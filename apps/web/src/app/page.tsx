@@ -404,6 +404,134 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="bg-background-secondary py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center animate-fade-in">
+            <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
+              Trusted by fitness enthusiasts worldwide
+            </h2>
+            <p className="mt-4 text-lg text-foreground-secondary">
+              See how Binectics is transforming the fitness journey for thousands of members
+            </p>
+          </div>
+
+          <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                name: 'Sarah Chen',
+                role: 'Marathon Runner',
+                location: 'Singapore',
+                image: '👩🏻‍💼',
+                color: 'blue',
+                rating: 5,
+                text: "I travel for work constantly. Binectics lets me access gyms in 15+ countries with one subscription. Game changer for maintaining my training schedule.",
+              },
+              {
+                name: 'Marcus Johnson',
+                role: 'Bodybuilder',
+                location: 'Los Angeles, USA',
+                image: '👨🏿‍💼',
+                color: 'yellow',
+                rating: 5,
+                text: "Found my coach through Binectics 8 months ago. Down 40lbs and competing in my first show next month. The nutrition tracking integration is incredible.",
+              },
+              {
+                name: 'Priya Patel',
+                role: 'Yoga Instructor',
+                location: 'Mumbai, India',
+                image: '👩🏽‍💼',
+                color: 'purple',
+                rating: 5,
+                text: "As an instructor, Binectics helps me manage 50+ clients effortlessly. The progress tracking and meal planning tools save me hours every week.",
+              },
+              {
+                name: 'Alex Rodriguez',
+                role: 'CrossFit Athlete',
+                location: 'Madrid, Spain',
+                image: '👨🏻‍💼',
+                color: 'orange',
+                rating: 5,
+                text: "The QR check-in is so smooth. I visit 3 different boxes depending on my schedule, and everything syncs automatically. No more paper sign-ins!",
+              },
+              {
+                name: 'Emma Thompson',
+                role: 'Busy Professional',
+                location: 'London, UK',
+                image: '👩🏼‍💼',
+                color: 'blue',
+                rating: 5,
+                text: "Between my trainer, nutritionist, and gym membership, I used to juggle 4 different apps. Now it's all in one place. Actually sticking to my goals for once!",
+              },
+              {
+                name: 'David Kim',
+                role: 'Gym Owner',
+                location: 'Seoul, South Korea',
+                image: '👨🏻‍💼',
+                color: 'yellow',
+                rating: 5,
+                text: "Switched our entire facility to Binectics. Member retention up 35%, admin work down by half. The analytics dashboard shows exactly what's working.",
+              },
+            ].map((testimonial, index) => (
+              <div
+                key={index}
+                className="group relative rounded-3xl bg-background p-8 shadow-card transition-shadow duration-300 hover:shadow-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-accent-${testimonial.color}-100 text-3xl`}>
+                    {testimonial.image}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold text-foreground">{testimonial.name}</h3>
+                        <p className="text-sm text-foreground-secondary">{testimonial.role}</p>
+                      </div>
+                      <div className="flex gap-0.5">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <svg key={i} className="h-4 w-4 text-accent-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="mt-1 text-xs text-foreground-tertiary">{testimonial.location}</p>
+                  </div>
+                </div>
+                <blockquote className="mt-6 text-sm leading-relaxed text-foreground-secondary">
+                  "{testimonial.text}"
+                </blockquote>
+              </div>
+            ))}
+          </div>
+
+          {/* Trust Metrics */}
+          <div className="mt-20 rounded-3xl bg-neutral-100 px-8 py-12">
+            <div className="grid gap-8 sm:grid-cols-3">
+              <div className="text-center">
+                <div className="font-display text-4xl font-bold text-foreground">4.9/5</div>
+                <div className="mt-2 flex items-center justify-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="h-5 w-5 text-accent-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <div className="mt-2 text-sm text-foreground-secondary">Average rating</div>
+              </div>
+              <div className="text-center">
+                <div className="font-display text-4xl font-bold text-foreground">10,000+</div>
+                <div className="mt-2 text-sm text-foreground-secondary">Active members</div>
+              </div>
+              <div className="text-center">
+                <div className="font-display text-4xl font-bold text-foreground">50+</div>
+                <div className="mt-2 text-sm text-foreground-secondary">Countries served</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section id="faq" className="bg-neutral-100 py-20 sm:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
