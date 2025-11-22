@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Input from '@/components/Input';
 
-export default function Diet icianRegisterPage() {
+export default function DieticianRegisterPage() {
   const [formData, setFormData] = useState({
     // Personal Info
     firstName: '',
