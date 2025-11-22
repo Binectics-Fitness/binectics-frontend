@@ -514,27 +514,27 @@ export default function Home() {
               <h3 className="font-semibold text-foreground">Popular Categories</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Strength Training
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Yoga & Pilates
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Nutrition Plans
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Personal Training
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Gym Memberships
                   </Link>
                 </li>
@@ -546,27 +546,27 @@ export default function Home() {
               <h3 className="font-semibold text-foreground">Company</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Careers
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Press
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Blog
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Partners
                   </Link>
                 </li>
@@ -578,27 +578,27 @@ export default function Home() {
               <h3 className="font-semibold text-foreground">Support</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Help Center
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-primary-500 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block">
                     Cookie Policy
                   </Link>
                 </li>
