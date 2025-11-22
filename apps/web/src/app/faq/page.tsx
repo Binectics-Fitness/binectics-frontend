@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Footer from '@/components/Footer';
 import Accordion from '@/components/Accordion';
 
 export default function FAQPage() {
@@ -144,36 +143,6 @@ export default function FAQPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-neutral-300 bg-background/95 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500">
-                <span className="text-xl font-bold text-white">B</span>
-              </div>
-              <span className="font-display text-xl font-bold text-foreground">
-                Binectics
-              </span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/login"
-                className="text-sm font-medium text-foreground-secondary transition-colors hover:text-accent-blue-500"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-6 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="bg-background py-16 sm:py-24">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
@@ -241,9 +210,6 @@ export default function FAQPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 }
