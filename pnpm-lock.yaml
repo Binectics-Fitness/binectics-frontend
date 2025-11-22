@@ -22,6 +22,9 @@ importers:
       '@prisma/client':
         specifier: ^7.0.0
         version: 7.0.0(prisma@7.0.0(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3))(typescript@5.9.3)
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -2094,6 +2097,10 @@ packages:
 
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.2.3:
+    resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -6452,6 +6459,8 @@ snapshots:
 
   dotenv@16.6.1: {}
 
+  dotenv@17.2.3: {}
+
   dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.2
@@ -6605,7 +6614,7 @@ snapshots:
       eslint: 9.39.1(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.1(jiti@2.6.1))
       eslint-plugin-react: 7.37.5(eslint@9.39.1(jiti@2.6.1))
       eslint-plugin-react-hooks: 7.0.1(eslint@9.39.1(jiti@2.6.1))
@@ -6642,7 +6651,7 @@ snapshots:
       tinyglobby: 0.2.15
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -6656,7 +6665,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.6.1)):
+  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
