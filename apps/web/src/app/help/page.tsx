@@ -104,28 +104,6 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-neutral-300 bg-background sticky top-0 z-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500">
-                <span className="text-xl font-bold text-white">B</span>
-              </div>
-              <span className="font-display text-xl font-bold text-foreground">
-                Binectics
-              </span>
-            </Link>
-            <Link
-              href="/contact"
-              className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
-            >
-              Contact Support
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="bg-background-secondary py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
