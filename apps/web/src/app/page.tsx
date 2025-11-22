@@ -78,7 +78,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-6 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-6 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
               >
                 Join Free
               </Link>
@@ -102,7 +102,7 @@ export default function Home() {
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
                   href="/register"
-                  className="inline-flex h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-white shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+                  className="inline-flex h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
                 >
                   Browse Gyms & Trainers
                 </Link>
