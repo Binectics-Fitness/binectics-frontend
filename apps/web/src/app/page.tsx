@@ -196,8 +196,112 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section id="how-it-works" className="bg-background-secondary py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center animate-fade-in">
+            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
+              Get started in 3 simple steps
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
+              From signup to your first workout in minutes
+            </p>
+          </div>
+
+          <div className="mt-16 grid gap-12 lg:grid-cols-3">
+            {[
+              {
+                step: '01',
+                title: 'Browse & Discover',
+                description: 'Search 500+ gyms, trainers, and nutritionists across 50 countries. Filter by specialty, location, ratings, and price.',
+                color: 'blue',
+                icon: (
+                  <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                ),
+              },
+              {
+                step: '02',
+                title: 'Subscribe & Connect',
+                description: 'Choose your plan and subscribe to your favorite gyms and trainers. All payments and bookings managed in one place.',
+                color: 'yellow',
+                icon: (
+                  <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+              },
+              {
+                step: '03',
+                title: 'Train & Track',
+                description: 'Check in with your QR code, complete workouts, and track progress automatically. Access your stats anytime, anywhere.',
+                color: 'purple',
+                icon: (
+                  <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                ),
+              },
+            ].map((item, index) => {
+              const colorClasses = {
+                blue: 'bg-accent-blue-100 text-accent-blue-600',
+                yellow: 'bg-accent-yellow-100 text-accent-yellow-600',
+                purple: 'bg-accent-purple-100 text-accent-purple-600',
+              };
+
+              return (
+                <div key={index} className="relative">
+                  {/* Connector Line - Hidden on mobile, shown on desktop */}
+                  {index < 2 && (
+                    <div className="absolute left-1/2 top-16 hidden h-0.5 w-full bg-neutral-300 lg:block" style={{zIndex: 0}}></div>
+                  )}
+
+                  <div className="relative z-10 text-center">
+                    {/* Step Number */}
+                    <div className="mb-6 flex justify-center">
+                      <div className={`flex h-20 w-20 items-center justify-center rounded-2xl ${colorClasses[item.color as keyof typeof colorClasses]} transition-shadow duration-300 hover:shadow-lg`}>
+                        {item.icon}
+                      </div>
+                    </div>
+
+                    {/* Step Label */}
+                    <div className="mb-3 text-sm font-bold uppercase tracking-wider text-foreground-tertiary">
+                      Step {item.step}
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="mb-3 font-display text-xl font-bold text-foreground">
+                      {item.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-sm leading-relaxed text-foreground-secondary">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* CTA */}
+          <div className="mt-16 text-center">
+            <Link
+              href="/register"
+              className="inline-flex h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+            >
+              Start Your Free Trial
+            </Link>
+            <p className="mt-4 text-sm text-foreground-tertiary">
+              No credit card required • Cancel anytime
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Use Cases Section - Lifestyle Photos */}
-      <section id="how-it-works" className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
             <h2 className="font-display text-4xl font-black leading-tight text-foreground sm:text-5xl">
