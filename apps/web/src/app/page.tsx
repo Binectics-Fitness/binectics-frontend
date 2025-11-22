@@ -52,19 +52,19 @@ export default function Home() {
             <nav className="hidden gap-8 md:flex">
               <Link
                 href="#features"
-                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-foreground"
+                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-primary-500"
               >
                 Features
               </Link>
               <Link
                 href="#how-it-works"
-                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-foreground"
+                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-primary-500"
               >
                 How it Works
               </Link>
               <Link
                 href="#faq"
-                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-foreground"
+                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-primary-500"
               >
                 FAQ
               </Link>
@@ -72,7 +72,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="text-sm font-medium text-foreground-secondary transition-colors hover:text-foreground"
+                className="text-sm font-medium text-foreground-secondary transition-colors hover:text-primary-500"
               >
                 Sign In
               </Link>
