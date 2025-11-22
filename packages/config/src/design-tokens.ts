@@ -15,6 +15,37 @@ export const colors = {
     800: '#005C3D',
     900: '#002E1F',
   },
+  // Accent colors - Blinkist uses multiple vibrant colors
+  accent: {
+    blue: {
+      50: '#E6F2FF',
+      100: '#BAE0FF',
+      500: '#3B9EFF', // Blinkist blue
+      600: '#2B7FDB',
+      700: '#1D5FAF',
+    },
+    yellow: {
+      50: '#FFF9E6',
+      100: '#FFECB3',
+      500: '#FFD93D', // Blinkist yellow
+      600: '#E6C235',
+      700: '#BFA02A',
+    },
+    purple: {
+      50: '#F3E6FF',
+      100: '#E0B3FF',
+      500: '#A855F7', // Blinkist purple
+      600: '#9333EA',
+      700: '#7E22CE',
+    },
+    orange: {
+      50: '#FFF4E6',
+      100: '#FFE0B3',
+      500: '#FF9F43', // Blinkist orange
+      600: '#E68A3A',
+      700: '#BF7230',
+    },
+  },
   // Secondary - Blinkist Dark Charcoal
   secondary: {
     50: '#F5F6F7',

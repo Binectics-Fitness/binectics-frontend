@@ -78,7 +78,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-10 items-center justify-center rounded-full bg-primary-500 px-6 text-sm font-semibold text-white transition-all duration-200 hover:bg-primary-600 hover:scale-105 active:scale-95"
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-primary-500 px-6 text-sm font-semibold text-white transition-all duration-200 hover:bg-primary-600 hover:scale-105 active:scale-95"
               >
                 Join Free
               </Link>
@@ -102,7 +102,7 @@ export default function Home() {
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
                   href="/register"
-                  className="inline-flex h-14 items-center justify-center rounded-full bg-primary-500 px-8 text-base font-semibold text-white shadow-button transition-all duration-300 hover:bg-primary-600 hover:shadow-lg hover:scale-105 active:scale-95"
+                  className="inline-flex h-14 items-center justify-center rounded-2xl bg-primary-500 px-8 text-base font-semibold text-white shadow-button transition-all duration-300 hover:bg-primary-600 hover:shadow-lg hover:scale-105 active:scale-95"
                 >
                   Browse Gyms & Trainers
                 </Link>
@@ -116,8 +116,8 @@ export default function Home() {
                 {/* Visual element - illustrated icons */}
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 space-y-6">
                   <div className="flex items-center gap-4 rounded-2xl bg-white p-6 shadow-lg animate-fade-in" style={{animationDelay: '0.2s'}}>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                      <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-blue-100">
+                      <svg className="h-6 w-6 text-accent-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10" />
                       </svg>
                     </div>
@@ -127,8 +127,8 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 rounded-2xl bg-white p-6 shadow-lg animate-fade-in" style={{animationDelay: '0.4s'}}>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                      <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-yellow-100">
+                      <svg className="h-6 w-6 text-accent-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z M16 8a2 2 0 100-4 2 2 0 000 4z" />
                       </svg>
                     </div>
@@ -138,8 +138,8 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 rounded-2xl bg-white p-6 shadow-lg animate-fade-in" style={{animationDelay: '0.6s'}}>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                      <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-orange-100">
+                      <svg className="h-6 w-6 text-accent-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13c-2.21 0-4-1.79-4-4m4 4c2.21 0 4-1.79 4-4m-9 13h10M3 21h18" />
                       </svg>
                     </div>
@@ -209,6 +209,7 @@ export default function Home() {
               {
                 label: 'At the Gym',
                 description: 'QR check-in, track workouts, access equipment guides',
+                color: 'blue',
                 icon: (
                   <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10" />
@@ -218,6 +219,7 @@ export default function Home() {
               {
                 label: 'Personal Training',
                 description: 'One-on-one sessions with certified trainers',
+                color: 'yellow',
                 icon: (
                   <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z M16 8a2 2 0 100-4 2 2 0 000 4z" />
@@ -227,6 +229,7 @@ export default function Home() {
               {
                 label: 'Nutrition Plans',
                 description: 'Custom meal plans from expert dieticians',
+                color: 'orange',
                 icon: (
                   <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v13m0-13c-2.21 0-4-1.79-4-4m4 4c2.21 0 4-1.79 4-4m-9 13h10M3 21h18" />
@@ -236,6 +239,7 @@ export default function Home() {
               {
                 label: 'Progress Tracking',
                 description: 'Monitor your goals with detailed analytics',
+                color: 'purple',
                 icon: (
                   <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -245,7 +249,7 @@ export default function Home() {
             ].map((useCase, index) => (
               <div key={index} className="group relative">
                 <div className="relative overflow-hidden rounded-3xl bg-background p-8 shadow-card transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-100 text-primary-600 transition-transform duration-300 group-hover:scale-110">
+                  <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-${useCase.color}-100 text-accent-${useCase.color}-600 transition-transform duration-300 group-hover:scale-110`}>
                     {useCase.icon}
                   </div>
                   <h3 className="text-lg font-semibold text-foreground mb-2">{useCase.label}</h3>
@@ -353,6 +357,7 @@ export default function Home() {
               {
                 title: 'For Gyms',
                 description: 'Digitize your facility, manage memberships, and grow your business with our comprehensive gym management platform.',
+                color: 'blue',
                 icon: (
                   <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10" />
@@ -362,6 +367,7 @@ export default function Home() {
               {
                 title: 'For Trainers',
                 description: 'Build your brand, sell training programs, and track client progress with powerful tools designed for fitness professionals.',
+                color: 'yellow',
                 icon: (
                   <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v18l7-4 7 4V3M9 6h6M9 10h6" />
@@ -371,6 +377,7 @@ export default function Home() {
               {
                 title: 'For Dieticians',
                 description: 'Offer personalized meal plans, track nutrition goals, and help clients succeed with integrated diet management tools.',
+                color: 'orange',
                 icon: (
                   <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v13m0-13c-2.21 0-4-1.79-4-4m4 4c2.21 0 4-1.79 4-4m-9 13h10M3 21h18" />
@@ -382,7 +389,7 @@ export default function Home() {
                 key={feature.title}
                 className="group rounded-2xl bg-background p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
               >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 text-primary-600 transition-transform duration-300 group-hover:scale-110">
+                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-${feature.color}-100 text-accent-${feature.color}-600 transition-transform duration-300 group-hover:scale-110`}>
                   {feature.icon}
                 </div>
                 <h3 className="font-display text-xl font-semibold text-foreground">
@@ -437,7 +444,7 @@ export default function Home() {
             <div className="mt-8 flex flex-col items-center gap-6">
               <Link
                 href="/register"
-                className="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-primary-500 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95"
+                className="inline-flex h-14 items-center justify-center rounded-2xl bg-white px-8 text-base font-semibold text-primary-500 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95"
               >
                 Explore Free
               </Link>

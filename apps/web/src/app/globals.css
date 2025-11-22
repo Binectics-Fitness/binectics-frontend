@@ -93,6 +93,35 @@
   --color-neutral-800: #3E3B36;
   --color-neutral-900: #28251F;
 
+  /* Blinkist Accent Colors */
+  --color-accent-blue-*: initial;
+  --color-accent-blue-50: #E6F2FF;
+  --color-accent-blue-100: #BAE0FF;
+  --color-accent-blue-500: #3B9EFF;
+  --color-accent-blue-600: #2B7FDB;
+  --color-accent-blue-700: #1D5FAF;
+
+  --color-accent-yellow-*: initial;
+  --color-accent-yellow-50: #FFF9E6;
+  --color-accent-yellow-100: #FFECB3;
+  --color-accent-yellow-500: #FFD93D;
+  --color-accent-yellow-600: #E6C235;
+  --color-accent-yellow-700: #BFA02A;
+
+  --color-accent-purple-*: initial;
+  --color-accent-purple-50: #F3E6FF;
+  --color-accent-purple-100: #E0B3FF;
+  --color-accent-purple-500: #A855F7;
+  --color-accent-purple-600: #9333EA;
+  --color-accent-purple-700: #7E22CE;
+
+  --color-accent-orange-*: initial;
+  --color-accent-orange-50: #FFF4E6;
+  --color-accent-orange-100: #FFE0B3;
+  --color-accent-orange-500: #FF9F43;
+  --color-accent-orange-600: #E68A3A;
+  --color-accent-orange-700: #BF7230;
+
   --color-background: var(--background);
   --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
