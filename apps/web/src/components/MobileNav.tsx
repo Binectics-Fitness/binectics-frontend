@@ -11,7 +11,7 @@ export default function MobileNav() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex md:hidden items-center justify-center rounded-lg p-2 text-foreground-secondary hover:bg-neutral-100 transition-colors"
+        className="relative z-[60] flex md:hidden items-center justify-center rounded-lg p-2 text-foreground-secondary hover:bg-neutral-100 transition-colors"
         aria-label="Toggle menu"
       >
         {isOpen ? (
@@ -28,14 +28,14 @@ export default function MobileNav() {
       {/* Mobile Menu Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-foreground/20 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[9998] bg-foreground/20 backdrop-blur-sm md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed right-0 top-0 z-[70] h-full w-full max-w-sm transform bg-background shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed right-0 top-0 z-[9999] h-full w-full max-w-sm transform bg-background shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
