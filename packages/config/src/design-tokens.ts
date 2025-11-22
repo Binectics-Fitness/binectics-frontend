@@ -19,17 +19,17 @@ export const colors = {
   accent: {
     blue: {
       50: '#E6F2FF',
-      100: '#BAE0FF',
-      500: '#3B9EFF', // Blinkist blue
-      600: '#2B7FDB',
-      700: '#1D5FAF',
+      100: '#CCE5FF',
+      500: '#0267F2', // Blinkist blue
+      600: '#0156D6',
+      700: '#0145BA',
     },
     yellow: {
       50: '#FFF9E6',
-      100: '#FFECB3',
-      500: '#FFD93D', // Blinkist yellow
-      600: '#E6C235',
-      700: '#BFA02A',
+      100: '#FFF1CC',
+      500: '#FDB90E', // Blinkist yellow
+      600: '#E3A70D',
+      700: '#C9950B',
     },
     purple: {
       50: '#F3E6FF',

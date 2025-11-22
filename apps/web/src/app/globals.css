@@ -96,17 +96,17 @@
   /* Blinkist Accent Colors */
   --color-accent-blue-*: initial;
   --color-accent-blue-50: #E6F2FF;
-  --color-accent-blue-100: #BAE0FF;
-  --color-accent-blue-500: #3B9EFF;
-  --color-accent-blue-600: #2B7FDB;
-  --color-accent-blue-700: #1D5FAF;
+  --color-accent-blue-100: #CCE5FF;
+  --color-accent-blue-500: #0267F2;
+  --color-accent-blue-600: #0156D6;
+  --color-accent-blue-700: #0145BA;
 
   --color-accent-yellow-*: initial;
   --color-accent-yellow-50: #FFF9E6;
-  --color-accent-yellow-100: #FFECB3;
-  --color-accent-yellow-500: #FFD93D;
-  --color-accent-yellow-600: #E6C235;
-  --color-accent-yellow-700: #BFA02A;
+  --color-accent-yellow-100: #FFF1CC;
+  --color-accent-yellow-500: #FDB90E;
+  --color-accent-yellow-600: #E3A70D;
+  --color-accent-yellow-700: #C9950B;
 
   --color-accent-purple-*: initial;
   --color-accent-purple-50: #F3E6FF;

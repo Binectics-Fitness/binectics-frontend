@@ -93,10 +93,10 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <h1 className="font-display text-5xl font-bold leading-tight text-foreground sm:text-6xl lg:text-7xl">
+              <h1 className="font-display text-5xl font-black leading-[1.1] text-foreground sm:text-6xl lg:text-7xl">
                 Your gym, trainer, and nutritionist—<span className="text-primary-500">all in one platform</span>
               </h1>
-              <p className="mt-6 max-w-lg text-lg text-foreground-secondary">
+              <p className="mt-6 max-w-lg text-xl leading-relaxed text-foreground-secondary">
                 Subscribe to gyms worldwide, book certified trainers, and get personalized meal plans—without juggling multiple apps.
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -196,10 +196,10 @@ export default function Home() {
       <section id="how-it-works" className="bg-neutral-100 py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
-            <h2 className="font-display text-4xl font-bold text-foreground sm:text-5xl">
+            <h2 className="font-display text-4xl font-black leading-tight text-foreground sm:text-5xl">
               Work out anywhere—home, gym, or park
             </h2>
-            <p className="mt-4 text-lg text-foreground-secondary">
+            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
               Access fitness professionals and facilities wherever life takes you
             </p>
           </div>
@@ -252,8 +252,8 @@ export default function Home() {
                   <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-${useCase.color}-100 text-accent-${useCase.color}-600`}>
                     {useCase.icon}
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{useCase.label}</h3>
-                  <p className="text-sm text-foreground-secondary">{useCase.description}</p>
+                  <h3 className="text-lg font-bold text-foreground mb-2">{useCase.label}</h3>
+                  <p className="text-sm leading-relaxed text-foreground-secondary">{useCase.description}</p>
                 </div>
               </div>
             ))}
@@ -265,10 +265,10 @@ export default function Home() {
       <section id="features" className="bg-background-secondary py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl">
+            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl">
               Browse 500+ trainers and gyms near you
             </h2>
-            <p className="mt-4 text-lg text-foreground-secondary">
+            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
               Find fitness professionals specialized in your goals
             </p>
           </div>
@@ -392,7 +392,7 @@ export default function Home() {
                 <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-${feature.color}-100 text-accent-${feature.color}-600`}>
                   {feature.icon}
                 </div>
-                <h3 className="font-display text-xl font-semibold text-foreground">
+                <h3 className="font-display text-xl font-bold text-foreground">
                   {feature.title}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-foreground-secondary">
@@ -408,10 +408,10 @@ export default function Home() {
       <section className="bg-background-secondary py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
+            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
               Trusted by fitness enthusiasts worldwide
             </h2>
-            <p className="mt-4 text-lg text-foreground-secondary">
+            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
               See how Binectics is transforming the fitness journey for thousands of members
             </p>
           </div>
@@ -484,7 +484,7 @@ export default function Home() {
                   <div className="flex-1">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="font-semibold text-foreground">{testimonial.name}</h3>
+                        <h3 className="font-bold text-foreground">{testimonial.name}</h3>
                         <p className="text-sm text-foreground-secondary">{testimonial.role}</p>
                       </div>
                       <div className="flex gap-0.5">
@@ -536,10 +536,10 @@ export default function Home() {
       <section id="faq" className="bg-neutral-100 py-20 sm:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl">
+            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl">
               Frequently asked questions
             </h2>
-            <p className="mt-4 text-lg text-foreground-secondary">
+            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
               Everything you need to know about using Binectics
             </p>
           </div>
@@ -563,10 +563,10 @@ export default function Home() {
       <section className="bg-background-secondary py-20 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-primary-500 px-8 py-16 sm:px-12 sm:py-20">
-            <h2 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+            <h2 className="font-display text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
               Join 10,000+ members worldwide
             </h2>
-            <p className="mt-4 text-lg text-white/90">
+            <p className="mt-4 text-lg leading-relaxed text-white/90">
               Access gyms and fitness pros anywhere. No credit card required to start.
             </p>
             <div className="mt-8 flex flex-col items-center gap-6">
