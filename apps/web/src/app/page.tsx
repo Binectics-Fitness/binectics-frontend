@@ -52,19 +52,19 @@ export default function Home() {
             <nav className="hidden gap-8 md:flex">
               <Link
                 href="#features"
-                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-primary-500"
+                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block"
               >
                 Features
               </Link>
               <Link
                 href="#how-it-works"
-                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-primary-500"
+                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block"
               >
                 How it Works
               </Link>
               <Link
                 href="#faq"
-                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-primary-500"
+                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block"
               >
                 FAQ
               </Link>
