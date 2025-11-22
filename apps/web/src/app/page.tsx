@@ -63,6 +63,12 @@ export default function Home() {
                 How it Works
               </Link>
               <Link
+                href="#pricing"
+                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block"
+              >
+                Pricing
+              </Link>
+              <Link
                 href="#faq"
                 className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block"
               >
@@ -520,6 +526,154 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="bg-neutral-100 py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center animate-fade-in">
+            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
+              Simple, transparent pricing
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
+              Choose the plan that fits your fitness journey
+            </p>
+          </div>
+
+          <div className="mt-16 grid gap-8 lg:grid-cols-3">
+            {[
+              {
+                name: 'Explorer',
+                price: '19',
+                period: 'month',
+                description: 'Perfect for casual gym-goers',
+                color: 'blue',
+                popular: false,
+                features: [
+                  'Access to 100+ gyms globally',
+                  'Book up to 5 trainer sessions/month',
+                  'Basic progress tracking',
+                  'Mobile app access',
+                  'Email support',
+                ],
+              },
+              {
+                name: 'Athlete',
+                price: '49',
+                period: 'month',
+                description: 'Most popular for serious fitness enthusiasts',
+                color: 'yellow',
+                popular: true,
+                features: [
+                  'Access to 500+ gyms globally',
+                  'Unlimited trainer sessions',
+                  'Advanced progress tracking & analytics',
+                  'Personalized meal plans',
+                  'Priority support',
+                  'QR check-in',
+                ],
+              },
+              {
+                name: 'Professional',
+                price: '99',
+                period: 'month',
+                description: 'For gym owners and trainers',
+                color: 'purple',
+                popular: false,
+                features: [
+                  'Everything in Athlete',
+                  'Manage unlimited clients',
+                  'Custom branding',
+                  'Revenue analytics dashboard',
+                  'API access',
+                  'Dedicated account manager',
+                ],
+              },
+            ].map((plan, index) => {
+              const colorClasses = {
+                blue: 'bg-accent-blue-500 text-white',
+                yellow: 'bg-accent-yellow-500 text-foreground',
+                purple: 'bg-accent-purple-500 text-white',
+              };
+
+              const borderClasses = {
+                blue: 'border-accent-blue-200',
+                yellow: 'border-accent-yellow-300',
+                purple: 'border-accent-purple-200',
+              };
+
+              return (
+                <div
+                  key={index}
+                  className={`relative rounded-3xl bg-background p-8 shadow-card transition-shadow duration-300 hover:shadow-xl ${
+                    plan.popular ? 'border-2 ' + borderClasses[plan.color as keyof typeof borderClasses] : 'border border-neutral-300'
+                  }`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <span className="inline-flex rounded-full bg-accent-yellow-500 px-4 py-1 text-sm font-bold text-foreground">
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="text-center">
+                    <h3 className="font-display text-2xl font-bold text-foreground">
+                      {plan.name}
+                    </h3>
+                    <p className="mt-2 text-sm text-foreground-secondary">
+                      {plan.description}
+                    </p>
+
+                    <div className="mt-6">
+                      <span className="font-display text-5xl font-black text-foreground">
+                        ${plan.price}
+                      </span>
+                      <span className="text-foreground-secondary">/{plan.period}</span>
+                    </div>
+
+                    <Link
+                      href="/register"
+                      className={`mt-6 inline-flex h-12 w-full items-center justify-center rounded-lg ${
+                        colorClasses[plan.color as keyof typeof colorClasses]
+                      } text-base font-semibold transition-all duration-200 hover:shadow-lg`}
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+
+                  <div className="mt-8 space-y-4">
+                    {plan.features.map((feature, fIndex) => (
+                      <div key={fIndex} className="flex items-start gap-3">
+                        <svg
+                          className="h-5 w-5 flex-shrink-0 text-primary-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm text-foreground-secondary">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-sm text-foreground-secondary">
+              All plans include a 14-day free trial • No credit card required •{' '}
+              <Link href="#" className="font-medium text-accent-blue-500 hover:text-accent-blue-600">
+                Compare plans
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
       <section className="bg-background-secondary py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -675,6 +829,103 @@ export default function Home() {
         </div>
       </section>
 
+      {/* For Professionals CTA */}
+      <section className="bg-neutral-100 py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-3xl bg-accent-yellow-500 p-12 sm:p-16">
+            <div className="grid items-center gap-8 lg:grid-cols-2">
+              <div>
+                <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
+                  Are you a gym owner or trainer?
+                </h2>
+                <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
+                  Join Binectics and grow your business with powerful tools designed for fitness professionals.
+                </p>
+
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  {[
+                    {
+                      title: 'Reach More Clients',
+                      description: '10,000+ active members waiting to discover you',
+                    },
+                    {
+                      title: 'Streamline Operations',
+                      description: 'Manage bookings, payments, and schedules in one place',
+                    },
+                    {
+                      title: 'Grow Your Revenue',
+                      description: 'Members spend 35% more with verified professionals',
+                    },
+                    {
+                      title: 'Get Insights',
+                      description: 'Analytics dashboard to track your business performance',
+                    },
+                  ].map((benefit, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <svg
+                        className="h-6 w-6 flex-shrink-0 text-foreground"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <div>
+                        <h3 className="font-bold text-foreground">{benefit.title}</h3>
+                        <p className="text-sm text-foreground-secondary">{benefit.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-8">
+                  <Link
+                    href="/register/professional"
+                    className="inline-flex h-14 items-center justify-center rounded-lg bg-foreground px-8 text-base font-semibold text-white shadow-lg transition-colors duration-200 hover:bg-foreground/90 active:bg-foreground/80"
+                  >
+                    Join as a Professional
+                  </Link>
+                </div>
+              </div>
+
+              <div className="hidden lg:block">
+                <div className="grid gap-4">
+                  <div className="rounded-2xl bg-white/20 backdrop-blur-sm p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground">
+                        <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-foreground">
+                        <div className="text-2xl font-black">$50K+</div>
+                        <div className="text-sm text-foreground-secondary">Avg. annual revenue increase</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-white/20 backdrop-blur-sm p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground">
+                        <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-foreground">
+                        <div className="text-2xl font-black">500+</div>
+                        <div className="text-sm text-foreground-secondary">Verified professionals</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="bg-background-secondary py-20 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
@@ -792,6 +1043,11 @@ export default function Home() {
                 <li>
                   <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block">
                     About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#pricing" className="text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block">
+                    Pricing
                   </Link>
                 </li>
                 <li>
