@@ -28,14 +28,14 @@ export default function MobileNav() {
       {/* Mobile Menu Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[60] bg-foreground/20 backdrop-blur-sm md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed right-0 top-0 z-50 h-full w-full max-w-sm transform bg-background shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed right-0 top-0 z-[70] h-full w-full max-w-sm transform bg-background shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
