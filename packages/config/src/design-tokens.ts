@@ -99,9 +99,9 @@ export const colors = {
     secondary: '#FFFFFF',      // White sections
     tertiary: '#EEEBE6',       // Darker cream (footer)
   },
-  // Text - Blinkist uses almost black with warm gray tones
+  // Text - Blinkist uses dark blue with warm gray tones
   text: {
-    primary: '#23292E',        // Almost black
+    primary: '#03314B',        // Blinkist dark blue
     secondary: '#6B7684',      // Medium gray
     tertiary: '#8B95A1',       // Light gray
     inverse: '#FFFFFF',        // White text
