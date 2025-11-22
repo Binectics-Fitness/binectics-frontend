@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+/* Cera Pro Font Faces - Blinkist Typography */
+@font-face {
+  font-family: 'Cera Pro';
+  src: url('/fonts/Cera-Pro-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cera Pro';
+  src: url('/fonts/Cera-Pro-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cera Pro';
+  src: url('/fonts/Cera-Pro-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cera Pro';
+  src: url('/fonts/Cera-Pro-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Blinkist Exact Color Palette */
+  --primary: #00D991;              /* Bright lime-teal green */
+  --primary-dark: #00B877;
+  --primary-light: #33E3A6;
+  --secondary: #2D3339;            /* Dark charcoal */
+  --background: #F7F4EF;           /* Light cream/beige base */
+  --background-secondary: #FFFFFF; /* White sections */
+  --background-tertiary: #EEEBE6;  /* Darker cream for footer */
+  --foreground: #23292E;           /* Almost black text */
+  --foreground-secondary: #6B7684; /* Medium gray */
+  --foreground-tertiary: #8B95A1;  /* Light gray */
+
+  /* Semantic colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+}
+
+@theme inline {
+  /* Blinkist Primary - Bright Lime-Teal Green */
+  --color-primary-*: initial;
+  --color-primary-50: #E6FFF5;
+  --color-primary-100: #B3FFDF;
+  --color-primary-200: #80FFC9;
+  --color-primary-300: #4DFFB3;
+  --color-primary-400: #1AFF9D;
+  --color-primary-500: #00D991;  /* Main Blinkist green */
+  --color-primary-600: #00B877;
+  --color-primary-700: #008A5A;
+  --color-primary-800: #005C3D;
+  --color-primary-900: #002E1F;
+
+  /* Blinkist Secondary - Dark Charcoal */
+  --color-secondary-*: initial;
+  --color-secondary-50: #F5F6F7;
+  --color-secondary-100: #E8EAED;
+  --color-secondary-200: #D1D5DA;
+  --color-secondary-300: #A3ACB6;
+  --color-secondary-400: #7C8693;
+  --color-secondary-500: #5A6472;
+  --color-secondary-600: #434D5B;
+  --color-secondary-700: #353E4A;
+  --color-secondary-800: #2D3339;
+  --color-secondary-900: #23292E;
+
+  /* Blinkist Neutrals - Warm grays and creams */
+  --color-neutral-*: initial;
+  --color-neutral-50: #FDFCFB;
+  --color-neutral-100: #F7F4EF;   /* Light cream background */
+  --color-neutral-200: #EEEBE6;   /* Cream for sections */
+  --color-neutral-300: #E5E1DA;
+  --color-neutral-400: #C9C4BA;
+  --color-neutral-500: #A39E94;
+  --color-neutral-600: #7D7870;
+  --color-neutral-700: #5C5851;
+  --color-neutral-800: #3E3B36;
+  --color-neutral-900: #28251F;
+
+  --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
+  --color-foreground: var(--foreground);
+
+  --font-family-sans: 'Cera Pro', system-ui, -apple-system, sans-serif;
+  --font-family-display: 'Cera Pro', system-ui, -apple-system, sans-serif;
+
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.5rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Cera Pro', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth transitions - only on interactive elements */
+a, button {
+  transition-property: color, background-color, border-color, transform, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.6s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s ease-out forwards;
+}

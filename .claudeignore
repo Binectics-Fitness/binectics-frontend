@@ -1,0 +1,15 @@
+# In your project root
+node_modules/
+dist/
+build/
+*.log
+*.min.js
+*.bundle.js
+.git/
+coverage/
+.next/
+__pycache__/
+*.pyc
+.env
+package-lock.json
+yarn.lock
