@@ -52,19 +52,19 @@ export default function Home() {
             <nav className="hidden gap-8 md:flex">
               <Link
                 href="#features"
-                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-foreground hover:scale-105 active:scale-95"
+                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-foreground"
               >
                 Features
               </Link>
               <Link
                 href="#how-it-works"
-                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-foreground hover:scale-105 active:scale-95"
+                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-foreground"
               >
                 How it Works
               </Link>
               <Link
                 href="#faq"
-                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-foreground hover:scale-105 active:scale-95"
+                className="text-sm font-medium text-foreground-secondary transition-colors duration-200 hover:text-foreground"
               >
                 FAQ
               </Link>
@@ -78,7 +78,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-10 items-center justify-center rounded-xl bg-primary-500 px-6 text-sm font-semibold text-white transition-all duration-200 hover:bg-primary-600 hover:scale-105 active:scale-95"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-6 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
               >
                 Join Free
               </Link>
@@ -102,7 +102,7 @@ export default function Home() {
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
                   href="/register"
-                  className="inline-flex h-14 items-center justify-center rounded-2xl bg-primary-500 px-8 text-base font-semibold text-white shadow-button transition-all duration-300 hover:bg-primary-600 hover:shadow-lg hover:scale-105 active:scale-95"
+                  className="inline-flex h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-white shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
                 >
                   Browse Gyms & Trainers
                 </Link>
@@ -248,8 +248,8 @@ export default function Home() {
               },
             ].map((useCase, index) => (
               <div key={index} className="group relative">
-                <div className="relative overflow-hidden rounded-3xl bg-background p-8 shadow-card transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
-                  <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-${useCase.color}-100 text-accent-${useCase.color}-600 transition-transform duration-300 group-hover:scale-110`}>
+                <div className="relative overflow-hidden rounded-3xl bg-background p-8 shadow-card transition-shadow duration-300 hover:shadow-xl">
+                  <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-${useCase.color}-100 text-accent-${useCase.color}-600`}>
                     {useCase.icon}
                   </div>
                   <h3 className="text-lg font-semibold text-foreground mb-2">{useCase.label}</h3>
@@ -342,7 +342,7 @@ export default function Home() {
             ].map((category, index) => (
               <button
                 key={index}
-                className="group flex items-center gap-3 text-left transition-all duration-200 hover:translate-x-1"
+                className="group flex items-center gap-3 text-left transition-colors duration-200"
               >
                 <span className="text-foreground-secondary transition-colors group-hover:text-primary-500">
                   {category.icon}
@@ -387,9 +387,9 @@ export default function Home() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group rounded-2xl bg-background p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="group rounded-2xl bg-background p-8 shadow-card transition-shadow duration-300 hover:shadow-xl"
               >
-                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-${feature.color}-100 text-accent-${feature.color}-600 transition-transform duration-300 group-hover:scale-110`}>
+                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-${feature.color}-100 text-accent-${feature.color}-600`}>
                   {feature.icon}
                 </div>
                 <h3 className="font-display text-xl font-semibold text-foreground">
@@ -444,14 +444,14 @@ export default function Home() {
             <div className="mt-8 flex flex-col items-center gap-6">
               <Link
                 href="/register"
-                className="inline-flex h-14 items-center justify-center rounded-2xl bg-white px-8 text-base font-semibold text-primary-500 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95"
+                className="inline-flex h-14 items-center justify-center rounded-lg bg-white px-8 text-base font-semibold text-primary-500 shadow-lg transition-colors duration-200 hover:bg-neutral-50 active:bg-neutral-100"
               >
                 Explore Free
               </Link>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <a
                   href="#"
-                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/20 hover:scale-105 active:scale-95"
+                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 active:bg-white/30"
                 >
                   <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
@@ -460,7 +460,7 @@ export default function Home() {
                 </a>
                 <a
                   href="#"
-                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/20 hover:scale-105 active:scale-95"
+                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 active:bg-white/30"
                 >
                   <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" />
@@ -491,17 +491,17 @@ export default function Home() {
                 Your global fitness ecosystem connecting gyms, trainers, and wellness enthusiasts.
               </p>
               <div className="mt-6 flex gap-4">
-                <a href="#" className="text-foreground-tertiary transition-all duration-200 hover:text-primary-500 hover:scale-110 active:scale-95">
+                <a href="#" className="text-foreground-tertiary transition-colors duration-200 hover:text-primary-500">
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                 </a>
-                <a href="#" className="text-foreground-tertiary transition-all duration-200 hover:text-primary-500 hover:scale-110 active:scale-95">
+                <a href="#" className="text-foreground-tertiary transition-colors duration-200 hover:text-primary-500">
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
                   </svg>
                 </a>
-                <a href="#" className="text-foreground-tertiary transition-all duration-200 hover:text-primary-500 hover:scale-110 active:scale-95">
+                <a href="#" className="text-foreground-tertiary transition-colors duration-200 hover:text-primary-500">
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
                   </svg>
@@ -514,27 +514,27 @@ export default function Home() {
               <h3 className="font-semibold text-foreground">Popular Categories</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Strength Training
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Yoga & Pilates
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Nutrition Plans
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Personal Training
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Gym Memberships
                   </Link>
                 </li>
@@ -546,27 +546,27 @@ export default function Home() {
               <h3 className="font-semibold text-foreground">Company</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Careers
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Press
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Blog
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Partners
                   </Link>
                 </li>
@@ -578,27 +578,27 @@ export default function Home() {
               <h3 className="font-semibold text-foreground">Support</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Help Center
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-foreground-secondary transition-all duration-200 hover:text-foreground hover:translate-x-1 inline-block">
+                  <Link href="#" className="text-foreground-secondary transition-colors duration-200 hover:text-foreground inline-block">
                     Cookie Policy
                   </Link>
                 </li>
