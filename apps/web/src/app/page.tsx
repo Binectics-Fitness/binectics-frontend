@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Accordion } from '../components/Accordion';
 import PricingSection from '../components/PricingSection';
 import ProfessionalsTab from '../components/ProfessionalsTab';
+import MobileNav from '../components/MobileNav';
 
 export default function Home() {
   const faqItems = [
@@ -80,7 +81,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-sm font-medium text-foreground-secondary transition-colors hover:text-accent-blue-500"
+                className="hidden md:inline-flex items-center gap-2 text-sm font-medium text-foreground-secondary transition-colors hover:text-accent-blue-500"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="currentColor" fillRule="evenodd" d="M6.75 9.003c.41 0 .75-.34.75-.75V4.5H19v16H7.5v-3.75c0-.41-.34-.75-.75-.75s-.75.34-.75.75v4.5c0 .41.34.75.75.75h13c.41 0 .75-.34.75-.75V3.75c0-.41-.34-.75-.75-.75h-13c-.41 0-.75.34-.75.75v4.503c0 .41.34.75.75.75Z" clipRule="evenodd"></path>
@@ -90,10 +91,11 @@ export default function Home() {
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-6 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+                className="hidden md:inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-6 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
               >
                 Join Free
               </Link>
+              <MobileNav />
             </div>
           </div>
         </div>
@@ -111,20 +113,20 @@ export default function Home() {
                 </svg>
                 <span className="text-sm font-semibold text-foreground">Available in 50+ countries</span>
               </div>
-              <h1 className="font-display text-5xl font-black leading-[1.1] text-foreground sm:text-6xl lg:text-7xl">
+              <h1 className="font-display text-4xl font-black leading-[1.1] text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
                 Your global fitness ecosystem—<span className="text-primary-500">gyms, trainers & dieticians</span>
               </h1>
-              <p className="mt-6 max-w-lg text-xl leading-relaxed text-foreground-secondary">
+              <p className="mt-6 max-w-lg text-lg leading-relaxed text-foreground-secondary sm:text-xl">
                 One unified marketplace connecting verified gyms, certified trainers, and expert dieticians worldwide. Subscribe, book, and track—all in one place.
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
                   href="/register"
-                  className="inline-flex h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+                  className="inline-flex min-h-[44px] h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
                 >
                   Explore the Marketplace
                 </Link>
-                <p className="text-sm text-foreground-tertiary animate-fade-in">
+                <p className="text-sm text-foreground-tertiary text-center sm:text-left animate-fade-in">
                   Join 10,000+ members across 50 countries
                 </p>
               </div>

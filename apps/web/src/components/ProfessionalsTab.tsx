@@ -144,11 +144,11 @@ export default function ProfessionalsTab() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="mt-12 flex justify-center">
-          <div className="inline-flex rounded-lg bg-background p-1 shadow-card">
+        <div className="mt-12 flex justify-center overflow-x-auto px-4 sm:px-0">
+          <div className="inline-flex rounded-lg bg-background p-1 shadow-card min-w-fit">
             <button
               onClick={() => setActiveTab('gym')}
-              className={`rounded-lg px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+              className={`rounded-lg px-4 sm:px-6 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'gym'
                   ? 'bg-accent-blue-500 text-white shadow-md'
                   : 'text-foreground-secondary hover:text-foreground'
@@ -158,7 +158,7 @@ export default function ProfessionalsTab() {
             </button>
             <button
               onClick={() => setActiveTab('trainer')}
-              className={`rounded-lg px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+              className={`rounded-lg px-4 sm:px-6 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'trainer'
                   ? 'bg-accent-yellow-500 text-foreground shadow-md'
                   : 'text-foreground-secondary hover:text-foreground'
@@ -168,7 +168,7 @@ export default function ProfessionalsTab() {
             </button>
             <button
               onClick={() => setActiveTab('dietician')}
-              className={`rounded-lg px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+              className={`rounded-lg px-4 sm:px-6 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'dietician'
                   ? 'bg-accent-purple-500 text-white shadow-md'
                   : 'text-foreground-secondary hover:text-foreground'
