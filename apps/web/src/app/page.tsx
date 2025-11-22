@@ -52,19 +52,19 @@ export default function Home() {
             <nav className="hidden gap-8 md:flex">
               <Link
                 href="#features"
-                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block"
+                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block"
               >
                 Features
               </Link>
               <Link
                 href="#how-it-works"
-                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block"
+                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block"
               >
                 How it Works
               </Link>
               <Link
                 href="#faq"
-                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-primary-500 hover:translate-x-1 inline-block"
+                className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block"
               >
                 FAQ
               </Link>
@@ -72,7 +72,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-sm font-medium text-foreground-secondary transition-colors hover:text-primary-500"
+                className="inline-flex items-center gap-2 text-sm font-medium text-foreground-secondary transition-colors hover:text-accent-blue-500"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="currentColor" fillRule="evenodd" d="M6.75 9.003c.41 0 .75-.34.75-.75V4.5H19v16H7.5v-3.75c0-.41-.34-.75-.75-.75s-.75.34-.75.75v4.5c0 .41.34.75.75.75h13c.41 0 .75-.34.75-.75V3.75c0-.41-.34-.75-.75-.75h-13c-.41 0-.75.34-.75.75v4.503c0 .41.34.75.75.75Z" clipRule="evenodd"></path>
