@@ -250,17 +250,25 @@ export default function Home() {
                   </svg>
                 ),
               },
-            ].map((useCase, index) => (
+            ].map((useCase, index) => {
+              const colorClasses = {
+                blue: 'bg-accent-blue-100 text-accent-blue-600',
+                yellow: 'bg-accent-yellow-100 text-accent-yellow-600',
+                orange: 'bg-accent-orange-100 text-accent-orange-600',
+                purple: 'bg-accent-purple-100 text-accent-purple-600',
+              };
+
+              return (
               <div key={index} className="group relative">
                 <div className="relative overflow-hidden rounded-3xl bg-background p-8 shadow-card transition-shadow duration-300 hover:shadow-xl">
-                  <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-${useCase.color}-100 text-accent-${useCase.color}-600`}>
+                  <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${colorClasses[useCase.color as keyof typeof colorClasses]}`}>
                     {useCase.icon}
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-2">{useCase.label}</h3>
                   <p className="text-sm leading-relaxed text-foreground-secondary">{useCase.description}</p>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </section>
