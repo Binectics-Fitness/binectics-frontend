@@ -201,7 +201,7 @@ export default function DieticianDashboard() {
             </div>
             <Link
               href="/dashboard/dietician/settings"
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-neutral-200 bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50"
+              className="inline-flex h-10 items-center justify-center rounded border border-neutral-200 bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50"
             >
               Edit Profile
             </Link>
@@ -213,9 +213,9 @@ export default function DieticianDashboard() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="rounded-2xl bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl"
+              className="rounded bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl"
             >
-              <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl ${stat.color} text-2xl`}>
+              <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-sm ${stat.color} text-2xl`}>
                 {stat.icon}
               </div>
               <p className="font-display text-2xl font-black text-foreground mb-1">{stat.value}</p>
@@ -235,7 +235,7 @@ export default function DieticianDashboard() {
               <Link
                 key={index}
                 href={action.href}
-                className={`group rounded-xl ${action.color} p-6 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                className={`group rounded-sm ${action.color} p-6 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
               >
                 <div className="text-4xl mb-3">{action.icon}</div>
                 <p className="font-semibold text-white">{action.label}</p>
@@ -258,7 +258,7 @@ export default function DieticianDashboard() {
                 View All
               </Link>
             </div>
-            <div className="rounded-2xl bg-background p-6 shadow-card">
+            <div className="rounded bg-background p-6 shadow-card">
               <ul className="space-y-4">
                 {todayConsultations.map((consultation, index) => (
                   <li key={index} className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0">
@@ -298,7 +298,7 @@ export default function DieticianDashboard() {
                 View All
               </Link>
             </div>
-            <div className="rounded-2xl bg-background p-6 shadow-card">
+            <div className="rounded bg-background p-6 shadow-card">
               <ul className="space-y-5">
                 {clientProgress.map((client, index) => (
                   <li key={index} className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0">
@@ -310,7 +310,7 @@ export default function DieticianDashboard() {
                         <p className="font-semibold text-foreground truncate">{client.name}</p>
                         <p className="text-xs text-foreground-tertiary">{client.currentWeight} → {client.targetWeight}</p>
                       </div>
-                      <span className="rounded-full bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 flex-shrink-0">
+                      <span className="rounded-sm bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 flex-shrink-0">
                         {client.goal}
                       </span>
                     </div>
@@ -348,7 +348,7 @@ export default function DieticianDashboard() {
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {recentMealPlans.map((plan, index) => (
-              <div key={index} className="rounded-2xl bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl">
+              <div key={index} className="rounded bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl">
                 <h3 className="font-display text-lg font-bold text-foreground mb-2">{plan.name}</h3>
                 <p className="text-sm text-foreground-secondary mb-4">{plan.client}</p>
                 <div className="space-y-2 text-sm">

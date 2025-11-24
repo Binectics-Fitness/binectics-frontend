@@ -118,7 +118,7 @@ export default function DashboardPage() {
               placeholder="Search gyms, trainers, workouts, or nutrition plans..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-neutral-200 bg-background py-3 pl-12 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="w-full rounded-sm border border-neutral-200 bg-background py-3 pl-12 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
             <svg
               className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground-tertiary"
@@ -136,10 +136,10 @@ export default function DashboardPage() {
           <h2 className="font-display text-2xl font-black text-foreground mb-6">
             Selected just for you
           </h2>
-          <div className="rounded-2xl bg-gradient-to-r from-accent-yellow-50 to-accent-yellow-100 p-8">
+          <div className="rounded bg-gradient-to-r from-accent-yellow-50 to-accent-yellow-100 p-8">
             <div className="flex items-start gap-8">
               <div className="flex-1">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-500 px-3 py-1 text-xs font-bold text-white">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-sm bg-primary-500 px-3 py-1 text-xs font-bold text-white">
                   <span className="h-2 w-2 rounded-full bg-white animate-pulse"></span>
                   Available Now
                 </div>
@@ -162,13 +162,13 @@ export default function DashboardPage() {
                 </div>
                 <Link
                   href="/dashboard/book"
-                  className="inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
+                  className="inline-flex h-12 items-center justify-center rounded bg-primary-500 px-8 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
                 >
                   Check In Now
                 </Link>
               </div>
               <div className="flex-shrink-0">
-                <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-white text-6xl shadow-lg">
+                <div className="flex h-32 w-32 items-center justify-center rounded bg-white text-6xl shadow-lg">
                   {featuredGym.image}
                 </div>
               </div>
@@ -191,9 +191,9 @@ export default function DashboardPage() {
               <Link
                 key={index}
                 href="/dashboard/book"
-                className="group rounded-2xl bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="group rounded bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
               >
-                <div className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-xl ${gym.color} text-3xl`}>
+                <div className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-sm ${gym.color} text-3xl`}>
                   {gym.image}
                 </div>
                 <h3 className="font-display text-lg font-bold text-foreground mb-2 group-hover:text-primary-500 transition-colors">
@@ -232,7 +232,7 @@ export default function DashboardPage() {
               <Link
                 key={index}
                 href="/dashboard/explore"
-                className={`group relative overflow-hidden rounded-2xl ${collection.color} p-8 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                className={`group relative overflow-hidden rounded ${collection.color} p-8 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
               >
                 <div className="mb-4 text-5xl">{collection.image}</div>
                 <h3 className="font-display text-xl font-bold text-white mb-2">
