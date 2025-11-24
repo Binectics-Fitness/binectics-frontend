@@ -20,7 +20,7 @@ export default function DashboardPage() {
     name: 'PowerHouse Fitness Downtown',
     location: 'New York, NY',
     distance: '0.3 mi',
-    image: '🏋️',
+    image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10" /></svg>),
     rating: 4.9,
     speciality: 'Strength Training & CrossFit',
     availableNow: true,
@@ -34,7 +34,7 @@ export default function DashboardPage() {
       type: 'Yoga & Meditation',
       duration: '45 min',
       rating: 4.8,
-      image: '🧘',
+      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>),
       color: 'bg-accent-purple-100',
     },
     {
@@ -43,7 +43,7 @@ export default function DashboardPage() {
       type: 'Strength Training',
       duration: '60 min',
       rating: 4.9,
-      image: '💪',
+      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>),
       color: 'bg-accent-blue-100',
     },
     {
@@ -52,7 +52,7 @@ export default function DashboardPage() {
       type: 'HIIT & Cardio',
       duration: '30 min',
       rating: 4.7,
-      image: '🏃',
+      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>),
       color: 'bg-accent-yellow-100',
     },
     {
@@ -61,7 +61,7 @@ export default function DashboardPage() {
       type: 'Nutrition & Wellness',
       duration: '40 min',
       rating: 4.9,
-      image: '🍎',
+      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>),
       color: 'bg-primary-100',
     },
   ];
@@ -71,25 +71,25 @@ export default function DashboardPage() {
     {
       title: 'Beginner Strength',
       count: 12,
-      image: '💪',
+      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>),
       color: 'bg-gradient-to-br from-accent-blue-400 to-accent-blue-600',
     },
     {
       title: 'Weight Loss Programs',
       count: 18,
-      image: '🔥',
+      image: <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" /></svg>,
       color: 'bg-gradient-to-br from-accent-yellow-400 to-accent-yellow-600',
     },
     {
       title: 'Muscle Building',
       count: 15,
-      image: '🏋️',
+      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10" /></svg>),
       color: 'bg-gradient-to-br from-accent-purple-400 to-accent-purple-600',
     },
     {
       title: 'Yoga & Flexibility',
       count: 20,
-      image: '🧘',
+      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>),
       color: 'bg-gradient-to-br from-primary-400 to-primary-600',
     },
   ];
@@ -103,7 +103,7 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="font-display text-3xl font-black text-foreground mb-2">
-            Welcome back, {user.name}! 👋
+            Welcome back, {user.name}!
           </h1>
           <p className="text-foreground-secondary">
             Keep up the great work! You're on a {user.currentStreak}-day streak.
