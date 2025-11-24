@@ -126,7 +126,7 @@ export default function DashboardSidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-neutral-200">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary-500">
+          <div className="flex h-10 w-10 items-center justify-center  bg-primary-500">
             <span className="text-xl font-bold text-white">B</span>
           </div>
           <span className="font-display text-xl font-bold text-foreground">
@@ -144,7 +144,7 @@ export default function DashboardSidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-3  px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? 'bg-neutral-200 text-foreground'
                       : 'text-foreground-secondary hover:bg-neutral-200 hover:text-foreground'
@@ -168,7 +168,7 @@ export default function DashboardSidebar() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground"
+                className="flex items-center gap-3  px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground"
               >
                 <span className="text-foreground-tertiary">{item.icon}</span>
                 {item.label}

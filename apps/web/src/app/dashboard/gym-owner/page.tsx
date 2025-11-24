@@ -165,7 +165,7 @@ export default function GymOwnerDashboard() {
             </div>
             <Link
               href="/dashboard/gym-owner/settings"
-              className="inline-flex h-10 items-center justify-center rounded border border-neutral-200 bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50"
+              className="inline-flex h-10 items-center justify-center border border-neutral-200 bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50"
             >
               Edit Gym Profile
             </Link>
@@ -177,10 +177,10 @@ export default function GymOwnerDashboard() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="rounded bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl"
+              className="bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-sm ${stat.color} ${stat.iconColor}`}>
+                <div className={`flex h-12 w-12 items-center justify-center  ${stat.color} ${stat.iconColor}`}>
                   {stat.icon}
                 </div>
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
@@ -205,7 +205,7 @@ export default function GymOwnerDashboard() {
               <Link
                 key={index}
                 href={action.href}
-                className={`group rounded-sm ${action.color} p-6 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                className={`group  ${action.color} p-6 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
               >
                 <div className="text-4xl mb-3">{action.icon}</div>
                 <p className="font-semibold text-white">{action.label}</p>
@@ -228,7 +228,7 @@ export default function GymOwnerDashboard() {
                 View All
               </Link>
             </div>
-            <div className="rounded bg-background p-6 shadow-card">
+            <div className="bg-background p-6 shadow-card">
               <ul className="space-y-4">
                 {recentCheckins.map((checkin, index) => (
                   <li key={index} className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0">
@@ -239,7 +239,7 @@ export default function GymOwnerDashboard() {
                       <p className="font-semibold text-foreground">{checkin.name}</p>
                       <p className="text-sm text-foreground-secondary">{checkin.time}</p>
                     </div>
-                    <span className="rounded-sm bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">
+                    <span className=" bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">
                       {checkin.plan}
                     </span>
                   </li>
@@ -261,7 +261,7 @@ export default function GymOwnerDashboard() {
                 Manage
               </Link>
             </div>
-            <div className="rounded bg-background p-6 shadow-card">
+            <div className="bg-background p-6 shadow-card">
               <ul className="space-y-4">
                 {upcomingClasses.map((classItem, index) => (
                   <li key={index} className="pb-4 border-b border-neutral-100 last:border-0 last:pb-0">
