@@ -158,8 +158,8 @@ export default function DieticianSidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-neutral-100 text-foreground'
-                      : 'text-foreground-secondary hover:bg-neutral-100 hover:text-foreground'
+                      ? 'bg-neutral-200 text-foreground'
+                      : 'text-foreground-secondary hover:bg-neutral-200 hover:text-foreground'
                   }`}
                 >
                   <span className={isActive ? 'text-foreground' : 'text-foreground-tertiary'}>
@@ -180,7 +180,7 @@ export default function DieticianSidebar() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-100 hover:text-foreground"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground"
               >
                 <span className="text-foreground-tertiary">{item.icon}</span>
                 {item.label}
