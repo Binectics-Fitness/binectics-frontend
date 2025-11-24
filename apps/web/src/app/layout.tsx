@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import CookieConsent from "@/components/CookieConsent";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import ConditionalLayout from "@/components/ConditionalLayout";
 
 export const metadata: Metadata = {
   title: "Binectics - Your Global Fitness Ecosystem",
@@ -17,9 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased" suppressHydrationWarning>
-        <Navbar />
-        {children}
-        <Footer />
+        <ConditionalLayout>
+          {children}
+        </ConditionalLayout>
         <CookieConsent />
       </body>
     </html>
