@@ -19,29 +19,39 @@ out/
 
 # Testing
 coverage/
+*.lcov
+.nyc_output
 
 # Production
 /build
 
 # Environment files
 .env*
+!.env.example
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
+*.sublime-*
+.project
+.classpath
+.settings/
 
 # OS
 .DS_Store
 *.pem
 Thumbs.db
+Desktop.ini
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
 
 # Vercel
 .vercel
@@ -49,3 +59,11 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Azure
+.azure/
