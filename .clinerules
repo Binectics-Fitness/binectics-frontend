@@ -1,0 +1,57 @@
+# AI Assistant Rules for Binectics Frontend
+
+## Primary Reference Document
+
+**ALWAYS read and reference `Claude.MD` before making any design, component, or architectural decisions.**
+
+Claude.MD contains:
+
+- Design system (Blinkist-inspired colors, typography)
+- Component patterns and standards
+- Completed features and sections
+- Backend data models and types
+- PRD requirements and specifications
+
+## Design System (from Claude.MD)
+
+- Colors: Use exact Blinkist palette defined in Claude.MD
+- Typography: Cera Pro font family
+- Components: Follow existing patterns in src/components
+- Dark text on colored backgrounds (including green, yellow)
+- No button animations (only hover/active states)
+- Card-based layouts with generous padding
+
+## Code Standards
+
+- UI Components: Use named exports (Button, Input, Card, etc.)
+- Page/Layout Components: Use default exports
+- TypeScript: Strict mode, always type component props
+- Imports: Use `@/components` and `@/lib` aliases
+- File naming: PascalCase for components, camelCase for utilities
+
+## Import Order
+
+1. React imports
+2. Third-party libraries
+3. Internal components (@/components)
+4. Internal utilities (@/lib)
+5. Styles/CSS
+
+## Before Building Features
+
+1. Check Claude.MD for existing patterns
+2. Verify color palette matches Blinkist design
+3. Ensure component exports follow project standards
+4. Use TypeScript with proper typing
+5. Follow established folder structure
+
+## Project Structure
+
+- `src/app/` - Next.js pages and routes
+- `src/components/` - All React components
+- `src/lib/` - Constants, types, utilities
+- `src/hooks/` - Custom React hooks
+
+## When in Doubt
+
+**Reference Claude.MD first** - it's the single source of truth for this project.

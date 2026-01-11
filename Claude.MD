@@ -592,8 +592,6 @@ NEXT_PUBLIC_API_URL=
 - [Blinkist.com](https://blinkist.com) - Design reference
 - [Next.js 16 Docs](https://nextjs.org/docs)
 - [Tailwind CSS 4](https://tailwindcss.com)
-- [NestJS Docs](https://docs.nestjs.com)
-- [Prisma Docs](https://www.prisma.io/docs)
 
 ---
 
