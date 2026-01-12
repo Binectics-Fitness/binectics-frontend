@@ -7,10 +7,13 @@ cd "$WORKDIR"
 # Set PORT with fallback
 PORT=${PORT:-8080}
 
-# Install dependencies if node_modules is missing or incomplete
-if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/next" ]; then
+# Install dependencies only if node_modules doesn't exist
+# Azure Oryx pre-installs dependencies during build phase, so this should only run locally
+if [ ! -d "node_modules" ]; then
     echo "Installing dependencies..."
-    npm ci --production=false
+    npm ci
+else
+    echo "Dependencies already installed (skipping npm ci for faster startup)"
 fi
 
 # Build the app if .next doesn't exist
