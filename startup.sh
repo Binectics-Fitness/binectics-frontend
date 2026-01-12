@@ -1,13 +1,11 @@
 #!/bin/sh
 
-# Ensure we're in the right directory
-cd /home/site/wwwroot
+# Set working directory (Azure uses /home/site/wwwroot, local uses current dir)
+WORKDIR="${WORKDIR:-$(pwd)}"
+cd "$WORKDIR"
 
 # Set PORT with fallback
 PORT=${PORT:-8080}
-
-# Ensure we're in the right directory
-cd /home/site/wwwroot
 
 # Install dependencies if node_modules is missing or incomplete
 if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/next" ]; then
