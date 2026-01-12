@@ -7,9 +7,9 @@ cd "$WORKDIR"
 # Set PORT with fallback
 PORT=${PORT:-8080}
 
-# Install dependencies only if node_modules doesn't exist
-# Azure Oryx pre-installs dependencies during build phase, so this should only run locally
-if [ ! -d "node_modules" ]; then
+# Install dependencies only if next command is not available
+# Azure Oryx pre-installs dependencies and adds them to PATH
+if ! command -v next >/dev/null 2>&1; then
     echo "Installing dependencies..."
     npm ci
 else
@@ -22,6 +22,6 @@ if [ ! -d ".next" ]; then
     npm run build
 fi
 
-# Start the Next.js server directly with the PORT variable
+# Start the Next.js server (next is in PATH on Azure, or in local node_modules/.bin)
 echo "Starting Next.js server on port $PORT..."
-./node_modules/.bin/next start -p $PORT
+next start -p $PORT
