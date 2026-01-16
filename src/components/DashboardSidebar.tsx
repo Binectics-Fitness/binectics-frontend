@@ -138,24 +138,6 @@ export default function DashboardSidebar() {
               </span>
             )}
           </Link>
-
-          {/* Toggle Button */}
-          <div className={`mt-4 flex ${isCollapsed ? 'justify-center' : 'justify-end'}`}>
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-neutral-200 hover:border-primary-500 transition-all duration-300"
-              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              <svg
-                className={`w-4 h-4 text-foreground transition-transform duration-300 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
         </div>
 
         {/* Main Navigation */}
@@ -202,6 +184,25 @@ export default function DashboardSidebar() {
             ))}
           </ul>
         </div>
+
+        {/* Toggle Button - Positioned below logo */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={`fixed z-50 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-neutral-200 hover:border-primary-500 transition-all duration-300 ${
+            isCollapsed ? 'left-[60px]' : 'left-[240px]'
+          }`}
+          style={{ top: '100px' }}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <svg
+            className={`w-4 h-4 text-foreground transition-transform duration-300 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
       </aside>
     </>
   );
