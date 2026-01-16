@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components";
 
 export default function UserRegisterPage() {
+  const { register, isLoading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -14,6 +16,8 @@ export default function UserRegisterPage() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string>("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -21,6 +25,9 @@ export default function UserRegisterPage() {
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    if (apiError) {
+      setApiError("");
     }
   };
 
@@ -57,14 +64,32 @@ export default function UserRegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError("");
 
     if (!validateForm()) {
       return;
     }
 
-    // TODO: API call to register user
-    console.log("Form submitted:", formData);
-    // Redirect to dashboard or email verification page
+    setIsLoading(true);
+
+    try {
+      const result = await register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: 'USER',
+      });
+
+      if (!result.success) {
+        setApiError(result.error || "Registration failed. Please try again.");
+      }
+      // Success redirect is handled by AuthContext
+    } catch (error) {
+      setApiError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -123,6 +148,26 @@ export default function UserRegisterPage() {
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* API Error Message */}
+            {apiError && (
+              <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
+                <div className="flex gap-3">
+                  <svg
+                    className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="text-sm text-red-800">{apiError}</p>
+                </div>
+              </div>
+            )}
+
             <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
               <div className="space-y-5">
                 {/* Name Fields */}
@@ -189,9 +234,10 @@ export default function UserRegisterPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+              disabled={isLoading || authLoading}
+              className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Account
+              {isLoading || authLoading ? "Creating Account..." : "Create Account"}
             </button>
 
             {/* Terms */}
@@ -209,6 +255,17 @@ export default function UserRegisterPage() {
                 className="text-accent-blue-500 hover:text-accent-blue-600"
               >
                 Privacy Policy
+              </Link>
+            </p>
+
+            {/* Login Link */}
+            <p className="text-center text-sm text-foreground-secondary">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-accent-blue-500 hover:text-accent-blue-600"
+              >
+                Sign in
               </Link>
             </p>
           </form>
