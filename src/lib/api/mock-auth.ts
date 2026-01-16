@@ -47,6 +47,10 @@ function storeTokens(accessToken: string, refreshToken: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem('access_token', accessToken);
   localStorage.setItem('refresh_token', refreshToken);
+
+  // Also set cookies for middleware
+  document.cookie = `access_token=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
+  document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
 }
 
 // Clear auth data
@@ -55,6 +59,10 @@ function clearAuth(): void {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('user');
+
+  // Also clear cookies
+  document.cookie = 'access_token=; path=/; max-age=0';
+  document.cookie = 'refresh_token=; path=/; max-age=0';
 }
 
 /**
