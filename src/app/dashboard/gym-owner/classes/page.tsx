@@ -5,7 +5,50 @@ import GymOwnerSidebar from '@/components/GymOwnerSidebar';
 
 export default function GymOwnerClassesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingClass, setEditingClass] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [classList, setClassList] = useState([
+    {
+      id: 1,
+      name: 'Morning Yoga',
+      instructor: 'Sarah Johnson',
+      schedule: 'Mon, Wed, Fri - 7:00 AM',
+      duration: '60 min',
+      capacity: 20,
+      enrolled: 15,
+      status: 'active',
+    },
+    {
+      id: 2,
+      name: 'HIIT Bootcamp',
+      instructor: 'Mike Davis',
+      schedule: 'Tue, Thu - 6:00 PM',
+      duration: '45 min',
+      capacity: 25,
+      enrolled: 22,
+      status: 'active',
+    },
+    {
+      id: 3,
+      name: 'Spin Class',
+      instructor: 'Emily Brown',
+      schedule: 'Daily - 5:30 PM',
+      duration: '50 min',
+      capacity: 30,
+      enrolled: 28,
+      status: 'active',
+    },
+    {
+      id: 4,
+      name: 'Pilates',
+      instructor: 'Lisa Martinez',
+      schedule: 'Mon, Wed - 10:00 AM',
+      duration: '60 min',
+      capacity: 15,
+      enrolled: 8,
+      status: 'active',
+    },
+  ]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -84,7 +127,16 @@ export default function GymOwnerClassesPage() {
     }
   };
 
-  const classes = [
+  const handleDeleteClass = (classId: number, className: string) => {
+    if (confirm(`Are you sure you want to cancel "${className}"? This action cannot be undone.`)) {
+      setClassList(classList.filter(c => c.id !== classId));
+      alert('Class cancelled successfully');
+    }
+  };
+
+  const classes = classList;
+
+  const oldClasses = [
     {
       id: 1,
       name: 'Morning Yoga',
@@ -225,7 +277,10 @@ export default function GymOwnerClassesPage() {
                             <button className="text-accent-blue-500 hover:text-accent-blue-700 text-sm font-medium">
                               Edit
                             </button>
-                            <button className="text-red-500 hover:text-red-700 text-sm font-medium">
+                            <button
+                              onClick={() => handleDeleteClass(classItem.id, classItem.name)}
+                              className="text-red-500 hover:text-red-700 text-sm font-medium"
+                            >
                               Cancel
                             </button>
                           </div>

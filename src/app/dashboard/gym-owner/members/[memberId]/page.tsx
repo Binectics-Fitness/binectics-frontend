@@ -9,6 +9,13 @@ export default function MemberDetailPage() {
   const router = useRouter();
   const memberId = params.memberId as string;
 
+  const handleCancelMembership = () => {
+    if (confirm('Are you sure you want to cancel this membership? This will immediately revoke gym access.')) {
+      alert('Membership cancelled successfully');
+      router.push('/dashboard/gym-owner/members');
+    }
+  };
+
   // Mock member data
   const member = {
     id: memberId,
@@ -218,7 +225,10 @@ export default function MemberDetailPage() {
                   <button className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg font-medium text-foreground">
                     Add Note
                   </button>
-                  <button className="w-full px-4 py-3 text-left bg-red-50 hover:bg-red-100 rounded-lg font-medium text-red-600">
+                  <button
+                    onClick={handleCancelMembership}
+                    className="w-full px-4 py-3 text-left bg-red-50 hover:bg-red-100 rounded-lg font-medium text-red-600"
+                  >
                     Cancel Membership
                   </button>
                 </div>

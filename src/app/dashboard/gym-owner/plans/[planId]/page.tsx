@@ -8,6 +8,13 @@ export default function PlanDetailPage() {
   const router = useRouter();
   const planId = params.planId as string;
 
+  const handleDeletePlan = () => {
+    if (confirm('Are you sure you want to delete this plan? All active subscriptions will need to be migrated.')) {
+      alert('Plan deleted successfully');
+      router.push('/dashboard/gym-owner/plans');
+    }
+  };
+
   const plan = {
     id: planId,
     name: 'Basic Monthly',
@@ -54,7 +61,10 @@ export default function PlanDetailPage() {
               >
                 Edit Plan
               </button>
-              <button className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600">
+              <button
+                onClick={handleDeletePlan}
+                className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600"
+              >
                 Delete Plan
               </button>
             </div>

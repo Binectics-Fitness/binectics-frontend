@@ -1,10 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import GymOwnerSidebar from '@/components/GymOwnerSidebar';
 
 export default function GymOwnerPlansPage() {
+  const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
+
+  const handleEditPlan = (planId: number) => {
+    router.push(`/dashboard/gym-owner/plans/${planId}`);
+  };
+
+  const handleDeletePlan = (planId: number, planName: string) => {
+    if (confirm(`Are you sure you want to delete "${planName}"? This action cannot be undone.`)) {
+      alert('Plan deleted successfully');
+      // In production: API call to delete plan
+    }
+  };
 
   const plans = [
     {
@@ -141,10 +154,16 @@ export default function GymOwnerPlansPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          <button className="text-accent-blue-500 hover:text-accent-blue-700 text-sm font-medium">
+                          <button
+                            onClick={() => handleEditPlan(plan.id)}
+                            className="text-accent-blue-500 hover:text-accent-blue-700 text-sm font-medium"
+                          >
                             Edit
                           </button>
-                          <button className="text-red-500 hover:text-red-700 text-sm font-medium">
+                          <button
+                            onClick={() => handleDeletePlan(plan.id, plan.name)}
+                            className="text-red-500 hover:text-red-700 text-sm font-medium"
+                          >
                             Delete
                           </button>
                         </div>

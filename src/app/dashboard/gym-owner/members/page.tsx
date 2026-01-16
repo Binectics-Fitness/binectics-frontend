@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import GymOwnerSidebar from '@/components/GymOwnerSidebar';
 
 export default function GymOwnerMembersPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
   const members = [
@@ -140,7 +142,10 @@ export default function GymOwnerMembersPage() {
                       <td className="px-6 py-4 text-foreground/60">{member.lastVisit}</td>
                       <td className="px-6 py-4 font-semibold text-foreground">{member.totalVisits}</td>
                       <td className="px-6 py-4">
-                        <button className="text-accent-blue-500 hover:text-accent-blue-700 text-sm font-medium">
+                        <button
+                          onClick={() => router.push(`/dashboard/gym-owner/members/${member.id}`)}
+                          className="text-accent-blue-500 hover:text-accent-blue-700 text-sm font-medium"
+                        >
                           View Profile
                         </button>
                       </td>
