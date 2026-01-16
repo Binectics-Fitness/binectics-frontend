@@ -6,25 +6,16 @@ import { Input } from "@/components";
 
 export default function TrainerRegisterPage() {
   const [formData, setFormData] = useState({
-    // Personal Info
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
     password: "",
     confirmPassword: "",
-    // Professional Info
-    certifications: "",
-    specialties: "",
-    yearsOfExperience: "",
-    bio: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -43,7 +34,6 @@ export default function TrainerRegisterPage() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Please enter a valid email";
     }
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
@@ -52,10 +42,6 @@ export default function TrainerRegisterPage() {
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
-    if (!formData.certifications.trim())
-      newErrors.certifications = "Certifications are required";
-    if (!formData.specialties.trim())
-      newErrors.specialties = "Specialties are required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -66,14 +52,16 @@ export default function TrainerRegisterPage() {
     if (!validateForm()) return;
 
     // TODO: API call to register trainer
+    // The API will set isOnboardingComplete to false
     console.log("Trainer registration:", formData);
+    // Redirect to dashboard where onboarding prompt will appear
   };
 
   return (
     <div className="min-h-screen bg-background-secondary">
       {/* Main Content */}
       <main className="py-12 sm:py-16">
-        <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <Link
             href="/register"
@@ -116,21 +104,18 @@ export default function TrainerRegisterPage() {
               </span>
             </div>
             <h1 className="font-display text-3xl font-black text-foreground sm:text-4xl">
-              Become a verified trainer
+              Get started as a trainer
             </h1>
             <p className="mt-2 text-base text-foreground-secondary">
-              Build your brand and grow your client base globally
+              You'll add your certifications and experience after creating your account
             </p>
           </div>
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Information */}
             <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
-              <h2 className="mb-6 font-display text-xl font-bold text-foreground">
-                Personal Information
-              </h2>
               <div className="space-y-5">
+                {/* Name Fields */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Input
                     label="First Name"
@@ -152,6 +137,7 @@ export default function TrainerRegisterPage() {
                   />
                 </div>
 
+                {/* Email */}
                 <Input
                   label="Email Address"
                   type="email"
@@ -163,99 +149,53 @@ export default function TrainerRegisterPage() {
                   error={errors.email}
                 />
 
+                {/* Password */}
                 <Input
-                  label="Phone Number"
-                  type="tel"
-                  name="phone"
-                  placeholder="+1 (555) 000-0000"
+                  label="Password"
+                  type="password"
+                  name="password"
+                  placeholder="••••••••"
                   required
-                  value={formData.phone}
+                  value={formData.password}
                   onChange={handleChange}
-                  error={errors.phone}
+                  error={errors.password}
+                  helperText="Minimum 8 characters"
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="Password"
-                    type="password"
-                    name="password"
-                    placeholder="••••••••"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    error={errors.password}
-                    helperText="Minimum 8 characters"
-                  />
-                  <Input
-                    label="Confirm Password"
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="••••••••"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    error={errors.confirmPassword}
-                  />
-                </div>
+                {/* Confirm Password */}
+                <Input
+                  label="Confirm Password"
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={errors.confirmPassword}
+                />
               </div>
             </div>
 
-            {/* Professional Information */}
-            <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
-              <h2 className="mb-6 font-display text-xl font-bold text-foreground">
-                Professional Information
-              </h2>
-              <div className="space-y-5">
-                <Input
-                  label="Certifications"
-                  name="certifications"
-                  placeholder="e.g., NASM-CPT, ACE, ISSA"
-                  required
-                  value={formData.certifications}
-                  onChange={handleChange}
-                  error={errors.certifications}
-                  helperText="Comma separated list"
-                />
-
-                <Input
-                  label="Specialties"
-                  name="specialties"
-                  placeholder="e.g., Strength Training, HIIT, Weight Loss"
-                  required
-                  value={formData.specialties}
-                  onChange={handleChange}
-                  error={errors.specialties}
-                  helperText="Comma separated list"
-                />
-
-                <Input
-                  label="Years of Experience"
-                  type="number"
-                  name="yearsOfExperience"
-                  placeholder="5"
-                  value={formData.yearsOfExperience}
-                  onChange={handleChange}
-                  error={errors.yearsOfExperience}
-                />
-
-                <div>
-                  <label
-                    htmlFor="bio"
-                    className="block text-sm font-semibold text-foreground mb-2"
-                  >
-                    Professional Bio
-                  </label>
-                  <textarea
-                    id="bio"
-                    name="bio"
-                    rows={4}
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder="Tell clients about your training philosophy, experience, and what makes you unique..."
-                    className="w-full rounded-lg border-2 border-neutral-300 focus:border-accent-yellow-500 bg-background px-4 py-3 text-base text-foreground placeholder:text-foreground-tertiary transition-colors duration-200 focus:outline-none resize-none"
+            {/* Info Box */}
+            <div className="rounded-xl bg-accent-yellow-50 p-4 border-2 border-accent-yellow-200">
+              <div className="flex gap-3">
+                <svg
+                  className="h-5 w-5 text-accent-yellow-600 flex-shrink-0 mt-0.5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
                   />
-                  <p className="mt-1 text-sm text-foreground-tertiary">
-                    This will appear on your profile
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-accent-yellow-800 mb-1">
+                    Quick signup, complete later
+                  </p>
+                  <p className="text-sm text-accent-yellow-700">
+                    After creating your account, you'll be guided to add your certifications, specialties, bio, and professional details.
                   </p>
                 </div>
               </div>
@@ -266,7 +206,7 @@ export default function TrainerRegisterPage() {
               type="submit"
               className="w-full h-12 rounded-lg bg-accent-yellow-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-accent-yellow-600 active:bg-accent-yellow-700"
             >
-              Create Trainer Account
+              Create Account
             </button>
 
             {/* Terms */}

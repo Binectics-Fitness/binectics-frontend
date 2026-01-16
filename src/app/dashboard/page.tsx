@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import OnboardingBanner from '@/components/OnboardingBanner';
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,6 +14,8 @@ export default function DashboardPage() {
     memberSince: '2024',
     currentStreak: 7,
     totalVisits: 45,
+    role: 'USER' as const, // Change this to test different roles: 'USER' | 'GYM_OWNER' | 'TRAINER' | 'DIETICIAN'
+    isOnboardingComplete: false, // Set to true to hide the banner
   };
 
   // Personalized gym recommendation
@@ -109,6 +112,13 @@ export default function DashboardPage() {
             Keep up the great work! You're on a {user.currentStreak}-day streak.
           </p>
         </div>
+
+        {/* Onboarding Banner */}
+        {!user.isOnboardingComplete && (
+          <div className="mb-8">
+            <OnboardingBanner userRole={user.role} userName={user.name} />
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="mb-8">

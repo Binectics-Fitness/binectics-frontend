@@ -6,20 +6,11 @@ import { Input } from "@/components";
 
 export default function GymOwnerRegisterPage() {
   const [formData, setFormData] = useState({
-    // Personal Info
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
     password: "",
     confirmPassword: "",
-    // Gym Info
-    gymName: "",
-    businessRegistration: "",
-    address: "",
-    city: "",
-    country: "",
-    postalCode: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -43,7 +34,6 @@ export default function GymOwnerRegisterPage() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Please enter a valid email";
     }
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
@@ -52,10 +42,6 @@ export default function GymOwnerRegisterPage() {
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
-    if (!formData.gymName.trim()) newErrors.gymName = "Gym name is required";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
-    if (!formData.city.trim()) newErrors.city = "City is required";
-    if (!formData.country.trim()) newErrors.country = "Country is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -66,14 +52,16 @@ export default function GymOwnerRegisterPage() {
     if (!validateForm()) return;
 
     // TODO: API call to register gym owner
+    // The API will set isOnboardingComplete to false
     console.log("Gym owner registration:", formData);
+    // Redirect to dashboard where onboarding prompt will appear
   };
 
   return (
     <div className="min-h-screen bg-background-secondary">
       {/* Main Content */}
       <main className="py-12 sm:py-16">
-        <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <Link
             href="/register"
@@ -116,21 +104,18 @@ export default function GymOwnerRegisterPage() {
               </span>
             </div>
             <h1 className="font-display text-3xl font-black text-foreground sm:text-4xl">
-              Register your gym
+              Get started as a gym owner
             </h1>
             <p className="mt-2 text-base text-foreground-secondary">
-              Join 250+ gyms on Binectics and grow your membership
+              You'll complete your gym details after creating your account
             </p>
           </div>
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Information */}
             <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
-              <h2 className="mb-6 font-display text-xl font-bold text-foreground">
-                Personal Information
-              </h2>
               <div className="space-y-5">
+                {/* Name Fields */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Input
                     label="First Name"
@@ -152,6 +137,7 @@ export default function GymOwnerRegisterPage() {
                   />
                 </div>
 
+                {/* Email */}
                 <Input
                   label="Email Address"
                   type="email"
@@ -163,108 +149,55 @@ export default function GymOwnerRegisterPage() {
                   error={errors.email}
                 />
 
+                {/* Password */}
                 <Input
-                  label="Phone Number"
-                  type="tel"
-                  name="phone"
-                  placeholder="+1 (555) 000-0000"
+                  label="Password"
+                  type="password"
+                  name="password"
+                  placeholder="••••••••"
                   required
-                  value={formData.phone}
+                  value={formData.password}
                   onChange={handleChange}
-                  error={errors.phone}
+                  error={errors.password}
+                  helperText="Minimum 8 characters"
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="Password"
-                    type="password"
-                    name="password"
-                    placeholder="••••••••"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    error={errors.password}
-                    helperText="Minimum 8 characters"
-                  />
-                  <Input
-                    label="Confirm Password"
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="••••••••"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    error={errors.confirmPassword}
-                  />
-                </div>
+                {/* Confirm Password */}
+                <Input
+                  label="Confirm Password"
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={errors.confirmPassword}
+                />
               </div>
             </div>
 
-            {/* Gym Information */}
-            <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
-              <h2 className="mb-6 font-display text-xl font-bold text-foreground">
-                Gym Information
-              </h2>
-              <div className="space-y-5">
-                <Input
-                  label="Gym Name"
-                  name="gymName"
-                  placeholder="Elite Fitness Center"
-                  required
-                  value={formData.gymName}
-                  onChange={handleChange}
-                  error={errors.gymName}
-                />
-
-                <Input
-                  label="Business Registration Number"
-                  name="businessRegistration"
-                  placeholder="Optional"
-                  value={formData.businessRegistration}
-                  onChange={handleChange}
-                  error={errors.businessRegistration}
-                  helperText="Required for verification"
-                />
-
-                <Input
-                  label="Street Address"
-                  name="address"
-                  placeholder="123 Main Street"
-                  required
-                  value={formData.address}
-                  onChange={handleChange}
-                  error={errors.address}
-                />
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="City"
-                    name="city"
-                    placeholder="New York"
-                    required
-                    value={formData.city}
-                    onChange={handleChange}
-                    error={errors.city}
+            {/* Info Box */}
+            <div className="rounded-xl bg-accent-blue-50 p-4 border-2 border-accent-blue-200">
+              <div className="flex gap-3">
+                <svg
+                  className="h-5 w-5 text-accent-blue-600 flex-shrink-0 mt-0.5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
                   />
-                  <Input
-                    label="Postal Code"
-                    name="postalCode"
-                    placeholder="10001"
-                    value={formData.postalCode}
-                    onChange={handleChange}
-                    error={errors.postalCode}
-                  />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-accent-blue-800 mb-1">
+                    Quick signup, complete later
+                  </p>
+                  <p className="text-sm text-accent-blue-700">
+                    After creating your account, you'll be guided to add your gym details, location, facilities, and business information.
+                  </p>
                 </div>
-
-                <Input
-                  label="Country"
-                  name="country"
-                  placeholder="United States"
-                  required
-                  value={formData.country}
-                  onChange={handleChange}
-                  error={errors.country}
-                />
               </div>
             </div>
 
@@ -273,7 +206,7 @@ export default function GymOwnerRegisterPage() {
               type="submit"
               className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
             >
-              Create Gym Owner Account
+              Create Account
             </button>
 
             {/* Terms */}

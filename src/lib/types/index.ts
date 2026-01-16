@@ -12,6 +12,7 @@ export interface User {
   avatar?: string;
   role: UserRole;
   isEmailVerified: boolean;
+  isOnboardingComplete: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
