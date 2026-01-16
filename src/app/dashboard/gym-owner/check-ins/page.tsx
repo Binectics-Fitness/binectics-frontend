@@ -1,17 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import GymOwnerSidebar from '@/components/GymOwnerSidebar';
+import QRCode from 'qrcode';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function GymOwnerCheckInsPage() {
+  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState('today');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Generate QR code on mount
+  useEffect(() => {
+    if (user && canvasRef.current) {
+      // Generate a unique check-in URL for this gym
+      const gymId = user.id; // In real app, this would be the gym ID
+      const checkInUrl = `${window.location.origin}/check-in/${gymId}`;
+
+      QRCode.toCanvas(canvasRef.current, checkInUrl, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#03314B',
+          light: '#FFFFFF',
+        },
+      });
+
+      // Also generate data URL for download
+      QRCode.toDataURL(checkInUrl, { width: 512 })
+        .then(url => setQrCodeUrl(url))
+        .catch(err => console.error(err));
+    }
+  }, [user]);
+
+  const downloadQRCode = () => {
+    if (qrCodeUrl) {
+      const link = document.createElement('a');
+      link.download = 'gym-checkin-qr-code.png';
+      link.href = qrCodeUrl;
+      link.click();
+    }
+  };
 
   const checkIns = [
-    { id: 1, memberName: 'John Smith', time: '08:15 AM', date: '2024-01-16' },
-    { id: 2, memberName: 'Sarah Johnson', time: '09:30 AM', date: '2024-01-16' },
-    { id: 3, memberName: 'Mike Davis', time: '10:45 AM', date: '2024-01-16' },
-    { id: 4, memberName: 'Emily Brown', time: '11:20 AM', date: '2024-01-16' },
-    { id: 5, memberName: 'Alex Wilson', time: '12:05 PM', date: '2024-01-16' },
+    { id: 1, memberName: 'John Smith', time: '08:15 AM', date: '2024-01-16', avatar: 'JS' },
+    { id: 2, memberName: 'Sarah Johnson', time: '09:30 AM', date: '2024-01-16', avatar: 'SJ' },
+    { id: 3, memberName: 'Mike Davis', time: '10:45 AM', date: '2024-01-16', avatar: 'MD' },
+    { id: 4, memberName: 'Emily Brown', time: '11:20 AM', date: '2024-01-16', avatar: 'EB' },
+    { id: 5, memberName: 'Alex Wilson', time: '12:05 PM', date: '2024-01-16', avatar: 'AW' },
+    { id: 6, memberName: 'Lisa Martinez', time: '01:30 PM', date: '2024-01-16', avatar: 'LM' },
+    { id: 7, memberName: 'Tom Anderson', time: '02:15 PM', date: '2024-01-16', avatar: 'TA' },
   ];
 
   return (
@@ -51,36 +90,55 @@ export default function GymOwnerCheckInsPage() {
             <div className="bg-accent-blue-50 border-2 border-accent-blue-200 rounded-xl p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">Your Gym QR Code</h3>
               <div className="bg-white rounded-lg p-6 flex items-center justify-center mb-4">
-                <div className="w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <svg className="w-32 h-32 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm4 4H7V7h2v2zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm4 4H7v-2h2v2zM13 3h8v8h-8V3zm2 2v4h4V5h-4zm4 4h-2V7h2v2zM13 13h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm4-2h2v4h-2v-4zm2 0h2v2h-2v-2z" />
-                  </svg>
-                </div>
+                <canvas ref={canvasRef} />
               </div>
               <p className="text-sm text-foreground/60 text-center mb-4">
-                Members scan this code to check in
+                Members scan this code to check in to your gym
               </p>
-              <button className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600">
-                Download QR Code
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={downloadQRCode}
+                  className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download QR Code
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="w-full px-4 py-3 border-2 border-accent-blue-500 text-accent-blue-500 font-semibold rounded-lg hover:bg-accent-blue-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Print QR Code
+                </button>
+              </div>
+              <div className="mt-4 p-3 bg-white rounded-lg">
+                <p className="text-xs font-semibold text-foreground/70 mb-1">Check-in URL:</p>
+                <p className="text-xs text-foreground/60 break-all">
+                  {typeof window !== 'undefined' && `${window.location.origin}/check-in/${user?.id}`}
+                </p>
+              </div>
             </div>
 
             {/* Recent Check-ins */}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-card p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">Recent Check-ins</h3>
-              <div className="space-y-3">
-                {checkIns.slice(0, 5).map((checkIn) => (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {checkIns.map((checkIn) => (
                   <div
                     key={checkIn.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-accent-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                        {checkIn.memberName.charAt(0)}
+                      <div className="w-10 h-10 bg-accent-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {checkIn.avatar}
                       </div>
                       <div>
                         <p className="font-semibold text-foreground">{checkIn.memberName}</p>
-                        <p className="text-sm text-foreground/60">Checked in</p>
+                        <p className="text-sm text-foreground/60">Checked in via QR</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -114,9 +172,27 @@ export default function GymOwnerCheckInsPage() {
               </div>
             </div>
 
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-              <p className="text-foreground/60">Check-in chart visualization coming soon...</p>
+            {/* Hourly breakdown */}
+            <div className="grid grid-cols-12 gap-2 mb-4">
+              {Array.from({ length: 24 }, (_, i) => {
+                const hour = i;
+                const checkIns = Math.floor(Math.random() * 20);
+                const height = Math.max(20, (checkIns / 20) * 100);
+                return (
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    <div className="w-full bg-gray-100 rounded-t-lg flex items-end" style={{ height: '100px' }}>
+                      <div
+                        className="w-full bg-accent-blue-500 rounded-t-lg"
+                        style={{ height: `${height}%` }}
+                        title={`${hour}:00 - ${checkIns} check-ins`}
+                      />
+                    </div>
+                    <span className="text-xs text-foreground/60">{hour}</span>
+                  </div>
+                );
+              })}
             </div>
+            <p className="text-center text-sm text-foreground/60">Hourly check-in distribution</p>
           </div>
         </div>
       </main>
