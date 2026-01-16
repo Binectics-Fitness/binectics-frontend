@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function TrainerSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { logout } = useAuth();
 
   const navItems = [
     {
@@ -102,6 +104,7 @@ export default function TrainerSidebar() {
       ),
       label: 'Settings',
       href: '/dashboard/trainer/settings',
+      isLink: true,
     },
     {
       icon: (
@@ -111,6 +114,7 @@ export default function TrainerSidebar() {
       ),
       label: 'Help & Support',
       href: '/help',
+      isLink: true,
     },
     {
       icon: (
@@ -119,7 +123,8 @@ export default function TrainerSidebar() {
         </svg>
       ),
       label: 'Logout',
-      href: '/logout',
+      onClick: logout,
+      isLink: false,
     },
   ];
 
@@ -176,18 +181,28 @@ export default function TrainerSidebar() {
         <div className="border-t border-neutral-200 py-4 px-3">
           <ul className="space-y-1">
             {bottomNavItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground ${isCollapsed ? 'justify-center' : ''}`}
-                  title={isCollapsed ? item.label : ''}
-                >
-                  <span className="text-foreground-tertiary flex-shrink-0">{item.icon}</span>
-                  {!isCollapsed && item.label}
-                </Link>
+              <li key={item.label}>
+                {item.isLink ? (
+                  <Link
+                    href={item.href!}
+                    className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground ${isCollapsed ? 'justify-center' : ''}`}
+                    title={isCollapsed ? item.label : ''}
+                  >
+                    <span className="text-foreground-tertiary flex-shrink-0">{item.icon}</span>
+                    {!isCollapsed && item.label}
+                  </Link>
+                ) : (
+                  <button
+                    onClick={item.onClick}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground ${isCollapsed ? 'justify-center' : ''}`}
+                    title={isCollapsed ? item.label : ''}
+                  >
+                    <span className="text-foreground-tertiary flex-shrink-0">{item.icon}</span>
+                    {!isCollapsed && item.label}
+                  </button>
+                )}
               </li>
             ))}
-          </ul>
         </div>
 
         {/* Toggle Button - Positioned below user type badge */}
