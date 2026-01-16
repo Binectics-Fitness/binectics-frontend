@@ -198,6 +198,7 @@ export default function DashboardSidebar() {
                 )}
               </li>
             ))}
+          </ul>
         </div>
 
         {/* Toggle Button - Positioned below logo */}

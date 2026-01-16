@@ -203,6 +203,7 @@ export default function TrainerSidebar() {
                 )}
               </li>
             ))}
+          </ul>
         </div>
 
         {/* Toggle Button - Positioned below user type badge */}

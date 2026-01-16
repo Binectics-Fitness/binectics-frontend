@@ -212,6 +212,7 @@ export default function DieticianSidebar() {
                 )}
               </li>
             ))}
+          </ul>
         </div>
 
         {/* Toggle Button - Positioned below user type badge */}
