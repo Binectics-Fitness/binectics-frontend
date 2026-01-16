@@ -8,7 +8,7 @@ export default function ReviewsPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="flex-1 p-8">
+      <main className="ml-64 flex-1 p-8">
         <h1 className="text-3xl font-black text-foreground mb-8">Reviews</h1>
         <div className="bg-white rounded-xl shadow-card p-6">
           {reviews.map(r => (

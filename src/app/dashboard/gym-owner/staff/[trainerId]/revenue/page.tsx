@@ -39,7 +39,7 @@ export default function TrainerRevenuePage() {
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="flex-1 p-8">
+      <main className="ml-64 flex-1 p-8">
         <div className="max-w-5xl mx-auto">
           <button
             onClick={() => router.push(`/dashboard/gym-owner/staff/${trainerId}`)}
