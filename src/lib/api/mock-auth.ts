@@ -38,6 +38,7 @@ function generateTokens(): AuthTokens {
   return {
     accessToken: 'mock_access_token_' + Date.now(),
     refreshToken: 'mock_refresh_token_' + Date.now(),
+    expiresIn: 604800, // 7 days in seconds
   };
 }
 

@@ -13,8 +13,11 @@ export interface User {
   role: UserRole;
   isEmailVerified: boolean;
   isOnboardingComplete: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  passwordHash?: string; // Only used in backend/mock, never sent to client
+  country?: string;
+  isSuspended?: boolean;
 }
 
 export interface AuthTokens {
@@ -35,6 +38,7 @@ export interface RegisterRequest {
   lastName: string;
   role: UserRole;
   phone?: string;
+  country?: string;
 }
 
 // Gym Types

@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Ignore the API directory during build
+[[build.processing]]
+  skip_processing = false
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
