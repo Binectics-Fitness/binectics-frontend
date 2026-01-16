@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { authService } from '@/lib/api/auth';
+import { mockAuthService as authService } from '@/lib/api/mock-auth';
 import type { User, LoginRequest, RegisterRequest } from '@/lib/types';
 
 interface AuthContextType {

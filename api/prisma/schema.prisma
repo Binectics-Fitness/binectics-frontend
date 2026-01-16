@@ -1,0 +1,259 @@
+// Binectics Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  GYM_OWNER
+  TRAINER
+  DIETICIAN
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PENDING_PAYMENT
+}
+
+enum PlanType {
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum ProviderType {
+  GYM
+  TRAINER
+  DIETICIAN
+}
+
+// Core User Model
+model User {
+  id                   String   @id @default(uuid())
+  email                String   @unique
+  passwordHash         String
+  firstName            String
+  lastName             String
+  role                 Role     @default(USER)
+  country              String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  isOnboardingComplete Boolean  @default(false)
+  isSuspended          Boolean  @default(false)
+  isEmailVerified      Boolean  @default(false)
+
+  // Relations
+  gymOwner              GymOwner?
+  trainer               Trainer?
+  dietician             Dietician?
+  subscriptions         Subscription[]
+  checkIns              CheckIn[]
+  journalEntriesAsClient JournalEntry[] @relation("ClientEntries")
+
+  @@map("users")
+}
+
+// Gym Owner Profile
+model GymOwner {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Business details
+  businessName        String?
+  businessRegistration String?
+
+  verificationStatus  VerificationStatus @default(PENDING)
+  verificationDocs    String[]
+  adminComment        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  gyms Gym[]
+
+  @@map("gym_owners")
+}
+
+// Gym Model
+model Gym {
+  id          String   @id @default(uuid())
+  ownerId     String
+  owner       GymOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  address     String
+  city        String
+  country     String
+  lat         Float
+  lng         Float
+  facilities  String[]
+  photos      String[]
+
+  verificationStatus VerificationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  plans    Plan[]
+  checkIns CheckIn[]
+
+  @@map("gyms")
+}
+
+// Trainer Profile
+model Trainer {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Professional details
+  bio            String?
+  specialties    String[]
+  certifications String[]
+
+  verificationStatus VerificationStatus @default(PENDING)
+  verificationDocs   String[]
+  adminComment       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  plans          Plan[]
+  journalEntries JournalEntry[]
+
+  @@map("trainers")
+}
+
+// Dietician Profile
+model Dietician {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Professional details
+  bio            String?
+  specialties    String[]
+  certifications String[]
+
+  verificationStatus VerificationStatus @default(PENDING)
+  verificationDocs   String[]
+  adminComment       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  plans          Plan[]
+  journalEntries JournalEntry[]
+
+  @@map("dieticians")
+}
+
+// Plan Model
+model Plan {
+  id           String       @id @default(uuid())
+  providerId   String
+  providerType ProviderType
+
+  name        String
+  type        PlanType
+  duration    Int // days
+  price       Float
+  currency    String
+  description String?
+  isActive    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  gym          Gym?           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId        String?
+  trainer      Trainer?       @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId    String?
+  dietician    Dietician?     @relation(fields: [dieticianId], references: [id], onDelete: Cascade)
+  dieticianId  String?
+  subscriptions Subscription[]
+  journalEntries JournalEntry[]
+
+  @@map("plans")
+}
+
+// Subscription Model
+model Subscription {
+  id         String             @id @default(uuid())
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId     String
+  plan       Plan               @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  amount     Float
+  currency   String
+  startDate  DateTime           @default(now())
+  endDate    DateTime?
+  status     SubscriptionStatus @default(PENDING_PAYMENT)
+
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@map("subscriptions")
+}
+
+// Check-in Model (for gyms)
+model CheckIn {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gymId     String
+  gym       Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  timestamp DateTime @default(now())
+
+  @@map("check_ins")
+}
+
+// Journal Entry Model
+model JournalEntry {
+  id             String    @id @default(uuid())
+  providerId     String
+  providerType   ProviderType
+  clientUserId   String
+  clientUser     User      @relation("ClientEntries", fields: [clientUserId], references: [id], onDelete: Cascade)
+  planId         String?
+  plan           Plan?     @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  date           DateTime  @default(now())
+  notes          String
+  weight         Float?
+  mood           String?
+  adherenceScore Int? // 0-100
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  trainer    Trainer?   @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId  String?
+  dietician  Dietician? @relation(fields: [dieticianId], references: [id], onDelete: Cascade)
+  dieticianId String?
+
+  @@map("journal_entries")
+}
