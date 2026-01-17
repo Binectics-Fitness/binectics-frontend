@@ -1,258 +1,206 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import AdminSidebar from '@/components/AdminSidebar';
 import Link from 'next/link';
 
-export default function AdminDashboardPage() {
-  const { user, isLoading } = useAuth();
+export default function AdminLoginPage() {
+  const router = useRouter();
+  const { login, user, isLoading: authLoading } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string>('');
 
-  // Loading and auth checks are handled by layout
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-foreground/60">Loading admin dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  // Redirect if already logged in as admin
+  useEffect(() => {
+    if (user && user.role === 'ADMIN') {
+      router.push('/admin/dashboard');
+    }
+  }, [user, router]);
 
-  if (!user || user.role !== 'ADMIN') {
-    return null;
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+    if (apiError) {
+      setApiError('');
+    }
+  };
 
-  const stats = [
-    {
-      label: 'Total Users',
-      value: '12,458',
-      change: '+284 this week',
-      changeType: 'positive',
-      icon: (
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ),
-      color: 'bg-accent-blue-100',
-      iconColor: 'text-accent-blue-600',
-    },
-    {
-      label: 'Active Providers',
-      value: '847',
-      change: '+12 pending',
-      changeType: 'neutral',
-      icon: (
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-      ),
-      color: 'bg-primary-100',
-      iconColor: 'text-primary-600',
-    },
-    {
-      label: 'Monthly Revenue',
-      value: '$127,450',
-      change: '+18.3%',
-      changeType: 'positive',
-      icon: (
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      color: 'bg-accent-yellow-100',
-      iconColor: 'text-accent-yellow-600',
-    },
-    {
-      label: 'Pending Verifications',
-      value: '23',
-      change: 'Requires action',
-      changeType: 'warning',
-      icon: (
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      ),
-      color: 'bg-red-100',
-      iconColor: 'text-red-600',
-    },
-  ];
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
 
-  const recentActivity = [
-    { user: 'John Smith', action: 'Registered as Gym Owner', time: '5 minutes ago', type: 'user' },
-    { user: 'Sarah Johnson', action: 'Submitted verification documents', time: '12 minutes ago', type: 'verification' },
-    { user: 'PowerHouse Gym', action: 'New subscription payment received', time: '23 minutes ago', type: 'payment' },
-    { user: 'Mike Davis', action: 'Verified as Personal Trainer', time: '1 hour ago', type: 'verification' },
-    { user: 'Emily Brown', action: 'Reported a violation', time: '2 hours ago', type: 'warning' },
-  ];
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
 
-  const pendingActions = [
-    { id: 1, title: 'Review 12 verification applications', priority: 'high', count: 12 },
-    { id: 2, title: 'Respond to 5 support tickets', priority: 'medium', count: 5 },
-    { id: 3, title: 'Review 3 flagged content items', priority: 'high', count: 3 },
-    { id: 4, title: 'Approve 8 pending provider profiles', priority: 'low', count: 8 },
-  ];
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setApiError('');
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (!result.success) {
+        setApiError(result.error || 'Login failed. Please try again.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if logged in user is admin
+      // Note: The redirect will be handled by the useEffect above
+    } catch (error) {
+      setApiError('An unexpected error occurred. Please try again.');
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AdminSidebar />
-
-      <main className="ml-64 flex-1 p-8">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-black text-foreground mb-2">
-            Admin Dashboard
-          </h1>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500 text-foreground mb-4">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-black text-foreground mb-2">Admin Login</h1>
           <p className="text-foreground/60">
-            Welcome back, {user.firstName} {user.lastName}
+            Sign in to access the admin dashboard
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg ${stat.color}`}>
-                  <div className={stat.iconColor}>{stat.icon}</div>
-                </div>
-              </div>
-              <p className="text-sm font-medium text-foreground/60">{stat.label}</p>
-              <p className="text-3xl font-black text-foreground mt-2">{stat.value}</p>
-              <p className={`text-sm mt-2 ${
-                stat.changeType === 'positive' ? 'text-primary-600' :
-                stat.changeType === 'warning' ? 'text-red-600' :
-                'text-foreground/60'
-              }`}>
-                {stat.change}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-card p-6">
-              <h2 className="text-xl font-bold text-foreground mb-4">Pending Actions</h2>
-              <div className="space-y-3">
-                {pendingActions.map((action) => (
-                  <div key={action.id} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-semibold text-foreground text-sm">{action.title}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                            action.priority === 'high' ? 'bg-red-100 text-red-700' :
-                            action.priority === 'medium' ? 'bg-accent-yellow-100 text-accent-yellow-700' :
-                            'bg-gray-200 text-gray-700'
-                          }`}>
-                            {action.priority}
-                          </span>
-                          <span className="text-xs text-foreground/60">{action.count} items</span>
-                        </div>
-                      </div>
-                      <svg className="w-5 h-5 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                ))}
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="bg-white shadow-card p-8">
+          {/* API Error Message */}
+          {apiError && (
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-500">
+              <div className="flex gap-3">
+                <svg className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm text-red-700 font-medium">{apiError}</p>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-card p-6">
-              <h2 className="text-xl font-bold text-foreground mb-4">Recent Activity</h2>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-0">
-                    <div className={`p-2 rounded-lg ${
-                      activity.type === 'user' ? 'bg-accent-blue-100' :
-                      activity.type === 'verification' ? 'bg-primary-100' :
-                      activity.type === 'payment' ? 'bg-accent-yellow-100' :
-                      'bg-red-100'
-                    }`}>
-                      <svg className={`w-4 h-4 ${
-                        activity.type === 'user' ? 'text-accent-blue-600' :
-                        activity.type === 'verification' ? 'text-primary-600' :
-                        activity.type === 'payment' ? 'text-accent-yellow-600' :
-                        'text-red-600'
-                      }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground">{activity.user}</p>
-                      <p className="text-sm text-foreground/60">{activity.action}</p>
-                      <p className="text-xs text-foreground/40 mt-1">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="space-y-5">
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-2">
+                Admin Email
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="admin@binectics.com"
+                required
+                className={`w-full h-12 border-2 ${
+                  errors.email ? 'border-red-500' : 'border-gray-200'
+                } px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-red-500 transition-colors`}
+              />
+              {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-2">
+                Password
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                className={`w-full h-12 border-2 ${
+                  errors.password ? 'border-red-500' : 'border-gray-200'
+                } px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-red-500 transition-colors`}
+              />
+              {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
             </div>
           </div>
-        </div>
 
-        <div className="mt-8">
-          <h2 className="text-xl font-bold text-foreground mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/admin/verification" className="bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary-100 rounded-lg">
-                  <svg className="w-6 h-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">Review Verifications</p>
-                  <p className="text-sm text-foreground/60">23 pending</p>
-                </div>
-              </div>
-            </Link>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading || authLoading}
+            className="w-full h-12 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+          >
+            {isLoading || authLoading ? 'Signing in...' : 'Sign In as Admin'}
+          </button>
 
-            <Link href="/admin/users" className="bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-accent-blue-100 rounded-lg">
-                  <svg className="w-6 h-6 text-accent-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">Manage Users</p>
-                  <p className="text-sm text-foreground/60">12,458 total</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/admin/providers" className="bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-accent-yellow-100 rounded-lg">
-                  <svg className="w-6 h-6 text-accent-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">View Providers</p>
-                  <p className="text-sm text-foreground/60">847 active</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/admin/analytics" className="bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-accent-purple-100 rounded-lg">
-                  <svg className="w-6 h-6 text-accent-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">View Analytics</p>
-                  <p className="text-sm text-foreground/60">Platform metrics</p>
-                </div>
-              </div>
-            </Link>
+          {/* Info */}
+          <div className="mt-6 p-4 bg-gray-50 border border-gray-200">
+            <p className="text-xs text-foreground/60 mb-2">
+              <strong>Admin Access Only</strong>
+            </p>
+            <p className="text-xs text-foreground/60">
+              This login is for administrators only. For regular user access, please use the{' '}
+              <Link href="/login" className="text-red-500 hover:text-red-600 font-semibold">
+                user login page
+              </Link>.
+            </p>
           </div>
+
+          {/* Demo Account Info */}
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200">
+            <p className="text-xs text-foreground/70">
+              <strong>Demo Account:</strong>
+            </p>
+            <p className="text-xs text-foreground/60 mt-1 font-mono">
+              admin@binectics.com / Admin@123456
+            </p>
+            <p className="text-xs text-foreground/60 mt-2">
+              Create demo accounts at{' '}
+              <Link href="/admin/create-super-admin" className="text-accent-blue-500 hover:underline">
+                /admin/create-super-admin
+              </Link>
+            </p>
+          </div>
+        </form>
+
+        {/* Back to Home */}
+        <div className="mt-6 text-center">
+          <Link href="/" className="text-sm text-foreground/60 hover:text-foreground">
+            ← Back to Home
+          </Link>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

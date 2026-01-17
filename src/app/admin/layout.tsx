@@ -10,15 +10,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   useEffect(() => {
-    // Don't redirect if we're on the admin login page or create-super-admin page
-    if (pathname === '/admin/login' || pathname === '/admin/create-super-admin') {
+    // Don't redirect if we're on the admin login page (/admin) or create-super-admin page
+    if (pathname === '/admin' || pathname === '/admin/create-super-admin') {
       return;
     }
 
+    // Redirect non-admin users to login page
     if (!isLoading && (!user || user.role !== 'ADMIN')) {
-      router.push('/admin/login');
+      router.push('/admin');
     }
   }, [user, isLoading, router, pathname]);
+
+  // Allow access to login page and create-super-admin without auth
+  if (pathname === '/admin' || pathname === '/admin/create-super-admin') {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (

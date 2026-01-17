@@ -18,7 +18,7 @@ export default function AdminSidebar() {
         </svg>
       ),
       label: 'Overview',
-      href: '/admin',
+      href: '/admin/dashboard',
     },
     {
       icon: (

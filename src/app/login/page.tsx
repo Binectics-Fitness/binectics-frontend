@@ -225,7 +225,7 @@ export default function LoginPage() {
               <p className="text-center text-sm text-foreground-secondary">
                 Administrator?{" "}
                 <Link
-                  href="/admin/login"
+                  href="/admin"
                   className="font-semibold text-red-500 hover:text-red-600"
                 >
                   Sign in to Admin Dashboard
