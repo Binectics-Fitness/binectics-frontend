@@ -251,7 +251,7 @@ function getRoleBasedRedirect(role: string): string {
     case 'DIETICIAN':
       return '/dashboard/dietician';
     case 'ADMIN':
-      return '/admin';
+      return '/admin/dashboard';
     case 'USER':
     default:
       return '/dashboard';
