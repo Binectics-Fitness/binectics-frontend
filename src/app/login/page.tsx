@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components";
 
 export default function LoginPage() {
-  const { login, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const { login, isLoading: authLoading, user } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      // User is already logged in, redirect to their dashboard
+      const redirectPath = getRoleBasedRedirect(user.role);
+      router.push(redirectPath);
+    }
+  }, [user, router]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [rememberMe, setRememberMe] = useState(false);
@@ -205,4 +216,23 @@ export default function LoginPage() {
       </main>
     </div>
   );
+}
+
+/**
+ * Get redirect path based on user role
+ */
+function getRoleBasedRedirect(role: string): string {
+  switch (role) {
+    case 'GYM_OWNER':
+      return '/dashboard/gym-owner';
+    case 'TRAINER':
+      return '/dashboard/trainer';
+    case 'DIETICIAN':
+      return '/dashboard/dietician';
+    case 'ADMIN':
+      return '/admin';
+    case 'USER':
+    default:
+      return '/dashboard';
+  }
 }
