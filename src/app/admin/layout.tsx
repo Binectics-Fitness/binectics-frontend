@@ -1,18 +1,24 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== 'ADMIN')) {
-      router.push('/login');
+    // Don't redirect if we're on the admin login page or create-super-admin page
+    if (pathname === '/admin/login' || pathname === '/admin/create-super-admin') {
+      return;
     }
-  }, [user, isLoading, router]);
+
+    if (!isLoading && (!user || user.role !== 'ADMIN')) {
+      router.push('/admin/login');
+    }
+  }, [user, isLoading, router, pathname]);
 
   if (isLoading) {
     return (

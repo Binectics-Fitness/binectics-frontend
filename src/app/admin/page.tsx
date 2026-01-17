@@ -1,26 +1,18 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (!isLoading && (!user || user.role !== 'ADMIN')) {
-      router.push('/login');
-    }
-  }, [user, isLoading, router]);
-
+  // Loading and auth checks are handled by layout
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
           <p className="mt-4 text-foreground/60">Loading admin dashboard...</p>
         </div>
       </div>

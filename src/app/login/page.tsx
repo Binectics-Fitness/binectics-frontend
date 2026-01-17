@@ -14,9 +14,15 @@ export default function LoginPage() {
     password: "",
   });
 
-  // Redirect if already logged in
+  // Redirect if already logged in (non-admin users only)
   useEffect(() => {
     if (user) {
+      // Don't allow admin login from regular login page
+      if (user.role === 'ADMIN') {
+        // Admin should use /admin/login
+        router.push('/admin');
+        return;
+      }
       // User is already logged in, redirect to their dashboard
       const redirectPath = getRoleBasedRedirect(user.role);
       router.push(redirectPath);
@@ -75,11 +81,13 @@ export default function LoginPage() {
 
       if (!result.success) {
         setApiError(result.error || "Login failed. Please try again.");
+        setIsLoading(false);
+        return;
       }
-      // Success redirect is handled by AuthContext
+
+      // Note: Redirect is handled by AuthContext based on user role
     } catch (error) {
       setApiError("An unexpected error occurred. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -211,6 +219,19 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
+
+            {/* Admin Login Link */}
+            <div className="mt-6 pt-6 border-t border-neutral-200">
+              <p className="text-center text-sm text-foreground-secondary">
+                Administrator?{" "}
+                <Link
+                  href="/admin/login"
+                  className="font-semibold text-red-500 hover:text-red-600"
+                >
+                  Sign in to Admin Dashboard
+                </Link>
+              </p>
+            </div>
           </form>
         </div>
       </main>
