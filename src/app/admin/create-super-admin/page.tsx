@@ -14,6 +14,27 @@ export default function CreateSuperAdminPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const getEmailForRole = (role: string): string => {
+    const baseEmail = formData.email.split('@');
+    const username = baseEmail[0];
+    const domain = baseEmail[1];
+
+    switch (role) {
+      case 'ADMIN':
+        return `${username}@${domain}`;
+      case 'GYM_OWNER':
+        return `gym@${domain}`;
+      case 'TRAINER':
+        return `trainer@${domain}`;
+      case 'DIETICIAN':
+        return `dietician@${domain}`;
+      case 'USER':
+        return `user@${domain}`;
+      default:
+        return formData.email;
+    }
+  };
+
   const createAccount = async (role: 'USER' | 'GYM_OWNER' | 'TRAINER' | 'DIETICIAN' | 'ADMIN') => {
     setIsLoading(true);
     setMessage(null);
@@ -21,13 +42,14 @@ export default function CreateSuperAdminPage() {
     try {
       const response = await authService.register({
         ...formData,
+        email: getEmailForRole(role),
         role,
       });
 
       if (response.success) {
         setMessage({
           type: 'success',
-          text: `✓ ${role} account created successfully`,
+          text: `✓ ${role} account created successfully (${getEmailForRole(role)})`,
         });
       } else {
         setMessage({
@@ -54,11 +76,32 @@ export default function CreateSuperAdminPage() {
       'USER',
     ];
 
+    setIsLoading(true);
+    let successCount = 0;
+
     for (const role of roles) {
-      await createAccount(role);
-      // Wait 500ms between requests to avoid rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      try {
+        const response = await authService.register({
+          ...formData,
+          email: getEmailForRole(role),
+          role,
+        });
+
+        if (response.success) {
+          successCount++;
+        }
+      } catch (error) {
+        console.error(`Failed to create ${role} account`, error);
+      }
+      // Wait 300ms between requests
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
+
+    setIsLoading(false);
+    setMessage({
+      type: 'success',
+      text: `✓ Successfully created ${successCount} accounts!`,
+    });
   };
 
   return (
@@ -73,17 +116,33 @@ export default function CreateSuperAdminPage() {
 
         {/* Account Details */}
         <div className="bg-gray-50 rounded-xl p-6 mb-8">
-          <h2 className="text-lg font-bold text-foreground mb-4">Account Details</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Account Details (All use same password)</h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-foreground/60">Email:</span>
-              <span className="font-semibold text-foreground">{formData.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-foreground/60">Password:</span>
+              <span className="text-foreground/60">Password (all accounts):</span>
               <span className="font-semibold text-foreground">{formData.password}</span>
             </div>
             <div className="flex justify-between">
+              <span className="text-foreground/60">Admin Email:</span>
+              <span className="font-semibold text-foreground">{getEmailForRole('ADMIN')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-foreground/60">Gym Owner Email:</span>
+              <span className="font-semibold text-foreground">{getEmailForRole('GYM_OWNER')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-foreground/60">Trainer Email:</span>
+              <span className="font-semibold text-foreground">{getEmailForRole('TRAINER')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-foreground/60">Dietician Email:</span>
+              <span className="font-semibold text-foreground">{getEmailForRole('DIETICIAN')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-foreground/60">User Email:</span>
+              <span className="font-semibold text-foreground">{getEmailForRole('USER')}</span>
+            </div>
+            <div className="flex justify-between pt-3 border-t border-gray-200">
               <span className="text-foreground/60">Name:</span>
               <span className="font-semibold text-foreground">
                 {formData.firstName} {formData.lastName}
@@ -202,10 +261,16 @@ export default function CreateSuperAdminPage() {
 
         {/* Info Box */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-foreground/70">
-            <strong>Note:</strong> This creates 5 separate accounts with different roles but the same
-            credentials. You can log in with any role by using the email and password above.
+          <p className="text-sm text-foreground/70 mb-3">
+            <strong>Note:</strong> This creates 5 separate accounts with different emails but the same password.
           </p>
+          <div className="text-xs text-foreground/60 space-y-1 font-mono">
+            <p>• Admin: {getEmailForRole('ADMIN')} / {formData.password}</p>
+            <p>• Gym: {getEmailForRole('GYM_OWNER')} / {formData.password}</p>
+            <p>• Trainer: {getEmailForRole('TRAINER')} / {formData.password}</p>
+            <p>• Dietician: {getEmailForRole('DIETICIAN')} / {formData.password}</p>
+            <p>• User: {getEmailForRole('USER')} / {formData.password}</p>
+          </div>
         </div>
 
         {/* Back to Home */}
