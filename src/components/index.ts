@@ -36,3 +36,6 @@ export { default as TrainerSidebar } from './TrainerSidebar';
 export { default as DieticianSidebar } from './DieticianSidebar';
 export { default as GymOwnerSidebar } from './GymOwnerSidebar';
 export { default as OnboardingBanner } from './OnboardingBanner';
+
+// Notification Components
+export { InactivityNotification } from './InactivityNotification';

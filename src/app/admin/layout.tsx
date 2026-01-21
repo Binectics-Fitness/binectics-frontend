@@ -3,11 +3,15 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import { useAutoLogout } from '@/hooks/useAutoLogout';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Enable auto-logout for admin pages (60 minutes of inactivity)
+  useAutoLogout(60);
 
   useEffect(() => {
     // Don't redirect if we're on the admin login page (/admin) or create-super-admin page

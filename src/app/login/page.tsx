@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components";
+import { InactivityNotification } from "@/components/InactivityNotification";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -94,6 +95,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">
+      {/* Inactivity Notification */}
+      <InactivityNotification />
+
       {/* Main Content */}
       <main className="flex min-h-[calc(100vh-4rem)] items-center py-12 sm:py-16">
         <div className="mx-auto w-full max-w-md px-4 sm:px-6 lg:px-8">

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { InactivityNotification } from '@/components/InactivityNotification';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -83,6 +84,9 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      {/* Inactivity Notification */}
+      <InactivityNotification />
+
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">

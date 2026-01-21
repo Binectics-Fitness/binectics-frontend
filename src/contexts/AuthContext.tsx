@@ -95,13 +95,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await authService.logout();
+      const currentUser = user;
       setUser(null);
-      router.push('/login');
+
+      // Redirect to appropriate login page based on user role
+      if (currentUser?.role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/login');
+      }
     } catch (error) {
       console.error('Logout error:', error);
       // Still clear local state and redirect even if API call fails
+      const currentUser = user;
       setUser(null);
-      router.push('/login');
+
+      if (currentUser?.role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/login');
+      }
     }
   };
 
