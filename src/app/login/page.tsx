@@ -219,19 +219,6 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
-
-            {/* Admin Login Link */}
-            <div className="mt-6 pt-6 border-t border-neutral-200">
-              <p className="text-center text-sm text-foreground-secondary">
-                Administrator?{" "}
-                <Link
-                  href="/admin"
-                  className="font-semibold text-red-500 hover:text-red-600"
-                >
-                  Sign in to Admin Dashboard
-                </Link>
-              </p>
-            </div>
           </form>
         </div>
       </main>
