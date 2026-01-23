@@ -15,10 +15,10 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (data: LoginRequest) => Promise<{ success: boolean; error?: string }>;
+  login: (data: LoginRequest) => Promise<{ success: boolean; error?: string; errors?: Record<string, string[]> }>;
   register: (
     data: RegisterRequest,
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; errors?: Record<string, string[]> }>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
 }
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (
     data: LoginRequest,
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; error?: string; errors?: Record<string, string[]> }> => {
     try {
       const response = await authService.login(data);
 
@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         success: false,
         error: response.message || "Login failed",
+        errors: response.errors,
       };
     } catch (error) {
       return {
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (
     data: RegisterRequest,
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; error?: string; errors?: Record<string, string[]> }> => {
     try {
       const response = await authService.register(data);
 
@@ -93,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         success: false,
         error: response.message || "Registration failed",
+        errors: response.errors,
       };
     } catch (error) {
       return {

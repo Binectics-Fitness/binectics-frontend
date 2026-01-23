@@ -6,24 +6,23 @@ export type SubscriptionStatus = 'ACTIVE' | 'INACTIVE' | 'CANCELLED' | 'EXPIRED'
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  avatar?: string;
+  first_name: string;
+  last_name: string;
+  phone_number?: string;
+  profile_picture?: string;
   role: UserRole;
-  isEmailVerified: boolean;
-  isOnboardingComplete: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  passwordHash?: string; // Only used in backend/mock, never sent to client
-  country?: string;
-  isSuspended?: boolean;
+  is_email_verified: boolean;
+  is_onboarding_complete?: boolean;
+  created_at: Date | string;
+  updated_at: Date | string;
+  country_code?: string;
+  is_suspended?: boolean;
 }
 
 export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
 }
 
 export interface LoginRequest {
@@ -34,11 +33,13 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   role: UserRole;
+  accept_tos: boolean;
   phone?: string;
-  country?: string;
+  phone_number?: string;
+  country_code?: string;
 }
 
 // Gym Types

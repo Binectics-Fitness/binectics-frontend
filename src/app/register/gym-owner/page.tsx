@@ -13,20 +13,25 @@ export default function GymOwnerRegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    acceptTos: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string>("");
+  const [apiErrors, setApiErrors] = useState<string[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
     if (apiError) {
       setApiError("");
+    }
+    if (apiErrors.length > 0) {
+      setApiErrors([]);
     }
   };
 
@@ -43,11 +48,16 @@ export default function GymOwnerRegisterPage() {
     }
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+    } else if (formData.password.length < 12) {
+      newErrors.password = "Password must be at least 12 characters";
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(formData.password)) {
+      newErrors.password = "Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)";
     }
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
+    }
+    if (!formData.acceptTos) {
+      newErrors.acceptTos = "You must accept the terms of service";
     }
 
     setErrors(newErrors);
@@ -57,6 +67,7 @@ export default function GymOwnerRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setApiError("");
+    setApiErrors([]);
 
     if (!validateForm()) return;
 
@@ -66,13 +77,31 @@ export default function GymOwnerRegisterPage() {
       const result = await register({
         email: formData.email,
         password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: 'GYM_OWNER',
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        role: 'gym_owner' as any,
+        accept_tos: formData.acceptTos,
       });
 
       if (!result.success) {
-        setApiError(result.error || "Registration failed. Please try again.");
+        // Check if there are detailed validation errors from the API
+        if (result.errors && typeof result.errors === 'object') {
+          // Flatten all error messages from the errors object
+          const errorMessages: string[] = [];
+          Object.entries(result.errors).forEach(([field, messages]) => {
+            if (Array.isArray(messages)) {
+              errorMessages.push(...messages);
+            }
+          });
+          
+          if (errorMessages.length > 0) {
+            setApiErrors(errorMessages);
+          } else {
+            setApiError(result.error || "Registration failed. Please try again.");
+          }
+        } else {
+          setApiError(result.error || "Registration failed. Please try again.");
+        }
       }
     } catch (error) {
       setApiError("An unexpected error occurred. Please try again.");
@@ -104,13 +133,24 @@ export default function GymOwnerRegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {apiError && (
+            {(apiError || apiErrors.length > 0) && (
               <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
                 <div className="flex gap-3">
                   <svg className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                  <p className="text-sm text-red-800">{apiError}</p>
+                  <div className="flex-1">
+                    {apiError && (
+                      <p className="text-sm text-red-800">{apiError}</p>
+                    )}
+                    {apiErrors.length > 0 && (
+                      <ul className="text-sm text-red-800 space-y-1">
+                        {apiErrors.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -122,7 +162,7 @@ export default function GymOwnerRegisterPage() {
                   <Input label="Last Name" name="lastName" placeholder="Doe" required value={formData.lastName} onChange={handleChange} error={errors.lastName} />
                 </div>
                 <Input label="Email Address" type="email" name="email" placeholder="john@gym.com" required value={formData.email} onChange={handleChange} error={errors.email} />
-                <Input label="Password" type="password" name="password" placeholder="••••••••" required value={formData.password} onChange={handleChange} error={errors.password} helperText="Minimum 8 characters" />
+                <Input label="Password" type="password" name="password" placeholder="••••••••" required value={formData.password} onChange={handleChange} error={errors.password} helperText="Min 12 characters with uppercase, lowercase, number, and special character (!@#$%^&*)" />
                 <Input label="Confirm Password" type="password" name="confirmPassword" placeholder="••••••••" required value={formData.confirmPassword} onChange={handleChange} error={errors.confirmPassword} />
               </div>
             </div>
@@ -139,13 +179,35 @@ export default function GymOwnerRegisterPage() {
               </div>
             </div>
 
+            {/* Terms of Service Checkbox */}
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="acceptTos"
+                  checked={formData.acceptTos}
+                  onChange={handleChange}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                />
+                <span className="text-sm text-foreground-secondary">
+                  I agree to the{" "}
+                  <Link href="/terms" target="_blank" className="text-accent-blue-500 hover:text-accent-blue-600 font-medium">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" target="_blank" className="text-accent-blue-500 hover:text-accent-blue-600 font-medium">
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              {errors.acceptTos && (
+                <p className="text-sm text-red-600 ml-7">{errors.acceptTos}</p>
+              )}
+            </div>
+
             <button type="submit" disabled={isLoading || authLoading} className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed">
               {isLoading || authLoading ? "Creating Account..." : "Create Account"}
             </button>
-
-            <p className="text-center text-sm text-foreground-tertiary">
-              By creating an account, you agree to our <Link href="/terms" className="text-accent-blue-500 hover:text-accent-blue-600">Terms of Service</Link> and <Link href="/privacy" className="text-accent-blue-500 hover:text-accent-blue-600">Privacy Policy</Link>
-            </p>
           </form>
         </div>
       </main>

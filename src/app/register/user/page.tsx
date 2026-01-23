@@ -13,21 +13,27 @@ export default function UserRegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    acceptTos: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string>("");
+  const [apiErrors, setApiErrors] = useState<string[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    const fieldValue = type === "checkbox" ? checked : value;
+    setFormData((prev) => ({ ...prev, [name]: fieldValue }));
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
     if (apiError) {
       setApiError("");
+    }
+    if (apiErrors.length > 0) {
+      setApiErrors([]);
     }
   };
 
@@ -50,12 +56,18 @@ export default function UserRegisterPage() {
 
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+    } else if (formData.password.length < 12) {
+      newErrors.password = "Password must be at least 12 characters";
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(formData.password)) {
+      newErrors.password = "Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)";
     }
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!formData.acceptTerms) {
+      newErrors.acceptTerms = "You must accept the terms of service";
     }
 
     setErrors(newErrors);
@@ -65,6 +77,7 @@ export default function UserRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setApiError("");
+    setApiErrors([]);
 
     if (!validateForm()) {
       return;
@@ -76,13 +89,31 @@ export default function UserRegisterPage() {
       const result = await register({
         email: formData.email,
         password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: 'USER',
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        role: 'fitness_member' as any,
+        accept_tos: formData.acceptTos,
       });
 
       if (!result.success) {
-        setApiError(result.error || "Registration failed. Please try again.");
+        // Check if there are detailed validation errors from the API
+        if (result.errors && typeof result.errors === 'object') {
+          // Flatten all error messages from the errors object
+          const errorMessages: string[] = [];
+          Object.entries(result.errors).forEach(([field, messages]) => {
+            if (Array.isArray(messages)) {
+              errorMessages.push(...messages);
+            }
+          });
+          
+          if (errorMessages.length > 0) {
+            setApiErrors(errorMessages);
+          } else {
+            setApiError(result.error || "Registration failed. Please try again.");
+          }
+        } else {
+          setApiError(result.error || "Registration failed. Please try again.");
+        }
       }
       // Success redirect is handled by AuthContext
     } catch (error) {
@@ -148,8 +179,8 @@ export default function UserRegisterPage() {
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* API Error Message */}
-            {apiError && (
+            {/* API Error Messages */}
+            {(apiError || apiErrors.length > 0) && (
               <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
                 <div className="flex gap-3">
                   <svg
@@ -163,7 +194,18 @@ export default function UserRegisterPage() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <p className="text-sm text-red-800">{apiError}</p>
+                  <div className="flex-1">
+                    {apiError && (
+                      <p className="text-sm text-red-800">{apiError}</p>
+                    )}
+                    {apiErrors.length > 0 && (
+                      <ul className="text-sm text-red-800 space-y-1">
+                        {apiErrors.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -214,7 +256,7 @@ export default function UserRegisterPage() {
                   value={formData.password}
                   onChange={handleChange}
                   error={errors.password}
-                  helperText="Minimum 8 characters"
+                  helperText="Min 12 characters with uppercase, lowercase, number, and special character (!@#$%^&*)"
                 />
 
                 {/* Confirm Password */}
@@ -231,6 +273,40 @@ export default function UserRegisterPage() {
               </div>
             </div>
 
+            {/* Terms and Conditions Checkbox */}
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="acceptTos"
+                  checked={formData.acceptTos}
+                  onChange={handleChange}
+                  className="mt-1 h-4 w-4 rounded border-neutral-300 text-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                />
+                <span className="text-sm text-foreground-secondary">
+                  I agree to the{" "}
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="text-accent-blue-500 hover:text-accent-blue-600 font-medium"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="text-accent-blue-500 hover:text-accent-blue-600 font-medium"
+                  >
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              {errors.acceptTos && (
+                <p className="text-sm text-red-600 ml-7">{errors.acceptTos}</p>
+              )}
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"
@@ -240,7 +316,7 @@ export default function UserRegisterPage() {
               {isLoading || authLoading ? "Creating Account..." : "Create Account"}
             </button>
 
-            {/* Terms */}
+            {/* Login Link */}
             <p className="text-center text-sm text-foreground-tertiary">
               By creating an account, you agree to our{" "}
               <Link
