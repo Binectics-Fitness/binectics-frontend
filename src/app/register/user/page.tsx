@@ -58,8 +58,11 @@ export default function UserRegisterPage() {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 12) {
       newErrors.password = "Password must be at least 12 characters";
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(formData.password)) {
-      newErrors.password = "Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)";
+    } else if (
+      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(formData.password)
+    ) {
+      newErrors.password =
+        "Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)";
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -91,13 +94,13 @@ export default function UserRegisterPage() {
         password: formData.password,
         first_name: formData.firstName,
         last_name: formData.lastName,
-        role: 'fitness_member' as any,
+        role: "fitness_member" as any,
         accept_tos: formData.acceptTos,
       });
 
       if (!result.success) {
         // Check if there are detailed validation errors from the API
-        if (result.errors && typeof result.errors === 'object') {
+        if (result.errors && typeof result.errors === "object") {
           // Flatten all error messages from the errors object
           const errorMessages: string[] = [];
           Object.entries(result.errors).forEach(([field, messages]) => {
@@ -105,11 +108,13 @@ export default function UserRegisterPage() {
               errorMessages.push(...messages);
             }
           });
-          
+
           if (errorMessages.length > 0) {
             setApiErrors(errorMessages);
           } else {
-            setApiError(result.error || "Registration failed. Please try again.");
+            setApiError(
+              result.error || "Registration failed. Please try again.",
+            );
           }
         } else {
           setApiError(result.error || "Registration failed. Please try again.");
@@ -313,7 +318,9 @@ export default function UserRegisterPage() {
               disabled={isLoading || authLoading}
               className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading || authLoading ? "Creating Account..." : "Create Account"}
+              {isLoading || authLoading
+                ? "Creating Account..."
+                : "Create Account"}
             </button>
 
             {/* Login Link */}

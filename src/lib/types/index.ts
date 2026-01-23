@@ -1,7 +1,11 @@
 // User & Auth Types
-export type UserRole = 'USER' | 'GYM_OWNER' | 'TRAINER' | 'DIETICIAN' | 'ADMIN';
-export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
-export type SubscriptionStatus = 'ACTIVE' | 'INACTIVE' | 'CANCELLED' | 'EXPIRED';
+export type UserRole = "USER" | "GYM_OWNER" | "TRAINER" | "DIETICIAN" | "ADMIN";
+export type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
+export type SubscriptionStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "CANCELLED"
+  | "EXPIRED";
 
 export interface User {
   id: string;
@@ -119,7 +123,12 @@ export interface DieticianProfile {
 }
 
 // Plan Types
-export type DurationType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+export type DurationType =
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "quarterly"
+  | "yearly";
 
 export interface Plan {
   id: string;

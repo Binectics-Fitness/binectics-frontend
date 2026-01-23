@@ -15,10 +15,20 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (data: LoginRequest) => Promise<{ success: boolean; error?: string; errors?: Record<string, string[]> }>;
+  login: (
+    data: LoginRequest,
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+    errors?: Record<string, string[]>;
+  }>;
   register: (
     data: RegisterRequest,
-  ) => Promise<{ success: boolean; error?: string; errors?: Record<string, string[]> }>;
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+    errors?: Record<string, string[]>;
+  }>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
 }
@@ -48,7 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (
     data: LoginRequest,
-  ): Promise<{ success: boolean; error?: string; errors?: Record<string, string[]> }> => {
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    errors?: Record<string, string[]>;
+  }> => {
     try {
       const response = await authService.login(data);
 
@@ -77,17 +91,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (
     data: RegisterRequest,
-  ): Promise<{ success: boolean; error?: string; errors?: Record<string, string[]> }> => {
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    errors?: Record<string, string[]>;
+  }> => {
     try {
       const response = await authService.register(data);
 
       if (response.success && response.data) {
-        setUser(response.data.user);
-
-        // Redirect based on user role
-        const redirectPath = getRoleBasedRedirect(response.data.user.role);
-        router.push(redirectPath);
-
+        // Redirect to verification page instead of logging in
+        router.push(`/verification?email=${encodeURIComponent(data.email)}`);
         return { success: true };
       }
 

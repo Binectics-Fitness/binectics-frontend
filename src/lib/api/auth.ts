@@ -30,6 +30,15 @@ export interface VerifyEmailRequest {
   token: string;
 }
 
+export interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResendOtpRequest {
+  email: string;
+}
+
 /**
  * Authentication Service
  */
@@ -58,23 +67,14 @@ export const authService = {
 
   /**
    * Register a new user
+   * Note: Registration does not return tokens. User must verify OTP first.
    */
-  async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
-    const response = await apiClient.post<AuthResponse>('/auth/register', data, false);
+  async register(data: RegisterRequest): Promise<ApiResponse<User>> {
+    const response = await apiClient.post<User>('/auth/register', data, false);
     console.log('Register response:', response);
 
-    if (response.success && response.data) {
-      // Store tokens and user data
-      apiClient.storeTokens(
-        response.data.tokens.accessToken,
-        response.data.tokens.refreshToken
-      );
-
-      // Store user data
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      }
-    }
+    // Registration only returns user data, no tokens
+    // User needs to verify OTP before authentication
 
     return response;
   },
@@ -116,6 +116,20 @@ export const authService = {
    */
   async verifyEmail(data: VerifyEmailRequest): Promise<ApiResponse<{ message: string }>> {
     return apiClient.post('/auth/verify-email', data, false);
+  },
+
+  /**
+   * Verify OTP code
+   */
+  async verifyOtp(data: VerifyOtpRequest): Promise<ApiResponse<{ message: string; user?: User }>> {
+    return apiClient.post('/auth/verify-otp', data, false);
+  },
+
+  /**
+   * Resend OTP code
+   */
+  async resendOtp(data: ResendOtpRequest): Promise<ApiResponse<{ message: string }>> {
+    return apiClient.post('/auth/resend-otp', data, false);
   },
 
   /**
