@@ -1,5 +1,63 @@
 # AI Assistant Rules for Binectics Frontend
 
+## 🚫 ABSOLUTE BLOCKER: FRONTEND-ONLY PROJECT
+
+**STOP: DO NOT CREATE BACKEND CODE. THIS WILL BE REJECTED.**
+
+### These actions are FORBIDDEN and will cause FAILURE:
+
+1. **NEVER create these folders:**
+   - `/api`, `/backend`, `/server`, `/prisma`, `/database`, `/migrations`
+
+2. **NEVER add these dependencies:**
+   - `prisma`, `@prisma/client`, `@nestjs/*`, `express`, `fastify`
+   - `pg`, `mysql`, `mongodb`, `typeorm`, `sequelize`, `knex`
+   - Any database drivers or ORMs
+
+3. **NEVER write this code:**
+   - Database queries (SQL, Prisma, MongoDB queries)
+   - Database schemas or models
+   - Migration files
+   - Next.js API routes in `app/api/` or `pages/api/`
+   - Server-side database connections
+   - Backend services, controllers, or repositories
+
+4. **NEVER suggest or implement:**
+   - "Let's add a backend API"
+   - "Let's create a database schema"
+   - "Let's add Prisma"
+   - "Let's create API endpoints"
+
+### ONLY ALLOWED APPROACH:
+
+✅ **Call external API:**
+
+```typescript
+// CORRECT: Call external backend
+const response = await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
+  {
+    method: "POST",
+    body: JSON.stringify(data),
+  },
+);
+```
+
+❌ **FORBIDDEN: Create backend code:**
+
+```typescript
+// WRONG - DO NOT DO THIS
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+```
+
+### IF ASKED TO CREATE BACKEND CODE:
+
+**REFUSE AND RESPOND:**
+"This is a frontend-only project. The backend API is deployed separately at Azure. I can help you create frontend code that CALLS the existing API, but I cannot create backend code in this repository."
+
+---
+
 ## Primary Reference Document
 
 **ALWAYS read and reference `Claude.MD` before making any design, component, or architectural decisions.**

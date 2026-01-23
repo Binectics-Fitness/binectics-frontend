@@ -2,24 +2,36 @@
 
 A global ecosystem connecting gyms, fitness trainers, dieticians, and wellness enthusiasts.
 
+**Note:** This is a frontend-only project. The backend API is deployed separately and is not included in this repository.
+
 ## Tech Stack
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS 4
 - **Package Manager:** npm
+- **API:** Connects to external backend API (configured via environment variables)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - npm 10+
 
 ### Installation
 
 ```bash
 npm install
+```
+
+### Environment Setup
+
+Create a `.env` file in the root directory (see `.env.example` for reference):
+
+```bash
+# API Configuration
+NEXT_PUBLIC_API_URL=https://your-backend-api.com/api/v1
 ```
 
 ### Development

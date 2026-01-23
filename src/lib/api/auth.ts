@@ -61,6 +61,7 @@ export const authService = {
    */
   async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
     const response = await apiClient.post<AuthResponse>('/auth/register', data, false);
+    console.log('Register response:', response);
 
     if (response.success && response.data) {
       // Store tokens and user data

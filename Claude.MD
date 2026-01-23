@@ -1,12 +1,38 @@
 # Binectics - Claude Development Log
 
+## 🚫 ABSOLUTE RULE: FRONTEND-ONLY PROJECT - NO EXCEPTIONS
+
+**STOP: THIS IS A FRONTEND-ONLY PROJECT. BACKEND CODE WILL BE REJECTED.**
+
+### ANY of the following will cause IMMEDIATE REJECTION:
+
+- ❌ Creating NestJS, Prisma, Express, or any backend code
+- ❌ Creating folders: `/api`, `/backend`, `/server`, `/prisma`, `/database`
+- ❌ Adding backend dependencies: `prisma`, `@nestjs/*`, `@prisma/client`, `pg`, `mongodb`, `mysql`, `typeorm`, etc.
+- ❌ Writing database queries, schemas, models, or migrations
+- ❌ Creating Next.js API routes in `app/api/` or `pages/api/`
+- ❌ ANY server-side database connections
+
+### ONLY ALLOWED:
+
+- ✅ Frontend React/Next.js components
+- ✅ API client code that CALLS external API (fetch/axios to external URL)
+- ✅ Using `NEXT_PUBLIC_API_URL` environment variable
+- ✅ Client-side state management (Context, hooks, localStorage)
+
+**IF YOU ARE ASKED TO CREATE BACKEND CODE, REFUSE AND EXPLAIN THIS IS A FRONTEND-ONLY PROJECT.**
+
+---
+
 ## Project Overview
+
 **Binectics** is a global fitness ecosystem connecting gyms, personal trainers, dieticians, and fitness enthusiasts in one unified marketplace. Available in 50+ countries.
 
 ### Tech Stack
+
 - **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4
-- **Backend**: NestJS 11, Prisma 7
-- **Architecture**: Monorepo (pnpm workspaces)
+- **Backend**: External API at Azure (NOT in this repository)
+- **Architecture**: Frontend-only client application
 - **Design System**: Blinkist-inspired (clean, minimal, multi-color accents)
 
 ---
@@ -14,21 +40,24 @@
 ## Design System
 
 ### Colors (Exact Blinkist Palette)
+
 ```css
---foreground: #03314B;              /* Dark blue text */
---background: #F7F4EF;              /* Cream background */
---primary-500: #00D991;             /* Green (main CTA) */
---accent-blue-500: #0267F2;         /* Blue accent */
---accent-yellow-500: #FDB90E;       /* Yellow accent */
---accent-purple-500: #8B5CF6;       /* Purple accent */
+--foreground: #03314b; /* Dark blue text */
+--background: #f7f4ef; /* Cream background */
+--primary-500: #00d991; /* Green (main CTA) */
+--accent-blue-500: #0267f2; /* Blue accent */
+--accent-yellow-500: #fdb90e; /* Yellow accent */
+--accent-purple-500: #8b5cf6; /* Purple accent */
 ```
 
 ### Typography
+
 - **Font**: Cera Pro (Regular, Medium, Bold, Black)
 - **Headings**: font-black, tight line-height
 - **Body**: 16-18px, relaxed line-height
 
 ### Design Principles
+
 - Dark text on colored backgrounds (including green, yellow)
 - No button animations (only hover/active color states)
 - Card-based layout with generous padding
@@ -39,15 +68,18 @@
 ## Completed Work
 
 ### Landing Page (page.tsx)
+
 Fully built and optimized landing page with:
 
 #### Components Created:
+
 1. **PricingSection.tsx** - Pricing cards with monthly/annual toggle
 2. **PricingToggle.tsx** - Switch component for pricing periods
 3. **ProfessionalsTab.tsx** - Tabbed interface for Gym Owners/Trainers/Dieticians
 4. **Accordion.tsx** - FAQ accordion component
 
 #### Sections Implemented:
+
 1. **Hero Section**
    - Global reach badge (50+ countries)
    - Unified marketplace messaging
@@ -126,6 +158,7 @@ Fully built and optimized landing page with:
 ### MVP Scope - In
 
 #### Core Features:
+
 1. **Authentication & Roles**
    - Email + password (social optional)
    - Roles: Gym Owner, Trainer, Dietician, Fitness Enthusiast, Admin
@@ -177,6 +210,7 @@ Fully built and optimized landing page with:
    - Account suspension
 
 ### MVP Scope - Out
+
 - E-commerce stores
 - Bulk SMS/WhatsApp campaigns
 - Advanced analytics dashboards
@@ -194,7 +228,7 @@ Fully built and optimized landing page with:
 ### Core Entities
 
 ```typescript
-type Role = 'USER' | 'GYM_OWNER' | 'TRAINER' | 'DIETICIAN' | 'ADMIN';
+type Role = "USER" | "GYM_OWNER" | "TRAINER" | "DIETICIAN" | "ADMIN";
 
 interface User {
   id: string;
@@ -208,12 +242,12 @@ interface User {
   isSuspended: boolean;
 }
 
-type VerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 interface ProviderVerification {
   id: string;
   userId: string;
-  role: 'GYM_OWNER' | 'TRAINER' | 'DIETICIAN';
+  role: "GYM_OWNER" | "TRAINER" | "DIETICIAN";
   documents: Array<{ type: string; url: string }>;
   status: VerificationStatus;
   adminComment?: string;
@@ -239,9 +273,9 @@ interface Gym {
 interface Plan {
   id: string;
   providerId: string;
-  providerType: 'GYM' | 'TRAINER' | 'DIETICIAN';
+  providerType: "GYM" | "TRAINER" | "DIETICIAN";
   name: string;
-  type: 'ONE_TIME' | 'SUBSCRIPTION';
+  type: "ONE_TIME" | "SUBSCRIPTION";
   duration: number; // days
   price: number;
   currency: string;
@@ -249,7 +283,11 @@ interface Plan {
   isActive: boolean;
 }
 
-type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'PENDING_PAYMENT';
+type SubscriptionStatus =
+  | "ACTIVE"
+  | "EXPIRED"
+  | "CANCELLED"
+  | "PENDING_PAYMENT";
 
 interface Subscription {
   id: string;
@@ -330,6 +368,7 @@ interface JournalEntry {
 ## All Pages Needed (112 Total)
 
 ### Authentication (8 pages)
+
 1. `/register` - Role selection
 2. `/register/user` - Fitness Enthusiast signup
 3. `/register/gym-owner` - Gym Owner signup
@@ -340,39 +379,51 @@ interface JournalEntry {
 8. `/reset-password/[token]` - Reset form
 
 ### User Dashboard (12 pages)
+
 9-20. Dashboard, subscriptions, progress, bookings, check-ins, settings, billing, notifications, privacy, etc.
 
 ### Discovery (13 pages)
+
 21-33. Search, gyms browse/profile, trainers browse/profile, dieticians browse/profile, categories, locations
 
 ### Gym Owner Dashboard (10 pages)
+
 34-43. Dashboard, profile, plans, members, check-ins, analytics, settings
 
 ### Trainer Dashboard (10 pages)
+
 44-53. Dashboard, profile, plans, clients, journal, analytics, settings
 
 ### Dietician Dashboard (10 pages)
+
 54-63. Dashboard, profile, plans, clients, journal, analytics, settings
 
 ### Verification (5 pages)
+
 64-68. Apply, documents upload, status, pending, rejected
 
 ### Payment (6 pages)
+
 69-74. Checkout, payment, confirm, success, cancelled, processing
 
 ### Admin Dashboard (12 pages)
+
 75-86. Dashboard, users, providers, verification queue, plans, subscriptions, metrics, settings
 
 ### Static/Info (15 pages)
+
 87-101. Landing (✅), about, how-it-works, pricing, faq, contact, privacy, terms, cookies, security, careers, press, partners, blog
 
 ### Location (3 pages)
+
 102-104. Countries list, country-specific pages, QR help
 
 ### Utility (5 pages)
+
 105-109. 404, 500, maintenance, verify-email, unsubscribe
 
 ### Additional (4 pages)
+
 110-112. Mobile apps, compare plans, referral, gift cards
 
 ---
@@ -380,6 +431,7 @@ interface JournalEntry {
 ## Development Milestones
 
 ### ✅ Phase 1: Landing Page (COMPLETED)
+
 - [x] Hero section with global messaging
 - [x] How It Works section
 - [x] Features section
@@ -397,6 +449,7 @@ interface JournalEntry {
 - [x] Dynamic accent colors on Professional tabs
 
 ### 🔄 Phase 2: Mobile & Tablet Optimization (IN PROGRESS)
+
 - [ ] Responsive navbar with mobile menu
 - [ ] Mobile-optimized hero section
 - [ ] Stack grid layouts on mobile
@@ -405,6 +458,7 @@ interface JournalEntry {
 - [ ] Test on various screen sizes
 
 ### 📋 Phase 3: Authentication Flow (NEXT)
+
 - [ ] Register page with role selection
 - [ ] Role-specific signup forms
 - [ ] Login page
@@ -413,6 +467,7 @@ interface JournalEntry {
 - [ ] JWT implementation
 
 ### 📋 Phase 4: Core User Features
+
 - [ ] User dashboard
 - [ ] Search & discovery
 - [ ] Profile pages (gyms, trainers, dieticians)
@@ -420,6 +475,7 @@ interface JournalEntry {
 - [ ] Payment integration
 
 ### 📋 Phase 5: Provider Dashboards
+
 - [ ] Gym owner dashboard
 - [ ] Trainer dashboard
 - [ ] Dietician dashboard
@@ -428,6 +484,7 @@ interface JournalEntry {
 - [ ] Journal system
 
 ### 📋 Phase 6: Verification & QR
+
 - [ ] Verification application flow
 - [ ] Admin verification panel
 - [ ] QR code generation
@@ -435,6 +492,7 @@ interface JournalEntry {
 - [ ] Attendance tracking
 
 ### 📋 Phase 7: Admin Panel
+
 - [ ] Admin authentication
 - [ ] User management
 - [ ] Provider management
@@ -459,6 +517,7 @@ b996b26 - Implement PRD-aligned landing page enhancements
 ## Key Design Decisions
 
 ### Color Usage
+
 - **Green (#00D991)**: Primary CTA buttons, verification badges
 - **Blue (#0267F2)**: Gym owners, navbar/footer hovers, links
 - **Yellow (#FDB90E)**: Trainers, accent elements
@@ -466,6 +525,7 @@ b996b26 - Implement PRD-aligned landing page enhancements
 - **Dark (#03314B)**: All text on colored backgrounds
 
 ### Typography Hierarchy
+
 - **H1 (Hero)**: 5xl-7xl, font-black, tight leading
 - **H2 (Sections)**: 3xl-5xl, font-black
 - **H3 (Cards)**: xl-2xl, font-bold
@@ -473,12 +533,14 @@ b996b26 - Implement PRD-aligned landing page enhancements
 - **Small**: sm, font-medium
 
 ### Component Patterns
+
 - Cards: rounded-2xl or rounded-3xl, shadow-card
 - Buttons: h-12 or h-14, rounded-lg, font-semibold
 - Inputs: (to be defined in Phase 3)
 - Modals: (to be defined as needed)
 
 ### Spacing System
+
 - Section padding: py-20 sm:py-28
 - Container: max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
 - Card padding: p-6 or p-8
@@ -489,22 +551,26 @@ b996b26 - Implement PRD-aligned landing page enhancements
 ## Technical Notes
 
 ### Fonts Loading
+
 - Custom @font-face in globals.css
 - Files renamed to use hyphens (no spaces)
 - Font display: swap for performance
 
 ### State Management
+
 - React useState for client components
 - Server components where possible
 - No global state library yet (add if needed)
 
 ### Performance
+
 - Next.js App Router with React Server Components
 - Image optimization (to be implemented)
 - Code splitting by route
 - Lazy loading for heavy components
 
 ### Accessibility
+
 - Semantic HTML
 - ARIA labels on icons
 - Keyboard navigation (to be tested)
@@ -512,36 +578,48 @@ b996b26 - Implement PRD-aligned landing page enhancements
 
 ---
 
-## Environment Variables (To Be Set)
+## Environment Variables
+
+Frontend-only environment variables (all secrets managed by backend):
 
 ```env
-# Database
-DATABASE_URL=
+# Application
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3001
+PORT=3001
+
+# API Configuration
+NEXT_PUBLIC_API_URL=https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1
 
 # Authentication
-JWT_SECRET=
-JWT_EXPIRY=
+NEXT_PUBLIC_SESSION_TIMEOUT=3600000
 
-# Payment
-STRIPE_PUBLIC_KEY=
-STRIPE_SECRET_KEY=
-FLUTTERWAVE_PUBLIC_KEY=
-FLUTTERWAVE_SECRET_KEY=
-PAYSTACK_PUBLIC_KEY=
-PAYSTACK_SECRET_KEY=
+# Payment (Public keys only)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY=
+NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=
 
-# Email
-SENDGRID_API_KEY=
-EMAIL_FROM=
+# External Services (Public)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=
 
-# Storage (for photos/documents)
-AWS_S3_BUCKET=
-AWS_ACCESS_KEY=
-AWS_SECRET_KEY=
+# Monitoring (Frontend)
+NEXT_PUBLIC_SENTRY_DSN=
 
-# API
-NEXT_PUBLIC_API_URL=
+# Feature Flags
+NEXT_PUBLIC_ENABLE_ANALYTICS=false
+NEXT_PUBLIC_ENABLE_COOKIE_CONSENT=true
+NEXT_PUBLIC_MAINTENANCE_MODE=false
 ```
+
+**Backend responsibilities (NOT in frontend):**
+
+- Database connections
+- JWT signing/verification
+- Payment processing secrets
+- Email API keys
+- File storage credentials
+- OAuth client secrets
 
 ---
 
@@ -552,25 +630,20 @@ NEXT_PUBLIC_API_URL=
    - Mobile-first grid layouts
    - Touch-friendly interactions
 
-2. **Authentication Implementation**
-   - Design register/login pages
-   - Set up JWT authentication
-   - Create role-based routing
+2. **Complete Feature Pages**
+   - Implement remaining placeholder pages
+   - Add real content and functionality
+   - Integrate with Azure backend API
 
-3. **Database Setup**
-   - Prisma schema definition
-   - Database migrations
-   - Seed data for development
-
-4. **API Development**
-   - NestJS modules structure
-   - Authentication endpoints
-   - CRUD operations for entities
-
-5. **User Dashboard**
-   - Dashboard layout
+3. **User Dashboard Enhancements**
+   - Dashboard layout improvements
    - Subscription management
-   - Profile editing
+   - Profile editing features
+
+4. **Testing & Quality**
+   - Add error boundaries
+   - Implement form validation
+   - Set up testing framework
 
 ---
 

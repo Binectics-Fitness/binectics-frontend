@@ -1,16 +1,24 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { mockAuthService as authService } from '@/lib/api/mock-auth';
-import type { User, LoginRequest, RegisterRequest } from '@/lib/types';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
+import { authService } from "@/lib/api/auth";
+import type { User, LoginRequest, RegisterRequest } from "@/lib/types";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (data: LoginRequest) => Promise<{ success: boolean; error?: string }>;
-  register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string }>;
+  register: (
+    data: RegisterRequest,
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
 }
@@ -29,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = authService.getCurrentUser();
         setUser(currentUser);
       } catch (error) {
-        console.error('Error loading user:', error);
+        console.error("Error loading user:", error);
       } finally {
         setIsLoading(false);
       }
@@ -38,7 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadUser();
   }, []);
 
-  const login = async (data: LoginRequest): Promise<{ success: boolean; error?: string }> => {
+  const login = async (
+    data: LoginRequest,
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await authService.login(data);
 
@@ -54,18 +64,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return {
         success: false,
-        error: response.message || 'Login failed',
+        error: response.message || "Login failed",
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'An error occurred',
+        error: error instanceof Error ? error.message : "An error occurred",
       };
     }
   };
 
   const register = async (
-    data: RegisterRequest
+    data: RegisterRequest,
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await authService.register(data);
@@ -82,38 +92,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return {
         success: false,
-        error: response.message || 'Registration failed',
+        error: response.message || "Registration failed",
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'An error occurred',
+        error: error instanceof Error ? error.message : "An error occurred",
       };
     }
   };
 
   const logout = async () => {
+    console.log("Logout initiated");
     try {
+      console.log("Calling authService.logout()");
       await authService.logout();
       const currentUser = user;
+      console.log("Clearing user state:", currentUser);
       setUser(null);
 
       // Redirect to appropriate login page based on user role
-      if (currentUser?.role === 'ADMIN') {
-        router.push('/admin');
+      if (currentUser?.role === "ADMIN") {
+        console.log("Redirecting to /admin");
+        router.push("/admin");
       } else {
-        router.push('/login');
+        console.log("Redirecting to /login");
+        router.push("/login");
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       // Still clear local state and redirect even if API call fails
       const currentUser = user;
       setUser(null);
 
-      if (currentUser?.role === 'ADMIN') {
-        router.push('/admin');
+      if (currentUser?.role === "ADMIN") {
+        router.push("/admin");
       } else {
-        router.push('/login');
+        router.push("/login");
       }
     }
   };
@@ -143,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
@@ -153,16 +168,16 @@ export function useAuth() {
  */
 function getRoleBasedRedirect(role: string): string {
   switch (role) {
-    case 'GYM_OWNER':
-      return '/dashboard/gym-owner';
-    case 'TRAINER':
-      return '/dashboard/trainer';
-    case 'DIETICIAN':
-      return '/dashboard/dietician';
-    case 'ADMIN':
-      return '/admin/dashboard';
-    case 'USER':
+    case "GYM_OWNER":
+      return "/dashboard/gym-owner";
+    case "TRAINER":
+      return "/dashboard/trainer";
+    case "DIETICIAN":
+      return "/dashboard/dietician";
+    case "ADMIN":
+      return "/admin/dashboard";
+    case "USER":
     default:
-      return '/dashboard';
+      return "/dashboard";
   }
 }

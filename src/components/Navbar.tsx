@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import MobileNav from './MobileNav';
+import Link from "next/link";
+import MobileNav from "./MobileNav";
 
 export default function Navbar() {
   return (
@@ -47,14 +47,30 @@ export default function Navbar() {
               href="/login"
               className="hidden md:inline-flex items-center gap-2 text-sm font-medium text-foreground-secondary transition-colors hover:text-accent-blue-500"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" fillRule="evenodd" d="M6.75 9.003c.41 0 .75-.34.75-.75V4.5H19v16H7.5v-3.75c0-.41-.34-.75-.75-.75s-.75.34-.75.75v4.5c0 .41.34.75.75.75h13c.41 0 .75-.34.75-.75V3.75c0-.41-.34-.75-.75-.75h-13c-.41 0-.75.34-.75.75v4.503c0 .41.34.75.75.75Z" clipRule="evenodd"></path>
-                <path fill="currentColor" fillRule="evenodd" d="m16.52 11.823-3.81-3.71a.754.754 0 0 0-1.06.01c-.29.3-.28.77.01 1.06l2.59 2.53H3.75c-.41 0-.75.34-.75.75s.34.75.75.75h10.37l-2.37 2.43c-.29.3-.28.77.01 1.06.3.29.77.28 1.06-.01l3.71-3.81c.29-.3.28-.77-.01-1.06Z" clipRule="evenodd"></path>
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  fill="currentColor"
+                  fillRule="evenodd"
+                  d="M6.75 9.003c.41 0 .75-.34.75-.75V4.5H19v16H7.5v-3.75c0-.41-.34-.75-.75-.75s-.75.34-.75.75v4.5c0 .41.34.75.75.75h13c.41 0 .75-.34.75-.75V3.75c0-.41-.34-.75-.75-.75h-13c-.41 0-.75.34-.75.75v4.503c0 .41.34.75.75.75Z"
+                  clipRule="evenodd"
+                ></path>
+                <path
+                  fill="currentColor"
+                  fillRule="evenodd"
+                  d="m16.52 11.823-3.81-3.71a.754.754 0 0 0-1.06.01c-.29.3-.28.77.01 1.06l2.59 2.53H3.75c-.41 0-.75.34-.75.75s.34.75.75.75h10.37l-2.37 2.43c-.29.3-.28.77.01 1.06.3.29.77.28 1.06-.01l3.71-3.81c.29-.3.28-.77-.01-1.06Z"
+                  clipRule="evenodd"
+                ></path>
               </svg>
               Sign In
             </Link>
             <Link
               href="/register"
+              prefetch={false}
               className="hidden md:inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-6 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
             >
               Join Free
