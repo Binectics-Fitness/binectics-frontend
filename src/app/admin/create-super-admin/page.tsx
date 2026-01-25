@@ -41,9 +41,13 @@ export default function CreateSuperAdminPage() {
 
     try {
       const response = await authService.register({
-        ...formData,
         email: getEmailForRole(role),
+        password: formData.password,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         role,
+        accept_tos: true,
+        country_code: 'US',
       });
 
       if (response.success) {
