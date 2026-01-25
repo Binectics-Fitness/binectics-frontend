@@ -82,20 +82,13 @@ export const authService = {
   },
 
   /**
-   * Logout current user
+   * Logout current user - JWT is stateless, just clear local storage
    */
   async logout(): Promise<void> {
-    try {
-      await apiClient.post("/auth/logout");
-    } catch (error) {
-      // Continue with logout even if API call fails
-      console.error("Logout API error:", error);
-    } finally {
-      // Always clear local auth data
-      apiClient.clearAuth();
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user");
-      }
+    // Clear local auth data (token from localStorage)
+    apiClient.clearAuth();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user");
     }
   },
 
