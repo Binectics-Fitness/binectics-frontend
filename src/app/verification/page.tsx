@@ -29,7 +29,7 @@ function VerificationForm() {
 
     try {
       const response = await authService.resendOtp({ email });
-      
+
       if (response.success) {
         setSuccess("Verification code has been resent to your email");
         setTimeout(() => setSuccess(""), 5000);
@@ -63,7 +63,7 @@ function VerificationForm() {
 
     try {
       const response = await authService.verifyOtp({ email, otp });
-      
+
       if (response.success) {
         setSuccess("Account verified successfully! Redirecting to login...");
         setTimeout(() => {
@@ -125,7 +125,10 @@ function VerificationForm() {
             {success && (
               <div className="rounded-md bg-green-50 p-4 border border-green-200">
                 <p className="text-sm text-green-600 font-medium">{success}</p>
-                <Link href="/login" className="block mt-2 text-sm text-green-700 underline font-medium">
+                <Link
+                  href="/login"
+                  className="block mt-2 text-sm text-green-700 underline font-medium"
+                >
                   Proceed to Login
                 </Link>
               </div>
@@ -162,7 +165,13 @@ function VerificationForm() {
 
 export default function VerificationPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
       <VerificationForm />
     </Suspense>
   );

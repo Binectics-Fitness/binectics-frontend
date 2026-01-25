@@ -15,16 +15,12 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (
-    data: LoginRequest,
-  ) => Promise<{
+  login: (data: LoginRequest) => Promise<{
     success: boolean;
     error?: string;
     errors?: Record<string, string[]>;
   }>;
-  register: (
-    data: RegisterRequest,
-  ) => Promise<{
+  register: (data: RegisterRequest) => Promise<{
     success: boolean;
     error?: string;
     errors?: Record<string, string[]>;
