@@ -161,8 +161,8 @@ export const authService = {
 
     if (response.success && response.data) {
       apiClient.storeTokens(
-        response.data.accessToken,
-        response.data.refreshToken,
+        response.data.access_token,
+        response.data.refresh_token,
       );
     }
 

@@ -1,48 +1,50 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
+import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
 
 export default function ProfileSettingsPage() {
   const { user, updateUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [formData, setFormData] = useState({
     // Basic Info
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    country: user?.country || '',
+    firstName: user?.first_name || "",
+    lastName: user?.last_name || "",
+    email: user?.email || "",
+    phone: user?.phone_number || "",
+    country: user?.country_code || "",
 
     // Gym Owner specific
-    businessName: '',
-    businessRegistration: '',
-    gymName: '',
-    gymAddress: '',
-    gymCity: '',
-    gymDescription: '',
+    businessName: "",
+    businessRegistration: "",
+    gymName: "",
+    gymAddress: "",
+    gymCity: "",
+    gymDescription: "",
     facilities: [] as string[],
 
     // Trainer/Dietician specific
-    bio: '',
+    bio: "",
     specialties: [] as string[],
     certifications: [] as string[],
-    experience: '',
+    experience: "",
 
     // User specific
     fitnessGoals: [] as string[],
     preferences: [] as string[],
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    setSuccessMessage('');
+    setSuccessMessage("");
 
     try {
       // Simulate save delay
@@ -61,10 +63,10 @@ export default function ProfileSettingsPage() {
         updateUser(updatedUser);
       }
 
-      setSuccessMessage('Profile saved successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setSuccessMessage("Profile saved successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      console.error('Save error:', error);
+      console.error("Save error:", error);
     } finally {
       setIsSaving(false);
     }
@@ -75,7 +77,9 @@ export default function ProfileSettingsPage() {
   const renderGymOwnerFields = () => (
     <>
       <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">Business Information</h3>
+        <h3 className="text-xl font-bold text-foreground mb-4">
+          Business Information
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -170,7 +174,9 @@ export default function ProfileSettingsPage() {
 
   const renderTrainerFields = () => (
     <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-      <h3 className="text-xl font-bold text-foreground mb-4">Professional Information</h3>
+      <h3 className="text-xl font-bold text-foreground mb-4">
+        Professional Information
+      </h3>
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -193,7 +199,9 @@ export default function ProfileSettingsPage() {
             type="text"
             name="specialties"
             onChange={(e) => {
-              const specialties = e.target.value.split(',').map((s) => s.trim());
+              const specialties = e.target.value
+                .split(",")
+                .map((s) => s.trim());
               setFormData({ ...formData, specialties });
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
@@ -208,7 +216,9 @@ export default function ProfileSettingsPage() {
             type="text"
             name="certifications"
             onChange={(e) => {
-              const certifications = e.target.value.split(',').map((s) => s.trim());
+              const certifications = e.target.value
+                .split(",")
+                .map((s) => s.trim());
               setFormData({ ...formData, certifications });
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
@@ -234,7 +244,9 @@ export default function ProfileSettingsPage() {
 
   const renderDieticianFields = () => (
     <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-      <h3 className="text-xl font-bold text-foreground mb-4">Professional Information</h3>
+      <h3 className="text-xl font-bold text-foreground mb-4">
+        Professional Information
+      </h3>
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -257,7 +269,9 @@ export default function ProfileSettingsPage() {
             type="text"
             name="specialties"
             onChange={(e) => {
-              const specialties = e.target.value.split(',').map((s) => s.trim());
+              const specialties = e.target.value
+                .split(",")
+                .map((s) => s.trim());
               setFormData({ ...formData, specialties });
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
@@ -272,7 +286,9 @@ export default function ProfileSettingsPage() {
             type="text"
             name="certifications"
             onChange={(e) => {
-              const certifications = e.target.value.split(',').map((s) => s.trim());
+              const certifications = e.target.value
+                .split(",")
+                .map((s) => s.trim());
               setFormData({ ...formData, certifications });
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
@@ -298,7 +314,9 @@ export default function ProfileSettingsPage() {
 
   const renderUserFields = () => (
     <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-      <h3 className="text-xl font-bold text-foreground mb-4">Fitness Goals & Preferences</h3>
+      <h3 className="text-xl font-bold text-foreground mb-4">
+        Fitness Goals & Preferences
+      </h3>
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -308,7 +326,7 @@ export default function ProfileSettingsPage() {
             type="text"
             name="fitnessGoals"
             onChange={(e) => {
-              const goals = e.target.value.split(',').map((s) => s.trim());
+              const goals = e.target.value.split(",").map((s) => s.trim());
               setFormData({ ...formData, fitnessGoals: goals });
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -323,7 +341,7 @@ export default function ProfileSettingsPage() {
             type="text"
             name="preferences"
             onChange={(e) => {
-              const prefs = e.target.value.split(',').map((s) => s.trim());
+              const prefs = e.target.value.split(",").map((s) => s.trim());
               setFormData({ ...formData, preferences: prefs });
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -345,7 +363,9 @@ export default function ProfileSettingsPage() {
 
       {/* Basic Information */}
       <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">Basic Information</h3>
+        <h3 className="text-xl font-bold text-foreground mb-4">
+          Basic Information
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -413,10 +433,10 @@ export default function ProfileSettingsPage() {
       </div>
 
       {/* Role-specific fields */}
-      {user.role === 'GYM_OWNER' && renderGymOwnerFields()}
-      {user.role === 'TRAINER' && renderTrainerFields()}
-      {user.role === 'DIETICIAN' && renderDieticianFields()}
-      {user.role === 'USER' && renderUserFields()}
+      {user.role === "GYM_OWNER" && renderGymOwnerFields()}
+      {user.role === "TRAINER" && renderTrainerFields()}
+      {user.role === "DIETICIAN" && renderDieticianFields()}
+      {user.role === "USER" && renderUserFields()}
 
       {/* Save Button */}
       <div className="flex justify-end">
@@ -425,7 +445,7 @@ export default function ProfileSettingsPage() {
           disabled={isSaving}
           className="px-8 py-3 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSaving ? 'Saving...' : 'Save Profile'}
+          {isSaving ? "Saving..." : "Save Profile"}
         </button>
       </div>
     </div>

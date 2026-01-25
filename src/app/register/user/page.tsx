@@ -69,8 +69,8 @@ export default function UserRegisterPage() {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    if (!formData.acceptTerms) {
-      newErrors.acceptTerms = "You must accept the terms of service";
+    if (!formData.acceptTos) {
+      newErrors.acceptTos = "You must accept the terms of service";
     }
 
     setErrors(newErrors);

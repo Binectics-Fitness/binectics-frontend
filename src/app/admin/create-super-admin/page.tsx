@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { mockAuthService as authService } from '@/lib/api/mock-auth';
+import { authService } from '@/lib/api/auth';
 
 export default function CreateSuperAdminPage() {
   const [formData, setFormData] = useState({

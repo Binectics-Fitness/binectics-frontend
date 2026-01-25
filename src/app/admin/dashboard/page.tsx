@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
             Admin Dashboard
           </h1>
           <p className="text-foreground/60">
-            Welcome back, {user.firstName} {user.lastName}
+            Welcome back, {user.first_name} {user.last_name}
           </p>
         </div>
 
