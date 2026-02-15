@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { Input } from "@/components";
+import { Input, PasswordInput } from "@/components";
 
 export default function UserRegisterPage() {
   const { register, isLoading: authLoading } = useAuth();
@@ -252,9 +252,8 @@ export default function UserRegisterPage() {
                 />
 
                 {/* Password */}
-                <Input
+                <PasswordInput
                   label="Password"
-                  type="password"
                   name="password"
                   placeholder="••••••••"
                   required
@@ -265,9 +264,8 @@ export default function UserRegisterPage() {
                 />
 
                 {/* Confirm Password */}
-                <Input
+                <PasswordInput
                   label="Confirm Password"
-                  type="password"
                   name="confirmPassword"
                   placeholder="••••••••"
                   required

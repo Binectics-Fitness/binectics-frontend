@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { Input } from "@/components";
+import { Input, PasswordInput } from "@/components";
 import { InactivityNotification } from "@/components/InactivityNotification";
 
 export default function LoginPage() {
@@ -164,25 +164,16 @@ export default function LoginPage() {
                       Forgot?
                     </Link>
                   </div>
-                  <input
-                    type="password"
+                  <PasswordInput
                     id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="••••••••"
                     required
-                    className={`w-full h-12 rounded-lg border-2 ${
-                      errors.password
-                        ? "border-red-500 focus:border-red-500"
-                        : "border-neutral-300 focus:border-accent-blue-500"
-                    } bg-background px-4 text-base text-foreground placeholder:text-foreground-tertiary transition-colors duration-200 focus:outline-none`}
+                    error={errors.password}
+                    className="h-12"
                   />
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.password}
-                    </p>
-                  )}
                 </div>
 
                 {/* Remember Me */}
