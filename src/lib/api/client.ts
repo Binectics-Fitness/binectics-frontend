@@ -7,8 +7,8 @@ import type { ApiResponse } from "@/lib/types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api" ||
-  "http://localhost:4000/api";
+  "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1" ||
+  "http://localhost:4000/api/v1";
 
 console.log("🔧 API Base URL:", API_BASE_URL);
 

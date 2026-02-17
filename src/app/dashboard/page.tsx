@@ -1,99 +1,259 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import DashboardSidebar from '@/components/DashboardSidebar';
-import OnboardingBanner from '@/components/OnboardingBanner';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import DashboardSidebar from "@/components/DashboardSidebar";
+import OnboardingBanner from "@/components/OnboardingBanner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DashboardPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
 
-  // Mock user data
-  const user = {
-    name: 'John',
-    memberSince: '2024',
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login");
+    }
+  }, [isLoading, user, router]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-500 border-r-transparent"></div>
+          <p className="mt-4 text-foreground-secondary">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no user (will redirect)
+  if (!user) {
+    return null;
+  }
+
+  // Extract user display name (first name or full name)
+  const displayName = user.first_name || user.last_name || "there";
+
+  // Mock additional user stats (TODO: fetch from API)
+  const userStats = {
     currentStreak: 7,
     totalVisits: 45,
-    role: 'USER' as const, // Change this to test different roles: 'USER' | 'GYM_OWNER' | 'TRAINER' | 'DIETICIAN'
-    isOnboardingComplete: false, // Set to true to hide the banner
+    isOnboardingComplete: user.is_onboarding_complete ?? false,
   };
 
   // Personalized gym recommendation
   const featuredGym = {
-    name: 'PowerHouse Fitness Downtown',
-    location: 'New York, NY',
-    distance: '0.3 mi',
-    image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10" /></svg>),
+    name: "PowerHouse Fitness Downtown",
+    location: "New York, NY",
+    distance: "0.3 mi",
+    image: (
+      <svg
+        className="h-8 w-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10"
+        />
+      </svg>
+    ),
     rating: 4.9,
-    speciality: 'Strength Training & CrossFit',
+    speciality: "Strength Training & CrossFit",
     availableNow: true,
   };
 
   // Recommended gyms nearby
   const recommendedGyms = [
     {
-      name: 'Yoga Flow Studio',
-      trainer: 'Sarah Johnson',
-      type: 'Yoga & Meditation',
-      duration: '45 min',
+      name: "Yoga Flow Studio",
+      trainer: "Sarah Johnson",
+      type: "Yoga & Meditation",
+      duration: "45 min",
       rating: 4.8,
-      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>),
-      color: 'bg-accent-purple-100',
+      image: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
+        </svg>
+      ),
+      color: "bg-accent-purple-100",
     },
     {
-      name: 'Iron Temple Gym',
-      trainer: 'Mike Chen',
-      type: 'Strength Training',
-      duration: '60 min',
+      name: "Iron Temple Gym",
+      trainer: "Mike Chen",
+      type: "Strength Training",
+      duration: "60 min",
       rating: 4.9,
-      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>),
-      color: 'bg-accent-blue-100',
+      image: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
+        </svg>
+      ),
+      color: "bg-accent-blue-100",
     },
     {
-      name: 'Cardio Core Studio',
-      trainer: 'Emily Davis',
-      type: 'HIIT & Cardio',
-      duration: '30 min',
+      name: "Cardio Core Studio",
+      trainer: "Emily Davis",
+      type: "HIIT & Cardio",
+      duration: "30 min",
       rating: 4.7,
-      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>),
-      color: 'bg-accent-yellow-100',
+      image: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
+        </svg>
+      ),
+      color: "bg-accent-yellow-100",
     },
     {
-      name: 'Wellness Center',
-      trainer: 'Dr. James Wilson',
-      type: 'Nutrition & Wellness',
-      duration: '40 min',
+      name: "Wellness Center",
+      trainer: "Dr. James Wilson",
+      type: "Nutrition & Wellness",
+      duration: "40 min",
       rating: 4.9,
-      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>),
-      color: 'bg-primary-100',
+      image: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+          />
+        </svg>
+      ),
+      color: "bg-primary-100",
     },
   ];
 
   // Workout collections
   const collections = [
     {
-      title: 'Beginner Strength',
+      title: "Beginner Strength",
       count: 12,
-      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>),
-      color: 'bg-gradient-to-br from-accent-blue-400 to-accent-blue-600',
+      image: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
+        </svg>
+      ),
+      color: "bg-gradient-to-br from-accent-blue-400 to-accent-blue-600",
     },
     {
-      title: 'Weight Loss Programs',
+      title: "Weight Loss Programs",
       count: 18,
-      image: <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" /></svg>,
-      color: 'bg-gradient-to-br from-accent-yellow-400 to-accent-yellow-600',
+      image: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"
+          />
+        </svg>
+      ),
+      color: "bg-gradient-to-br from-accent-yellow-400 to-accent-yellow-600",
     },
     {
-      title: 'Muscle Building',
+      title: "Muscle Building",
       count: 15,
-      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10" /></svg>),
-      color: 'bg-gradient-to-br from-accent-purple-400 to-accent-purple-600',
+      image: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10"
+          />
+        </svg>
+      ),
+      color: "bg-gradient-to-br from-accent-purple-400 to-accent-purple-600",
     },
     {
-      title: 'Yoga & Flexibility',
+      title: "Yoga & Flexibility",
       count: 20,
-      image: (<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>),
-      color: 'bg-gradient-to-br from-primary-400 to-primary-600',
+      image: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
+        </svg>
+      ),
+      color: "bg-gradient-to-br from-primary-400 to-primary-600",
     },
   ];
 
@@ -106,17 +266,18 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="font-display text-3xl font-black text-foreground mb-2">
-            Welcome back, {user.name}!
+            Welcome back, {displayName}!
           </h1>
           <p className="text-foreground-secondary">
-            Keep up the great work! You're on a {user.currentStreak}-day streak.
+            Keep up the great work! You're on a {userStats.currentStreak}-day
+            streak.
           </p>
         </div>
 
         {/* Onboarding Banner */}
-        {!user.isOnboardingComplete && (
+        {!userStats.isOnboardingComplete && (
           <div className="mb-8">
-            <OnboardingBanner userRole={user.role} userName={user.name} />
+            <OnboardingBanner userRole={user.role} userName={displayName} />
           </div>
         )}
 
@@ -136,7 +297,12 @@ export default function DashboardPage() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </div>
         </div>
@@ -161,10 +327,16 @@ export default function DashboardPage() {
                 </p>
                 <div className="flex items-center gap-4 mb-6">
                   <div className="flex items-center gap-1">
-                    <svg className="h-5 w-5 text-accent-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <svg
+                      className="h-5 w-5 text-accent-yellow-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
-                    <span className="text-sm font-semibold text-foreground">{featuredGym.rating}</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {featuredGym.rating}
+                    </span>
                   </div>
                   <span className="text-sm text-foreground-secondary">
                     Specializes in {featuredGym.speciality}
@@ -203,7 +375,9 @@ export default function DashboardPage() {
                 href="/dashboard/book"
                 className="group bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
               >
-                <div className={`mb-4 inline-flex h-16 w-16 items-center justify-center  ${gym.color} text-3xl`}>
+                <div
+                  className={`mb-4 inline-flex h-16 w-16 items-center justify-center  ${gym.color} text-3xl`}
+                >
                   {gym.image}
                 </div>
                 <h3 className="font-display text-lg font-bold text-foreground mb-2 group-hover:text-primary-500 transition-colors">
@@ -217,10 +391,16 @@ export default function DashboardPage() {
                   <span>{gym.duration}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <svg className="h-4 w-4 text-accent-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    className="h-4 w-4 text-accent-yellow-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
-                  <span className="text-sm font-semibold text-foreground">{gym.rating}</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {gym.rating}
+                  </span>
                 </div>
               </Link>
             ))}

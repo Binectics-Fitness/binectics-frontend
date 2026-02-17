@@ -19,9 +19,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (user) {
       // Don't allow admin login from regular login page
-      if (user.role === 'ADMIN') {
+      if (user.role === "ADMIN") {
         // Admin should use /admin/login
-        router.push('/admin');
+        router.push("/admin");
         return;
       }
       // User is already logged in, redirect to their dashboard
@@ -226,16 +226,16 @@ export default function LoginPage() {
  */
 function getRoleBasedRedirect(role: string): string {
   switch (role) {
-    case 'GYM_OWNER':
-      return '/dashboard/gym-owner';
-    case 'TRAINER':
-      return '/dashboard/trainer';
-    case 'DIETICIAN':
-      return '/dashboard/dietician';
-    case 'ADMIN':
-      return '/admin/dashboard';
-    case 'USER':
+    case "GYM_OWNER":
+      return "/dashboard/gym-owner";
+    case "TRAINER":
+      return "/dashboard/trainer";
+    case "DIETICIAN":
+      return "/dashboard/dietician";
+    case "ADMIN":
+      return "/admin/dashboard";
+    case "USER":
     default:
-      return '/dashboard';
+      return "/dashboard";
   }
 }
