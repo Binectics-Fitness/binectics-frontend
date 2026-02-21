@@ -11,6 +11,12 @@ import type {
   RegisterRequest,
   ApiResponse,
 } from "@/lib/types";
+import { userStorage, refreshTokenStorage, clearAuthStorage } from "@/lib/utils/storage";
+
+export interface LoginResponse {
+  user: User;
+  access_token: string;
+}
 
 export interface AuthResponse {
   user: User;
@@ -46,31 +52,24 @@ export const authService = {
   /**
    * Login with email and password
    */
-  async login(data: LoginRequest): Promise<ApiResponse<AuthResponse>> {
-    const response = await apiClient.post<{ access_token: string; user: any }>(
+  async login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
+    const response = await apiClient.post<LoginResponse>(
       "/auth/login",
       data,
       false,
     );
 
     if (response.success && response.data) {
-      // Backend returns { access_token, user }
-      // Store access token (no refresh token in current implementation)
-      apiClient.storeTokens(response.data.access_token, "");
-
+      // Store access token
+      apiClient.storeTokens(response.data.access_token);
       // Store user data
-      if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-      }
+      userStorage.set(response.data.user);
     } else {
       // Clear any stale auth data when login fails
-      apiClient.clearAuth();
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user");
-      }
+      clearAuthStorage();
     }
 
-    return response as any;
+    return response;
   },
 
   /**
@@ -78,24 +77,14 @@ export const authService = {
    * Note: Registration does not return tokens. User must verify OTP first.
    */
   async register(data: RegisterRequest): Promise<ApiResponse<User>> {
-    const response = await apiClient.post<User>("/auth/register", data, false);
-    console.log("Register response:", response);
-
-    // Registration only returns user data, no tokens
-    // User needs to verify OTP before authentication
-
-    return response;
+    return apiClient.post<User>("/auth/register", data, false);
   },
 
   /**
-   * Logout current user - JWT is stateless, just clear local storage
+   * Logout current user
    */
   async logout(): Promise<void> {
-    // Clear local auth data (token from localStorage)
-    apiClient.clearAuth();
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user");
-    }
+    clearAuthStorage();
   },
 
   /**
@@ -147,14 +136,7 @@ export const authService = {
    * Refresh access token
    */
   async refreshToken(): Promise<ApiResponse<AuthTokens>> {
-    if (typeof window === "undefined") {
-      return {
-        success: false,
-        message: "Server-side token refresh not supported",
-      };
-    }
-
-    const refreshToken = localStorage.getItem("refresh_token");
+    const refreshToken = refreshTokenStorage.get();
     if (!refreshToken) {
       return { success: false, message: "No refresh token available" };
     }
@@ -176,35 +158,16 @@ export const authService = {
   },
 
   /**
-   * Get current user from localStorage
+   * Get current user from storage
    */
   getCurrentUser(): User | null {
-    if (typeof window === "undefined") return null;
-
-    const userStr = localStorage.getItem("user");
-    if (!userStr) return null;
-
-    try {
-      return JSON.parse(userStr);
-    } catch (error) {
-      console.error("Error parsing user data:", error);
-      return null;
-    }
-  },
-
-  /**
-   * Check if user is authenticated
-   */
-  isAuthenticated(): boolean {
-    if (typeof window === "undefined") return false;
-    return !!localStorage.getItem("access_token");
+    return userStorage.get();
   },
 
   /**
    * Update stored user data
    */
   updateUser(user: User): void {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("user", JSON.stringify(user));
+    userStorage.set(user);
   },
 };

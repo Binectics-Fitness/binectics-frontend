@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input, PasswordInput } from "@/components";
 import { InactivityNotification } from "@/components/InactivityNotification";
+import { getDashboardRoute } from "@/lib/constants/routes";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,18 +16,16 @@ export default function LoginPage() {
     password: "",
   });
 
-  // Redirect if already logged in (non-admin users only)
+  // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      // Don't allow admin login from regular login page
+      // Admin users should use /admin login
       if (user.role === "ADMIN") {
-        // Admin should use /admin/login
         router.push("/admin");
         return;
       }
-      // User is already logged in, redirect to their dashboard
-      const redirectPath = getRoleBasedRedirect(user.role);
-      router.push(redirectPath);
+      // Redirect to role-based dashboard
+      router.push(getDashboardRoute(user.role));
     }
   }, [user, router]);
 
@@ -86,7 +85,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Note: Redirect is handled by AuthContext based on user role
+      // Redirect is handled by AuthContext
     } catch (error) {
       setApiError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
@@ -219,23 +218,4 @@ export default function LoginPage() {
       </main>
     </div>
   );
-}
-
-/**
- * Get redirect path based on user role
- */
-function getRoleBasedRedirect(role: string): string {
-  switch (role) {
-    case "GYM_OWNER":
-      return "/dashboard/gym-owner";
-    case "TRAINER":
-      return "/dashboard/trainer";
-    case "DIETICIAN":
-      return "/dashboard/dietician";
-    case "ADMIN":
-      return "/admin/dashboard";
-    case "USER":
-    default:
-      return "/dashboard";
-  }
 }
