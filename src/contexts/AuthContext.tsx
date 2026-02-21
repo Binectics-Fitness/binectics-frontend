@@ -72,12 +72,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true };
       }
 
+      // Clear user state when login fails
+      setUser(null);
+
       return {
         success: false,
         error: response.message || "Login failed",
         errors: response.errors,
       };
     } catch (error) {
+      // Clear user state on error
+      setUser(null);
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : "An error occurred",

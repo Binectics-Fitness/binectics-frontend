@@ -62,6 +62,12 @@ export const authService = {
       if (typeof window !== "undefined") {
         localStorage.setItem("user", JSON.stringify(response.data.user));
       }
+    } else {
+      // Clear any stale auth data when login fails
+      apiClient.clearAuth();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+      }
     }
 
     return response as any;
