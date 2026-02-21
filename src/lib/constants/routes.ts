@@ -19,13 +19,13 @@ export const AUTH_ROUTES = {
 /**
  * Dashboard routes by user role
  */
-export const DASHBOARD_ROUTES: Record<UserRole, string> = {
+export const DASHBOARD_ROUTES: Readonly<Record<UserRole, string>> = {
   USER: "/dashboard",
   GYM_OWNER: "/dashboard/gym-owner",
   TRAINER: "/dashboard/trainer",
   DIETICIAN: "/dashboard/dietician",
   ADMIN: "/admin/dashboard",
-} as const;
+};
 
 /**
  * Get dashboard route for user role
