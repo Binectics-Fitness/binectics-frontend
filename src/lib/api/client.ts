@@ -4,13 +4,17 @@
  */
 
 import type { ApiResponse } from "@/lib/types";
+import {
+  tokenStorage,
+  refreshTokenStorage,
+  clearAuthStorage,
+} from "@/lib/utils/storage";
+import { isAuthRoute } from "@/lib/constants/routes";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1" ||
   "http://localhost:4000/api/v1";
-
-console.log("🔧 API Base URL:", API_BASE_URL);
 
 class ApiClient {
   private baseUrl: string;
@@ -20,29 +24,10 @@ class ApiClient {
   }
 
   /**
-   * Get authentication token from localStorage
+   * Get authentication token
    */
   private getToken(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("access_token");
-  }
-
-  /**
-   * Set authentication token in localStorage
-   */
-  private setToken(token: string): void {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("access_token", token);
-  }
-
-  /**
-   * Remove authentication token from localStorage
-   */
-  private removeToken(): void {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user");
+    return tokenStorage.get();
   }
 
   /**
@@ -80,19 +65,11 @@ class ApiClient {
     if (!response.ok) {
       // Handle 401 - Unauthorized (token expired)
       if (response.status === 401) {
-        this.removeToken();
+        clearAuthStorage();
+        
         // Only redirect to login if we're not already on an auth page
-        // This prevents page reload when auth operations fail
-        if (typeof window !== "undefined") {
-          const pathname = window.location.pathname;
-          const isAuthPage = pathname.startsWith('/login') || 
-                             pathname.startsWith('/register') || 
-                             pathname.startsWith('/forgot-password') ||
-                             pathname.startsWith('/reset-password');
-          
-          if (!isAuthPage) {
-            window.location.href = "/login";
-          }
+        if (typeof window !== "undefined" && !isAuthRoute(window.location.pathname)) {
+          window.location.href = "/login";
         }
       }
 
@@ -230,9 +207,9 @@ class ApiClient {
    * Store tokens after successful authentication
    */
   storeTokens(accessToken: string, refreshToken?: string): void {
-    this.setToken(accessToken);
-    if (refreshToken && typeof window !== "undefined") {
-      localStorage.setItem("refresh_token", refreshToken);
+    tokenStorage.set(accessToken);
+    if (refreshToken) {
+      refreshTokenStorage.set(refreshToken);
     }
   }
 
@@ -240,7 +217,7 @@ class ApiClient {
    * Clear all authentication data
    */
   clearAuth(): void {
-    this.removeToken();
+    clearAuthStorage();
   }
 }
 

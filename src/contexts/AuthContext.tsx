@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/api/auth";
+import { getDashboardRoute, getLoginRoute } from "@/lib/constants/routes";
 import type { User, LoginRequest, RegisterRequest } from "@/lib/types";
 
 interface AuthContextType {
@@ -64,11 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.success && response.data) {
         setUser(response.data.user);
-
-        // Redirect based on user role
-        const redirectPath = getRoleBasedRedirect(response.data.user.role);
-        router.push(redirectPath);
-
+        router.push(getDashboardRoute(response.data.user.role));
         return { success: true };
       }
 
@@ -81,9 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         errors: response.errors,
       };
     } catch (error) {
-      // Clear user state on error
       setUser(null);
-      
       return {
         success: false,
         error: error instanceof Error ? error.message : "An error occurred",
@@ -121,33 +116,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    console.log("Logout initiated");
+    const userRole = user?.role;
+    
     try {
-      console.log("Calling authService.logout()");
       await authService.logout();
-      const currentUser = user;
-      console.log("Clearing user state:", currentUser);
       setUser(null);
-
-      // Redirect to appropriate login page based on user role
-      if (currentUser?.role === "ADMIN") {
-        console.log("Redirecting to /admin");
-        router.push("/admin");
-      } else {
-        console.log("Redirecting to /login");
-        router.push("/login");
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
+      router.push(getLoginRoute(userRole));
+    } catch {
       // Still clear local state and redirect even if API call fails
-      const currentUser = user;
       setUser(null);
-
-      if (currentUser?.role === "ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push("/login");
-      }
+      router.push(getLoginRoute(userRole));
     }
   };
 
@@ -179,23 +157,4 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
-
-/**
- * Get redirect path based on user role
- */
-function getRoleBasedRedirect(role: string): string {
-  switch (role) {
-    case "GYM_OWNER":
-      return "/dashboard/gym-owner";
-    case "TRAINER":
-      return "/dashboard/trainer";
-    case "DIETICIAN":
-      return "/dashboard/dietician";
-    case "ADMIN":
-      return "/admin/dashboard";
-    case "USER":
-    default:
-      return "/dashboard";
-  }
 }
