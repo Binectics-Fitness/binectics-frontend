@@ -33,11 +33,20 @@ export const tokenStorage = {
   set(token: string): void {
     if (!isBrowser()) return;
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+
+    // Also set as httpOnly cookie for middleware access
+    // Note: We set it as a regular cookie since httpOnly can only be set server-side
+    const maxAge = 60 * 60; // 1 hour (matches JWT expiration)
+    document.cookie = `access_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
   },
 
   remove(): void {
     if (!isBrowser()) return;
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+
+    // Also remove cookie
+    document.cookie =
+      "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   },
 };
 
@@ -53,11 +62,19 @@ export const refreshTokenStorage = {
   set(token: string): void {
     if (!isBrowser()) return;
     localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
+
+    // Also set as cookie for middleware access
+    const maxAge = 7 * 24 * 60 * 60; // 7 days
+    document.cookie = `refresh_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
   },
 
   remove(): void {
     if (!isBrowser()) return;
     localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+
+    // Also remove cookie
+    document.cookie =
+      "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   },
 };
 

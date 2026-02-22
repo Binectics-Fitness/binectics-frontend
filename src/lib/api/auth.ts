@@ -11,7 +11,11 @@ import type {
   RegisterRequest,
   ApiResponse,
 } from "@/lib/types";
-import { userStorage, refreshTokenStorage, clearAuthStorage } from "@/lib/utils/storage";
+import {
+  userStorage,
+  refreshTokenStorage,
+  clearAuthStorage,
+} from "@/lib/utils/storage";
 
 export interface LoginResponse {
   user: User;
