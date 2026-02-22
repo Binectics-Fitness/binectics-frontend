@@ -1,47 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import DashboardLoading from "@/components/DashboardLoading";
 import OnboardingBanner from "@/components/OnboardingBanner";
-import { useAuth } from "@/contexts/AuthContext";
-import { getDashboardRoute } from "@/lib/constants/routes";
+import { useRoleGuard } from "@/hooks/useRequireAuth";
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const { user, isLoading, isAuthorized } = useRoleGuard("USER");
 
-  // Redirect to login if not authenticated, or to correct dashboard based on role
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login");
-    } else if (!isLoading && user) {
-      // Redirect non-USER roles to their specific dashboards
-      const correctDashboard = getDashboardRoute(user.role);
-      if (correctDashboard !== "/dashboard") {
-        router.replace(correctDashboard);
-      }
-    }
-  }, [isLoading, user, router]);
+  if (isLoading) return <DashboardLoading />;
+  if (!isAuthorized) return null;
 
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-500 border-r-transparent"></div>
-          <p className="mt-4 text-foreground-secondary">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if no user (will redirect)
-  if (!user) {
-    return null;
-  }
+  // TypeScript guard - at this point user is guaranteed to be non-null
+  if (!user) return null;
 
   // Extract user display name (first name or full name)
   const displayName = user.first_name || user.last_name || "there";
@@ -319,7 +293,7 @@ export default function DashboardPage() {
           <h2 className="font-display text-2xl font-black text-foreground mb-6">
             Selected just for you
           </h2>
-          <div className="bg-gradient-to-r from-accent-yellow-50 to-accent-yellow-100 p-8">
+          <div className="bg-linear-to-r from-accent-yellow-50 to-accent-yellow-100 p-8">
             <div className="flex items-start gap-8">
               <div className="flex-1">
                 <div className="mb-4 inline-flex items-center gap-2  bg-primary-500 px-3 py-1 text-xs font-bold text-white">
@@ -356,7 +330,7 @@ export default function DashboardPage() {
                   Check In Now
                 </Link>
               </div>
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <div className="flex h-32 w-32 items-center justify-center bg-white text-6xl shadow-lg">
                   {featuredGym.image}
                 </div>

@@ -1,41 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DieticianSidebar from '@/components/DieticianSidebar';
-import { useAuth } from '@/contexts/AuthContext';
-import { getDashboardRoute } from '@/lib/constants/routes';
+import DashboardLoading from '@/components/DashboardLoading';
+import { useRoleGuard } from '@/hooks/useRequireAuth';
 
 export default function DieticianDashboard() {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const { user, isLoading, isAuthorized } = useRoleGuard('DIETICIAN');
 
-  // Redirect if not authenticated or wrong role
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-    } else if (!isLoading && user && user.role !== 'DIETICIAN') {
-      router.replace(getDashboardRoute(user.role));
-    }
-  }, [isLoading, user, router]);
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-500 border-r-transparent"></div>
-          <p className="mt-4 text-foreground-secondary">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if no user or wrong role
-  if (!user || user.role !== 'DIETICIAN') {
-    return null;
-  }
+  if (isLoading) return <DashboardLoading />;
+  if (!isAuthorized) return null;
   // Mock dietician data
   const dieticianData = {
     name: 'Dr. Emily Wilson',
@@ -293,14 +267,14 @@ export default function DieticianDashboard() {
               <ul className="space-y-4">
                 {todayConsultations.map((consultation, index) => (
                   <li key={index} className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-2xl flex-shrink-0">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-2xl shrink-0">
                       {consultation.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground truncate">{consultation.client}</p>
                       <p className="text-sm text-foreground-secondary">{consultation.type} • {consultation.duration}</p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <p className="text-sm font-medium text-foreground">{consultation.time}</p>
                       <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
                         consultation.status === 'completed'
@@ -334,14 +308,14 @@ export default function DieticianDashboard() {
                 {clientProgress.map((client, index) => (
                   <li key={index} className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-xl flex-shrink-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-xl shrink-0">
                         {client.avatar}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-foreground truncate">{client.name}</p>
                         <p className="text-xs text-foreground-tertiary">{client.currentWeight} → {client.targetWeight}</p>
                       </div>
-                      <span className=" bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 flex-shrink-0">
+                      <span className=" bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 shrink-0">
                         {client.goal}
                       </span>
                     </div>
