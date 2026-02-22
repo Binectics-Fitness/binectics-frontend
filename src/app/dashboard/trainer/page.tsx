@@ -1,10 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TrainerSidebar from '@/components/TrainerSidebar';
+import { useAuth } from '@/contexts/AuthContext';
+import { getDashboardRoute } from '@/lib/constants/routes';
 
 export default function TrainerDashboard() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect if not authenticated or wrong role
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    } else if (!isLoading && user && user.role !== 'TRAINER') {
+      router.replace(getDashboardRoute(user.role));
+    }
+  }, [isLoading, user, router]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-500 border-r-transparent"></div>
+          <p className="mt-4 text-foreground-secondary">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no user or wrong role
+  if (!user || user.role !== 'TRAINER') {
+    return null;
+  }
   // Mock trainer data
   const trainerData = {
     name: 'Mike Chen',

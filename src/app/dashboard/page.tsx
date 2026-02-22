@@ -6,16 +6,23 @@ import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { useAuth } from "@/contexts/AuthContext";
+import { getDashboardRoute } from "@/lib/constants/routes";
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated, or to correct dashboard based on role
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/login");
+    } else if (!isLoading && user) {
+      // Redirect non-USER roles to their specific dashboards
+      const correctDashboard = getDashboardRoute(user.role);
+      if (correctDashboard !== "/dashboard") {
+        router.replace(correctDashboard);
+      }
     }
   }, [isLoading, user, router]);
 

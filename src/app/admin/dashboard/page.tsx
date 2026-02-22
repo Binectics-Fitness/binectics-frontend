@@ -1,11 +1,24 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDashboardRoute } from '@/lib/constants/routes';
 import AdminSidebar from '@/components/AdminSidebar';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
   const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect if not authenticated or wrong role
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    } else if (!isLoading && user && user.role !== 'ADMIN') {
+      router.replace(getDashboardRoute(user.role));
+    }
+  }, [isLoading, user, router]);
 
   // Loading and auth checks are handled by layout
   if (isLoading) {
