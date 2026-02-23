@@ -562,6 +562,48 @@ b996b26 - Implement PRD-aligned landing page enhancements
 - Server components where possible
 - No global state library yet (add if needed)
 
+### Next.js 13+ App Router Guidelines
+
+**IMPORTANT: `useSearchParams()` Suspense Requirement**
+
+Next.js 13+ **requires** `useSearchParams()` to be wrapped in a `<Suspense>` boundary:
+
+```tsx
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
+// Inner component that uses useSearchParams
+function MyPageContent() {
+  const searchParams = useSearchParams();
+  // ... component logic
+}
+
+// Wrapper component with Suspense boundary
+export default function MyPage() {
+  return (
+    <Suspense fallback={<LoadingComponent />}>
+      <MyPageContent />
+    </Suspense>
+  );
+}
+```
+
+**Why This Is Required:**
+- The hook accesses URL query parameters that aren't available during static generation
+- During build time (SSG), query parameters don't exist yet
+- Suspense allows Next.js to handle this gracefully by showing a fallback during client-side hydration
+- Without Suspense, builds will fail with: `useSearchParams() should be wrapped in a suspense boundary`
+
+**When to Apply:**
+- ✅ Any component using `useSearchParams()`
+- ✅ Any component using `useRouter().searchParams`
+- ✅ Components that read URL query parameters on mount
+
+**Pattern:**
+1. Create inner component with the hook
+2. Wrap in outer component with `<Suspense>`
+3. Provide appropriate loading fallback (e.g., `<DashboardLoading />`)
+
 ### Performance
 
 - Next.js App Router with React Server Components

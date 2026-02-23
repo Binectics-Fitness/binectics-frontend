@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +9,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
 
-export default function FormsListPage() {
+function FormsListContent() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,7 +76,6 @@ export default function FormsListPage() {
     }
 
     if (user) {
-      // eslint-disable-next-line react-compiler/react-compiler
       void loadForms();
     }
   }, [user, authLoading, router, loadForms]);
@@ -85,7 +84,6 @@ export default function FormsListPage() {
   useEffect(() => {
     const highlight = searchParams.get("highlight");
     if (highlight) {
-      // eslint-disable-next-line react-compiler/react-compiler
       setHighlightedFormId(highlight);
       // Remove highlight after 5 seconds
       setTimeout(() => setHighlightedFormId(null), 5000);
@@ -298,5 +296,13 @@ export default function FormsListPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function FormsListPage() {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <FormsListContent />
+    </Suspense>
   );
 }
