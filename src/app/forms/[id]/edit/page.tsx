@@ -450,18 +450,6 @@ export default function FormBuilderPage() {
     setQuestionData({ ...questionData, options });
   };
 
-  const handleCopyLink = async () => {
-    const formUrl = `${window.location.origin}/forms/${formId}/submit`;
-    try {
-      await navigator.clipboard.writeText(formUrl);
-      showToast("Form link copied to clipboard!");
-    } catch (err) {
-      console.error("Failed to copy link:", err);
-      // Fallback: Show the link in an error toast
-      showToast(`Failed to copy. Link: ${formUrl}`, true);
-    }
-  };
-
   if (authLoading || isLoading) {
     return <DashboardLoading />;
   }
@@ -501,26 +489,6 @@ export default function FormBuilderPage() {
             >
               {form.is_published ? "Published" : "Draft"}
             </span>
-            <button
-              onClick={handleCopyLink}
-              className="px-4 py-2 text-neutral-700 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors flex items-center gap-2 font-medium"
-              title="Copy form link to clipboard"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
-              Copy Link
-            </button>
             <button
               onClick={() => window.open(`/forms/${formId}/submit`, '_blank')}
               className="px-4 py-2 text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-2 font-medium"
@@ -815,7 +783,10 @@ export default function FormBuilderPage() {
             formId={formId}
             formTitle={form.title}
             isOpen={showPublishModal}
-            onClose={() => setShowPublishModal(false)}
+            onClose={() => {
+              setShowPublishModal(false);
+              void loadFormData(); // Reload form to get updated status
+            }}
           />
         )}
       </div>
