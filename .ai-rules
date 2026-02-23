@@ -1,0 +1,387 @@
+# AI Assistant Rules for Binectics Frontend
+
+## Core Directives
+
+### 1. Frontend-Only Architecture
+
+This is a **frontend-only** Next.js application. The backend is a separate NestJS API hosted on Azure.
+
+**NEVER:**
+
+- Create backend code (NestJS, Prisma, database schemas)
+- Create API routes in Next.js (`app/api/*` or `pages/api/*`)
+- Add backend dependencies
+- Write database queries or migrations
+
+**ALWAYS:**
+
+- Create API client code that calls the external API
+- Use `NEXT_PUBLIC_API_URL` environment variable
+- Handle API responses with proper error handling
+
+### 2. Navigation Standards - BREADCRUMBS REQUIRED
+
+**CRITICAL RULE: Use breadcrumbs for all authenticated page navigation**
+
+❌ **NEVER** use standalone "Back" buttons like:
+
+```tsx
+// BAD - Don't do this
+<Button onClick={() => router.push("/dashboard")}>
+  ← Back to Dashboard
+</Button>
+
+<Link href="/forms">← Back to Forms</Link>
+```
+
+✅ **ALWAYS** use breadcrumbs instead:
+
+```tsx
+// GOOD - Do this
+import Breadcrumb from "@/components/Breadcrumb";
+
+<Breadcrumb />
+// or
+<Breadcrumb items={[
+  { label: "Dashboard", href: "/dashboard" },
+  { label: "Forms", href: "/forms" },
+  { label: "Edit", href: `/forms/${id}/edit` }
+]} />
+```
+
+**Breadcrumb Placement:**
+
+- Place at the top of the content area
+- Before the main page heading
+- Inside the max-width container
+
+**When to use breadcrumbs:**
+
+- ✅ All authenticated dashboard pages
+- ✅ Create/Edit forms
+- ✅ Detail views and sub-pages
+- ✅ Settings pages
+- ✅ Multi-level navigation
+- ❌ Public landing pages
+- ❌ Login/Register pages
+- ❌ Error pages
+
+### 3. Design System Compliance (Blinkist-Inspired)
+
+**Color Palette (Use Exact Values):**
+
+```css
+--foreground: #03314b; /* Dark blue text */
+--background: #f7f4ef; /* Cream background */
+--primary-500: #00d991; /* Green (CTAs) */
+--accent-blue-500: #0267f2; /* Blue accent */
+--accent-yellow-500: #fdb90e; /* Yellow accent */
+--accent-purple-500: #8b5cf6; /* Purple accent */
+```
+
+**Typography:**
+
+- Font family: Cera Pro (Regular, Medium, Bold, Black)
+- Headings: `font-display font-black` with tight line-height
+- Body: `text-base` or `text-lg` with relaxed line-height
+
+**Design Principles:**
+
+- Dark text (`text-foreground`) on colored backgrounds
+- No CSS animations (only color transitions on hover/active)
+- Card-based layouts with `rounded-2xl` or `rounded-3xl`
+- Use `shadow-card` for elevation
+
+**Component Styling:**
+
+- Buttons: `h-12` or `h-14`, `rounded-lg`, `font-semibold`
+- Cards: `rounded-2xl`, `shadow-card`, `p-6` or `p-8`
+- Spacing: `py-20 sm:py-28` for sections
+- Container: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`
+
+### 4. Authentication & Authorization
+
+**Always check authentication state:**
+
+```tsx
+const { user, isLoading } = useAuth();
+
+// Redirect if not authenticated
+useEffect(() => {
+  if (!isLoading && !user) {
+    router.push("/login");
+  }
+}, [user, isLoading, router]);
+
+// Show loading state
+if (isLoading) {
+  return <DashboardLoading />;
+}
+
+if (!user) {
+  return null;
+}
+```
+
+**Role-based access:**
+
+```tsx
+const { hasRole } = useRoleGuard();
+
+if (!hasRole(["TRAINER", "DIETICIAN"])) {
+  return <UnauthorizedPage />;
+}
+```
+
+### 5. Component Architecture
+
+**Client vs Server Components:**
+
+- Use server components by default
+- Use `"use client"` only when needed:
+  - useState, useEffect, event handlers
+  - Browser APIs
+  - Context consumers
+
+**Component Structure:**
+
+```tsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import Breadcrumb from "@/components/Breadcrumb";
+
+export default function PageName() {
+  // 1. Hooks
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const [state, setState] = useState();
+
+  // 2. Effects
+  useEffect(() => {
+    // Auth check, data loading
+  }, []);
+
+  // 3. Event handlers
+  const handleAction = async () => {
+    // Implementation
+  };
+
+  // 4. Loading state
+  if (isLoading) {
+    return <DashboardLoading />;
+  }
+
+  // 5. Auth guard
+  if (!user) {
+    return null;
+  }
+
+  // 6. Render
+  return (
+    <div className="min-h-screen bg-background p-8">
+      <div className="max-w-7xl mx-auto">
+        <Breadcrumb />
+        {/* Content */}
+      </div>
+    </div>
+  );
+}
+```
+
+### 6. Error Handling & User Feedback
+
+**API calls:**
+
+```tsx
+const response = await apiService.action();
+
+if (response.success) {
+  // Success feedback
+  setState(response.data);
+} else {
+  // Error feedback
+  setError(response.message || "Action failed");
+}
+```
+
+**Show error messages:**
+
+```tsx
+{
+  error && (
+    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+      {error}
+    </div>
+  );
+}
+```
+
+**Loading states:**
+
+- Use `<DashboardLoading />` for full-page loading
+- Disable buttons during submission: `disabled={isSubmitting}`
+- Show inline spinners for partial updates
+
+### 7. Form Handling
+
+**Best practices:**
+
+- Use controlled components
+- Validate on submit
+- Show errors near inputs
+- Clear errors on change
+- Disable submit during processing
+- Show success feedback
+
+```tsx
+const [formData, setFormData] = useState({ title: "" });
+const [errors, setErrors] = useState<Record<string, string>>({});
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setErrors({});
+
+  // Validation
+  if (!formData.title) {
+    setErrors({ title: "Title is required" });
+    return;
+  }
+
+  setIsSubmitting(true);
+  const response = await apiService.submit(formData);
+
+  if (response.success) {
+    router.push("/success");
+  } else {
+    setErrors({ form: response.message });
+    setIsSubmitting(false);
+  }
+};
+```
+
+### 8. Code Quality Standards
+
+**TypeScript:**
+
+- Use strict mode
+- Define interfaces for all data structures
+- Avoid `any` type
+- Use type guards where needed
+
+**Code Style:**
+
+- Prefer `const` over `let`
+- Use arrow functions
+- Destructure props and objects
+- Use optional chaining (`?.`) and nullish coalescing (`??`)
+- Keep functions focused and small
+
+**Imports:**
+
+```tsx
+// 1. React/Next
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+// 2. Contexts
+import { useAuth } from "@/contexts/AuthContext";
+
+// 3. Components
+import Breadcrumb from "@/components/Breadcrumb";
+import { Button } from "@/components/Button";
+
+// 4. Services/Utils
+import { formsService } from "@/lib/api/forms";
+
+// 5. Types
+import type { Form } from "@/lib/api/forms";
+```
+
+### 9. Accessibility
+
+**Requirements:**
+
+- Semantic HTML (`<nav>`, `<main>`, `<article>`)
+- ARIA labels on icon-only buttons
+- Keyboard navigation support
+- Focus styles visible
+- Color contrast WCAG AA compliant
+- Alt text on all images
+
+### 10. File Organization
+
+```
+/src
+  /app
+    /dashboard         # Dashboard pages
+    /forms            # Form builder pages
+    /[feature]        # Feature pages
+    layout.tsx        # Root layout
+    page.tsx          # Landing page
+  /components
+    Breadcrumb.tsx    # ← USE THIS FOR NAVIGATION
+    Button.tsx
+    [Component].tsx
+  /contexts
+    AuthContext.tsx
+  /hooks
+    useRoleGuard.ts
+  /lib
+    /api              # API client services
+    /utils            # Helper functions
+```
+
+## Decision Framework
+
+Before implementing any feature, ask:
+
+1. **Is this frontend-only?** If it needs backend changes, stop and inform the user.
+
+2. **Does this need authentication?** Add auth checks and breadcrumbs.
+
+3. **What's the navigation hierarchy?** Implement appropriate breadcrumbs.
+
+4. **Does it match Blinkist design?** Use correct colors, typography, and spacing.
+
+5. **Is error handling complete?** Loading states, error messages, success feedback.
+
+6. **Is it accessible?** Semantic HTML, ARIA labels, keyboard navigation.
+
+7. **Is it type-safe?** Proper TypeScript interfaces and types.
+
+## Common Mistakes to Avoid
+
+❌ Creating API routes in Next.js
+❌ Using "Back" buttons instead of breadcrumbs
+❌ Skipping authentication checks
+❌ Using wrong colors from design system
+❌ Missing loading states
+❌ Not handling API errors
+❌ Using `any` type in TypeScript
+❌ Forgetting breadcrumb navigation
+❌ Mixing client/server components incorrectly
+
+## When to Ask for Clarification
+
+- Is this feature frontend-only or does it need backend work?
+- Should archived/deleted items be shown?
+- What role(s) can access this page?
+- What should happen on error?
+- Is pagination needed?
+- Should this be real-time or can it poll?
+
+## Summary
+
+1. **Frontend-only** - Never create backend code
+2. **Breadcrumbs always** - Never use "Back" buttons on authenticated pages
+3. **Blinkist design** - Follow exact color palette and typography
+4. **Auth first** - Check authentication on every protected page
+5. **Error handling** - Handle loading, error, and success states
+6. **Type safety** - Use TypeScript strictly
+7. **Accessibility** - Build for all users
+8. **Consistency** - Follow established patterns
