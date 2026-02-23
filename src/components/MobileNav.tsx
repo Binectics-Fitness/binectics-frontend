@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MobileNav() {
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -95,40 +97,76 @@ export default function MobileNav() {
             </div>
 
             <div className="mt-8 space-y-3">
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 rounded-lg border-2 border-neutral-300 px-4 py-3 text-base font-semibold text-foreground transition-colors hover:bg-neutral-100"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill="currentColor"
-                    fillRule="evenodd"
-                    d="M6.75 9.003c.41 0 .75-.34.75-.75V4.5H19v16H7.5v-3.75c0-.41-.34-.75-.75-.75s-.75.34-.75.75v4.5c0 .41.34.75.75.75h13c.41 0 .75-.34.75-.75V3.75c0-.41-.34-.75-.75-.75h-13c-.41 0-.75.34-.75.75v4.503c0 .41.34.75.75.75Z"
-                    clipRule="evenodd"
-                  ></path>
-                  <path
-                    fill="currentColor"
-                    fillRule="evenodd"
-                    d="m16.52 11.823-3.81-3.71a.754.754 0 0 0-1.06.01c-.29.3-.28.77.01 1.06l2.59 2.53H3.75c-.41 0-.75.34-.75.75s.34.75.75.75h10.37l-2.37 2.43c-.29.3-.28.77.01 1.06.3.29.77.28 1.06-.01l3.71-3.81c.29-.3.28-.77-.01-1.06Z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                prefetch={false}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center rounded-lg bg-primary-500 px-4 py-3 text-base font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
-              >
-                Join Free
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center gap-2 rounded-lg border-2 border-neutral-300 px-4 py-3 text-base font-semibold text-foreground transition-colors hover:bg-neutral-100"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                      />
+                    </svg>
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center rounded-lg bg-foreground px-4 py-3 text-base font-semibold text-background shadow-button transition-colors hover:bg-foreground-secondary"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center gap-2 rounded-lg border-2 border-neutral-300 px-4 py-3 text-base font-semibold text-foreground transition-colors hover:bg-neutral-100"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fill="currentColor"
+                        fillRule="evenodd"
+                        d="M6.75 9.003c.41 0 .75-.34.75-.75V4.5H19v16H7.5v-3.75c0-.41-.34-.75-.75-.75s-.75.34-.75.75v4.5c0 .41.34.75.75.75h13c.41 0 .75-.34.75-.75V3.75c0-.41-.34-.75-.75-.75h-13c-.41 0-.75.34-.75.75v4.503c0 .41.34.75.75.75Z"
+                        clipRule="evenodd"
+                      ></path>
+                      <path
+                        fill="currentColor"
+                        fillRule="evenodd"
+                        d="m16.52 11.823-3.81-3.71a.754.754 0 0 0-1.06.01c-.29.3-.28.77.01 1.06l2.59 2.53H3.75c-.41 0-.75.34-.75.75s.34.75.75.75h10.37l-2.37 2.43c-.29.3-.28.77.01 1.06.3.29.77.28 1.06-.01l3.71-3.81c.29-.3.28-.77-.01-1.06Z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    prefetch={false}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center rounded-lg bg-primary-500 px-4 py-3 text-base font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
+                  >
+                    Join Free
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>

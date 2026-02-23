@@ -1,0 +1,224 @@
+# Binectics Frontend - Cursor AI Rules
+
+## Project Overview
+
+This is a frontend-only Next.js application for the Binectics fitness marketplace platform. The backend API is hosted separately on Azure.
+
+## Critical Rules
+
+### 🚫 ABSOLUTE: Frontend-Only Project
+
+- **NEVER** create backend code (NestJS, Prisma, Express, API routes)
+- **NEVER** create folders: `/api`, `/backend`, `/server`, `/prisma`, `/database`
+- **NEVER** add backend dependencies
+- **NEVER** create Next.js API routes in `app/api/` or `pages/api/`
+- **ONLY** create API client code that calls the external Azure API
+
+### Design System (Blinkist-Inspired)
+
+- **Colors**: Use exact Blinkist palette from `globals.css`
+  - Primary: `#00d991` (green)
+  - Blue: `#0267f2`
+  - Yellow: `#fdb90e`
+  - Purple: `#8b5cf6`
+  - Foreground: `#03314b` (dark blue text)
+  - Background: `#f7f4ef` (cream)
+- **Typography**: Cera Pro font family (Regular, Medium, Bold, Black)
+- **Principle**: Dark text on colored backgrounds (including green/yellow buttons)
+- **No animations**: Only hover/active color states on buttons
+- **Cards**: `rounded-2xl` or `rounded-3xl` with `shadow-card`
+
+### Navigation Standards
+
+#### Breadcrumbs (Required)
+
+- **ALWAYS** use breadcrumb navigation on authenticated pages
+- **NEVER** use standalone "Back" or "Back to Dashboard" buttons
+- Implementation:
+
+  ```tsx
+  import Breadcrumb from "@/components/Breadcrumb";
+
+  // Auto-generate from path
+  <Breadcrumb />
+
+  // Or specify custom breadcrumbs
+  <Breadcrumb items={[
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Forms", href: "/forms" },
+    { label: "Edit Form", href: `/forms/${id}/edit` }
+  ]} />
+  ```
+
+- Place breadcrumbs at the top of content area, before page heading
+- Breadcrumbs should show logical hierarchy: Dashboard → Section → Page
+
+#### When to Use Breadcrumbs
+
+- ✅ All authenticated dashboard pages
+- ✅ Multi-step workflows (forms, profiles, settings)
+- ✅ Nested content (edit pages, detail views)
+- ❌ Landing page
+- ❌ Login/Register pages
+- ❌ Error pages (404, 500)
+
+### Component Architecture
+
+- Use client components (`"use client"`) only when needed (state, hooks, events)
+- Use server components by default
+- Centralize reusable logic in hooks (`/src/hooks`)
+- Keep components focused and single-responsibility
+
+### Authentication
+
+- Always check `useAuth()` hook for user state
+- Redirect unauthenticated users to `/login`
+- Use `useRoleGuard()` hook for role-specific access
+- Show loading state during auth checks
+
+### Code Style
+
+- TypeScript strict mode
+- Use `interface` for object types
+- Prefer `const` over `let`
+- Use optional chaining (`?.`) and nullish coalescing (`??`)
+- Keep functions small and focused
+- Use descriptive variable names
+
+### File Organization
+
+```
+/src
+  /app              # Next.js App Router pages
+  /components       # Reusable React components
+  /contexts         # React Context providers
+  /hooks            # Custom React hooks
+  /lib              # Utilities, API clients, helpers
+```
+
+### API Integration
+
+- All API calls through `/src/lib/api/*` client modules
+- Use `NEXT_PUBLIC_API_URL` environment variable
+- Handle loading, error, and success states
+- Show user-friendly error messages
+
+### Forms & Validation
+
+- Use controlled components
+- Validate on submit (and real-time where appropriate)
+- Show clear error messages near inputs
+- Disable submit during processing
+- Clear errors when user makes changes
+
+### Accessibility
+
+- Use semantic HTML
+- Add `aria-label` to icon-only buttons
+- Ensure keyboard navigation works
+- Maintain color contrast ratios
+- Use `alt` text on images
+
+### Performance
+
+- Use Next.js `<Link>` for navigation
+- Lazy load heavy components
+- Optimize images with `next/image`
+- Minimize client-side JavaScript
+
+## Common Patterns
+
+### Authenticated Page Structure
+
+```tsx
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import Breadcrumb from "@/components/Breadcrumb";
+import DashboardLoading from "@/components/DashboardLoading";
+
+export default function Page() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return <DashboardLoading />;
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-background p-8">
+      <div className="max-w-7xl mx-auto">
+        <Breadcrumb />
+        <h1 className="font-display text-3xl font-black text-foreground mb-6">
+          Page Title
+        </h1>
+        {/* Page content */}
+      </div>
+    </div>
+  );
+}
+```
+
+### API Service Pattern
+
+```tsx
+interface Response<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
+
+async function apiCall<T>(endpoint: string): Promise<Response<T>> {
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Request failed",
+      };
+    }
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Network error",
+    };
+  }
+}
+```
+
+## Questions to Ask
+
+When implementing features, consider:
+
+1. Is this frontend-only or does it need backend changes?
+2. Does this page require authentication?
+3. Should this be a client or server component?
+4. Have I added breadcrumb navigation?
+5. Does this match the Blinkist design system?
+6. Is error handling comprehensive?
+7. Is the loading state clear to users?
+8. Is this accessible?
