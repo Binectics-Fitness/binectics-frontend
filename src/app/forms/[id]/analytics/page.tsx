@@ -162,7 +162,7 @@ export default function FormAnalyticsPage() {
               <h2 className="font-display text-xl font-bold text-foreground mb-6">
                 Submission Trend (Last 30 Days)
               </h2>
-              <div className="h-64 flex items-end justify-between gap-2">
+              <div className="h-64 flex items-end justify-start gap-3 px-4 pb-8">
                 {analytics.submission_trend.map((point) => {
                   const maxCount = Math.max(
                     ...analytics.submission_trend.map((p) => p.count),
@@ -172,21 +172,31 @@ export default function FormAnalyticsPage() {
                   return (
                     <div
                       key={point.date}
-                      className="flex-1 flex flex-col items-center"
+                      className="flex flex-col items-center justify-end"
+                      style={{ width: "40px" }}
                     >
                       <div
-                        className="w-full bg-primary-500 rounded-t hover:bg-primary-600 transition-colors relative group"
+                        className="w-full bg-primary-500 rounded-t-md hover:bg-primary-600 transition-all duration-200 relative group cursor-pointer shadow-sm"
                         style={{
                           height: `${height}%`,
-                          minHeight: point.count > 0 ? "4px" : "0",
+                          minHeight: point.count > 0 ? "8px" : "0",
                         }}
                       >
-                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-foreground text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          {point.count}{" "}
-                          {point.count === 1 ? "response" : "responses"}
+                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-foreground text-white text-xs px-3 py-1.5 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                          <div className="font-semibold">
+                            {point.count}{" "}
+                            {point.count === 1 ? "response" : "responses"}
+                          </div>
+                          <div className="text-xs opacity-75">
+                            {new Date(point.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-xs text-foreground-tertiary mt-2 transform -rotate-45 origin-left">
+                      <div className="text-xs text-foreground-tertiary mt-2 text-center whitespace-nowrap">
                         {new Date(point.date).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
