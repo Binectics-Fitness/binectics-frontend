@@ -223,6 +223,30 @@ export default function FormBuilderPage() {
     }),
   );
 
+  // Toast notification helper
+  const showToast = (message: string, isError = false) => {
+    if (typeof document === "undefined") return;
+    const toast = document.createElement("div");
+    toast.textContent = message;
+    toast.style.position = "fixed";
+    toast.style.bottom = "1rem";
+    toast.style.right = "1rem";
+    toast.style.zIndex = "9999";
+    toast.style.padding = "0.75rem 1rem";
+    toast.style.borderRadius = "0.375rem";
+    toast.style.fontSize = "0.875rem";
+    toast.style.fontWeight = "500";
+    toast.style.boxShadow =
+      "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)";
+    toast.style.backgroundColor = isError ? "#fef2f2" : "#ecfdf5"; // red-50 / green-50
+    toast.style.color = isError ? "#b91c1c" : "#166534"; // red-700 / green-700
+    toast.style.border = isError ? "1px solid #fecaca" : "1px solid #a7f3d0"; // red-200 / green-200
+    document.body.appendChild(toast);
+    window.setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  };
+
   // Handle drag end - reorder questions
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -333,7 +357,7 @@ export default function FormBuilderPage() {
 
   const handleSaveQuestion = async () => {
     if (!questionData.label.trim()) {
-      alert("Question label is required");
+      showToast("Question label is required", true);
       return;
     }
 
@@ -347,7 +371,7 @@ export default function FormBuilderPage() {
       requiresOptions.includes(questionData.type) &&
       (!questionData.options || questionData.options.length === 0)
     ) {
-      alert("Please add at least one option");
+      showToast("Please add at least one option", true);
       return;
     }
 
@@ -367,7 +391,7 @@ export default function FormBuilderPage() {
       await loadFormData();
       setShowQuestionModal(false);
     } else {
-      alert(response.message || "Failed to save question");
+      showToast(response.message || "Failed to save question", true);
     }
 
     setIsSaving(false);
@@ -383,13 +407,13 @@ export default function FormBuilderPage() {
     if (response.success) {
       setQuestions(questions.filter((q) => q._id !== questionId));
     } else {
-      alert(response.message || "Failed to delete question");
+      showToast(response.message || "Failed to delete question", true);
     }
   };
 
   const handlePublishForm = async () => {
     if (questions.length === 0) {
-      alert("Add at least one question before publishing");
+      showToast("Add at least one question before publishing", true);
       return;
     }
 
@@ -399,7 +423,7 @@ export default function FormBuilderPage() {
       setForm(response.data);
       setShowPublishModal(true);
     } else {
-      alert(response.message || "Failed to publish form");
+      showToast(response.message || "Failed to publish form", true);
     }
   };
 
@@ -430,11 +454,11 @@ export default function FormBuilderPage() {
     const formUrl = `${window.location.origin}/forms/${formId}/submit`;
     try {
       await navigator.clipboard.writeText(formUrl);
-      alert("Form link copied to clipboard!");
+      showToast("Form link copied to clipboard!");
     } catch (err) {
       console.error("Failed to copy link:", err);
-      // Fallback: Show the link in an alert
-      alert(`Form link: ${formUrl}`);
+      // Fallback: Show the link in an error toast
+      showToast(`Failed to copy. Link: ${formUrl}`, true);
     }
   };
 

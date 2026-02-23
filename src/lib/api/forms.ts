@@ -142,7 +142,7 @@ export type UpdateQuestionRequest = Partial<CreateQuestionRequest>;
 export interface SubmitFormResponseRequest {
   answers: Array<{
     question_id: string;
-    value: any;
+    value: string | number | boolean | string[] | null;
   }>;
   completion_time_seconds?: number;
 }
