@@ -62,7 +62,8 @@ export interface FormQuestion {
 export interface FormResponse {
   _id: string;
   form_id: string;
-  submitted_by_id: string;
+  submitted_by_id: string | null;
+  submitted_by: string; // User's name or "Anonymous"
   submitted_at: string;
   completion_time_seconds?: number;
   is_complete: boolean;

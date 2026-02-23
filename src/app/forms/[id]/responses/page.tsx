@@ -195,7 +195,7 @@ export default function FormResponsesPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium text-foreground">
-                            {response.submitted_by_id || "Anonymous"}
+                            {response.submitted_by || "Anonymous"}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground-secondary">
