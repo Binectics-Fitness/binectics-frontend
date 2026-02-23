@@ -152,7 +152,7 @@ export default function FormSubmitPage() {
                   ? "tel"
                   : "text"
             }
-            placeholder="Your answer"
+            placeholder={question.help_text || "Your answer"}
             value={value || ""}
             onChange={(e) => handleAnswerChange(question._id, e.target.value)}
             required={question.is_required}
@@ -165,7 +165,7 @@ export default function FormSubmitPage() {
         return (
           <textarea
             className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-30"
-            placeholder="Your answer"
+            placeholder={question.help_text || "Your answer"}
             value={value || ""}
             onChange={(e) => handleAnswerChange(question._id, e.target.value)}
             required={question.is_required}
@@ -179,7 +179,7 @@ export default function FormSubmitPage() {
         return (
           <Input
             type="number"
-            placeholder="Your answer"
+            placeholder={question.help_text || "Your answer"}
             value={value || ""}
             onChange={(e) =>
               handleAnswerChange(question._id, Number(e.target.value))
@@ -273,7 +273,7 @@ export default function FormSubmitPage() {
         return (
           <Input
             type="text"
-            placeholder="Your answer"
+            placeholder={question.help_text || "Your answer"}
             value={value || ""}
             onChange={(e) => handleAnswerChange(question._id, e.target.value)}
             required={question.is_required}
@@ -521,11 +521,6 @@ export default function FormSubmitPage() {
                     <span className="text-red-500 ml-1">*</span>
                   )}
                 </span>
-                {question.help_text && (
-                  <span className="block text-sm text-foreground-secondary mt-1">
-                    {question.help_text}
-                  </span>
-                )}
               </label>
               {renderQuestionInput(question)}
             </div>

@@ -490,7 +490,7 @@ export default function FormBuilderPage() {
               {form.is_published ? "Published" : "Draft"}
             </span>
             <button
-              onClick={() => window.open(`/forms/${formId}/submit`, '_blank')}
+              onClick={() => window.open(`/forms/${formId}/submit`, "_blank")}
               className="px-4 py-2 text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-2 font-medium"
               title="Preview form in new tab"
             >
