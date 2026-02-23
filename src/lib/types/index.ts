@@ -48,7 +48,7 @@ export interface RegisterRequest {
 // Gym Types
 export interface Gym {
   id: string;
-  ownerId: string;
+  owner_id: string;
   name: string;
   description?: string;
   address: string;
@@ -61,11 +61,11 @@ export interface Gym {
   website?: string;
   facilities: string[];
   images: string[];
-  openingHours?: OpeningHours;
-  verificationStatus: VerificationStatus;
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  opening_hours?: OpeningHours;
+  verification_status: VerificationStatus;
+  is_public: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface OpeningHours {
@@ -87,38 +87,38 @@ export interface DayHours {
 // Trainer Types
 export interface TrainerProfile {
   id: string;
-  userId: string;
+  user_id: string;
   user?: User;
   bio?: string;
   specializations: string[];
   certifications: string[];
   experience?: number;
-  brandName?: string;
+  brand_name?: string;
   portfolio: string[];
-  verificationStatus: VerificationStatus;
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  verification_status: VerificationStatus;
+  is_public: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Dietician Types
 export interface DieticianProfile {
   id: string;
-  userId: string;
+  user_id: string;
   user?: User;
   bio?: string;
   specializations: string[];
   certifications: string[];
-  companyName?: string;
+  company_name?: string;
   address?: string;
   city?: string;
   country?: string;
   latitude?: number;
   longitude?: number;
-  verificationStatus: VerificationStatus;
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  verification_status: VerificationStatus;
+  is_public: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Plan Types
@@ -136,31 +136,31 @@ export interface Plan {
   price: number;
   currency: string;
   duration: number;
-  durationType: DurationType;
+  duration_type: DurationType;
   features: string[];
-  isActive: boolean;
-  gymId?: string;
-  trainerId?: string;
-  dieticianId?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  is_active: boolean;
+  gym_id?: string;
+  trainer_id?: string;
+  dietician_id?: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Subscription Types
 export interface Subscription {
   id: string;
-  userId: string;
-  planId: string;
+  user_id: string;
+  plan_id: string;
   plan?: Plan;
   status: SubscriptionStatus;
-  startDate: Date;
-  endDate: Date;
-  paymentId?: string;
-  paymentMethod?: string;
+  start_date: Date;
+  end_date: Date;
+  payment_id?: string;
+  payment_method?: string;
   amount: number;
   currency: string;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Search & Filter Types
@@ -175,8 +175,8 @@ export interface SearchFilters {
   country?: string;
   location?: GeoLocation;
   radius?: number; // km
-  minRating?: number;
-  maxPrice?: number;
+  min_rating?: number;
+  max_price?: number;
   facilities?: string[];
   specializations?: string[];
 }
@@ -186,7 +186,7 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
-  totalPages: number;
+  total_pages: number;
 }
 
 // API Response Types
