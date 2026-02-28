@@ -21,6 +21,9 @@ export interface User {
   updated_at: Date | string;
   country_code?: string;
   is_suspended?: boolean;
+  company_name?: string;
+  company_logo?: string;
+  is_company?: boolean;
 }
 
 export interface AuthTokens {

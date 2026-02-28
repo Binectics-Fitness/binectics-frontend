@@ -39,6 +39,10 @@ export interface Form {
   archived_at?: string;
   created_at: string;
   updated_at: string;
+  custom_logo?: string;
+  custom_header_color?: string;
+  company_name?: string;
+  company_description?: string;
 }
 
 export interface FormQuestion {
@@ -114,6 +118,10 @@ export interface CreateFormRequest {
   description?: string;
   allow_multiple_submissions?: boolean;
   require_authentication?: boolean;
+  custom_logo?: string;
+  custom_header_color?: string;
+  company_name?: string;
+  company_description?: string;
 }
 
 export interface UpdateFormRequest {
@@ -123,6 +131,10 @@ export interface UpdateFormRequest {
   is_active?: boolean;
   allow_multiple_submissions?: boolean;
   require_authentication?: boolean;
+  custom_logo?: string;
+  custom_header_color?: string;
+  company_name?: string;
+  company_description?: string;
 }
 
 export interface CreateQuestionRequest {

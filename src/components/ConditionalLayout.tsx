@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { usePathname } from 'next/navigation';
-import Navbar from './Navbar';
-import Footer from './Footer';
+import { usePathname } from "next/navigation";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 export default function ConditionalLayout({
   children,
@@ -11,10 +11,11 @@ export default function ConditionalLayout({
 }) {
   const pathname = usePathname();
 
-  // Hide Navbar and Footer for dashboard pages
-  const isDashboard = pathname?.startsWith('/dashboard');
+  // Hide Navbar and Footer for dashboard pages and form submissions
+  const isDashboard = pathname?.startsWith("/dashboard");
+  const isFormSubmit = pathname?.match(/^\/forms\/[^\/]+\/submit$/);
 
-  if (isDashboard) {
+  if (isDashboard || isFormSubmit) {
     return <>{children}</>;
   }
 

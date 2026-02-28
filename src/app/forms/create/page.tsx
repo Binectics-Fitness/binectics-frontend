@@ -14,6 +14,7 @@ export default function CreateFormPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showBranding, setShowBranding] = useState(false);
 
   const [formData, setFormData] = useState<CreateFormRequest>({
     title: "",
@@ -177,6 +178,190 @@ export default function CreateFormPage() {
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
                 </label>
               </div>
+            </div>
+
+            {/* Branding (Optional) */}
+            <div className="mb-8">
+              <button
+                type="button"
+                onClick={() => setShowBranding(!showBranding)}
+                className="w-full flex items-center justify-between p-4 bg-neutral-50 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🎨</span>
+                  <div className="text-left">
+                    <p className="font-semibold text-foreground">
+                      Branding (Optional)
+                    </p>
+                    <p className="text-sm text-foreground-secondary">
+                      Add your company logo and customize the form header
+                    </p>
+                  </div>
+                </div>
+                <svg
+                  className={`w-5 h-5 text-foreground-secondary transition-transform ${showBranding ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {showBranding && (
+                <div className="mt-4 space-y-4 p-4 border border-neutral-200 rounded-lg">
+                  {/* Company Name */}
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-2">
+                      Company / Brand Name
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="e.g., FitLife Nutrition"
+                      value={formData.company_name || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          company_name: e.target.value,
+                        })
+                      }
+                      maxLength={255}
+                    />
+                  </div>
+
+                  {/* Company Description */}
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-2">
+                      Tagline / Description
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="e.g., Personalized nutrition for your goals"
+                      value={formData.company_description || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          company_description: e.target.value,
+                        })
+                      }
+                      maxLength={500}
+                    />
+                  </div>
+
+                  {/* Logo URL */}
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-2">
+                      Logo URL
+                    </label>
+                    <Input
+                      type="url"
+                      placeholder="https://your-domain.com/logo.png"
+                      value={formData.custom_logo || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          custom_logo: e.target.value,
+                        })
+                      }
+                    />
+                    {formData.custom_logo && (
+                      <div className="mt-2 flex items-center gap-3">
+                        <span className="text-xs text-foreground-secondary">
+                          Preview:
+                        </span>
+                        <img
+                          src={formData.custom_logo}
+                          alt="Logo preview"
+                          className="h-10 max-w-30 object-contain rounded"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Header Color */}
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-2">
+                      Header Background Color
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={formData.custom_header_color || "#00d991"}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            custom_header_color: e.target.value,
+                          })
+                        }
+                        className="w-10 h-10 rounded cursor-pointer border border-neutral-200"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="#00d991"
+                        value={formData.custom_header_color || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            custom_header_color: e.target.value,
+                          })
+                        }
+                        maxLength={100}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preview Banner */}
+                  {(formData.company_name ||
+                    formData.custom_logo ||
+                    formData.custom_header_color) && (
+                    <div
+                      className="rounded-lg p-4 mt-2"
+                      style={{
+                        backgroundColor:
+                          formData.custom_header_color || "#00d991",
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        {formData.custom_logo && (
+                          <img
+                            src={formData.custom_logo}
+                            alt="Logo"
+                            className="h-10 max-w-25 object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                            }}
+                          />
+                        )}
+                        <div>
+                          {formData.company_name && (
+                            <p className="font-bold text-foreground text-sm">
+                              {formData.company_name}
+                            </p>
+                          )}
+                          {formData.company_description && (
+                            <p className="text-xs text-foreground">
+                              {formData.company_description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-foreground mt-2 opacity-70">
+                        ↑ Header preview
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Actions */}

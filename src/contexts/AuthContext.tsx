@@ -10,6 +10,8 @@ import React, {
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/api/auth";
 import { getDashboardRoute, getLoginRoute } from "@/lib/constants/routes";
+import { tokenStorage } from "@/lib/utils/storage";
+import SessionModal from "@/components/SessionModal";
 import type { User, LoginRequest, RegisterRequest } from "@/lib/types";
 
 interface AuthContextType {
@@ -32,9 +34,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Parse JWT to get expiration time
+function parseJWT(token: string): { exp?: number } | null {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [sessionEnded, setSessionEnded] = useState(false);
   const router = useRouter();
 
   // Load user from localStorage on mount
@@ -52,6 +73,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     loadUser();
   }, []);
+
+  // Session timeout monitoring
+  useEffect(() => {
+    if (!user) {
+      setShowSessionModal(false);
+      setSessionEnded(false);
+      return;
+    }
+
+    const token = tokenStorage.get();
+    if (!token) return;
+
+    const payload = parseJWT(token);
+    if (!payload?.exp) return;
+
+    const expiryTime = payload.exp * 1000; // Convert to milliseconds
+    const now = Date.now();
+    const timeUntilExpiry = expiryTime - now;
+
+    // Show warning 2 minutes before expiry
+    const warningTime = timeUntilExpiry - 2 * 60 * 1000;
+
+    let warningTimeout: NodeJS.Timeout;
+    let expiryTimeout: NodeJS.Timeout;
+
+    if (warningTime > 0) {
+      warningTimeout = setTimeout(() => {
+        setShowSessionModal(true);
+        setSessionEnded(false);
+      }, warningTime);
+    } else if (timeUntilExpiry > 0) {
+      // If less than 2 minutes remaining, show warning immediately
+      setShowSessionModal(true);
+      setSessionEnded(false);
+    }
+
+    if (timeUntilExpiry > 0) {
+      expiryTimeout = setTimeout(() => {
+        setShowSessionModal(true);
+        setSessionEnded(true);
+      }, timeUntilExpiry);
+    } else {
+      // Token already expired
+      setShowSessionModal(true);
+      setSessionEnded(true);
+    }
+
+    return () => {
+      if (warningTimeout) clearTimeout(warningTimeout);
+      if (expiryTimeout) clearTimeout(expiryTimeout);
+    };
+  }, [user]);
+
+  const handleContinueSession = () => {
+    setShowSessionModal(false);
+    setSessionEnded(false);
+    // In a real app, you might want to refresh the token here
+  };
+
+  const handleModalLogout = async () => {
+    setShowSessionModal(false);
+    await logout();
+  };
 
   const login = async (
     data: LoginRequest,
@@ -147,6 +231,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      <SessionModal
+        isOpen={showSessionModal}
+        sessionEnded={sessionEnded}
+        onContinue={handleContinueSession}
+        onLogout={handleModalLogout}
+      />
     </AuthContext.Provider>
   );
 }

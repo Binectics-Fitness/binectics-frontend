@@ -8,6 +8,7 @@ import { formsService, type Form } from "@/lib/api/forms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
+import { decodeObjectEntities } from "@/lib/utils";
 
 function FormsListContent() {
   const { user, isLoading: authLoading } = useAuth();
@@ -45,7 +46,7 @@ function FormsListContent() {
     const response = await formsService.getMyForms();
 
     if (response.success && response.data) {
-      setForms(response.data);
+      setForms(decodeObjectEntities(response.data));
 
       // Load response counts for each form
       const counts: Record<string, number> = {};

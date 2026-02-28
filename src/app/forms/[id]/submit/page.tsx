@@ -13,6 +13,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { decodeObjectEntities } from "@/lib/utils";
 
 export default function FormSubmitPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -42,7 +43,7 @@ export default function FormSubmitPage() {
     ]);
 
     if (formResponse.success && formResponse.data) {
-      const formData = formResponse.data;
+      const formData = decodeObjectEntities(formResponse.data);
       setForm(formData);
 
       // Check if form requires authentication
@@ -58,7 +59,7 @@ export default function FormSubmitPage() {
     }
 
     if (questionsResponse.success && questionsResponse.data) {
-      setQuestions(questionsResponse.data);
+      setQuestions(decodeObjectEntities(questionsResponse.data));
     }
 
     setIsLoading(false);
@@ -480,66 +481,131 @@ export default function FormSubmitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Forms", href: "/forms" },
-            { label: "Submit", href: `/forms/${formId}/submit` },
-          ]}
-        />
+    <div className="min-h-screen bg-background">
+      {/* Branded Header */}
+      {(form.custom_logo || form.company_name) && (
+        <div
+          className="py-6 px-4 sm:px-6 lg:px-8 border-b border-neutral-200"
+          style={{
+            backgroundColor: form.custom_header_color || "#f7f4ef",
+          }}
+        >
+          <div className="max-w-3xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {form.custom_logo && (
+                <img
+                  src={form.custom_logo}
+                  alt={form.company_name || "Company logo"}
+                  className="h-12 w-auto object-contain"
+                />
+              )}
+              {form.company_name && (
+                <div>
+                  <h2 className="font-display text-xl font-bold text-foreground">
+                    {form.company_name}
+                  </h2>
+                  {form.company_description && (
+                    <p className="text-sm text-foreground-secondary">
+                      {form.company_description}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="text-sm text-foreground-tertiary">
+              Form Submission
+            </div>
+          </div>
+        </div>
+      )}
 
-        {/* Form Header */}
-        <div className="bg-white rounded-xl shadow-card p-8 mb-6">
-          <h1 className="font-display text-3xl font-black text-foreground mb-4">
-            {form.title}
-          </h1>
-          {form.description && (
-            <p className="text-foreground-secondary text-lg">
-              {form.description}
-            </p>
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          {user && !form.custom_logo && !form.company_name && (
+            <Breadcrumb
+              items={[
+                { label: "Dashboard", href: "/dashboard" },
+                { label: "Forms", href: "/forms" },
+                { label: "Submit", href: `/forms/${formId}/submit` },
+              ]}
+            />
           )}
-          {form.require_authentication && user && (
-            <p className="mt-4 text-sm text-foreground-tertiary">
-              Submitting as: <span className="font-semibold">{user.email}</span>
-            </p>
+
+          {/* Form Header */}
+          <div className="bg-white rounded-xl shadow-card p-8 mb-6">
+            <h1 className="font-display text-3xl font-black text-foreground mb-4">
+              {form.title}
+            </h1>
+            {form.description && (
+              <p className="text-foreground-secondary text-lg">
+                {form.description}
+              </p>
+            )}
+            {form.require_authentication && user && (
+              <p className="mt-4 text-sm text-foreground-tertiary">
+                Submitting as:{" "}
+                <span className="font-semibold">{user.email}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Questions Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {questions.map((question, index) => (
+              <div
+                key={question._id}
+                className="bg-white rounded-xl shadow-card p-6"
+              >
+                <label className="block mb-4">
+                  <span className="text-lg font-semibold text-foreground">
+                    {index + 1}. {question.label}
+                    {question.is_required && (
+                      <span className="text-red-500 ml-1">*</span>
+                    )}
+                  </span>
+                </label>
+                {renderQuestionInput(question)}
+              </div>
+            ))}
+
+            {/* Submit Button */}
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => (user ? router.back() : router.push("/"))}
+                className="text-foreground-secondary hover:text-foreground font-medium"
+              >
+                Cancel
+              </button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                style={
+                  form.custom_header_color
+                    ? { backgroundColor: form.custom_header_color }
+                    : undefined
+                }
+              >
+                {isSubmitting ? "Submitting..." : "Submit Form"}
+              </Button>
+            </div>
+          </form>
+
+          {/* Powered by footer for branded forms */}
+          {(form.custom_logo || form.company_name) && (
+            <div className="mt-8 text-center">
+              <p className="text-xs text-foreground-tertiary">
+                Powered by{" "}
+                <a
+                  href="/"
+                  className="text-primary-500 hover:text-primary-600 font-medium"
+                >
+                  Binectics
+                </a>
+              </p>
+            </div>
           )}
         </div>
-
-        {/* Questions Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {questions.map((question, index) => (
-            <div
-              key={question._id}
-              className="bg-white rounded-xl shadow-card p-6"
-            >
-              <label className="block mb-4">
-                <span className="text-lg font-semibold text-foreground">
-                  {index + 1}. {question.label}
-                  {question.is_required && (
-                    <span className="text-red-500 ml-1">*</span>
-                  )}
-                </span>
-              </label>
-              {renderQuestionInput(question)}
-            </div>
-          ))}
-
-          {/* Submit Button */}
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="text-foreground-secondary hover:text-foreground font-medium"
-            >
-              Cancel
-            </button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Form"}
-            </Button>
-          </div>
-        </form>
       </div>
     </div>
   );
