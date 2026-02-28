@@ -145,8 +145,8 @@ function AcceptInvitationContent() {
             Invitation accepted!
           </h2>
           <p className="mt-2 text-sm text-foreground-secondary">
-            You&#39;ve successfully joined the organization.{" "}
-            Head to your Team dashboard to get started.
+            You&#39;ve successfully joined the organization. Head to your Team
+            dashboard to get started.
           </p>
         </div>
         <Link

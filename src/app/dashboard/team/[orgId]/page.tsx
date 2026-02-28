@@ -13,6 +13,7 @@ import {
   type OrganizationMember,
   type TeamInvitation,
   type InviteMemberRequest,
+  type AddMemberDirectRequest,
   type CreateTeamRoleRequest,
   MemberStatus,
   InvitationStatus,
@@ -60,14 +61,28 @@ export default function OrgDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Invite modal
+  // Add member modal (invite or direct)
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [addMode, setAddMode] = useState<"invite" | "direct">("invite");
+
+  // Invite-by-email form
   const [inviteForm, setInviteForm] = useState<InviteMemberRequest>({
     email: "",
     team_role_id: "",
   });
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
+
+  // Direct-add form
+  const [directForm, setDirectForm] = useState<AddMemberDirectRequest>({
+    first_name: "",
+    last_name: "",
+    email: "",
+    password: "",
+    team_role_id: "",
+  });
+  const [directAdding, setDirectAdding] = useState(false);
+  const [directError, setDirectError] = useState<string | null>(null);
 
   // Create role modal
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -100,10 +115,14 @@ export default function OrgDetailPage() {
       if (invitesRes.success && invitesRes.data)
         setInvitations(invitesRes.data);
       const errors: string[] = [];
-      if (!orgRes.success) errors.push(orgRes.message ?? "Failed to load organization.");
-      if (!membersRes.success) errors.push(membersRes.message ?? "Failed to load members.");
-      if (!rolesRes.success) errors.push(rolesRes.message ?? "Failed to load roles.");
-      if (!invitesRes.success) errors.push(invitesRes.message ?? "Failed to load invitations.");
+      if (!orgRes.success)
+        errors.push(orgRes.message ?? "Failed to load organization.");
+      if (!membersRes.success)
+        errors.push(membersRes.message ?? "Failed to load members.");
+      if (!rolesRes.success)
+        errors.push(rolesRes.message ?? "Failed to load roles.");
+      if (!invitesRes.success)
+        errors.push(invitesRes.message ?? "Failed to load invitations.");
       if (errors.length > 0) setError(errors.join(" "));
     } catch {
       setError("Failed to load organization data.");
@@ -130,6 +149,33 @@ export default function OrgDetailPage() {
       setInviteError("Failed to send invitation.");
     } finally {
       setInviting(false);
+    }
+  }
+
+  async function handleAddDirect(e: React.FormEvent) {
+    e.preventDefault();
+    setDirectAdding(true);
+    setDirectError(null);
+    try {
+      const res = await teamsService.addMemberDirect(orgId, directForm);
+      if (res.success && res.data) {
+        setMembers((prev) => [...prev, res.data!]);
+        setShowInviteModal(false);
+        setDirectForm({
+          first_name: "",
+          last_name: "",
+          email: "",
+          password: "",
+          team_role_id: "",
+        });
+        setActiveTab("members");
+      } else {
+        setDirectError(res.message ?? "Failed to add member.");
+      }
+    } catch {
+      setDirectError("Failed to add member.");
+    } finally {
+      setDirectAdding(false);
     }
   }
 
@@ -319,7 +365,7 @@ export default function OrgDetailPage() {
                 d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
               />
             </svg>
-            Invite Member
+            Add Member
           </button>
         </div>
 
@@ -393,7 +439,7 @@ export default function OrgDetailPage() {
                   onClick={() => setShowInviteModal(true)}
                   className="text-accent-blue-500 hover:underline font-semibold"
                 >
-                  Invite the first one →
+                  Add the first one →
                 </button>
               </div>
             ) : (
@@ -640,14 +686,13 @@ export default function OrgDetailPage() {
         )}
       </main>
 
-      {/* ─── INVITE MODAL ─── */}
+      {/* ─── ADD MEMBER MODAL ─── */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
+            {/* Header */}
             <div className="flex items-center justify-between border-b border-neutral-100 p-6">
-              <h2 className="text-xl font-bold text-foreground">
-                Invite Member
-              </h2>
+              <h2 className="text-xl font-bold text-foreground">Add Member</h2>
               <button
                 onClick={() => setShowInviteModal(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-400"
@@ -667,67 +712,232 @@ export default function OrgDetailPage() {
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleInvite} className="p-6 space-y-4">
-              {inviteError && (
-                <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-                  {inviteError}
+
+            {/* Mode tabs */}
+            <div className="flex border-b border-neutral-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setAddMode("invite");
+                  setInviteError(null);
+                  setDirectError(null);
+                }}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                  addMode === "invite"
+                    ? "border-b-2 border-foreground text-foreground"
+                    : "text-foreground-secondary hover:text-foreground"
+                }`}
+              >
+                Send Invite
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAddMode("direct");
+                  setInviteError(null);
+                  setDirectError(null);
+                }}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                  addMode === "direct"
+                    ? "border-b-2 border-foreground text-foreground"
+                    : "text-foreground-secondary hover:text-foreground"
+                }`}
+              >
+                Add Directly
+              </button>
+            </div>
+
+            {/* ── Send Invite form ── */}
+            {addMode === "invite" && (
+              <form onSubmit={handleInvite} className="p-6 space-y-4">
+                <p className="text-sm text-foreground-secondary">
+                  An invitation link will be emailed to the address below. They
+                  must accept to join.
+                </p>
+                {inviteError && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                    {inviteError}
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={inviteForm.email}
+                    onChange={(e) =>
+                      setInviteForm((f) => ({ ...f, email: e.target.value }))
+                    }
+                    placeholder="colleague@example.com"
+                    className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
+                  />
                 </div>
-              )}
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={inviteForm.email}
-                  onChange={(e) =>
-                    setInviteForm((f) => ({ ...f, email: e.target.value }))
-                  }
-                  placeholder="colleague@example.com"
-                  className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">
-                  Role <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={inviteForm.team_role_id}
-                  onChange={(e) =>
-                    setInviteForm((f) => ({
-                      ...f,
-                      team_role_id: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
-                >
-                  <option value="">Select a role...</option>
-                  {roles.map((r) => (
-                    <option key={r._id} value={r._id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowInviteModal(false)}
-                  className="flex-1 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-neutral-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={inviting}
-                  className="flex-1 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors disabled:opacity-60"
-                >
-                  {inviting ? "Sending..." : "Send Invite"}
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={inviteForm.team_role_id}
+                    onChange={(e) =>
+                      setInviteForm((f) => ({
+                        ...f,
+                        team_role_id: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
+                  >
+                    <option value="">Select a role...</option>
+                    {roles.map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowInviteModal(false)}
+                    className="flex-1 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-neutral-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={inviting}
+                    className="flex-1 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors disabled:opacity-60"
+                  >
+                    {inviting ? "Sending..." : "Send Invite"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* ── Add Directly form ── */}
+            {addMode === "direct" && (
+              <form onSubmit={handleAddDirect} className="p-6 space-y-4">
+                <p className="text-sm text-foreground-secondary">
+                  A new account will be created and the member can log in
+                  immediately with the password you set.
+                </p>
+                {directError && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                    {directError}
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1.5">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={directForm.first_name}
+                      onChange={(e) =>
+                        setDirectForm((f) => ({
+                          ...f,
+                          first_name: e.target.value,
+                        }))
+                      }
+                      placeholder="John"
+                      className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1.5">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={directForm.last_name}
+                      onChange={(e) =>
+                        setDirectForm((f) => ({
+                          ...f,
+                          last_name: e.target.value,
+                        }))
+                      }
+                      placeholder="Doe"
+                      className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={directForm.email}
+                    onChange={(e) =>
+                      setDirectForm((f) => ({ ...f, email: e.target.value }))
+                    }
+                    placeholder="member@example.com"
+                    className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={directForm.password}
+                    onChange={(e) =>
+                      setDirectForm((f) => ({ ...f, password: e.target.value }))
+                    }
+                    placeholder="Min. 8 characters"
+                    className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={directForm.team_role_id}
+                    onChange={(e) =>
+                      setDirectForm((f) => ({
+                        ...f,
+                        team_role_id: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
+                  >
+                    <option value="">Select a role...</option>
+                    {roles.map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowInviteModal(false)}
+                    className="flex-1 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-neutral-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={directAdding}
+                    className="flex-1 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors disabled:opacity-60"
+                  >
+                    {directAdding ? "Adding..." : "Add Member"}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

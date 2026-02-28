@@ -132,6 +132,14 @@ export interface InviteMemberRequest {
   team_role_id: string;
 }
 
+export interface AddMemberDirectRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  team_role_id: string;
+}
+
 export interface UpdateMemberRequest {
   team_role_id?: string;
   status?: MemberStatus;
@@ -254,6 +262,17 @@ export const teamsService = {
   },
 
   // ==================== INVITATIONS ====================
+
+  /** Directly add a member — creates a user account if the email is new */
+  async addMemberDirect(
+    organizationId: string,
+    data: AddMemberDirectRequest,
+  ): Promise<ApiResponse<OrganizationMember>> {
+    return await apiClient.post<OrganizationMember>(
+      `/teams/organizations/${organizationId}/members`,
+      data,
+    );
+  },
 
   /** Invite a new member by email */
   async inviteMember(
