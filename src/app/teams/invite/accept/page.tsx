@@ -17,14 +17,15 @@ function AcceptInvitationContent() {
 
   const [state, setState] = useState<PageState>("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [orgName, setOrgName] = useState<string>("");
 
   useEffect(() => {
     if (authLoading) return;
 
     if (!token) {
       setState("error");
-      setErrorMessage("No invitation token found. Please use the link from your email.");
+      setErrorMessage(
+        "No invitation token found. Please use the link from your email.",
+      );
       return;
     }
 
@@ -51,7 +52,9 @@ function AcceptInvitationContent() {
       }
     } catch {
       setState("error");
-      setErrorMessage("Something went wrong. Please try again or contact support.");
+      setErrorMessage(
+        "Something went wrong. Please try again or contact support.",
+      );
     }
   }
 
@@ -65,7 +68,9 @@ function AcceptInvitationContent() {
     return (
       <div className="flex flex-col items-center gap-4">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-        <p className="text-sm text-foreground-secondary">Accepting invitation...</p>
+        <p className="text-sm text-foreground-secondary">
+          Accepting invitation...
+        </p>
       </div>
     );
   }
@@ -75,14 +80,27 @@ function AcceptInvitationContent() {
     return (
       <div className="flex flex-col items-center text-center gap-6">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-blue-500/10">
-          <svg className="h-8 w-8 text-accent-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          <svg
+            className="h-8 w-8 text-accent-blue-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
           </svg>
         </div>
         <div>
-          <h2 className="text-2xl font-black text-foreground">Sign in to accept</h2>
+          <h2 className="text-2xl font-black text-foreground">
+            Sign in to accept
+          </h2>
           <p className="mt-2 text-sm text-foreground-secondary">
-            You need to be signed in to accept this invitation. If you don&apos;t have an account yet, create one first.
+            You need to be signed in to accept this invitation. If you
+            don&apos;t have an account yet, create one first.
           </p>
         </div>
         <div className="flex flex-col gap-3 w-full max-w-xs">
@@ -108,8 +126,18 @@ function AcceptInvitationContent() {
     return (
       <div className="flex flex-col items-center text-center gap-6">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-500">
-          <svg className="h-8 w-8 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          <svg
+            className="h-8 w-8 text-foreground"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
         <div>
@@ -117,9 +145,7 @@ function AcceptInvitationContent() {
             Invitation accepted!
           </h2>
           <p className="mt-2 text-sm text-foreground-secondary">
-            {orgName
-              ? `You've joined ${orgName}.`
-              : "You've successfully joined the organization."}{" "}
+            You&#39;ve successfully joined the organization.{" "}
             Head to your Team dashboard to get started.
           </p>
         </div>
@@ -137,12 +163,24 @@ function AcceptInvitationContent() {
   return (
     <div className="flex flex-col items-center text-center gap-6">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-        <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="h-8 w-8 text-red-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       </div>
       <div>
-        <h2 className="text-2xl font-black text-foreground">Unable to accept</h2>
+        <h2 className="text-2xl font-black text-foreground">
+          Unable to accept
+        </h2>
         <p className="mt-2 text-sm text-foreground-secondary">{errorMessage}</p>
       </div>
       <div className="flex gap-3">

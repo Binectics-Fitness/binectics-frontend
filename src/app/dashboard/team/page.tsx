@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
@@ -40,7 +41,8 @@ function getAccountType(role?: UserRole | null): AccountType {
 }
 
 export default function TeamPage() {
-  const { isLoading: authLoading, isAuthenticated: isAuthorized } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated: isAuthorized } =
+    useRequireAuth();
   const { user } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,11 @@ export default function TeamPage() {
       if (res.success && res.data) {
         setOrganizations((prev) => [...prev, res.data!]);
         setShowCreateModal(false);
-        setCreateForm({ name: "", description: "", account_type: AccountType.FITNESS_MEMBER });
+        setCreateForm({
+          name: "",
+          description: "",
+          account_type: AccountType.FITNESS_MEMBER,
+        });
       } else {
         setCreateError(res.message ?? "Failed to create organization.");
       }
@@ -120,8 +126,18 @@ export default function TeamPage() {
             onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             New Organization
           </button>
@@ -139,8 +155,18 @@ export default function TeamPage() {
         ) : organizations.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-200 py-24 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-              <svg className="h-8 w-8 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <svg
+                className="h-8 w-8 text-neutral-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-bold text-foreground">
@@ -159,7 +185,7 @@ export default function TeamPage() {
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {organizations.map((org) => (
-              <a
+              <Link
                 key={org._id}
                 href={`/dashboard/team/${org._id}`}
                 className="group block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
@@ -197,7 +223,7 @@ export default function TeamPage() {
                     View team →
                   </span>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         )}
@@ -215,8 +241,18 @@ export default function TeamPage() {
                 onClick={() => setShowCreateModal(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-400"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -252,7 +288,10 @@ export default function TeamPage() {
                   rows={3}
                   value={createForm.description}
                   onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, description: e.target.value }))
+                    setCreateForm((f) => ({
+                      ...f,
+                      description: e.target.value,
+                    }))
                   }
                   placeholder="Short description of your organization..."
                   className="w-full resize-none rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
