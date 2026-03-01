@@ -166,10 +166,36 @@ export const formsService = {
   // ==================== FORM CRUD ====================
 
   /**
-   * Create a new form
+   * Create a new personal form (no organization)
    */
   async createForm(data: CreateFormRequest): Promise<ApiResponse<Form>> {
     return await apiClient.post<Form>("/forms", data);
+  },
+
+  /**
+   * Create a form for an organization
+   */
+  async createOrgForm(
+    organizationId: string,
+    data: CreateFormRequest,
+  ): Promise<ApiResponse<Form>> {
+    return await apiClient.post<Form>(
+      `/forms/organizations/${organizationId}/forms`,
+      data,
+    );
+  },
+
+  /**
+   * Get all forms in an organization
+   */
+  async getOrgForms(
+    organizationId: string,
+    includeArchived: boolean = false,
+  ): Promise<ApiResponse<Form[]>> {
+    const query = includeArchived ? "?include_archived=true" : "";
+    return await apiClient.get<Form[]>(
+      `/forms/organizations/${organizationId}/forms${query}`,
+    );
   },
 
   /**

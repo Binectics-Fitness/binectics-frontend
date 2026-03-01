@@ -1,17 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { teamsService } from "@/lib/api/teams";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const { user, isLoading, isAuthorized } = useRoleGuard("USER");
+  const [resolvingPerspective, setResolvingPerspective] = useState(true);
 
-  if (isLoading) return <DashboardLoading />;
+  useEffect(() => {
+    let mounted = true;
+
+    async function resolvePerspective() {
+      if (isLoading || !isAuthorized || !user) return;
+
+      try {
+        const res = await teamsService.getMyOrganizations();
+        if (!mounted) return;
+
+        if (res.success && res.data) {
+          // Only org owners see the gym-owner dashboard
+          // Not all members with manage_organization permission
+          const isOwnerOfAnyOrg = res.data.some((org) => org.is_owner);
+          if (isOwnerOfAnyOrg) {
+            router.replace("/dashboard/gym-owner");
+            return;
+          }
+        }
+      } finally {
+        if (mounted) setResolvingPerspective(false);
+      }
+    }
+
+    resolvePerspective();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isLoading, isAuthorized, user, router]);
+
+  if (isLoading || resolvingPerspective) return <DashboardLoading />;
   if (!isAuthorized) return null;
 
   // TypeScript guard - at this point user is guaranteed to be non-null
