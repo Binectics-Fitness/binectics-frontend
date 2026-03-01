@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import OrganizationSelector from "./OrganizationSelector";
 import type { ReactNode } from "react";
 
 export interface NavItem {
@@ -153,6 +154,13 @@ export default function AppSidebar({
             </div>
           )}
         </div>
+
+        {/* Organization Context */}
+        {!isCollapsed && (
+          <div className="px-3 py-4 border-b border-neutral-200">
+            <OrganizationSelector />
+          </div>
+        )}
 
         {/* Main Navigation */}
         <nav className="flex-1 overflow-y-auto py-6 px-3">

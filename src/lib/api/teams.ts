@@ -50,6 +50,9 @@ export interface Organization {
   logo?: string;
   account_type: AccountType;
   is_active: boolean;
+  is_owner?: boolean;
+  can_manage_organization?: boolean;
+  my_role_code?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -69,35 +72,33 @@ export interface TeamRole {
 export interface OrganizationMember {
   _id: string;
   organization_id: string;
-  user_id: string;
-  team_role_id: string;
+  user_id: string | {
+    _id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    profile_picture?: string;
+  }; // Can be populated
+  team_role_id: string | TeamRole; // Can be populated
   status: MemberStatus;
   invited_by: string | null;
   joined_at: string | null;
   updated_by: string | null;
   created_at: string;
   updated_at: string;
-  // Populated fields (when API joins):
-  user?: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  team_role?: TeamRole;
 }
 
 export interface TeamInvitation {
   _id: string;
   organization_id: string;
   email: string;
-  team_role_id: string;
+  team_role_id: string | TeamRole; // Can be populated
   status: InvitationStatus;
   expires_at: string;
   invited_by: string;
   accepted_at: string | null;
   created_at: string;
   updated_at: string;
-  team_role?: TeamRole;
 }
 
 // ==================== REQUEST TYPES ====================

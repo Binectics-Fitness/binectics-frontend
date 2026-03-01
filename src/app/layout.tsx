@@ -3,6 +3,7 @@ import "./globals.css";
 import CookieConsent from "@/components/CookieConsent";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OrganizationProvider } from "@/contexts/OrganizationContext";
 
 export const metadata: Metadata = {
   title: "Binectics - Your Global Fitness Ecosystem",
@@ -18,10 +19,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased" suppressHydrationWarning>
         <AuthProvider>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
-          <CookieConsent />
+          <OrganizationProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+            <CookieConsent />
+          </OrganizationProvider>
         </AuthProvider>
       </body>
     </html>

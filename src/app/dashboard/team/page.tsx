@@ -56,6 +56,12 @@ export default function TeamPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
+  const canCreateOrganization =
+    organizations.length === 0 ||
+    user?.role === "GYM_OWNER" ||
+    user?.role === "ADMIN" ||
+    organizations.some((org) => org.is_owner === true);
+
   useEffect(() => {
     if (!authLoading && isAuthorized) fetchOrganizations();
   }, [authLoading, isAuthorized]);
@@ -79,6 +85,12 @@ export default function TeamPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!canCreateOrganization) {
+      setCreateError("Only organization owners can create organizations.");
+      return;
+    }
+
     setCreating(true);
     setCreateError(null);
     try {
@@ -88,7 +100,15 @@ export default function TeamPage() {
       };
       const res = await teamsService.createOrganization(payload);
       if (res.success && res.data) {
-        setOrganizations((prev) => [...prev, res.data!]);
+        setOrganizations((prev) => [
+          ...prev,
+          {
+            ...res.data!,
+            is_owner: true,
+            can_manage_organization: true,
+            my_role_code: "owner",
+          },
+        ]);
         setShowCreateModal(false);
         setCreateForm({
           name: "",
@@ -122,25 +142,27 @@ export default function TeamPage() {
               Manage your organizations, members, and roles.
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          {canCreateOrganization && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            New Organization
-          </button>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              New Organization
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -175,12 +197,18 @@ export default function TeamPage() {
             <p className="mt-1 text-sm text-foreground-secondary">
               Create your first organization to start managing your team.
             </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="mt-6 rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
-            >
-              Create Organization
-            </button>
+            {canCreateOrganization ? (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="mt-6 rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
+              >
+                Create Organization
+              </button>
+            ) : (
+              <p className="mt-3 text-sm text-foreground-secondary">
+                You were added to an organization and cannot create a new one.
+              </p>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -230,7 +258,7 @@ export default function TeamPage() {
       </main>
 
       {/* Create Organization Modal */}
-      {showCreateModal && (
+      {showCreateModal && canCreateOrganization && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between border-b border-neutral-100 p-6">

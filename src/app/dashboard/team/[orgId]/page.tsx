@@ -138,7 +138,8 @@ export default function OrgDetailPage() {
     try {
       const res = await teamsService.inviteMember(orgId, inviteForm);
       if (res.success && res.data) {
-        setInvitations((prev) => [...prev, res.data!]);
+        // Reload all data to get populated fields
+        await loadAll();
         setShowInviteModal(false);
         setInviteForm({ email: "", team_role_id: "" });
         setActiveTab("invitations");
@@ -159,7 +160,8 @@ export default function OrgDetailPage() {
     try {
       const res = await teamsService.addMemberDirect(orgId, directForm);
       if (res.success && res.data) {
-        setMembers((prev) => [...prev, res.data!]);
+        // Reload all data to get populated fields
+        await loadAll();
         setShowInviteModal(false);
         setDirectForm({
           first_name: "",
@@ -470,20 +472,29 @@ export default function OrgDetailPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm font-bold text-foreground">
-                            {(member.user?.name ?? "?").charAt(0).toUpperCase()}
+                            {(() => {
+                              const user = typeof member.user_id === 'object' ? member.user_id : null;
+                              const name = user ? `${user.first_name} ${user.last_name}` : '?';
+                              return name.charAt(0).toUpperCase();
+                            })()}
                           </div>
                           <div>
                             <p className="font-semibold text-foreground">
-                              {member.user?.name ?? "—"}
+                              {(() => {
+                                const user = typeof member.user_id === 'object' ? member.user_id : null;
+                                return user ? `${user.first_name} ${user.last_name}` : '—';
+                              })()}
                             </p>
                             <p className="text-xs text-foreground-secondary">
-                              {member.user?.email ?? "—"}
+                              {typeof member.user_id === 'object' ? member.user_id.email : '—'}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 font-medium text-foreground">
-                        {getRoleName(member.team_role_id)}
+                        {typeof member.team_role_id === "object" && member.team_role_id?.name
+                          ? member.team_role_id.name
+                          : getRoleName(member.team_role_id as string)}
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -655,7 +666,9 @@ export default function OrgDetailPage() {
                         {inv.email}
                       </td>
                       <td className="px-6 py-4 text-foreground-secondary">
-                        {inv.team_role?.name ?? getRoleName(inv.team_role_id)}
+                        {typeof inv.team_role_id === "object" && inv.team_role_id?.name
+                          ? inv.team_role_id.name
+                          : getRoleName(inv.team_role_id as string)}
                       </td>
                       <td className="px-6 py-4">
                         <span
