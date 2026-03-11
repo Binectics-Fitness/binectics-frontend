@@ -1,17 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuth } from "@/contexts/AuthContext";
+import { teamsService } from "@/lib/api/teams";
 
 export default function GymOwnerDashboard() {
+  const router = useRouter();
   const [selectedPeriod, setSelectedPeriod] = useState("today");
-  const { user, isLoading, isAuthorized } = useRoleGuard("GYM_OWNER");
+  const { isLoading: authLoading, isAuthenticated: isAuthorized } =
+    useRequireAuth();
+  const { user } = useAuth();
+  const [canViewOwnerDashboard, setCanViewOwnerDashboard] = useState(false);
+  const [resolvingPerspective, setResolvingPerspective] = useState(true);
 
-  if (isLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
+  useEffect(() => {
+    let mounted = true;
+
+    async function resolvePerspective() {
+      if (authLoading || !isAuthorized || !user) return;
+
+      if (user.role === "GYM_OWNER" || user.role === "ADMIN") {
+        if (mounted) {
+          setCanViewOwnerDashboard(true);
+          setResolvingPerspective(false);
+        }
+        return;
+      }
+
+      try {
+        const res = await teamsService.getMyOrganizations();
+        if (!mounted) return;
+
+        // Only org owners can view the owner dashboard
+        const hasOwnerPerspective =
+          !!res.success && !!res.data && res.data.some((org) => org.is_owner);
+
+        if (hasOwnerPerspective) {
+          setCanViewOwnerDashboard(true);
+        } else {
+          router.replace("/dashboard");
+          return;
+        }
+      } finally {
+        if (mounted) setResolvingPerspective(false);
+      }
+    }
+
+    resolvePerspective();
+
+    return () => {
+      mounted = false;
+    };
+  }, [authLoading, isAuthorized, user, router]);
+
+  if (authLoading || resolvingPerspective) return <DashboardLoading />;
+  if (!isAuthorized || !canViewOwnerDashboard) return null;
 
   // Mock gym data
   const gymData = {
