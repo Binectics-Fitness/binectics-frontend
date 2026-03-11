@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { authService } from "@/lib/api/auth";
 import { getDashboardRoute, getLoginRoute } from "@/lib/constants/routes";
 import { tokenStorage } from "@/lib/utils/storage";
+import { apiClient } from "@/lib/api/client";
 import SessionModal from "@/components/SessionModal";
 import type { User, LoginRequest, RegisterRequest } from "@/lib/types";
 
@@ -126,10 +127,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
-  const handleContinueSession = () => {
+  const handleContinueSession = async () => {
     setShowSessionModal(false);
     setSessionEnded(false);
-    // In a real app, you might want to refresh the token here
+
+    // Attempt to refresh the token
+    const response = await authService.refreshToken();
+
+    if (response.success && response.data) {
+      // Token refreshed successfully - update with new token
+      apiClient.storeTokens(
+        response.data.access_token,
+        response.data.refresh_token,
+      );
+    } else {
+      // Token refresh failed - force logout
+      await logout();
+    }
   };
 
   const handleModalLogout = async () => {

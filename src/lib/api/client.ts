@@ -13,8 +13,7 @@ import { isAuthRoute } from "@/lib/constants/routes";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1" ||
-  "http://localhost:4000/api/v1";
+  "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1";
 
 class ApiClient {
   private baseUrl: string;
