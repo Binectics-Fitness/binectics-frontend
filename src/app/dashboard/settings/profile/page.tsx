@@ -126,7 +126,7 @@ export default function ProfileSettingsPage() {
       };
 
       if (formData.businessName) payload.company_name = formData.businessName;
-      if (formData.bio) payload.other_name = formData.bio;
+      if (formData.bio) payload.bio = formData.bio;
 
       const res = await authService.updateProfile(payload);
 
