@@ -24,6 +24,10 @@ export interface User {
   company_name?: string;
   company_logo?: string;
   is_company?: boolean;
+  fitness_goals?: string[];
+  preferred_activities?: string[];
+  other_name?: string;
+  date_of_birth?: string;
 }
 
 export interface AuthTokens {

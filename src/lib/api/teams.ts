@@ -25,6 +25,14 @@ export enum TeamPermission {
   MANAGE_ORGANIZATION = "team:manage_organization",
   CANCEL_INVITATION = "team:cancel_invitation",
   VIEW_INVITATIONS = "team:view_invitations",
+
+  // Progress Tracking Permissions
+  PROGRESS_VIEW = "progress:view",
+  PROGRESS_CREATE = "progress:create",
+  PROGRESS_EDIT = "progress:edit",
+  PROGRESS_DELETE = "progress:delete",
+  PROGRESS_MANAGE_CLIENTS = "progress:manage_clients",
+  PROGRESS_INVITE_CLIENT = "progress:invite_client",
 }
 
 export enum MemberStatus {
@@ -72,13 +80,15 @@ export interface TeamRole {
 export interface OrganizationMember {
   _id: string;
   organization_id: string;
-  user_id: string | {
-    _id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    profile_picture?: string;
-  }; // Can be populated
+  user_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        profile_picture?: string;
+      }; // Can be populated
   team_role_id: string | TeamRole; // Can be populated
   status: MemberStatus;
   invited_by: string | null;

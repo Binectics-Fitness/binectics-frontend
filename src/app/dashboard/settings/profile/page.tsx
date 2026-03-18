@@ -1,12 +1,79 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { authService } from "@/lib/api/auth";
+import { utilityService } from "@/lib/api/utility";
+import type { CountryItem } from "@/lib/api/utility";
+import TagInput from "@/components/TagInput";
+import SearchableSelect from "@/components/SearchableSelect";
+
+const FITNESS_GOAL_SUGGESTIONS = [
+  "Weight Loss",
+  "Build Muscle",
+  "Improve Flexibility",
+  "Increase Endurance",
+  "Improve Cardio",
+  "Tone Body",
+  "Gain Strength",
+  "Lose Body Fat",
+  "Improve Posture",
+  "Stress Relief",
+  "Improve Balance",
+  "Rehabilitation",
+  "Marathon Training",
+  "Sports Performance",
+  "General Fitness",
+  "Body Recomposition",
+];
+
+const ACTIVITY_SUGGESTIONS = [
+  "Yoga",
+  "Cycling",
+  "Swimming",
+  "Weight Training",
+  "Running",
+  "Walking",
+  "HIIT",
+  "Pilates",
+  "CrossFit",
+  "Boxing",
+  "Dance",
+  "Martial Arts",
+  "Rowing",
+  "Rock Climbing",
+  "Tennis",
+  "Basketball",
+  "Soccer",
+  "Hiking",
+  "Stretching",
+  "Calisthenics",
+];
 
 export default function ProfileSettingsPage() {
   const { user, updateUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [countries, setCountries] = useState<CountryItem[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadCountries() {
+      try {
+        const res = await utilityService.getCountries();
+        if (mounted && res.success && res.data) setCountries(res.data);
+      } catch {
+        // non-critical
+      } finally {
+        if (mounted) setCountriesLoading(false);
+      }
+    }
+    loadCountries();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -32,12 +99,14 @@ export default function ProfileSettingsPage() {
     experience: "",
 
     // User specific
-    fitnessGoals: [] as string[],
-    preferences: [] as string[],
+    fitnessGoals: (user?.fitness_goals || []) as string[],
+    preferences: (user?.preferred_activities || []) as string[],
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -47,26 +116,32 @@ export default function ProfileSettingsPage() {
     setSuccessMessage("");
 
     try {
-      // Simulate save delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const payload: Record<string, unknown> = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone_number: formData.phone,
+        country_code: formData.country,
+        fitness_goals: formData.fitnessGoals,
+        preferred_activities: formData.preferences,
+      };
 
-      // Update user with onboarding complete
-      if (user) {
-        const updatedUser = {
-          ...user,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phone: formData.phone,
-          country: formData.country,
-          isOnboardingComplete: true,
-        };
-        updateUser(updatedUser);
+      if (formData.businessName) payload.company_name = formData.businessName;
+      if (formData.bio) payload.other_name = formData.bio;
+
+      const res = await authService.updateProfile(payload);
+
+      if (res.success && res.data) {
+        updateUser(res.data);
+        setSuccessMessage("Profile saved successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setSuccessMessage(res.message || "Failed to save profile");
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
-
-      setSuccessMessage("Profile saved successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Save error:", error);
+      setSuccessMessage("An error occurred while saving");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } finally {
       setIsSaving(false);
     }
@@ -320,32 +395,30 @@ export default function ProfileSettingsPage() {
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground/70 mb-2">
-            Fitness Goals (comma-separated)
+            Fitness Goals
           </label>
-          <input
-            type="text"
+          <TagInput
             name="fitnessGoals"
-            onChange={(e) => {
-              const goals = e.target.value.split(",").map((s) => s.trim());
-              setFormData({ ...formData, fitnessGoals: goals });
-            }}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="e.g., Weight Loss, Build Muscle, Improve Flexibility"
+            value={formData.fitnessGoals}
+            onChange={(goals) =>
+              setFormData({ ...formData, fitnessGoals: goals })
+            }
+            suggestions={FITNESS_GOAL_SUGGESTIONS}
+            placeholder="Type to search or add a goal…"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground/70 mb-2">
-            Preferred Activities (comma-separated)
+            Preferred Activities
           </label>
-          <input
-            type="text"
+          <TagInput
             name="preferences"
-            onChange={(e) => {
-              const prefs = e.target.value.split(",").map((s) => s.trim());
-              setFormData({ ...formData, preferences: prefs });
-            }}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="e.g., Yoga, Cycling, Swimming, Weight Training"
+            value={formData.preferences}
+            onChange={(prefs) =>
+              setFormData({ ...formData, preferences: prefs })
+            }
+            suggestions={ACTIVITY_SUGGESTIONS}
+            placeholder="Type to search or add an activity…"
           />
         </div>
       </div>
@@ -420,13 +493,13 @@ export default function ProfileSettingsPage() {
             <label className="block text-sm font-medium text-foreground/70 mb-2">
               Country
             </label>
-            <input
-              type="text"
+            <SearchableSelect
               name="country"
               value={formData.country}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="United States"
+              onChange={(val) => setFormData({ ...formData, country: val })}
+              options={countries.map((c) => ({ label: c.name, value: c.code }))}
+              placeholder="Select a country"
+              loading={countriesLoading}
             />
           </div>
         </div>

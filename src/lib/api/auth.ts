@@ -174,4 +174,13 @@ export const authService = {
   updateUser(user: User): void {
     userStorage.set(user);
   },
+
+  /**
+   * Update user profile on the server
+   */
+  async updateProfile(
+    data: Record<string, unknown>,
+  ): Promise<ApiResponse<User>> {
+    return apiClient.patch<User>("/auth/profile", data);
+  },
 };
