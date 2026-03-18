@@ -71,31 +71,109 @@ const PERIOD_OPTIONS = [
 
 function MiniLineChart({
   data,
+  labels,
+  unit = "",
   width = 260,
   height = 60,
   color = "#00d991",
 }: {
   data: number[];
+  labels?: string[];
+  unit?: string;
   width?: number;
   height?: number;
   color?: string;
 }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+
   if (data.length < 2) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
-  const stepX = width / (data.length - 1);
-  const points = data
-    .map((v, i) => `${i * stepX},${height - ((v - min) / range) * height}`)
-    .join(" ");
+  const pad = 6; // padding for dot radius
+  const stepX = (width - pad * 2) / (data.length - 1);
+
+  const coords = data.map((v, i) => ({
+    x: pad + i * stepX,
+    y: height - pad - ((v - min) / range) * (height - pad * 2),
+  }));
+
+  const points = coords.map((c) => `${c.x},${c.y}`).join(" ");
+
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       width={width}
       height={height}
       className="overflow-visible"
+      onMouseLeave={() => setHovered(null)}
     >
-      <polyline fill="none" stroke={color} strokeWidth={2} points={points} />
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        points={points}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {coords.map((c, i) => (
+        <g key={i}>
+          {/* Invisible larger hit area */}
+          <circle
+            cx={c.x}
+            cy={c.y}
+            r={12}
+            fill="transparent"
+            onMouseEnter={() => setHovered(i)}
+          />
+          {/* Visible dot */}
+          <circle
+            cx={c.x}
+            cy={c.y}
+            r={hovered === i ? 5 : 3}
+            fill={hovered === i ? color : "white"}
+            stroke={color}
+            strokeWidth={2}
+            className="transition-all duration-150"
+            style={{ cursor: "pointer" }}
+          />
+          {/* Tooltip */}
+          {hovered === i && (
+            <g>
+              <rect
+                x={c.x - 40}
+                y={c.y - 38}
+                width={80}
+                height={labels ? 30 : 20}
+                rx={4}
+                fill="#03314b"
+              />
+              <text
+                x={c.x}
+                y={c.y - (labels ? 24 : 22)}
+                textAnchor="middle"
+                fill="white"
+                fontSize={11}
+                fontWeight={600}
+              >
+                {data[i]}
+                {unit ? ` ${unit}` : ""}
+              </text>
+              {labels?.[i] && (
+                <text
+                  x={c.x}
+                  y={c.y - 12}
+                  textAnchor="middle"
+                  fill="#94a3b8"
+                  fontSize={9}
+                >
+                  {labels[i]}
+                </text>
+              )}
+            </g>
+          )}
+        </g>
+      ))}
     </svg>
   );
 }
@@ -310,24 +388,40 @@ export default function ProgressPage() {
 
   // ─── derived chart data ───────────────────────────────────────
 
-  const weightData =
+  const sortedWeightLogs =
     summary?.weight.logs
       .slice()
       .sort(
         (a, b) =>
           new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime(),
-      )
-      .map((l) => l.weight_kg) ?? [];
+      ) ?? [];
 
-  const activityCalData =
+  const weightData = sortedWeightLogs.map((l) => l.weight_kg);
+  const weightLabels = sortedWeightLogs.map((l) =>
+    new Date(l.recorded_at).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    }),
+  );
+
+  const sortedActivityReports =
     summary?.activities.reports
       .slice()
       .sort(
         (a, b) =>
           new Date(a.performed_at).getTime() -
           new Date(b.performed_at).getTime(),
-      )
-      .map((r) => r.calories_burned ?? 0) ?? [];
+      ) ?? [];
+
+  const activityCalData = sortedActivityReports.map(
+    (r) => r.calories_burned ?? 0,
+  );
+  const activityLabels = sortedActivityReports.map((r) =>
+    new Date(r.performed_at).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    }),
+  );
 
   // ─── render ───────────────────────────────────────────────────
 
@@ -547,6 +641,8 @@ export default function ProgressPage() {
                         {weightData.length >= 2 ? (
                           <MiniLineChart
                             data={weightData}
+                            labels={weightLabels}
+                            unit="kg"
                             width={420}
                             height={100}
                             color="#00d991"
@@ -564,6 +660,8 @@ export default function ProgressPage() {
                         {activityCalData.length >= 2 ? (
                           <MiniLineChart
                             data={activityCalData}
+                            labels={activityLabels}
+                            unit="cal"
                             width={420}
                             height={100}
                             color="#0267f2"
@@ -619,6 +717,8 @@ export default function ProgressPage() {
                       <div className="rounded-2xl bg-white p-6 shadow-sm">
                         <MiniLineChart
                           data={weightData}
+                          labels={weightLabels}
+                          unit="kg"
                           width={600}
                           height={120}
                           color="#00d991"
@@ -817,6 +917,7 @@ export default function ProgressPage() {
                 name="recorded_at"
                 type="datetime-local"
                 defaultValue={new Date().toISOString().slice(0, 16)}
+                max={new Date().toISOString().slice(0, 16)}
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
               />
             </label>
@@ -878,6 +979,7 @@ export default function ProgressPage() {
                 name="meal_date"
                 type="date"
                 defaultValue={new Date().toISOString().split("T")[0]}
+                max={new Date().toISOString().split("T")[0]}
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
               />
             </label>
@@ -1009,6 +1111,7 @@ export default function ProgressPage() {
                 name="performed_at"
                 type="datetime-local"
                 defaultValue={new Date().toISOString().slice(0, 16)}
+                max={new Date().toISOString().slice(0, 16)}
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
               />
             </label>

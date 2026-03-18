@@ -71,7 +71,11 @@ class ApiClient {
           typeof window !== "undefined" &&
           !isAuthRoute(window.location.pathname)
         ) {
-          window.location.href = "/login";
+          // Use replace to avoid back-button loops
+          window.location.replace("/login");
+          // Return a never-resolving promise so callers don't continue
+          // processing stale state while the browser navigates away
+          return new Promise<ApiResponse<T>>(() => {});
         }
       }
 
