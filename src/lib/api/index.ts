@@ -5,6 +5,8 @@
 export { apiClient } from "./client";
 export { authService } from "./auth";
 export { formsService } from "./forms";
+export { progressService } from "./progress";
+export { utilityService } from "./utility";
 export type {
   AuthResponse,
   ForgotPasswordRequest,
@@ -12,3 +14,4 @@ export type {
   VerifyEmailRequest,
 } from "./auth";
 export type * from "./forms";
+export type * from "./progress";

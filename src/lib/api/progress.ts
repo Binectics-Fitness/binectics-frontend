@@ -1,0 +1,478 @@
+/**
+ * Progress Tracking API Service
+ * Handles client profiles, weight logs, meal feedback, activity reports,
+ * progress summaries, and client invitations.
+ */
+
+import { apiClient } from "./client";
+import type { ApiResponse } from "@/lib/types";
+
+// ==================== ENUMS ====================
+
+export enum MealType {
+  BREAKFAST = "breakfast",
+  LUNCH = "lunch",
+  DINNER = "dinner",
+  SNACK = "snack",
+}
+
+export enum MealRating {
+  GREAT = "great",
+  GOOD = "good",
+  OKAY = "okay",
+  POOR = "poor",
+}
+
+export enum ActivityType {
+  CARDIO = "cardio",
+  STRENGTH = "strength",
+  FLEXIBILITY = "flexibility",
+  HIIT = "hiit",
+  YOGA = "yoga",
+  SWIMMING = "swimming",
+  CYCLING = "cycling",
+  RUNNING = "running",
+  WALKING = "walking",
+  OTHER = "other",
+}
+
+// ==================== TYPES ====================
+
+export interface ClientProfile {
+  _id: string;
+  client_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        profile_picture?: string;
+      };
+  organization_id: string | null;
+  professional_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        profile_picture?: string;
+      };
+  notes?: string;
+  starting_weight_kg?: number;
+  target_weight_kg?: number;
+  height_cm?: number;
+  goals: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WeightLog {
+  _id: string;
+  client_profile_id: string;
+  client_id: string;
+  weight_kg: number;
+  recorded_at: string;
+  logged_by: string | { _id: string; first_name: string; last_name: string };
+  note?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MealFeedback {
+  _id: string;
+  client_profile_id: string;
+  client_id: string;
+  meal_date: string;
+  meal_type: MealType;
+  description: string;
+  rating?: MealRating;
+  calories?: number;
+  feedback?: string;
+  logged_by: string | { _id: string; first_name: string; last_name: string };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActivityReport {
+  _id: string;
+  client_profile_id: string;
+  client_id: string;
+  activity_type: ActivityType;
+  title: string;
+  duration_minutes: number;
+  calories_burned?: number;
+  intensity?: number;
+  performed_at: string;
+  notes?: string;
+  logged_by: string | { _id: string; first_name: string; last_name: string };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProgressSummary {
+  profile: ClientProfile;
+  period_days: number;
+  weight: {
+    logs: WeightLog[];
+    latest_kg: number | null;
+    starting_kg: number | null;
+    change_kg: number | null;
+    target_kg: number | null;
+  };
+  meals: {
+    feedbacks: MealFeedback[];
+    total_count: number;
+  };
+  activities: {
+    reports: ActivityReport[];
+    total_count: number;
+    total_duration_minutes: number;
+    total_calories_burned: number;
+  };
+}
+
+export interface ClientInvitation {
+  _id: string;
+  id: string;
+  email: string;
+  status: string;
+  expires_at: string;
+}
+
+// ==================== REQUEST TYPES ====================
+
+export interface AddClientRequest {
+  email: string;
+  first_name?: string;
+  message?: string;
+  notes?: string;
+  starting_weight_kg?: number;
+  target_weight_kg?: number;
+  height_cm?: number;
+  goals?: string[];
+}
+
+export interface AddClientResponse {
+  action: "request_sent" | "invitation_sent";
+  message: string;
+}
+
+export interface ClientRequestItem {
+  _id: string;
+  professional_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        profile_picture?: string;
+      };
+  client_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        profile_picture?: string;
+      };
+  organization_id: string | null;
+  professional_type: string;
+  status: string;
+  message?: string;
+  notes?: string;
+  starting_weight_kg?: number;
+  target_weight_kg?: number;
+  height_cm?: number;
+  goals: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdateClientProfileRequest {
+  notes?: string;
+  target_weight_kg?: number;
+  height_cm?: number;
+  goals?: string[];
+  is_active?: boolean;
+}
+
+export interface CreateWeightLogRequest {
+  weight_kg: number;
+  recorded_at: string;
+  note?: string;
+}
+
+export interface CreateMealFeedbackRequest {
+  meal_date: string;
+  meal_type: MealType;
+  description: string;
+  rating?: MealRating;
+  calories?: number;
+  feedback?: string;
+}
+
+export interface CreateActivityReportRequest {
+  activity_type: ActivityType;
+  title: string;
+  duration_minutes: number;
+  calories_burned?: number;
+  intensity?: number;
+  performed_at: string;
+  notes?: string;
+}
+
+export interface InviteClientRequest {
+  email: string;
+  first_name?: string;
+  organization_id?: string;
+}
+
+export interface AcceptClientInviteRequest {
+  token: string;
+}
+
+// ==================== SERVICE ====================
+
+export const progressService = {
+  // ==================== ADD CLIENT (unified — by email) ====================
+
+  async addClient(
+    data: AddClientRequest,
+  ): Promise<ApiResponse<AddClientResponse>> {
+    return await apiClient.post<AddClientResponse>(
+      "/progress/add-client",
+      data,
+    );
+  },
+
+  async addClientInOrg(
+    organizationId: string,
+    data: AddClientRequest,
+  ): Promise<ApiResponse<AddClientResponse>> {
+    return await apiClient.post<AddClientResponse>(
+      `/progress/organizations/${organizationId}/add-client`,
+      data,
+    );
+  },
+
+  // ==================== CLIENT REQUESTS (authorization flow) ====================
+
+  async getMyPendingClientRequests(): Promise<
+    ApiResponse<ClientRequestItem[]>
+  > {
+    return await apiClient.get<ClientRequestItem[]>("/progress/my-requests");
+  },
+
+  async respondToClientRequest(
+    requestId: string,
+    approved: boolean,
+  ): Promise<ApiResponse<ClientProfile | null>> {
+    return await apiClient.post<ClientProfile | null>(
+      `/progress/requests/${requestId}/respond`,
+      { approved },
+    );
+  },
+
+  async getSentClientRequests(
+    organizationId?: string,
+  ): Promise<ApiResponse<ClientRequestItem[]>> {
+    const query = organizationId ? `?organization_id=${organizationId}` : "";
+    return await apiClient.get<ClientRequestItem[]>(
+      `/progress/requests/sent${query}`,
+    );
+  },
+
+  async getOrgSentClientRequests(
+    organizationId: string,
+  ): Promise<ApiResponse<ClientRequestItem[]>> {
+    return await apiClient.get<ClientRequestItem[]>(
+      `/progress/organizations/${organizationId}/requests/sent`,
+    );
+  },
+
+  async cancelClientRequest(requestId: string): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(`/progress/requests/${requestId}`);
+  },
+
+  // ==================== CLIENT PROFILES (ORG) ====================
+
+  async getOrgClientProfiles(
+    organizationId: string,
+  ): Promise<ApiResponse<ClientProfile[]>> {
+    return await apiClient.get<ClientProfile[]>(
+      `/progress/organizations/${organizationId}/clients`,
+    );
+  },
+
+  // ==================== CLIENT PROFILES (SOLO) ====================
+
+  async getMyClientProfiles(): Promise<ApiResponse<ClientProfile[]>> {
+    return await apiClient.get<ClientProfile[]>("/progress/clients");
+  },
+
+  // ==================== CLIENT PROFILES (SHARED) ====================
+
+  async getMyOwnProfiles(): Promise<ApiResponse<ClientProfile[]>> {
+    return await apiClient.get<ClientProfile[]>("/progress/my-profiles");
+  },
+
+  async getClientProfile(
+    profileId: string,
+  ): Promise<ApiResponse<ClientProfile>> {
+    return await apiClient.get<ClientProfile>(`/progress/clients/${profileId}`);
+  },
+
+  async updateClientProfile(
+    profileId: string,
+    data: UpdateClientProfileRequest,
+  ): Promise<ApiResponse<ClientProfile>> {
+    return await apiClient.patch<ClientProfile>(
+      `/progress/clients/${profileId}`,
+      data,
+    );
+  },
+
+  // ==================== WEIGHT LOGS ====================
+
+  async createWeightLog(
+    profileId: string,
+    data: CreateWeightLogRequest,
+  ): Promise<ApiResponse<WeightLog>> {
+    return await apiClient.post<WeightLog>(
+      `/progress/clients/${profileId}/weight`,
+      data,
+    );
+  },
+
+  async getWeightLogs(
+    profileId: string,
+    limit?: number,
+  ): Promise<ApiResponse<WeightLog[]>> {
+    const query = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<WeightLog[]>(
+      `/progress/clients/${profileId}/weight${query}`,
+    );
+  },
+
+  async deleteWeightLog(logId: string): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(`/progress/weight/${logId}`);
+  },
+
+  // ==================== MEAL FEEDBACKS ====================
+
+  async createMealFeedback(
+    profileId: string,
+    data: CreateMealFeedbackRequest,
+  ): Promise<ApiResponse<MealFeedback>> {
+    return await apiClient.post<MealFeedback>(
+      `/progress/clients/${profileId}/meals`,
+      data,
+    );
+  },
+
+  async getMealFeedbacks(
+    profileId: string,
+    limit?: number,
+  ): Promise<ApiResponse<MealFeedback[]>> {
+    const query = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<MealFeedback[]>(
+      `/progress/clients/${profileId}/meals${query}`,
+    );
+  },
+
+  async deleteMealFeedback(feedbackId: string): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(`/progress/meals/${feedbackId}`);
+  },
+
+  // ==================== ACTIVITY REPORTS ====================
+
+  async createActivityReport(
+    profileId: string,
+    data: CreateActivityReportRequest,
+  ): Promise<ApiResponse<ActivityReport>> {
+    return await apiClient.post<ActivityReport>(
+      `/progress/clients/${profileId}/activities`,
+      data,
+    );
+  },
+
+  async getActivityReports(
+    profileId: string,
+    limit?: number,
+  ): Promise<ApiResponse<ActivityReport[]>> {
+    const query = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<ActivityReport[]>(
+      `/progress/clients/${profileId}/activities${query}`,
+    );
+  },
+
+  async deleteActivityReport(reportId: string): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(`/progress/activities/${reportId}`);
+  },
+
+  // ==================== PROGRESS SUMMARY ====================
+
+  async getProgressSummary(
+    profileId: string,
+    days?: number,
+  ): Promise<ApiResponse<ProgressSummary>> {
+    const query = days ? `?days=${days}` : "";
+    return await apiClient.get<ProgressSummary>(
+      `/progress/clients/${profileId}/summary${query}`,
+    );
+  },
+
+  // ==================== CLIENT INVITATIONS ====================
+
+  async inviteClient(
+    data: InviteClientRequest,
+  ): Promise<ApiResponse<ClientInvitation>> {
+    return await apiClient.post<ClientInvitation>("/progress/invite", data);
+  },
+
+  async inviteClientInOrg(
+    organizationId: string,
+    data: InviteClientRequest,
+  ): Promise<ApiResponse<ClientInvitation>> {
+    return await apiClient.post<ClientInvitation>(
+      `/progress/organizations/${organizationId}/invite-client`,
+      data,
+    );
+  },
+
+  async acceptClientInvitation(
+    data: AcceptClientInviteRequest,
+  ): Promise<ApiResponse<ClientProfile>> {
+    return await apiClient.post<ClientProfile>("/progress/invite/accept", data);
+  },
+
+  async getMyClientInvitations(
+    organizationId?: string,
+  ): Promise<ApiResponse<ClientInvitation[]>> {
+    const query = organizationId ? `?organization_id=${organizationId}` : "";
+    return await apiClient.get<ClientInvitation[]>(
+      `/progress/invitations${query}`,
+    );
+  },
+
+  async getOrgClientInvitations(
+    organizationId: string,
+  ): Promise<ApiResponse<ClientInvitation[]>> {
+    return await apiClient.get<ClientInvitation[]>(
+      `/progress/organizations/${organizationId}/invitations`,
+    );
+  },
+
+  async cancelClientInvitation(
+    invitationId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/progress/invitations/${invitationId}`,
+    );
+  },
+};

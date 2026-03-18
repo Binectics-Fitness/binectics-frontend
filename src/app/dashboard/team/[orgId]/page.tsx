@@ -45,6 +45,12 @@ const PERMISSION_LABELS: Record<TeamPermission, string> = {
   [TeamPermission.MANAGE_ORGANIZATION]: "Manage Organization",
   [TeamPermission.CANCEL_INVITATION]: "Cancel Invitations",
   [TeamPermission.VIEW_INVITATIONS]: "View Invitations",
+  [TeamPermission.PROGRESS_VIEW]: "View Client Progress",
+  [TeamPermission.PROGRESS_CREATE]: "Create Progress Entries",
+  [TeamPermission.PROGRESS_EDIT]: "Edit Progress Entries",
+  [TeamPermission.PROGRESS_DELETE]: "Delete Progress Entries",
+  [TeamPermission.PROGRESS_MANAGE_CLIENTS]: "Manage Clients",
+  [TeamPermission.PROGRESS_INVITE_CLIENT]: "Invite Clients",
 };
 
 export default function OrgDetailPage() {
@@ -473,26 +479,39 @@ export default function OrgDetailPage() {
                         <div className="flex items-center gap-3">
                           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm font-bold text-foreground">
                             {(() => {
-                              const user = typeof member.user_id === 'object' ? member.user_id : null;
-                              const name = user ? `${user.first_name} ${user.last_name}` : '?';
+                              const user =
+                                typeof member.user_id === "object"
+                                  ? member.user_id
+                                  : null;
+                              const name = user
+                                ? `${user.first_name} ${user.last_name}`
+                                : "?";
                               return name.charAt(0).toUpperCase();
                             })()}
                           </div>
                           <div>
                             <p className="font-semibold text-foreground">
                               {(() => {
-                                const user = typeof member.user_id === 'object' ? member.user_id : null;
-                                return user ? `${user.first_name} ${user.last_name}` : '—';
+                                const user =
+                                  typeof member.user_id === "object"
+                                    ? member.user_id
+                                    : null;
+                                return user
+                                  ? `${user.first_name} ${user.last_name}`
+                                  : "—";
                               })()}
                             </p>
                             <p className="text-xs text-foreground-secondary">
-                              {typeof member.user_id === 'object' ? member.user_id.email : '—'}
+                              {typeof member.user_id === "object"
+                                ? member.user_id.email
+                                : "—"}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 font-medium text-foreground">
-                        {typeof member.team_role_id === "object" && member.team_role_id?.name
+                        {typeof member.team_role_id === "object" &&
+                        member.team_role_id?.name
                           ? member.team_role_id.name
                           : getRoleName(member.team_role_id as string)}
                       </td>
@@ -666,7 +685,8 @@ export default function OrgDetailPage() {
                         {inv.email}
                       </td>
                       <td className="px-6 py-4 text-foreground-secondary">
-                        {typeof inv.team_role_id === "object" && inv.team_role_id?.name
+                        {typeof inv.team_role_id === "object" &&
+                        inv.team_role_id?.name
                           ? inv.team_role_id.name
                           : getRoleName(inv.team_role_id as string)}
                       </td>
