@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import { marketplaceService } from "@/lib/api/marketplace";
-import type {
-  MarketplaceListing,
-  MarketplaceAccountType,
-} from "@/lib/types";
+import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
 
 const ACCOUNT_TYPE_OPTIONS: {
   value: MarketplaceAccountType;

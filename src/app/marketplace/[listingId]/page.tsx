@@ -49,8 +49,7 @@ function StarRating({
 }
 
 function ReviewCard({ review }: { review: MarketplaceReview }) {
-  const client =
-    typeof review.client_id === "object" ? review.client_id : null;
+  const client = typeof review.client_id === "object" ? review.client_id : null;
   const date = new Date(review.created_at).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -307,8 +306,9 @@ export default function ListingDetailPage() {
                   <div className="flex items-center gap-2">
                     <StarRating rating={listing.average_rating} />
                     <span className="text-sm text-foreground-secondary">
-                      {listing.average_rating.toFixed(1)} ({listing.review_count}{" "}
-                      review{listing.review_count !== 1 ? "s" : ""})
+                      {listing.average_rating.toFixed(1)} (
+                      {listing.review_count} review
+                      {listing.review_count !== 1 ? "s" : ""})
                     </span>
                   </div>
                 )}
@@ -587,9 +587,7 @@ export default function ListingDetailPage() {
                     <select
                       value={requestType}
                       onChange={(e) =>
-                        setRequestType(
-                          e.target.value as MarketplaceRequestType,
-                        )
+                        setRequestType(e.target.value as MarketplaceRequestType)
                       }
                       className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
                     >

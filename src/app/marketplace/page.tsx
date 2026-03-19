@@ -72,9 +72,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
       ? `${professional.first_name} ${professional.last_name}`
       : "Professional";
 
-  const profileImage = org
-    ? org.logo
-    : professional?.profile_picture;
+  const profileImage = org ? org.logo : professional?.profile_picture;
 
   return (
     <Link
@@ -118,7 +116,9 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
           {listing.city && (
             <span className="text-xs text-foreground-secondary">
               📍 {listing.city}
-              {listing.country_code ? `, ${listing.country_code.toUpperCase()}` : ""}
+              {listing.country_code
+                ? `, ${listing.country_code.toUpperCase()}`
+                : ""}
             </span>
           )}
         </div>
@@ -205,9 +205,9 @@ export default function MarketplacePage() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [accountType, setAccountType] = useState<
-    MarketplaceAccountType | ""
-  >("");
+  const [accountType, setAccountType] = useState<MarketplaceAccountType | "">(
+    "",
+  );
   const [city, setCity] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [minRating, setMinRating] = useState<number | "">("");
@@ -236,7 +236,15 @@ export default function MarketplacePage() {
       setTotalPages(res.data.total_pages);
     }
     setIsLoading(false);
-  }, [page, searchQuery, accountType, city, selectedSpecialty, minRating, sortBy]);
+  }, [
+    page,
+    searchQuery,
+    accountType,
+    city,
+    selectedSpecialty,
+    minRating,
+    sortBy,
+  ]);
 
   useEffect(() => {
     fetchListings();
@@ -388,9 +396,7 @@ export default function MarketplacePage() {
                 <select
                   value={minRating}
                   onChange={(e) => {
-                    setMinRating(
-                      e.target.value ? Number(e.target.value) : "",
-                    );
+                    setMinRating(e.target.value ? Number(e.target.value) : "");
                     setPage(1);
                   }}
                   className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"

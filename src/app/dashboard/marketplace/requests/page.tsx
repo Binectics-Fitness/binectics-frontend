@@ -136,8 +136,8 @@ export default function MarketplaceRequestsPage() {
               No requests yet
             </h3>
             <p className="text-foreground-secondary">
-              When clients send you a connection request through the marketplace,
-              it will appear here.
+              When clients send you a connection request through the
+              marketplace, it will appear here.
             </p>
           </div>
         )}
@@ -155,9 +155,7 @@ export default function MarketplaceRequestsPage() {
                   request={req}
                   isExpanded={respondingId === req._id}
                   onToggleExpand={() =>
-                    setRespondingId(
-                      respondingId === req._id ? null : req._id,
-                    )
+                    setRespondingId(respondingId === req._id ? null : req._id)
                   }
                   responseNote={responseNote}
                   setResponseNote={setResponseNote}
@@ -233,9 +231,7 @@ function RequestCard({
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">
-              {client
-                ? `${client.first_name} ${client.last_name}`
-                : "Client"}
+              {client ? `${client.first_name} ${client.last_name}` : "Client"}
             </p>
             <p className="text-xs text-foreground-secondary">
               {request.type === "connection" ? "Connection Request" : "Inquiry"}{" "}

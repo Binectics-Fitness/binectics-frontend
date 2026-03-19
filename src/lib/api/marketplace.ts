@@ -103,9 +103,7 @@ export const marketplaceService = {
     );
   },
 
-  async getListingById(
-    id: string,
-  ): Promise<ApiResponse<MarketplaceListing>> {
+  async getListingById(id: string): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.get<MarketplaceListing>(
       `/marketplace/listings/${id}`,
       false,
@@ -149,9 +147,7 @@ export const marketplaceService = {
   },
 
   async cancelRequest(requestId: string): Promise<ApiResponse<void>> {
-    return await apiClient.delete<void>(
-      `/marketplace/requests/${requestId}`,
-    );
+    return await apiClient.delete<void>(`/marketplace/requests/${requestId}`);
   },
 
   async transferClient(
@@ -186,9 +182,7 @@ export const marketplaceService = {
   },
 
   async deleteReview(reviewId: string): Promise<ApiResponse<void>> {
-    return await apiClient.delete<void>(
-      `/marketplace/reviews/${reviewId}`,
-    );
+    return await apiClient.delete<void>(`/marketplace/reviews/${reviewId}`);
   },
 
   // ─── Solo Professional Management ───
@@ -203,9 +197,7 @@ export const marketplaceService = {
   },
 
   async getMyListing(): Promise<ApiResponse<MarketplaceListing>> {
-    return await apiClient.get<MarketplaceListing>(
-      "/marketplace/my-listing",
-    );
+    return await apiClient.get<MarketplaceListing>("/marketplace/my-listing");
   },
 
   async updateMyListing(
@@ -229,9 +221,7 @@ export const marketplaceService = {
     );
   },
 
-  async getMyListingRequests(): Promise<
-    ApiResponse<MarketplaceRequest[]>
-  > {
+  async getMyListingRequests(): Promise<ApiResponse<MarketplaceRequest[]>> {
     return await apiClient.get<MarketplaceRequest[]>(
       "/marketplace/my-listing/requests",
     );
