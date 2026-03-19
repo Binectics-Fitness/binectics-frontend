@@ -9,6 +9,7 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import type {
   MarketplaceListing,
   MarketplaceAccountType,
+  UserRole,
 } from "@/lib/types";
 
 const ACCOUNT_TYPE_OPTIONS: {
@@ -19,6 +20,8 @@ const ACCOUNT_TYPE_OPTIONS: {
   { value: "personal_trainer", label: "Personal Trainer" },
   { value: "dietician", label: "Dietician" },
 ];
+
+const PROFESSIONAL_ROLES: UserRole[] = ["GYM_OWNER", "TRAINER", "DIETICIAN"];
 
 export default function MyMarketplaceListingPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -68,6 +71,11 @@ export default function MyMarketplaceListingPage() {
     if (authLoading) return;
     if (!user) {
       router.push("/login");
+      return;
+    }
+
+    if (!PROFESSIONAL_ROLES.includes(user.role)) {
+      router.replace("/dashboard");
       return;
     }
 
