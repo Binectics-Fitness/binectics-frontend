@@ -236,6 +236,13 @@ export interface AcceptClientInviteRequest {
   token: string;
 }
 
+export interface DashboardStats {
+  active_clients: number;
+  total_clients: number;
+  pending_requests: number;
+  pending_invitations: number;
+}
+
 // ==================== SERVICE ====================
 
 export const progressService = {
@@ -474,5 +481,11 @@ export const progressService = {
     return await apiClient.delete<void>(
       `/progress/invitations/${invitationId}`,
     );
+  },
+
+  // ==================== DASHBOARD STATS ====================
+
+  async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
+    return await apiClient.get<DashboardStats>("/progress/dashboard-stats");
   },
 };

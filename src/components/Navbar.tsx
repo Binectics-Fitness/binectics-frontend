@@ -39,6 +39,12 @@ export default function Navbar() {
               Pricing
             </Link>
             <Link
+              href="/marketplace"
+              className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block"
+            >
+              Marketplace
+            </Link>
+            <Link
               href="/#faq"
               className="text-sm font-medium text-foreground-secondary transition-all duration-200 hover:text-accent-blue-500 hover:translate-x-1 inline-block"
             >

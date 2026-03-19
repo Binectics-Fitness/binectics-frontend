@@ -196,6 +196,126 @@ export interface PaginatedResponse<T> {
   total_pages: number;
 }
 
+// Marketplace Types
+export type MarketplaceAccountType =
+  | "gym_owner"
+  | "personal_trainer"
+  | "dietician";
+
+export type MarketplaceRequestType = "connection" | "inquiry";
+
+export type MarketplaceRequestStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "cancelled";
+
+export interface MarketplaceListing {
+  _id: string;
+  organization_id?: string | { _id: string; name: string; logo?: string };
+  professional_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        profile_picture?: string;
+      };
+  account_type: MarketplaceAccountType;
+  headline: string;
+  bio: string;
+  specialties: string[];
+  certifications: string[];
+  languages: string[];
+  photos: string[];
+  city?: string;
+  country_code?: string;
+  address?: string;
+  location?: { type: string; coordinates: [number, number] };
+  currency: string;
+  price_from?: number;
+  price_label?: string;
+  accepting_clients: boolean;
+  max_clients?: number;
+  is_published: boolean;
+  published_at?: string;
+  active_client_count: number;
+  average_rating: number;
+  review_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MarketplaceRequest {
+  _id: string;
+  client_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        profile_picture?: string;
+      };
+  listing_id: string | MarketplaceListing;
+  organization_id?: string;
+  professional_id:
+    | string
+    | { _id: string; first_name: string; last_name: string };
+  type: MarketplaceRequestType;
+  status: MarketplaceRequestStatus;
+  message?: string;
+  response_note?: string;
+  starting_weight_kg?: number;
+  target_weight_kg?: number;
+  height_cm?: number;
+  goals: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MarketplaceReview {
+  _id: string;
+  client_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        profile_picture?: string;
+      };
+  listing_id: string;
+  rating: number;
+  comment?: string;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MarketplaceSearchParams {
+  account_type?: MarketplaceAccountType;
+  country_code?: string;
+  city?: string;
+  lat?: number;
+  lng?: number;
+  radius_km?: number;
+  specialties?: string;
+  q?: string;
+  accepting_clients?: boolean;
+  min_rating?: number;
+  sort?: "rating" | "newest" | "nearest";
+  page?: number;
+  limit?: number;
+}
+
+export interface MarketplaceSearchResult {
+  listings: MarketplaceListing[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
 // API Response Types
 export interface ApiResponse<T = unknown> {
   success: boolean;
