@@ -1,6 +1,6 @@
 # Binectics Frontend — File Structure Guide
 
-> **Last Updated**: 2025-01-27
+> **Last Updated**: 2026-03-19
 > **Stack**: Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · TypeScript 5
 
 ---
@@ -32,7 +32,10 @@ binectics-frontend/
 │   ├── components/        # Reusable UI components
 │   ├── contexts/          # React Context providers
 │   ├── hooks/             # Custom React hooks
-│   └── lib/               # API clients, types, utilities, constants
+│   ├── lib/               # API clients, types, utilities, constants
+│   ├── services/          # Service-layer barrel export
+│   ├── store/             # Client-side state store
+│   └── utils/             # General utilities (async, format, JWT)
 ├── middleware.ts           # Next.js Edge middleware (auth guards)
 ├── next.config.ts          # Next.js configuration
 ├── tailwind / postcss      # Styling config
@@ -41,8 +44,9 @@ binectics-frontend/
 
 **Key facts:**
 
-- ~112 pages across 39 route groups
+- ~125 pages across 37 route groups
 - 34 shared components
+- 9 custom hooks
 - 8 API service modules
 - Role-based dashboards for 5 user roles (User, Gym Owner, Trainer, Dietician, Admin)
 - Deploys to **Netlify** (`netlify.toml`)
@@ -202,30 +206,31 @@ Next.js App Router uses the file system for routing. Each folder with a `page.ts
 
 ##### Gym Owner Dashboard (`/dashboard/gym-owner`)
 
-| Route                                              | Description              |
-| -------------------------------------------------- | ------------------------ |
-| `/dashboard/gym-owner`                             | Gym owner home           |
-| `/dashboard/gym-owner/analytics`                   | Gym analytics            |
-| `/dashboard/gym-owner/check-ins`                   | Check-in management      |
-| `/dashboard/gym-owner/classes`                     | Class management         |
-| `/dashboard/gym-owner/classes/new`                 | Create new class         |
-| `/dashboard/gym-owner/facility`                    | Facility management      |
-| `/dashboard/gym-owner/marketing`                   | Marketing tools          |
-| `/dashboard/gym-owner/marketplace`                 | Org marketplace listings |
-| `/dashboard/gym-owner/members`                     | Member management        |
-| `/dashboard/gym-owner/members/[memberId]`          | Member detail            |
-| `/dashboard/gym-owner/members/[memberId]/activity` | Member activity          |
-| `/dashboard/gym-owner/plans`                       | Plan management          |
-| `/dashboard/gym-owner/plans/create`                | Create new plan          |
-| `/dashboard/gym-owner/plans/[planId]`              | Plan detail              |
-| `/dashboard/gym-owner/revenue`                     | Revenue overview         |
-| `/dashboard/gym-owner/reviews`                     | Review management        |
-| `/dashboard/gym-owner/settings`                    | Gym settings             |
-| `/dashboard/gym-owner/staff`                       | Staff management         |
-| `/dashboard/gym-owner/staff/invite`                | Invite staff member      |
-| `/dashboard/gym-owner/staff/[trainerId]`           | Staff detail             |
-| `/dashboard/gym-owner/staff/[trainerId]/revenue`   | Staff revenue            |
-| `/dashboard/gym-owner/staff/[trainerId]/schedule`  | Staff schedule           |
+| Route                                              | Description               |
+| -------------------------------------------------- | ------------------------- |
+| `/dashboard/gym-owner`                             | Gym owner home            |
+| `/dashboard/gym-owner/analytics`                   | Gym analytics             |
+| `/dashboard/gym-owner/check-ins`                   | Check-in management       |
+| `/dashboard/gym-owner/checkins`                    | Check-in management (alt) |
+| `/dashboard/gym-owner/classes`                     | Class management          |
+| `/dashboard/gym-owner/classes/new`                 | Create new class          |
+| `/dashboard/gym-owner/facility`                    | Facility management       |
+| `/dashboard/gym-owner/marketing`                   | Marketing tools           |
+| `/dashboard/gym-owner/marketplace`                 | Org marketplace listings  |
+| `/dashboard/gym-owner/members`                     | Member management         |
+| `/dashboard/gym-owner/members/[memberId]`          | Member detail             |
+| `/dashboard/gym-owner/members/[memberId]/activity` | Member activity           |
+| `/dashboard/gym-owner/plans`                       | Plan management           |
+| `/dashboard/gym-owner/plans/create`                | Create new plan           |
+| `/dashboard/gym-owner/plans/[planId]`              | Plan detail               |
+| `/dashboard/gym-owner/revenue`                     | Revenue overview          |
+| `/dashboard/gym-owner/reviews`                     | Review management         |
+| `/dashboard/gym-owner/settings`                    | Gym settings              |
+| `/dashboard/gym-owner/staff`                       | Staff management          |
+| `/dashboard/gym-owner/staff/invite`                | Invite staff member       |
+| `/dashboard/gym-owner/staff/[trainerId]`           | Staff detail              |
+| `/dashboard/gym-owner/staff/[trainerId]/revenue`   | Staff revenue             |
+| `/dashboard/gym-owner/staff/[trainerId]/schedule`  | Staff schedule            |
 
 ##### Trainer Dashboard (`/dashboard/trainer`)
 
@@ -273,13 +278,13 @@ Next.js App Router uses the file system for routing. Each folder with a `page.ts
 
 ##### Utility
 
-| Route                  | Description           |
-| ---------------------- | --------------------- |
-| `/maintenance`         | Maintenance mode page |
-| `/status`              | System status page    |
-| `/qr-help`             | QR code help          |
-| `/teams`               | Teams listing         |
-| `/teams/invite/accept` | Accept team invite    |
+| Route                  | Description                 |
+| ---------------------- | --------------------------- |
+| `/maintenance`         | Maintenance mode page       |
+| `/status`              | System status page          |
+| `/qr-help`             | QR code help                |
+| `/verification`        | Provider verification apply |
+| `/teams/invite/accept` | Accept team invite          |
 
 ---
 
@@ -376,6 +381,11 @@ import { Button, Card, Input, Badge } from "@/components";
 | `useRequireAuth.ts`      | Redirects unauthenticated users to login (client-side guard)         |
 | `useCookieConsent.ts`    | Manages cookie consent state via `localStorage`                      |
 | `useAutoAcceptInvite.ts` | Automatically accepts team invitations from URL parameters           |
+| `useForms.ts`            | Form builder state management and API integration                    |
+| `useProfileSettings.ts`  | Profile settings form state and update logic                         |
+| `useProgress.ts`         | Progress tracking data fetching and state                            |
+| `useTeams.ts`            | Team/organization data management and API calls                      |
+| `useVerification.ts`     | Provider verification workflow state                                 |
 
 ---
 
@@ -420,6 +430,14 @@ Central type definitions for the entire app, including:
 | `utils.ts`         | General utility functions                                                                                                      |
 | `design-tokens.ts` | Blinkist-inspired color palette, spacing, typography tokens — used by Tailwind config and can be imported for programmatic use |
 | `utils/storage.ts` | `tokenStorage`, `refreshTokenStorage`, `clearAuthStorage` — thin wrappers around `localStorage` / cookies                      |
+
+#### Additional Source Directories
+
+| Directory       | Files                                         | Purpose                                                   |
+| --------------- | --------------------------------------------- | --------------------------------------------------------- |
+| `src/services/` | `index.ts`                                    | Service-layer barrel export                               |
+| `src/store/`    | `index.ts`                                    | Client-side state store barrel export                     |
+| `src/utils/`    | `index.ts`, `async.ts`, `format.ts`, `jwt.ts` | General utilities — async helpers, formatters, JWT decode |
 
 ---
 
