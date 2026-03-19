@@ -312,7 +312,7 @@ export function useFormEditor(formId: string) {
       if (response.success && response.data) {
         const newQuestion = decodeObjectEntities(response.data);
         setQuestions((prev) => [...prev, newQuestion]);
-        return response.data;
+        return newQuestion;
       }
       return null;
     },

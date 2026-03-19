@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { progressService } from "@/lib/api/progress";
+import { useClientInviteAccept } from "@/hooks/useProgress";
 
 export default function InviteContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+  const { status: acceptStatus, error: acceptError, acceptInvite } = useClientInviteAccept();
 
   const token = searchParams.get("token");
   const email = searchParams.get("email");
@@ -29,7 +29,7 @@ export default function InviteContent() {
 
     if (user) {
       // Already logged in — accept invitation immediately
-      acceptInvite();
+      acceptInvite(token);
     } else {
       // Not logged in — store token for after registration and show signup prompt
       if (typeof window !== "undefined") {
@@ -40,29 +40,21 @@ export default function InviteContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, token]);
 
-  async function acceptInvite() {
-    if (!token) return;
-    setStatus("loading");
-    try {
-      const res = await progressService.acceptClientInvitation({ token });
-      if (res.success) {
-        // Clean up stored token
-        if (typeof window !== "undefined") {
-          sessionStorage.removeItem("binectics_invite_token");
-        }
-        setStatus("accepted");
-      } else {
-        setStatus("error");
-        setErrorMsg(
-          res.message ||
-            "Could not accept this invitation. It may have expired or already been used.",
-        );
+  useEffect(() => {
+    if (acceptStatus === "success") {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("binectics_invite_token");
       }
-    } catch {
-      setStatus("error");
-      setErrorMsg("Something went wrong. Please try again later.");
+      setStatus("accepted");
     }
-  }
+    if (acceptStatus === "error") {
+      setStatus("error");
+      setErrorMsg(
+        acceptError ||
+          "Could not accept this invitation. It may have expired or already been used.",
+      );
+    }
+  }, [acceptStatus, acceptError]);
 
   // ─── Loading ────────────────────────────────────────────────────
 

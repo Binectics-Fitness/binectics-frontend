@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { teamsService } from "@/lib/api/teams";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTeamInviteAccept } from "@/hooks/useTeams";
 
 type PageState = "loading" | "success" | "error" | "requires_login";
 
@@ -15,6 +15,7 @@ function AcceptInvitationContent() {
 
   const token = searchParams.get("token");
 
+  const { status: acceptStatus, error: acceptError, acceptInvite } = useTeamInviteAccept();
   const [state, setState] = useState<PageState>("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
@@ -35,28 +36,17 @@ function AcceptInvitationContent() {
       return;
     }
 
-    acceptToken();
+    acceptInvite(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, token]);
 
-  async function acceptToken() {
-    if (!token) return;
-    setState("loading");
-    try {
-      const res = await teamsService.acceptInvitation({ token });
-      if (res.success) {
-        setState("success");
-      } else {
-        setState("error");
-        setErrorMessage(res.message ?? "Failed to accept invitation.");
-      }
-    } catch {
+  useEffect(() => {
+    if (acceptStatus === "success") setState("success");
+    if (acceptStatus === "error") {
       setState("error");
-      setErrorMessage(
-        "Something went wrong. Please try again or contact support.",
-      );
+      setErrorMessage(acceptError ?? "Failed to accept invitation.");
     }
-  }
+  }, [acceptStatus, acceptError]);
 
   function handleLoginRedirect() {
     const returnUrl = encodeURIComponent(`/teams/invite/accept?token=${token}`);
