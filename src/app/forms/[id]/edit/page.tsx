@@ -4,19 +4,17 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  formsService,
-  type Form,
   type FormQuestion,
   type CreateQuestionRequest,
   type UpdateFormRequest,
   QuestionType,
 } from "@/lib/api/forms";
+import { useFormEditor } from "@/hooks/useForms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import PublishSuccessModal from "@/components/PublishSuccessModal";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
-import { decodeObjectEntities } from "@/lib/utils";
 import {
   DndContext,
   closestCenter,
@@ -192,12 +190,22 @@ export default function FormBuilderPage() {
   const params = useParams();
   const formId = params.id as string;
 
-  const [form, setForm] = useState<Form | null>(null);
-  const [questions, setQuestions] = useState<FormQuestion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    form,
+    questions,
+    setQuestions,
+    isLoading,
+    error,
+    loadFormDetail,
+    updateForm,
+    addQuestion,
+    updateQuestion,
+    deleteQuestion,
+    updateQuestionOrder,
+    publishForm,
+  } = useFormEditor(formId);
   const [isSaving, setIsSaving] = useState(false);
   const [isSettingsSaving, setIsSettingsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [showFormSettings, setShowFormSettings] = useState(false);
@@ -280,77 +288,45 @@ export default function FormBuilderPage() {
           order_index: index,
         }));
 
-        // Update backend with new order (batch update)
-        void updateQuestionOrder(updatedQuestions);
+        // Update backend with new order
+        void updateQuestionOrder(
+          updatedQuestions.map((q) => ({
+            question_id: q._id,
+            order_index: q.order_index,
+          })),
+        );
 
         return updatedQuestions;
       });
     }
   };
 
-  // Update question order in backend
-  const updateQuestionOrder = async (reorderedQuestions: FormQuestion[]) => {
-    // Prepare batch update payload
-    const updates = reorderedQuestions.map((q) => ({
-      question_id: q._id,
-      order_index: q.order_index,
-    }));
-
-    try {
-      const response = await formsService.updateQuestionOrder(formId, updates);
-      if (!response.success) {
-        console.error("Failed to update question order:", response.message);
-        // Optionally reload to restore correct order
-      }
-    } catch (error) {
-      console.error("Error updating question order:", error);
-    }
-  };
-
   const handleSaveSettings = async () => {
     setIsSettingsSaving(true);
-    const response = await formsService.updateForm(formId, formSettings);
-    if (response.success && response.data) {
-      setForm(decodeObjectEntities(response.data));
+    const success = await updateForm(formSettings);
+    if (success) {
       showToast("Form settings saved");
     } else {
-      showToast(response.message || "Failed to save settings", true);
+      showToast("Failed to save settings", true);
     }
     setIsSettingsSaving(false);
   };
 
-  const loadFormData = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const [formResponse, questionsResponse] = await Promise.all([
-      formsService.getFormById(formId),
-      formsService.getFormQuestions(formId),
-    ]);
-
-    if (formResponse.success && formResponse.data) {
-      const f = decodeObjectEntities(formResponse.data);
-      setForm(f);
+  // Sync formSettings when form data loads
+  useEffect(() => {
+    if (form) {
       setFormSettings({
-        title: f.title || "",
-        description: f.description || "",
-        allow_multiple_submissions: f.allow_multiple_submissions ?? false,
-        require_authentication: f.require_authentication ?? true,
-        custom_logo: f.custom_logo || "",
-        custom_header_color: f.custom_header_color || "",
-        company_name: f.company_name || "",
-        company_description: f.company_description || "",
+        title: form.title || "",
+        description: form.description || "",
+        allow_multiple_submissions: form.allow_multiple_submissions ?? false,
+        require_authentication: form.require_authentication ?? true,
+        custom_logo: form.custom_logo || "",
+        custom_header_color: form.custom_header_color || "",
+        company_name: form.company_name || "",
+        company_description: form.company_description || "",
       });
-    } else {
-      setError(formResponse.message || "Failed to load form");
     }
-
-    if (questionsResponse.success && questionsResponse.data) {
-      setQuestions(decodeObjectEntities(questionsResponse.data));
-    }
-
-    setIsLoading(false);
-  };
+  }, [form]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -359,7 +335,7 @@ export default function FormBuilderPage() {
     }
 
     if (user) {
-      void loadFormData();
+      void loadFormDetail();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, formId, router]);
@@ -416,21 +392,18 @@ export default function FormBuilderPage() {
 
     setIsSaving(true);
 
-    let response;
+    let success: boolean;
     if (editingQuestion) {
-      response = await formsService.updateQuestion(
-        editingQuestion._id,
-        questionData,
-      );
+      success = await updateQuestion(editingQuestion._id, questionData);
     } else {
-      response = await formsService.addQuestion(formId, questionData);
+      const newQuestion = await addQuestion(questionData);
+      success = newQuestion !== null;
     }
 
-    if (response.success) {
-      await loadFormData();
+    if (success) {
       setShowQuestionModal(false);
     } else {
-      showToast(response.message || "Failed to save question", true);
+      showToast("Failed to save question", true);
     }
 
     setIsSaving(false);
@@ -441,12 +414,9 @@ export default function FormBuilderPage() {
       return;
     }
 
-    const response = await formsService.deleteQuestion(questionId);
-
-    if (response.success) {
-      setQuestions(questions.filter((q) => q._id !== questionId));
-    } else {
-      showToast(response.message || "Failed to delete question", true);
+    const success = await deleteQuestion(questionId);
+    if (!success) {
+      showToast("Failed to delete question", true);
     }
   };
 
@@ -456,13 +426,11 @@ export default function FormBuilderPage() {
       return;
     }
 
-    const response = await formsService.publishForm(formId);
-
-    if (response.success && response.data) {
-      setForm(response.data);
+    const success = await publishForm();
+    if (success) {
       setShowPublishModal(true);
     } else {
-      showToast(response.message || "Failed to publish form", true);
+      showToast("Failed to publish form", true);
     }
   };
 
@@ -1138,7 +1106,7 @@ export default function FormBuilderPage() {
             isOpen={showPublishModal}
             onClose={() => {
               setShowPublishModal(false);
-              void loadFormData(); // Reload form to get updated status
+              void loadFormDetail(); // Reload form to get updated status
             }}
           />
         )}

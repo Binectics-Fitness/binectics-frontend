@@ -3,17 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  formsService,
-  type Form,
-  type FormQuestion,
-  QuestionType,
-} from "@/lib/api/forms";
+import { useFormSubmission } from "@/hooks/useForms";
+import { QuestionType, type FormQuestion } from "@/lib/api/forms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
-import { decodeObjectEntities } from "@/lib/utils";
 
 export default function FormSubmitPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -21,56 +16,39 @@ export default function FormSubmitPage() {
   const params = useParams();
   const formId = params.id as string;
 
-  const [form, setForm] = useState<Form | null>(null);
-  const [questions, setQuestions] = useState<FormQuestion[]>([]);
+  const {
+    form,
+    questions,
+    isLoading,
+    error: loadError,
+    loadFormDetail,
+    isSubmitting,
+    submitError,
+    submitForm,
+  } = useFormSubmission(formId);
   const [answers, setAnswers] = useState<
     Record<string, string | number | string[]>
   >({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [startTime] = useState<number>(Date.now());
   const [showAuthRequired, setShowAuthRequired] = useState(false);
 
-  const loadFormData = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const [formResponse, questionsResponse] = await Promise.all([
-      formsService.getFormById(formId),
-      formsService.getFormQuestions(formId),
-    ]);
-
-    if (formResponse.success && formResponse.data) {
-      const formData = decodeObjectEntities(formResponse.data);
-      setForm(formData);
-
-      // Check if form requires authentication
-      if (formData.require_authentication && !user) {
-        setShowAuthRequired(true);
-        setIsLoading(false);
-        return;
-      } else {
-        setShowAuthRequired(false);
-      }
-    } else {
-      setError(formResponse.message || "Form not found");
-    }
-
-    if (questionsResponse.success && questionsResponse.data) {
-      setQuestions(decodeObjectEntities(questionsResponse.data));
-    }
-
-    setIsLoading(false);
-  };
+  const error = loadError || submitError;
 
   useEffect(() => {
     if (!authLoading) {
-      void loadFormData();
+      void loadFormDetail();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formId, user, authLoading]);
+  }, [authLoading, loadFormDetail]);
+
+  // Check auth requirement after form loads
+  useEffect(() => {
+    if (form && form.require_authentication && !user) {
+      setShowAuthRequired(true);
+    } else {
+      setShowAuthRequired(false);
+    }
+  }, [form, user]);
 
   const handleAnswerChange = (
     questionId: string,
@@ -110,9 +88,6 @@ export default function FormSubmitPage() {
       return;
     }
 
-    setIsSubmitting(true);
-    setError(null);
-
     // Calculate completion time in seconds
     const completionTimeSeconds = Math.floor((Date.now() - startTime) / 1000);
 
@@ -124,16 +99,13 @@ export default function FormSubmitPage() {
         value: answers[q._id],
       }));
 
-    const response = await formsService.submitForm(formId, {
+    const success = await submitForm({
       answers: formattedAnswers,
       completion_time_seconds: completionTimeSeconds,
     });
 
-    if (response.success) {
+    if (success) {
       setSubmitted(true);
-    } else {
-      setError(response.message || "Failed to submit form");
-      setIsSubmitting(false);
     }
   };
 

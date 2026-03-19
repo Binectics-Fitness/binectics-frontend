@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { formsService, type CreateFormRequest } from "@/lib/api/forms";
+import { useFormCreate } from "@/hooks/useForms";
+import type { CreateFormRequest } from "@/lib/api/forms";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
@@ -16,9 +17,12 @@ export default function CreateFormPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { currentOrg } = useOrganization();
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { createForm, isCreating, error: createError } = useFormCreate();
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [showBranding, setShowBranding] = useState(false);
+
+  const error = validationError || createError;
+  const isSubmitting = isCreating;
 
   const [formData, setFormData] = useState<CreateFormRequest>({
     title: "",
@@ -38,26 +42,18 @@ export default function CreateFormPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setValidationError(null);
 
     if (!formData.title.trim()) {
-      setError("Form title is required");
+      setValidationError("Form title is required");
       return;
     }
 
-    setIsSubmitting(true);
+    const result = await createForm(formData, currentOrg?._id);
 
-    // Use current organization context to automatically scope forms
-    const response = currentOrg
-      ? await formsService.createOrgForm(currentOrg._id, formData)
-      : await formsService.createForm(formData);
-
-    if (response.success && response.data) {
+    if (result) {
       // Redirect to form builder
-      router.push(`/forms/${response.data._id}/edit`);
-    } else {
-      setError(response.message || "Failed to create form");
-      setIsSubmitting(false);
+      router.push(`/forms/${result._id}/edit`);
     }
   };
 

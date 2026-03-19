@@ -1,74 +1,24 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { formsService, type Form } from "@/lib/api/forms";
+import { useForms } from "@/hooks/useForms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
-import { decodeObjectEntities } from "@/lib/utils";
+import { formatDate } from "@/utils/format";
 
 function FormsListContent() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [forms, setForms] = useState<Form[]>([]);
-  const [responseCounts, setResponseCounts] = useState<Record<string, number>>(
-    {},
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { forms, responseCounts, isLoading, error, loadForms, deleteForm } =
+    useForms();
   const [highlightedFormId, setHighlightedFormId] = useState<string | null>(
     null,
   );
-
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "N/A";
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "N/A";
-    }
-  };
-
-  const loadForms = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const response = await formsService.getMyForms();
-
-    if (response.success && response.data) {
-      setForms(decodeObjectEntities(response.data));
-
-      // Load response counts for each form
-      const counts: Record<string, number> = {};
-      await Promise.all(
-        response.data.map(async (form) => {
-          const responsesResponse = await formsService.getFormResponses(
-            form._id,
-          );
-          if (responsesResponse.success && responsesResponse.data) {
-            counts[form._id] = responsesResponse.data.length;
-          } else {
-            counts[form._id] = 0;
-          }
-        }),
-      );
-      setResponseCounts(counts);
-    } else {
-      setError(response.message || "Failed to load forms");
-    }
-
-    setIsLoading(false);
-  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -107,13 +57,10 @@ function FormsListContent() {
       return;
     }
 
-    const response = await formsService.deleteForm(formId);
+    const success = await deleteForm(formId);
 
-    if (response.success) {
-      // Remove from list
-      setForms(forms.filter((f) => f._id !== formId));
-    } else {
-      alert(response.message || "Failed to delete form");
+    if (!success) {
+      alert("Failed to delete form");
     }
   };
 

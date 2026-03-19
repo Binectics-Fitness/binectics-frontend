@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input, Button } from "@/components";
-import { authService } from "@/lib/api/auth";
+import { useVerification } from "@/hooks/useVerification";
 
 function VerificationForm() {
   const router = useRouter();
@@ -14,8 +14,7 @@ function VerificationForm() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResending, setIsResending] = useState(false);
+  const { verifyOtp, resendOtp, isVerifying, isResending } = useVerification();
 
   const handleResend = async () => {
     if (!email) {
@@ -23,23 +22,16 @@ function VerificationForm() {
       return;
     }
 
-    setIsResending(true);
     setError("");
     setSuccess("");
 
-    try {
-      const response = await authService.resendOtp({ email });
+    const sent = await resendOtp(email);
 
-      if (response.success) {
-        setSuccess("Verification code has been resent to your email");
-        setTimeout(() => setSuccess(""), 5000);
-      } else {
-        setError(response.message || "Failed to resend code");
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to resend code. Please try again.");
-    } finally {
-      setIsResending(false);
+    if (sent) {
+      setSuccess("Verification code has been resent to your email");
+      setTimeout(() => setSuccess(""), 5000);
+    } else {
+      setError("Failed to resend code");
     }
   };
 
@@ -47,35 +39,26 @@ function VerificationForm() {
     e.preventDefault();
     setError("");
     setSuccess("");
-    setIsLoading(true);
 
     if (!email) {
       setError("Email is required");
-      setIsLoading(false);
       return;
     }
 
     if (otp.length !== 6) {
       setError("Please enter a valid 6-digit code");
-      setIsLoading(false);
       return;
     }
 
-    try {
-      const response = await authService.verifyOtp({ email, otp });
+    const result = await verifyOtp(email, otp);
 
-      if (response.success) {
-        setSuccess("Account verified successfully! Redirecting to login...");
-        setTimeout(() => {
-          router.push("/login");
-        }, 2000);
-      } else {
-        setError(response.message || "Verification failed");
-      }
-    } catch (err: any) {
-      setError(err.message || "Verification failed. Please try again.");
-    } finally {
-      setIsLoading(false);
+    if (result.success) {
+      setSuccess("Account verified successfully! Redirecting to login...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
+    } else {
+      setError("Verification failed");
     }
   };
 
@@ -137,7 +120,7 @@ function VerificationForm() {
             <Button
               type="submit"
               fullWidth
-              isLoading={isLoading}
+              isLoading={isVerifying}
               variant="primary"
             >
               Verify Email
@@ -150,7 +133,7 @@ function VerificationForm() {
                   type="button"
                   className="text-accent-blue-500 hover:text-accent-blue-600 font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleResend}
-                  disabled={isResending || isLoading}
+                  disabled={isResending || isVerifying}
                 >
                   {isResending ? "Resending..." : "Resend"}
                 </button>

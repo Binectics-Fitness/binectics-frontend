@@ -3,15 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  formsService,
-  type Form,
-  type FormQuestion,
-  type FormResponse,
-} from "@/lib/api/forms";
+import { useFormResponses } from "@/hooks/useForms";
+import type { FormResponse } from "@/lib/api/forms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
+import { formatDate } from "@/utils/format";
 
 export default function FormResponsesPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -19,42 +16,11 @@ export default function FormResponsesPage() {
   const params = useParams();
   const formId = params.id as string;
 
-  const [form, setForm] = useState<Form | null>(null);
-  const [questions, setQuestions] = useState<FormQuestion[]>([]);
-  const [responses, setResponses] = useState<FormResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { form, questions, responses, isLoading, error, loadResponses } =
+    useFormResponses(formId);
   const [selectedResponse, setSelectedResponse] = useState<FormResponse | null>(
     null,
   );
-
-  const loadFormData = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const [formResponse, questionsResponse, responsesResponse] =
-      await Promise.all([
-        formsService.getFormById(formId),
-        formsService.getFormQuestions(formId),
-        formsService.getFormResponses(formId),
-      ]);
-
-    if (formResponse.success && formResponse.data) {
-      setForm(formResponse.data);
-    } else {
-      setError(formResponse.message || "Failed to load form");
-    }
-
-    if (questionsResponse.success && questionsResponse.data) {
-      setQuestions(questionsResponse.data);
-    }
-
-    if (responsesResponse.success && responsesResponse.data) {
-      setResponses(responsesResponse.data);
-    }
-
-    setIsLoading(false);
-  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -63,10 +29,9 @@ export default function FormResponsesPage() {
     }
 
     if (user) {
-      void loadFormData();
+      void loadResponses();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, formId, router]);
+  }, [user, authLoading, loadResponses, router]);
 
   const getAnswerValue = (
     response: FormResponse,
@@ -86,8 +51,8 @@ export default function FormResponsesPage() {
     return String(answer.value);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+  const formatResponseDate = (date: string) => {
+    return formatDate(date, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -199,7 +164,7 @@ export default function FormResponsesPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground-secondary">
-                          {formatDate(response.submitted_at)}
+                          {formatResponseDate(response.submitted_at)}
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground-secondary">
                           {response.completion_time_seconds
@@ -254,7 +219,7 @@ export default function FormResponsesPage() {
                 </div>
                 <div className="text-sm font-bold text-foreground">
                   {responses.length > 0
-                    ? formatDate(responses[responses.length - 1].submitted_at)
+                    ? formatResponseDate(responses[responses.length - 1].submitted_at)
                     : "-"}
                 </div>
               </div>
@@ -272,7 +237,7 @@ export default function FormResponsesPage() {
                     Response Details
                   </h2>
                   <p className="text-sm text-foreground-secondary mt-1">
-                    Submitted on {formatDate(selectedResponse.submitted_at)}
+                    Submitted on {formatResponseDate(selectedResponse.submitted_at)}
                   </p>
                 </div>
                 <button
