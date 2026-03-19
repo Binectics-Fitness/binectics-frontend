@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { formsService, type Form, type FormAnalytics } from "@/lib/api/forms";
+import { useFormAnalytics } from "@/hooks/useForms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
@@ -14,34 +14,8 @@ export default function FormAnalyticsPage() {
   const params = useParams();
   const formId = params.id as string;
 
-  const [form, setForm] = useState<Form | null>(null);
-  const [analytics, setAnalytics] = useState<FormAnalytics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadAnalytics = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const [formResponse, analyticsResponse] = await Promise.all([
-      formsService.getFormById(formId),
-      formsService.getFormAnalytics(formId),
-    ]);
-
-    if (formResponse.success && formResponse.data) {
-      setForm(formResponse.data);
-    } else {
-      setError(formResponse.message || "Failed to load form");
-    }
-
-    if (analyticsResponse.success && analyticsResponse.data) {
-      setAnalytics(analyticsResponse.data);
-    } else {
-      setError(analyticsResponse.message || "Failed to load analytics");
-    }
-
-    setIsLoading(false);
-  };
+  const { form, analytics, isLoading, error, loadAnalytics } =
+    useFormAnalytics(formId);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -52,8 +26,7 @@ export default function FormAnalyticsPage() {
     if (user) {
       void loadAnalytics();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, formId, router]);
+  }, [user, authLoading, loadAnalytics, router]);
 
   const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${seconds}s`;
