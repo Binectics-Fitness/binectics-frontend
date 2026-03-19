@@ -10,6 +10,8 @@ import {
   type DashboardStats,
   type ClientProfile,
 } from "@/lib/api/progress";
+import { marketplaceService } from "@/lib/api/marketplace";
+import type { MarketplaceListing } from "@/lib/types";
 
 function getClientName(profile: ClientProfile): string {
   if (typeof profile.client_id === "object" && profile.client_id) {
@@ -33,6 +35,7 @@ export default function DieticianDashboard() {
     null,
   );
   const [clientProfiles, setClientProfiles] = useState<ClientProfile[]>([]);
+  const [myListing, setMyListing] = useState<MarketplaceListing | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -41,6 +44,11 @@ export default function DieticianDashboard() {
     });
     progressService.getMyClientProfiles().then((res) => {
       if (res.success && res.data) setClientProfiles(res.data.slice(0, 4));
+    });
+    marketplaceService.getMyListing().then((res) => {
+      if (res.success && res.data) setMyListing(res.data);
+    }).catch(() => {
+      // listing not found or error — rating stays as empty state
     });
   }, [user]);
 
@@ -116,8 +124,16 @@ export default function DieticianDashboard() {
     },
     {
       label: "Avg. Rating",
-      value: "4.9",
-      subtext: "Based on 189 reviews",
+      value:
+        myListing?.average_rating != null
+          ? myListing.average_rating.toFixed(1)
+          : "—",
+      subtext:
+        myListing?.review_count != null
+          ? myListing.review_count === 0
+            ? "No reviews yet"
+            : `Based on ${myListing.review_count} review${myListing.review_count === 1 ? "" : "s"}`
+          : "Loading...",
       icon: (
         <svg
           className="h-8 w-8"
