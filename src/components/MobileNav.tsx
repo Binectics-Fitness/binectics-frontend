@@ -88,6 +88,13 @@ export default function MobileNav() {
                 Pricing
               </Link>
               <Link
+                href="/marketplace"
+                onClick={() => setIsOpen(false)}
+                className="block rounded-lg px-4 py-3 text-base font-medium text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors"
+              >
+                Marketplace
+              </Link>
+              <Link
                 href="#faq"
                 onClick={() => setIsOpen(false)}
                 className="block rounded-lg px-4 py-3 text-base font-medium text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors"

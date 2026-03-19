@@ -1,26 +1,71 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import DieticianSidebar from "@/components/DieticianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import {
+  progressService,
+  type DashboardStats,
+  type ClientProfile,
+  type LatestWeight,
+} from "@/lib/api/progress";
+
+function getClientName(profile: ClientProfile): string {
+  if (typeof profile.client_id === "object" && profile.client_id) {
+    return `${profile.client_id.first_name} ${profile.client_id.last_name}`;
+  }
+  return "Unknown Client";
+}
+
+function computeProgress(
+  profile: ClientProfile,
+  latestWeights: Record<string, LatestWeight | null>,
+): number {
+  const start = profile.starting_weight_kg;
+  const target = profile.target_weight_kg;
+  if (typeof start !== "number" || typeof target !== "number") return 0;
+  if (!isFinite(start) || !isFinite(target) || start === target) return 0;
+
+  const latest = latestWeights[profile._id];
+  if (!latest) return 0;
+
+  const current = latest.weight_kg;
+  const totalChange = target - start;
+  const currentChange = current - start;
+  let progress = (currentChange / totalChange) * 100;
+
+  return Math.max(0, Math.min(100, Math.round(progress)));
+}
 
 export default function DieticianDashboard() {
   const { user, isLoading, isAuthorized } = useRoleGuard("DIETICIAN");
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null,
+  );
+  const [clientProfiles, setClientProfiles] = useState<ClientProfile[]>([]);
+  const [latestWeights, setLatestWeights] = useState<
+    Record<string, LatestWeight | null>
+  >({});
+
+  useEffect(() => {
+    if (!user) return;
+    progressService.getDashboardStats().then((res) => {
+      if (res.success && res.data) setDashboardStats(res.data);
+    });
+    progressService.getMyClientProfiles().then((res) => {
+      if (res.success && res.data) setClientProfiles(res.data.slice(0, 4));
+    });
+    progressService.getLatestWeights().then((res) => {
+      if (res.success && res.data) setLatestWeights(res.data);
+    });
+  }, [user]);
 
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
-  // Mock dietician data
-  const dieticianData = {
-    name: "Dr. Emily Wilson",
-    credentials: "RD, CDN, CSSD",
-    specialties: ["Sports Nutrition", "Weight Management", "Meal Planning"],
-    rating: 4.9,
-    totalClients: 45,
-    activeClients: 38,
-    consultationsThisWeek: 22,
-    totalConsultations: 315,
-  };
+
+  const displayName = user ? `${user.first_name} ${user.last_name}` : "";
 
   // Stats cards
   const stats = [
@@ -47,8 +92,8 @@ export default function DieticianDashboard() {
     },
     {
       label: "Active Clients",
-      value: dieticianData.activeClients.toString(),
-      subtext: `${dieticianData.totalClients} total clients`,
+      value: dashboardStats?.active_clients?.toString() ?? "—",
+      subtext: `${dashboardStats?.total_clients ?? 0} total clients`,
       icon: (
         <svg
           className="h-8 w-8"
@@ -89,7 +134,7 @@ export default function DieticianDashboard() {
     },
     {
       label: "Avg. Rating",
-      value: dieticianData.rating.toFixed(1),
+      value: "4.9",
       subtext: "Based on 189 reviews",
       icon: (
         <svg
@@ -206,98 +251,6 @@ export default function DieticianDashboard() {
       type: "Follow-up",
       duration: "30 min",
       status: "completed",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-  ];
-
-  // Client nutrition progress
-  const clientProgress = [
-    {
-      name: "Sarah Johnson",
-      goal: "Weight Loss",
-      progress: 70,
-      currentWeight: "145 lbs",
-      targetWeight: "130 lbs",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "John Doe",
-      goal: "Muscle Gain",
-      progress: 55,
-      currentWeight: "170 lbs",
-      targetWeight: "185 lbs",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Mike Wilson",
-      goal: "Maintenance",
-      progress: 90,
-      currentWeight: "175 lbs",
-      targetWeight: "175 lbs",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Emily Davis",
-      goal: "Weight Loss",
-      progress: 40,
-      currentWeight: "160 lbs",
-      targetWeight: "140 lbs",
       avatar: (
         <svg
           className="h-8 w-8"
@@ -436,12 +389,12 @@ export default function DieticianDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="font-display text-3xl font-black text-foreground mb-2">
-                Welcome back, {dieticianData.name}!
+                Welcome back, {displayName}!
               </h1>
               <p className="text-foreground-secondary">
-                {dieticianData.credentials} •{" "}
-                {dieticianData.specialties.join(" • ")} •{" "}
-                {dieticianData.totalConsultations} consultations completed
+                {dashboardStats
+                  ? `${dashboardStats.active_clients} active clients • ${dashboardStats.pending_requests} pending requests`
+                  : "Loading stats..."}
               </p>
             </div>
             <Link
@@ -556,54 +509,98 @@ export default function DieticianDashboard() {
                 Client Progress
               </h2>
               <Link
-                href="/dashboard/dietician/progress"
+                href="/dashboard/dietician/clients"
                 className="text-sm font-medium text-primary-600 hover:text-primary-700"
               >
                 View All
               </Link>
             </div>
             <div className="bg-background p-6 shadow-card">
-              <ul className="space-y-5">
-                {clientProgress.map((client, index) => (
-                  <li
-                    key={index}
-                    className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-xl shrink-0">
-                        {client.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">
-                          {client.name}
-                        </p>
-                        <p className="text-xs text-foreground-tertiary">
-                          {client.currentWeight} → {client.targetWeight}
-                        </p>
-                      </div>
-                      <span className=" bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 shrink-0">
-                        {client.goal}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-foreground-secondary">
-                          Progress
-                        </span>
-                        <span className="font-semibold text-foreground">
-                          {client.progress}%
-                        </span>
-                      </div>
-                      <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary-500 rounded-full transition-all duration-300"
-                          style={{ width: `${client.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {clientProfiles.length === 0 ? (
+                <p className="text-sm text-foreground-tertiary text-center py-4">
+                  No clients yet. Add your first client to get started.
+                </p>
+              ) : (
+                <ul className="space-y-5">
+                  {clientProfiles.map((profile) => {
+                    const name = getClientName(profile);
+                    const goal = profile.goals[0] ?? "—";
+                    const start = profile.starting_weight_kg;
+                    const target = profile.target_weight_kg;
+                    const progress = computeProgress(profile, latestWeights);
+                    return (
+                      <li
+                        key={profile._id}
+                        className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-xl shrink-0">
+                            {typeof profile.client_id === "object" &&
+                            profile.client_id.profile_picture ? (
+                              <img
+                                src={profile.client_id.profile_picture}
+                                alt={name}
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <svg
+                                className="h-5 w-5 text-neutral-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-foreground truncate">
+                              {name}
+                            </p>
+                            <p className="text-xs text-foreground-tertiary">
+                              {start ? `${start} kg` : "—"} →{" "}
+                              {target ? `${target} kg` : "—"}
+                            </p>
+                          </div>
+                          <span className="bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 shrink-0">
+                            {goal}
+                          </span>
+                        </div>
+                        {start &&
+                          target &&
+                          start !== target &&
+                          (latestWeights[profile._id] ? (
+                            <div>
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="text-foreground-secondary">
+                                  Progress
+                                </span>
+                                <span className="font-semibold text-foreground">
+                                  {progress}%
+                                </span>
+                              </div>
+                              <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-foreground-tertiary">
+                              No weight logs yet
+                            </p>
+                          ))}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </section>
         </div>

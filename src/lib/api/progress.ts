@@ -236,6 +236,18 @@ export interface AcceptClientInviteRequest {
   token: string;
 }
 
+export interface LatestWeight {
+  weight_kg: number;
+  recorded_at: string;
+}
+
+export interface DashboardStats {
+  active_clients: number;
+  total_clients: number;
+  pending_requests: number;
+  pending_invitations: number;
+}
+
 // ==================== SERVICE ====================
 
 export const progressService = {
@@ -474,5 +486,29 @@ export const progressService = {
     return await apiClient.delete<void>(
       `/progress/invitations/${invitationId}`,
     );
+  },
+
+  // ==================== LATEST WEIGHTS (batch) ====================
+
+  async getLatestWeights(): Promise<
+    ApiResponse<Record<string, LatestWeight | null>>
+  > {
+    return await apiClient.get<Record<string, LatestWeight | null>>(
+      "/progress/clients/latest-weights",
+    );
+  },
+
+  async getOrgLatestWeights(
+    organizationId: string,
+  ): Promise<ApiResponse<Record<string, LatestWeight | null>>> {
+    return await apiClient.get<Record<string, LatestWeight | null>>(
+      `/progress/organizations/${organizationId}/clients/latest-weights`,
+    );
+  },
+
+  // ==================== DASHBOARD STATS ====================
+
+  async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
+    return await apiClient.get<DashboardStats>("/progress/dashboard-stats");
   },
 };

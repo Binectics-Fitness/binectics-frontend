@@ -1,25 +1,44 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import {
+  progressService,
+  type DashboardStats,
+  type ClientProfile,
+} from "@/lib/api/progress";
+
+function getClientName(profile: ClientProfile): string {
+  if (typeof profile.client_id === "object" && profile.client_id) {
+    return `${profile.client_id.first_name} ${profile.client_id.last_name}`;
+  }
+  return "Unknown Client";
+}
 
 export default function TrainerDashboard() {
   const { user, isLoading, isAuthorized } = useRoleGuard("TRAINER");
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null,
+  );
+  const [clientProfiles, setClientProfiles] = useState<ClientProfile[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    progressService.getDashboardStats().then((res) => {
+      if (res.success && res.data) setDashboardStats(res.data);
+    });
+    progressService.getMyClientProfiles().then((res) => {
+      if (res.success && res.data) setClientProfiles(res.data.slice(0, 4));
+    });
+  }, [user]);
 
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
-  // Mock trainer data
-  const trainerData = {
-    name: "Mike Chen",
-    specialties: ["Strength Training", "CrossFit", "HIIT"],
-    rating: 4.9,
-    totalClients: 32,
-    activeClients: 28,
-    sessionsThisWeek: 18,
-    totalSessions: 247,
-  };
+
+  const displayName = user ? `${user.first_name} ${user.last_name}` : "";
 
   // Stats cards
   const stats = [
@@ -46,8 +65,8 @@ export default function TrainerDashboard() {
     },
     {
       label: "Active Clients",
-      value: trainerData.activeClients.toString(),
-      subtext: `${trainerData.totalClients} total clients`,
+      value: dashboardStats?.active_clients?.toString() ?? "—",
+      subtext: `${dashboardStats?.total_clients ?? 0} total clients`,
       icon: (
         <svg
           className="h-8 w-8"
@@ -88,7 +107,7 @@ export default function TrainerDashboard() {
     },
     {
       label: "Avg. Rating",
-      value: trainerData.rating.toFixed(1),
+      value: "4.9",
       subtext: "Based on 156 reviews",
       icon: (
         <svg
@@ -183,94 +202,6 @@ export default function TrainerDashboard() {
       type: "Strength Training",
       duration: "45 min",
       status: "completed",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-  ];
-
-  // Recent client progress
-  const clientProgress = [
-    {
-      name: "John Doe",
-      goal: "Muscle Gain",
-      progress: 75,
-      lastSession: "1 day ago",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Sarah Johnson",
-      goal: "Weight Loss",
-      progress: 60,
-      lastSession: "2 days ago",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Mike Wilson",
-      goal: "Strength",
-      progress: 85,
-      lastSession: "Today",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Emily Davis",
-      goal: "Endurance",
-      progress: 70,
-      lastSession: "Today",
       avatar: (
         <svg
           className="h-8 w-8"
@@ -384,11 +315,12 @@ export default function TrainerDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="font-display text-3xl font-black text-foreground mb-2">
-                Welcome back, {trainerData.name}!
+                Welcome back, {displayName}!
               </h1>
               <p className="text-foreground-secondary">
-                {trainerData.specialties.join(" • ")} •{" "}
-                {trainerData.totalSessions} sessions completed
+                {dashboardStats
+                  ? `${dashboardStats.active_clients} active clients • ${dashboardStats.pending_requests} pending requests`
+                  : "Loading stats..."}
               </p>
             </div>
             <Link
@@ -501,54 +433,81 @@ export default function TrainerDashboard() {
                 Client Progress
               </h2>
               <Link
-                href="/dashboard/trainer/progress"
+                href="/dashboard/trainer/clients"
                 className="text-sm font-medium text-primary-600 hover:text-primary-700"
               >
                 View All
               </Link>
             </div>
             <div className="bg-background p-6 shadow-card">
-              <ul className="space-y-5">
-                {clientProgress.map((client, index) => (
-                  <li
-                    key={index}
-                    className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-xl flex-shrink-0">
-                        {client.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">
-                          {client.name}
-                        </p>
-                        <p className="text-xs text-foreground-tertiary">
-                          {client.lastSession}
-                        </p>
-                      </div>
-                      <span className=" bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 flex-shrink-0">
-                        {client.goal}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-foreground-secondary">
-                          Progress
-                        </span>
-                        <span className="font-semibold text-foreground">
-                          {client.progress}%
-                        </span>
-                      </div>
-                      <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary-500 rounded-full transition-all duration-300"
-                          style={{ width: `${client.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {clientProfiles.length === 0 ? (
+                <p className="text-sm text-foreground-tertiary text-center py-4">
+                  No clients yet. Add your first client to get started.
+                </p>
+              ) : (
+                <ul className="space-y-5">
+                  {clientProfiles.map((profile) => {
+                    const name = getClientName(profile);
+                    const goal = profile.goals[0] ?? "—";
+                    const joined = new Date(
+                      profile.created_at,
+                    ).toLocaleDateString();
+                    return (
+                      <li
+                        key={profile._id}
+                        className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-xl flex-shrink-0">
+                            {typeof profile.client_id === "object" &&
+                            profile.client_id.profile_picture ? (
+                              <img
+                                src={profile.client_id.profile_picture}
+                                alt={name}
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <svg
+                                className="h-5 w-5 text-neutral-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-foreground truncate">
+                              {name}
+                            </p>
+                            <p className="text-xs text-foreground-tertiary">
+                              Joined {joined}
+                            </p>
+                          </div>
+                          <span className="bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 flex-shrink-0">
+                            {goal}
+                          </span>
+                        </div>
+                        {profile.starting_weight_kg &&
+                          profile.target_weight_kg &&
+                          profile.starting_weight_kg !==
+                            profile.target_weight_kg && (
+                            <p className="text-xs text-foreground-tertiary">
+                              {profile.starting_weight_kg} kg →{" "}
+                              {profile.target_weight_kg} kg
+                            </p>
+                          )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </section>
         </div>
