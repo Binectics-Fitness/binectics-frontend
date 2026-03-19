@@ -9,6 +9,7 @@ import {
   progressService,
   type DashboardStats,
   type ClientProfile,
+  type LatestWeight,
 } from "@/lib/api/progress";
 
 function getClientName(profile: ClientProfile): string {
@@ -18,13 +19,24 @@ function getClientName(profile: ClientProfile): string {
   return "Unknown Client";
 }
 
-function computeProgress(profile: ClientProfile): number {
+function computeProgress(
+  profile: ClientProfile,
+  latestWeights: Record<string, LatestWeight | null>,
+): number {
   const start = profile.starting_weight_kg;
   const target = profile.target_weight_kg;
-  if (!start || !target || start === target) return 0;
-  // Simple linear progress: how far from start toward target
-  // We don't have latest weight here, so show 0 (would need weight logs)
-  return 0;
+  if (typeof start !== "number" || typeof target !== "number") return 0;
+  if (!isFinite(start) || !isFinite(target) || start === target) return 0;
+
+  const latest = latestWeights[profile._id];
+  if (!latest) return 0;
+
+  const current = latest.weight_kg;
+  const totalChange = target - start;
+  const currentChange = current - start;
+  let progress = (currentChange / totalChange) * 100;
+
+  return Math.max(0, Math.min(100, Math.round(progress)));
 }
 
 export default function DieticianDashboard() {
@@ -33,6 +45,9 @@ export default function DieticianDashboard() {
     null,
   );
   const [clientProfiles, setClientProfiles] = useState<ClientProfile[]>([]);
+  const [latestWeights, setLatestWeights] = useState<
+    Record<string, LatestWeight | null>
+  >({});
 
   useEffect(() => {
     if (!user) return;
@@ -41,6 +56,9 @@ export default function DieticianDashboard() {
     });
     progressService.getMyClientProfiles().then((res) => {
       if (res.success && res.data) setClientProfiles(res.data.slice(0, 4));
+    });
+    progressService.getLatestWeights().then((res) => {
+      if (res.success && res.data) setLatestWeights(res.data);
     });
   }, [user]);
 
@@ -509,7 +527,7 @@ export default function DieticianDashboard() {
                     const goal = profile.goals[0] ?? "—";
                     const start = profile.starting_weight_kg;
                     const target = profile.target_weight_kg;
-                    const progress = computeProgress(profile);
+                    const progress = computeProgress(profile, latestWeights);
                     return (
                       <li
                         key={profile._id}
@@ -553,24 +571,31 @@ export default function DieticianDashboard() {
                             {goal}
                           </span>
                         </div>
-                        {start && target && start !== target && (
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-foreground-secondary">
-                                Progress
-                              </span>
-                              <span className="font-semibold text-foreground">
-                                {progress}%
-                              </span>
+                        {start &&
+                          target &&
+                          start !== target &&
+                          (latestWeights[profile._id] ? (
+                            <div>
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="text-foreground-secondary">
+                                  Progress
+                                </span>
+                                <span className="font-semibold text-foreground">
+                                  {progress}%
+                                </span>
+                              </div>
+                              <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
                             </div>
-                            <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary-500 rounded-full transition-all duration-300"
-                                style={{ width: `${progress}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
+                          ) : (
+                            <p className="text-xs text-foreground-tertiary">
+                              No weight logs yet
+                            </p>
+                          ))}
                       </li>
                     );
                   })}
