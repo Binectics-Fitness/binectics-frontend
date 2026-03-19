@@ -6,6 +6,7 @@
 export { formatDate, formatDateShort, signedChange, formatCurrency } from "./format";
 export { parseJWT, isTokenExpired, getTokenExpiryMs } from "./jwt";
 export type { JWTPayload } from "./jwt";
+export { pMap } from "./async";
 
 // Re-export existing utils
 export { decodeHtmlEntities, decodeObjectEntities } from "@/lib/utils";

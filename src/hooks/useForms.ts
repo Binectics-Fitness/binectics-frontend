@@ -14,6 +14,10 @@ import {
   type SubmitFormResponseRequest,
 } from "@/lib/api/forms";
 import { decodeObjectEntities } from "@/lib/utils";
+import { pMap } from "@/utils/async";
+
+/** Maximum concurrent getFormResponses requests to avoid API fan-out. */
+const RESPONSE_COUNT_CONCURRENCY = 5;
 
 /**
  * Hook for managing the forms list.
@@ -37,8 +41,9 @@ export function useForms() {
       setForms(decodeObjectEntities(response.data));
 
       const counts: Record<string, number> = {};
-      await Promise.all(
-        response.data.map(async (form) => {
+      await pMap(
+        response.data,
+        async (form) => {
           const responsesResponse = await formsService.getFormResponses(
             form._id,
           );
@@ -47,7 +52,8 @@ export function useForms() {
           } else {
             counts[form._id] = 0;
           }
-        }),
+        },
+        RESPONSE_COUNT_CONCURRENCY,
       );
       setResponseCounts(counts);
     } else {

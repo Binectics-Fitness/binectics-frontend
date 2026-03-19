@@ -12,6 +12,10 @@ import type {
   CreateMealFeedbackRequest,
   CreateActivityReportRequest,
 } from "@/lib/api/progress";
+import { pMap } from "@/utils/async";
+
+/** Maximum concurrent getProgressSummary requests to avoid API fan-out. */
+const SUMMARY_CONCURRENCY = 5;
 
 // ==================== useClientManagement ====================
 
@@ -41,9 +45,11 @@ export function useClientManagement(organizationId?: string) {
       const loadedProfiles = profilesRes.data;
       setProfiles(loadedProfiles);
 
-      // Load 30-day progress summaries for each profile
-      const summaryResults = await Promise.all(
-        loadedProfiles.map((p) => progressService.getProgressSummary(p._id, 30))
+      // Load 30-day progress summaries with concurrency limit
+      const summaryResults = await pMap(
+        loadedProfiles,
+        (p) => progressService.getProgressSummary(p._id, 30),
+        SUMMARY_CONCURRENCY,
       );
       const summaryMap: Record<string, ProgressSummary> = {};
       loadedProfiles.forEach((p, i) => {
