@@ -160,7 +160,7 @@ export default function ListingDetailPage() {
       type: requestType,
       message: requestMessage || undefined,
       goals: requestGoals
-        ? requestGoals.split(",").map((g) => g.trim())
+        ? requestGoals.split(",").map((g) => g.trim()).filter(Boolean)
         : undefined,
     });
 
