@@ -6,6 +6,7 @@ import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { formatLocal } from "@/utils/format";
 import {
   teamsService,
   type Organization,
@@ -477,7 +478,7 @@ export default function OrgDetailPage() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm font-bold text-foreground">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm font-bold text-foreground">
                             {(() => {
                               const user =
                                 typeof member.user_id === "object"
@@ -524,7 +525,7 @@ export default function OrgDetailPage() {
                       </td>
                       <td className="px-6 py-4 text-foreground-secondary">
                         {member.joined_at
-                          ? new Date(member.joined_at).toLocaleDateString()
+                          ? formatLocal(member.joined_at, "MMM d, yyyy")
                           : "—"}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -698,7 +699,7 @@ export default function OrgDetailPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-foreground-secondary">
-                        {new Date(inv.expires_at).toLocaleDateString()}
+                        {formatLocal(inv.expires_at, "MMM d, yyyy")}
                       </td>
                       <td className="px-6 py-4 text-right">
                         {inv.status === InvitationStatus.PENDING && (

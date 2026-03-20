@@ -1,13 +1,17 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import GymOwnerSidebar from '@/components/GymOwnerSidebar';
+import TimezoneHelpBadge from '@/components/TimezoneHelpBadge';
+import { getClientTimezone } from '@/utils/format';
 
 export default function TrainerSchedulePage() {
   const params = useParams();
   const router = useRouter();
   const trainerId = params.trainerId as string;
+  const userTimezone = getClientTimezone();
 
   const trainer = {
     id: trainerId,
@@ -55,8 +59,26 @@ export default function TrainerSchedulePage() {
           </button>
 
           <div className="mb-8">
-            <h1 className="text-3xl font-black text-foreground">Schedule Management</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-black text-foreground">Schedule Management</h1>
+              <TimezoneHelpBadge
+                message="Consultation availability windows are interpreted in your selected timezone first, then converted for clients and trainers automatically."
+                label="Scheduling timezone help"
+                className="text-foreground/60"
+              />
+            </div>
             <p className="text-foreground/60 mt-1">{trainer.name} - {trainer.role}</p>
+            <p className="text-sm text-foreground/60 mt-2">
+              Current browser timezone: <span className="font-semibold text-foreground">{userTimezone}</span>
+            </p>
+            <div className="mt-3">
+              <Link
+                href="/dashboard/gym-owner/consultations"
+                className="inline-flex items-center rounded-lg bg-accent-blue-500 px-4 py-2 text-sm font-semibold text-white"
+              >
+                Manage Consultation Availability
+              </Link>
+            </div>
           </div>
 
           {/* Stats */}

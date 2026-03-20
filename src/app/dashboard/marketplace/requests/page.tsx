@@ -7,6 +7,7 @@ import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceRequest, MarketplaceRequestStatus } from "@/lib/types";
+import { formatLocal } from "@/utils/format";
 
 const STATUS_COLORS: Record<MarketplaceRequestStatus, string> = {
   pending: "bg-accent-yellow-100 text-accent-yellow-700",
@@ -204,11 +205,7 @@ function RequestCard({
 }) {
   const client =
     typeof request.client_id === "object" ? request.client_id : null;
-  const date = new Date(request.created_at).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const date = formatLocal(request.created_at, "MMM d, yyyy");
   const isPending = request.status === "pending";
 
   return (
