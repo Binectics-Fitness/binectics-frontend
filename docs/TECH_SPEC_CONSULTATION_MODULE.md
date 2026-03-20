@@ -3,7 +3,7 @@
 **Status**: Proposed (MVP)
 **Author**: Copilot
 **Date**: 2026-03-20
-**Source**: WhatsApp planning conversation (Daniel A. A. ↔ Feranmi Adunni Mi, 2026-03-19)
+**Source**: Internal planning discussion, 2026-03-19
 
 ---
 
