@@ -6,6 +6,10 @@ import DieticianSidebar from "@/components/DieticianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import {
+  consultationsService,
+  type ConsultationBooking,
+} from "@/lib/api/consultations";
+import {
   progressService,
   type DashboardStats,
   type ClientProfile,
@@ -48,9 +52,19 @@ export default function DieticianDashboard() {
   const [latestWeights, setLatestWeights] = useState<
     Record<string, LatestWeight | null>
   >({});
+  const [todayProviderBookings, setTodayProviderBookings] = useState<
+    ConsultationBooking[]
+  >([]);
 
   useEffect(() => {
     if (!user) return;
+
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
     progressService.getDashboardStats().then((res) => {
       if (res.success && res.data) setDashboardStats(res.data);
     });
@@ -60,19 +74,36 @@ export default function DieticianDashboard() {
     progressService.getLatestWeights().then((res) => {
       if (res.success && res.data) setLatestWeights(res.data);
     });
+
+    consultationsService
+      .getProviderBookings({
+        from: startOfDay.toISOString(),
+        to: endOfDay.toISOString(),
+      })
+      .then((res) => {
+        if (res.success && res.data) {
+          setTodayProviderBookings(res.data);
+        }
+      });
   }, [user]);
 
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
 
   const displayName = user ? `${user.first_name} ${user.last_name}` : "";
+  const completedTodayCount = todayProviderBookings.filter(
+    (booking) => booking.status === "COMPLETED",
+  ).length;
+  const upcomingTodayCount = todayProviderBookings.filter(
+    (booking) => booking.status === "CONFIRMED" || booking.status === "PENDING",
+  ).length;
 
   // Stats cards
   const stats = [
     {
       label: "Consultations Today",
-      value: "5",
-      subtext: "3 completed, 2 upcoming",
+      value: todayProviderBookings.length.toString(),
+      subtext: `${completedTodayCount} completed, ${upcomingTodayCount} upcoming`,
       icon: (
         <svg
           className="h-8 w-8"
@@ -155,119 +186,76 @@ export default function DieticianDashboard() {
     },
   ];
 
-  // Today's consultations
-  const todayConsultations = [
-    {
-      time: "9:00 AM",
-      client: "Sarah Johnson",
-      type: "Weight Loss Plan",
-      duration: "45 min",
-      status: "upcoming",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      time: "10:30 AM",
-      client: "John Doe",
-      type: "Sports Nutrition",
-      duration: "60 min",
-      status: "upcoming",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      time: "1:00 PM",
-      client: "Mike Wilson",
-      type: "Meal Plan Review",
-      duration: "30 min",
-      status: "completed",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      time: "3:00 PM",
-      client: "Emily Davis",
-      type: "Initial Consultation",
-      duration: "60 min",
-      status: "completed",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      time: "5:00 PM",
-      client: "James Brown",
-      type: "Follow-up",
-      duration: "30 min",
-      status: "completed",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-  ];
+  // Transform API bookings to display format
+  const todayConsultations = todayProviderBookings.map((booking) => {
+    const startDate = new Date(booking.startsAt);
+    const endDate = new Date(booking.endsAt);
+
+    // Format time as HH:MM AM/PM
+    const time = startDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    // Calculate duration in minutes
+    const durationMs = endDate.getTime() - startDate.getTime();
+    const durationMinutes = Math.round(durationMs / (1000 * 60));
+    const duration = `${durationMinutes} min`;
+
+    // Look up client name from clientProfiles array
+    const clientProfile = clientProfiles.find((profile) => {
+      const clientId =
+        typeof profile.client_id === "string"
+          ? profile.client_id
+          : profile.client_id?._id;
+      return clientId === booking.clientUserId;
+    });
+
+    let client = "Client";
+    if (clientProfile) {
+      const clientObj =
+        typeof clientProfile.client_id === "object"
+          ? clientProfile.client_id
+          : null;
+      if (clientObj) {
+        client =
+          `${clientObj.first_name || ""} ${clientObj.last_name || ""}`.trim();
+      }
+    }
+
+    // Map booking status to display status
+    const displayStatus =
+      booking.status === "COMPLETED" || booking.status === "NO_SHOW"
+        ? "completed"
+        : "upcoming";
+
+    // Generic user avatar SVG
+    const avatar = (
+      <svg
+        className="h-8 w-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+        />
+      </svg>
+    );
+
+    return {
+      time,
+      client,
+      type: "Consultation", // Generic type since we don't fetch type name yet
+      duration,
+      status: displayStatus,
+      avatar,
+    };
+  });
 
   // Recent meal plans
   const recentMealPlans = [
