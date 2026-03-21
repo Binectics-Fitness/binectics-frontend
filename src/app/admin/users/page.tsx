@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import AdminSidebar from '@/components/AdminSidebar';
-import { UserRole } from '@/lib/types';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import AdminSidebar from "@/components/AdminSidebar";
+import { UserRole } from "@/lib/types";
 
 enum AdminUserStatus {
-  ACTIVE = 'Active',
-  SUSPENDED = 'Suspended',
+  ACTIVE = "Active",
+  SUSPENDED = "Suspended",
 }
 
 type AdminUser = {
@@ -23,30 +23,106 @@ type AdminUser = {
 
 export default function AdminUsersPage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
 
   // Mock data
   const users: AdminUser[] = [
-    { id: 1, name: 'John Smith', email: 'john@example.com', role: UserRole.USER, country: 'United States', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-15', subscriptions: 2 },
-    { id: 2, name: 'Sarah Johnson', email: 'sarah@example.com', role: UserRole.USER, country: 'United Kingdom', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-18', subscriptions: 1 },
-    { id: 3, name: 'Mike Chen', email: 'mike@example.com', role: UserRole.TRAINER, country: 'Hong Kong', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-20', subscriptions: 0 },
-    { id: 4, name: 'Emily Davis', email: 'emily@example.com', role: UserRole.USER, country: 'Australia', status: AdminUserStatus.SUSPENDED, signupDate: '2024-01-22', subscriptions: 3 },
-    { id: 5, name: 'David Kim', email: 'david@example.com', role: UserRole.GYM_OWNER, country: 'South Korea', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-25', subscriptions: 0 },
-    { id: 6, name: 'Maria Garcia', email: 'maria@example.com', role: UserRole.DIETICIAN, country: 'Spain', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-28', subscriptions: 0 },
-    { id: 7, name: 'James Wilson', email: 'james@example.com', role: UserRole.USER, country: 'Canada', status: AdminUserStatus.ACTIVE, signupDate: '2024-02-01', subscriptions: 1 },
-    { id: 8, name: 'Lisa Anderson', email: 'lisa@example.com', role: UserRole.TRAINER, country: 'United States', status: AdminUserStatus.ACTIVE, signupDate: '2024-02-03', subscriptions: 0 },
+    {
+      id: 1,
+      name: "John Smith",
+      email: "john@example.com",
+      role: UserRole.USER,
+      country: "United States",
+      status: AdminUserStatus.ACTIVE,
+      signupDate: "2024-01-15",
+      subscriptions: 2,
+    },
+    {
+      id: 2,
+      name: "Sarah Johnson",
+      email: "sarah@example.com",
+      role: UserRole.USER,
+      country: "United Kingdom",
+      status: AdminUserStatus.ACTIVE,
+      signupDate: "2024-01-18",
+      subscriptions: 1,
+    },
+    {
+      id: 3,
+      name: "Mike Chen",
+      email: "mike@example.com",
+      role: UserRole.TRAINER,
+      country: "Hong Kong",
+      status: AdminUserStatus.ACTIVE,
+      signupDate: "2024-01-20",
+      subscriptions: 0,
+    },
+    {
+      id: 4,
+      name: "Emily Davis",
+      email: "emily@example.com",
+      role: UserRole.USER,
+      country: "Australia",
+      status: AdminUserStatus.SUSPENDED,
+      signupDate: "2024-01-22",
+      subscriptions: 3,
+    },
+    {
+      id: 5,
+      name: "David Kim",
+      email: "david@example.com",
+      role: UserRole.GYM_OWNER,
+      country: "South Korea",
+      status: AdminUserStatus.ACTIVE,
+      signupDate: "2024-01-25",
+      subscriptions: 0,
+    },
+    {
+      id: 6,
+      name: "Maria Garcia",
+      email: "maria@example.com",
+      role: UserRole.DIETICIAN,
+      country: "Spain",
+      status: AdminUserStatus.ACTIVE,
+      signupDate: "2024-01-28",
+      subscriptions: 0,
+    },
+    {
+      id: 7,
+      name: "James Wilson",
+      email: "james@example.com",
+      role: UserRole.USER,
+      country: "Canada",
+      status: AdminUserStatus.ACTIVE,
+      signupDate: "2024-02-01",
+      subscriptions: 1,
+    },
+    {
+      id: 8,
+      name: "Lisa Anderson",
+      email: "lisa@example.com",
+      role: UserRole.TRAINER,
+      country: "United States",
+      status: AdminUserStatus.ACTIVE,
+      signupDate: "2024-02-03",
+      subscriptions: 0,
+    },
   ];
 
   const handleSuspendUser = (userId: number, userName: string) => {
-    if (confirm(`Are you sure you want to suspend ${userName}? They will lose access to the platform.`)) {
-      alert('User suspended successfully');
+    if (
+      confirm(
+        `Are you sure you want to suspend ${userName}? They will lose access to the platform.`,
+      )
+    ) {
+      alert("User suspended successfully");
     }
   };
 
   const handleActivateUser = (userId: number, userName: string) => {
     if (confirm(`Are you sure you want to activate ${userName}?`)) {
-      alert('User activated successfully');
+      alert("User activated successfully");
     }
   };
 
@@ -57,13 +133,13 @@ export default function AdminUsersPage() {
   const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
       case UserRole.GYM_OWNER:
-        return 'bg-accent-blue-100 text-accent-blue-700';
+        return "bg-accent-blue-100 text-accent-blue-700";
       case UserRole.TRAINER:
-        return 'bg-accent-yellow-100 text-accent-yellow-700';
+        return "bg-accent-yellow-100 text-accent-yellow-700";
       case UserRole.DIETICIAN:
-        return 'bg-accent-purple-100 text-accent-purple-700';
+        return "bg-accent-purple-100 text-accent-purple-700";
       default:
-        return 'bg-gray-100 text-gray-700';
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -75,8 +151,12 @@ export default function AdminUsersPage() {
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
           <div className="px-8 py-6">
-            <h1 className="text-3xl font-black text-foreground">User Management</h1>
-            <p className="mt-1 text-foreground/60">View and manage all platform users</p>
+            <h1 className="text-3xl font-black text-foreground">
+              User Management
+            </h1>
+            <p className="mt-1 text-foreground/60">
+              View and manage all platform users
+            </p>
           </div>
         </header>
 
@@ -102,7 +182,9 @@ export default function AdminUsersPage() {
                 </label>
                 <select
                   value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value as 'all' | UserRole)}
+                  onChange={(e) =>
+                    setRoleFilter(e.target.value as "all" | UserRole)
+                  }
                   className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="all">All Roles</option>
@@ -118,19 +200,27 @@ export default function AdminUsersPage() {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">Total Users</p>
+              <p className="text-sm font-medium text-foreground/60">
+                Total Users
+              </p>
               <p className="text-3xl font-black text-foreground mt-2">12,458</p>
             </div>
             <div className="bg-white p-6 shadow-card">
               <p className="text-sm font-medium text-foreground/60">Active</p>
-              <p className="text-3xl font-black text-primary-500 mt-2">11,892</p>
+              <p className="text-3xl font-black text-primary-500 mt-2">
+                11,892
+              </p>
             </div>
             <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">Suspended</p>
+              <p className="text-sm font-medium text-foreground/60">
+                Suspended
+              </p>
               <p className="text-3xl font-black text-red-500 mt-2">566</p>
             </div>
             <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">New This Week</p>
+              <p className="text-sm font-medium text-foreground/60">
+                New This Week
+              </p>
               <p className="text-3xl font-black text-foreground mt-2">284</p>
             </div>
           </div>
@@ -168,22 +258,32 @@ export default function AdminUsersPage() {
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <p className="font-semibold text-foreground">{user.name}</p>
-                        <p className="text-sm text-foreground/60">{user.email}</p>
+                        <p className="font-semibold text-foreground">
+                          {user.name}
+                        </p>
+                        <p className="text-sm text-foreground/60">
+                          {user.email}
+                        </p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-xs font-semibold ${getRoleBadgeColor(user.role)}`}>
-                        {user.role.replace('_', ' ')}
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold ${getRoleBadgeColor(user.role)}`}
+                      >
+                        {user.role.replace("_", " ")}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                       {user.country}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-xs font-semibold ${
-                        user.status === AdminUserStatus.ACTIVE ? 'bg-primary-100 text-primary-700' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold ${
+                          user.status === AdminUserStatus.ACTIVE
+                            ? "bg-primary-100 text-primary-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {user.status}
                       </span>
                     </td>
@@ -203,14 +303,18 @@ export default function AdminUsersPage() {
                         </button>
                         {user.status === AdminUserStatus.ACTIVE ? (
                           <button
-                            onClick={() => handleSuspendUser(user.id, user.name)}
+                            onClick={() =>
+                              handleSuspendUser(user.id, user.name)
+                            }
                             className="text-foreground/60 hover:text-red-600 font-semibold"
                           >
                             Suspend
                           </button>
                         ) : (
                           <button
-                            onClick={() => handleActivateUser(user.id, user.name)}
+                            onClick={() =>
+                              handleActivateUser(user.id, user.name)
+                            }
                             className="text-primary-500 hover:text-primary-700 font-semibold"
                           >
                             Activate

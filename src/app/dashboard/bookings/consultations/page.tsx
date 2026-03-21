@@ -51,8 +51,10 @@ function ConsultationBookingPageContent() {
     (roleName?: string | null): ConsultationProviderRole | undefined => {
       if (!roleName) return undefined;
       const normalized = roleName.toLowerCase();
-      if (normalized.includes("diet")) return ConsultationProviderRole.DIETICIAN;
-      if (normalized.includes("trainer")) return ConsultationProviderRole.PERSONAL_TRAINER;
+      if (normalized.includes("diet"))
+        return ConsultationProviderRole.DIETICIAN;
+      if (normalized.includes("trainer"))
+        return ConsultationProviderRole.PERSONAL_TRAINER;
       return ConsultationProviderRole.OTHER;
     },
     [],

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import AdminSidebar from '@/components/AdminSidebar';
+import { useState } from "react";
+import AdminSidebar from "@/components/AdminSidebar";
 
 enum AdminSubscriptionStatus {
-  ACTIVE = 'ACTIVE',
-  CANCELLED = 'CANCELLED',
-  EXPIRED = 'EXPIRED',
-  PENDING_PAYMENT = 'PENDING_PAYMENT',
+  ACTIVE = "ACTIVE",
+  CANCELLED = "CANCELLED",
+  EXPIRED = "EXPIRED",
+  PENDING_PAYMENT = "PENDING_PAYMENT",
 }
 
 type AdminSubscription = {
@@ -24,102 +24,106 @@ type AdminSubscription = {
 };
 
 export default function AdminSubscriptionsPage() {
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Mock data
   const subscriptions: AdminSubscription[] = [
     {
       id: 1,
-      user: 'John Smith',
-      userEmail: 'john@example.com',
-      provider: 'PowerHouse Gym',
-      plan: 'Premium Monthly',
-      amount: '$49.99',
+      user: "John Smith",
+      userEmail: "john@example.com",
+      provider: "PowerHouse Gym",
+      plan: "Premium Monthly",
+      amount: "$49.99",
       status: AdminSubscriptionStatus.ACTIVE,
-      startDate: '2024-01-15',
-      nextBilling: '2024-03-15',
-      duration: '1 month',
+      startDate: "2024-01-15",
+      nextBilling: "2024-03-15",
+      duration: "1 month",
     },
     {
       id: 2,
-      user: 'Sarah Johnson',
-      userEmail: 'sarah@example.com',
-      provider: 'Mike Chen - Personal Training',
-      plan: 'Elite Training Package',
-      amount: '$199.99',
+      user: "Sarah Johnson",
+      userEmail: "sarah@example.com",
+      provider: "Mike Chen - Personal Training",
+      plan: "Elite Training Package",
+      amount: "$199.99",
       status: AdminSubscriptionStatus.ACTIVE,
-      startDate: '2024-02-01',
-      nextBilling: '2024-03-01',
-      duration: '1 month',
+      startDate: "2024-02-01",
+      nextBilling: "2024-03-01",
+      duration: "1 month",
     },
     {
       id: 3,
-      user: 'Emily Davis',
-      userEmail: 'emily@example.com',
-      provider: 'Dr. Maria Garcia - Nutrition',
-      plan: 'Weight Loss Plan',
-      amount: '$89.99',
+      user: "Emily Davis",
+      userEmail: "emily@example.com",
+      provider: "Dr. Maria Garcia - Nutrition",
+      plan: "Weight Loss Plan",
+      amount: "$89.99",
       status: AdminSubscriptionStatus.CANCELLED,
-      startDate: '2023-12-10',
-      nextBilling: '-',
-      duration: '3 months',
+      startDate: "2023-12-10",
+      nextBilling: "-",
+      duration: "3 months",
     },
     {
       id: 4,
-      user: 'Mike Wilson',
-      userEmail: 'mike@example.com',
-      provider: 'FitCore Studio',
-      plan: 'Annual Membership',
-      amount: '$499.99',
+      user: "Mike Wilson",
+      userEmail: "mike@example.com",
+      provider: "FitCore Studio",
+      plan: "Annual Membership",
+      amount: "$499.99",
       status: AdminSubscriptionStatus.ACTIVE,
-      startDate: '2023-06-01',
-      nextBilling: '2024-06-01',
-      duration: '12 months',
+      startDate: "2023-06-01",
+      nextBilling: "2024-06-01",
+      duration: "12 months",
     },
     {
       id: 5,
-      user: 'Lisa Anderson',
-      userEmail: 'lisa@example.com',
-      provider: 'PowerHouse Gym',
-      plan: 'Day Pass',
-      amount: '$15.00',
+      user: "Lisa Anderson",
+      userEmail: "lisa@example.com",
+      provider: "PowerHouse Gym",
+      plan: "Day Pass",
+      amount: "$15.00",
       status: AdminSubscriptionStatus.EXPIRED,
-      startDate: '2024-02-01',
-      nextBilling: '-',
-      duration: '1 day',
+      startDate: "2024-02-01",
+      nextBilling: "-",
+      duration: "1 day",
     },
     {
       id: 6,
-      user: 'David Kim',
-      userEmail: 'david@example.com',
-      provider: 'Mike Chen - Personal Training',
-      plan: 'Basic Training',
-      amount: '$99.99',
+      user: "David Kim",
+      userEmail: "david@example.com",
+      provider: "Mike Chen - Personal Training",
+      plan: "Basic Training",
+      amount: "$99.99",
       status: AdminSubscriptionStatus.PENDING_PAYMENT,
-      startDate: '2024-02-10',
-      nextBilling: '2024-03-10',
-      duration: '1 month',
+      startDate: "2024-02-10",
+      nextBilling: "2024-03-10",
+      duration: "1 month",
     },
   ];
 
   const getStatusBadgeColor = (status: AdminSubscriptionStatus) => {
     switch (status) {
       case AdminSubscriptionStatus.ACTIVE:
-        return 'bg-primary-100 text-primary-700';
+        return "bg-primary-100 text-primary-700";
       case AdminSubscriptionStatus.CANCELLED:
-        return 'bg-gray-100 text-gray-700';
+        return "bg-gray-100 text-gray-700";
       case AdminSubscriptionStatus.EXPIRED:
-        return 'bg-red-100 text-red-700';
+        return "bg-red-100 text-red-700";
       case AdminSubscriptionStatus.PENDING_PAYMENT:
-        return 'bg-accent-yellow-100 text-accent-yellow-700';
+        return "bg-accent-yellow-100 text-accent-yellow-700";
       default:
-        return 'bg-gray-100 text-gray-700';
+        return "bg-gray-100 text-gray-700";
     }
   };
 
   const handleCancelSubscription = (id: number, user: string) => {
-    if (confirm(`Are you sure you want to cancel ${user}'s subscription? This action cannot be undone.`)) {
-      alert('Subscription cancelled successfully');
+    if (
+      confirm(
+        `Are you sure you want to cancel ${user}'s subscription? This action cannot be undone.`,
+      )
+    ) {
+      alert("Subscription cancelled successfully");
     }
   };
 
@@ -131,8 +135,12 @@ export default function AdminSubscriptionsPage() {
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
           <div className="px-8 py-6">
-            <h1 className="text-3xl font-black text-foreground">Subscription Management</h1>
-            <p className="mt-1 text-foreground/60">Monitor and manage all platform subscriptions</p>
+            <h1 className="text-3xl font-black text-foreground">
+              Subscription Management
+            </h1>
+            <p className="mt-1 text-foreground/60">
+              Monitor and manage all platform subscriptions
+            </p>
           </div>
         </header>
 
@@ -140,7 +148,9 @@ export default function AdminSubscriptionsPage() {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
             <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">Total Subscriptions</p>
+              <p className="text-sm font-medium text-foreground/60">
+                Total Subscriptions
+              </p>
               <p className="text-3xl font-black text-foreground mt-2">3,842</p>
             </div>
             <div className="bg-white p-6 shadow-card">
@@ -148,11 +158,17 @@ export default function AdminSubscriptionsPage() {
               <p className="text-3xl font-black text-primary-500 mt-2">2,987</p>
             </div>
             <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">Pending Payment</p>
-              <p className="text-3xl font-black text-accent-yellow-500 mt-2">156</p>
+              <p className="text-sm font-medium text-foreground/60">
+                Pending Payment
+              </p>
+              <p className="text-3xl font-black text-accent-yellow-500 mt-2">
+                156
+              </p>
             </div>
             <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">Cancelled</p>
+              <p className="text-sm font-medium text-foreground/60">
+                Cancelled
+              </p>
               <p className="text-3xl font-black text-gray-500 mt-2">423</p>
             </div>
             <div className="bg-white p-6 shadow-card">
@@ -165,51 +181,51 @@ export default function AdminSubscriptionsPage() {
           <div className="bg-white p-6 shadow-card mb-6">
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => setStatusFilter('all')}
+                onClick={() => setStatusFilter("all")}
                 className={`px-6 py-3 font-semibold ${
-                  statusFilter === 'all'
-                    ? 'bg-red-500 text-foreground'
-                    : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                  statusFilter === "all"
+                    ? "bg-red-500 text-foreground"
+                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                 }`}
               >
                 All
               </button>
               <button
-                onClick={() => setStatusFilter('active')}
+                onClick={() => setStatusFilter("active")}
                 className={`px-6 py-3 font-semibold ${
-                  statusFilter === 'active'
-                    ? 'bg-red-500 text-foreground'
-                    : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                  statusFilter === "active"
+                    ? "bg-red-500 text-foreground"
+                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                 }`}
               >
                 Active
               </button>
               <button
-                onClick={() => setStatusFilter('pending')}
+                onClick={() => setStatusFilter("pending")}
                 className={`px-6 py-3 font-semibold ${
-                  statusFilter === 'pending'
-                    ? 'bg-red-500 text-foreground'
-                    : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                  statusFilter === "pending"
+                    ? "bg-red-500 text-foreground"
+                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                 }`}
               >
                 Pending Payment
               </button>
               <button
-                onClick={() => setStatusFilter('cancelled')}
+                onClick={() => setStatusFilter("cancelled")}
                 className={`px-6 py-3 font-semibold ${
-                  statusFilter === 'cancelled'
-                    ? 'bg-red-500 text-foreground'
-                    : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                  statusFilter === "cancelled"
+                    ? "bg-red-500 text-foreground"
+                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                 }`}
               >
                 Cancelled
               </button>
               <button
-                onClick={() => setStatusFilter('expired')}
+                onClick={() => setStatusFilter("expired")}
                 className={`px-6 py-3 font-semibold ${
-                  statusFilter === 'expired'
-                    ? 'bg-red-500 text-foreground'
-                    : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                  statusFilter === "expired"
+                    ? "bg-red-500 text-foreground"
+                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                 }`}
               >
                 Expired
@@ -250,23 +266,37 @@ export default function AdminSubscriptionsPage() {
                   <tr key={sub.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <p className="font-semibold text-foreground">{sub.user}</p>
-                        <p className="text-sm text-foreground/60">{sub.userEmail}</p>
+                        <p className="font-semibold text-foreground">
+                          {sub.user}
+                        </p>
+                        <p className="text-sm text-foreground/60">
+                          {sub.userEmail}
+                        </p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-semibold text-foreground">{sub.plan}</p>
-                        <p className="text-sm text-foreground/60">{sub.provider}</p>
+                        <p className="font-semibold text-foreground">
+                          {sub.plan}
+                        </p>
+                        <p className="text-sm text-foreground/60">
+                          {sub.provider}
+                        </p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-semibold text-foreground">{sub.amount}</p>
-                      <p className="text-xs text-foreground/60">{sub.duration}</p>
+                      <p className="font-semibold text-foreground">
+                        {sub.amount}
+                      </p>
+                      <p className="text-xs text-foreground/60">
+                        {sub.duration}
+                      </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-xs font-semibold ${getStatusBadgeColor(sub.status)}`}>
-                        {sub.status.replace('_', ' ')}
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold ${getStatusBadgeColor(sub.status)}`}
+                      >
+                        {sub.status.replace("_", " ")}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
@@ -282,7 +312,9 @@ export default function AdminSubscriptionsPage() {
                         </button>
                         {sub.status === AdminSubscriptionStatus.ACTIVE && (
                           <button
-                            onClick={() => handleCancelSubscription(sub.id, sub.user)}
+                            onClick={() =>
+                              handleCancelSubscription(sub.id, sub.user)
+                            }
                             className="text-foreground/60 hover:text-red-600 font-semibold"
                           >
                             Cancel

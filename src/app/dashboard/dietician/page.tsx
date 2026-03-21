@@ -47,9 +47,7 @@ function computeProgress(
 }
 
 export default function DieticianDashboard() {
-  const { user, isLoading, isAuthorized } = useRoleGuard(
-    UserRole.DIETICIAN,
-  );
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETICIAN);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null,
   );
@@ -100,7 +98,9 @@ export default function DieticianDashboard() {
     (booking) => booking.status === ConsultationBookingStatus.COMPLETED,
   ).length;
   const upcomingTodayCount = todayProviderBookings.filter(
-    (booking) => booking.status === ConsultationBookingStatus.CONFIRMED || booking.status === ConsultationBookingStatus.PENDING,
+    (booking) =>
+      booking.status === ConsultationBookingStatus.CONFIRMED ||
+      booking.status === ConsultationBookingStatus.PENDING,
   ).length;
 
   // Stats cards

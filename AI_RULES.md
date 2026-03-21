@@ -10,16 +10,18 @@
 - If a shared enum does not exist yet, create one in the relevant shared API/types module and reuse it everywhere
 
 ✅ Correct:
+
 ```typescript
 if (user.role === UserRole.ADMIN) {
-   router.push('/admin');
+  router.push("/admin");
 }
 ```
 
 ❌ Wrong:
+
 ```typescript
-if (user.role === 'ADMIN') {
-   router.push('/admin');
+if (user.role === "ADMIN") {
+  router.push("/admin");
 }
 ```
 
@@ -28,6 +30,7 @@ if (user.role === 'ADMIN') {
 **ABSOLUTE RULE: ALL API RESPONSE PROPERTIES MUST USE SNAKE_CASE**
 
 ### ✅ Correct (snake_case):
+
 ```typescript
 interface User {
   first_name: string;
@@ -55,20 +58,21 @@ interface Subscription {
 ```
 
 ### ❌ Wrong (camelCase):
+
 ```typescript
 interface User {
-  firstName: string;        // ❌ Wrong
-  lastName: string;         // ❌ Wrong
+  firstName: string; // ❌ Wrong
+  lastName: string; // ❌ Wrong
   isEmailVerified: boolean; // ❌ Wrong
-  createdAt: Date;          // ❌ Wrong
-  profilePicture?: string;  // ❌ Wrong
+  createdAt: Date; // ❌ Wrong
+  profilePicture?: string; // ❌ Wrong
 }
 
 interface Gym {
-  ownerId: string;              // ❌ Wrong
-  verificationStatus: string;   // ❌ Wrong
-  isPublic: boolean;            // ❌ Wrong
-  openingHours?: OpeningHours;  // ❌ Wrong
+  ownerId: string; // ❌ Wrong
+  verificationStatus: string; // ❌ Wrong
+  isPublic: boolean; // ❌ Wrong
+  openingHours?: OpeningHours; // ❌ Wrong
 }
 ```
 
@@ -89,7 +93,7 @@ Branch: `chore/migrate-database-models-to-snake-case`
 All TypeScript interfaces in `src/lib/types/index.ts` updated:
 
 1. **User** - Already using snake_case ✅
-2. **Gym** 
+2. **Gym**
    - `ownerId` → `owner_id`
    - `verificationStatus` → `verification_status`
    - `isPublic` → `is_public`

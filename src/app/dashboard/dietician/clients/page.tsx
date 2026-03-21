@@ -38,9 +38,7 @@ function formatDate(iso: string) {
 // ─── Page ──────────────────────────────────────────────────────────
 
 export default function DieticianClientsPage() {
-  const { user, isLoading, isAuthorized } = useRoleGuard(
-    UserRole.DIETICIAN,
-  );
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETICIAN);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
 
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);

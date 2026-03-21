@@ -71,9 +71,9 @@ export default function ConsultationAvailabilityManager({
   const userTimezone = useMemo(() => getClientTimezone(), []);
 
   const [rules, setRules] = useState<AvailabilityRule[]>([]);
-  const [consultationTypes, setConsultationTypes] = useState<ConsultationType[]>(
-    [],
-  );
+  const [consultationTypes, setConsultationTypes] = useState<
+    ConsultationType[]
+  >([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingType, setIsCreatingType] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -133,7 +133,10 @@ export default function ConsultationAvailabilityManager({
       return;
     }
 
-    if (newType.defaultDurationMinutes < 5 || newType.defaultDurationMinutes > 240) {
+    if (
+      newType.defaultDurationMinutes < 5 ||
+      newType.defaultDurationMinutes > 240
+    ) {
       setMessage("Duration must be between 5 and 240 minutes.");
       return;
     }
@@ -295,7 +298,10 @@ export default function ConsultationAvailabilityManager({
           <textarea
             value={newType.description}
             onChange={(event) =>
-              setNewType((prev) => ({ ...prev, description: event.target.value }))
+              setNewType((prev) => ({
+                ...prev,
+                description: event.target.value,
+              }))
             }
             rows={2}
             placeholder="Optional description"

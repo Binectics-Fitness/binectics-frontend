@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import AdminSidebar from '@/components/AdminSidebar';
-import { UserRole } from '@/lib/types';
+import { useState } from "react";
+import AdminSidebar from "@/components/AdminSidebar";
+import { UserRole } from "@/lib/types";
 
 enum VerificationRequestStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
 }
 
 type VerificationRequest = {
@@ -23,97 +23,101 @@ type VerificationRequest = {
 };
 
 export default function AdminVerificationPage() {
-  const [statusFilter, setStatusFilter] = useState('pending');
+  const [statusFilter, setStatusFilter] = useState("pending");
 
   // Mock data
   const verifications: VerificationRequest[] = [
     {
       id: 1,
-      applicant: 'PowerHouse Gym',
-      email: 'contact@powerhousegym.com',
+      applicant: "PowerHouse Gym",
+      email: "contact@powerhousegym.com",
       type: UserRole.GYM_OWNER,
-      location: 'Los Angeles, USA',
-      appliedDate: '2024-02-10',
+      location: "Los Angeles, USA",
+      appliedDate: "2024-02-10",
       status: VerificationRequestStatus.PENDING,
-      documents: ['Business Registration', 'Government ID', 'Facility Photos'],
+      documents: ["Business Registration", "Government ID", "Facility Photos"],
     },
     {
       id: 2,
-      applicant: 'Mike Chen',
-      email: 'mike.chen@trainer.com',
+      applicant: "Mike Chen",
+      email: "mike.chen@trainer.com",
       type: UserRole.TRAINER,
-      location: 'Hong Kong',
-      appliedDate: '2024-02-11',
+      location: "Hong Kong",
+      appliedDate: "2024-02-11",
       status: VerificationRequestStatus.PENDING,
-      documents: ['NASM-CPT Certificate', 'Government ID', 'Insurance'],
+      documents: ["NASM-CPT Certificate", "Government ID", "Insurance"],
     },
     {
       id: 3,
-      applicant: 'Dr. Aisha Patel',
-      email: 'aisha@nutrition.com',
+      applicant: "Dr. Aisha Patel",
+      email: "aisha@nutrition.com",
       type: UserRole.DIETICIAN,
-      location: 'Mumbai, India',
-      appliedDate: '2024-02-12',
+      location: "Mumbai, India",
+      appliedDate: "2024-02-12",
       status: VerificationRequestStatus.PENDING,
-      documents: ['RD License', 'Government ID', 'University Degree'],
+      documents: ["RD License", "Government ID", "University Degree"],
     },
     {
       id: 4,
-      applicant: 'FitCore Studio',
-      email: 'info@fitcore.uk',
+      applicant: "FitCore Studio",
+      email: "info@fitcore.uk",
       type: UserRole.GYM_OWNER,
-      location: 'London, UK',
-      appliedDate: '2024-02-09',
+      location: "London, UK",
+      appliedDate: "2024-02-09",
       status: VerificationRequestStatus.APPROVED,
-      documents: ['Business Registration', 'Government ID', 'Facility Photos'],
+      documents: ["Business Registration", "Government ID", "Facility Photos"],
     },
     {
       id: 5,
-      applicant: 'John Smith',
-      email: 'john@email.com',
+      applicant: "John Smith",
+      email: "john@email.com",
       type: UserRole.TRAINER,
-      location: 'Sydney, Australia',
-      appliedDate: '2024-02-08',
+      location: "Sydney, Australia",
+      appliedDate: "2024-02-08",
       status: VerificationRequestStatus.REJECTED,
-      documents: ['Incomplete Certificate', 'Government ID'],
-      rejectionReason: 'Certification documents incomplete',
+      documents: ["Incomplete Certificate", "Government ID"],
+      rejectionReason: "Certification documents incomplete",
     },
   ];
 
   const handleApprove = (id: number, name: string) => {
-    if (confirm(`Are you sure you want to approve ${name}? They will receive verified status.`)) {
-      alert('Verification approved successfully');
+    if (
+      confirm(
+        `Are you sure you want to approve ${name}? They will receive verified status.`,
+      )
+    ) {
+      alert("Verification approved successfully");
     }
   };
 
   const handleReject = (id: number, name: string) => {
     const reason = prompt(`Please provide a reason for rejecting ${name}:`);
     if (reason) {
-      alert('Verification rejected. Applicant will be notified.');
+      alert("Verification rejected. Applicant will be notified.");
     }
   };
 
   const getTypeBadgeColor = (type: UserRole) => {
     switch (type) {
       case UserRole.GYM_OWNER:
-        return 'bg-accent-blue-100 text-accent-blue-700';
+        return "bg-accent-blue-100 text-accent-blue-700";
       case UserRole.TRAINER:
-        return 'bg-accent-yellow-100 text-accent-yellow-700';
+        return "bg-accent-yellow-100 text-accent-yellow-700";
       case UserRole.DIETICIAN:
-        return 'bg-accent-purple-100 text-accent-purple-700';
+        return "bg-accent-purple-100 text-accent-purple-700";
       default:
-        return 'bg-gray-100 text-gray-700';
+        return "bg-gray-100 text-gray-700";
     }
   };
 
   const getStatusBadgeColor = (status: VerificationRequestStatus) => {
     switch (status) {
       case VerificationRequestStatus.APPROVED:
-        return 'bg-primary-100 text-primary-700';
+        return "bg-primary-100 text-primary-700";
       case VerificationRequestStatus.REJECTED:
-        return 'bg-red-100 text-red-700';
+        return "bg-red-100 text-red-700";
       default:
-        return 'bg-accent-yellow-100 text-accent-yellow-700';
+        return "bg-accent-yellow-100 text-accent-yellow-700";
     }
   };
 
@@ -125,8 +129,12 @@ export default function AdminVerificationPage() {
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
           <div className="px-8 py-6">
-            <h1 className="text-3xl font-black text-foreground">Verification Queue</h1>
-            <p className="mt-1 text-foreground/60">Review and approve provider verification requests</p>
+            <h1 className="text-3xl font-black text-foreground">
+              Verification Queue
+            </h1>
+            <p className="mt-1 text-foreground/60">
+              Review and approve provider verification requests
+            </p>
           </div>
         </header>
 
@@ -135,10 +143,14 @@ export default function AdminVerificationPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="bg-white p-6 shadow-card">
               <p className="text-sm font-medium text-foreground/60">Pending</p>
-              <p className="text-3xl font-black text-accent-yellow-500 mt-2">23</p>
+              <p className="text-3xl font-black text-accent-yellow-500 mt-2">
+                23
+              </p>
             </div>
             <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">Approved This Week</p>
+              <p className="text-sm font-medium text-foreground/60">
+                Approved This Week
+              </p>
               <p className="text-3xl font-black text-primary-500 mt-2">47</p>
             </div>
             <div className="bg-white p-6 shadow-card">
@@ -146,7 +158,9 @@ export default function AdminVerificationPage() {
               <p className="text-3xl font-black text-red-500 mt-2">12</p>
             </div>
             <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">Avg Review Time</p>
+              <p className="text-sm font-medium text-foreground/60">
+                Avg Review Time
+              </p>
               <p className="text-3xl font-black text-foreground mt-2">24h</p>
             </div>
           </div>
@@ -155,31 +169,37 @@ export default function AdminVerificationPage() {
           <div className="bg-white p-6 shadow-card mb-6">
             <div className="flex gap-4">
               <button
-                onClick={() => setStatusFilter('pending')}
+                onClick={() => setStatusFilter("pending")}
                 className={`px-6 py-3 font-semibold ${
-                  statusFilter === 'pending'
-                    ? 'bg-red-500 text-foreground'
-                    : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                  statusFilter === "pending"
+                    ? "bg-red-500 text-foreground"
+                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                 }`}
               >
-                Pending ({verifications.filter(v => v.status === VerificationRequestStatus.PENDING).length})
+                Pending (
+                {
+                  verifications.filter(
+                    (v) => v.status === VerificationRequestStatus.PENDING,
+                  ).length
+                }
+                )
               </button>
               <button
-                onClick={() => setStatusFilter('approved')}
+                onClick={() => setStatusFilter("approved")}
                 className={`px-6 py-3 font-semibold ${
-                  statusFilter === 'approved'
-                    ? 'bg-red-500 text-foreground'
-                    : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                  statusFilter === "approved"
+                    ? "bg-red-500 text-foreground"
+                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                 }`}
               >
                 Approved
               </button>
               <button
-                onClick={() => setStatusFilter('rejected')}
+                onClick={() => setStatusFilter("rejected")}
                 className={`px-6 py-3 font-semibold ${
-                  statusFilter === 'rejected'
-                    ? 'bg-red-500 text-foreground'
-                    : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                  statusFilter === "rejected"
+                    ? "bg-red-500 text-foreground"
+                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                 }`}
               >
                 Rejected
@@ -194,29 +214,46 @@ export default function AdminVerificationPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-bold text-foreground">{verification.applicant}</h3>
-                      <span className={`px-3 py-1 text-xs font-semibold ${getTypeBadgeColor(verification.type)}`}>
-                        {verification.type.replace('_', ' ')}
+                      <h3 className="text-xl font-bold text-foreground">
+                        {verification.applicant}
+                      </h3>
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold ${getTypeBadgeColor(verification.type)}`}
+                      >
+                        {verification.type.replace("_", " ")}
                       </span>
-                      <span className={`px-3 py-1 text-xs font-semibold ${getStatusBadgeColor(verification.status)}`}>
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold ${getStatusBadgeColor(verification.status)}`}
+                      >
                         {verification.status}
                       </span>
                     </div>
-                    <p className="text-foreground/60 mb-1">{verification.email}</p>
-                    <p className="text-sm text-foreground/60">📍 {verification.location}</p>
+                    <p className="text-foreground/60 mb-1">
+                      {verification.email}
+                    </p>
+                    <p className="text-sm text-foreground/60">
+                      📍 {verification.location}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-foreground/60">Applied</p>
-                    <p className="font-semibold text-foreground">{verification.appliedDate}</p>
+                    <p className="font-semibold text-foreground">
+                      {verification.appliedDate}
+                    </p>
                   </div>
                 </div>
 
                 {/* Documents */}
                 <div className="mb-4">
-                  <p className="text-sm font-semibold text-foreground mb-2">Submitted Documents:</p>
+                  <p className="text-sm font-semibold text-foreground mb-2">
+                    Submitted Documents:
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {verification.documents.map((doc, index) => (
-                      <span key={index} className="px-3 py-1 bg-gray-100 text-foreground text-sm">
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-gray-100 text-foreground text-sm"
+                      >
                         📄 {doc}
                       </span>
                     ))}
@@ -224,24 +261,33 @@ export default function AdminVerificationPage() {
                 </div>
 
                 {/* Rejection Reason */}
-                {verification.status === VerificationRequestStatus.REJECTED && verification.rejectionReason && (
-                  <div className="mb-4 p-4 bg-red-50 border border-red-200">
-                    <p className="text-sm font-semibold text-red-700 mb-1">Rejection Reason:</p>
-                    <p className="text-sm text-red-600">{verification.rejectionReason}</p>
-                  </div>
-                )}
+                {verification.status === VerificationRequestStatus.REJECTED &&
+                  verification.rejectionReason && (
+                    <div className="mb-4 p-4 bg-red-50 border border-red-200">
+                      <p className="text-sm font-semibold text-red-700 mb-1">
+                        Rejection Reason:
+                      </p>
+                      <p className="text-sm text-red-600">
+                        {verification.rejectionReason}
+                      </p>
+                    </div>
+                  )}
 
                 {/* Actions */}
                 {verification.status === VerificationRequestStatus.PENDING && (
                   <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <button
-                      onClick={() => handleApprove(verification.id, verification.applicant)}
+                      onClick={() =>
+                        handleApprove(verification.id, verification.applicant)
+                      }
                       className="flex-1 px-6 py-3 bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors"
                     >
                       ✓ Approve Verification
                     </button>
                     <button
-                      onClick={() => handleReject(verification.id, verification.applicant)}
+                      onClick={() =>
+                        handleReject(verification.id, verification.applicant)
+                      }
                       className="flex-1 px-6 py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
                     >
                       ✗ Reject Application

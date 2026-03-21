@@ -1,22 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { authService } from '@/lib/api/auth';
-import { AccountType } from '@/lib/types';
+import { useState } from "react";
+import { authService } from "@/lib/api/auth";
+import { AccountType } from "@/lib/types";
 
 export default function CreateSuperAdminPage() {
   const [formData, setFormData] = useState({
-    firstName: 'Super',
-    lastName: 'Admin',
-    email: 'admin@binectics.com',
-    password: 'Admin@123456',
-    country: 'United States',
+    firstName: "Super",
+    lastName: "Admin",
+    email: "admin@binectics.com",
+    password: "Admin@123456",
+    country: "United States",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const getEmailForRole = (role: AccountType): string => {
-    const baseEmail = formData.email.split('@');
+    const baseEmail = formData.email.split("@");
     const username = baseEmail[0];
     const domain = baseEmail[1];
 
@@ -46,23 +49,23 @@ export default function CreateSuperAdminPage() {
         last_name: formData.lastName,
         role,
         accept_tos: true,
-        country_code: 'US',
+        country_code: "US",
       });
 
       if (response.success) {
         setMessage({
-          type: 'success',
+          type: "success",
           text: `✓ ${role} account created successfully (${getEmailForRole(role)})`,
         });
       } else {
         setMessage({
-          type: 'error',
+          type: "error",
           text: `✗ Failed to create ${role} account: ${response.message}`,
         });
       }
     } catch (error) {
       setMessage({
-        type: 'error',
+        type: "error",
         text: `✗ Error creating ${role} account`,
       });
     } finally {
@@ -90,7 +93,7 @@ export default function CreateSuperAdminPage() {
           last_name: formData.lastName,
           role,
           accept_tos: true,
-          country_code: 'US',
+          country_code: "US",
         });
 
         if (response.success) {
@@ -105,7 +108,7 @@ export default function CreateSuperAdminPage() {
 
     setIsLoading(false);
     setMessage({
-      type: 'success',
+      type: "success",
       text: `✓ Successfully created ${successCount} accounts!`,
     });
   };
@@ -117,32 +120,47 @@ export default function CreateSuperAdminPage() {
           Create Super Admin Account
         </h1>
         <p className="text-foreground/60 mb-8">
-          This will create 4 supported registration accounts with the same credentials but different account types.
+          This will create 4 supported registration accounts with the same
+          credentials but different account types.
         </p>
 
         {/* Account Details */}
         <div className="bg-gray-50 rounded-xl p-6 mb-8">
-          <h2 className="text-lg font-bold text-foreground mb-4">Account Details (All use same password)</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">
+            Account Details (All use same password)
+          </h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-foreground/60">Password (all accounts):</span>
-              <span className="font-semibold text-foreground">{formData.password}</span>
+              <span className="text-foreground/60">
+                Password (all accounts):
+              </span>
+              <span className="font-semibold text-foreground">
+                {formData.password}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground/60">Gym Owner Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole(AccountType.GYM_OWNER)}</span>
+              <span className="font-semibold text-foreground">
+                {getEmailForRole(AccountType.GYM_OWNER)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground/60">Trainer Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole(AccountType.PERSONAL_TRAINER)}</span>
+              <span className="font-semibold text-foreground">
+                {getEmailForRole(AccountType.PERSONAL_TRAINER)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground/60">Dietician Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole(AccountType.DIETICIAN)}</span>
+              <span className="font-semibold text-foreground">
+                {getEmailForRole(AccountType.DIETICIAN)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground/60">User Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole(AccountType.FITNESS_MEMBER)}</span>
+              <span className="font-semibold text-foreground">
+                {getEmailForRole(AccountType.FITNESS_MEMBER)}
+              </span>
             </div>
             <div className="flex justify-between pt-3 border-t border-gray-200">
               <span className="text-foreground/60">Name:</span>
@@ -152,48 +170,62 @@ export default function CreateSuperAdminPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-foreground/60">Country:</span>
-              <span className="font-semibold text-foreground">{formData.country}</span>
+              <span className="font-semibold text-foreground">
+                {formData.country}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Edit Form */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-foreground mb-4">Edit Details (Optional)</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">
+            Edit Details (Optional)
+          </h2>
           <div className="grid grid-cols-2 gap-4">
             <input
               type="text"
               placeholder="First Name"
               value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, firstName: e.target.value })
+              }
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="text"
               placeholder="Last Name"
               value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, lastName: e.target.value })
+              }
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="email"
               placeholder="Email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
             <input
               type="password"
               placeholder="Password"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
             <input
               type="text"
               placeholder="Country"
               value={formData.country}
-              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, country: e.target.value })
+              }
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
           </div>
@@ -203,9 +235,9 @@ export default function CreateSuperAdminPage() {
         {message && (
           <div
             className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success'
-                ? 'bg-primary-500/10 text-primary-500 border border-primary-500/20'
-                : 'bg-red-50 text-red-600 border border-red-200'
+              message.type === "success"
+                ? "bg-primary-500/10 text-primary-500 border border-primary-500/20"
+                : "bg-red-50 text-red-600 border border-red-200"
             }`}
           >
             {message.text}
@@ -219,7 +251,7 @@ export default function CreateSuperAdminPage() {
             disabled={isLoading}
             className="w-full h-14 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-500/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Creating Accounts...' : 'Create All 4 Accounts'}
+            {isLoading ? "Creating Accounts..." : "Create All 4 Accounts"}
           </button>
 
           <div className="grid grid-cols-4 gap-2">
@@ -257,19 +289,35 @@ export default function CreateSuperAdminPage() {
         {/* Info Box */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-foreground/70 mb-3">
-            <strong>Note:</strong> This creates 4 supported registration accounts with different emails but the same password.
+            <strong>Note:</strong> This creates 4 supported registration
+            accounts with different emails but the same password.
           </p>
           <div className="text-xs text-foreground/60 space-y-1 font-mono">
-            <p>• Gym: {getEmailForRole(AccountType.GYM_OWNER)} / {formData.password}</p>
-            <p>• Trainer: {getEmailForRole(AccountType.PERSONAL_TRAINER)} / {formData.password}</p>
-            <p>• Dietician: {getEmailForRole(AccountType.DIETICIAN)} / {formData.password}</p>
-            <p>• User: {getEmailForRole(AccountType.FITNESS_MEMBER)} / {formData.password}</p>
+            <p>
+              • Gym: {getEmailForRole(AccountType.GYM_OWNER)} /{" "}
+              {formData.password}
+            </p>
+            <p>
+              • Trainer: {getEmailForRole(AccountType.PERSONAL_TRAINER)} /{" "}
+              {formData.password}
+            </p>
+            <p>
+              • Dietician: {getEmailForRole(AccountType.DIETICIAN)} /{" "}
+              {formData.password}
+            </p>
+            <p>
+              • User: {getEmailForRole(AccountType.FITNESS_MEMBER)} /{" "}
+              {formData.password}
+            </p>
           </div>
         </div>
 
         {/* Back to Home */}
         <div className="mt-6 text-center">
-          <a href="/" className="text-accent-blue-500 hover:underline font-medium">
+          <a
+            href="/"
+            className="text-accent-blue-500 hover:underline font-medium"
+          >
             ← Back to Home
           </a>
         </div>

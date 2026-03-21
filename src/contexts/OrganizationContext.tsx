@@ -18,9 +18,9 @@ interface OrganizationContextType {
   refreshOrganizations: () => Promise<void>;
 }
 
-const OrganizationContext = createContext<
-  OrganizationContextType | undefined
->(undefined);
+const OrganizationContext = createContext<OrganizationContextType | undefined>(
+  undefined,
+);
 
 export function OrganizationProvider({
   children,
@@ -54,7 +54,7 @@ export function OrganizationProvider({
 
         const storedOrgId = localStorage.getItem("currentOrgId");
         const nextOrg = storedOrgId
-          ? response.data.find((org) => org._id === storedOrgId) ?? null
+          ? (response.data.find((org) => org._id === storedOrgId) ?? null)
           : null;
 
         setCurrentOrgState(nextOrg || response.data[0] || null);
