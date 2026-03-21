@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import DieticianSidebar from "@/components/DieticianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
+import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import {
   consultationsService,
@@ -451,42 +452,46 @@ export default function DieticianDashboard() {
               </Link>
             </div>
             <div className="bg-background p-6 shadow-card">
-              <ul className="space-y-4">
-                {todayConsultations.map((consultation, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-2xl shrink-0">
-                      {consultation.avatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">
-                        {consultation.client}
-                      </p>
-                      <p className="text-sm text-foreground-secondary">
-                        {consultation.type} • {consultation.duration}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-medium text-foreground">
-                        {consultation.time}
-                      </p>
-                      <span
-                        className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          consultation.status === "completed"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {consultation.status === "completed"
-                          ? "Done"
-                          : "Upcoming"}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {todayConsultations.length === 0 ? (
+                <EmptyState message="No consultations scheduled for today." />
+              ) : (
+                <ul className="space-y-4">
+                  {todayConsultations.map((consultation, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-2xl shrink-0">
+                        {consultation.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground truncate">
+                          {consultation.client}
+                        </p>
+                        <p className="text-sm text-foreground-secondary">
+                          {consultation.type} • {consultation.duration}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {consultation.time}
+                        </p>
+                        <span
+                          className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            consultation.status === "completed"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {consultation.status === "completed"
+                            ? "Done"
+                            : "Upcoming"}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 
@@ -505,9 +510,7 @@ export default function DieticianDashboard() {
             </div>
             <div className="bg-background p-6 shadow-card">
               {clientProfiles.length === 0 ? (
-                <p className="text-sm text-foreground-tertiary text-center py-4">
-                  No clients yet. Add your first client to get started.
-                </p>
+                <EmptyState message="No clients yet. Add your first client to get started." />
               ) : (
                 <ul className="space-y-5">
                   {clientProfiles.map((profile) => {

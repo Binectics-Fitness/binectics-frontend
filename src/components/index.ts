@@ -47,3 +47,7 @@ export { default as OnboardingBanner } from "./OnboardingBanner";
 
 // Notification Components
 export { InactivityNotification } from "./InactivityNotification";
+
+// Utility UI Components
+export { EmptyState } from "./EmptyState";
+export type { EmptyStateProps } from "./EmptyState";

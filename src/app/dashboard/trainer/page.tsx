@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
+import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import {
   progressService,
@@ -441,9 +442,7 @@ export default function TrainerDashboard() {
             </div>
             <div className="bg-background p-6 shadow-card">
               {clientProfiles.length === 0 ? (
-                <p className="text-sm text-foreground-tertiary text-center py-4">
-                  No clients yet. Add your first client to get started.
-                </p>
+                <EmptyState message="No clients yet. Add your first client to get started." />
               ) : (
                 <ul className="space-y-5">
                   {clientProfiles.map((profile) => {
