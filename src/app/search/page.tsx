@@ -1,124 +1,124 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState } from "react";
+import Link from "next/link";
 
 export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [priceRange, setPriceRange] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [priceRange, setPriceRange] = useState("all");
 
   // Mock search results
   const results = [
     {
       id: 1,
-      type: 'gym',
-      name: 'PowerHouse Gym',
-      location: 'Los Angeles, USA',
+      type: "gym",
+      name: "PowerHouse Gym",
+      location: "Los Angeles, USA",
       rating: 4.8,
       reviews: 342,
-      image: '/placeholder-gym.jpg',
-      price: '$49/month',
+      image: "/placeholder-gym.jpg",
+      price: "$49/month",
       verified: true,
-      facilities: ['Cardio', 'Weights', 'Classes'],
+      facilities: ["Cardio", "Weights", "Classes"],
     },
     {
       id: 2,
-      type: 'trainer',
-      name: 'Mike Chen',
-      location: 'Hong Kong',
+      type: "trainer",
+      name: "Mike Chen",
+      location: "Hong Kong",
       rating: 5.0,
       reviews: 128,
-      image: '/placeholder-trainer.jpg',
-      price: '$99/session',
+      image: "/placeholder-trainer.jpg",
+      price: "$99/session",
       verified: true,
-      specialties: ['Strength', 'HIIT', 'Boxing'],
+      specialties: ["Strength", "HIIT", "Boxing"],
     },
     {
       id: 3,
-      type: 'dietitian',
-      name: 'Dr. Maria Garcia',
-      location: 'Barcelona, Spain',
+      type: "dietitian",
+      name: "Dr. Maria Garcia",
+      location: "Barcelona, Spain",
       rating: 4.9,
       reviews: 89,
-      image: '/placeholder-dietitian.jpg',
-      price: '$79/month',
+      image: "/placeholder-dietitian.jpg",
+      price: "$79/month",
       verified: true,
-      specialties: ['Weight Loss', 'Sports Nutrition'],
+      specialties: ["Weight Loss", "Sports Nutrition"],
     },
     {
       id: 4,
-      type: 'gym',
-      name: 'FitCore Studio',
-      location: 'London, UK',
+      type: "gym",
+      name: "FitCore Studio",
+      location: "London, UK",
       rating: 4.7,
       reviews: 289,
-      image: '/placeholder-gym.jpg',
-      price: '$39/month',
+      image: "/placeholder-gym.jpg",
+      price: "$39/month",
       verified: true,
-      facilities: ['Yoga', 'Pilates', 'Sauna'],
+      facilities: ["Yoga", "Pilates", "Sauna"],
     },
   ];
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'gym':
-        return 'bg-accent-blue-500';
-      case 'trainer':
-        return 'bg-accent-yellow-500';
-      case 'dietitian':
-        return 'bg-accent-purple-500';
+      case "gym":
+        return "bg-accent-blue-500";
+      case "trainer":
+        return "bg-accent-yellow-500";
+      case "dietitian":
+        return "bg-accent-purple-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getTypeLink = (type: string, id: number) => {
     switch (type) {
-      case 'gym':
+      case "gym":
         return `/gyms/${id}`;
-      case 'trainer':
+      case "trainer":
         return `/trainers/${id}`;
-      case 'dietitian':
+      case "dietitian":
         return `/dietitians/${id}`;
       default:
-        return '#';
+        return "#";
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Search Section */}
-      <div className="bg-primary-500 py-16">
+      <div className="bg-primary-500 py-8 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-black text-foreground mb-4">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-3">
               Find Your Perfect Fit
             </h1>
-            <p className="text-lg text-foreground/80">
+            <p className="text-base sm:text-lg text-foreground/80 max-w-2xl mx-auto">
               Discover gyms, trainers, and nutrition experts in 50+ countries
             </p>
           </div>
 
           {/* Search Bar */}
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white shadow-lg p-2 flex flex-col md:flex-row gap-2">
+            <div className="bg-white shadow-lg p-2 flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search gyms, trainers, dietitians..."
-                className="flex-1 px-4 py-3 border-2 border-gray-200 focus:outline-none focus:border-primary-500"
+                className="flex-1 ord px-4 py-3 border-2 border-gray-200 focus:outline-none focus:border-primary-500"
               />
               <input
                 type="text"
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
                 placeholder="Location"
-                className="w-full md:w-48 px-4 py-3 border-2 border-gray-200 focus:outline-none focus:border-primary-500"
+                className="w-full sm:w-48 px-4 py-3 border-2 border-gray-200 focus:outline-none focus:border-primary-500"
               />
-              <button className="px-8 py-3 bg-accent-blue-500 text-foreground font-semibold hover:bg-accent-blue-600 transition-colors">
+              <button className="px-6 sm:px-8 py-3 bg-accent-blue-500 text-foreground font-semibold hover:bg-accent-blue-600 transition-colors whitespace-nowrap">
                 Search
               </button>
             </div>
@@ -127,19 +127,24 @@ export default function SearchPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white p-6 shadow-card sticky top-4">
-              <h2 className="text-xl font-bold text-foreground mb-6">Filters</h2>
+              <h2 className="text-xl font-bold text-foreground mb-6">
+                Filters
+              </h2>
 
               {/* Type Filter */}
               <div className="mb-6">
                 <h3 className="font-semibold text-foreground mb-3">Type</h3>
                 <div className="space-y-2">
-                  {['all', 'gym', 'trainer', 'dietitian'].map((type) => (
-                    <label key={type} className="flex items-center cursor-pointer">
+                  {["all", "gym", "trainer", "dietitian"].map((type) => (
+                    <label
+                      key={type}
+                      className="flex items-center cursor-pointer"
+                    >
                       <input
                         type="radio"
                         name="type"
@@ -147,7 +152,9 @@ export default function SearchPage() {
                         onChange={() => setSelectedType(type)}
                         className="w-4 h-4 text-primary-500"
                       />
-                      <span className="ml-2 text-foreground capitalize">{type === 'all' ? 'All' : type}</span>
+                      <span className="ml-2 text-foreground capitalize">
+                        {type === "all" ? "All" : type}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -155,7 +162,9 @@ export default function SearchPage() {
 
               {/* Price Range */}
               <div className="mb-6">
-                <h3 className="font-semibold text-foreground mb-3">Price Range</h3>
+                <h3 className="font-semibold text-foreground mb-3">
+                  Price Range
+                </h3>
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
@@ -179,7 +188,9 @@ export default function SearchPage() {
 
               {/* Quick Links */}
               <div className="pt-6 border-t border-gray-200">
-                <h3 className="font-semibold text-foreground mb-3">Browse by Type</h3>
+                <h3 className="font-semibold text-foreground mb-3">
+                  Browse by Type
+                </h3>
                 <div className="space-y-2">
                   <Link
                     href="/gyms"
@@ -206,11 +217,11 @@ export default function SearchPage() {
 
           {/* Results */}
           <div className="lg:col-span-3">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground order-2 sm:order-1">
                 {results.length} Results Found
               </h2>
-              <select className="px-4 py-2 border-2 border-gray-200 focus:outline-none focus:border-primary-500">
+              <select className="w-full sm:w-auto order-1 sm:order-2 px-4 py-2 border-2 border-gray-200 focus:outline-none focus:border-primary-500 text-sm">
                 <option>Most Relevant</option>
                 <option>Highest Rated</option>
                 <option>Price: Low to High</option>
@@ -220,7 +231,7 @@ export default function SearchPage() {
             </div>
 
             {/* Results Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
               {results.map((result) => (
                 <Link
                   key={result.id}
@@ -228,52 +239,80 @@ export default function SearchPage() {
                   className="bg-white shadow-card hover:shadow-lg transition-shadow group"
                 >
                   {/* Image Placeholder */}
-                  <div className="relative h-48 bg-gray-200">
-                    <div className={`absolute top-4 left-4 px-3 py-1 ${getTypeColor(result.type)} text-foreground text-sm font-semibold`}>
+                  <div className="relative h-40 sm:h-48 bg-gray-200">
+                    <div
+                      className={`absolute top-4 left-4 px-3 py-1 ${getTypeColor(result.type)} text-foreground text-xs sm:text-sm font-semibold`}
+                    >
                       {result.type.toUpperCase()}
                     </div>
                     {result.verified && (
-                      <div className="absolute top-4 right-4 bg-primary-500 text-foreground px-3 py-1 text-xs font-semibold flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <div className="absolute top-4 right-4 bg-primary-500 text-foreground px-2 sm:px-3 py-1 text-xs font-semibold flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
                         </svg>
-                        VERIFIED
+                        <span className="hidden sm:inline">VERIFIED</span>
                       </div>
                     )}
                   </div>
 
                   {/* Content */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary-500 transition-colors">
+                  <div className="p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 group-hover:text-primary-500 transition-colors line-clamp-2">
                       {result.name}
                     </h3>
-                    <p className="text-foreground/60 text-sm mb-3">📍 {result.location}</p>
+                    <p className="text-foreground/60 text-xs sm:text-sm mb-3 truncate">
+                      📍 {result.location}
+                    </p>
 
                     {/* Rating */}
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
                       <div className="flex items-center">
-                        <span className="text-foreground">⭐</span>
-                        <span className="font-semibold text-foreground ml-1">{result.rating}</span>
+                        <span>⭐</span>
+                        <span className="font-semibold text-foreground ml-1 text-sm">
+                          {result.rating}
+                        </span>
                       </div>
-                      <span className="text-foreground/60 text-sm">({result.reviews} reviews)</span>
+                      <span className="text-foreground/60 text-xs sm:text-sm">
+                        ({result.reviews} reviews)
+                      </span>
                     </div>
 
                     {/* Tags */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {(result.type === 'gym' ? result.facilities : result.specialties)?.map((tag, index) => (
-                        <span key={index} className="px-3 py-1 bg-gray-100 text-foreground text-xs">
-                          {tag}
-                        </span>
-                      ))}
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mb-4">
+                      {(result.type === "gym"
+                        ? result.facilities
+                        : result.specialties
+                      )
+                        ?.slice(0, 2)
+                        .map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-2 sm:px-3 py-1 bg-gray-100 text-foreground text-xs"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                     </div>
 
                     {/* Price & CTA */}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div>
-                        <p className="text-sm text-foreground/60">Starting at</p>
-                        <p className="text-xl font-black text-foreground">{result.price}</p>
+                        <p className="text-xs text-foreground/60">
+                          Starting at
+                        </p>
+                        <p className="text-lg sm:text-xl font-black text-foreground">
+                          {result.price}
+                        </p>
                       </div>
-                      <button className="px-6 py-2 bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors">
+                      <button className="px-3 sm:px-6 py-2 text-xs sm:text-sm bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap">
                         View Details
                       </button>
                     </div>
@@ -283,20 +322,20 @@ export default function SearchPage() {
             </div>
 
             {/* Pagination */}
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <button className="px-4 py-2 border-2 border-gray-200 text-foreground font-semibold hover:bg-gray-50">
+            <div className="mt-6 sm:mt-8 flex items-center justify-center  gap-1 sm:gap-2 flex-wrap">
+              <button className="px-2 sm:px-4 py-2 border-2 border-gray-200 text-foreground text-xs sm:text-sm font-semibold hover:bg-gray-50">
                 Previous
               </button>
-              <button className="px-4 py-2 bg-primary-500 text-foreground font-semibold">
+              <button className="px-2 sm:px-4 py-2 bg-primary-500 text-foreground text-xs sm:text-sm font-semibold">
                 1
               </button>
-              <button className="px-4 py-2 border-2 border-gray-200 text-foreground font-semibold hover:bg-gray-50">
+              <button className="px-2 sm:px-4 py-2 border-2 border-gray-200 text-foreground text-xs sm:text-sm font-semibold hover:bg-gray-50">
                 2
               </button>
-              <button className="px-4 py-2 border-2 border-gray-200 text-foreground font-semibold hover:bg-gray-50">
+              <button className="px-2 sm:px-4 py-2 border-2 border-gray-200 text-foreground text-xs sm:text-sm font-semibold hover:bg-gray-50">
                 3
               </button>
-              <button className="px-4 py-2 border-2 border-gray-200 text-foreground font-semibold hover:bg-gray-50">
+              <button className="px-2 sm:px-4 py-2 border-2 border-gray-200 text-foreground text-xs sm:text-sm font-semibold hover:bg-gray-50">
                 Next
               </button>
             </div>

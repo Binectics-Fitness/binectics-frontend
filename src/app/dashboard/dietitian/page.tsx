@@ -377,15 +377,15 @@ export default function DietitianDashboard() {
       <DietitianSidebar />
 
       {/* Main Content */}
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-3 sm:mb-4">
             <div>
-              <h1 className="font-display text-3xl font-black text-foreground mb-2">
+              <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-1 sm:mb-2">
                 Welcome back, {displayName}!
               </h1>
-              <p className="text-foreground-secondary">
+              <p className="text-xs sm:text-sm text-foreground-secondary">
                 {dashboardStats
                   ? `${dashboardStats.active_clients} active clients • ${dashboardStats.pending_requests} pending requests`
                   : "Loading stats..."}
@@ -393,7 +393,7 @@ export default function DietitianDashboard() {
             </div>
             <Link
               href="/dashboard/dietitian/settings"
-              className="inline-flex h-10 items-center justify-center border border-neutral-200 bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50"
+              className="inline-flex h-10 items-center justify-center border border-neutral-200 bg-background px-4 sm:px-6 text-xs sm:text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50 whitespace-nowrap"
             >
               Edit Profile
             </Link>

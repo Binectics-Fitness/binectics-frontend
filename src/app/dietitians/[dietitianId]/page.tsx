@@ -175,10 +175,10 @@ export default function DietitianProfilePage() {
     <div className="min-h-screen bg-background">
       {/* Back Button */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-foreground/60 hover:text-foreground"
+            className="flex items-center gap-2 text-foreground/60 hover:text-foreground text-sm sm:text-base"
           >
             <svg
               className="w-5 h-5"
@@ -200,47 +200,55 @@ export default function DietitianProfilePage() {
 
       {/* Hero Section */}
       <div className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {/* Profile Image & Quick Stats */}
-            <div className="space-y-6">
-              <div className="h-96 bg-accent-purple-100 flex items-center justify-center">
-                <span className="text-9xl">{dietitian.image}</span>
+            <div className="space-y-4 sm:space-y-6">
+              <div className="h-48 sm:h-64 md:h-96 bg-accent-purple-100 flex items-center justify-center rounded-lg">
+                <span className="text-6xl sm:text-7xl md:text-9xl">
+                  {dietitian.image}
+                </span>
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 text-center">
-                  <p className="text-2xl font-black text-foreground">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                <div className="bg-gray-50 p-3 sm:p-4 text-center rounded-lg">
+                  <p className="text-lg sm:text-2xl font-black text-foreground">
                     {dietitian.rating}
                   </p>
-                  <p className="text-sm text-foreground/60">Rating</p>
+                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">
+                    Rating
+                  </p>
                 </div>
-                <div className="bg-gray-50 p-4 text-center">
-                  <p className="text-2xl font-black text-foreground">
+                <div className="bg-gray-50 p-3 sm:p-4 text-center rounded-lg">
+                  <p className="text-lg sm:text-2xl font-black text-foreground">
                     {dietitian.reviews}
                   </p>
-                  <p className="text-sm text-foreground/60">Reviews</p>
+                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">
+                    Reviews
+                  </p>
                 </div>
-                <div className="bg-gray-50 p-4 text-center">
-                  <p className="text-2xl font-black text-foreground">
+                <div className="bg-gray-50 p-3 sm:p-4 text-center rounded-lg">
+                  <p className="text-lg sm:text-2xl font-black text-foreground">
                     {dietitian.clients}
                   </p>
-                  <p className="text-sm text-foreground/60">Clients</p>
+                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">
+                    Clients
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Dietitian Info */}
             <div>
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-3 sm:mb-4 flex-wrap gap-3">
                 <div>
-                  <h1 className="text-4xl font-black text-foreground mb-2">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground mb-2">
                     {dietitian.name}
                   </h1>
-                  <p className="text-foreground/60 flex items-center gap-2">
+                  <p className="text-xs sm:text-sm md:text-base text-foreground/60 flex items-center gap-2">
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4 sm:w-5 sm:h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -256,9 +264,9 @@ export default function DietitianProfilePage() {
                   </p>
                 </div>
                 {dietitian.verified && (
-                  <div className="bg-primary-500 text-foreground px-4 py-2 font-semibold flex items-center gap-2">
+                  <div className="bg-primary-500 text-foreground px-3 sm:px-4 py-1.5 sm:py-2 font-semibold flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4 sm:w-5 sm:h-5"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -274,31 +282,31 @@ export default function DietitianProfilePage() {
               </div>
 
               {/* Bio */}
-              <p className="text-foreground/80 mb-6 leading-relaxed">
+              <p className="text-sm sm:text-base text-foreground/80 mb-4 sm:mb-6 leading-relaxed">
                 {dietitian.bio}
               </p>
 
               {/* Experience */}
-              <div className="mb-6 p-4 bg-gray-50 border border-gray-200">
-                <p className="text-sm font-semibold text-foreground mb-1">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 border border-gray-200 text-sm">
+                <p className="text-xs sm:text-sm font-semibold text-foreground mb-1">
                   Experience
                 </p>
-                <p className="text-foreground/80">
+                <p className="text-xs sm:text-sm text-foreground/80">
                   {dietitian.experience} of clinical and sports nutrition
                   practice
                 </p>
               </div>
 
               {/* Specialties */}
-              <div className="mb-6">
-                <p className="text-sm font-semibold text-foreground mb-3">
+              <div className="mb-4 sm:mb-6">
+                <p className="text-xs sm:text-sm font-semibold text-foreground mb-2 sm:mb-3">
                   Specialties
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {dietitian.specialties.map((specialty, index) => (
                     <span
                       key={index}
-                      className="px-4 py-2 bg-accent-purple-100 text-accent-purple-700 text-sm font-semibold"
+                      className="px-3 sm:px-4 py-1.5 sm:py-2 bg-accent-purple-100 text-accent-purple-700 text-xs sm:text-sm font-semibold"
                     >
                       {specialty}
                     </span>
@@ -307,35 +315,35 @@ export default function DietitianProfilePage() {
               </div>
 
               {/* Languages & Consultation Modes */}
-              <div className="mb-6 space-y-2">
+              <div className="mb-4 sm:mb-6 space-y-2 text-sm">
                 <div>
-                  <p className="text-sm font-semibold text-foreground mb-1">
+                  <p className="text-xs sm:text-sm font-semibold text-foreground mb-1">
                     Languages
                   </p>
-                  <p className="text-foreground/80">
+                  <p className="text-xs sm:text-sm text-foreground/80">
                     {dietitian.languages.join(", ")}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground mb-1">
+                  <p className="text-xs sm:text-sm font-semibold text-foreground mb-1">
                     Consultation Options
                   </p>
-                  <p className="text-foreground/80">
+                  <p className="text-xs sm:text-sm text-foreground/80">
                     {dietitian.consultationModes.join(" • ")}
                   </p>
                 </div>
               </div>
 
               {/* Quick Contact */}
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3 flex-col sm:flex-row">
                 <button
                   onClick={() => selectedPlan && handleBookNow(selectedPlan)}
                   disabled={!selectedPlan}
-                  className="flex-1 px-6 py-3 bg-accent-purple-500 text-white font-semibold hover:bg-accent-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-accent-purple-500 text-foreground text-sm sm:text-base font-semibold hover:bg-accent-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {selectedPlan ? "Book Now" : "Select a Program"}
                 </button>
-                <button className="px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-accent-purple-500 transition-colors">
+                <button className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-gray-200 text-foreground text-sm sm:text-base font-semibold hover:border-accent-purple-500 transition-colors">
                   Message
                 </button>
               </div>

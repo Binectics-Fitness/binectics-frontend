@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
-import { useAutoLogout } from '@/hooks/useAutoLogout';
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { useAutoLogout } from "@/hooks/useAutoLogout";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -15,18 +19,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     // Don't redirect if we're on the admin login page (/admin) or create-super-admin page
-    if (pathname === '/admin' || pathname === '/admin/create-super-admin') {
+    if (pathname === "/admin" || pathname === "/admin/create-super-admin") {
       return;
     }
 
     // Redirect non-admin users to login page
-    if (!isLoading && (!user || user.role !== 'ADMIN')) {
-      router.push('/admin');
+    if (!isLoading && (!user || user.role !== "ADMIN")) {
+      router.push("/admin");
     }
   }, [user, isLoading, router, pathname]);
 
   // Allow access to login page and create-super-admin without auth
-  if (pathname === '/admin' || pathname === '/admin/create-super-admin') {
+  if (pathname === "/admin" || pathname === "/admin/create-super-admin") {
     return <>{children}</>;
   }
 
@@ -41,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user || user.role !== 'ADMIN') {
+  if (!user || user.role !== "ADMIN") {
     return null;
   }
 
