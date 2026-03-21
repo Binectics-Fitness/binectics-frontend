@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Input, PasswordInput } from "@/components";
 import { InactivityNotification } from "@/components/InactivityNotification";
 import { getDashboardRoute } from "@/lib/constants/routes";
+import { UserRole } from "@/lib/types";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (user) {
       // Admin users should use /admin login
-      if (user.role === "ADMIN") {
+      if (user.role === UserRole.ADMIN) {
         router.push("/admin");
         return;
       }

@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import {
   consultationsService,
+  ConsultationBookingStatus,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import {
@@ -93,10 +94,10 @@ export default function DieticianDashboard() {
 
   const displayName = user ? `${user.first_name} ${user.last_name}` : "";
   const completedTodayCount = todayProviderBookings.filter(
-    (booking) => booking.status === "COMPLETED",
+    (booking) => booking.status === ConsultationBookingStatus.COMPLETED,
   ).length;
   const upcomingTodayCount = todayProviderBookings.filter(
-    (booking) => booking.status === "CONFIRMED" || booking.status === "PENDING",
+    (booking) => booking.status === ConsultationBookingStatus.CONFIRMED || booking.status === ConsultationBookingStatus.PENDING,
   ).length;
 
   // Stats cards

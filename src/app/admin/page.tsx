@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { InactivityNotification } from '@/components/InactivityNotification';
+import { UserRole } from '@/lib/types';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function AdminLoginPage() {
 
   // Redirect if already logged in as admin
   useEffect(() => {
-    if (user && user.role === 'ADMIN') {
+    if (user && user.role === UserRole.ADMIN) {
       router.push('/admin/dashboard');
     }
   }, [user, router]);

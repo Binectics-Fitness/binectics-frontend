@@ -2,7 +2,7 @@
 
 import AppSidebar, { type NavItem, type RoleBadge } from "./AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import type { UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/types";
 
 const ROLE_BADGE_MAP: Partial<Record<UserRole, RoleBadge>> = {
   GYM_OWNER: {

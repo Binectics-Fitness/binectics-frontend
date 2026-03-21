@@ -6,7 +6,7 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
-import type { UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/types";
 import {
   teamsService,
   type Organization,
@@ -58,8 +58,8 @@ export default function TeamPage() {
 
   const canCreateOrganization =
     organizations.length === 0 ||
-    user?.role === "GYM_OWNER" ||
-    user?.role === "ADMIN" ||
+    user?.role === UserRole.GYM_OWNER ||
+    user?.role === UserRole.ADMIN ||
     organizations.some((org) => org.is_owner === true);
 
   useEffect(() => {

@@ -1,11 +1,22 @@
 // User & Auth Types
-export type UserRole = "USER" | "GYM_OWNER" | "TRAINER" | "DIETICIAN" | "ADMIN";
-export type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
-export type SubscriptionStatus =
-  | "ACTIVE"
-  | "INACTIVE"
-  | "CANCELLED"
-  | "EXPIRED";
+export enum UserRole {
+  USER = "USER",
+  GYM_OWNER = "GYM_OWNER",
+  TRAINER = "TRAINER",
+  DIETICIAN = "DIETICIAN",
+  ADMIN = "ADMIN",
+}
+export enum VerificationStatus {
+  PENDING = "PENDING",
+  VERIFIED = "VERIFIED",
+  REJECTED = "REJECTED",
+}
+export enum SubscriptionStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  CANCELLED = "CANCELLED",
+  EXPIRED = "EXPIRED",
+}
 
 export interface User {
   id: string;

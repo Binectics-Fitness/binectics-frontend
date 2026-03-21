@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
@@ -382,6 +383,28 @@ export default function ProgressPage() {
   // ─── empty state ──────────────────────────────────────────────
 
   const noProfiles = !loadingData && profiles.length === 0;
+  const selectedProfile = selectedProfileId
+    ? (profiles.find((profile) => profile._id === selectedProfileId) ?? null)
+    : null;
+  const selectedProfessional =
+    selectedProfile && typeof selectedProfile.professional_id === "object"
+      ? selectedProfile.professional_id
+      : null;
+  const selectedProviderId = selectedProfessional?._id;
+  const selectedProviderName = selectedProfessional
+    ? `${selectedProfessional.first_name} ${selectedProfessional.last_name}`.trim()
+    : "";
+  const selectedProviderRoleName = selectedProfessional?.user_role?.role?.name;
+  const selectedProviderRole = selectedProviderRoleName
+    ? selectedProviderRoleName.toLowerCase().includes("diet")
+      ? "DIETICIAN"
+      : selectedProviderRoleName.toLowerCase().includes("trainer")
+        ? "PERSONAL_TRAINER"
+        : "OTHER"
+    : undefined;
+  const bookConsultationHref = selectedProviderId
+    ? `/dashboard/bookings/consultations?providerId=${encodeURIComponent(selectedProviderId)}&providerName=${encodeURIComponent(selectedProviderName)}${selectedProviderRole ? `&providerRole=${encodeURIComponent(selectedProviderRole)}` : ""}`
+    : "/dashboard/bookings/consultations";
 
   // ─── derived chart data ───────────────────────────────────────
 
@@ -458,7 +481,38 @@ export default function ProgressPage() {
               })}
             </select>
           )}
+
+          {selectedProviderId && (
+            <Link
+              href={bookConsultationHref}
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-accent-purple-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-accent-purple-600"
+            >
+              Book Consultation
+            </Link>
+          )}
         </div>
+
+        {selectedProfessional && (
+          <div className="mb-6 rounded-2xl bg-white px-5 py-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Book with {selectedProviderName}
+                </p>
+                <p className="text-sm text-foreground-secondary">
+                  Choose a date and time from this provider&apos;s consultation
+                  availability.
+                </p>
+              </div>
+              <Link
+                href={bookConsultationHref}
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-neutral-300 bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-100"
+              >
+                View Calendar
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* ── Connection Requests ─────────────────────────── */}
         {pendingRequests.length > 0 && (

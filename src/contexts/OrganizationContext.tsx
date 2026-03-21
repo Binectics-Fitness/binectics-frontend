@@ -1,7 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { teamsService, type Organization } from "@/lib/api/teams";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface OrganizationContextType {
   organizations: Organization[];
@@ -20,30 +27,48 @@ export function OrganizationProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentOrg, setCurrentOrgState] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadOrganizations = async () => {
+  const resetOrganizations = useCallback(() => {
+    setOrganizations([]);
+    setCurrentOrgState(null);
+    localStorage.removeItem("currentOrgId");
+    setIsLoading(false);
+  }, []);
+
+  const loadOrganizations = useCallback(async () => {
+    if (!isAuthenticated) {
+      resetOrganizations();
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await teamsService.getMyOrganizations();
+
       if (response.success && response.data) {
         setOrganizations(response.data);
-        
-        // Auto-select first organization if none selected
-        if (!currentOrg && response.data.length > 0) {
-          const storedOrgId = localStorage.getItem("currentOrgId");
-          const stored = response.data.find((o) => o._id === storedOrgId);
-          setCurrentOrgState(stored || response.data[0]);
-        }
+
+        const storedOrgId = localStorage.getItem("currentOrgId");
+        const nextOrg = storedOrgId
+          ? response.data.find((org) => org._id === storedOrgId) ?? null
+          : null;
+
+        setCurrentOrgState(nextOrg || response.data[0] || null);
+        return;
       }
+
+      resetOrganizations();
     } catch (error) {
       console.error("Failed to load organizations:", error);
+      resetOrganizations();
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, resetOrganizations]);
 
   const setCurrentOrg = (org: Organization | null) => {
     setCurrentOrgState(org);
@@ -55,9 +80,10 @@ export function OrganizationProvider({
   };
 
   useEffect(() => {
-    loadOrganizations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (isAuthLoading) return;
+
+    void loadOrganizations();
+  }, [isAuthLoading, loadOrganizations]);
 
   return (
     <OrganizationContext.Provider

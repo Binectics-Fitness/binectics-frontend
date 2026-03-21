@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardRoute } from "@/lib/constants/routes";
-import type { UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/types";
 
 /**
  * Hook to protect client-side routes
@@ -28,7 +28,7 @@ export function useRequireAuth(redirectUrl: string = "/login") {
  * @deprecated Use useRoleGuard instead for better role-based routing
  */
 export function useRequireRole(
-  allowedRoles: string[],
+  allowedRoles: UserRole[],
   redirectUrl: string = "/dashboard",
 ) {
   const { user, isLoading } = useAuth();

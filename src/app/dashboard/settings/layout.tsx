@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { UserRole } from '@/lib/types';
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -86,13 +87,13 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             <div>
               <Link
                 href={
-                  user.role === 'GYM_OWNER'
+                  user.role === UserRole.GYM_OWNER
                     ? '/dashboard/gym-owner'
-                    : user.role === 'TRAINER'
+                    : user.role === UserRole.TRAINER
                     ? '/dashboard/trainer'
-                    : user.role === 'DIETICIAN'
+                    : user.role === UserRole.DIETICIAN
                     ? '/dashboard/dietician'
-                    : user.role === 'ADMIN'
+                    : user.role === UserRole.ADMIN
                     ? '/admin'
                     : '/dashboard'
                 }

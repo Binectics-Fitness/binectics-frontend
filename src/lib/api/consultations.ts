@@ -1,17 +1,30 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
 
-export type ConsultationProviderRole =
-  | "DIETICIAN"
-  | "PERSONAL_TRAINER"
-  | "OTHER";
+export enum ConsultationProviderRole {
+  DIETICIAN = "DIETICIAN",
+  PERSONAL_TRAINER = "PERSONAL_TRAINER",
+  OTHER = "OTHER",
+}
 
-export type ConsultationBookingStatus =
-  | "PENDING"
-  | "CONFIRMED"
-  | "CANCELLED"
-  | "COMPLETED"
-  | "NO_SHOW";
+export enum ConsultationBookingStatus {
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  CANCELLED = "CANCELLED",
+  COMPLETED = "COMPLETED",
+  NO_SHOW = "NO_SHOW",
+}
+
+export enum ConsultationCancelledBy {
+  CLIENT = "CLIENT",
+  PROVIDER = "PROVIDER",
+  ADMIN = "ADMIN",
+}
+
+export enum AvailabilityExceptionType {
+  UNAVAILABLE = "UNAVAILABLE",
+  CUSTOM_HOURS = "CUSTOM_HOURS",
+}
 
 export interface ConsultationType {
   id: string;
@@ -22,6 +35,14 @@ export interface ConsultationType {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreateConsultationTypeRequest {
+  name: string;
+  description?: string;
+  providerRole: ConsultationProviderRole;
+  defaultDurationMinutes: number;
+  isActive?: boolean;
 }
 
 export interface AvailabilityRule {
@@ -38,7 +59,7 @@ export interface AvailabilityRule {
 export interface AvailabilityException {
   id: string;
   date: string;
-  type: "UNAVAILABLE" | "CUSTOM_HOURS";
+  type: AvailabilityExceptionType;
   startTime?: string;
   endTime?: string;
   timezone?: string;
@@ -66,7 +87,7 @@ export interface ConsultationBooking {
   status: ConsultationBookingStatus;
   notes?: string;
   completionNote?: string;
-  cancelledBy?: "CLIENT" | "PROVIDER" | "ADMIN";
+  cancelledBy?: ConsultationCancelledBy;
   cancelReason?: string;
   createdAt: string;
   updatedAt: string;
@@ -96,6 +117,12 @@ export interface CompleteBookingRequest {
 export const consultationsService = {
   getTypes(): Promise<ApiResponse<ConsultationType[]>> {
     return apiClient.get<ConsultationType[]>("/consultations/types");
+  },
+
+  createType(
+    payload: CreateConsultationTypeRequest,
+  ): Promise<ApiResponse<ConsultationType>> {
+    return apiClient.post<ConsultationType>("/consultations/types", payload);
   },
 
   getCatalog(params?: {

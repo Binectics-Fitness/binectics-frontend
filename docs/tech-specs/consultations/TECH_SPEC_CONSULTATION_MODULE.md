@@ -324,7 +324,7 @@ This section is the shared frontend/backend contract shape for transport payload
 
 ## 10) Timezone Handling
 
-See **[`docs/TIMEZONE_STRATEGY.md`](./TIMEZONE_STRATEGY.md)** for the full codebase-wide strategy.
+See **[`docs/architecture/TIMEZONE_STRATEGY.md`](../../architecture/TIMEZONE_STRATEGY.md)** for the full codebase-wide strategy.
 
 **Consultation-specific rules:**
 

@@ -323,7 +323,7 @@ Required runtime keys:
 ## 16) References
 
 - `Claude.MD`
-- `docs/FRONTEND_FILE_STRUCTURE.md`
-- `docs/TECH_SPEC_CLIENT_WEIGHT_PROGRESS.md`
+- `docs/architecture/FRONTEND_FILE_STRUCTURE.md`
+- `docs/tech-specs/progress/TECH_SPEC_CLIENT_WEIGHT_PROGRESS.md`
 - Next.js documentation: https://nextjs.org/docs
 - Tailwind CSS documentation: https://tailwindcss.com

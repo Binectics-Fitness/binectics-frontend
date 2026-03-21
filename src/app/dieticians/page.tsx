@@ -20,7 +20,7 @@ export default function DieticiansPage() {
       verified: true,
       image: '🥗',
       specialties: ['Weight Loss', 'Sports Nutrition', 'Meal Planning'],
-      certifications: ['Registered Dietitian (RD)', 'CSSD', 'Precision Nutrition L2'],
+      certifications: ['Registered Dietician (RD)', 'CSSD', 'Precision Nutrition L2'],
       experience: '12 years',
       price: '$120/session',
       bio: 'Evidence-based nutrition strategies for sustainable health and performance.',

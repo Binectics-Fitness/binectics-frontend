@@ -58,6 +58,11 @@ export interface ClientProfile {
         last_name: string;
         email: string;
         profile_picture?: string;
+        user_role?: {
+          role?: {
+            name?: string;
+          };
+        };
       };
   notes?: string;
   starting_weight_kg?: number;
