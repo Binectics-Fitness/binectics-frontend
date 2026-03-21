@@ -148,6 +148,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (max-width: 767px) {
+  body.dashboard-sidebar-mobile-offset {
+    padding-top: 4rem;
+  }
+
+  body.admin-sidebar-mobile-offset {
+    padding-top: 4rem;
+  }
+
+  .dashboard-route [class~="ml-64"] {
+    margin-left: 0 !important;
+  }
+
+  .admin-route [class~="ml-64"] {
+    margin-left: 0 !important;
+  }
+}
+
 /* Smooth transitions - only on interactive elements */
 a, button {
   transition-property: color, background-color, border-color, transform, box-shadow;

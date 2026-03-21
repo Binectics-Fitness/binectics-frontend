@@ -45,5 +45,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return null;
   }
 
-  return <>{children}</>;
+  return <div className="admin-route">{children}</div>;
 }
