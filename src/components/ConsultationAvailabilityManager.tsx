@@ -5,10 +5,12 @@ import DashboardLoading from "@/components/DashboardLoading";
 import TimezoneHelpBadge from "@/components/TimezoneHelpBadge";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { getClientTimezone } from "@/utils/format";
-import type { UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/types";
 import {
   consultationsService,
+  ConsultationProviderRole,
   type AvailabilityRule,
+  type ConsultationType,
 } from "@/lib/api/consultations";
 
 const weekDays = [
@@ -69,7 +71,11 @@ export default function ConsultationAvailabilityManager({
   const userTimezone = useMemo(() => getClientTimezone(), []);
 
   const [rules, setRules] = useState<AvailabilityRule[]>([]);
+  const [consultationTypes, setConsultationTypes] = useState<
+    ConsultationType[]
+  >([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreatingType, setIsCreatingType] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const [newRule, setNewRule] = useState({
@@ -80,9 +86,31 @@ export default function ConsultationAvailabilityManager({
     isActive: true,
   });
 
+  const providerRoleForType: ConsultationProviderRole =
+    role === UserRole.DIETITIAN
+      ? ConsultationProviderRole.DIETITIAN
+      : role === UserRole.TRAINER
+        ? ConsultationProviderRole.PERSONAL_TRAINER
+        : ConsultationProviderRole.OTHER;
+
+  const [newType, setNewType] = useState({
+    name: "",
+    description: "",
+    defaultDurationMinutes: 30,
+    isActive: true,
+  });
+
   const activeRules = useMemo(
     () => rules.filter((rule) => rule.isActive),
     [rules],
+  );
+
+  const roleTypes = useMemo(
+    () =>
+      consultationTypes.filter(
+        (type) => type.providerRole === providerRoleForType,
+      ),
+    [consultationTypes, providerRoleForType],
   );
 
   useEffect(() => {
@@ -91,7 +119,54 @@ export default function ConsultationAvailabilityManager({
         setRules(res.data);
       }
     });
+
+    consultationsService.getTypes().then((res) => {
+      if (res.success && res.data) {
+        setConsultationTypes(res.data);
+      }
+    });
   }, []);
+
+  const createType = async () => {
+    if (!newType.name.trim()) {
+      setMessage("Consultation type name is required.");
+      return;
+    }
+
+    if (
+      newType.defaultDurationMinutes < 5 ||
+      newType.defaultDurationMinutes > 240
+    ) {
+      setMessage("Duration must be between 5 and 240 minutes.");
+      return;
+    }
+
+    setIsCreatingType(true);
+    setMessage(null);
+
+    const response = await consultationsService.createType({
+      name: newType.name.trim(),
+      description: newType.description.trim() || undefined,
+      providerRole: providerRoleForType,
+      defaultDurationMinutes: newType.defaultDurationMinutes,
+      isActive: newType.isActive,
+    });
+
+    if (response.success && response.data) {
+      setConsultationTypes((prev) => [...prev, response.data!]);
+      setNewType({
+        name: "",
+        description: "",
+        defaultDurationMinutes: 30,
+        isActive: true,
+      });
+      setMessage("Consultation type created successfully.");
+    } else {
+      setMessage(response.message ?? "Failed to create consultation type.");
+    }
+
+    setIsCreatingType(false);
+  };
 
   const addRule = () => {
     if (newRule.startTime >= newRule.endTime) {
@@ -165,6 +240,107 @@ export default function ConsultationAvailabilityManager({
             {message}
           </div>
         )}
+
+        <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
+          <h2 className="mb-4 text-xl font-bold text-foreground">
+            Consultation Types
+          </h2>
+
+          <div className="grid gap-3 md:grid-cols-4">
+            <input
+              type="text"
+              value={newType.name}
+              onChange={(event) =>
+                setNewType((prev) => ({ ...prev, name: event.target.value }))
+              }
+              placeholder="Type name"
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            />
+
+            <input
+              type="number"
+              min={5}
+              max={240}
+              value={newType.defaultDurationMinutes}
+              onChange={(event) =>
+                setNewType((prev) => ({
+                  ...prev,
+                  defaultDurationMinutes: Number(event.target.value || 0),
+                }))
+              }
+              placeholder="Duration (minutes)"
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            />
+
+            <select
+              value={newType.isActive ? "active" : "inactive"}
+              onChange={(event) =>
+                setNewType((prev) => ({
+                  ...prev,
+                  isActive: event.target.value === "active",
+                }))
+              }
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+
+            <button
+              onClick={createType}
+              disabled={isCreatingType}
+              className="rounded-lg bg-accent-purple-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isCreatingType ? "Creating..." : "Create Type"}
+            </button>
+          </div>
+
+          <textarea
+            value={newType.description}
+            onChange={(event) =>
+              setNewType((prev) => ({
+                ...prev,
+                description: event.target.value,
+              }))
+            }
+            rows={2}
+            placeholder="Optional description"
+            className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          />
+
+          <div className="mt-4 space-y-2">
+            {roleTypes.length === 0 ? (
+              <p className="text-sm text-foreground-secondary">
+                No consultation types yet for this role.
+              </p>
+            ) : (
+              roleTypes.map((type) => (
+                <div
+                  key={type.id}
+                  className="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {type.name}
+                    </p>
+                    <p className="text-xs text-foreground-secondary">
+                      {type.defaultDurationMinutes} min • {type.providerRole}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded px-2 py-1 text-xs font-semibold ${
+                      type.isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-neutral-100 text-foreground-secondary"
+                    }`}
+                  >
+                    {type.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
 
         <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
           <div className="mb-4 flex items-center gap-2">

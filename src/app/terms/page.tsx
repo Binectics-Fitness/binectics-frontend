@@ -67,11 +67,11 @@ export default function TermsPage() {
       ],
     },
     {
-      title: '5. Professional Services (Trainers and Dieticians)',
+      title: '5. Professional Services (Trainers and Dietitians)',
       content: [
         {
           subtitle: '5.1 Verification and Credentials',
-          text: 'While we verify professional credentials, Binectics does not guarantee the quality, accuracy, or results of services provided by trainers and dieticians. You are responsible for evaluating professionals before booking sessions.',
+          text: 'While we verify professional credentials, Binectics does not guarantee the quality, accuracy, or results of services provided by trainers and dietitians. You are responsible for evaluating professionals before booking sessions.',
         },
         {
           subtitle: '5.2 Professional-Client Relationship',
@@ -92,7 +92,7 @@ export default function TermsPage() {
       content: [
         {
           subtitle: '6.1 Professional Obligations',
-          text: 'If you operate as a gym owner, trainer, or dietician, you agree to: (a) maintain all required licenses and certifications; (b) comply with applicable laws and regulations; (c) provide accurate information about your services; (d) maintain professional liability insurance; (e) treat all clients with respect and professionalism.',
+          text: 'If you operate as a gym owner, trainer, or dietitian, you agree to: (a) maintain all required licenses and certifications; (b) comply with applicable laws and regulations; (c) provide accurate information about your services; (d) maintain professional liability insurance; (e) treat all clients with respect and professionalism.',
         },
         {
           subtitle: '6.2 Commission and Fees',

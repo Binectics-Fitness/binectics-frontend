@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input, PasswordInput } from "@/components";
+import { AccountType } from "@/lib/types";
 
 export default function TrainerRegisterPage() {
   const { register, isLoading: authLoading } = useAuth();
@@ -66,7 +67,7 @@ export default function TrainerRegisterPage() {
         password: formData.password,
         first_name: formData.firstName,
         last_name: formData.lastName,
-        role: "personal_trainer" as any,
+        role: AccountType.PERSONAL_TRAINER,
         accept_tos: formData.acceptTos,
       });
       if (!result.success) {

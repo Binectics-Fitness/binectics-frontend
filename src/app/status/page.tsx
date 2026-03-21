@@ -51,7 +51,7 @@ export default function StatusPage() {
       status: 'operational',
       uptime: '99.96%',
       responseTime: '312ms',
-      description: 'Trainer and dietician scheduling',
+      description: 'Trainer and dietitian scheduling',
     },
     {
       name: 'Payment Processing',

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { authService } from "@/lib/api/auth";
 import { utilityService } from "@/lib/api/utility";
 import type { CountryItem } from "@/lib/api/utility";
+import { UserRole } from "@/lib/types";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
 
@@ -92,7 +93,7 @@ export default function ProfileSettingsPage() {
     gymDescription: "",
     facilities: [] as string[],
 
-    // Trainer/Dietician specific
+    // Trainer/Dietitian specific
     bio: "",
     specialties: [] as string[],
     certifications: [] as string[],
@@ -317,7 +318,7 @@ export default function ProfileSettingsPage() {
     </div>
   );
 
-  const renderDieticianFields = () => (
+  const renderDietitianFields = () => (
     <div className="bg-white rounded-xl shadow-card p-6 mb-6">
       <h3 className="text-xl font-bold text-foreground mb-4">
         Professional Information
@@ -506,10 +507,10 @@ export default function ProfileSettingsPage() {
       </div>
 
       {/* Role-specific fields */}
-      {user.role === "GYM_OWNER" && renderGymOwnerFields()}
-      {user.role === "TRAINER" && renderTrainerFields()}
-      {user.role === "DIETICIAN" && renderDieticianFields()}
-      {user.role === "USER" && renderUserFields()}
+      {user.role === UserRole.GYM_OWNER && renderGymOwnerFields()}
+      {user.role === UserRole.TRAINER && renderTrainerFields()}
+      {user.role === UserRole.DIETITIAN && renderDietitianFields()}
+      {user.role === UserRole.USER && renderUserFields()}
 
       {/* Save Button */}
       <div className="flex justify-end">

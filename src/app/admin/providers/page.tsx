@@ -1,87 +1,106 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import AdminSidebar from '@/components/AdminSidebar';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import AdminSidebar from "@/components/AdminSidebar";
+import { UserRole } from "@/lib/types";
+
+enum ProviderStatus {
+  ACTIVE = "Active",
+  SUSPENDED = "Suspended",
+}
+
+type AdminProvider = {
+  id: number;
+  name: string;
+  email: string;
+  type: UserRole;
+  location: string;
+  verified: boolean;
+  members: number;
+  revenue: string;
+  joinedDate: string;
+  status: ProviderStatus;
+};
 
 export default function AdminProvidersPage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | UserRole>("all");
 
   // Mock data
-  const providers = [
+  const providers: AdminProvider[] = [
     {
       id: 1,
-      name: 'PowerHouse Gym',
-      email: 'contact@powerhousegym.com',
-      type: 'GYM_OWNER',
-      location: 'Los Angeles, USA',
+      name: "PowerHouse Gym",
+      email: "contact@powerhousegym.com",
+      type: UserRole.GYM_OWNER,
+      location: "Los Angeles, USA",
       verified: true,
       members: 342,
-      revenue: '$12,450',
-      joinedDate: '2023-06-15',
-      status: 'Active',
+      revenue: "$12,450",
+      joinedDate: "2023-06-15",
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 2,
-      name: 'Mike Chen',
-      email: 'mike@trainer.com',
-      type: 'TRAINER',
-      location: 'Hong Kong',
+      name: "Mike Chen",
+      email: "mike@trainer.com",
+      type: UserRole.TRAINER,
+      location: "Hong Kong",
       verified: true,
       members: 28,
-      revenue: '$3,200',
-      joinedDate: '2023-08-20',
-      status: 'Active',
+      revenue: "$3,200",
+      joinedDate: "2023-08-20",
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 3,
-      name: 'Dr. Maria Garcia',
-      email: 'maria@nutrition.com',
-      type: 'DIETICIAN',
-      location: 'Barcelona, Spain',
+      name: "Dr. Maria Garcia",
+      email: "maria@nutrition.com",
+      type: UserRole.DIETITIAN,
+      location: "Barcelona, Spain",
       verified: true,
       members: 45,
-      revenue: '$5,600',
-      joinedDate: '2023-09-10',
-      status: 'Active',
+      revenue: "$5,600",
+      joinedDate: "2023-09-10",
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 4,
-      name: 'FitCore Studio',
-      email: 'info@fitcore.uk',
-      type: 'GYM_OWNER',
-      location: 'London, UK',
+      name: "FitCore Studio",
+      email: "info@fitcore.uk",
+      type: UserRole.GYM_OWNER,
+      location: "London, UK",
       verified: true,
       members: 289,
-      revenue: '$9,870',
-      joinedDate: '2023-07-22',
-      status: 'Active',
+      revenue: "$9,870",
+      joinedDate: "2023-07-22",
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 5,
-      name: 'Sarah Johnson',
-      email: 'sarah@personaltraining.com',
-      type: 'TRAINER',
-      location: 'Sydney, Australia',
+      name: "Sarah Johnson",
+      email: "sarah@personaltraining.com",
+      type: UserRole.TRAINER,
+      location: "Sydney, Australia",
       verified: false,
       members: 12,
-      revenue: '$1,400',
-      joinedDate: '2024-01-05',
-      status: 'Active',
+      revenue: "$1,400",
+      joinedDate: "2024-01-05",
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 6,
-      name: 'Elite Fitness Center',
-      email: 'contact@elitefitness.com',
-      type: 'GYM_OWNER',
-      location: 'Dubai, UAE',
+      name: "Elite Fitness Center",
+      email: "contact@elitefitness.com",
+      type: UserRole.GYM_OWNER,
+      location: "Dubai, UAE",
       verified: true,
       members: 456,
-      revenue: '$18,900',
-      joinedDate: '2023-05-10',
-      status: 'Suspended',
+      revenue: "$18,900",
+      joinedDate: "2023-05-10",
+      status: ProviderStatus.SUSPENDED,
     },
   ];
 
@@ -90,27 +109,31 @@ export default function AdminProvidersPage() {
   };
 
   const handleSuspendProvider = (id: number, name: string) => {
-    if (confirm(`Are you sure you want to suspend ${name}? Their services will be temporarily unavailable.`)) {
-      alert('Provider suspended successfully');
+    if (
+      confirm(
+        `Are you sure you want to suspend ${name}? Their services will be temporarily unavailable.`,
+      )
+    ) {
+      alert("Provider suspended successfully");
     }
   };
 
   const handleActivateProvider = (id: number, name: string) => {
     if (confirm(`Are you sure you want to activate ${name}?`)) {
-      alert('Provider activated successfully');
+      alert("Provider activated successfully");
     }
   };
 
-  const getTypeBadgeColor = (type: string) => {
+  const getTypeBadgeColor = (type: UserRole) => {
     switch (type) {
-      case 'GYM_OWNER':
-        return 'bg-accent-blue-100 text-accent-blue-700';
-      case 'TRAINER':
-        return 'bg-accent-yellow-100 text-accent-yellow-700';
-      case 'DIETICIAN':
-        return 'bg-accent-purple-100 text-accent-purple-700';
+      case UserRole.GYM_OWNER:
+        return "bg-accent-blue-100 text-accent-blue-700";
+      case UserRole.TRAINER:
+        return "bg-accent-yellow-100 text-accent-yellow-700";
+      case UserRole.DIETITIAN:
+        return "bg-accent-purple-100 text-accent-purple-700";
       default:
-        return 'bg-gray-100 text-gray-700';
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -122,8 +145,12 @@ export default function AdminProvidersPage() {
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
           <div className="px-8 py-6">
-            <h1 className="text-3xl font-black text-foreground">Provider Management</h1>
-            <p className="mt-1 text-foreground/60">Manage gyms, trainers, and dieticians</p>
+            <h1 className="text-3xl font-black text-foreground">
+              Provider Management
+            </h1>
+            <p className="mt-1 text-foreground/60">
+              Manage gyms, trainers, and dietitians
+            </p>
           </div>
         </header>
 
@@ -133,8 +160,18 @@ export default function AdminProvidersPage() {
             <div className="bg-white p-6 shadow-card">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-accent-blue-100">
-                  <svg className="w-5 h-5 text-accent-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  <svg
+                    className="w-5 h-5 text-accent-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
                   </svg>
                 </div>
                 <div>
@@ -146,12 +183,24 @@ export default function AdminProvidersPage() {
             <div className="bg-white p-6 shadow-card">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-accent-yellow-100">
-                  <svg className="w-5 h-5 text-accent-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    className="w-5 h-5 text-accent-yellow-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground/60">Trainers</p>
+                  <p className="text-sm font-medium text-foreground/60">
+                    Trainers
+                  </p>
                   <p className="text-2xl font-black text-foreground">289</p>
                 </div>
               </div>
@@ -159,12 +208,24 @@ export default function AdminProvidersPage() {
             <div className="bg-white p-6 shadow-card">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-accent-purple-100">
-                  <svg className="w-5 h-5 text-accent-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <svg
+                    className="w-5 h-5 text-accent-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground/60">Dieticians</p>
+                  <p className="text-sm font-medium text-foreground/60">
+                    Dietitians
+                  </p>
                   <p className="text-2xl font-black text-foreground">216</p>
                 </div>
               </div>
@@ -172,12 +233,24 @@ export default function AdminProvidersPage() {
             <div className="bg-white p-6 shadow-card">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-primary-100">
-                  <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-5 h-5 text-primary-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground/60">Verified</p>
+                  <p className="text-sm font-medium text-foreground/60">
+                    Verified
+                  </p>
                   <p className="text-2xl font-black text-foreground">789</p>
                 </div>
               </div>
@@ -205,13 +278,15 @@ export default function AdminProvidersPage() {
                 </label>
                 <select
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
+                  onChange={(e) =>
+                    setTypeFilter(e.target.value as "all" | UserRole)
+                  }
                   className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="all">All Types</option>
-                  <option value="GYM_OWNER">Gyms</option>
-                  <option value="TRAINER">Trainers</option>
-                  <option value="DIETICIAN">Dieticians</option>
+                  <option value={UserRole.GYM_OWNER}>Gyms</option>
+                  <option value={UserRole.TRAINER}>Trainers</option>
+                  <option value={UserRole.DIETITIAN}>Dietitians</option>
                 </select>
               </div>
             </div>
@@ -251,19 +326,25 @@ export default function AdminProvidersPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-foreground">{provider.name}</p>
+                          <p className="font-semibold text-foreground">
+                            {provider.name}
+                          </p>
                           {provider.verified && (
                             <span className="text-primary-500" title="Verified">
                               ✓
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-foreground/60">{provider.email}</p>
+                        <p className="text-sm text-foreground/60">
+                          {provider.email}
+                        </p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-xs font-semibold ${getTypeBadgeColor(provider.type)}`}>
-                        {provider.type.replace('_', ' ')}
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold ${getTypeBadgeColor(provider.type)}`}
+                      >
+                        {provider.type.replace("_", " ")}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
@@ -276,9 +357,13 @@ export default function AdminProvidersPage() {
                       {provider.revenue}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-xs font-semibold ${
-                        provider.status === 'Active' ? 'bg-primary-100 text-primary-700' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold ${
+                          provider.status === ProviderStatus.ACTIVE
+                            ? "bg-primary-100 text-primary-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {provider.status}
                       </span>
                     </td>
@@ -290,16 +375,20 @@ export default function AdminProvidersPage() {
                         >
                           View
                         </button>
-                        {provider.status === 'Active' ? (
+                        {provider.status === ProviderStatus.ACTIVE ? (
                           <button
-                            onClick={() => handleSuspendProvider(provider.id, provider.name)}
+                            onClick={() =>
+                              handleSuspendProvider(provider.id, provider.name)
+                            }
                             className="text-foreground/60 hover:text-red-600 font-semibold"
                           >
                             Suspend
                           </button>
                         ) : (
                           <button
-                            onClick={() => handleActivateProvider(provider.id, provider.name)}
+                            onClick={() =>
+                              handleActivateProvider(provider.id, provider.name)
+                            }
                             className="text-primary-500 hover:text-primary-700 font-semibold"
                           >
                             Activate

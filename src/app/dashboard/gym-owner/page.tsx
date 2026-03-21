@@ -8,6 +8,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { teamsService } from "@/lib/api/teams";
+import { UserRole } from "@/lib/types";
 
 export default function GymOwnerDashboard() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function GymOwnerDashboard() {
     async function resolvePerspective() {
       if (authLoading || !isAuthorized || !user) return;
 
-      if (user.role === "GYM_OWNER" || user.role === "ADMIN") {
+      if (user.role === UserRole.GYM_OWNER || user.role === UserRole.ADMIN) {
         if (mounted) {
           setCanViewOwnerDashboard(true);
           setResolvingPerspective(false);

@@ -2,7 +2,7 @@
  * Application Routes & Navigation
  */
 
-import type { UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/types";
 
 /**
  * Authentication routes
@@ -23,7 +23,7 @@ export const DASHBOARD_ROUTES: Readonly<Record<UserRole, string>> = {
   USER: "/dashboard",
   GYM_OWNER: "/dashboard/gym-owner",
   TRAINER: "/dashboard/trainer",
-  DIETICIAN: "/dashboard/dietician",
+  DIETITIAN: "/dashboard/dietitian",
   ADMIN: "/admin/dashboard",
 };
 
@@ -38,7 +38,7 @@ export function getDashboardRoute(role: UserRole): string {
  * Get login route for user role
  */
 export function getLoginRoute(role?: UserRole): string {
-  return role === "ADMIN" ? "/admin" : AUTH_ROUTES.LOGIN;
+  return role === UserRole.ADMIN ? "/admin" : AUTH_ROUTES.LOGIN;
 }
 
 /**

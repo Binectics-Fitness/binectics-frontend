@@ -6,7 +6,7 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
-import type { UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/types";
 import {
   teamsService,
   type Organization,
@@ -17,21 +17,21 @@ import {
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   [AccountType.GYM_OWNER]: "Gym Owner",
   [AccountType.PERSONAL_TRAINER]: "Personal Trainer",
-  [AccountType.DIETICIAN]: "Dietician",
+  [AccountType.DIETITIAN]: "Dietitian",
   [AccountType.FITNESS_MEMBER]: "Fitness Member",
 };
 
 const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
   [AccountType.GYM_OWNER]: "bg-blue-100 text-blue-700",
   [AccountType.PERSONAL_TRAINER]: "bg-yellow-100 text-yellow-700",
-  [AccountType.DIETICIAN]: "bg-purple-100 text-purple-700",
+  [AccountType.DIETITIAN]: "bg-purple-100 text-purple-700",
   [AccountType.FITNESS_MEMBER]: "bg-green-100 text-green-700",
 };
 
 const ROLE_TO_ACCOUNT_TYPE: Record<UserRole, AccountType> = {
   GYM_OWNER: AccountType.GYM_OWNER,
   TRAINER: AccountType.PERSONAL_TRAINER,
-  DIETICIAN: AccountType.DIETICIAN,
+  DIETITIAN: AccountType.DIETITIAN,
   USER: AccountType.FITNESS_MEMBER,
   ADMIN: AccountType.GYM_OWNER,
 };
@@ -58,8 +58,8 @@ export default function TeamPage() {
 
   const canCreateOrganization =
     organizations.length === 0 ||
-    user?.role === "GYM_OWNER" ||
-    user?.role === "ADMIN" ||
+    user?.role === UserRole.GYM_OWNER ||
+    user?.role === UserRole.ADMIN ||
     organizations.some((org) => org.is_owner === true);
 
   useEffect(() => {

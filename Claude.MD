@@ -1,5 +1,14 @@
 # Binectics - Claude Development Log
 
+## Enum Rule
+
+**Use enums for all domain constants instead of raw string values.**
+
+- Roles, statuses, booking states, review target types, provider roles, and similar fixed values must come from enums
+- Reuse existing shared enums before adding new ones
+- Avoid inline string unions and raw string comparisons when an enum exists
+- When adding a new API field with constrained values, create or extend a shared enum first
+
 ## 🚫 ABSOLUTE RULE: FRONTEND-ONLY PROJECT - NO EXCEPTIONS
 
 **STOP: THIS IS A FRONTEND-ONLY PROJECT. BACKEND CODE WILL BE REJECTED.**
@@ -26,7 +35,7 @@
 
 ## Project Overview
 
-**Binectics** is a global fitness ecosystem connecting gyms, personal trainers, dieticians, and fitness enthusiasts in one unified marketplace. Available in 50+ countries.
+**Binectics** is a global fitness ecosystem connecting gyms, personal trainers, dietitians, and fitness enthusiasts in one unified marketplace. Available in 50+ countries.
 
 ### Tech Stack
 
@@ -75,7 +84,7 @@ Fully built and optimized landing page with:
 
 1. **PricingSection.tsx** - Pricing cards with monthly/annual toggle
 2. **PricingToggle.tsx** - Switch component for pricing periods
-3. **ProfessionalsTab.tsx** - Tabbed interface for Gym Owners/Trainers/Dieticians
+3. **ProfessionalsTab.tsx** - Tabbed interface for Gym Owners/Trainers/Dietitians
 4. **Accordion.tsx** - FAQ accordion component
 
 #### Sections Implemented:
@@ -95,7 +104,7 @@ Fully built and optimized landing page with:
 
 4. **Features Section**
    - 8 fitness categories with icons
-   - For Gyms/Trainers/Dieticians cards
+   - For Gyms/Trainers/Dietitians cards
 
 5. **Platform Features** (PRD-aligned)
    - QR Check-in
@@ -123,7 +132,7 @@ Fully built and optimized landing page with:
    - 6 diverse testimonials including:
      - Gym Owner (David Kim)
      - Personal Trainer (Jake Martinez)
-     - Certified Dietician (Priya Patel)
+     - Certified Dietitian (Priya Patel)
      - 3 Fitness Enthusiasts
    - Trust metrics (4.9/5 rating, 10K+ members, 50+ countries)
 
@@ -134,7 +143,7 @@ Fully built and optimized landing page with:
 
 11. **For Professionals** (Tabbed)
     - Dynamic accent colors per tab
-    - Gym Owners (blue), Trainers (yellow), Dieticians (purple)
+    - Gym Owners (blue), Trainers (yellow), Dietitians (purple)
     - Stats cards and benefits per role
 
 12. **FAQ Section**
@@ -161,7 +170,7 @@ Fully built and optimized landing page with:
 
 1. **Authentication & Roles**
    - Email + password (social optional)
-   - Roles: Gym Owner, Trainer, Dietician, Fitness Enthusiast, Admin
+   - Roles: Gym Owner, Trainer, Dietitian, Fitness Enthusiast, Admin
    - JWT-based auth
 
 2. **Verification Workflow**
@@ -172,7 +181,7 @@ Fully built and optimized landing page with:
 3. **Profiles & Listings**
    - Gym profile: name, location, facilities, photos, plans
    - Trainer profile: bio, specialties, certifications, plans
-   - Dietician profile: bio, specialties, certifications, plans
+   - Dietitian profile: bio, specialties, certifications, plans
    - Plans: ONE_TIME or SUBSCRIPTION, duration, price
 
 4. **Search & Discovery**
@@ -192,7 +201,7 @@ Fully built and optimized landing page with:
    - Gym dashboard with check-in history
 
 7. **Client Journals**
-   - Trainers/dieticians log client progress
+   - Trainers/dietitians log client progress
    - Text notes + simple metrics (weight, mood, adherence)
    - Read-only for clients
 
@@ -228,7 +237,7 @@ Fully built and optimized landing page with:
 ### Core Entities
 
 ```typescript
-type Role = "USER" | "GYM_OWNER" | "TRAINER" | "DIETICIAN" | "ADMIN";
+type Role = "USER" | "GYM_OWNER" | "TRAINER" | "DIETITIAN" | "ADMIN";
 
 interface User {
   id: string;
@@ -247,7 +256,7 @@ type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
 interface ProviderVerification {
   id: string;
   userId: string;
-  role: "GYM_OWNER" | "TRAINER" | "DIETICIAN";
+  role: "GYM_OWNER" | "TRAINER" | "DIETITIAN";
   documents: Array<{ type: string; url: string }>;
   status: VerificationStatus;
   adminComment?: string;
@@ -273,7 +282,7 @@ interface Gym {
 interface Plan {
   id: string;
   providerId: string;
-  providerType: "GYM" | "TRAINER" | "DIETICIAN";
+  providerType: "GYM" | "TRAINER" | "DIETITIAN";
   name: string;
   type: "ONE_TIME" | "SUBSCRIPTION";
   duration: number; // days
@@ -373,7 +382,7 @@ interface JournalEntry {
 2. `/register/user` - Fitness Enthusiast signup
 3. `/register/gym-owner` - Gym Owner signup
 4. `/register/trainer` - Trainer signup
-5. `/register/dietician` - Dietician signup
+5. `/register/dietitian` - Dietitian signup
 6. `/login` - Login
 7. `/forgot-password` - Reset request
 8. `/reset-password/[token]` - Reset form
@@ -384,7 +393,7 @@ interface JournalEntry {
 
 ### Discovery (13 pages)
 
-21-33. Search, gyms browse/profile, trainers browse/profile, dieticians browse/profile, categories, locations
+21-33. Search, gyms browse/profile, trainers browse/profile, dietitians browse/profile, categories, locations
 
 ### Gym Owner Dashboard (10 pages)
 
@@ -394,7 +403,7 @@ interface JournalEntry {
 
 44-53. Dashboard, profile, plans, clients, journal, analytics, settings
 
-### Dietician Dashboard (10 pages)
+### Dietitian Dashboard (10 pages)
 
 54-63. Dashboard, profile, plans, clients, journal, analytics, settings
 
@@ -470,7 +479,7 @@ interface JournalEntry {
 
 - [ ] User dashboard
 - [ ] Search & discovery
-- [ ] Profile pages (gyms, trainers, dieticians)
+- [ ] Profile pages (gyms, trainers, dietitians)
 - [ ] Subscription flow
 - [ ] Payment integration
 
@@ -478,7 +487,7 @@ interface JournalEntry {
 
 - [ ] Gym owner dashboard
 - [ ] Trainer dashboard
-- [ ] Dietician dashboard
+- [ ] Dietitian dashboard
 - [ ] Plan management
 - [ ] Client management
 - [ ] Journal system
@@ -521,7 +530,7 @@ b996b26 - Implement PRD-aligned landing page enhancements
 - **Green (#00D991)**: Primary CTA buttons, verification badges
 - **Blue (#0267F2)**: Gym owners, navbar/footer hovers, links
 - **Yellow (#FDB90E)**: Trainers, accent elements
-- **Purple (#8B5CF6)**: Dieticians, accent elements
+- **Purple (#8B5CF6)**: Dietitians, accent elements
 - **Dark (#03314B)**: All text on colored backgrounds
 
 ### Typography Hierarchy
@@ -589,17 +598,20 @@ export default function MyPage() {
 ```
 
 **Why This Is Required:**
+
 - The hook accesses URL query parameters that aren't available during static generation
 - During build time (SSG), query parameters don't exist yet
 - Suspense allows Next.js to handle this gracefully by showing a fallback during client-side hydration
 - Without Suspense, builds will fail with: `useSearchParams() should be wrapped in a suspense boundary`
 
 **When to Apply:**
+
 - ✅ Any component using `useSearchParams()`
 - ✅ Any component using `useRouter().searchParams`
 - ✅ Components that read URL query parameters on mount
 
 **Pattern:**
+
 1. Create inner component with the hook
 2. Wrap in outer component with `<Suspense>`
 3. Provide appropriate loading fallback (e.g., `<DashboardLoading />`)

@@ -80,11 +80,11 @@ export default function PartnersPage() {
       href: '/register/trainer',
     },
     {
-      title: 'Dieticians & Nutritionists',
+      title: 'Dietitians & Nutritionists',
       description: 'Connect with clients seeking nutrition guidance and meal planning',
       features: ['Professional credentials display', 'Consultation scheduling', 'Meal planning tools', 'Client progress tracking'],
-      cta: 'Join as a Dietician',
-      href: '/register/dietician',
+      cta: 'Join as a Dietitian',
+      href: '/register/dietitian',
     },
   ];
 
@@ -102,9 +102,9 @@ export default function PartnersPage() {
       location: 'Miami, USA',
     },
     {
-      quote: "As a dietician, Binectics gave me the tools to manage my practice efficiently while reaching clients worldwide.",
+      quote: "As a dietitian, Binectics gave me the tools to manage my practice efficiently while reaching clients worldwide.",
       author: 'Priya Patel',
-      role: 'Registered Dietician',
+      role: 'Registered Dietitian',
       location: 'Mumbai, India',
     },
   ];

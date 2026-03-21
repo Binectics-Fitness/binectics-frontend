@@ -1,6 +1,6 @@
 # Binectics Frontend
 
-A global ecosystem connecting gyms, fitness trainers, dieticians, and wellness enthusiasts.
+A global ecosystem connecting gyms, fitness trainers, dietitians, and wellness enthusiasts.
 
 **Note:** This is a frontend-only project. The backend API is deployed separately and is not included in this repository.
 

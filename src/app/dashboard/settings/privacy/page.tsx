@@ -119,7 +119,7 @@ export default function PrivacySettingsPage() {
         </div>
         <div className="space-y-4">
           <PrivacyToggle label="Allow Direct Messages" description="Let other members send you direct messages" checked={privacy.allowDirectMessages} onChange={() => handleToggle('allowDirectMessages')} />
-          <PrivacyToggle label="Provider Messages" description="Receive messages from trainers, gyms, and dieticians" checked={privacy.allowProviderMessages} onChange={() => handleToggle('allowProviderMessages')} />
+          <PrivacyToggle label="Provider Messages" description="Receive messages from trainers, gyms, and dietitians" checked={privacy.allowProviderMessages} onChange={() => handleToggle('allowProviderMessages')} />
           <PrivacyToggle label="Marketing Communications" description="Receive marketing emails from Binectics partners" checked={privacy.allowMarketingEmails} onChange={() => handleToggle('allowMarketingEmails')} />
         </div>
       </div>

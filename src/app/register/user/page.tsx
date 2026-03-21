@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input, PasswordInput } from "@/components";
+import { AccountType } from "@/lib/types";
 
 export default function UserRegisterPage() {
   const { register, isLoading: authLoading } = useAuth();
@@ -94,7 +95,7 @@ export default function UserRegisterPage() {
         password: formData.password,
         first_name: formData.firstName,
         last_name: formData.lastName,
-        role: "fitness_member" as any,
+        role: AccountType.FITNESS_MEMBER,
         accept_tos: formData.acceptTos,
       });
 

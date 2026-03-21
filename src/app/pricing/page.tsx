@@ -32,7 +32,7 @@ export default function PricingPage() {
       features: [
         'Unlimited access to 500+ gyms',
         'Book personal trainers',
-        'Book dietician consultations',
+        'Book dietitian consultations',
         'Advanced progress tracking',
         'Priority gym access',
         'Exclusive community events',
@@ -51,7 +51,7 @@ export default function PricingPage() {
       features: [
         'Everything in Pro',
         'Unlimited trainer sessions (2/week)',
-        'Unlimited dietician consultations',
+        'Unlimited dietitian consultations',
         'Personalized workout plans',
         'Custom meal plans',
         'VIP gym access',
@@ -117,12 +117,12 @@ export default function PricingPage() {
       color: 'accent-yellow',
     },
     {
-      name: 'Dietician',
+      name: 'Dietitian',
       monthlyPrice: 49,
       annualPrice: 39,
       description: 'For nutrition professionals',
       features: [
-        'Verified dietician profile',
+        'Verified dietitian profile',
         'Client booking system',
         'Meal planning tools',
         'Progress tracking',
@@ -221,7 +221,7 @@ export default function PricingPage() {
               For Fitness Enthusiasts
             </h2>
             <p className="mt-4 text-lg text-foreground-secondary">
-              Access gyms, trainers, and dieticians worldwide
+              Access gyms, trainers, and dietitians worldwide
             </p>
           </div>
           <div className="grid gap-8 lg:grid-cols-3">

@@ -81,7 +81,7 @@ export default function AdminProviderDetailPage() {
         return 'bg-accent-blue-100 text-accent-blue-700';
       case 'TRAINER':
         return 'bg-accent-yellow-100 text-accent-yellow-700';
-      case 'DIETICIAN':
+      case 'DIETITIAN':
         return 'bg-accent-purple-100 text-accent-purple-700';
       default:
         return 'bg-gray-100 text-gray-700';

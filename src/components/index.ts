@@ -40,7 +40,7 @@ export { default as ProfessionalsTab } from "./ProfessionalsTab";
 export { default as DashboardSidebar } from "./DashboardSidebar";
 export { default as DashboardLoading } from "./DashboardLoading";
 export { default as TrainerSidebar } from "./TrainerSidebar";
-export { default as DieticianSidebar } from "./DieticianSidebar";
+export { default as DietitianSidebar } from "./DietitianSidebar";
 export { default as GymOwnerSidebar } from "./GymOwnerSidebar";
 export { default as AdminSidebar } from "./AdminSidebar";
 export { default as OnboardingBanner } from "./OnboardingBanner";

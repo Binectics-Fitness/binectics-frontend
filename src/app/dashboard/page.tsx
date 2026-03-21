@@ -8,11 +8,12 @@ import DashboardLoading from "@/components/DashboardLoading";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { teamsService } from "@/lib/api/teams";
+import { UserRole } from "@/lib/types";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, isLoading, isAuthorized } = useRoleGuard("USER");
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.USER);
   const [resolvingPerspective, setResolvingPerspective] = useState(true);
 
   useEffect(() => {

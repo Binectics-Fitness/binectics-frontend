@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Input, PasswordInput } from "@/components";
 import { InactivityNotification } from "@/components/InactivityNotification";
 import { getDashboardRoute } from "@/lib/constants/routes";
+import { UserRole } from "@/lib/types";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (user) {
       // Admin users should use /admin login
-      if (user.role === "ADMIN") {
+      if (user.role === UserRole.ADMIN) {
         router.push("/admin");
         return;
       }
@@ -117,7 +118,7 @@ export default function LoginPage() {
               <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
                 <div className="flex gap-3">
                   <svg
-                    className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5"
+                    className="h-5 w-5 shrink-0 text-red-600 mt-0.5"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >

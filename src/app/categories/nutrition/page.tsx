@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Nutrition Plans - Binectics',
-  description: 'Transform your diet with personalized nutrition plans from certified dieticians and nutritionists.',
+  description: 'Transform your diet with personalized nutrition plans from certified dietitians and nutritionists.',
 };
 
 export default function NutritionPage() {
@@ -36,7 +36,7 @@ export default function NutritionPage() {
     },
   ];
 
-  const dieticians = [
+  const dietitians = [
     {
       name: 'Dr. Emily Chen',
       specialty: 'Sports Nutrition',
@@ -144,7 +144,7 @@ export default function NutritionPage() {
   const faqs = [
     {
       question: 'Do I need to count calories?',
-      answer: 'Not necessarily. While some programs use calorie tracking, many focus on portion control, food quality, and intuitive eating. Your dietician will recommend the best approach for your goals and lifestyle.',
+      answer: 'Not necessarily. While some programs use calorie tracking, many focus on portion control, food quality, and intuitive eating. Your dietitian will recommend the best approach for your goals and lifestyle.',
     },
     {
       question: 'Can I still eat foods I enjoy?',
@@ -156,7 +156,7 @@ export default function NutritionPage() {
     },
     {
       question: 'Do I need supplements?',
-      answer: 'Supplements are optional and personalized to your needs. Your dietician will assess your diet and recommend only necessary supplements, if any.',
+      answer: 'Supplements are optional and personalized to your needs. Your dietitian will assess your diet and recommend only necessary supplements, if any.',
     },
   ];
 
@@ -170,7 +170,7 @@ export default function NutritionPage() {
     {
       step: 2,
       title: 'Goal Setting',
-      description: 'Work with your dietician to set realistic, achievable goals',
+      description: 'Work with your dietitian to set realistic, achievable goals',
       icon: '🎯',
     },
     {
@@ -197,7 +197,7 @@ export default function NutritionPage() {
             Nutrition Plans
           </h1>
           <p className="text-xl text-foreground-secondary mb-8 max-w-3xl mx-auto">
-            Transform your health with personalized nutrition guidance from certified dieticians. Achieve your goals with science-backed meal plans tailored to your lifestyle.
+            Transform your health with personalized nutrition guidance from certified dietitians. Achieve your goals with science-backed meal plans tailored to your lifestyle.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -359,47 +359,47 @@ export default function NutritionPage() {
         </div>
       </section>
 
-      {/* Dieticians */}
+      {/* Dietitians */}
       <section className="bg-background py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-black text-foreground mb-12 text-center">
-            Certified Dieticians
+            Certified Dietitians
           </h2>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {dieticians.map((dietician, index) => (
+            {dietitians.map((dietitian, index) => (
               <div
                 key={index}
                 className="rounded-lg border-2 border-neutral-300 bg-background p-6"
               >
                 <div className="text-center mb-4">
                   <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-neutral-100 text-4xl mb-3">
-                    {dietician.image}
+                    {dietitian.image}
                   </div>
                   <h3 className="font-display text-xl font-bold text-foreground mb-1">
-                    {dietician.name}
+                    {dietitian.name}
                   </h3>
                   <p className="text-sm text-foreground-secondary mb-2">
-                    {dietician.specialty}
+                    {dietitian.specialty}
                   </p>
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <div className="flex items-center gap-1">
                       <span className="text-accent-yellow-500">★</span>
-                      <span className="font-semibold text-foreground">{dietician.rating}</span>
+                      <span className="font-semibold text-foreground">{dietitian.rating}</span>
                     </div>
                     <span className="text-sm text-foreground-secondary">
-                      ({dietician.reviews} reviews)
+                      ({dietitian.reviews} reviews)
                     </span>
                   </div>
                   <p className="text-sm text-foreground-secondary">
-                    📍 {dietician.location}
+                    📍 {dietitian.location}
                   </p>
                 </div>
                 <div className="space-y-2 mb-4">
                   <p className="text-sm text-foreground-secondary">
-                    <strong>Experience:</strong> {dietician.experience}
+                    <strong>Experience:</strong> {dietitian.experience}
                   </p>
                   <p className="text-sm text-foreground-secondary">
-                    <strong>Certifications:</strong> {dietician.certifications.join(', ')}
+                    <strong>Certifications:</strong> {dietitian.certifications.join(', ')}
                   </p>
                 </div>
                 <Link

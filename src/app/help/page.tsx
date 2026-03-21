@@ -111,7 +111,7 @@ export default function HelpPage() {
       ),
       articles: [
         { title: "Booking a personal trainer", href: "/help/book-trainer" },
-        { title: "Scheduling with a dietician", href: "/help/book-dietician" },
+        { title: "Scheduling with a dietitian", href: "/help/book-dietitian" },
         {
           title: "Canceling and rescheduling sessions",
           href: "/help/reschedule",

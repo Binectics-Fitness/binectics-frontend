@@ -1,10 +1,36 @@
 # AI Development Rules for Binectics Frontend
 
+## Enum Usage
+
+**ABSOLUTE RULE: USE ENUMS FOR DOMAIN VALUES, NOT RAW STRING LITERALS**
+
+- Use enums for roles, statuses, target types, provider types, and other fixed-value API fields
+- Do not create inline string unions when a shared enum already exists
+- Do not compare API values with raw strings like `"ADMIN"`, `"PENDING"`, or `"DIETITIAN"` when an enum is available
+- If a shared enum does not exist yet, create one in the relevant shared API/types module and reuse it everywhere
+
+✅ Correct:
+
+```typescript
+if (user.role === UserRole.ADMIN) {
+  router.push("/admin");
+}
+```
+
+❌ Wrong:
+
+```typescript
+if (user.role === "ADMIN") {
+  router.push("/admin");
+}
+```
+
 ## Database Model Naming Convention
 
 **ABSOLUTE RULE: ALL API RESPONSE PROPERTIES MUST USE SNAKE_CASE**
 
 ### ✅ Correct (snake_case):
+
 ```typescript
 interface User {
   first_name: string;
@@ -32,20 +58,21 @@ interface Subscription {
 ```
 
 ### ❌ Wrong (camelCase):
+
 ```typescript
 interface User {
-  firstName: string;        // ❌ Wrong
-  lastName: string;         // ❌ Wrong
+  firstName: string; // ❌ Wrong
+  lastName: string; // ❌ Wrong
   isEmailVerified: boolean; // ❌ Wrong
-  createdAt: Date;          // ❌ Wrong
-  profilePicture?: string;  // ❌ Wrong
+  createdAt: Date; // ❌ Wrong
+  profilePicture?: string; // ❌ Wrong
 }
 
 interface Gym {
-  ownerId: string;              // ❌ Wrong
-  verificationStatus: string;   // ❌ Wrong
-  isPublic: boolean;            // ❌ Wrong
-  openingHours?: OpeningHours;  // ❌ Wrong
+  ownerId: string; // ❌ Wrong
+  verificationStatus: string; // ❌ Wrong
+  isPublic: boolean; // ❌ Wrong
+  openingHours?: OpeningHours; // ❌ Wrong
 }
 ```
 
@@ -66,7 +93,7 @@ Branch: `chore/migrate-database-models-to-snake-case`
 All TypeScript interfaces in `src/lib/types/index.ts` updated:
 
 1. **User** - Already using snake_case ✅
-2. **Gym** 
+2. **Gym**
    - `ownerId` → `owner_id`
    - `verificationStatus` → `verification_status`
    - `isPublic` → `is_public`
@@ -82,7 +109,7 @@ All TypeScript interfaces in `src/lib/types/index.ts` updated:
    - `createdAt` → `created_at`
    - `updatedAt` → `updated_at`
 
-4. **DieticianProfile**
+4. **DietitianProfile**
    - `userId` → `user_id`
    - `companyName` → `company_name`
    - `verificationStatus` → `verification_status`
@@ -95,7 +122,7 @@ All TypeScript interfaces in `src/lib/types/index.ts` updated:
    - `isActive` → `is_active`
    - `gymId` → `gym_id`
    - `trainerId` → `trainer_id`
-   - `dieticianId` → `dietician_id`
+   - `dietitianId` → `dietitian_id`
    - `createdAt` → `created_at`
    - `updatedAt` → `updated_at`
 
