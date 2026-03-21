@@ -182,18 +182,18 @@ export default function SettingsLayout({
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-8">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
           {/* Sidebar Navigation */}
-          <div className="w-64 shrink-0">
-            <nav className="space-y-1">
+          <div className="w-full lg:w-64 lg:shrink-0">
+            <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
               {settingsTabs.map((tab) => {
                 const isActive = pathname === tab.href;
                 return (
                   <Link
                     key={tab.href}
                     href={tab.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                       isActive
                         ? "bg-primary-500 text-foreground shadow-md"
                         : "text-foreground/60 hover:bg-gray-100 hover:text-foreground"
@@ -208,7 +208,7 @@ export default function SettingsLayout({
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">{children}</div>
+          <div className="min-w-0 flex-1">{children}</div>
         </div>
       </div>
     </div>
