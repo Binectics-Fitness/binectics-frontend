@@ -35,9 +35,9 @@ export default function AccountSettingsPage() {
   return (
     <div className="space-y-6">
       {/* Change Password */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">Change Password</h3>
-        <div className="space-y-4 max-w-md">
+      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">Change Password</h3>
+        <div className="max-w-xl space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
               Current Password
@@ -74,7 +74,7 @@ export default function AccountSettingsPage() {
           <button
             onClick={handlePasswordChange}
             disabled={isChangingPassword}
-            className="px-6 py-3 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 transition-colors"
+            className="w-full rounded-lg bg-primary-500 px-6 py-3 font-semibold text-foreground transition-colors hover:bg-primary-600 sm:w-auto"
           >
             {isChangingPassword ? 'Changing...' : 'Change Password'}
           </button>
@@ -82,14 +82,14 @@ export default function AccountSettingsPage() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-xl shadow-card p-6 border-2 border-red-200">
-        <h3 className="text-xl font-bold text-red-600 mb-4">Danger Zone</h3>
+      <div className="rounded-xl border-2 border-red-200 bg-white p-4 shadow-card sm:p-6">
+        <h3 className="mb-4 text-lg font-bold text-red-600 sm:text-xl">Danger Zone</h3>
         <p className="text-sm text-foreground/70 mb-4">
           Once you delete your account, there is no going back. Please be certain.
         </p>
         <button
           onClick={handleDeleteAccount}
-          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+          className="w-full rounded-lg bg-red-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-red-700 sm:w-auto"
         >
           Delete Account
         </button>

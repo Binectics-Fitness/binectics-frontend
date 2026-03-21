@@ -55,13 +55,13 @@ export default function GymOwnerPlansPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-black text-foreground">Membership Plans</h1>
-              <p className="text-foreground/60 mt-1">Create and manage your gym's pricing plans</p>
+              <p className="text-foreground/60 mt-1">Create and manage your gym&apos;s pricing plans</p>
             </div>
             <button
               onClick={() => setIsCreating(true)}

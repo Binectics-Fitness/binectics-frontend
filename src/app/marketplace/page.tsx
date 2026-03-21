@@ -77,11 +77,11 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
   return (
     <Link
       href={`/marketplace/${listing._id}`}
-      className="group block rounded-2xl bg-white shadow-card hover:shadow-lg transition-shadow duration-200"
+      className="group block h-full rounded-2xl bg-white shadow-card transition-shadow duration-200 hover:shadow-lg"
     >
-      <div className="p-6">
+      <div className="flex h-full flex-col p-6 sm:p-8">
         {/* Header */}
-        <div className="flex items-start gap-4 mb-4">
+        <div className="mb-4 flex items-start gap-4">
           <div className="h-14 w-14 shrink-0 rounded-xl bg-neutral-200 overflow-hidden flex items-center justify-center">
             {profileImage ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -148,7 +148,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
         )}
 
         {/* Footer: Rating + Price */}
-        <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+        <div className="mt-auto flex flex-col gap-3 border-t border-neutral-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             {listing.review_count > 0 ? (
               <div className="flex items-center gap-1">
@@ -163,7 +163,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
               </span>
             )}
           </div>
-          <div className="text-right">
+          <div className="sm:text-right">
             {listing.price_from != null ? (
               <div>
                 <span className="text-sm font-semibold text-foreground">
@@ -268,19 +268,20 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="bg-background-secondary py-16 border-b border-neutral-200">
+      <section className="border-b border-neutral-200 bg-background-secondary py-10 sm:py-16">
         <div className="mx-auto max-w-5xl px-4 text-center">
-          <h1 className="font-display text-4xl sm:text-5xl font-black text-foreground mb-4">
+          <h1 className="mb-4 font-display text-3xl font-black text-foreground sm:text-5xl">
             Find Your Perfect{" "}
             <span className="text-primary-500">Fitness Professional</span>
           </h1>
-          <p className="text-lg text-foreground-secondary max-w-2xl mx-auto mb-8">
+          <p className="mx-auto mb-8 max-w-2xl text-base text-foreground-secondary sm:text-lg">
             Browse verified gyms, personal trainers, and dietitians. Connect
             with the right professional for your fitness journey.
           </p>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
+          <form onSubmit={handleSearch} className="mx-auto max-w-2xl">
+            <div className="relative">
             <svg
               className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-secondary"
               fill="none"
@@ -299,25 +300,26 @@ export default function MarketplacePage() {
               placeholder="Search by name, specialty, or keyword..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border-2 border-neutral-300 bg-white px-5 py-4 pl-12 text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="w-full rounded-xl border-2 border-neutral-300 bg-white px-5 py-4 pl-12 pr-4 text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:pr-28"
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-primary-500 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-600 transition-colors"
+              className="mt-3 w-full rounded-lg bg-primary-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-600 sm:absolute sm:right-2 sm:top-1/2 sm:mt-0 sm:w-auto sm:-translate-y-1/2 sm:py-2"
             >
               Search
             </button>
+            </div>
           </form>
         </div>
       </section>
 
       {/* Content */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:gap-8">
           {/* Filters Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="rounded-2xl bg-white p-6 shadow-card sticky top-20">
-              <div className="flex items-center justify-between mb-6">
+            <div className="rounded-2xl bg-white p-4 shadow-card sm:p-6 lg:sticky lg:top-20">
+              <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">Filters</h2>
                 <button
                   onClick={clearFilters}
@@ -434,7 +436,7 @@ export default function MarketplacePage() {
           {/* Results */}
           <div className="lg:col-span-3">
             {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-foreground-secondary">
                 {isLoading
                   ? "Searching..."
@@ -444,11 +446,11 @@ export default function MarketplacePage() {
 
             {/* Loading */}
             {isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
-                    className="rounded-2xl bg-white p-6 shadow-card animate-pulse"
+                    className="animate-pulse rounded-2xl bg-white p-4 shadow-card sm:p-6"
                   >
                     <div className="flex items-start gap-4 mb-4">
                       <div className="h-14 w-14 rounded-xl bg-neutral-200" />
@@ -466,7 +468,7 @@ export default function MarketplacePage() {
 
             {/* Empty State */}
             {!isLoading && listings.length === 0 && (
-              <div className="rounded-2xl bg-white p-12 shadow-card text-center">
+              <div className="rounded-2xl bg-white p-8 text-center shadow-card sm:p-12">
                 <svg
                   className="mx-auto h-16 w-16 text-neutral-300 mb-4"
                   fill="none"
@@ -498,7 +500,7 @@ export default function MarketplacePage() {
             {/* Results Grid */}
             {!isLoading && listings.length > 0 && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                   {listings.map((listing) => (
                     <ListingCard key={listing._id} listing={listing} />
                   ))}
@@ -506,7 +508,7 @@ export default function MarketplacePage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-8">
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}

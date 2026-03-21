@@ -49,7 +49,7 @@ export default function TrainerDetailPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           <button
             onClick={() => router.back()}
@@ -198,12 +198,12 @@ export default function TrainerDetailPage() {
                 <h3 className="text-lg font-bold text-foreground mb-4">Revenue Split</h3>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm font-semibold text-foreground/60">Trainer's Share</p>
+                    <p className="text-sm font-semibold text-foreground/60">Trainer&apos;s Share</p>
                     <p className="text-2xl font-black text-foreground mt-1">{trainer.revenueShare}%</p>
                     <p className="text-sm text-foreground/60 mt-1">${trainerRevenue.toLocaleString()} this month</p>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground/60">Gym's Share</p>
+                    <p className="text-sm font-semibold text-foreground/60">Gym&apos;s Share</p>
                     <p className="text-2xl font-black text-foreground mt-1">{100 - trainer.revenueShare}%</p>
                     <p className="text-sm text-foreground/60 mt-1">${gymRevenue.toLocaleString()} this month</p>
                   </div>

@@ -226,9 +226,9 @@ export default function TermsPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">{/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Terms of Service
           </h1>
           <p className="mt-6 text-lg text-foreground-secondary leading-relaxed">
@@ -243,11 +243,11 @@ export default function TermsPage() {
       </section>
 
       {/* Terms Content */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="space-y-12">
+          <div className="space-y-8 sm:space-y-12">
             {sections.map((section, index) => (
-              <div key={index} className="rounded-2xl bg-background p-8 sm:p-10 shadow-card">
+              <div key={index} className="rounded-2xl bg-background p-6 sm:p-10 shadow-card">
                 <h2 className="font-display text-2xl font-black text-foreground mb-6 sm:text-3xl">
                   {section.title}
                 </h2>
@@ -270,7 +270,7 @@ export default function TermsPage() {
           </div>
 
           {/* Quick Links */}
-          <div className="mt-12 rounded-2xl bg-primary-500 p-8 shadow-xl">
+          <div className="mt-10 sm:mt-12 rounded-2xl bg-primary-500 p-6 sm:p-8 shadow-xl">
             <h3 className="font-display text-2xl font-black text-foreground mb-4">
               Related Documents
             </h3>

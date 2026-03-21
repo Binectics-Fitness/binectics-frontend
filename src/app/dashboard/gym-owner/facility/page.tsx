@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import GymOwnerSidebar from '@/components/GymOwnerSidebar';
 
 export default function GymOwnerFacilityPage() {
@@ -27,11 +26,11 @@ export default function GymOwnerFacilityPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-black text-foreground">Facilities & Amenities</h1>
-            <p className="text-foreground/60 mt-1">Manage your gym's facilities and amenities</p>
+            <p className="text-foreground/60 mt-1">Manage your gym&apos;s facilities and amenities</p>
           </div>
 
           {/* Stats */}

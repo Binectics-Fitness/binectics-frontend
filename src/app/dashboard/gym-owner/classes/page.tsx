@@ -5,7 +5,6 @@ import GymOwnerSidebar from '@/components/GymOwnerSidebar';
 
 export default function GymOwnerClassesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingClass, setEditingClass] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [classList, setClassList] = useState([
     {
@@ -136,53 +135,10 @@ export default function GymOwnerClassesPage() {
 
   const classes = classList;
 
-  const oldClasses = [
-    {
-      id: 1,
-      name: 'Morning Yoga',
-      instructor: 'Sarah Johnson',
-      schedule: 'Mon, Wed, Fri - 7:00 AM',
-      duration: '60 min',
-      capacity: 20,
-      enrolled: 15,
-      status: 'active',
-    },
-    {
-      id: 2,
-      name: 'HIIT Bootcamp',
-      instructor: 'Mike Davis',
-      schedule: 'Tue, Thu - 6:00 PM',
-      duration: '45 min',
-      capacity: 25,
-      enrolled: 22,
-      status: 'active',
-    },
-    {
-      id: 3,
-      name: 'Spin Class',
-      instructor: 'Emily Brown',
-      schedule: 'Daily - 5:30 PM',
-      duration: '50 min',
-      capacity: 30,
-      enrolled: 28,
-      status: 'active',
-    },
-    {
-      id: 4,
-      name: 'Pilates',
-      instructor: 'Lisa Martinez',
-      schedule: 'Mon, Wed - 10:00 AM',
-      duration: '60 min',
-      capacity: 15,
-      enrolled: 8,
-      status: 'active',
-    },
-  ];
-
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <div>

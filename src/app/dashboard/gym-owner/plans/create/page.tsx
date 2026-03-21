@@ -40,7 +40,7 @@ export default function CreatePlanPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => router.back()}
@@ -181,7 +181,7 @@ export default function CreatePlanPage() {
                 ))}
                 {formData.features.length === 0 && (
                   <p className="text-sm text-foreground/40 text-center py-4">
-                    No features added yet. Add features to highlight what's included.
+                    No features added yet. Add features to highlight what&apos;s included.
                   </p>
                 )}
               </div>

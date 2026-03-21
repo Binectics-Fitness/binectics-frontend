@@ -333,12 +333,12 @@ function ConsultationBookingPageContent() {
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar />
 
-      <main className="ml-64 flex-1 p-8">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-black text-foreground">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
             Book Consultation
           </h1>
-          <p className="mt-2 text-foreground-secondary">
+          <p className="mt-2 text-xs sm:text-sm text-foreground-secondary">
             Choose from your connected providers, then pick a date and time from
             their availability.
           </p>
@@ -357,12 +357,12 @@ function ConsultationBookingPageContent() {
           </div>
         )}
 
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
+        <section className="mb-6 sm:mb-8 rounded-2xl bg-white p-4 sm:p-6 shadow-card">
           <h2 className="mb-4 text-xl font-bold text-foreground">
             Booking Details
           </h2>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
             {loadingProviders ? (
               <div className="rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-foreground-secondary">
                 Loading connected providers...
@@ -434,7 +434,7 @@ function ConsultationBookingPageContent() {
           </div>
         </section>
 
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
+        <section className="mb-6 sm:mb-8 rounded-2xl bg-white p-4 sm:p-6 shadow-card">
           <h2 className="mb-4 text-xl font-bold text-foreground">
             Choose a Date and Time
           </h2>

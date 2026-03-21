@@ -104,9 +104,9 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-background-secondary">
       {/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Get in Touch
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -116,14 +116,14 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Methods */}
-      <section className="bg-neutral-100 py-16 sm:py-20">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {contactMethods.map((method, index) => (
               <a
                 key={index}
                 href={method.href}
-                className="rounded-2xl bg-background p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 text-center"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 text-center"
               >
                 <div
                   className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-${method.color}-500 text-white`}
@@ -146,7 +146,7 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Form */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -165,7 +165,7 @@ export default function ContactPage() {
       </section>
 
       {/* Offices */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -175,7 +175,7 @@ export default function ContactPage() {
               Visit us at one of our global locations
             </p>
           </div>
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {[
               {
                 city: "San Francisco",
@@ -198,9 +198,9 @@ export default function ContactPage() {
             ].map((office, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-8 shadow-card text-center"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card text-center"
               >
-                <div className="text-5xl mb-4">{office.image}</div>
+                <div className="mb-4 text-4xl sm:text-5xl">{office.image}</div>
                 <h3 className="font-display text-xl font-black text-foreground mb-2">
                   {office.city}
                 </h3>

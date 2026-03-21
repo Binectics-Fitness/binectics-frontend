@@ -124,14 +124,14 @@ export default function SecurityPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">{/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-500">
             <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Security & Trust
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -142,7 +142,7 @@ export default function SecurityPage() {
       </section>
 
       {/* Security Features */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl lg:text-5xl">
@@ -152,11 +152,11 @@ export default function SecurityPage() {
               Enterprise-grade security infrastructure
             </p>
           </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {securityFeatures.map((feature, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
               >
                 <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-${feature.color}-500 text-white`}>
                   {feature.icon}
@@ -174,7 +174,7 @@ export default function SecurityPage() {
       </section>
 
       {/* Certifications */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -184,13 +184,13 @@ export default function SecurityPage() {
               Independently verified security and privacy standards
             </p>
           </div>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {certifications.map((cert, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-neutral-100 p-8 text-center shadow-card"
+                className="rounded-2xl bg-neutral-100 p-6 sm:p-8 text-center shadow-card"
               >
-                <div className="text-5xl mb-4">{cert.image}</div>
+                <div className="mb-4 text-4xl sm:text-5xl">{cert.image}</div>
                 <h3 className="font-display text-lg font-black text-foreground mb-2">
                   {cert.name}
                 </h3>
@@ -204,7 +204,7 @@ export default function SecurityPage() {
       </section>
 
       {/* Best Practices */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -236,9 +236,9 @@ export default function SecurityPage() {
       </section>
 
       {/* Incident Response */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-gradient-to-br from-primary-500 to-accent-blue-500 p-8 sm:p-12 shadow-2xl">
+          <div className="rounded-3xl bg-linear-to-br from-primary-500 to-accent-blue-500 p-8 sm:p-12 shadow-2xl">
             <div className="text-center">
               <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20">
                 <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -276,7 +276,7 @@ export default function SecurityPage() {
       </section>
 
       {/* Data Protection */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-2xl bg-background p-8 sm:p-10 shadow-card">
             <h2 className="font-display text-2xl font-black text-foreground mb-6 sm:text-3xl">

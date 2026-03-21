@@ -67,9 +67,9 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">{/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Your global fitness ecosystem
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -80,12 +80,12 @@ export default function AboutPage() {
       </section>
 
       {/* Stats */}
-      <section className="bg-neutral-100 py-16 sm:py-20">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="font-display text-4xl sm:text-5xl font-bold text-foreground">
+                <div className="font-display text-3xl sm:text-5xl font-bold text-foreground">
                   {stat.value}
                 </div>
                 <div className="mt-2 text-sm sm:text-base text-foreground-secondary">
@@ -98,7 +98,7 @@ export default function AboutPage() {
       </section>
 
       {/* Story Section */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl lg:text-5xl">
@@ -125,14 +125,14 @@ export default function AboutPage() {
       </section>
 
       {/* Values Section */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl lg:text-5xl">
               What Drives Us
             </h2>
           </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {values.map((value, index) => (
               <div
                 key={index}
@@ -154,9 +154,9 @@ export default function AboutPage() {
       </section>
 
       {/* Mission, Vision, Commitment */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-3">
+          <div className="grid gap-8 lg:grid-cols-3">
             {team.map((item, index) => (
               <div key={index} className="text-center lg:text-left">
                 <h3 className="mb-3 font-display text-2xl font-black text-foreground">

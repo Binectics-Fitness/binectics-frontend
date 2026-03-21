@@ -7,6 +7,7 @@ export default function TrainersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   // Mock trainers data
   const trainers = [
@@ -129,19 +130,27 @@ export default function TrainersPage() {
     const matchesSpecialty =
       selectedSpecialty === 'all' ||
       trainer.specialties.some((s) => s.toLowerCase() === selectedSpecialty.toLowerCase());
-    return matchesSearch && matchesSpecialty;
+    const locationValue = trainer.location.toLowerCase();
+    const matchesLocation =
+      selectedLocation === 'all' ||
+      (selectedLocation === 'usa' && locationValue.includes('usa')) ||
+      (selectedLocation === 'uk' && locationValue.includes('uk')) ||
+      (selectedLocation === 'asia' && (locationValue.includes('hong kong') || locationValue.includes('india'))) ||
+      (selectedLocation === 'europe' && (locationValue.includes('spain') || locationValue.includes('london')));
+    const matchesVerified = !verifiedOnly || trainer.verified;
+    return matchesSearch && matchesSpecialty && matchesLocation && matchesVerified;
   });
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-accent-yellow-500 py-16">
+      <section className="bg-accent-yellow-500 py-10 sm:py-16">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h1 className="font-display text-4xl sm:text-5xl font-black text-foreground mb-4">
+            <h1 className="mb-4 font-display text-3xl font-black text-foreground sm:text-5xl">
               Find Your Personal Trainer
             </h1>
-            <p className="text-lg text-foreground/90">
+            <p className="text-base text-foreground/90 sm:text-lg">
               Connect with certified trainers worldwide to reach your fitness goals
             </p>
           </div>
@@ -175,7 +184,7 @@ export default function TrainersPage() {
       {/* Filters */}
       <section className="bg-background border-b border-neutral-300 py-6">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-4">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             {/* Specialty Filter */}
             <div className="flex-1">
               <label className="block text-sm font-semibold text-foreground mb-2">Specialty</label>
@@ -210,8 +219,8 @@ export default function TrainersPage() {
 
             {/* Verified Only */}
             <div className="flex items-end">
-              <label className="flex items-center cursor-pointer px-4 py-2 border-2 border-neutral-300 hover:border-accent-yellow-500 transition-colors">
-                <input type="checkbox" className="w-4 h-4 text-accent-yellow-500 mr-2" />
+              <label className="flex w-full items-center rounded-lg border-2 border-neutral-300 px-4 py-3 transition-colors hover:border-accent-yellow-500 lg:w-auto">
+                <input type="checkbox" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} className="mr-2 h-4 w-4 text-accent-yellow-500" />
                 <span className="text-foreground font-semibold">Verified only</span>
               </label>
             </div>
@@ -231,13 +240,13 @@ export default function TrainersPage() {
             {filteredTrainers.map((trainer) => (
               <div
                 key={trainer.id}
-                className="bg-white shadow-card hover:shadow-lg transition-shadow"
+                className="flex h-full flex-col bg-white shadow-card transition-shadow hover:shadow-lg"
               >
                 {/* Header */}
-                <div className="p-6 pb-4">
-                  <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-1 flex-col p-4 pb-4 sm:p-6">
+                  <div className="mb-4 flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-16 h-16 bg-accent-yellow-100 flex items-center justify-center text-3xl">
+                      <div className="flex h-14 w-14 items-center justify-center bg-accent-yellow-100 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
                         {trainer.image}
                       </div>
                       <div>
@@ -265,7 +274,7 @@ export default function TrainersPage() {
                   </div>
 
                   {/* Bio */}
-                  <p className="text-sm text-foreground-secondary mb-4">{trainer.bio}</p>
+                  <p className="mb-4 text-sm text-foreground-secondary">{trainer.bio}</p>
 
                   {/* Specialties */}
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -280,7 +289,7 @@ export default function TrainersPage() {
                   </div>
 
                   {/* Experience & Certifications */}
-                  <div className="space-y-2 mb-4 text-sm">
+                  <div className="mb-4 space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-foreground-secondary">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -307,14 +316,14 @@ export default function TrainersPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <div className="mt-auto flex flex-col gap-3 border-t border-gray-200 bg-gray-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <div>
                     <p className="text-xs text-foreground-secondary">Starting at</p>
                     <p className="text-xl font-black text-foreground">{trainer.price}</p>
                   </div>
                   <Link
                     href={`/trainers/${trainer.id}`}
-                    className="px-6 py-2 bg-accent-yellow-500 text-foreground font-semibold hover:bg-accent-yellow-600 transition-colors"
+                    className="inline-flex items-center justify-center bg-accent-yellow-500 px-6 py-2 text-center font-semibold text-foreground transition-colors hover:bg-accent-yellow-600"
                   >
                     View Profile
                   </Link>

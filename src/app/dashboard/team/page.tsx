@@ -131,21 +131,21 @@ export default function TeamPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar />
-      <main className="flex-1 p-8 ml-64">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-black text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground">
               Team Management
             </h1>
-            <p className="mt-1 text-sm text-foreground-secondary">
+            <p className="mt-1 text-xs sm:text-sm text-foreground-secondary">
               Manage your organizations, members, and roles.
             </p>
           </div>
           {canCreateOrganization && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors whitespace-nowrap"
             >
               <svg
                 className="h-4 w-4"
@@ -211,12 +211,12 @@ export default function TeamPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {organizations.map((org) => (
               <Link
                 key={org._id}
                 href={`/dashboard/team/${org._id}`}
-                className="group block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                className="group block rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6 shadow-sm transition-shadow hover:shadow-md h-full"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-500 text-xl font-black text-foreground">

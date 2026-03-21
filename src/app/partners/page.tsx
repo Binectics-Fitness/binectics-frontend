@@ -111,9 +111,9 @@ export default function PartnersPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">{/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Partner with Binectics
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -123,23 +123,23 @@ export default function PartnersPage() {
       </section>
 
       {/* Stats */}
-      <section className="bg-neutral-100 py-16">
+      <section className="bg-neutral-100 py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="text-center">
-              <div className="font-display text-4xl font-black text-primary-500">500+</div>
+              <div className="font-display text-3xl sm:text-4xl font-black text-primary-500">500+</div>
               <div className="mt-2 text-sm text-foreground-secondary">Partner Gyms</div>
             </div>
             <div className="text-center">
-              <div className="font-display text-4xl font-black text-primary-500">10K+</div>
+              <div className="font-display text-3xl sm:text-4xl font-black text-primary-500">10K+</div>
               <div className="mt-2 text-sm text-foreground-secondary">Active Members</div>
             </div>
             <div className="text-center">
-              <div className="font-display text-4xl font-black text-primary-500">50+</div>
+              <div className="font-display text-3xl sm:text-4xl font-black text-primary-500">50+</div>
               <div className="mt-2 text-sm text-foreground-secondary">Countries</div>
             </div>
             <div className="text-center">
-              <div className="font-display text-4xl font-black text-primary-500">4.9★</div>
+              <div className="font-display text-3xl sm:text-4xl font-black text-primary-500">4.9★</div>
               <div className="mt-2 text-sm text-foreground-secondary">Partner Rating</div>
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function PartnersPage() {
       </section>
 
       {/* Benefits */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -176,7 +176,7 @@ export default function PartnersPage() {
       </section>
 
       {/* Partner Types */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -185,7 +185,7 @@ export default function PartnersPage() {
           </div>
           <div className="grid gap-8 lg:grid-cols-3">
             {partnerTypes.map((type, index) => (
-              <div key={index} className="rounded-2xl bg-background p-8 shadow-card">
+              <div key={index} className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
                 <h3 className="font-display text-2xl font-bold text-foreground mb-3">
                   {type.title}
                 </h3>
@@ -215,7 +215,7 @@ export default function PartnersPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -224,7 +224,7 @@ export default function PartnersPage() {
           </div>
           <div className="grid gap-8 lg:grid-cols-3">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="rounded-2xl bg-neutral-100 p-8 shadow-card">
+              <div key={index} className="rounded-2xl bg-neutral-100 p-6 sm:p-8 shadow-card">
                 <blockquote className="text-foreground-secondary leading-relaxed mb-6">
                   "{testimonial.quote}"
                 </blockquote>

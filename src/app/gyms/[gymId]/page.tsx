@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
@@ -87,33 +86,6 @@ export default function GymProfilePage() {
       "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=gym_123",
   };
 
-  const reviews = [
-    {
-      id: 1,
-      user: "John Smith",
-      rating: 5,
-      date: "2024-02-10",
-      comment:
-        "Amazing facilities and great staff! The equipment is top-notch.",
-    },
-    {
-      id: 2,
-      user: "Sarah Johnson",
-      rating: 4,
-      date: "2024-02-08",
-      comment:
-        "Great gym, can get crowded during peak hours but overall excellent.",
-    },
-    {
-      id: 3,
-      user: "Mike Chen",
-      rating: 5,
-      date: "2024-02-05",
-      comment:
-        "Best gym in LA! Clean, modern, and the trainers are incredibly knowledgeable.",
-    },
-  ];
-
   useEffect(() => {
     let mounted = true;
 
@@ -148,7 +120,7 @@ export default function GymProfilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-foreground/60 hover:text-foreground"
+            className="flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground sm:text-base"
           >
             <svg
               className="w-5 h-5"
@@ -171,19 +143,19 @@ export default function GymProfilePage() {
       {/* Hero Section */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Image Gallery */}
             <div className="space-y-4">
-              <div className="h-96 bg-gray-200 flex items-center justify-center">
-                <span className="text-8xl">🏋️</span>
+              <div className="flex h-72 items-center justify-center bg-gray-200 sm:h-96">
+                <span className="text-6xl sm:text-8xl">🏋️</span>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="h-24 bg-gray-200 flex items-center justify-center"
+                    className="flex h-20 items-center justify-center bg-gray-200 sm:h-24"
                   >
-                    <span className="text-4xl">📸</span>
+                    <span className="text-3xl sm:text-4xl">📸</span>
                   </div>
                 ))}
               </div>
@@ -191,9 +163,9 @@ export default function GymProfilePage() {
 
             {/* Gym Info */}
             <div>
-              <div className="flex items-start justify-between mb-4">
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h1 className="text-4xl font-black text-foreground mb-2">
+                  <h1 className="mb-2 text-3xl font-black text-foreground sm:text-4xl">
                     {gym.name}
                   </h1>
                   <p className="text-foreground/60 flex items-center gap-2">
@@ -214,7 +186,7 @@ export default function GymProfilePage() {
                   </p>
                 </div>
                 {gym.verified && (
-                  <div className="bg-primary-500 text-foreground px-4 py-2 font-semibold flex items-center gap-2">
+                  <div className="flex items-center gap-2 self-start bg-primary-500 px-4 py-2 font-semibold text-foreground">
                     <svg
                       className="w-5 h-5"
                       fill="currentColor"
@@ -232,7 +204,7 @@ export default function GymProfilePage() {
               </div>
 
               {/* Rating */}
-              <div className="flex items-center gap-4 mb-6">
+              <div className="mb-6 flex flex-wrap items-center gap-3 sm:gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">⭐</span>
                   <span className="text-2xl font-black text-foreground">
@@ -258,7 +230,7 @@ export default function GymProfilePage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <button className="flex-1 px-6 py-3 bg-accent-blue-500 text-foreground font-semibold hover:bg-accent-blue-600 transition-colors">
                   Get Directions
                 </button>
@@ -273,7 +245,7 @@ export default function GymProfilePage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Facilities */}
@@ -281,7 +253,7 @@ export default function GymProfilePage() {
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Facilities & Amenities
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {gym.facilities.map((facility, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <svg
@@ -310,7 +282,7 @@ export default function GymProfilePage() {
                 {Object.entries(gym.hours).map(([days, hours]) => (
                   <div
                     key={days}
-                    className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                    className="flex flex-col gap-1 border-b border-gray-100 py-2 last:border-0 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <span className="font-semibold text-foreground">
                       {days}
@@ -332,7 +304,7 @@ export default function GymProfilePage() {
 
           {/* Right Column - Plans & CTA */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 shadow-card sticky top-4">
+            <div className="bg-white p-6 shadow-card lg:sticky lg:top-4">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Membership Plans
               </h2>
@@ -347,7 +319,7 @@ export default function GymProfilePage() {
                     }`}
                     onClick={() => setSelectedPlan(plan.id)}
                   >
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h3 className="font-bold text-foreground">
                           {plan.name}
@@ -356,7 +328,7 @@ export default function GymProfilePage() {
                           {plan.description}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="sm:text-right">
                         <p className="text-2xl font-black text-foreground">
                           ${plan.price}
                         </p>
