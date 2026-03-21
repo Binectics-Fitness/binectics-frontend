@@ -26,7 +26,13 @@ export default function Page() {
           </div>
 
           <p className="text-sm text-foreground-secondary">
-            Your current browser timezone is <span className="font-semibold text-foreground">{userTimezone}</span>. Use consultation availability rules to define your schedule in that timezone, then client-facing booking times will be converted automatically.
+            Your current browser timezone is{" "}
+            <span className="font-semibold text-foreground">
+              {userTimezone}
+            </span>
+            . Use consultation availability rules to define your schedule in
+            that timezone, then client-facing booking times will be converted
+            automatically.
           </p>
 
           <div className="mt-4">

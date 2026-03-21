@@ -259,7 +259,8 @@ export default function ConsultationAvailabilityManager({
                 >
                   <div>
                     <p className="text-sm font-semibold text-foreground">
-                      {weekDays[rule.dayOfWeek]} • {rule.startTime} - {rule.endTime}
+                      {weekDays[rule.dayOfWeek]} • {rule.startTime} -{" "}
+                      {rule.endTime}
                     </p>
                     <p className="text-xs text-foreground-secondary">
                       {rule.timezone}
