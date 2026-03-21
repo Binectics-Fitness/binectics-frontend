@@ -10,6 +10,7 @@ import {
   MealRating,
   ActivityType,
 } from "@/lib/api/progress";
+import { formatLocal } from "@/utils/format";
 import type {
   ClientProfile,
   ProgressSummary,
@@ -22,11 +23,7 @@ import type {
 // ─── Helpers ───────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatLocal(iso, "MMM d, yyyy");
 }
 
 function signedChange(val: number | null | undefined) {
@@ -398,10 +395,7 @@ export default function ProgressPage() {
 
   const weightData = sortedWeightLogs.map((l) => l.weight_kg);
   const weightLabels = sortedWeightLogs.map((l) =>
-    new Date(l.recorded_at).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-    }),
+    formatLocal(l.recorded_at, "MMM d"),
   );
 
   const sortedActivityReports =
@@ -417,10 +411,7 @@ export default function ProgressPage() {
     (r) => r.calories_burned ?? 0,
   );
   const activityLabels = sortedActivityReports.map((r) =>
-    new Date(r.performed_at).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-    }),
+    formatLocal(r.performed_at, "MMM d"),
   );
 
   // ─── render ───────────────────────────────────────────────────

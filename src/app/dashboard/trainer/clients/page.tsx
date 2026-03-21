@@ -6,6 +6,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { progressService } from "@/lib/api/progress";
+import { formatLocal } from "@/utils/format";
 import type {
   ClientProfile,
   ProgressSummary,
@@ -30,11 +31,7 @@ function clientEmail(profile: ClientProfile): string {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatLocal(iso, "MMM d, yyyy");
 }
 
 // ─── Page ──────────────────────────────────────────────────────────
