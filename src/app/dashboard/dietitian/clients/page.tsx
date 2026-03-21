@@ -186,20 +186,20 @@ export default function DietitianClientsPage() {
     <div className="flex min-h-screen bg-neutral-50">
       <DietitianSidebar />
 
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* ── Header ──────────────────────────────────────── */}
-        <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="font-display text-3xl font-black text-foreground">
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
               My Clients
             </h1>
-            <p className="mt-1 text-foreground-secondary">
+            <p className="mt-1 text-xs sm:text-sm text-foreground-secondary">
               Manage client profiles and track their progress.
             </p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="rounded-lg bg-accent-purple-500 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-purple-600"
+            className="rounded-lg bg-accent-purple-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-accent-purple-600 whitespace-nowrap"
           >
             + Add Client
           </button>

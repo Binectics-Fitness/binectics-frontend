@@ -144,20 +144,20 @@ export default function AdminProvidersPage() {
       <div className="flex-1 ml-64">
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
-          <div className="px-8 py-6">
-            <h1 className="text-3xl font-black text-foreground">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground">
               Provider Management
             </h1>
-            <p className="mt-1 text-foreground/60">
+            <p className="mt-1 text-sm sm:text-base text-foreground/60">
               Manage gyms, trainers, and dietitians
             </p>
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white p-6 shadow-card">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+            <div className="bg-white p-4 sm:p-6 shadow-card">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-accent-blue-100">
                   <svg
@@ -198,14 +198,14 @@ export default function AdminProvidersPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground/60">
+                  <p className="text-xs sm:text-sm font-medium text-foreground/60">
                     Trainers
                   </p>
-                  <p className="text-2xl font-black text-foreground">289</p>
+                  <p className="text-xl sm:text-2xl font-black text-foreground">289</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-4 sm:p-6 shadow-card">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-accent-purple-100">
                   <svg
@@ -223,14 +223,14 @@ export default function AdminProvidersPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground/60">
+                  <p className="text-xs sm:text-sm font-medium text-foreground/60">
                     Dietitians
                   </p>
-                  <p className="text-2xl font-black text-foreground">216</p>
+                  <p className="text-xl sm:text-2xl font-black text-foreground">216</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-4 sm:p-6 shadow-card">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-primary-100">
                   <svg
@@ -248,19 +248,19 @@ export default function AdminProvidersPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground/60">
+                  <p className="text-xs sm:text-sm font-medium text-foreground/60">
                     Verified
                   </p>
-                  <p className="text-2xl font-black text-foreground">789</p>
+                  <p className="text-xl sm:text-2xl font-black text-foreground">789</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="bg-white p-6 shadow-card mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
+          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="sm:col-span-2 lg:col-span-1">
                 <label className="block text-sm font-medium text-foreground/70 mb-2">
                   Search Providers
                 </label>
@@ -292,8 +292,8 @@ export default function AdminProvidersPage() {
             </div>
           </div>
 
-          {/* Providers Table */}
-          <div className="bg-white shadow-card overflow-hidden">
+          {/* Providers Table - Desktop View */}
+          <div className="hidden md:block bg-white shadow-card overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -402,25 +402,101 @@ export default function AdminProvidersPage() {
             </table>
           </div>
 
+          {/* Providers Cards - Mobile View */}
+          <div className="md:hidden space-y-3 mb-6">
+            {providers.map((provider) => (
+              <div key={provider.id} className="bg-white p-4 shadow-card rounded-lg border border-gray-100">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-foreground truncate">
+                        {provider.name}
+                      </p>
+                      {provider.verified && (
+                        <span className="text-primary-500 shrink-0" title="Verified">✓</span>
+                      )}
+                    </div>
+                    <p className="text-xs sm:text-sm text-foreground/60 truncate">
+                      {provider.email}
+                    </p>
+                  </div>
+                  <span
+                    className={`ml-2 shrink-0 px-2 py-1 text-xs font-semibold whitespace-nowrap ${getTypeBadgeColor(provider.type)}`}
+                  >
+                    {provider.type.replace("_", " ")}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-3 text-xs sm:text-sm">
+                  <div>
+                    <span className="text-foreground/60">Location: </span>
+                    <span className="text-foreground font-medium">{provider.location}</span>
+                  </div>
+                  <div>
+                    <span className="text-foreground/60">Members: </span>
+                    <span className="text-foreground font-medium">{provider.members}</span>
+                  </div>
+                  <div>
+                    <span className="text-foreground/60">Revenue: </span>
+                    <span className="text-foreground font-medium">{provider.revenue}</span>
+                  </div>
+                  <div>
+                    <span className={`px-2 py-1 text-xs font-semibold ${
+                      provider.status === ProviderStatus.ACTIVE
+                        ? "bg-primary-100 text-primary-700"
+                        : "bg-red-100 text-red-700"
+                    }`}>
+                      {provider.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleViewProvider(provider.id)}
+                    className="flex-1 px-3 py-2 bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-colors"
+                  >
+                    View
+                  </button>
+                  {provider.status === ProviderStatus.ACTIVE ? (
+                    <button
+                      onClick={() => handleSuspendProvider(provider.id, provider.name)}
+                      className="flex-1 px-3 py-2 border border-red-300 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors"
+                    >
+                      Suspend
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleActivateProvider(provider.id, provider.name)}
+                      className="flex-1 px-3 py-2 border border-primary-300 text-primary-600 text-xs font-semibold hover:bg-primary-50 transition-colors"
+                    >
+                      Activate
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-foreground/60">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs sm:text-sm text-foreground/60 text-center sm:text-left">
               Showing 1 to 6 of 847 providers
             </p>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+            <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
+              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
                 Previous
               </button>
-              <button className="px-4 py-2 bg-red-500 text-foreground font-semibold hover:bg-red-600">
+              <button className="px-3 sm:px-4 py-2 bg-red-500 text-white text-sm font-semibold hover:bg-red-600">
                 1
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
                 2
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
                 3
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
                 Next
               </button>
             </div>

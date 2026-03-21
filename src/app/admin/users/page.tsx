@@ -150,21 +150,21 @@ export default function AdminUsersPage() {
       <div className="flex-1 ml-64">
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
-          <div className="px-8 py-6">
-            <h1 className="text-3xl font-black text-foreground">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground">
               User Management
             </h1>
-            <p className="mt-1 text-foreground/60">
+            <p className="mt-1 text-sm sm:text-base text-foreground/60">
               View and manage all platform users
             </p>
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* Filters */}
-          <div className="bg-white p-6 shadow-card mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
+          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="sm:col-span-2 lg:col-span-1">
                 <label className="block text-sm font-medium text-foreground/70 mb-2">
                   Search Users
                 </label>
@@ -198,35 +198,35 @@ export default function AdminUsersPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+            <div className="bg-white p-4 sm:p-6 shadow-card">
+              <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Total Users
               </p>
-              <p className="text-3xl font-black text-foreground mt-2">12,458</p>
+              <p className="text-2xl sm:text-3xl font-black text-foreground mt-2">12,458</p>
             </div>
-            <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">Active</p>
-              <p className="text-3xl font-black text-primary-500 mt-2">
+            <div className="bg-white p-4 sm:p-6 shadow-card">
+              <p className="text-xs sm:text-sm font-medium text-foreground/60">Active</p>
+              <p className="text-2xl sm:text-3xl font-black text-primary-500 mt-2">
                 11,892
               </p>
             </div>
-            <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">
+            <div className="bg-white p-4 sm:p-6 shadow-card">
+              <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Suspended
               </p>
-              <p className="text-3xl font-black text-red-500 mt-2">566</p>
+              <p className="text-2xl sm:text-3xl font-black text-red-500 mt-2">566</p>
             </div>
-            <div className="bg-white p-6 shadow-card">
-              <p className="text-sm font-medium text-foreground/60">
+            <div className="bg-white p-4 sm:p-6 shadow-card">
+              <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 New This Week
               </p>
-              <p className="text-3xl font-black text-foreground mt-2">284</p>
+              <p className="text-2xl sm:text-3xl font-black text-foreground mt-2">284</p>
             </div>
           </div>
 
-          {/* Users Table */}
-          <div className="bg-white shadow-card overflow-hidden">
+          {/* Users Table - Desktop View */}
+          <div className="hidden md:block bg-white shadow-card overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -328,25 +328,96 @@ export default function AdminUsersPage() {
             </table>
           </div>
 
+          {/* Users Cards - Mobile View */}
+          <div className="md:hidden space-y-3 mb-6">
+            {users.map((user) => (
+              <div key={user.id} className="bg-white p-4 shadow-card rounded-lg border border-gray-100">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground truncate">
+                      {user.name}
+                    </p>
+                    <p className="text-xs sm:text-sm text-foreground/60 truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                  <span
+                    className={`ml-2 shrink-0 px-2 py-1 text-xs font-semibold whitespace-nowrap ${getRoleBadgeColor(user.role)}`}
+                  >
+                    {user.role.replace("_", " ")}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mb-3 text-xs sm:text-sm">
+                  <div>
+                    <span className="text-foreground/60">Country: </span>
+                    <span className="text-foreground font-medium">{user.country}</span>
+                  </div>
+                  <div>
+                    <span className="text-foreground/60">Subscriptions: </span>
+                    <span className="text-foreground font-medium">{user.subscriptions}</span>
+                  </div>
+                  <div>
+                    <span className="text-foreground/60">Joined: </span>
+                    <span className="text-foreground font-medium">{user.signupDate}</span>
+                  </div>
+                  <div>
+                    <span className={`px-2 py-1 text-xs font-semibold ${
+                      user.status === AdminUserStatus.ACTIVE
+                        ? "bg-primary-100 text-primary-700"
+                        : "bg-red-100 text-red-700"
+                    }`}>
+                      {user.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleViewUser(user.id)}
+                    className="flex-1 px-3 py-2 bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-colors"
+                  >
+                    View
+                  </button>
+                  {user.status === AdminUserStatus.ACTIVE ? (
+                    <button
+                      onClick={() => handleSuspendUser(user.id, user.name)}
+                      className="flex-1 px-3 py-2 border border-red-300 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors"
+                    >
+                      Suspend
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleActivateUser(user.id, user.name)}
+                      className="flex-1 px-3 py-2 border border-primary-300 text-primary-600 text-xs font-semibold hover:bg-primary-50 transition-colors"
+                    >
+                      Activate
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-foreground/60">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs sm:text-sm text-foreground/60 text-center sm:text-left">
               Showing 1 to 8 of 12,458 users
             </p>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+            <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
+              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
                 Previous
               </button>
-              <button className="px-4 py-2 bg-red-500 text-foreground font-semibold hover:bg-red-600">
+              <button className="px-3 sm:px-4 py-2 bg-red-500 text-white text-sm font-semibold hover:bg-red-600">
                 1
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
                 2
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
                 3
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
                 Next
               </button>
             </div>
