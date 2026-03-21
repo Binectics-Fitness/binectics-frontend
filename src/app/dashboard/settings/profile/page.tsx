@@ -93,7 +93,7 @@ export default function ProfileSettingsPage() {
     gymDescription: "",
     facilities: [] as string[],
 
-    // Trainer/Dietician specific
+    // Trainer/Dietitian specific
     bio: "",
     specialties: [] as string[],
     certifications: [] as string[],
@@ -318,7 +318,7 @@ export default function ProfileSettingsPage() {
     </div>
   );
 
-  const renderDieticianFields = () => (
+  const renderDietitianFields = () => (
     <div className="bg-white rounded-xl shadow-card p-6 mb-6">
       <h3 className="text-xl font-bold text-foreground mb-4">
         Professional Information
@@ -509,7 +509,7 @@ export default function ProfileSettingsPage() {
       {/* Role-specific fields */}
       {user.role === UserRole.GYM_OWNER && renderGymOwnerFields()}
       {user.role === UserRole.TRAINER && renderTrainerFields()}
-      {user.role === UserRole.DIETICIAN && renderDieticianFields()}
+      {user.role === UserRole.DIETITIAN && renderDietitianFields()}
       {user.role === UserRole.USER && renderUserFields()}
 
       {/* Save Button */}

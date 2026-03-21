@@ -13,7 +13,7 @@ The public provider profile pages are currently mock-driven for core data (ident
 
 Affected routes:
 
-- `src/app/dieticians/[dieticianId]/page.tsx`
+- `src/app/dietitians/[dietitianId]/page.tsx`
 - `src/app/trainers/[trainerId]/page.tsx`
 - `src/app/gyms/[gymId]/page.tsx`
 
@@ -53,7 +53,7 @@ Current APIs provide only part of this shape, so migration requires:
 - Name/title composition
 - Bio/description blocks
 - Role-specific detail sections:
-  - Dietician: education, approach, consultation modes
+  - Dietitian: education, approach, consultation modes
   - Trainer: achievements, availability details
   - Gym: facilities, hours, gallery placeholders
 - Plan arrays with features and pricing labels
@@ -93,7 +93,7 @@ Create `src/hooks/useProviderProfileData.ts`:
 Inputs:
 
 - `listingId: string`
-- `targetType: 'GYM' | 'TRAINER' | 'DIETICIAN'`
+- `targetType: 'GYM' | 'TRAINER' | 'DIETITIAN'`
 
 Returns:
 
@@ -158,7 +158,7 @@ Returns active plans linked to listing provider (or organization listing context
 Returns role-specific optional details not in base listing:
 
 - Trainer: achievements, experience summary, availability text
-- Dietician: education, approach bullets, consultation modes
+- Dietitian: education, approach bullets, consultation modes
 - Gym: facilities list, opening hours, gallery assets
 
 If backend chooses to keep one endpoint, this data can be embedded in `GET /marketplace/listings/:id` under explicit optional fields. The important requirement is contract stability and explicit typing.
@@ -252,7 +252,7 @@ Track events:
 
 ### E2E (smoke)
 
-- Navigate to one gym, one trainer, one dietician profile.
+- Navigate to one gym, one trainer, one dietitian profile.
 - Verify no mock fallback text appears when API data exists.
 - Verify plan selection and booking/checkout link composition.
 

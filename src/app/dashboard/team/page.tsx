@@ -17,21 +17,21 @@ import {
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   [AccountType.GYM_OWNER]: "Gym Owner",
   [AccountType.PERSONAL_TRAINER]: "Personal Trainer",
-  [AccountType.DIETICIAN]: "Dietician",
+  [AccountType.DIETITIAN]: "Dietitian",
   [AccountType.FITNESS_MEMBER]: "Fitness Member",
 };
 
 const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
   [AccountType.GYM_OWNER]: "bg-blue-100 text-blue-700",
   [AccountType.PERSONAL_TRAINER]: "bg-yellow-100 text-yellow-700",
-  [AccountType.DIETICIAN]: "bg-purple-100 text-purple-700",
+  [AccountType.DIETITIAN]: "bg-purple-100 text-purple-700",
   [AccountType.FITNESS_MEMBER]: "bg-green-100 text-green-700",
 };
 
 const ROLE_TO_ACCOUNT_TYPE: Record<UserRole, AccountType> = {
   GYM_OWNER: AccountType.GYM_OWNER,
   TRAINER: AccountType.PERSONAL_TRAINER,
-  DIETICIAN: AccountType.DIETICIAN,
+  DIETITIAN: AccountType.DIETITIAN,
   USER: AccountType.FITNESS_MEMBER,
   ADMIN: AccountType.GYM_OWNER,
 };

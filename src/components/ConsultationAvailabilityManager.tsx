@@ -87,8 +87,8 @@ export default function ConsultationAvailabilityManager({
   });
 
   const providerRoleForType: ConsultationProviderRole =
-    role === UserRole.DIETICIAN
-      ? ConsultationProviderRole.DIETICIAN
+    role === UserRole.DIETITIAN
+      ? ConsultationProviderRole.DIETITIAN
       : role === UserRole.TRAINER
         ? ConsultationProviderRole.PERSONAL_TRAINER
         : ConsultationProviderRole.OTHER;

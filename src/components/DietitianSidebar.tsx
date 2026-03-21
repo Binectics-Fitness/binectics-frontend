@@ -20,7 +20,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "Overview",
-    href: "/dashboard/dietician",
+    href: "/dashboard/dietitian",
   },
   {
     icon: (
@@ -39,7 +39,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "My Clients",
-    href: "/dashboard/dietician/clients",
+    href: "/dashboard/dietitian/clients",
   },
   {
     icon: (
@@ -58,7 +58,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "Consultations",
-    href: "/dashboard/dietician/consultations",
+    href: "/dashboard/dietitian/consultations",
   },
   {
     icon: (
@@ -77,7 +77,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "Bookings",
-    href: "/dashboard/dietician/bookings",
+    href: "/dashboard/dietitian/bookings",
   },
   {
     icon: (
@@ -96,7 +96,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "Meal Plans",
-    href: "/dashboard/dietician/meal-plans",
+    href: "/dashboard/dietitian/meal-plans",
   },
   {
     icon: (
@@ -115,7 +115,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "Recipe Library",
-    href: "/dashboard/dietician/recipes",
+    href: "/dashboard/dietitian/recipes",
   },
   {
     icon: (
@@ -153,7 +153,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "Nutrition Plans",
-    href: "/dashboard/dietician/nutrition-plans",
+    href: "/dashboard/dietitian/nutrition-plans",
   },
   {
     icon: (
@@ -172,7 +172,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "Earnings",
-    href: "/dashboard/dietician/earnings",
+    href: "/dashboard/dietitian/earnings",
   },
   {
     icon: (
@@ -191,7 +191,7 @@ const navItems: NavItem[] = [
       </svg>
     ),
     label: "Reviews & Ratings",
-    href: "/dashboard/dietician/reviews",
+    href: "/dashboard/dietitian/reviews",
   },
   {
     icon: (
@@ -215,16 +215,16 @@ const navItems: NavItem[] = [
 ];
 
 const roleBadge: RoleBadge = {
-  label: "Dietician",
+  label: "Dietitian",
   bgClass: "bg-accent-purple-50",
   textClass: "text-accent-purple-700",
 };
 
-export default function DieticianSidebar() {
+export default function DietitianSidebar() {
   return (
     <AppSidebar
       navItems={navItems}
-      settingsHref="/dashboard/dietician/settings"
+      settingsHref="/dashboard/dietitian/settings"
       roleBadge={roleBadge}
     />
   );

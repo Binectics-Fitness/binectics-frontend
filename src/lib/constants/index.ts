@@ -3,7 +3,7 @@ export const USER_ROLES = {
   USER: 'USER',
   GYM_OWNER: 'GYM_OWNER',
   TRAINER: 'TRAINER',
-  DIETICIAN: 'DIETICIAN',
+  DIETITIAN: 'DIETITIAN',
   ADMIN: 'ADMIN',
 } as const;
 
@@ -11,7 +11,7 @@ export const ROLE_LABELS: Record<string, string> = {
   USER: 'Fitness Enthusiast',
   GYM_OWNER: 'Gym Owner',
   TRAINER: 'Personal Trainer',
-  DIETICIAN: 'Dietician',
+  DIETITIAN: 'Dietitian',
   ADMIN: 'Administrator',
 };
 
@@ -100,8 +100,8 @@ export const TRAINER_SPECIALIZATIONS = [
   'Functional Training',
 ] as const;
 
-// Dietician Specializations
-export const DIETICIAN_SPECIALIZATIONS = [
+// Dietitian Specializations
+export const DIETITIAN_SPECIALIZATIONS = [
   'Weight Management',
   'Sports Nutrition',
   'Clinical Nutrition',

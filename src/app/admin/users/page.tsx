@@ -82,7 +82,7 @@ export default function AdminUsersPage() {
       id: 6,
       name: "Maria Garcia",
       email: "maria@example.com",
-      role: UserRole.DIETICIAN,
+      role: UserRole.DIETITIAN,
       country: "Spain",
       status: AdminUserStatus.ACTIVE,
       signupDate: "2024-01-28",
@@ -136,7 +136,7 @@ export default function AdminUsersPage() {
         return "bg-accent-blue-100 text-accent-blue-700";
       case UserRole.TRAINER:
         return "bg-accent-yellow-100 text-accent-yellow-700";
-      case UserRole.DIETICIAN:
+      case UserRole.DIETITIAN:
         return "bg-accent-purple-100 text-accent-purple-700";
       default:
         return "bg-gray-100 text-gray-700";
@@ -191,7 +191,7 @@ export default function AdminUsersPage() {
                   <option value={UserRole.USER}>Users</option>
                   <option value={UserRole.GYM_OWNER}>Gym Owners</option>
                   <option value={UserRole.TRAINER}>Trainers</option>
-                  <option value={UserRole.DIETICIAN}>Dieticians</option>
+                  <option value={UserRole.DIETITIAN}>Dietitians</option>
                 </select>
               </div>
             </div>

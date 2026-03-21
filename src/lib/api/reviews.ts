@@ -4,7 +4,7 @@ import type { ApiResponse } from "@/lib/types";
 export enum ReviewTargetType {
   GYM = "GYM",
   TRAINER = "TRAINER",
-  DIETICIAN = "DIETICIAN",
+  DIETITIAN = "DIETITIAN",
 }
 
 export enum ReviewStatus {

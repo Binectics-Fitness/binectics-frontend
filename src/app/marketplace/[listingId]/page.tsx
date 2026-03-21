@@ -15,13 +15,13 @@ import type {
 const ACCOUNT_TYPE_LABELS: Record<MarketplaceAccountType, string> = {
   gym_owner: "Gym",
   personal_trainer: "Personal Trainer",
-  dietician: "Dietician",
+  dietitian: "Dietitian",
 };
 
 const ACCOUNT_TYPE_COLORS: Record<MarketplaceAccountType, string> = {
   gym_owner: "bg-accent-blue-100 text-accent-blue-700",
   personal_trainer: "bg-accent-yellow-100 text-accent-yellow-700",
-  dietician: "bg-accent-purple-100 text-accent-purple-700",
+  dietitian: "bg-accent-purple-100 text-accent-purple-700",
 };
 
 function StarRating({

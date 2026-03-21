@@ -1,14 +1,14 @@
 "use client";
 
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
-import DieticianSidebar from "@/components/DieticianSidebar";
+import DietitianSidebar from "@/components/DietitianSidebar";
 import { UserRole } from "@/lib/types";
 
-export default function DieticianConsultationsPage() {
+export default function DietitianConsultationsPage() {
   return (
     <ConsultationAvailabilityManager
-      role={UserRole.DIETICIAN}
-      sidebar={<DieticianSidebar />}
+      role={UserRole.DIETITIAN}
+      sidebar={<DietitianSidebar />}
       description="Define when clients can book consultation sessions."
     />
   );

@@ -37,12 +37,12 @@ export default function SearchPage() {
     },
     {
       id: 3,
-      type: 'dietician',
+      type: 'dietitian',
       name: 'Dr. Maria Garcia',
       location: 'Barcelona, Spain',
       rating: 4.9,
       reviews: 89,
-      image: '/placeholder-dietician.jpg',
+      image: '/placeholder-dietitian.jpg',
       price: '$79/month',
       verified: true,
       specialties: ['Weight Loss', 'Sports Nutrition'],
@@ -67,7 +67,7 @@ export default function SearchPage() {
         return 'bg-accent-blue-500';
       case 'trainer':
         return 'bg-accent-yellow-500';
-      case 'dietician':
+      case 'dietitian':
         return 'bg-accent-purple-500';
       default:
         return 'bg-gray-500';
@@ -80,8 +80,8 @@ export default function SearchPage() {
         return `/gyms/${id}`;
       case 'trainer':
         return `/trainers/${id}`;
-      case 'dietician':
-        return `/dieticians/${id}`;
+      case 'dietitian':
+        return `/dietitians/${id}`;
       default:
         return '#';
     }
@@ -108,7 +108,7 @@ export default function SearchPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search gyms, trainers, dieticians..."
+                placeholder="Search gyms, trainers, dietitians..."
                 className="flex-1 px-4 py-3 border-2 border-gray-200 focus:outline-none focus:border-primary-500"
               />
               <input
@@ -138,7 +138,7 @@ export default function SearchPage() {
               <div className="mb-6">
                 <h3 className="font-semibold text-foreground mb-3">Type</h3>
                 <div className="space-y-2">
-                  {['all', 'gym', 'trainer', 'dietician'].map((type) => (
+                  {['all', 'gym', 'trainer', 'dietitian'].map((type) => (
                     <label key={type} className="flex items-center cursor-pointer">
                       <input
                         type="radio"
@@ -194,10 +194,10 @@ export default function SearchPage() {
                     All Trainers
                   </Link>
                   <Link
-                    href="/dieticians"
+                    href="/dietitians"
                     className="block px-4 py-2 bg-accent-purple-100 text-accent-purple-700 font-semibold hover:bg-accent-purple-200 transition-colors"
                   >
-                    All Dieticians
+                    All Dietitians
                   </Link>
                 </div>
               </div>

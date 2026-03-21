@@ -7,12 +7,12 @@ export default function Home() {
     {
       title: 'What is Binectics?',
       content:
-        'Binectics is a global fitness ecosystem that connects verified gyms, certified personal trainers, and expert dieticians in one platform. With a single subscription, you get access to 500+ gyms across 50+ countries, plus the ability to book trainers and dieticians wherever you are.',
+        'Binectics is a global fitness ecosystem that connects verified gyms, certified personal trainers, and expert dietitians in one platform. With a single subscription, you get access to 500+ gyms across 50+ countries, plus the ability to book trainers and dietitians wherever you are.',
     },
     {
       title: 'How does Binectics work?',
       content:
-        'Simply sign up, choose your plan, and get verified. You\'ll receive a unique QR code that works at any partner gym worldwide. You can also browse and book personal trainers and dieticians through our app, track your progress, and manage everything from one dashboard.',
+        'Simply sign up, choose your plan, and get verified. You\'ll receive a unique QR code that works at any partner gym worldwide. You can also browse and book personal trainers and dietitians through our app, track your progress, and manage everything from one dashboard.',
     },
     {
       title: 'Is there a free trial?',
@@ -50,10 +50,10 @@ export default function Home() {
                 <span className="text-sm font-semibold text-foreground">Available in 50+ countries</span>
               </div>
               <h1 className="font-display text-4xl font-black leading-[1.1] text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-                Your global fitness ecosystem—<span className="text-primary-500">gyms, trainers & dieticians</span>
+                Your global fitness ecosystem—<span className="text-primary-500">gyms, trainers & dietitians</span>
               </h1>
               <p className="mt-6 max-w-lg text-lg leading-relaxed text-foreground-secondary sm:text-xl">
-                One unified marketplace connecting verified gyms, certified trainers, and expert dieticians worldwide. Subscribe, book, and track—all in one place.
+                One unified marketplace connecting verified gyms, certified trainers, and expert dietitians worldwide. Subscribe, book, and track—all in one place.
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
@@ -288,7 +288,7 @@ export default function Home() {
               },
               {
                 label: 'Nutrition Plans',
-                description: 'Custom meal plans from expert dieticians',
+                description: 'Custom meal plans from expert dietitians',
                 color: 'orange',
                 icon: (
                   <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -443,7 +443,7 @@ export default function Home() {
                 ),
               },
               {
-                title: 'For Dieticians',
+                title: 'For Dietitians',
                 description: 'Offer personalized meal plans, track nutrition goals, and help clients succeed with integrated diet management tools.',
                 color: 'orange',
                 icon: (
@@ -498,7 +498,7 @@ export default function Home() {
               },
               {
                 title: 'Verified Professionals',
-                description: 'All gyms, trainers, and dieticians are verified with credentials, certifications, and background checks.',
+                description: 'All gyms, trainers, and dietitians are verified with credentials, certifications, and background checks.',
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -508,7 +508,7 @@ export default function Home() {
               },
               {
                 title: 'Client Journals',
-                description: 'Trainers and dieticians log your progress. View notes, metrics, and track your fitness journey over time.',
+                description: 'Trainers and dietitians log your progress. View notes, metrics, and track your fitness journey over time.',
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -538,7 +538,7 @@ export default function Home() {
               },
               {
                 title: 'Location-Based Search',
-                description: 'Find gyms, trainers, and dieticians near you with smart filters by specialty, price, ratings, and verified status.',
+                description: 'Find gyms, trainers, and dietitians near you with smart filters by specialty, price, ratings, and verified status.',
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -769,7 +769,7 @@ export default function Home() {
               },
               {
                 name: 'Priya Patel',
-                role: 'Certified Dietician',
+                role: 'Certified Dietitian',
                 location: 'Mumbai, India',
                 image: '👩🏽‍💼',
                 color: 'purple',

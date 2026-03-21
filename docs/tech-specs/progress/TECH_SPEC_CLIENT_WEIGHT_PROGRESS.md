@@ -3,13 +3,13 @@
 **Status**: Proposed
 **Author**: Auto-generated
 **Date**: 2026-03-19
-**PR Context**: [Copilot review on dietician/page.tsx#L24-27](https://github.com/Binectics-Fitness/binectics-frontend/pull/9)
+**PR Context**: [Copilot review on dietitian/page.tsx#L24-27](https://github.com/Binectics-Fitness/binectics-frontend/pull/9)
 
 ---
 
 ## Problem
 
-The `computeProgress()` function in the dietician dashboard (`src/app/dashboard/dietician/page.tsx`) always returns `0` even when a client has `starting_weight_kg` and `target_weight_kg` set. The progress bar renders `0%`, which is misleading.
+The `computeProgress()` function in the dietitian dashboard (`src/app/dashboard/dietitian/page.tsx`) always returns `0` even when a client has `starting_weight_kg` and `target_weight_kg` set. The progress bar renders `0%`, which is misleading.
 
 ```ts
 function computeProgress(profile: ClientProfile): number {
@@ -165,7 +165,7 @@ async getLatestWeights(): Promise<ApiResponse<Record<string, LatestWeight | null
 }
 ```
 
-#### 2. Update dietician dashboard (`src/app/dashboard/dietician/page.tsx`)
+#### 2. Update dietitian dashboard (`src/app/dashboard/dietitian/page.tsx`)
 
 ```ts
 const [latestWeights, setLatestWeights] = useState<
@@ -225,7 +225,7 @@ When there are no weight logs for a client, instead of showing a misleading 0% b
 - New `GET /progress/organizations/:orgId/clients/latest-weights` endpoint (backend)
 - Unit tests for the new service method
 - Frontend API method addition
-- Dietician dashboard `computeProgress` fix
+- Dietitian dashboard `computeProgress` fix
 - Conditional "No weight logs yet" message
 
 ### Out of Scope

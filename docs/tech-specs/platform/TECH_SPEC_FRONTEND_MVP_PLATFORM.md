@@ -9,7 +9,7 @@
 
 ## 1) Overview
 
-Binectics is a global fitness marketplace frontend connecting gyms, trainers, dieticians, and fitness enthusiasts across 50+ countries.
+Binectics is a global fitness marketplace frontend connecting gyms, trainers, dietitians, and fitness enthusiasts across 50+ countries.
 
 This spec defines the frontend MVP architecture, scope, UX constraints, delivery phases, and implementation standards for the Next.js application.
 
@@ -30,7 +30,7 @@ This spec defines the frontend MVP architecture, scope, UX constraints, delivery
 
 - Next.js 16 App Router frontend pages/components.
 - Client-side API integration via external backend (`NEXT_PUBLIC_API_URL`).
-- Role-based UI flows for users, gym owners, trainers, dieticians, and admins.
+- Role-based UI flows for users, gym owners, trainers, dietitians, and admins.
 - Responsive design for mobile, tablet, and desktop.
 
 ### Out of Scope (This Repository)
@@ -74,7 +74,7 @@ This repository is frontend-only. Any backend implementation is explicitly prohi
 - Role-aware accenting:
   - Gym Owner: Blue
   - Trainer: Yellow
-  - Dietician: Purple
+  - Dietitian: Purple
 
 ### Spacing/Patterns
 
@@ -122,13 +122,13 @@ Implemented and production-styled with:
   - User
   - Gym Owner
   - Trainer
-  - Dietician
+  - Dietitian
 - Email verification UX.
 
 ### 7.2 Discovery Marketplace
 
 - Search and filtering by location, type, price range, verification status.
-- List/detail experiences for gyms, trainers, and dieticians.
+- List/detail experiences for gyms, trainers, and dietitians.
 - Country and category entry points.
 
 ### 7.3 Subscriptions & Payments (Frontend)
@@ -141,7 +141,7 @@ Implemented and production-styled with:
 
 - Gym owner dashboard: plans, members, check-ins, analytics.
 - Trainer dashboard: clients, journals, plans, analytics.
-- Dietician dashboard: clients, journals, plans, analytics.
+- Dietitian dashboard: clients, journals, plans, analytics.
 
 ### 7.5 Verification & Trust UX
 
@@ -168,7 +168,7 @@ Total targeted page inventory: **112 pages**.
 - Discovery: 13
 - Gym owner dashboard: 10
 - Trainer dashboard: 10
-- Dietician dashboard: 10
+- Dietitian dashboard: 10
 - Verification: 5
 - Payment: 6
 - Admin: 12

@@ -5,7 +5,7 @@ export default function HowItWorksPage() {
     {
       number: '01',
       title: 'Create Your Account',
-      description: 'Sign up in under 2 minutes. Choose your role: fitness enthusiast, gym owner, trainer, or dietician.',
+      description: 'Sign up in under 2 minutes. Choose your role: fitness enthusiast, gym owner, trainer, or dietitian.',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -91,7 +91,7 @@ export default function HowItWorksPage() {
       color: 'accent-yellow',
     },
     {
-      role: 'Dieticians',
+      role: 'Dietitians',
       steps: [
         'Display your credentials and experience',
         'Offer custom meal plans and consultations',

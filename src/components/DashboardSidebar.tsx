@@ -15,8 +15,8 @@ const ROLE_BADGE_MAP: Partial<Record<UserRole, RoleBadge>> = {
     bgClass: "bg-accent-yellow-50",
     textClass: "text-accent-yellow-700",
   },
-  DIETICIAN: {
-    label: "Dietician",
+  DIETITIAN: {
+    label: "Dietitian",
     bgClass: "bg-accent-purple-50",
     textClass: "text-accent-purple-700",
   },

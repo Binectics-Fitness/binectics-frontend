@@ -51,7 +51,7 @@ export default function AdminVerificationPage() {
       id: 3,
       applicant: "Dr. Aisha Patel",
       email: "aisha@nutrition.com",
-      type: UserRole.DIETICIAN,
+      type: UserRole.DIETITIAN,
       location: "Mumbai, India",
       appliedDate: "2024-02-12",
       status: VerificationRequestStatus.PENDING,
@@ -103,7 +103,7 @@ export default function AdminVerificationPage() {
         return "bg-accent-blue-100 text-accent-blue-700";
       case UserRole.TRAINER:
         return "bg-accent-yellow-100 text-accent-yellow-700";
-      case UserRole.DIETICIAN:
+      case UserRole.DIETITIAN:
         return "bg-accent-purple-100 text-accent-purple-700";
       default:
         return "bg-gray-100 text-gray-700";

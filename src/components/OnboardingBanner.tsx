@@ -72,8 +72,8 @@ export default function OnboardingBanner({
         "Pricing & availability",
       ],
     },
-    DIETICIAN: {
-      title: "Complete your dietician profile",
+    DIETITIAN: {
+      title: "Complete your dietitian profile",
       description:
         "Add your credentials, license, and specialties to start helping clients.",
       color: "purple",

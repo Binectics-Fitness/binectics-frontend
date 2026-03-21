@@ -52,7 +52,7 @@ function ConsultationBookingPageContent() {
       if (!roleName) return undefined;
       const normalized = roleName.toLowerCase();
       if (normalized.includes("diet"))
-        return ConsultationProviderRole.DIETICIAN;
+        return ConsultationProviderRole.DIETITIAN;
       if (normalized.includes("trainer"))
         return ConsultationProviderRole.PERSONAL_TRAINER;
       return ConsultationProviderRole.OTHER;

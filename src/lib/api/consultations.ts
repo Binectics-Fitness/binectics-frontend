@@ -2,7 +2,7 @@ import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
 
 export enum ConsultationProviderRole {
-  DIETICIAN = "DIETICIAN",
+  DIETITIAN = "DIETITIAN",
   PERSONAL_TRAINER = "PERSONAL_TRAINER",
   OTHER = "OTHER",
 }

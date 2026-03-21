@@ -67,8 +67,8 @@ export default function ProviderReviewsSection({
     if (!providerOwnerUserId) return false;
 
     const roleMatchesTarget =
-      (targetType === ReviewTargetType.DIETICIAN &&
-        user.role === UserRole.DIETICIAN) ||
+      (targetType === ReviewTargetType.DIETITIAN &&
+        user.role === UserRole.DIETITIAN) ||
       (targetType === ReviewTargetType.TRAINER &&
         user.role === UserRole.TRAINER) ||
       (targetType === ReviewTargetType.GYM && user.role === UserRole.GYM_OWNER);

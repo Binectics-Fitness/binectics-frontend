@@ -58,7 +58,7 @@ export default function AdminProvidersPage() {
       id: 3,
       name: "Dr. Maria Garcia",
       email: "maria@nutrition.com",
-      type: UserRole.DIETICIAN,
+      type: UserRole.DIETITIAN,
       location: "Barcelona, Spain",
       verified: true,
       members: 45,
@@ -130,7 +130,7 @@ export default function AdminProvidersPage() {
         return "bg-accent-blue-100 text-accent-blue-700";
       case UserRole.TRAINER:
         return "bg-accent-yellow-100 text-accent-yellow-700";
-      case UserRole.DIETICIAN:
+      case UserRole.DIETITIAN:
         return "bg-accent-purple-100 text-accent-purple-700";
       default:
         return "bg-gray-100 text-gray-700";
@@ -149,7 +149,7 @@ export default function AdminProvidersPage() {
               Provider Management
             </h1>
             <p className="mt-1 text-foreground/60">
-              Manage gyms, trainers, and dieticians
+              Manage gyms, trainers, and dietitians
             </p>
           </div>
         </header>
@@ -224,7 +224,7 @@ export default function AdminProvidersPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground/60">
-                    Dieticians
+                    Dietitians
                   </p>
                   <p className="text-2xl font-black text-foreground">216</p>
                 </div>
@@ -286,7 +286,7 @@ export default function AdminProvidersPage() {
                   <option value="all">All Types</option>
                   <option value={UserRole.GYM_OWNER}>Gyms</option>
                   <option value={UserRole.TRAINER}>Trainers</option>
-                  <option value={UserRole.DIETICIAN}>Dieticians</option>
+                  <option value={UserRole.DIETITIAN}>Dietitians</option>
                 </select>
               </div>
             </div>

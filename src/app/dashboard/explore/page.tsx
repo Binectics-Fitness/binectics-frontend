@@ -12,7 +12,7 @@ export default function ExplorePage() {
     { id: "all", label: "All", count: 500 },
     { id: "gyms", label: "Gyms", count: 200 },
     { id: "trainers", label: "Personal Trainers", count: 150 },
-    { id: "dieticians", label: "Dieticians", count: 100 },
+    { id: "dietitians", label: "Dietitians", count: 100 },
     { id: "classes", label: "Classes", count: 50 },
   ];
 
@@ -62,7 +62,7 @@ export default function ExplorePage() {
       rating: 4.9,
       reviews: 156,
       price: "$120/consultation",
-      type: "dietician",
+      type: "dietitian",
     },
   ];
 
@@ -87,7 +87,7 @@ export default function ExplorePage() {
             Explore
           </h1>
           <p className="text-foreground-secondary">
-            Discover gyms, trainers, and dieticians worldwide
+            Discover gyms, trainers, and dietitians worldwide
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export default function ExplorePage() {
           <div className="relative max-w-2xl">
             <input
               type="text"
-              placeholder="Search for gyms, trainers, or dieticians..."
+              placeholder="Search for gyms, trainers, or dietitians..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border border-neutral-200 bg-background py-3 pl-12 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"

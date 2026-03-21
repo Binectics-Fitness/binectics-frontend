@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import DieticianSidebar from "@/components/DieticianSidebar";
+import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
@@ -46,8 +46,8 @@ function computeProgress(
   return Math.max(0, Math.min(100, Math.round(progress)));
 }
 
-export default function DieticianDashboard() {
-  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETICIAN);
+export default function DietitianDashboard() {
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null,
   );
@@ -307,7 +307,7 @@ export default function DieticianDashboard() {
           />
         </svg>
       ),
-      href: "/dashboard/dietician/meal-plans/new",
+      href: "/dashboard/dietitian/meal-plans/new",
       color: "bg-primary-500",
     },
     {
@@ -327,7 +327,7 @@ export default function DieticianDashboard() {
           />
         </svg>
       ),
-      href: "/dashboard/dietician/clients",
+      href: "/dashboard/dietitian/clients",
       color: "bg-accent-purple-500",
     },
     {
@@ -347,7 +347,7 @@ export default function DieticianDashboard() {
           />
         </svg>
       ),
-      href: "/dashboard/dietician/consultations",
+      href: "/dashboard/dietitian/consultations",
       color: "bg-accent-yellow-500",
     },
     {
@@ -367,14 +367,14 @@ export default function DieticianDashboard() {
           />
         </svg>
       ),
-      href: "/dashboard/dietician/recipes",
+      href: "/dashboard/dietitian/recipes",
       color: "bg-accent-blue-500",
     },
   ];
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
-      <DieticianSidebar />
+      <DietitianSidebar />
 
       {/* Main Content */}
       <main className="ml-64 flex-1 p-8">
@@ -392,7 +392,7 @@ export default function DieticianDashboard() {
               </p>
             </div>
             <Link
-              href="/dashboard/dietician/settings"
+              href="/dashboard/dietitian/settings"
               className="inline-flex h-10 items-center justify-center border border-neutral-200 bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50"
             >
               Edit Profile
@@ -450,7 +450,7 @@ export default function DieticianDashboard() {
                 Today's Consultations
               </h2>
               <Link
-                href="/dashboard/dietician/consultations"
+                href="/dashboard/dietitian/consultations"
                 className="text-sm font-medium text-primary-600 hover:text-primary-700"
               >
                 View All
@@ -507,7 +507,7 @@ export default function DieticianDashboard() {
                 Client Progress
               </h2>
               <Link
-                href="/dashboard/dietician/clients"
+                href="/dashboard/dietitian/clients"
                 className="text-sm font-medium text-primary-600 hover:text-primary-700"
               >
                 View All
@@ -608,7 +608,7 @@ export default function DieticianDashboard() {
               Recent Meal Plans
             </h2>
             <Link
-              href="/dashboard/dietician/meal-plans"
+              href="/dashboard/dietitian/meal-plans"
               className="text-sm font-medium text-primary-600 hover:text-primary-700"
             >
               View All

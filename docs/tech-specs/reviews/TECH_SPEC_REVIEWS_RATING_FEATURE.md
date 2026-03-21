@@ -9,7 +9,7 @@
 
 ## 1) Context
 
-Binectics needs a trusted reviews and ratings system so users can evaluate gyms, trainers, and dieticians before purchasing plans or booking sessions.
+Binectics needs a trusted reviews and ratings system so users can evaluate gyms, trainers, and dietitians before purchasing plans or booking sessions.
 
 The feature should:
 
@@ -59,7 +59,7 @@ Without a real reviews system:
 - Submits ratings for providers after eligible engagement.
 - Edits/deletes own review within a defined window (optional policy).
 
-### Provider (Gym Owner / Trainer / Dietician)
+### Provider (Gym Owner / Trainer / Dietitian)
 
 - Views ratings and review feed for own profile.
 - Flags abusive reviews for moderation.
@@ -196,7 +196,7 @@ Without a real reviews system:
 
 - `GYM`
 - `TRAINER`
-- `DIETICIAN`
+- `DIETITIAN`
 
 ### ReviewStatus
 
@@ -207,7 +207,7 @@ Without a real reviews system:
 ### Review
 
 - `id: string`
-- `targetType: 'GYM' | 'TRAINER' | 'DIETICIAN'`
+- `targetType: 'GYM' | 'TRAINER' | 'DIETITIAN'`
 - `targetId: string`
 - `reviewerUserId: string`
 - `reviewerName: string`
@@ -223,7 +223,7 @@ Without a real reviews system:
 
 ### ReviewAggregate
 
-- `targetType: 'GYM' | 'TRAINER' | 'DIETICIAN'`
+- `targetType: 'GYM' | 'TRAINER' | 'DIETITIAN'`
 - `targetId: string`
 - `averageRating: number`
 - `totalReviews: number`

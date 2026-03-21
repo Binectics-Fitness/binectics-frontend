@@ -7,7 +7,7 @@ import { OrganizationProvider } from "@/contexts/OrganizationContext";
 
 export const metadata: Metadata = {
   title: "Binectics - Your Global Fitness Ecosystem",
-  description: "Connect with verified gyms, personal trainers, and dieticians worldwide.",
+  description: "Connect with verified gyms, personal trainers, and dietitians worldwide.",
 };
 
 export default function RootLayout({

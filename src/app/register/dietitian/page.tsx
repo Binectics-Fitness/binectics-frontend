@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Input, PasswordInput } from "@/components";
 import { AccountType } from "@/lib/types";
 
-export default function DieticianRegisterPage() {
+export default function DietitianRegisterPage() {
   const { register, isLoading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     firstName: "",
@@ -67,7 +67,7 @@ export default function DieticianRegisterPage() {
         password: formData.password,
         first_name: formData.firstName,
         last_name: formData.lastName,
-        role: AccountType.DIETICIAN,
+        role: AccountType.DIETITIAN,
         accept_tos: formData.acceptTos,
       });
       if (!result.success) {
@@ -130,11 +130,11 @@ export default function DieticianRegisterPage() {
                 />
               </svg>
               <span className="text-sm font-semibold text-accent-purple-600">
-                Dietician
+                Dietitian
               </span>
             </div>
             <h1 className="font-display text-3xl font-black text-foreground sm:text-4xl">
-              Get started as a dietician
+              Get started as a dietitian
             </h1>
             <p className="mt-2 text-base text-foreground-secondary">
               You'll add your credentials and specialties after creating your
@@ -197,7 +197,7 @@ export default function DieticianRegisterPage() {
                   label="Email Address"
                   type="email"
                   name="email"
-                  placeholder="jane@dietician.com"
+                  placeholder="jane@dietitian.com"
                   required
                   value={formData.email}
                   onChange={handleChange}

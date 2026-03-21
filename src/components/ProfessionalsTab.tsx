@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 export default function ProfessionalsTab() {
-  const [activeTab, setActiveTab] = useState<'gym' | 'trainer' | 'dietician'>('gym');
+  const [activeTab, setActiveTab] = useState<'gym' | 'trainer' | 'dietitian'>('gym');
 
   const tabs = {
     gym: {
@@ -67,8 +67,8 @@ export default function ProfessionalsTab() {
         { value: '180+', label: 'Verified trainers earning' },
       ],
     },
-    dietician: {
-      title: 'For Dieticians',
+    dietitian: {
+      title: 'For Dietitians',
       subtitle: 'Help clients achieve their nutrition goals',
       benefits: [
         {
@@ -89,12 +89,12 @@ export default function ProfessionalsTab() {
         },
       ],
       cta: {
-        text: 'Join as Dietician',
-        href: '/register/dietician',
+        text: 'Join as Dietitian',
+        href: '/register/dietitian',
       },
       stats: [
         { value: '40%', label: 'Avg. client retention increase' },
-        { value: '70+', label: 'Verified dieticians active' },
+        { value: '70+', label: 'Verified dietitians active' },
       ],
     },
   };
@@ -119,7 +119,7 @@ export default function ProfessionalsTab() {
       infoBox: 'bg-accent-yellow-500/10',
       infoIcon: 'text-accent-yellow-500',
     },
-    dietician: {
+    dietitian: {
       checkmark: 'text-accent-purple-500',
       button: 'bg-accent-purple-500 hover:bg-accent-purple-600 active:bg-accent-purple-700',
       buttonText: 'text-white',
@@ -167,14 +167,14 @@ export default function ProfessionalsTab() {
               Trainers
             </button>
             <button
-              onClick={() => setActiveTab('dietician')}
+              onClick={() => setActiveTab('dietitian')}
               className={`rounded-lg px-4 sm:px-6 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
-                activeTab === 'dietician'
+                activeTab === 'dietitian'
                   ? 'bg-accent-purple-500 text-white shadow-md'
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
             >
-              Dieticians
+              Dietitians
             </button>
           </div>
         </div>

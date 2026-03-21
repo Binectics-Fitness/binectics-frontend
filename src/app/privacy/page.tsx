@@ -24,7 +24,7 @@ export default function PrivacyPage() {
       content: [
         {
           subtitle: '2.1 Provide and Improve Services',
-          text: 'We use your information to operate, maintain, and improve our platform, including processing payments, facilitating gym check-ins, connecting you with trainers and dieticians, and personalizing your experience.',
+          text: 'We use your information to operate, maintain, and improve our platform, including processing payments, facilitating gym check-ins, connecting you with trainers and dietitians, and personalizing your experience.',
         },
         {
           subtitle: '2.2 Communications',
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
         },
         {
           subtitle: '3.2 Business Partners',
-          text: 'We share limited information with gyms, trainers, and dieticians when you check in, book sessions, or make purchases. This is necessary to facilitate the services you request.',
+          text: 'We share limited information with gyms, trainers, and dietitians when you check in, book sessions, or make purchases. This is necessary to facilitate the services you request.',
         },
         {
           subtitle: '3.3 Legal Requirements',

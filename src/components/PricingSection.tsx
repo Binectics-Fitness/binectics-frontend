@@ -34,7 +34,7 @@ export default function PricingSection() {
       features: [
         'Unlimited access to 500+ gyms',
         'Book personal trainers',
-        'Book dietician consultations',
+        'Book dietitian consultations',
         'Advanced progress tracking',
         'Priority gym access',
         'Exclusive community events',
@@ -52,7 +52,7 @@ export default function PricingSection() {
       features: [
         'Everything in Pro',
         'Unlimited trainer sessions (2/week)',
-        'Unlimited dietician consultations',
+        'Unlimited dietitian consultations',
         'Personalized workout plans',
         'Custom meal plans',
         'VIP gym access',

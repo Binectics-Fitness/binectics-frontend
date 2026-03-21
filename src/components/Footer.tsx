@@ -93,7 +93,7 @@ export default function Footer() {
             </Link>
             <p className="text-sm text-foreground-secondary leading-relaxed mb-6 max-w-sm">
               Your global fitness ecosystem. Access 500+ gyms, book certified
-              trainers and dieticians, all with a single membership. Train
+              trainers and dietitians, all with a single membership. Train
               anywhere, anytime.
             </p>
             <div className="flex gap-4">

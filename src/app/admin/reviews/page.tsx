@@ -60,7 +60,7 @@ export default function AdminReviewsPage() {
       provider: "Dr. Maria Garcia - Nutrition",
       rating: 2,
       comment:
-        "This service is terrible and a complete waste of money. The dietician was unprofessional and rude.",
+        "This service is terrible and a complete waste of money. The dietitian was unprofessional and rude.",
       date: "2024-02-12",
       status: ReviewModerationStatus.FLAGGED,
       flagged: true,

@@ -398,7 +398,7 @@ export default function ProgressPage() {
   const selectedProviderRoleName = selectedProfessional?.user_role?.role?.name;
   const selectedProviderRole = selectedProviderRoleName
     ? selectedProviderRoleName.toLowerCase().includes("diet")
-      ? "DIETICIAN"
+      ? "DIETITIAN"
       : selectedProviderRoleName.toLowerCase().includes("trainer")
         ? "PERSONAL_TRAINER"
         : "OTHER"
@@ -590,7 +590,7 @@ export default function ProgressPage() {
               No Progress Profiles Yet
             </h2>
             <p className="mt-2 max-w-md text-foreground-secondary">
-              Once a trainer, dietician, or gym sets you up as a client
+              Once a trainer, dietitian, or gym sets you up as a client
               you&apos;ll see your progress tracking data here.
             </p>
           </div>

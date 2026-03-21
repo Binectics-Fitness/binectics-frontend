@@ -9,12 +9,12 @@ export default function FAQPage() {
         {
           question: "What is Binectics?",
           answer:
-            "Binectics is a global fitness ecosystem that connects verified gyms, certified personal trainers, and expert dieticians in one platform. With a single subscription, you get access to 500+ gyms across 50+ countries, plus the ability to book trainers and dieticians wherever you are.",
+            "Binectics is a global fitness ecosystem that connects verified gyms, certified personal trainers, and expert dietitians in one platform. With a single subscription, you get access to 500+ gyms across 50+ countries, plus the ability to book trainers and dietitians wherever you are.",
         },
         {
           question: "How does Binectics work?",
           answer:
-            "Simply sign up, choose your plan, and get verified. You'll receive a unique QR code that works at any partner gym worldwide. You can also browse and book personal trainers and dieticians through our app, track your progress, and manage everything from one dashboard.",
+            "Simply sign up, choose your plan, and get verified. You'll receive a unique QR code that works at any partner gym worldwide. You can also browse and book personal trainers and dietitians through our app, track your progress, and manage everything from one dashboard.",
         },
         {
           question: "Which countries are you available in?",
@@ -84,7 +84,7 @@ export default function FAQPage() {
       ],
     },
     {
-      name: "For Trainers & Dieticians",
+      name: "For Trainers & Dietitians",
       faqs: [
         {
           question: "How do I get verified as a professional?",

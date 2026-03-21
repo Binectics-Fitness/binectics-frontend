@@ -16,7 +16,7 @@ Core request from discussion:
 - Clients should be able to book consultation sessions.
 - Booking should use a calendar with available date/time.
 - Providers should configure available times on their end.
-- Scope should support dieticians first, but be extensible to trainers (and future provider types).
+- Scope should support dietitians first, but be extensible to trainers (and future provider types).
 - Admin should be able to define/list consultation types that can be offered.
 
 ---
@@ -41,7 +41,7 @@ A structured scheduling module is required to:
 1. Enable clients to discover and book consultation slots.
 2. Allow providers to set and manage calendar availability.
 3. Allow admin to configure available consultation types.
-4. Support dietician consultations first, with architecture ready for trainers.
+4. Support dietitian consultations first, with architecture ready for trainers.
 5. Keep module independent from consultation intake/forms module.
 
 ### Non-Goals (MVP)
@@ -62,7 +62,7 @@ A structured scheduling module is required to:
 - Filters/selects provider and slot.
 - Books, reschedules, or cancels a consultation (within policy).
 
-### Provider (Dietician/Trainer)
+### Provider (Dietitian/Trainer)
 
 - Configures availability windows.
 - Sets exceptions (unavailable dates, breaks).
@@ -83,7 +83,7 @@ A structured scheduling module is required to:
 - Fields:
   - `name`
   - `description`
-  - `providerRole` (DIETICIAN | PERSONAL_TRAINER | OTHER)
+  - `providerRole` (DIETITIAN | PERSONAL_TRAINER | OTHER)
   - `defaultDurationMinutes`
   - `isActive`
 - Archived types are unavailable for new bookings but remain on historical sessions.
@@ -177,7 +177,7 @@ A structured scheduling module is required to:
 - `id: string`
 - `name: string`
 - `description?: string`
-- `providerRole: 'DIETICIAN' | 'PERSONAL_TRAINER' | 'OTHER'`
+- `providerRole: 'DIETITIAN' | 'PERSONAL_TRAINER' | 'OTHER'`
 - `defaultDurationMinutes: number`
 - `isActive: boolean`
 - `createdAt: string`
@@ -232,7 +232,7 @@ This section is the shared frontend/backend contract shape for transport payload
 
 ### Role Enum
 
-- `DIETICIAN`
+- `DIETITIAN`
 - `PERSONAL_TRAINER`
 - `OTHER`
 
@@ -388,11 +388,11 @@ These metrics support optimization of availability settings and future module ex
 
 ## 14) Delivery Plan
 
-### Phase 1 (Dietician MVP)
+### Phase 1 (Dietitian MVP)
 
-- Admin consultation type setup (dietician types).
-- Provider availability setup for dieticians.
-- Client booking flow for dietician consultations.
+- Admin consultation type setup (dietitian types).
+- Provider availability setup for dietitians.
+- Client booking flow for dietitian consultations.
 - Basic booking list + cancel/reschedule.
 
 ### Phase 2 (Trainer Expansion)
@@ -417,7 +417,7 @@ These metrics support optimization of availability settings and future module ex
 4. Client can see real-time available slots and complete booking.
 5. Double-booking is prevented at confirmation.
 6. Booking lifecycle (confirm/cancel/reschedule) works with role permissions.
-7. Dietician support ships first; trainer can be enabled without redesign.
+7. Dietitian support ships first; trainer can be enabled without redesign.
 
 ---
 

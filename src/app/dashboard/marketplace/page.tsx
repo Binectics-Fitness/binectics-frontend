@@ -14,7 +14,7 @@ const ACCOUNT_TYPE_OPTIONS: {
 }[] = [
   { value: "gym_owner", label: "Gym" },
   { value: "personal_trainer", label: "Personal Trainer" },
-  { value: "dietician", label: "Dietician" },
+  { value: "dietitian", label: "Dietitian" },
 ];
 
 export default function MyMarketplaceListingPage() {

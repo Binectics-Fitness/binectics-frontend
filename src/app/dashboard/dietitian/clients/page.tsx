@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import DieticianSidebar from "@/components/DieticianSidebar";
+import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -37,8 +37,8 @@ function formatDate(iso: string) {
 
 // ─── Page ──────────────────────────────────────────────────────────
 
-export default function DieticianClientsPage() {
-  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETICIAN);
+export default function DietitianClientsPage() {
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
 
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
@@ -184,7 +184,7 @@ export default function DieticianClientsPage() {
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
-      <DieticianSidebar />
+      <DietitianSidebar />
 
       <main className="ml-64 flex-1 p-8">
         {/* ── Header ──────────────────────────────────────── */}

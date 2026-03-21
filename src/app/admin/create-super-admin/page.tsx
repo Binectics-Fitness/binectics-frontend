@@ -28,8 +28,8 @@ export default function CreateSuperAdminPage() {
         return `gym@${domain}`;
       case AccountType.PERSONAL_TRAINER:
         return `trainer@${domain}`;
-      case AccountType.DIETICIAN:
-        return `dietician@${domain}`;
+      case AccountType.DIETITIAN:
+        return `dietitian@${domain}`;
       case AccountType.FITNESS_MEMBER:
         return `user@${domain}`;
       default:
@@ -77,7 +77,7 @@ export default function CreateSuperAdminPage() {
     const roles: AccountType[] = [
       AccountType.GYM_OWNER,
       AccountType.PERSONAL_TRAINER,
-      AccountType.DIETICIAN,
+      AccountType.DIETITIAN,
       AccountType.FITNESS_MEMBER,
     ];
 
@@ -151,9 +151,9 @@ export default function CreateSuperAdminPage() {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground/60">Dietician Email:</span>
+              <span className="text-foreground/60">Dietitian Email:</span>
               <span className="font-semibold text-foreground">
-                {getEmailForRole(AccountType.DIETICIAN)}
+                {getEmailForRole(AccountType.DIETITIAN)}
               </span>
             </div>
             <div className="flex justify-between">
@@ -270,11 +270,11 @@ export default function CreateSuperAdminPage() {
               Trainer
             </button>
             <button
-              onClick={() => createAccount(AccountType.DIETICIAN)}
+              onClick={() => createAccount(AccountType.DIETITIAN)}
               disabled={isLoading}
               className="px-3 py-2 bg-accent-purple-500 text-white font-semibold rounded-lg hover:bg-accent-purple-500/90 transition-colors disabled:opacity-50 text-sm"
             >
-              Dietician
+              Dietitian
             </button>
             <button
               onClick={() => createAccount(AccountType.FITNESS_MEMBER)}
@@ -302,7 +302,7 @@ export default function CreateSuperAdminPage() {
               {formData.password}
             </p>
             <p>
-              • Dietician: {getEmailForRole(AccountType.DIETICIAN)} /{" "}
+              • Dietitian: {getEmailForRole(AccountType.DIETITIAN)} /{" "}
               {formData.password}
             </p>
             <p>

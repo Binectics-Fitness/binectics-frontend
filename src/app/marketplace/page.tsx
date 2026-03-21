@@ -12,13 +12,13 @@ import type {
 const ACCOUNT_TYPE_LABELS: Record<MarketplaceAccountType, string> = {
   gym_owner: "Gym",
   personal_trainer: "Personal Trainer",
-  dietician: "Dietician",
+  dietitian: "Dietitian",
 };
 
 const ACCOUNT_TYPE_COLORS: Record<MarketplaceAccountType, string> = {
   gym_owner: "bg-accent-blue-100 text-accent-blue-700",
   personal_trainer: "bg-accent-yellow-100 text-accent-yellow-700",
-  dietician: "bg-accent-purple-100 text-accent-purple-700",
+  dietitian: "bg-accent-purple-100 text-accent-purple-700",
 };
 
 const SPECIALTY_OPTIONS = [
@@ -275,7 +275,7 @@ export default function MarketplacePage() {
             <span className="text-primary-500">Fitness Professional</span>
           </h1>
           <p className="text-lg text-foreground-secondary max-w-2xl mx-auto mb-8">
-            Browse verified gyms, personal trainers, and dieticians. Connect
+            Browse verified gyms, personal trainers, and dietitians. Connect
             with the right professional for your fitness journey.
           </p>
 
@@ -345,7 +345,7 @@ export default function MarketplacePage() {
                   <option value="">All Types</option>
                   <option value="gym_owner">Gyms</option>
                   <option value="personal_trainer">Personal Trainers</option>
-                  <option value="dietician">Dieticians</option>
+                  <option value="dietitian">Dietitians</option>
                 </select>
               </div>
 

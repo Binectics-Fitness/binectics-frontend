@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 
-export default function DieticiansPage() {
+export default function DietitiansPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
 
-  // Mock dieticians data
-  const dieticians = [
+  // Mock dietitians data
+  const dietitians = [
     {
       id: 1,
       name: "Dr. Sarah Thompson",
@@ -21,7 +21,7 @@ export default function DieticiansPage() {
       image: "🥗",
       specialties: ["Weight Loss", "Sports Nutrition", "Meal Planning"],
       certifications: [
-        "Registered Dietician (RD)",
+        "Registered Dietitian (RD)",
         "CSSD",
         "Precision Nutrition L2",
       ],
@@ -138,16 +138,16 @@ export default function DieticiansPage() {
     { value: "middle-east", label: "Middle East" },
   ];
 
-  const filteredDieticians = dieticians.filter((dietician) => {
+  const filteredDietitians = dietitians.filter((dietitian) => {
     const matchesSearch =
-      dietician.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dietician.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dietician.specialties.some((s) =>
+      dietitian.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dietitian.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dietitian.specialties.some((s) =>
         s.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     const matchesSpecialty =
       selectedSpecialty === "all" ||
-      dietician.specialties.some(
+      dietitian.specialties.some(
         (s) => s.toLowerCase() === selectedSpecialty.toLowerCase(),
       );
     return matchesSearch && matchesSpecialty;
@@ -160,10 +160,10 @@ export default function DieticiansPage() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h1 className="font-display text-4xl sm:text-5xl font-black text-foreground mb-4">
-              Find Your Certified Dietician
+              Find Your Certified Dietitian
             </h1>
             <p className="text-lg text-foreground/90">
-              Connect with registered dieticians worldwide for personalized
+              Connect with registered dietitians worldwide for personalized
               nutrition guidance
             </p>
           </div>
@@ -253,19 +253,19 @@ export default function DieticiansPage() {
 
           {/* Results Count */}
           <div className="mt-4 text-sm text-foreground-secondary">
-            Showing {filteredDieticians.length}{" "}
-            {filteredDieticians.length === 1 ? "dietician" : "dieticians"}
+            Showing {filteredDietitians.length}{" "}
+            {filteredDietitians.length === 1 ? "dietitian" : "dietitians"}
           </div>
         </div>
       </section>
 
-      {/* Dieticians Grid */}
+      {/* Dietitians Grid */}
       <section className="bg-background py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredDieticians.map((dietician) => (
+            {filteredDietitians.map((dietitian) => (
               <div
-                key={dietician.id}
+                key={dietitian.id}
                 className="bg-white shadow-card hover:shadow-lg transition-shadow"
               >
                 {/* Header */}
@@ -273,18 +273,18 @@ export default function DieticiansPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-16 h-16 bg-accent-purple-100 flex items-center justify-center text-3xl">
-                        {dietician.image}
+                        {dietitian.image}
                       </div>
                       <div>
                         <h3 className="font-display text-lg font-bold text-foreground">
-                          {dietician.name}
+                          {dietitian.name}
                         </h3>
                         <p className="text-sm text-foreground-secondary">
-                          📍 {dietician.location}
+                          📍 {dietitian.location}
                         </p>
                       </div>
                     </div>
-                    {dietician.verified && (
+                    {dietitian.verified && (
                       <div className="bg-primary-500 text-foreground px-2 py-1 text-xs font-semibold">
                         ✓
                       </div>
@@ -296,25 +296,25 @@ export default function DieticiansPage() {
                     <div className="flex items-center gap-1">
                       <span className="text-accent-purple-500">★</span>
                       <span className="font-semibold text-foreground">
-                        {dietician.rating}
+                        {dietitian.rating}
                       </span>
                     </div>
                     <span className="text-sm text-foreground-secondary">
-                      ({dietician.reviews} reviews)
+                      ({dietitian.reviews} reviews)
                     </span>
                     <span className="text-sm text-foreground-secondary">
-                      • {dietician.clients} clients
+                      • {dietitian.clients} clients
                     </span>
                   </div>
 
                   {/* Bio */}
                   <p className="text-sm text-foreground-secondary mb-4">
-                    {dietician.bio}
+                    {dietitian.bio}
                   </p>
 
                   {/* Specialties */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {dietician.specialties
+                    {dietitian.specialties
                       .slice(0, 3)
                       .map((specialty, index) => (
                         <span
@@ -342,7 +342,7 @@ export default function DieticiansPage() {
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      {dietician.experience} experience
+                      {dietitian.experience} experience
                     </div>
                     <div className="flex items-center gap-2 text-foreground-secondary">
                       <svg
@@ -358,7 +358,7 @@ export default function DieticiansPage() {
                           d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
                         />
                       </svg>
-                      {dietician.certifications.join(", ")}
+                      {dietitian.certifications.join(", ")}
                     </div>
                   </div>
                 </div>
@@ -370,11 +370,11 @@ export default function DieticiansPage() {
                       Starting at
                     </p>
                     <p className="text-xl font-black text-foreground">
-                      {dietician.price}
+                      {dietitian.price}
                     </p>
                   </div>
                   <Link
-                    href={`/dieticians/${dietician.id}`}
+                    href={`/dietitians/${dietitian.id}`}
                     className="px-6 py-2 bg-accent-purple-500 text-white font-semibold hover:bg-accent-purple-600 transition-colors"
                   >
                     View Profile
@@ -393,7 +393,7 @@ export default function DieticiansPage() {
             Ready to Transform Your Nutrition?
           </h2>
           <p className="text-lg text-foreground/80 mb-8">
-            Connect with certified dieticians and achieve your health goals
+            Connect with certified dietitians and achieve your health goals
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

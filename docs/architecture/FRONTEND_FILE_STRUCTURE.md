@@ -48,7 +48,7 @@ binectics-frontend/
 - 34 shared components
 - 9 custom hooks
 - 8 API service modules
-- Role-based dashboards for 5 user roles (User, Gym Owner, Trainer, Dietician, Admin)
+- Role-based dashboards for 5 user roles (User, Gym Owner, Trainer, Dietitian, Admin)
 - Deploys to **Netlify** (`netlify.toml`)
 - Calls an external **Azure-hosted NestJS API** — no backend code lives here
 
@@ -141,7 +141,7 @@ Next.js App Router uses the file system for routing. Each folder with a `page.ts
 | `/register/user`          | Fitness Enthusiast signup form  |
 | `/register/gym-owner`     | Gym Owner signup form           |
 | `/register/trainer`       | Trainer signup form             |
-| `/register/dietician`     | Dietician signup form           |
+| `/register/dietitian`     | Dietitian signup form           |
 | `/register/invite`        | Accept team invitation signup   |
 | `/forgot-password`        | Request password reset          |
 | `/reset-password/[token]` | Reset password with token       |
@@ -157,8 +157,8 @@ Next.js App Router uses the file system for routing. Each folder with a `page.ts
 | `/gyms/[gymId]`                 | Gym detail/profile page       |
 | `/trainers`                     | Browse all trainers           |
 | `/trainers/[trainerId]`         | Trainer detail/profile page   |
-| `/dieticians`                   | Browse all dieticians         |
-| `/dieticians/[dieticianId]`     | Dietician detail/profile page |
+| `/dietitians`                   | Browse all dietitians         |
+| `/dietitians/[dietitianId]`     | Dietitian detail/profile page |
 | `/marketplace`                  | Browse marketplace listings   |
 | `/marketplace/[listingId]`      | Marketplace listing detail    |
 | `/categories/gyms`              | Category — gyms               |
@@ -245,19 +245,19 @@ Next.js App Router uses the file system for routing. Each folder with a `page.ts
 | `/dashboard/trainer/sessions`  | Session management |
 | `/dashboard/trainer/settings`  | Trainer settings   |
 
-##### Dietician Dashboard (`/dashboard/dietician`)
+##### Dietitian Dashboard (`/dashboard/dietitian`)
 
 | Route                                  | Description             |
 | -------------------------------------- | ----------------------- |
-| `/dashboard/dietician`                 | Dietician home          |
-| `/dashboard/dietician/analytics`       | Dietician analytics     |
-| `/dashboard/dietician/clients`         | Client management       |
-| `/dashboard/dietician/consultations`   | Consultation management |
-| `/dashboard/dietician/earnings`        | Earnings overview       |
-| `/dashboard/dietician/nutrition-plans` | Nutrition plan builder  |
-| `/dashboard/dietician/plans`           | Plan management         |
-| `/dashboard/dietician/reviews`         | Review management       |
-| `/dashboard/dietician/settings`        | Dietician settings      |
+| `/dashboard/dietitian`                 | Dietitian home          |
+| `/dashboard/dietitian/analytics`       | Dietitian analytics     |
+| `/dashboard/dietitian/clients`         | Client management       |
+| `/dashboard/dietitian/consultations`   | Consultation management |
+| `/dashboard/dietitian/earnings`        | Earnings overview       |
+| `/dashboard/dietitian/nutrition-plans` | Nutrition plan builder  |
+| `/dashboard/dietitian/plans`           | Plan management         |
+| `/dashboard/dietitian/reviews`         | Review management       |
+| `/dashboard/dietitian/settings`        | Dietitian settings      |
 
 ##### Admin Panel (`/admin`)
 
@@ -329,7 +329,7 @@ import { Button, Card, Input, Badge } from "@/components";
 | `DashboardSidebar.tsx`     | Default | User role sidebar (`/dashboard` routes)                 |
 | `GymOwnerSidebar.tsx`      | Default | Gym Owner sidebar (`/dashboard/gym-owner`)              |
 | `TrainerSidebar.tsx`       | Default | Trainer sidebar (`/dashboard/trainer`)                  |
-| `DieticianSidebar.tsx`     | Default | Dietician sidebar (`/dashboard/dietician`)              |
+| `DietitianSidebar.tsx`     | Default | Dietitian sidebar (`/dashboard/dietitian`)              |
 | `AdminSidebar.tsx`         | Default | Admin sidebar (`/admin` routes)                         |
 | `DashboardLoading.tsx`     | Default | Skeleton loader for dashboard pages                     |
 | `OnboardingBanner.tsx`     | Default | Banner prompting users to complete profile setup        |
@@ -341,7 +341,7 @@ import { Button, Card, Input, Badge } from "@/components";
 | ---------------------------- | ------- | -------------------------------------------------- |
 | `PricingSection.tsx`         | Default | Pricing cards with plan details                    |
 | `PricingToggle.tsx`          | Default | Monthly/Annual pricing switch                      |
-| `ProfessionalsTab.tsx`       | Default | Tabbed interface (Gym Owners/Trainers/Dieticians)  |
+| `ProfessionalsTab.tsx`       | Default | Tabbed interface (Gym Owners/Trainers/Dietitians)  |
 | `ContactForm.tsx`            | Named   | Contact form component                             |
 | `CookieConsent.tsx`          | Default | GDPR cookie consent banner                         |
 | `CookieSettings.tsx`         | Default | Detailed cookie preference management              |
@@ -411,7 +411,7 @@ All API modules return `Promise<ApiResponse<T>>` and use the shared `ApiClient`.
 Central type definitions for the entire app, including:
 
 - **Auth**: `User`, `UserRole`, `LoginRequest`, `RegisterRequest`, `ApiResponse<T>`
-- **Providers**: `Gym`, `Trainer`, `Dietician`, `Plan`, `Subscription`
+- **Providers**: `Gym`, `Trainer`, `Dietitian`, `Plan`, `Subscription`
 - **Marketplace**: `MarketplaceListing`, `MarketplaceRequest`, `MarketplaceReview`, `MarketplaceSearchParams`
 - **Teams**: Types imported from `teams.ts` service
 - **Shared**: `VerificationStatus`, `SubscriptionStatus`, pagination types
@@ -482,7 +482,7 @@ Each role gets its own dashboard section with a dedicated sidebar:
 | User      | `/dashboard`           | `DashboardSidebar` |
 | Gym Owner | `/dashboard/gym-owner` | `GymOwnerSidebar`  |
 | Trainer   | `/dashboard/trainer`   | `TrainerSidebar`   |
-| Dietician | `/dashboard/dietician` | `DieticianSidebar` |
+| Dietitian | `/dashboard/dietitian` | `DietitianSidebar` |
 | Admin     | `/admin`               | `AdminSidebar`     |
 
 ### 3. Auth Protection (Two Layers)

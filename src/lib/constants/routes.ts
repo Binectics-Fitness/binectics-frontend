@@ -23,7 +23,7 @@ export const DASHBOARD_ROUTES: Readonly<Record<UserRole, string>> = {
   USER: "/dashboard",
   GYM_OWNER: "/dashboard/gym-owner",
   TRAINER: "/dashboard/trainer",
-  DIETICIAN: "/dashboard/dietician",
+  DIETITIAN: "/dashboard/dietitian",
   ADMIN: "/admin/dashboard",
 };
 

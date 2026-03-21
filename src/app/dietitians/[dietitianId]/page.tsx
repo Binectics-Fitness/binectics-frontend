@@ -7,20 +7,20 @@ import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 
-export default function DieticianProfilePage() {
+export default function DietitianProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const dieticianId = Array.isArray(params.dieticianId)
-    ? params.dieticianId[0]
-    : params.dieticianId;
+  const dietitianId = Array.isArray(params.dietitianId)
+    ? params.dietitianId[0]
+    : params.dietitianId;
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [reviewOwnerUserId, setReviewOwnerUserId] = useState<string | null>(
     null,
   );
 
-  // Mock dietician data - in production this would come from API
-  const dietician = {
-    id: dieticianId,
+  // Mock dietitian data - in production this would come from API
+  const dietitian = {
+    id: dietitianId,
     name: "Dr. Sarah Thompson",
     location: "New York, USA",
     rating: 5.0,
@@ -35,7 +35,7 @@ export default function DieticianProfilePage() {
       "Metabolic Health",
     ],
     certifications: [
-      "Registered Dietician (RD)",
+      "Registered Dietitian (RD)",
       "CSSD",
       "Precision Nutrition L2",
       "ISSN Sports Nutritionist",
@@ -148,7 +148,7 @@ export default function DieticianProfilePage() {
 
     async function loadListingOwner() {
       const response = await marketplaceService.getListingById(
-        String(dieticianId),
+        String(dietitianId),
       );
       if (!mounted || !response.success || !response.data) return;
 
@@ -165,10 +165,10 @@ export default function DieticianProfilePage() {
     return () => {
       mounted = false;
     };
-  }, [dieticianId]);
+  }, [dietitianId]);
 
   const handleBookNow = (planId: number) => {
-    router.push(`/checkout?dietician=${dieticianId}&plan=${planId}`);
+    router.push(`/checkout?dietitian=${dietitianId}&plan=${planId}`);
   };
 
   return (
@@ -193,7 +193,7 @@ export default function DieticianProfilePage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            Back to Dieticians
+            Back to Dietitians
           </button>
         </div>
       </div>
@@ -205,38 +205,38 @@ export default function DieticianProfilePage() {
             {/* Profile Image & Quick Stats */}
             <div className="space-y-6">
               <div className="h-96 bg-accent-purple-100 flex items-center justify-center">
-                <span className="text-9xl">{dietician.image}</span>
+                <span className="text-9xl">{dietitian.image}</span>
               </div>
 
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-gray-50 p-4 text-center">
                   <p className="text-2xl font-black text-foreground">
-                    {dietician.rating}
+                    {dietitian.rating}
                   </p>
                   <p className="text-sm text-foreground/60">Rating</p>
                 </div>
                 <div className="bg-gray-50 p-4 text-center">
                   <p className="text-2xl font-black text-foreground">
-                    {dietician.reviews}
+                    {dietitian.reviews}
                   </p>
                   <p className="text-sm text-foreground/60">Reviews</p>
                 </div>
                 <div className="bg-gray-50 p-4 text-center">
                   <p className="text-2xl font-black text-foreground">
-                    {dietician.clients}
+                    {dietitian.clients}
                   </p>
                   <p className="text-sm text-foreground/60">Clients</p>
                 </div>
               </div>
             </div>
 
-            {/* Dietician Info */}
+            {/* Dietitian Info */}
             <div>
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h1 className="text-4xl font-black text-foreground mb-2">
-                    {dietician.name}
+                    {dietitian.name}
                   </h1>
                   <p className="text-foreground/60 flex items-center gap-2">
                     <svg
@@ -252,10 +252,10 @@ export default function DieticianProfilePage() {
                         d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                       />
                     </svg>
-                    {dietician.location}
+                    {dietitian.location}
                   </p>
                 </div>
-                {dietician.verified && (
+                {dietitian.verified && (
                   <div className="bg-primary-500 text-foreground px-4 py-2 font-semibold flex items-center gap-2">
                     <svg
                       className="w-5 h-5"
@@ -275,7 +275,7 @@ export default function DieticianProfilePage() {
 
               {/* Bio */}
               <p className="text-foreground/80 mb-6 leading-relaxed">
-                {dietician.bio}
+                {dietitian.bio}
               </p>
 
               {/* Experience */}
@@ -284,7 +284,7 @@ export default function DieticianProfilePage() {
                   Experience
                 </p>
                 <p className="text-foreground/80">
-                  {dietician.experience} of clinical and sports nutrition
+                  {dietitian.experience} of clinical and sports nutrition
                   practice
                 </p>
               </div>
@@ -295,7 +295,7 @@ export default function DieticianProfilePage() {
                   Specialties
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {dietician.specialties.map((specialty, index) => (
+                  {dietitian.specialties.map((specialty, index) => (
                     <span
                       key={index}
                       className="px-4 py-2 bg-accent-purple-100 text-accent-purple-700 text-sm font-semibold"
@@ -313,7 +313,7 @@ export default function DieticianProfilePage() {
                     Languages
                   </p>
                   <p className="text-foreground/80">
-                    {dietician.languages.join(", ")}
+                    {dietitian.languages.join(", ")}
                   </p>
                 </div>
                 <div>
@@ -321,7 +321,7 @@ export default function DieticianProfilePage() {
                     Consultation Options
                   </p>
                   <p className="text-foreground/80">
-                    {dietician.consultationModes.join(" • ")}
+                    {dietitian.consultationModes.join(" • ")}
                   </p>
                 </div>
               </div>
@@ -360,7 +360,7 @@ export default function DieticianProfilePage() {
                     Academic Degrees
                   </p>
                   <div className="space-y-2">
-                    {dietician.education.map((degree, index) => (
+                    {dietitian.education.map((degree, index) => (
                       <div
                         key={index}
                         className="flex items-start gap-3 p-3 bg-gray-50"
@@ -383,7 +383,7 @@ export default function DieticianProfilePage() {
                     Professional Certifications
                   </p>
                   <div className="space-y-2">
-                    {dietician.certifications.map((cert, index) => (
+                    {dietitian.certifications.map((cert, index) => (
                       <div
                         key={index}
                         className="flex items-start gap-3 p-3 bg-gray-50"
@@ -413,7 +413,7 @@ export default function DieticianProfilePage() {
                 My Approach
               </h2>
               <div className="space-y-3">
-                {dietician.approach.map((item, index) => (
+                {dietitian.approach.map((item, index) => (
                   <div key={index} className="flex items-start gap-3">
                     <svg
                       className="w-5 h-5 text-primary-500 mt-0.5"
@@ -438,7 +438,7 @@ export default function DieticianProfilePage() {
                 Availability
               </h2>
               <div className="space-y-3">
-                {Object.entries(dietician.availability).map(([days, hours]) => (
+                {Object.entries(dietitian.availability).map(([days, hours]) => (
                   <div
                     key={days}
                     className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
@@ -453,8 +453,8 @@ export default function DieticianProfilePage() {
             </div>
 
             <ProviderReviewsSection
-              targetType={ReviewTargetType.DIETICIAN}
-              targetId={String(dieticianId)}
+              targetType={ReviewTargetType.DIETITIAN}
+              targetId={String(dietitianId)}
               title="Client Reviews"
               accentClassName="bg-accent-purple-100 text-accent-purple-700"
               providerOwnerUserId={reviewOwnerUserId}
@@ -468,7 +468,7 @@ export default function DieticianProfilePage() {
                 Nutrition Programs
               </h2>
               <div className="space-y-4">
-                {dietician.plans.map((plan) => (
+                {dietitian.plans.map((plan) => (
                   <div
                     key={plan.id}
                     className={`p-4 border-2 cursor-pointer transition-all ${

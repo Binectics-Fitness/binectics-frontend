@@ -150,8 +150,8 @@ export default function SettingsLayout({
                     ? "/dashboard/gym-owner"
                     : user.role === UserRole.TRAINER
                       ? "/dashboard/trainer"
-                      : user.role === UserRole.DIETICIAN
-                        ? "/dashboard/dietician"
+                      : user.role === UserRole.DIETITIAN
+                        ? "/dashboard/dietitian"
                         : user.role === UserRole.ADMIN
                           ? "/admin"
                           : "/dashboard"

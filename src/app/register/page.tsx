@@ -5,7 +5,7 @@ export default function RegisterPage() {
     {
       id: 'user',
       title: 'Fitness Enthusiast',
-      description: 'Find gyms, trainers, and dieticians worldwide',
+      description: 'Find gyms, trainers, and dietitians worldwide',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -15,7 +15,7 @@ export default function RegisterPage() {
       href: '/register/user',
       features: [
         'Access 500+ gyms globally',
-        'Book trainers & dieticians',
+        'Book trainers & dietitians',
         'Track your progress',
         'QR check-in at gyms',
       ],
@@ -57,8 +57,8 @@ export default function RegisterPage() {
       ],
     },
     {
-      id: 'dietician',
-      title: 'Dietician',
+      id: 'dietitian',
+      title: 'Dietitian',
       description: 'Help clients achieve their nutrition goals',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,7 +66,7 @@ export default function RegisterPage() {
         </svg>
       ),
       color: 'purple',
-      href: '/register/dietician',
+      href: '/register/dietitian',
       features: [
         'Verified credentials',
         'Custom meal plans',

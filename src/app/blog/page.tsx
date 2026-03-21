@@ -30,8 +30,8 @@ export default function BlogPage() {
       image: '💪',
     },
     {
-      title: 'Nutrition Myths Debunked by Professional Dieticians',
-      excerpt: 'Our expert dieticians tackle the most common nutrition myths and reveal the truth behind popular diet trends.',
+      title: 'Nutrition Myths Debunked by Professional Dietitians',
+      excerpt: 'Our expert dietitians tackle the most common nutrition myths and reveal the truth behind popular diet trends.',
       author: 'Priya Patel',
       date: 'October 28, 2024',
       readTime: '8 min read',

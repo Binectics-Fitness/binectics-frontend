@@ -3,13 +3,13 @@ export enum UserRole {
   USER = "USER",
   GYM_OWNER = "GYM_OWNER",
   TRAINER = "TRAINER",
-  DIETICIAN = "DIETICIAN",
+  DIETITIAN = "DIETITIAN",
   ADMIN = "ADMIN",
 }
 export enum AccountType {
   GYM_OWNER = "gym_owner",
   PERSONAL_TRAINER = "personal_trainer",
-  DIETICIAN = "dietician",
+  DIETITIAN = "dietitian",
   FITNESS_MEMBER = "fitness_member",
 }
 export enum VerificationStatus {
@@ -125,8 +125,8 @@ export interface TrainerProfile {
   updated_at: Date;
 }
 
-// Dietician Types
-export interface DieticianProfile {
+// Dietitian Types
+export interface DietitianProfile {
   id: string;
   user_id: string;
   user?: User;
@@ -165,7 +165,7 @@ export interface Plan {
   is_active: boolean;
   gym_id?: string;
   trainer_id?: string;
-  dietician_id?: string;
+  dietitian_id?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -217,7 +217,7 @@ export interface PaginatedResponse<T> {
 export type MarketplaceAccountType =
   | "gym_owner"
   | "personal_trainer"
-  | "dietician";
+  | "dietitian";
 
 export type MarketplaceRequestType = "connection" | "inquiry";
 
