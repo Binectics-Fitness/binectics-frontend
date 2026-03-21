@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { authService } from '@/lib/api/auth';
+import { AccountType } from '@/lib/types';
 
 export default function CreateSuperAdminPage() {
   const [formData, setFormData] = useState({
@@ -14,28 +15,26 @@ export default function CreateSuperAdminPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const getEmailForRole = (role: string): string => {
+  const getEmailForRole = (role: AccountType): string => {
     const baseEmail = formData.email.split('@');
     const username = baseEmail[0];
     const domain = baseEmail[1];
 
     switch (role) {
-      case 'ADMIN':
-        return `${username}@${domain}`;
-      case 'GYM_OWNER':
+      case AccountType.GYM_OWNER:
         return `gym@${domain}`;
-      case 'TRAINER':
+      case AccountType.PERSONAL_TRAINER:
         return `trainer@${domain}`;
-      case 'DIETICIAN':
+      case AccountType.DIETICIAN:
         return `dietician@${domain}`;
-      case 'USER':
+      case AccountType.FITNESS_MEMBER:
         return `user@${domain}`;
       default:
         return formData.email;
     }
   };
 
-  const createAccount = async (role: 'USER' | 'GYM_OWNER' | 'TRAINER' | 'DIETICIAN' | 'ADMIN') => {
+  const createAccount = async (role: AccountType) => {
     setIsLoading(true);
     setMessage(null);
 
@@ -72,12 +71,11 @@ export default function CreateSuperAdminPage() {
   };
 
   const createAllAccounts = async () => {
-    const roles: Array<'USER' | 'GYM_OWNER' | 'TRAINER' | 'DIETICIAN' | 'ADMIN'> = [
-      'ADMIN',
-      'GYM_OWNER',
-      'TRAINER',
-      'DIETICIAN',
-      'USER',
+    const roles: AccountType[] = [
+      AccountType.GYM_OWNER,
+      AccountType.PERSONAL_TRAINER,
+      AccountType.DIETICIAN,
+      AccountType.FITNESS_MEMBER,
     ];
 
     setIsLoading(true);
@@ -119,7 +117,7 @@ export default function CreateSuperAdminPage() {
           Create Super Admin Account
         </h1>
         <p className="text-foreground/60 mb-8">
-          This will create 5 accounts with the same credentials but different roles.
+          This will create 4 supported registration accounts with the same credentials but different account types.
         </p>
 
         {/* Account Details */}
@@ -131,24 +129,20 @@ export default function CreateSuperAdminPage() {
               <span className="font-semibold text-foreground">{formData.password}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground/60">Admin Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole('ADMIN')}</span>
-            </div>
-            <div className="flex justify-between">
               <span className="text-foreground/60">Gym Owner Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole('GYM_OWNER')}</span>
+              <span className="font-semibold text-foreground">{getEmailForRole(AccountType.GYM_OWNER)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground/60">Trainer Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole('TRAINER')}</span>
+              <span className="font-semibold text-foreground">{getEmailForRole(AccountType.PERSONAL_TRAINER)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground/60">Dietician Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole('DIETICIAN')}</span>
+              <span className="font-semibold text-foreground">{getEmailForRole(AccountType.DIETICIAN)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground/60">User Email:</span>
-              <span className="font-semibold text-foreground">{getEmailForRole('USER')}</span>
+              <span className="font-semibold text-foreground">{getEmailForRole(AccountType.FITNESS_MEMBER)}</span>
             </div>
             <div className="flex justify-between pt-3 border-t border-gray-200">
               <span className="text-foreground/60">Name:</span>
@@ -225,40 +219,33 @@ export default function CreateSuperAdminPage() {
             disabled={isLoading}
             className="w-full h-14 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-500/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Creating Accounts...' : 'Create All 5 Accounts'}
+            {isLoading ? 'Creating Accounts...' : 'Create All 4 Accounts'}
           </button>
 
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <button
-              onClick={() => createAccount('ADMIN')}
-              disabled={isLoading}
-              className="px-3 py-2 bg-foreground text-white font-semibold rounded-lg hover:bg-foreground/90 transition-colors disabled:opacity-50 text-sm"
-            >
-              Admin
-            </button>
-            <button
-              onClick={() => createAccount('GYM_OWNER')}
+              onClick={() => createAccount(AccountType.GYM_OWNER)}
               disabled={isLoading}
               className="px-3 py-2 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-500/90 transition-colors disabled:opacity-50 text-sm"
             >
               Gym
             </button>
             <button
-              onClick={() => createAccount('TRAINER')}
+              onClick={() => createAccount(AccountType.PERSONAL_TRAINER)}
               disabled={isLoading}
               className="px-3 py-2 bg-accent-yellow-500 text-foreground font-semibold rounded-lg hover:bg-accent-yellow-500/90 transition-colors disabled:opacity-50 text-sm"
             >
               Trainer
             </button>
             <button
-              onClick={() => createAccount('DIETICIAN')}
+              onClick={() => createAccount(AccountType.DIETICIAN)}
               disabled={isLoading}
               className="px-3 py-2 bg-accent-purple-500 text-white font-semibold rounded-lg hover:bg-accent-purple-500/90 transition-colors disabled:opacity-50 text-sm"
             >
               Dietician
             </button>
             <button
-              onClick={() => createAccount('USER')}
+              onClick={() => createAccount(AccountType.FITNESS_MEMBER)}
               disabled={isLoading}
               className="px-3 py-2 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-500/90 transition-colors disabled:opacity-50 text-sm"
             >
@@ -270,14 +257,13 @@ export default function CreateSuperAdminPage() {
         {/* Info Box */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-foreground/70 mb-3">
-            <strong>Note:</strong> This creates 5 separate accounts with different emails but the same password.
+            <strong>Note:</strong> This creates 4 supported registration accounts with different emails but the same password.
           </p>
           <div className="text-xs text-foreground/60 space-y-1 font-mono">
-            <p>• Admin: {getEmailForRole('ADMIN')} / {formData.password}</p>
-            <p>• Gym: {getEmailForRole('GYM_OWNER')} / {formData.password}</p>
-            <p>• Trainer: {getEmailForRole('TRAINER')} / {formData.password}</p>
-            <p>• Dietician: {getEmailForRole('DIETICIAN')} / {formData.password}</p>
-            <p>• User: {getEmailForRole('USER')} / {formData.password}</p>
+            <p>• Gym: {getEmailForRole(AccountType.GYM_OWNER)} / {formData.password}</p>
+            <p>• Trainer: {getEmailForRole(AccountType.PERSONAL_TRAINER)} / {formData.password}</p>
+            <p>• Dietician: {getEmailForRole(AccountType.DIETICIAN)} / {formData.password}</p>
+            <p>• User: {getEmailForRole(AccountType.FITNESS_MEMBER)} / {formData.password}</p>
           </div>
         </div>
 

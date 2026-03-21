@@ -3,11 +3,30 @@
 import { useState } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 
+enum ReviewModerationStatus {
+  PUBLISHED = 'Published',
+  FLAGGED = 'Flagged',
+}
+
+type AdminReview = {
+  id: number;
+  user: string;
+  userEmail: string;
+  provider: string;
+  rating: number;
+  comment: string;
+  date: string;
+  status: ReviewModerationStatus;
+  flagged: boolean;
+  reports: number;
+  flagReason?: string;
+};
+
 export default function AdminReviewsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   // Mock data
-  const reviews = [
+  const reviews: AdminReview[] = [
     {
       id: 1,
       user: 'John Smith',
@@ -16,7 +35,7 @@ export default function AdminReviewsPage() {
       rating: 5,
       comment: 'Amazing facilities and great staff! The equipment is top-notch and always well-maintained.',
       date: '2024-02-14',
-      status: 'Published',
+      status: ReviewModerationStatus.PUBLISHED,
       flagged: false,
       reports: 0,
     },
@@ -28,7 +47,7 @@ export default function AdminReviewsPage() {
       rating: 5,
       comment: 'Mike is an incredible trainer! Lost 15 pounds in 2 months with his guidance.',
       date: '2024-02-13',
-      status: 'Published',
+      status: ReviewModerationStatus.PUBLISHED,
       flagged: false,
       reports: 0,
     },
@@ -40,7 +59,7 @@ export default function AdminReviewsPage() {
       rating: 2,
       comment: 'This service is terrible and a complete waste of money. The dietician was unprofessional and rude.',
       date: '2024-02-12',
-      status: 'Flagged',
+      status: ReviewModerationStatus.FLAGGED,
       flagged: true,
       reports: 3,
       flagReason: 'Inappropriate language, possible fake review',
@@ -53,7 +72,7 @@ export default function AdminReviewsPage() {
       rating: 4,
       comment: 'Great gym overall, but can get crowded during peak hours. Would still recommend!',
       date: '2024-02-11',
-      status: 'Published',
+      status: ReviewModerationStatus.PUBLISHED,
       flagged: false,
       reports: 0,
     },
@@ -65,7 +84,7 @@ export default function AdminReviewsPage() {
       rating: 1,
       comment: 'Scam! DO NOT JOIN! They stole my money!!!',
       date: '2024-02-10',
-      status: 'Flagged',
+      status: ReviewModerationStatus.FLAGGED,
       flagged: true,
       reports: 5,
       flagReason: 'Suspected fake review, spam content',
@@ -78,7 +97,7 @@ export default function AdminReviewsPage() {
       rating: 5,
       comment: 'Best decision I ever made! Mike helped me achieve my fitness goals.',
       date: '2024-02-09',
-      status: 'Published',
+      status: ReviewModerationStatus.PUBLISHED,
       flagged: false,
       reports: 0,
     },

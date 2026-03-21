@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { ReviewTargetType } from "@/lib/api/reviews";
 
 export default function GymProfilePage() {
   const params = useParams();
@@ -321,7 +322,7 @@ export default function GymProfilePage() {
             </div>
 
             <ProviderReviewsSection
-              targetType="GYM"
+              targetType={ReviewTargetType.GYM}
               targetId={String(gymId)}
               title="Member Reviews"
               accentClassName="bg-primary-100 text-primary-700"

@@ -3,85 +3,104 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/AdminSidebar';
+import { UserRole } from '@/lib/types';
+
+enum ProviderStatus {
+  ACTIVE = 'Active',
+  SUSPENDED = 'Suspended',
+}
+
+type AdminProvider = {
+  id: number;
+  name: string;
+  email: string;
+  type: UserRole;
+  location: string;
+  verified: boolean;
+  members: number;
+  revenue: string;
+  joinedDate: string;
+  status: ProviderStatus;
+};
 
 export default function AdminProvidersPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | UserRole>('all');
 
   // Mock data
-  const providers = [
+  const providers: AdminProvider[] = [
     {
       id: 1,
       name: 'PowerHouse Gym',
       email: 'contact@powerhousegym.com',
-      type: 'GYM_OWNER',
+      type: UserRole.GYM_OWNER,
       location: 'Los Angeles, USA',
       verified: true,
       members: 342,
       revenue: '$12,450',
       joinedDate: '2023-06-15',
-      status: 'Active',
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 2,
       name: 'Mike Chen',
       email: 'mike@trainer.com',
-      type: 'TRAINER',
+      type: UserRole.TRAINER,
       location: 'Hong Kong',
       verified: true,
       members: 28,
       revenue: '$3,200',
       joinedDate: '2023-08-20',
-      status: 'Active',
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 3,
       name: 'Dr. Maria Garcia',
       email: 'maria@nutrition.com',
-      type: 'DIETICIAN',
+      type: UserRole.DIETICIAN,
       location: 'Barcelona, Spain',
       verified: true,
       members: 45,
       revenue: '$5,600',
       joinedDate: '2023-09-10',
-      status: 'Active',
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 4,
       name: 'FitCore Studio',
       email: 'info@fitcore.uk',
-      type: 'GYM_OWNER',
+      type: UserRole.GYM_OWNER,
       location: 'London, UK',
       verified: true,
       members: 289,
       revenue: '$9,870',
       joinedDate: '2023-07-22',
-      status: 'Active',
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 5,
       name: 'Sarah Johnson',
       email: 'sarah@personaltraining.com',
-      type: 'TRAINER',
+      type: UserRole.TRAINER,
       location: 'Sydney, Australia',
       verified: false,
       members: 12,
       revenue: '$1,400',
       joinedDate: '2024-01-05',
-      status: 'Active',
+      status: ProviderStatus.ACTIVE,
     },
     {
       id: 6,
       name: 'Elite Fitness Center',
       email: 'contact@elitefitness.com',
-      type: 'GYM_OWNER',
+      type: UserRole.GYM_OWNER,
       location: 'Dubai, UAE',
       verified: true,
       members: 456,
       revenue: '$18,900',
       joinedDate: '2023-05-10',
-      status: 'Suspended',
+      status: ProviderStatus.SUSPENDED,
     },
   ];
 
@@ -101,13 +120,13 @@ export default function AdminProvidersPage() {
     }
   };
 
-  const getTypeBadgeColor = (type: string) => {
+  const getTypeBadgeColor = (type: UserRole) => {
     switch (type) {
-      case 'GYM_OWNER':
+      case UserRole.GYM_OWNER:
         return 'bg-accent-blue-100 text-accent-blue-700';
-      case 'TRAINER':
+      case UserRole.TRAINER:
         return 'bg-accent-yellow-100 text-accent-yellow-700';
-      case 'DIETICIAN':
+      case UserRole.DIETICIAN:
         return 'bg-accent-purple-100 text-accent-purple-700';
       default:
         return 'bg-gray-100 text-gray-700';
@@ -205,13 +224,13 @@ export default function AdminProvidersPage() {
                 </label>
                 <select
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
+                  onChange={(e) => setTypeFilter(e.target.value as 'all' | UserRole)}
                   className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="all">All Types</option>
-                  <option value="GYM_OWNER">Gyms</option>
-                  <option value="TRAINER">Trainers</option>
-                  <option value="DIETICIAN">Dieticians</option>
+                  <option value={UserRole.GYM_OWNER}>Gyms</option>
+                  <option value={UserRole.TRAINER}>Trainers</option>
+                  <option value={UserRole.DIETICIAN}>Dieticians</option>
                 </select>
               </div>
             </div>
@@ -277,7 +296,7 @@ export default function AdminProvidersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 text-xs font-semibold ${
-                        provider.status === 'Active' ? 'bg-primary-100 text-primary-700' : 'bg-red-100 text-red-700'
+                        provider.status === ProviderStatus.ACTIVE ? 'bg-primary-100 text-primary-700' : 'bg-red-100 text-red-700'
                       }`}>
                         {provider.status}
                       </span>
@@ -290,7 +309,7 @@ export default function AdminProvidersPage() {
                         >
                           View
                         </button>
-                        {provider.status === 'Active' ? (
+                        {provider.status === ProviderStatus.ACTIVE ? (
                           <button
                             onClick={() => handleSuspendProvider(provider.id, provider.name)}
                             className="text-foreground/60 hover:text-red-600 font-semibold"

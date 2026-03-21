@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { UserRole } from "@/lib/types";
 
 interface OnboardingBannerProps {
-  userRole: "GYM_OWNER" | "TRAINER" | "DIETICIAN" | "USER" | "ADMIN";
+  userRole: UserRole;
   userName?: string;
 }
 
@@ -208,7 +209,7 @@ export default function OnboardingBanner({
       <div className="flex gap-4">
         {/* Icon */}
         <div
-          className={`flex-shrink-0 h-12 w-12 rounded-xl ${colors.icon} flex items-center justify-center`}
+          className={`h-12 w-12 shrink-0 rounded-xl ${colors.icon} flex items-center justify-center`}
         >
           {config.icon}
         </div>
@@ -239,7 +240,7 @@ export default function OnboardingBanner({
               {config.steps.map((step, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div
-                    className={`h-5 w-5 rounded border-2 ${colors.checkboxBorder} ${colors.checkboxBg} flex items-center justify-center flex-shrink-0`}
+                    className={`h-5 w-5 shrink-0 rounded border-2 ${colors.checkboxBorder} ${colors.checkboxBg} flex items-center justify-center`}
                   >
                     <span
                       className={`text-xs font-semibold ${colors.textMuted}`}

@@ -6,6 +6,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { progressService } from "@/lib/api/progress";
+import { UserRole } from "@/lib/types";
 import { formatLocal } from "@/utils/format";
 import type {
   ClientProfile,
@@ -37,7 +38,7 @@ function formatDate(iso: string) {
 // ─── Page ──────────────────────────────────────────────────────────
 
 export default function TrainerClientsPage() {
-  const { user, isLoading, isAuthorized } = useRoleGuard("TRAINER");
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
 
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);

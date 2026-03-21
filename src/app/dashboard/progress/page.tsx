@@ -5,6 +5,7 @@ import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
 import {
   progressService,
   MealType,
@@ -183,7 +184,7 @@ type Tab = "overview" | "weight" | "meals" | "activities";
 // ─── Page ──────────────────────────────────────────────────────────
 
 export default function ProgressPage() {
-  const { user, isLoading, isAuthorized } = useRoleGuard("USER");
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.USER);
 
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(

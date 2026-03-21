@@ -2,60 +2,79 @@
 
 import { useState } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
+import { UserRole } from '@/lib/types';
+
+enum VerificationRequestStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+type VerificationRequest = {
+  id: number;
+  applicant: string;
+  email: string;
+  type: UserRole;
+  location: string;
+  appliedDate: string;
+  status: VerificationRequestStatus;
+  documents: string[];
+  rejectionReason?: string;
+};
 
 export default function AdminVerificationPage() {
   const [statusFilter, setStatusFilter] = useState('pending');
 
   // Mock data
-  const verifications = [
+  const verifications: VerificationRequest[] = [
     {
       id: 1,
       applicant: 'PowerHouse Gym',
       email: 'contact@powerhousegym.com',
-      type: 'GYM_OWNER',
+      type: UserRole.GYM_OWNER,
       location: 'Los Angeles, USA',
       appliedDate: '2024-02-10',
-      status: 'PENDING',
+      status: VerificationRequestStatus.PENDING,
       documents: ['Business Registration', 'Government ID', 'Facility Photos'],
     },
     {
       id: 2,
       applicant: 'Mike Chen',
       email: 'mike.chen@trainer.com',
-      type: 'TRAINER',
+      type: UserRole.TRAINER,
       location: 'Hong Kong',
       appliedDate: '2024-02-11',
-      status: 'PENDING',
+      status: VerificationRequestStatus.PENDING,
       documents: ['NASM-CPT Certificate', 'Government ID', 'Insurance'],
     },
     {
       id: 3,
       applicant: 'Dr. Aisha Patel',
       email: 'aisha@nutrition.com',
-      type: 'DIETICIAN',
+      type: UserRole.DIETICIAN,
       location: 'Mumbai, India',
       appliedDate: '2024-02-12',
-      status: 'PENDING',
+      status: VerificationRequestStatus.PENDING,
       documents: ['RD License', 'Government ID', 'University Degree'],
     },
     {
       id: 4,
       applicant: 'FitCore Studio',
       email: 'info@fitcore.uk',
-      type: 'GYM_OWNER',
+      type: UserRole.GYM_OWNER,
       location: 'London, UK',
       appliedDate: '2024-02-09',
-      status: 'APPROVED',
+      status: VerificationRequestStatus.APPROVED,
       documents: ['Business Registration', 'Government ID', 'Facility Photos'],
     },
     {
       id: 5,
       applicant: 'John Smith',
       email: 'john@email.com',
-      type: 'TRAINER',
+      type: UserRole.TRAINER,
       location: 'Sydney, Australia',
       appliedDate: '2024-02-08',
-      status: 'REJECTED',
+      status: VerificationRequestStatus.REJECTED,
       documents: ['Incomplete Certificate', 'Government ID'],
       rejectionReason: 'Certification documents incomplete',
     },
@@ -74,24 +93,24 @@ export default function AdminVerificationPage() {
     }
   };
 
-  const getTypeBadgeColor = (type: string) => {
+  const getTypeBadgeColor = (type: UserRole) => {
     switch (type) {
-      case 'GYM_OWNER':
+      case UserRole.GYM_OWNER:
         return 'bg-accent-blue-100 text-accent-blue-700';
-      case 'TRAINER':
+      case UserRole.TRAINER:
         return 'bg-accent-yellow-100 text-accent-yellow-700';
-      case 'DIETICIAN':
+      case UserRole.DIETICIAN:
         return 'bg-accent-purple-100 text-accent-purple-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
   };
 
-  const getStatusBadgeColor = (status: string) => {
+  const getStatusBadgeColor = (status: VerificationRequestStatus) => {
     switch (status) {
-      case 'APPROVED':
+      case VerificationRequestStatus.APPROVED:
         return 'bg-primary-100 text-primary-700';
-      case 'REJECTED':
+      case VerificationRequestStatus.REJECTED:
         return 'bg-red-100 text-red-700';
       default:
         return 'bg-accent-yellow-100 text-accent-yellow-700';
@@ -143,7 +162,7 @@ export default function AdminVerificationPage() {
                     : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
                 }`}
               >
-                Pending ({verifications.filter(v => v.status === 'PENDING').length})
+                Pending ({verifications.filter(v => v.status === VerificationRequestStatus.PENDING).length})
               </button>
               <button
                 onClick={() => setStatusFilter('approved')}
@@ -205,7 +224,7 @@ export default function AdminVerificationPage() {
                 </div>
 
                 {/* Rejection Reason */}
-                {verification.status === 'REJECTED' && verification.rejectionReason && (
+                {verification.status === VerificationRequestStatus.REJECTED && verification.rejectionReason && (
                   <div className="mb-4 p-4 bg-red-50 border border-red-200">
                     <p className="text-sm font-semibold text-red-700 mb-1">Rejection Reason:</p>
                     <p className="text-sm text-red-600">{verification.rejectionReason}</p>
@@ -213,7 +232,7 @@ export default function AdminVerificationPage() {
                 )}
 
                 {/* Actions */}
-                {verification.status === 'PENDING' && (
+                {verification.status === VerificationRequestStatus.PENDING && (
                   <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => handleApprove(verification.id, verification.applicant)}

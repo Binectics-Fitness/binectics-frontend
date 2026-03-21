@@ -3,11 +3,31 @@
 import { useState } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 
+enum AdminSubscriptionStatus {
+  ACTIVE = 'ACTIVE',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED',
+  PENDING_PAYMENT = 'PENDING_PAYMENT',
+}
+
+type AdminSubscription = {
+  id: number;
+  user: string;
+  userEmail: string;
+  provider: string;
+  plan: string;
+  amount: string;
+  status: AdminSubscriptionStatus;
+  startDate: string;
+  nextBilling: string;
+  duration: string;
+};
+
 export default function AdminSubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   // Mock data
-  const subscriptions = [
+  const subscriptions: AdminSubscription[] = [
     {
       id: 1,
       user: 'John Smith',
@@ -15,7 +35,7 @@ export default function AdminSubscriptionsPage() {
       provider: 'PowerHouse Gym',
       plan: 'Premium Monthly',
       amount: '$49.99',
-      status: 'ACTIVE',
+      status: AdminSubscriptionStatus.ACTIVE,
       startDate: '2024-01-15',
       nextBilling: '2024-03-15',
       duration: '1 month',
@@ -27,7 +47,7 @@ export default function AdminSubscriptionsPage() {
       provider: 'Mike Chen - Personal Training',
       plan: 'Elite Training Package',
       amount: '$199.99',
-      status: 'ACTIVE',
+      status: AdminSubscriptionStatus.ACTIVE,
       startDate: '2024-02-01',
       nextBilling: '2024-03-01',
       duration: '1 month',
@@ -39,7 +59,7 @@ export default function AdminSubscriptionsPage() {
       provider: 'Dr. Maria Garcia - Nutrition',
       plan: 'Weight Loss Plan',
       amount: '$89.99',
-      status: 'CANCELLED',
+      status: AdminSubscriptionStatus.CANCELLED,
       startDate: '2023-12-10',
       nextBilling: '-',
       duration: '3 months',
@@ -51,7 +71,7 @@ export default function AdminSubscriptionsPage() {
       provider: 'FitCore Studio',
       plan: 'Annual Membership',
       amount: '$499.99',
-      status: 'ACTIVE',
+      status: AdminSubscriptionStatus.ACTIVE,
       startDate: '2023-06-01',
       nextBilling: '2024-06-01',
       duration: '12 months',
@@ -63,7 +83,7 @@ export default function AdminSubscriptionsPage() {
       provider: 'PowerHouse Gym',
       plan: 'Day Pass',
       amount: '$15.00',
-      status: 'EXPIRED',
+      status: AdminSubscriptionStatus.EXPIRED,
       startDate: '2024-02-01',
       nextBilling: '-',
       duration: '1 day',
@@ -75,22 +95,22 @@ export default function AdminSubscriptionsPage() {
       provider: 'Mike Chen - Personal Training',
       plan: 'Basic Training',
       amount: '$99.99',
-      status: 'PENDING_PAYMENT',
+      status: AdminSubscriptionStatus.PENDING_PAYMENT,
       startDate: '2024-02-10',
       nextBilling: '2024-03-10',
       duration: '1 month',
     },
   ];
 
-  const getStatusBadgeColor = (status: string) => {
+  const getStatusBadgeColor = (status: AdminSubscriptionStatus) => {
     switch (status) {
-      case 'ACTIVE':
+      case AdminSubscriptionStatus.ACTIVE:
         return 'bg-primary-100 text-primary-700';
-      case 'CANCELLED':
+      case AdminSubscriptionStatus.CANCELLED:
         return 'bg-gray-100 text-gray-700';
-      case 'EXPIRED':
+      case AdminSubscriptionStatus.EXPIRED:
         return 'bg-red-100 text-red-700';
-      case 'PENDING_PAYMENT':
+      case AdminSubscriptionStatus.PENDING_PAYMENT:
         return 'bg-accent-yellow-100 text-accent-yellow-700';
       default:
         return 'bg-gray-100 text-gray-700';
@@ -260,7 +280,7 @@ export default function AdminSubscriptionsPage() {
                         <button className="text-red-500 hover:text-red-700 font-semibold">
                           View
                         </button>
-                        {sub.status === 'ACTIVE' && (
+                        {sub.status === AdminSubscriptionStatus.ACTIVE && (
                           <button
                             onClick={() => handleCancelSubscription(sub.id, sub.user)}
                             className="text-foreground/60 hover:text-red-600 font-semibold"

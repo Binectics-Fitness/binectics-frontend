@@ -6,6 +6,7 @@ import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
 import {
   progressService,
   type DashboardStats,
@@ -20,7 +21,7 @@ function getClientName(profile: ClientProfile): string {
 }
 
 export default function TrainerDashboard() {
-  const { user, isLoading, isAuthorized } = useRoleGuard("TRAINER");
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null,
   );
@@ -396,7 +397,7 @@ export default function TrainerDashboard() {
                     key={index}
                     className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-2xl flex-shrink-0">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-2xl">
                       {session.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -407,7 +408,7 @@ export default function TrainerDashboard() {
                         {session.type} • {session.duration}
                       </p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <p className="text-sm font-medium text-foreground">
                         {session.time}
                       </p>
@@ -457,7 +458,7 @@ export default function TrainerDashboard() {
                         className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0"
                       >
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-xl flex-shrink-0">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xl">
                             {typeof profile.client_id === "object" &&
                             profile.client_id.profile_picture ? (
                               <img
@@ -489,7 +490,7 @@ export default function TrainerDashboard() {
                               Joined {joined}
                             </p>
                           </div>
-                          <span className="bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 flex-shrink-0">
+                          <span className="bg-primary-100 shrink-0 px-2 py-1 text-xs font-semibold text-primary-700">
                             {goal}
                           </span>
                         </div>

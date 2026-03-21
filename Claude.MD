@@ -1,5 +1,14 @@
 # Binectics - Claude Development Log
 
+## Enum Rule
+
+**Use enums for all domain constants instead of raw string values.**
+
+- Roles, statuses, booking states, review target types, provider roles, and similar fixed values must come from enums
+- Reuse existing shared enums before adding new ones
+- Avoid inline string unions and raw string comparisons when an enum exists
+- When adding a new API field with constrained values, create or extend a shared enum first
+
 ## 🚫 ABSOLUTE RULE: FRONTEND-ONLY PROJECT - NO EXCEPTIONS
 
 **STOP: THIS IS A FRONTEND-ONLY PROJECT. BACKEND CODE WILL BE REJECTED.**

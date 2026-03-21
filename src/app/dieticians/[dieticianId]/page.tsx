@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { ReviewTargetType } from "@/lib/api/reviews";
 
 export default function DieticianProfilePage() {
   const params = useParams();
@@ -452,7 +453,7 @@ export default function DieticianProfilePage() {
             </div>
 
             <ProviderReviewsSection
-              targetType="DIETICIAN"
+              targetType={ReviewTargetType.DIETICIAN}
               targetId={String(dieticianId)}
               title="Client Reviews"
               accentClassName="bg-accent-purple-100 text-accent-purple-700"

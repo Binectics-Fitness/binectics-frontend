@@ -4,16 +4,10 @@
  */
 
 import { apiClient } from "./client";
-import type { ApiResponse } from "@/lib/types";
+import { AccountType, type ApiResponse } from "@/lib/types";
 
 // ==================== ENUMS ====================
-
-export enum AccountType {
-  GYM_OWNER = "gym_owner",
-  PERSONAL_TRAINER = "personal_trainer",
-  DIETICIAN = "dietician",
-  FITNESS_MEMBER = "fitness_member",
-}
+export { AccountType };
 
 export enum TeamPermission {
   VIEW_MEMBERS = "team:view_members",

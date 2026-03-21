@@ -6,6 +6,7 @@ import DieticianSidebar from "@/components/DieticianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
 import {
   consultationsService,
   ConsultationBookingStatus,
@@ -46,7 +47,9 @@ function computeProgress(
 }
 
 export default function DieticianDashboard() {
-  const { user, isLoading, isAuthorized } = useRoleGuard("DIETICIAN");
+  const { user, isLoading, isAuthorized } = useRoleGuard(
+    UserRole.DIETICIAN,
+  );
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null,
   );
@@ -228,7 +231,8 @@ export default function DieticianDashboard() {
 
     // Map booking status to display status
     const displayStatus =
-      booking.status === "COMPLETED" || booking.status === "NO_SHOW"
+      booking.status === ConsultationBookingStatus.COMPLETED ||
+      booking.status === ConsultationBookingStatus.NO_SHOW
         ? "completed"
         : "upcoming";
 

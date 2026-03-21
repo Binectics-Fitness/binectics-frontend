@@ -1,5 +1,28 @@
 # AI Development Rules for Binectics Frontend
 
+## Enum Usage
+
+**ABSOLUTE RULE: USE ENUMS FOR DOMAIN VALUES, NOT RAW STRING LITERALS**
+
+- Use enums for roles, statuses, target types, provider types, and other fixed-value API fields
+- Do not create inline string unions when a shared enum already exists
+- Do not compare API values with raw strings like `"ADMIN"`, `"PENDING"`, or `"DIETICIAN"` when an enum is available
+- If a shared enum does not exist yet, create one in the relevant shared API/types module and reuse it everywhere
+
+✅ Correct:
+```typescript
+if (user.role === UserRole.ADMIN) {
+   router.push('/admin');
+}
+```
+
+❌ Wrong:
+```typescript
+if (user.role === 'ADMIN') {
+   router.push('/admin');
+}
+```
+
 ## Database Model Naming Convention
 
 **ABSOLUTE RULE: ALL API RESPONSE PROPERTIES MUST USE SNAKE_CASE**

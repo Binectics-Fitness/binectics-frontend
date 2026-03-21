@@ -3,22 +3,39 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/AdminSidebar';
+import { UserRole } from '@/lib/types';
+
+enum AdminUserStatus {
+  ACTIVE = 'Active',
+  SUSPENDED = 'Suspended',
+}
+
+type AdminUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: UserRole;
+  country: string;
+  status: AdminUserStatus;
+  signupDate: string;
+  subscriptions: number;
+};
 
 export default function AdminUsersPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all');
 
   // Mock data
-  const users = [
-    { id: 1, name: 'John Smith', email: 'john@example.com', role: 'USER', country: 'United States', status: 'Active', signupDate: '2024-01-15', subscriptions: 2 },
-    { id: 2, name: 'Sarah Johnson', email: 'sarah@example.com', role: 'USER', country: 'United Kingdom', status: 'Active', signupDate: '2024-01-18', subscriptions: 1 },
-    { id: 3, name: 'Mike Chen', email: 'mike@example.com', role: 'TRAINER', country: 'Hong Kong', status: 'Active', signupDate: '2024-01-20', subscriptions: 0 },
-    { id: 4, name: 'Emily Davis', email: 'emily@example.com', role: 'USER', country: 'Australia', status: 'Suspended', signupDate: '2024-01-22', subscriptions: 3 },
-    { id: 5, name: 'David Kim', email: 'david@example.com', role: 'GYM_OWNER', country: 'South Korea', status: 'Active', signupDate: '2024-01-25', subscriptions: 0 },
-    { id: 6, name: 'Maria Garcia', email: 'maria@example.com', role: 'DIETICIAN', country: 'Spain', status: 'Active', signupDate: '2024-01-28', subscriptions: 0 },
-    { id: 7, name: 'James Wilson', email: 'james@example.com', role: 'USER', country: 'Canada', status: 'Active', signupDate: '2024-02-01', subscriptions: 1 },
-    { id: 8, name: 'Lisa Anderson', email: 'lisa@example.com', role: 'TRAINER', country: 'United States', status: 'Active', signupDate: '2024-02-03', subscriptions: 0 },
+  const users: AdminUser[] = [
+    { id: 1, name: 'John Smith', email: 'john@example.com', role: UserRole.USER, country: 'United States', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-15', subscriptions: 2 },
+    { id: 2, name: 'Sarah Johnson', email: 'sarah@example.com', role: UserRole.USER, country: 'United Kingdom', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-18', subscriptions: 1 },
+    { id: 3, name: 'Mike Chen', email: 'mike@example.com', role: UserRole.TRAINER, country: 'Hong Kong', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-20', subscriptions: 0 },
+    { id: 4, name: 'Emily Davis', email: 'emily@example.com', role: UserRole.USER, country: 'Australia', status: AdminUserStatus.SUSPENDED, signupDate: '2024-01-22', subscriptions: 3 },
+    { id: 5, name: 'David Kim', email: 'david@example.com', role: UserRole.GYM_OWNER, country: 'South Korea', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-25', subscriptions: 0 },
+    { id: 6, name: 'Maria Garcia', email: 'maria@example.com', role: UserRole.DIETICIAN, country: 'Spain', status: AdminUserStatus.ACTIVE, signupDate: '2024-01-28', subscriptions: 0 },
+    { id: 7, name: 'James Wilson', email: 'james@example.com', role: UserRole.USER, country: 'Canada', status: AdminUserStatus.ACTIVE, signupDate: '2024-02-01', subscriptions: 1 },
+    { id: 8, name: 'Lisa Anderson', email: 'lisa@example.com', role: UserRole.TRAINER, country: 'United States', status: AdminUserStatus.ACTIVE, signupDate: '2024-02-03', subscriptions: 0 },
   ];
 
   const handleSuspendUser = (userId: number, userName: string) => {
@@ -37,13 +54,13 @@ export default function AdminUsersPage() {
     router.push(`/admin/users/${userId}`);
   };
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
-      case 'GYM_OWNER':
+      case UserRole.GYM_OWNER:
         return 'bg-accent-blue-100 text-accent-blue-700';
-      case 'TRAINER':
+      case UserRole.TRAINER:
         return 'bg-accent-yellow-100 text-accent-yellow-700';
-      case 'DIETICIAN':
+      case UserRole.DIETICIAN:
         return 'bg-accent-purple-100 text-accent-purple-700';
       default:
         return 'bg-gray-100 text-gray-700';
@@ -85,14 +102,14 @@ export default function AdminUsersPage() {
                 </label>
                 <select
                   value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
+                  onChange={(e) => setRoleFilter(e.target.value as 'all' | UserRole)}
                   className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="all">All Roles</option>
-                  <option value="USER">Users</option>
-                  <option value="GYM_OWNER">Gym Owners</option>
-                  <option value="TRAINER">Trainers</option>
-                  <option value="DIETICIAN">Dieticians</option>
+                  <option value={UserRole.USER}>Users</option>
+                  <option value={UserRole.GYM_OWNER}>Gym Owners</option>
+                  <option value={UserRole.TRAINER}>Trainers</option>
+                  <option value={UserRole.DIETICIAN}>Dieticians</option>
                 </select>
               </div>
             </div>
@@ -165,7 +182,7 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 text-xs font-semibold ${
-                        user.status === 'Active' ? 'bg-primary-100 text-primary-700' : 'bg-red-100 text-red-700'
+                        user.status === AdminUserStatus.ACTIVE ? 'bg-primary-100 text-primary-700' : 'bg-red-100 text-red-700'
                       }`}>
                         {user.status}
                       </span>
@@ -184,7 +201,7 @@ export default function AdminUsersPage() {
                         >
                           View
                         </button>
-                        {user.status === 'Active' ? (
+                        {user.status === AdminUserStatus.ACTIVE ? (
                           <button
                             onClick={() => handleSuspendUser(user.id, user.name)}
                             className="text-foreground/60 hover:text-red-600 font-semibold"

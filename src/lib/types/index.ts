@@ -6,6 +6,12 @@ export enum UserRole {
   DIETICIAN = "DIETICIAN",
   ADMIN = "ADMIN",
 }
+export enum AccountType {
+  GYM_OWNER = "gym_owner",
+  PERSONAL_TRAINER = "personal_trainer",
+  DIETICIAN = "dietician",
+  FITNESS_MEMBER = "fitness_member",
+}
 export enum VerificationStatus {
   PENDING = "PENDING",
   VERIFIED = "VERIFIED",
@@ -56,7 +62,7 @@ export interface RegisterRequest {
   password: string;
   first_name: string;
   last_name: string;
-  role: UserRole;
+  role: AccountType;
   accept_tos: boolean;
   phone?: string;
   phone_number?: string;

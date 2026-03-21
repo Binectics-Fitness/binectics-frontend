@@ -4,9 +4,10 @@ import AdminSidebar from "@/components/AdminSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import Link from "next/link";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
 
 export default function AdminDashboardPage() {
-  const { user, isLoading, isAuthorized } = useRoleGuard("ADMIN");
+  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.ADMIN);
 
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;

@@ -114,7 +114,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           {/* Sidebar Navigation */}
-          <div className="w-64 flex-shrink-0">
+          <div className="w-64 shrink-0">
             <nav className="space-y-1">
               {settingsTabs.map((tab) => {
                 const isActive = pathname === tab.href;
