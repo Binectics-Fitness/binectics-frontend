@@ -13,7 +13,7 @@ export default function Page() {
     <div className="flex min-h-screen bg-background">
       <TrainerSidebar />
 
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
           <div className="mb-3 flex items-center gap-2">
             <h1 className="font-display text-2xl font-black text-foreground">

@@ -82,9 +82,9 @@ export default function PressPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">{/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Press & Media
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -94,10 +94,10 @@ export default function PressPage() {
       </section>
 
       {/* As Seen In */}
-      <section className="bg-neutral-100 py-16">
+      <section className="bg-neutral-100 py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-foreground-tertiary mb-8">AS SEEN IN</p>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-8 items-center justify-items-center">
             {mediaLogos.map((media, index) => (
               <div
                 key={index}
@@ -113,7 +113,7 @@ export default function PressPage() {
       </section>
 
       {/* Press Releases */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-black text-foreground mb-12 sm:text-4xl">
             Latest Press Releases
@@ -152,7 +152,7 @@ export default function PressPage() {
       </section>
 
       {/* Press Kit */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">

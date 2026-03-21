@@ -5,6 +5,8 @@ import GymOwnerSidebar from '@/components/GymOwnerSidebar';
 import QRCode from 'qrcode';
 import { useAuth } from '@/contexts/AuthContext';
 
+const HOURLY_CHECK_INS = [8, 10, 6, 4, 3, 5, 9, 12, 16, 14, 11, 13, 15, 12, 10, 9, 11, 17, 19, 18, 14, 10, 7, 5];
+
 export default function GymOwnerCheckInsPage() {
   const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState('today');
@@ -56,7 +58,7 @@ export default function GymOwnerCheckInsPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -67,7 +69,7 @@ export default function GymOwnerCheckInsPage() {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-card p-6">
-              <p className="text-sm font-medium text-foreground/60">Today's Check-ins</p>
+              <p className="text-sm font-medium text-foreground/60">Today&apos;s Check-ins</p>
               <p className="text-3xl font-black text-foreground mt-2">87</p>
               <p className="text-sm text-primary-500 mt-2">+12% from yesterday</p>
             </div>
@@ -176,7 +178,7 @@ export default function GymOwnerCheckInsPage() {
             <div className="grid grid-cols-12 gap-2 mb-4">
               {Array.from({ length: 24 }, (_, i) => {
                 const hour = i;
-                const checkIns = Math.floor(Math.random() * 20);
+                const checkIns = HOURLY_CHECK_INS[i];
                 const height = Math.max(20, (checkIns / 20) * 100);
                 return (
                   <div key={i} className="flex flex-col items-center gap-1">

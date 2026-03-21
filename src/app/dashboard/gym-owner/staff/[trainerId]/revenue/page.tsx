@@ -39,7 +39,7 @@ export default function TrainerRevenuePage() {
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-5xl mx-auto">
           <button
             onClick={() => router.push(`/dashboard/gym-owner/staff/${trainerId}`)}
@@ -102,7 +102,7 @@ export default function TrainerRevenuePage() {
 
             <div className="mb-6">
               <label className="block text-sm font-semibold text-foreground mb-3">
-                Trainer's Share: {revenueShare}%
+                Trainer&apos;s Share: {revenueShare}%
               </label>
               <input
                 type="range"
@@ -161,7 +161,7 @@ export default function TrainerRevenuePage() {
                 <div>
                   <p className="font-semibold text-yellow-800">Important</p>
                   <p className="text-sm text-yellow-700 mt-1">
-                    Changing the revenue split will affect the trainer's earnings. Make sure to communicate this change with the trainer before implementing it.
+                    Changing the revenue split will affect the trainer&apos;s earnings. Make sure to communicate this change with the trainer before implementing it.
                   </p>
                 </div>
               </div>

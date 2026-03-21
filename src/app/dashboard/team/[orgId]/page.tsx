@@ -298,7 +298,7 @@ export default function OrgDetailPage() {
     return (
       <div className="flex min-h-screen bg-background">
         <DashboardSidebar />
-        <main className="flex-1 flex items-center justify-center ml-64">
+        <main className="md:ml-64 flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
         </main>
       </div>
@@ -309,7 +309,7 @@ export default function OrgDetailPage() {
     return (
       <div className="flex min-h-screen bg-background">
         <DashboardSidebar />
-        <main className="flex-1 p-8 ml-64">
+        <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
           <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
             {error ?? "Organization not found."}
           </div>
@@ -327,9 +327,9 @@ export default function OrgDetailPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar />
-      <main className="flex-1 p-8 ml-64">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Breadcrumb */}
-        <div className="mb-6 flex items-center gap-2 text-sm text-foreground-secondary">
+        <div className="mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm text-foreground-secondary">
           <Link
             href="/dashboard/team"
             className="hover:text-foreground transition-colors"
@@ -341,13 +341,13 @@ export default function OrgDetailPage() {
         </div>
 
         {/* Org Header */}
-        <div className="mb-8 flex items-start justify-between">
-          <div className="flex items-center gap-4">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-500 text-2xl font-black text-foreground">
               {org.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-3xl font-black text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground">
                 {org.name}
               </h1>
               {org.description && (
@@ -359,7 +359,7 @@ export default function OrgDetailPage() {
           </div>
           <button
             onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
+            className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors whitespace-nowrap"
           >
             <svg
               className="h-4 w-4"
@@ -379,7 +379,7 @@ export default function OrgDetailPage() {
         </div>
 
         {/* Stats bar */}
-        <div className="mb-8 grid grid-cols-3 gap-4">
+        <div className="mb-6 sm:mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="rounded-xl border border-neutral-200 bg-white p-4">
             <p className="text-2xl font-black text-foreground">
               {members.filter((m) => m.status === MemberStatus.ACTIVE).length}

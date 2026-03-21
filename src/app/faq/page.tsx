@@ -168,9 +168,9 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen bg-background-secondary">
       {/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Frequently Asked Questions
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -188,10 +188,10 @@ export default function FAQPage() {
       </section>
 
       {/* FAQ Categories */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           {categories.map((category, categoryIndex) => (
-            <div key={categoryIndex} className="mb-16 last:mb-0">
+            <div key={categoryIndex} className="mb-12 sm:mb-16 last:mb-0">
               <h2 className="mb-8 font-display text-2xl font-black text-foreground sm:text-3xl">
                 {category.name}
               </h2>
@@ -207,7 +207,7 @@ export default function FAQPage() {
       </section>
 
       {/* Still Have Questions */}
-      <section className="bg-background py-16 sm:py-20">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-primary-500 p-8 sm:p-12 text-center shadow-2xl">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20">

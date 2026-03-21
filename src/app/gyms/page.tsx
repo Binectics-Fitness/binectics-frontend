@@ -10,6 +10,7 @@ export default function GymsPage() {
 
   const gyms = [
     {
+      id: 1,
       name: 'FitZone Downtown',
       city: 'New York',
       country: 'United States',
@@ -24,6 +25,7 @@ export default function GymsPage() {
       distance: '0.5 mi',
     },
     {
+      id: 2,
       name: 'Strength & Power Gym',
       city: 'Los Angeles',
       country: 'United States',
@@ -38,6 +40,7 @@ export default function GymsPage() {
       distance: '1.2 mi',
     },
     {
+      id: 3,
       name: 'Yoga & Wellness Studio',
       city: 'San Francisco',
       country: 'United States',
@@ -52,6 +55,7 @@ export default function GymsPage() {
       distance: '2.1 mi',
     },
     {
+      id: 4,
       name: 'Premier Fitness London',
       city: 'London',
       country: 'United Kingdom',
@@ -66,6 +70,7 @@ export default function GymsPage() {
       distance: '0.8 mi',
     },
     {
+      id: 5,
       name: 'Berlin Athletic Club',
       city: 'Berlin',
       country: 'Germany',
@@ -80,6 +85,7 @@ export default function GymsPage() {
       distance: '1.5 mi',
     },
     {
+      id: 6,
       name: 'Tokyo Fitness Hub',
       city: 'Tokyo',
       country: 'Japan',
@@ -126,13 +132,13 @@ export default function GymsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-background-secondary py-16">
+      <section className="bg-background-secondary py-10 sm:py-16">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h1 className="font-display text-4xl sm:text-5xl font-black text-foreground mb-4">
+            <h1 className="mb-4 font-display text-3xl font-black text-foreground sm:text-5xl">
               Find Your Perfect Gym
             </h1>
-            <p className="text-lg text-foreground-secondary">
+            <p className="text-base text-foreground-secondary sm:text-lg">
               Access 500+ gyms worldwide with your Binectics membership
             </p>
           </div>
@@ -231,10 +237,10 @@ export default function GymsPage() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredGyms.map((gym, index) => (
+              {filteredGyms.map((gym) => (
                 <div
-                  key={index}
-                  className="rounded-lg border-2 border-neutral-300 bg-background overflow-hidden transition-all hover:border-primary-500 hover:shadow-lg"
+                  key={gym.id}
+                  className="flex h-full flex-col overflow-hidden rounded-lg border-2 border-neutral-300 bg-background transition-all hover:border-primary-500 hover:shadow-lg"
                 >
                   {/* Image Placeholder */}
                   <div className="h-48 bg-neutral-100 flex items-center justify-center text-6xl">
@@ -242,8 +248,8 @@ export default function GymsPage() {
                   </div>
 
                   {/* Content */}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-3">
+                  <div className="flex flex-1 flex-col p-4 sm:p-6">
+                    <div className="mb-3 flex items-start justify-between gap-3">
                       <div>
                         <h3 className="font-display text-xl font-bold text-foreground mb-1">
                           {gym.name}
@@ -275,7 +281,7 @@ export default function GymsPage() {
                     </p>
 
                     {/* Hours & Distance */}
-                    <div className="flex items-center gap-4 mb-4 text-sm text-foreground-secondary">
+                    <div className="mb-4 flex flex-col gap-2 text-sm text-foreground-secondary sm:flex-row sm:items-center sm:gap-4">
                       <span className="flex items-center gap-1">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -309,8 +315,8 @@ export default function GymsPage() {
 
                     {/* CTA */}
                     <Link
-                      href={`/gyms/${gym.countryCode}/${gym.name.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="block w-full rounded-lg bg-primary-500 px-4 py-3 text-center font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
+                      href={`/gyms/${gym.id}`}
+                      className="mt-auto block w-full rounded-lg bg-primary-500 px-4 py-3 text-center font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
                     >
                       View Details
                     </Link>

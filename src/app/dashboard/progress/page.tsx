@@ -451,14 +451,14 @@ export default function ProgressPage() {
     <div className="flex min-h-screen bg-neutral-50">
       <DashboardSidebar />
 
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* ── Header ─────────────────────────────────────── */}
-        <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div className="mb-6 sm:mb-8 flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="font-display text-3xl font-black text-foreground">
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
               My Progress
             </h1>
-            <p className="mt-1 text-foreground-secondary">
+            <p className="mt-1 text-xs sm:text-sm text-foreground-secondary">
               Track your weight, meals, and activities over time.
             </p>
           </div>
@@ -494,13 +494,13 @@ export default function ProgressPage() {
         </div>
 
         {selectedProfessional && (
-          <div className="mb-6 rounded-2xl bg-white px-5 py-4 shadow-sm">
+          <div className="mb-6 rounded-2xl bg-white px-4 sm:px-5 py-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-foreground">
+                <p className="text-xs sm:text-sm font-semibold text-foreground">
                   Book with {selectedProviderName}
                 </p>
-                <p className="text-sm text-foreground-secondary">
+                <p className="text-xs sm:text-sm text-foreground-secondary">
                   Choose a date and time from this provider&apos;s consultation
                   availability.
                 </p>
@@ -530,7 +530,7 @@ export default function ProgressPage() {
                 return (
                   <div
                     key={req._id}
-                    className="flex items-center justify-between rounded-xl bg-white px-5 py-4 shadow-sm"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-xl bg-white px-4 sm:px-5 py-4 shadow-sm gap-3"
                   >
                     <div>
                       <p className="text-sm font-medium text-foreground">
@@ -547,18 +547,18 @@ export default function ProgressPage() {
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => handleRespondToRequest(req._id, false)}
                         disabled={respondingTo === req._id}
-                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-foreground-secondary hover:bg-neutral-100 disabled:opacity-50"
+                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-foreground-secondary hover:bg-neutral-100 disabled:opacity-50 flex-1 sm:flex-none"
                       >
                         Decline
                       </button>
                       <button
                         onClick={() => handleRespondToRequest(req._id, true)}
                         disabled={respondingTo === req._id}
-                        className="rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-primary-600 disabled:opacity-50"
+                        className="rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-primary-600 disabled:opacity-50 flex-1 sm:flex-none"
                       >
                         Accept
                       </button>

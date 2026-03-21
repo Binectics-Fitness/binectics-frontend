@@ -106,9 +106,9 @@ export default function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-background-secondary">
       {/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             How Binectics Works
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -119,14 +119,14 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Main Steps */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl lg:text-5xl">
               Get Started in 4 Simple Steps
             </h2>
           </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => (
               <div
                 key={index}
@@ -155,7 +155,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* User Journey */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl lg:text-5xl">
@@ -184,7 +184,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Professional Journeys */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl lg:text-5xl">
@@ -194,11 +194,11 @@ export default function HowItWorksPage() {
               Everything you need to grow your business
             </p>
           </div>
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-3">
             {professionalJourney.map((professional, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-8 shadow-card"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card"
               >
                 <h3 className={`mb-6 font-display text-2xl font-black text-foreground`}>
                   {professional.role}
@@ -207,7 +207,7 @@ export default function HowItWorksPage() {
                   {professional.steps.map((step, stepIndex) => (
                     <li key={stepIndex} className="flex items-start gap-3">
                       <svg
-                        className={`h-6 w-6 flex-shrink-0 text-${professional.color}-500`}
+                        className={`h-6 w-6 shrink-0 text-${professional.color}-500`}
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -230,7 +230,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Technology Section */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
@@ -277,7 +277,7 @@ export default function HowItWorksPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-3xl bg-gradient-to-br from-primary-500 to-accent-blue-500 p-12 text-center shadow-2xl">
+            <div className="rounded-3xl bg-gradient-to-br from-primary-500 to-accent-blue-500 p-8 sm:p-12 text-center shadow-2xl">
               <div className="mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-3xl bg-white/20 backdrop-blur">
                 <svg className="h-20 w-20 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />

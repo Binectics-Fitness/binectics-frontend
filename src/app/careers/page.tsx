@@ -124,9 +124,9 @@ export default function CareersPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">{/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Join the Team Building the Future of Fitness
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -137,7 +137,7 @@ export default function CareersPage() {
       </section>
 
       {/* Values */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -163,7 +163,7 @@ export default function CareersPage() {
       </section>
 
       {/* Benefits */}
-      <section className="bg-background py-20 sm:py-28">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -176,7 +176,7 @@ export default function CareersPage() {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {benefits.map((benefit, index) => (
               <div key={index} className="flex items-start gap-4">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
                   {benefit.icon}
                 </div>
                 <div>
@@ -194,7 +194,7 @@ export default function CareersPage() {
       </section>
 
       {/* Open Positions */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">

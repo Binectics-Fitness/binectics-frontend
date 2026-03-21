@@ -1,12 +1,10 @@
 'use client';
-import { useState } from 'react';
 import GymOwnerSidebar from '@/components/GymOwnerSidebar';
 export default function GymOwnerAnalyticsPage() {
-  const [period, setPeriod] = useState('month');
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-black text-foreground mb-8">Analytics</h1>
           <div className="grid grid-cols-3 gap-6 mb-8">

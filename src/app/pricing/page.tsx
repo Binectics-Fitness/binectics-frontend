@@ -155,9 +155,9 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-background-secondary">{/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Simple, transparent pricing
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
@@ -167,13 +167,13 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Toggle */}
-      <section className="bg-neutral-100 py-12">
+      <section className="bg-neutral-100 py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsAnnual(false)}
-                className={`text-base font-semibold transition-colors duration-200 min-h-[44px] px-2 ${
+                className={`text-base font-semibold transition-colors duration-200 min-h-11 px-2 ${
                   !isAnnual ? 'text-foreground' : 'text-foreground-secondary'
                 }`}
               >
@@ -196,7 +196,7 @@ export default function PricingPage() {
 
               <button
                 onClick={() => setIsAnnual(true)}
-                className={`text-base font-semibold transition-colors duration-200 min-h-[44px] px-2 ${
+                className={`text-base font-semibold transition-colors duration-200 min-h-11 px-2 ${
                   isAnnual ? 'text-foreground' : 'text-foreground-secondary'
                 }`}
               >
@@ -214,7 +214,7 @@ export default function PricingPage() {
       </section>
 
       {/* Member Plans */}
-      <section className="bg-neutral-100 py-16 sm:py-20">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -224,11 +224,11 @@ export default function PricingPage() {
               Access gyms, trainers, and dietitians worldwide
             </p>
           </div>
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid gap-6 sm:gap-8 lg:grid-cols-3">
             {memberPlans.map((plan, index) => (
               <div
                 key={index}
-                className={`relative rounded-2xl bg-background p-8 shadow-card transition-all duration-300 hover:shadow-xl ${
+                className={`relative rounded-2xl bg-background p-6 sm:p-8 shadow-card transition-all duration-300 hover:shadow-xl ${
                   plan.popular ? 'ring-2 ring-primary-500' : ''
                 }`}
               >
@@ -247,7 +247,7 @@ export default function PricingPage() {
                     {plan.description}
                   </p>
                   <div className="mt-6">
-                    <span className="text-5xl font-black text-foreground">
+                    <span className="text-4xl sm:text-5xl font-black text-foreground">
                       ${isAnnual ? plan.annualPrice : plan.monthlyPrice}
                     </span>
                     <span className="text-foreground-secondary">/month</span>
@@ -262,7 +262,7 @@ export default function PricingPage() {
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start gap-3">
                       <svg
-                        className="h-6 w-6 flex-shrink-0 text-primary-500"
+                        className="h-6 w-6 shrink-0 text-primary-500"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -295,7 +295,7 @@ export default function PricingPage() {
       </section>
 
       {/* Professional Plans */}
-      <section className="bg-background py-16 sm:py-20">
+      <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
@@ -305,7 +305,7 @@ export default function PricingPage() {
               Grow your business with powerful tools
             </p>
           </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-4">
             {professionalPlans.map((plan, index) => (
               <div
                 key={index}
@@ -338,7 +338,7 @@ export default function PricingPage() {
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start gap-2">
                       <svg
-                        className={`h-5 w-5 flex-shrink-0 text-${plan.color}-500`}
+                        className={`h-5 w-5 shrink-0 text-${plan.color}-500`}
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -367,7 +367,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="bg-neutral-100 py-16 sm:py-20">
+      <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">

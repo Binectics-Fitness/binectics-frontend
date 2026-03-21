@@ -80,19 +80,19 @@ export default function ExplorePage() {
     <div className="flex min-h-screen bg-neutral-50">
       <DashboardSidebar />
 
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-black text-foreground mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-2">
             Explore
           </h1>
-          <p className="text-foreground-secondary">
+          <p className="text-xs sm:text-sm text-foreground-secondary">
             Discover gyms, trainers, and dietitians worldwide
           </p>
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="relative max-w-2xl">
             <input
               type="text"
@@ -118,13 +118,13 @@ export default function ExplorePage() {
         </div>
 
         {/* Category Filters */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex gap-3 overflow-x-auto pb-2">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`flex-shrink-0 px-4 py-2 text-sm font-medium transition-colors ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors ${
                   selectedCategory === category.id
                     ? "bg-foreground text-background"
                     : "bg-background text-foreground-secondary hover:bg-neutral-200"
@@ -138,11 +138,11 @@ export default function ExplorePage() {
 
         {/* Results Grid */}
         <div>
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-foreground-secondary">
+          <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-xs sm:text-sm text-foreground-secondary">
               {filteredResults.length} results found
             </p>
-            <select className="border border-neutral-200 bg-background px-4 py-2 text-sm text-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20">
+            <select className="w-full sm:w-auto border border-neutral-200 bg-background px-3 sm:px-4 py-2 text-xs sm:text-sm text-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20">
               <option>Sort by: Recommended</option>
               <option>Sort by: Distance</option>
               <option>Sort by: Rating</option>
@@ -150,12 +150,12 @@ export default function ExplorePage() {
             </select>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredResults.map((item, index) => (
               <Link
                 key={index}
                 href={`/dashboard/${item.type}s/${index}`}
-                className="group bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl"
+                className="group bg-background p-4 sm:p-6 shadow-card transition-all duration-300 hover:shadow-xl h-full flex flex-col"
               >
                 {/* Type Badge */}
                 <div className="mb-4">
@@ -164,11 +164,11 @@ export default function ExplorePage() {
                   </span>
                 </div>
 
-                <h3 className="font-display text-lg font-bold text-foreground mb-2 group-hover:text-primary-500 transition-colors">
+                <h3 className="font-display text-base sm:text-lg font-bold text-foreground mb-2 group-hover:text-primary-500 transition-colors">
                   {item.name}
                 </h3>
 
-                <p className="text-sm text-foreground-secondary mb-3">
+                <p className="text-xs sm:text-sm text-foreground-secondary mb-3">
                   {"specialty" in item ? item.specialty : item.location}
                 </p>
 
@@ -187,13 +187,13 @@ export default function ExplorePage() {
                 )}
 
                 {"distance" in item && (
-                  <p className="text-sm text-foreground-tertiary mb-4">
+                  <p className="text-xs sm:text-sm text-foreground-tertiary mb-4">
                     {item.distance} away
                   </p>
                 )}
 
                 {/* Rating and Price */}
-                <div className="flex items-center justify-between">
+                <div className="mt-auto flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <svg
                       className="h-4 w-4 text-accent-yellow-500"
@@ -202,14 +202,14 @@ export default function ExplorePage() {
                     >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
-                    <span className="text-sm font-semibold text-foreground">
+                    <span className="text-xs sm:text-sm font-semibold text-foreground">
                       {item.rating}
                     </span>
                     <span className="text-xs text-foreground-tertiary">
                       ({item.reviews})
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">
+                  <span className="text-xs sm:text-sm font-semibold text-foreground">
                     {item.price}
                   </span>
                 </div>

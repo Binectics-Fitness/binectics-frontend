@@ -354,7 +354,7 @@ export default function DietitianProfilePage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Education */}
@@ -449,7 +449,7 @@ export default function DietitianProfilePage() {
                 {Object.entries(dietitian.availability).map(([days, hours]) => (
                   <div
                     key={days}
-                    className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                    className="flex flex-col gap-1 border-b border-gray-100 py-2 last:border-0 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <span className="font-semibold text-foreground">
                       {days}
@@ -471,7 +471,7 @@ export default function DietitianProfilePage() {
 
           {/* Right Column - Programs */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 shadow-card sticky top-4">
+            <div className="bg-white p-6 shadow-card lg:sticky lg:top-4">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Nutrition Programs
               </h2>
@@ -486,7 +486,7 @@ export default function DietitianProfilePage() {
                     }`}
                     onClick={() => setSelectedPlan(plan.id)}
                   >
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h3 className="font-bold text-foreground">
                           {plan.name}
@@ -495,7 +495,7 @@ export default function DietitianProfilePage() {
                           {plan.description}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="sm:text-right">
                         <p className="text-2xl font-black text-foreground">
                           ${plan.price}
                         </p>

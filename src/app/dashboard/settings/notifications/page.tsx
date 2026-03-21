@@ -56,18 +56,18 @@ export default function NotificationsSettingsPage() {
     <div className="space-y-6">
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-primary-50 border-2 border-primary-500 text-primary-900 rounded-lg p-4">
+        <div className="rounded-lg border-2 border-primary-500 bg-primary-50 p-4 text-primary-900">
           <p className="font-semibold">{successMessage}</p>
         </div>
       )}
 
       {/* Email Notifications */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
-          <h3 className="text-xl font-bold text-foreground">Email Notifications</h3>
+          <h3 className="text-lg font-bold text-foreground sm:text-xl">Email Notifications</h3>
         </div>
         <div className="space-y-4">
           <NotificationToggle
@@ -116,12 +116,12 @@ export default function NotificationsSettingsPage() {
       </div>
 
       {/* Push Notifications */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
-          <h3 className="text-xl font-bold text-foreground">Push Notifications</h3>
+          <h3 className="text-lg font-bold text-foreground sm:text-xl">Push Notifications</h3>
         </div>
         <div className="space-y-4">
           <NotificationToggle
@@ -158,12 +158,12 @@ export default function NotificationsSettingsPage() {
       </div>
 
       {/* SMS Notifications */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
-          <h3 className="text-xl font-bold text-foreground">SMS Notifications</h3>
+          <h3 className="text-lg font-bold text-foreground sm:text-xl">SMS Notifications</h3>
         </div>
         <div className="space-y-4">
           <NotificationToggle
@@ -185,7 +185,7 @@ export default function NotificationsSettingsPage() {
             onChange={() => handleToggle('smsUrgentOnly')}
           />
         </div>
-        <div className="mt-4 p-4 bg-accent-blue-50 border border-accent-blue-200 rounded-lg">
+        <div className="mt-4 rounded-lg border border-accent-blue-200 bg-accent-blue-50 p-4">
           <p className="text-sm text-foreground/70">
             <span className="font-semibold">Note:</span> Standard SMS rates may apply depending on your carrier.
           </p>
@@ -193,11 +193,11 @@ export default function NotificationsSettingsPage() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-stretch sm:justify-end">
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="px-8 py-3 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-lg bg-primary-500 px-8 py-3 font-semibold text-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {isSaving ? 'Saving...' : 'Save Preferences'}
         </button>
@@ -219,14 +219,14 @@ function NotificationToggle({
   onChange: () => void;
 }) {
   return (
-    <div className="flex items-start justify-between py-3 border-b border-gray-100 last:border-0">
-      <div className="flex-1">
+    <div className="flex flex-col gap-3 border-b border-gray-100 py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex-1 pr-2">
         <p className="font-semibold text-foreground">{label}</p>
         <p className="text-sm text-foreground/60 mt-1">{description}</p>
       </div>
       <button
         onClick={onChange}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 self-start cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:self-auto ${
           checked ? 'bg-primary-500' : 'bg-gray-200'
         }`}
       >

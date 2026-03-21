@@ -12,7 +12,6 @@ import { UserRole } from "@/lib/types";
 
 export default function GymOwnerDashboard() {
   const router = useRouter();
-  const [selectedPeriod, setSelectedPeriod] = useState("today");
   const { isLoading: authLoading, isAuthenticated: isAuthorized } =
     useRequireAuth();
   const { user } = useAuth();
@@ -397,7 +396,7 @@ export default function GymOwnerDashboard() {
       <GymOwnerSidebar />
 
       {/* Main Content */}
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -515,7 +514,7 @@ export default function GymOwnerDashboard() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-xl font-black text-foreground">
-                Today's Classes
+                Today&apos;s Classes
               </h2>
               <Link
                 href="/dashboard/gym-owner/classes"

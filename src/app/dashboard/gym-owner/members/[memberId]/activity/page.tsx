@@ -1,25 +1,25 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import GymOwnerSidebar from '@/components/GymOwnerSidebar';
 
+const CHECK_INS = Array.from({ length: 30 }, (_, i) => ({
+  id: i + 1,
+  date: `2024-01-${String(30 - i).padStart(2, '0')}`,
+  time: ['06:30 AM', '07:00 AM', '05:45 PM', '06:15 PM'][i % 4],
+  duration: `${60 + (i % 4) * 15} min`,
+}));
+
 export default function MemberActivityPage() {
-  const params = useParams();
   const router = useRouter();
-  const memberId = params.memberId as string;
 
   const member = { name: 'John Smith' };
-  const checkIns = Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: ['06:30 AM', '07:00 AM', '05:45 PM', '06:15 PM'][Math.floor(Math.random() * 4)],
-    duration: `${Math.floor(Math.random() * 60 + 60)} min`,
-  }));
+  const checkIns = CHECK_INS;
 
   return (
     <div className="flex min-h-screen bg-background">
       <GymOwnerSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           <button
             onClick={() => router.back()}

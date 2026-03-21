@@ -152,8 +152,8 @@ export default function ProfileSettingsPage() {
 
   const renderGymOwnerFields = () => (
     <>
-      <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Business Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -186,8 +186,8 @@ export default function ProfileSettingsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">Gym Details</h3>
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">Gym Details</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -249,8 +249,8 @@ export default function ProfileSettingsPage() {
   );
 
   const renderTrainerFields = () => (
-    <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-      <h3 className="text-xl font-bold text-foreground mb-4">
+    <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
         Professional Information
       </h3>
       <div className="space-y-4">
@@ -319,8 +319,8 @@ export default function ProfileSettingsPage() {
   );
 
   const renderDietitianFields = () => (
-    <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-      <h3 className="text-xl font-bold text-foreground mb-4">
+    <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
         Professional Information
       </h3>
       <div className="space-y-4">
@@ -389,8 +389,8 @@ export default function ProfileSettingsPage() {
   );
 
   const renderUserFields = () => (
-    <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-      <h3 className="text-xl font-bold text-foreground mb-4">
+    <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
         Fitness Goals & Preferences
       </h3>
       <div className="space-y-4">
@@ -430,14 +430,14 @@ export default function ProfileSettingsPage() {
     <div>
       {/* Success Message */}
       {successMessage && (
-        <div className="mb-6 bg-primary-50 border-2 border-primary-500 text-primary-900 rounded-lg p-4">
+        <div className="mb-6 rounded-lg border-2 border-primary-500 bg-primary-50 p-4 text-primary-900">
           <p className="font-semibold">{successMessage}</p>
         </div>
       )}
 
       {/* Basic Information */}
-      <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Basic Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -513,11 +513,11 @@ export default function ProfileSettingsPage() {
       {user.role === UserRole.USER && renderUserFields()}
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-stretch sm:justify-end">
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="px-8 py-3 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-lg bg-primary-500 px-8 py-3 font-semibold text-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {isSaving ? "Saving..." : "Save Profile"}
         </button>

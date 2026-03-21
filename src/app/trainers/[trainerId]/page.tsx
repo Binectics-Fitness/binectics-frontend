@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
@@ -93,35 +92,6 @@ export default function TrainerProfilePage() {
     languages: ["English", "Cantonese", "Mandarin"],
   };
 
-  const testimonials = [
-    {
-      id: 1,
-      user: "Sarah Johnson",
-      rating: 5,
-      date: "2024-02-10",
-      comment:
-        "Mike completely transformed my approach to fitness. Lost 20 lbs and gained so much strength!",
-      program: "12-Week Transformation",
-    },
-    {
-      id: 2,
-      user: "David Lee",
-      rating: 5,
-      date: "2024-02-05",
-      comment:
-        "Best trainer I've ever worked with. His boxing techniques are incredible.",
-      program: "4-Week Package",
-    },
-    {
-      id: 3,
-      user: "Emily Chen",
-      rating: 5,
-      date: "2024-01-28",
-      comment: "Professional, knowledgeable, and motivating. Highly recommend!",
-      program: "12-Week Transformation",
-    },
-  ];
-
   useEffect(() => {
     let mounted = true;
 
@@ -157,7 +127,7 @@ export default function TrainerProfilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-foreground/60 hover:text-foreground"
+            className="flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground sm:text-base"
           >
             <svg
               className="w-5 h-5"
@@ -180,29 +150,29 @@ export default function TrainerProfilePage() {
       {/* Hero Section */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Profile Image & Quick Stats */}
             <div className="space-y-6">
-              <div className="h-96 bg-accent-yellow-100 flex items-center justify-center">
-                <span className="text-9xl">{trainer.image}</span>
+              <div className="flex h-72 items-center justify-center bg-accent-yellow-100 sm:h-96">
+                <span className="text-7xl sm:text-9xl">{trainer.image}</span>
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 text-center">
-                  <p className="text-2xl font-black text-foreground">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                <div className="bg-gray-50 p-3 text-center sm:p-4">
+                  <p className="text-xl font-black text-foreground sm:text-2xl">
                     {trainer.rating}
                   </p>
                   <p className="text-sm text-foreground/60">Rating</p>
                 </div>
-                <div className="bg-gray-50 p-4 text-center">
-                  <p className="text-2xl font-black text-foreground">
+                <div className="bg-gray-50 p-3 text-center sm:p-4">
+                  <p className="text-xl font-black text-foreground sm:text-2xl">
                     {trainer.reviews}
                   </p>
                   <p className="text-sm text-foreground/60">Reviews</p>
                 </div>
-                <div className="bg-gray-50 p-4 text-center">
-                  <p className="text-2xl font-black text-foreground">
+                <div className="bg-gray-50 p-3 text-center sm:p-4">
+                  <p className="text-xl font-black text-foreground sm:text-2xl">
                     {trainer.clients}
                   </p>
                   <p className="text-sm text-foreground/60">Clients</p>
@@ -212,9 +182,9 @@ export default function TrainerProfilePage() {
 
             {/* Trainer Info */}
             <div>
-              <div className="flex items-start justify-between mb-4">
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h1 className="text-4xl font-black text-foreground mb-2">
+                  <h1 className="mb-2 text-3xl font-black text-foreground sm:text-4xl">
                     {trainer.name}
                   </h1>
                   <p className="text-foreground/60 flex items-center gap-2">
@@ -235,7 +205,7 @@ export default function TrainerProfilePage() {
                   </p>
                 </div>
                 {trainer.verified && (
-                  <div className="bg-primary-500 text-foreground px-4 py-2 font-semibold flex items-center gap-2">
+                  <div className="flex items-center gap-2 self-start bg-primary-500 px-4 py-2 font-semibold text-foreground">
                     <svg
                       className="w-5 h-5"
                       fill="currentColor"
@@ -295,7 +265,7 @@ export default function TrainerProfilePage() {
               </div>
 
               {/* Quick Contact */}
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   onClick={() => selectedPlan && handleBookNow(selectedPlan)}
                   disabled={!selectedPlan}
@@ -303,7 +273,7 @@ export default function TrainerProfilePage() {
                 >
                   {selectedPlan ? "Book Now" : "Select a Package"}
                 </button>
-                <button className="px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-accent-yellow-500 transition-colors">
+                <button className="px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-accent-yellow-500 transition-colors sm:w-auto">
                   Message
                 </button>
               </div>
@@ -314,7 +284,7 @@ export default function TrainerProfilePage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Certifications */}
@@ -379,7 +349,7 @@ export default function TrainerProfilePage() {
                 {Object.entries(trainer.availability).map(([days, hours]) => (
                   <div
                     key={days}
-                    className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                    className="flex flex-col gap-1 border-b border-gray-100 py-2 last:border-0 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <span className="font-semibold text-foreground">
                       {days}
@@ -401,7 +371,7 @@ export default function TrainerProfilePage() {
 
           {/* Right Column - Packages */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 shadow-card sticky top-4">
+            <div className="bg-white p-6 shadow-card lg:sticky lg:top-4">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Training Packages
               </h2>
@@ -416,7 +386,7 @@ export default function TrainerProfilePage() {
                     }`}
                     onClick={() => setSelectedPlan(plan.id)}
                   >
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h3 className="font-bold text-foreground">
                           {plan.name}
@@ -425,7 +395,7 @@ export default function TrainerProfilePage() {
                           {plan.description}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="sm:text-right">
                         <p className="text-2xl font-black text-foreground">
                           ${plan.price}
                         </p>

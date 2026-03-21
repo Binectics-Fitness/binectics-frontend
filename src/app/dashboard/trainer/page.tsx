@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
@@ -311,7 +312,7 @@ export default function TrainerDashboard() {
       <TrainerSidebar />
 
       {/* Main Content */}
-      <main className="ml-64 flex-1 p-8">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -381,7 +382,7 @@ export default function TrainerDashboard() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-xl font-black text-foreground">
-                Today's Sessions
+                Today&apos;s Sessions
               </h2>
               <Link
                 href="/dashboard/trainer/sessions"
@@ -461,9 +462,11 @@ export default function TrainerDashboard() {
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xl">
                             {typeof profile.client_id === "object" &&
                             profile.client_id.profile_picture ? (
-                              <img
+                              <Image
                                 src={profile.client_id.profile_picture}
                                 alt={name}
+                                width={40}
+                                height={40}
                                 className="h-10 w-10 rounded-full object-cover"
                               />
                             ) : (

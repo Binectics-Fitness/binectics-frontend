@@ -7,6 +7,7 @@ export default function DietitiansPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   // Mock dietitians data
   const dietitians = [
@@ -150,7 +151,16 @@ export default function DietitiansPage() {
       dietitian.specialties.some(
         (s) => s.toLowerCase() === selectedSpecialty.toLowerCase(),
       );
-    return matchesSearch && matchesSpecialty;
+    const locationValue = dietitian.location.toLowerCase();
+    const matchesLocation =
+      selectedLocation === "all" ||
+      (selectedLocation === "usa" && locationValue.includes("usa")) ||
+      (selectedLocation === "uk" && locationValue.includes("uk")) ||
+      (selectedLocation === "asia" && (locationValue.includes("india") || locationValue.includes("singapore"))) ||
+      (selectedLocation === "europe" && (locationValue.includes("spain") || locationValue.includes("london"))) ||
+      (selectedLocation === "middle-east" && locationValue.includes("dubai"));
+    const matchesVerified = !verifiedOnly || dietitian.verified;
+    return matchesSearch && matchesSpecialty && matchesLocation && matchesVerified;
   });
 
   return (
@@ -197,7 +207,7 @@ export default function DietitiansPage() {
       {/* Filters */}
       <section className="bg-background border-b border-neutral-300 py-4 sm:py-6">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             {/* Specialty Filter */}
             <div className="flex-1">
               <label className="block text-xs sm:text-sm font-semibold text-foreground mb-2">
@@ -239,10 +249,12 @@ export default function DietitiansPage() {
 
             {/* Verified Only */}
             <div className="flex items-end">
-              <label className="flex items-center cursor-pointer px-4 py-2 border-2 border-neutral-300 hover:border-accent-purple-500 transition-colors">
+              <label className="flex w-full items-center rounded-lg border-2 border-neutral-300 px-4 py-3 transition-colors hover:border-accent-purple-500 lg:w-auto">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-accent-purple-500 mr-2"
+                  checked={verifiedOnly}
+                  onChange={(e) => setVerifiedOnly(e.target.checked)}
+                  className="mr-2 h-4 w-4 text-accent-purple-500"
                 />
                 <span className="text-foreground font-semibold">
                   Verified only
@@ -266,13 +278,13 @@ export default function DietitiansPage() {
             {filteredDietitians.map((dietitian) => (
               <div
                 key={dietitian.id}
-                className="bg-white shadow-card hover:shadow-lg transition-shadow"
+                className="flex h-full flex-col bg-white shadow-card transition-shadow hover:shadow-lg"
               >
                 {/* Header */}
-                <div className="p-6 pb-4">
-                  <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-1 flex-col p-4 pb-4 sm:p-6">
+                  <div className="mb-4 flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-16 h-16 bg-accent-purple-100 flex items-center justify-center text-3xl">
+                      <div className="flex h-14 w-14 items-center justify-center bg-accent-purple-100 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
                         {dietitian.image}
                       </div>
                       <div>
@@ -308,7 +320,7 @@ export default function DietitiansPage() {
                   </div>
 
                   {/* Bio */}
-                  <p className="text-sm text-foreground-secondary mb-4">
+                  <p className="mb-4 text-sm text-foreground-secondary">
                     {dietitian.bio}
                   </p>
 
@@ -327,7 +339,7 @@ export default function DietitiansPage() {
                   </div>
 
                   {/* Experience & Certifications */}
-                  <div className="space-y-2 mb-4 text-sm">
+                  <div className="mb-4 space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-foreground-secondary">
                       <svg
                         className="w-4 h-4"
@@ -364,7 +376,7 @@ export default function DietitiansPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <div className="mt-auto flex flex-col gap-3 border-t border-gray-200 bg-gray-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <div>
                     <p className="text-xs text-foreground-secondary">
                       Starting at
@@ -375,7 +387,7 @@ export default function DietitiansPage() {
                   </div>
                   <Link
                     href={`/dietitians/${dietitian.id}`}
-                    className="px-6 py-2 bg-accent-purple-500 text-white font-semibold hover:bg-accent-purple-600 transition-colors"
+                    className="inline-flex items-center justify-center bg-accent-purple-500 px-6 py-2 text-center font-semibold text-white transition-colors hover:bg-accent-purple-600"
                   >
                     View Profile
                   </Link>
