@@ -205,7 +205,9 @@ export default function DietitianProfilePage() {
             {/* Profile Image & Quick Stats */}
             <div className="space-y-4 sm:space-y-6">
               <div className="h-48 sm:h-64 md:h-96 bg-accent-purple-100 flex items-center justify-center rounded-lg">
-                <span className="text-6xl sm:text-7xl md:text-9xl">{dietitian.image}</span>
+                <span className="text-6xl sm:text-7xl md:text-9xl">
+                  {dietitian.image}
+                </span>
               </div>
 
               {/* Quick Stats */}
@@ -214,19 +216,25 @@ export default function DietitianProfilePage() {
                   <p className="text-lg sm:text-2xl font-black text-foreground">
                     {dietitian.rating}
                   </p>
-                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">Rating</p>
+                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">
+                    Rating
+                  </p>
                 </div>
                 <div className="bg-gray-50 p-3 sm:p-4 text-center rounded-lg">
                   <p className="text-lg sm:text-2xl font-black text-foreground">
                     {dietitian.reviews}
                   </p>
-                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">Reviews</p>
+                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">
+                    Reviews
+                  </p>
                 </div>
                 <div className="bg-gray-50 p-3 sm:p-4 text-center rounded-lg">
                   <p className="text-lg sm:text-2xl font-black text-foreground">
                     {dietitian.clients}
                   </p>
-                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">Clients</p>
+                  <p className="text-xs sm:text-sm text-foreground/60 mt-1">
+                    Clients
+                  </p>
                 </div>
               </div>
             </div>

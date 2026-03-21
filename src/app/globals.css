@@ -2,32 +2,32 @@
 
 /* Cera Pro Font Faces - Blinkist Typography */
 @font-face {
-  font-family: 'Cera Pro';
-  src: url('/fonts/Cera-Pro-Regular.otf') format('opentype');
+  font-family: "Cera Pro";
+  src: url("/fonts/Cera-Pro-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Cera Pro';
-  src: url('/fonts/Cera-Pro-Medium.otf') format('opentype');
+  font-family: "Cera Pro";
+  src: url("/fonts/Cera-Pro-Medium.otf") format("opentype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Cera Pro';
-  src: url('/fonts/Cera-Pro-Bold.otf') format('opentype');
+  font-family: "Cera Pro";
+  src: url("/fonts/Cera-Pro-Bold.otf") format("opentype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Cera Pro';
-  src: url('/fonts/Cera-Pro-Black.otf') format('opentype');
+  font-family: "Cera Pro";
+  src: url("/fonts/Cera-Pro-Black.otf") format("opentype");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
@@ -35,99 +35,99 @@
 
 :root {
   /* Blinkist Exact Color Palette */
-  --primary: #00D991;              /* Bright lime-teal green */
-  --primary-dark: #00B877;
-  --primary-light: #33E3A6;
-  --secondary: #2D3339;            /* Dark charcoal */
-  --background: #F7F4EF;           /* Light cream/beige base */
-  --background-secondary: #FFFFFF; /* White sections */
-  --background-tertiary: #EEEBE6;  /* Darker cream for footer */
-  --foreground: #03314B;           /* Blinkist dark blue text */
-  --foreground-secondary: #6B7684; /* Medium gray */
-  --foreground-tertiary: #8B95A1;  /* Light gray */
+  --primary: #00d991; /* Bright lime-teal green */
+  --primary-dark: #00b877;
+  --primary-light: #33e3a6;
+  --secondary: #2d3339; /* Dark charcoal */
+  --background: #f7f4ef; /* Light cream/beige base */
+  --background-secondary: #ffffff; /* White sections */
+  --background-tertiary: #eeebe6; /* Darker cream for footer */
+  --foreground: #03314b; /* Blinkist dark blue text */
+  --foreground-secondary: #6b7684; /* Medium gray */
+  --foreground-tertiary: #8b95a1; /* Light gray */
 
   /* Semantic colors */
-  --success: #10B981;
-  --warning: #F59E0B;
-  --error: #EF4444;
-  --info: #3B82F6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
 }
 
 @theme inline {
   /* Blinkist Primary - Bright Lime-Teal Green */
   --color-primary-*: initial;
-  --color-primary-50: #E6FFF5;
-  --color-primary-100: #B3FFDF;
-  --color-primary-200: #80FFC9;
-  --color-primary-300: #4DFFB3;
-  --color-primary-400: #1AFF9D;
-  --color-primary-500: #00D991;  /* Main Blinkist green */
-  --color-primary-600: #00B877;
-  --color-primary-700: #008A5A;
-  --color-primary-800: #005C3D;
-  --color-primary-900: #002E1F;
+  --color-primary-50: #e6fff5;
+  --color-primary-100: #b3ffdf;
+  --color-primary-200: #80ffc9;
+  --color-primary-300: #4dffb3;
+  --color-primary-400: #1aff9d;
+  --color-primary-500: #00d991; /* Main Blinkist green */
+  --color-primary-600: #00b877;
+  --color-primary-700: #008a5a;
+  --color-primary-800: #005c3d;
+  --color-primary-900: #002e1f;
 
   /* Blinkist Secondary - Dark Charcoal */
   --color-secondary-*: initial;
-  --color-secondary-50: #F5F6F7;
-  --color-secondary-100: #E8EAED;
-  --color-secondary-200: #D1D5DA;
-  --color-secondary-300: #A3ACB6;
-  --color-secondary-400: #7C8693;
-  --color-secondary-500: #5A6472;
-  --color-secondary-600: #434D5B;
-  --color-secondary-700: #353E4A;
-  --color-secondary-800: #2D3339;
-  --color-secondary-900: #23292E;
+  --color-secondary-50: #f5f6f7;
+  --color-secondary-100: #e8eaed;
+  --color-secondary-200: #d1d5da;
+  --color-secondary-300: #a3acb6;
+  --color-secondary-400: #7c8693;
+  --color-secondary-500: #5a6472;
+  --color-secondary-600: #434d5b;
+  --color-secondary-700: #353e4a;
+  --color-secondary-800: #2d3339;
+  --color-secondary-900: #23292e;
 
   /* Blinkist Neutrals - Warm grays and creams */
   --color-neutral-*: initial;
-  --color-neutral-50: #FDFCFB;
-  --color-neutral-100: #F7F4EF;   /* Light cream background */
-  --color-neutral-200: #EEEBE6;   /* Cream for sections */
-  --color-neutral-300: #E5E1DA;
-  --color-neutral-400: #C9C4BA;
-  --color-neutral-500: #A39E94;
-  --color-neutral-600: #7D7870;
-  --color-neutral-700: #5C5851;
-  --color-neutral-800: #3E3B36;
-  --color-neutral-900: #28251F;
+  --color-neutral-50: #fdfcfb;
+  --color-neutral-100: #f7f4ef; /* Light cream background */
+  --color-neutral-200: #eeebe6; /* Cream for sections */
+  --color-neutral-300: #e5e1da;
+  --color-neutral-400: #c9c4ba;
+  --color-neutral-500: #a39e94;
+  --color-neutral-600: #7d7870;
+  --color-neutral-700: #5c5851;
+  --color-neutral-800: #3e3b36;
+  --color-neutral-900: #28251f;
 
   /* Blinkist Accent Colors */
   --color-accent-blue-*: initial;
-  --color-accent-blue-50: #E6F2FF;
-  --color-accent-blue-100: #CCE5FF;
-  --color-accent-blue-500: #0267F2;
-  --color-accent-blue-600: #0156D6;
-  --color-accent-blue-700: #0145BA;
+  --color-accent-blue-50: #e6f2ff;
+  --color-accent-blue-100: #cce5ff;
+  --color-accent-blue-500: #0267f2;
+  --color-accent-blue-600: #0156d6;
+  --color-accent-blue-700: #0145ba;
 
   --color-accent-yellow-*: initial;
-  --color-accent-yellow-50: #FFF9E6;
-  --color-accent-yellow-100: #FFF1CC;
-  --color-accent-yellow-500: #FDB90E;
-  --color-accent-yellow-600: #E3A70D;
-  --color-accent-yellow-700: #C9950B;
+  --color-accent-yellow-50: #fff9e6;
+  --color-accent-yellow-100: #fff1cc;
+  --color-accent-yellow-500: #fdb90e;
+  --color-accent-yellow-600: #e3a70d;
+  --color-accent-yellow-700: #c9950b;
 
   --color-accent-purple-*: initial;
-  --color-accent-purple-50: #F3E6FF;
-  --color-accent-purple-100: #E0B3FF;
-  --color-accent-purple-500: #A855F7;
-  --color-accent-purple-600: #9333EA;
-  --color-accent-purple-700: #7E22CE;
+  --color-accent-purple-50: #f3e6ff;
+  --color-accent-purple-100: #e0b3ff;
+  --color-accent-purple-500: #a855f7;
+  --color-accent-purple-600: #9333ea;
+  --color-accent-purple-700: #7e22ce;
 
   --color-accent-orange-*: initial;
-  --color-accent-orange-50: #FFF4E6;
-  --color-accent-orange-100: #FFE0B3;
-  --color-accent-orange-500: #FF9F43;
-  --color-accent-orange-600: #E68A3A;
-  --color-accent-orange-700: #BF7230;
+  --color-accent-orange-50: #fff4e6;
+  --color-accent-orange-100: #ffe0b3;
+  --color-accent-orange-500: #ff9f43;
+  --color-accent-orange-600: #e68a3a;
+  --color-accent-orange-700: #bf7230;
 
   --color-background: var(--background);
   --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
 
-  --font-family-sans: 'Cera Pro', system-ui, -apple-system, sans-serif;
-  --font-family-display: 'Cera Pro', system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Cera Pro", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Cera Pro", system-ui, -apple-system, sans-serif;
 
   --radius: 0.5rem;
   --radius-lg: 0.75rem;
@@ -143,7 +143,11 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Cera Pro', system-ui, -apple-system, sans-serif;
+  font-family:
+    "Cera Pro",
+    system-ui,
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -167,8 +171,10 @@ body {
 }
 
 /* Smooth transitions - only on interactive elements */
-a, button {
-  transition-property: color, background-color, border-color, transform, box-shadow;
+a,
+button {
+  transition-property:
+    color, background-color, border-color, transform, box-shadow;
   transition-duration: 200ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }

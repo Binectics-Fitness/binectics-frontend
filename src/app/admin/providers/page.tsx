@@ -201,7 +201,9 @@ export default function AdminProvidersPage() {
                   <p className="text-xs sm:text-sm font-medium text-foreground/60">
                     Trainers
                   </p>
-                  <p className="text-xl sm:text-2xl font-black text-foreground">289</p>
+                  <p className="text-xl sm:text-2xl font-black text-foreground">
+                    289
+                  </p>
                 </div>
               </div>
             </div>
@@ -226,7 +228,9 @@ export default function AdminProvidersPage() {
                   <p className="text-xs sm:text-sm font-medium text-foreground/60">
                     Dietitians
                   </p>
-                  <p className="text-xl sm:text-2xl font-black text-foreground">216</p>
+                  <p className="text-xl sm:text-2xl font-black text-foreground">
+                    216
+                  </p>
                 </div>
               </div>
             </div>
@@ -251,7 +255,9 @@ export default function AdminProvidersPage() {
                   <p className="text-xs sm:text-sm font-medium text-foreground/60">
                     Verified
                   </p>
-                  <p className="text-xl sm:text-2xl font-black text-foreground">789</p>
+                  <p className="text-xl sm:text-2xl font-black text-foreground">
+                    789
+                  </p>
                 </div>
               </div>
             </div>
@@ -405,7 +411,10 @@ export default function AdminProvidersPage() {
           {/* Providers Cards - Mobile View */}
           <div className="md:hidden space-y-3 mb-6">
             {providers.map((provider) => (
-              <div key={provider.id} className="bg-white p-4 shadow-card rounded-lg border border-gray-100">
+              <div
+                key={provider.id}
+                className="bg-white p-4 shadow-card rounded-lg border border-gray-100"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -413,7 +422,12 @@ export default function AdminProvidersPage() {
                         {provider.name}
                       </p>
                       {provider.verified && (
-                        <span className="text-primary-500 shrink-0" title="Verified">✓</span>
+                        <span
+                          className="text-primary-500 shrink-0"
+                          title="Verified"
+                        >
+                          ✓
+                        </span>
                       )}
                     </div>
                     <p className="text-xs sm:text-sm text-foreground/60 truncate">
@@ -430,22 +444,30 @@ export default function AdminProvidersPage() {
                 <div className="grid grid-cols-2 gap-2 mb-3 text-xs sm:text-sm">
                   <div>
                     <span className="text-foreground/60">Location: </span>
-                    <span className="text-foreground font-medium">{provider.location}</span>
+                    <span className="text-foreground font-medium">
+                      {provider.location}
+                    </span>
                   </div>
                   <div>
                     <span className="text-foreground/60">Members: </span>
-                    <span className="text-foreground font-medium">{provider.members}</span>
+                    <span className="text-foreground font-medium">
+                      {provider.members}
+                    </span>
                   </div>
                   <div>
                     <span className="text-foreground/60">Revenue: </span>
-                    <span className="text-foreground font-medium">{provider.revenue}</span>
+                    <span className="text-foreground font-medium">
+                      {provider.revenue}
+                    </span>
                   </div>
                   <div>
-                    <span className={`px-2 py-1 text-xs font-semibold ${
-                      provider.status === ProviderStatus.ACTIVE
-                        ? "bg-primary-100 text-primary-700"
-                        : "bg-red-100 text-red-700"
-                    }`}>
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold ${
+                        provider.status === ProviderStatus.ACTIVE
+                          ? "bg-primary-100 text-primary-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
                       {provider.status}
                     </span>
                   </div>
@@ -460,14 +482,18 @@ export default function AdminProvidersPage() {
                   </button>
                   {provider.status === ProviderStatus.ACTIVE ? (
                     <button
-                      onClick={() => handleSuspendProvider(provider.id, provider.name)}
+                      onClick={() =>
+                        handleSuspendProvider(provider.id, provider.name)
+                      }
                       className="flex-1 px-3 py-2 border border-red-300 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors"
                     >
                       Suspend
                     </button>
                   ) : (
                     <button
-                      onClick={() => handleActivateProvider(provider.id, provider.name)}
+                      onClick={() =>
+                        handleActivateProvider(provider.id, provider.name)
+                      }
                       className="flex-1 px-3 py-2 border border-primary-300 text-primary-600 text-xs font-semibold hover:bg-primary-50 transition-colors"
                     >
                       Activate

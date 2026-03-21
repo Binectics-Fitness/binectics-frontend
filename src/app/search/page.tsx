@@ -1,89 +1,89 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState } from "react";
+import Link from "next/link";
 
 export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [priceRange, setPriceRange] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [priceRange, setPriceRange] = useState("all");
 
   // Mock search results
   const results = [
     {
       id: 1,
-      type: 'gym',
-      name: 'PowerHouse Gym',
-      location: 'Los Angeles, USA',
+      type: "gym",
+      name: "PowerHouse Gym",
+      location: "Los Angeles, USA",
       rating: 4.8,
       reviews: 342,
-      image: '/placeholder-gym.jpg',
-      price: '$49/month',
+      image: "/placeholder-gym.jpg",
+      price: "$49/month",
       verified: true,
-      facilities: ['Cardio', 'Weights', 'Classes'],
+      facilities: ["Cardio", "Weights", "Classes"],
     },
     {
       id: 2,
-      type: 'trainer',
-      name: 'Mike Chen',
-      location: 'Hong Kong',
+      type: "trainer",
+      name: "Mike Chen",
+      location: "Hong Kong",
       rating: 5.0,
       reviews: 128,
-      image: '/placeholder-trainer.jpg',
-      price: '$99/session',
+      image: "/placeholder-trainer.jpg",
+      price: "$99/session",
       verified: true,
-      specialties: ['Strength', 'HIIT', 'Boxing'],
+      specialties: ["Strength", "HIIT", "Boxing"],
     },
     {
       id: 3,
-      type: 'dietitian',
-      name: 'Dr. Maria Garcia',
-      location: 'Barcelona, Spain',
+      type: "dietitian",
+      name: "Dr. Maria Garcia",
+      location: "Barcelona, Spain",
       rating: 4.9,
       reviews: 89,
-      image: '/placeholder-dietitian.jpg',
-      price: '$79/month',
+      image: "/placeholder-dietitian.jpg",
+      price: "$79/month",
       verified: true,
-      specialties: ['Weight Loss', 'Sports Nutrition'],
+      specialties: ["Weight Loss", "Sports Nutrition"],
     },
     {
       id: 4,
-      type: 'gym',
-      name: 'FitCore Studio',
-      location: 'London, UK',
+      type: "gym",
+      name: "FitCore Studio",
+      location: "London, UK",
       rating: 4.7,
       reviews: 289,
-      image: '/placeholder-gym.jpg',
-      price: '$39/month',
+      image: "/placeholder-gym.jpg",
+      price: "$39/month",
       verified: true,
-      facilities: ['Yoga', 'Pilates', 'Sauna'],
+      facilities: ["Yoga", "Pilates", "Sauna"],
     },
   ];
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'gym':
-        return 'bg-accent-blue-500';
-      case 'trainer':
-        return 'bg-accent-yellow-500';
-      case 'dietitian':
-        return 'bg-accent-purple-500';
+      case "gym":
+        return "bg-accent-blue-500";
+      case "trainer":
+        return "bg-accent-yellow-500";
+      case "dietitian":
+        return "bg-accent-purple-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getTypeLink = (type: string, id: number) => {
     switch (type) {
-      case 'gym':
+      case "gym":
         return `/gyms/${id}`;
-      case 'trainer':
+      case "trainer":
         return `/trainers/${id}`;
-      case 'dietitian':
+      case "dietitian":
         return `/dietitians/${id}`;
       default:
-        return '#';
+        return "#";
     }
   };
 
@@ -132,14 +132,19 @@ export default function SearchPage() {
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white p-6 shadow-card sticky top-4">
-              <h2 className="text-xl font-bold text-foreground mb-6">Filters</h2>
+              <h2 className="text-xl font-bold text-foreground mb-6">
+                Filters
+              </h2>
 
               {/* Type Filter */}
               <div className="mb-6">
                 <h3 className="font-semibold text-foreground mb-3">Type</h3>
                 <div className="space-y-2">
-                  {['all', 'gym', 'trainer', 'dietitian'].map((type) => (
-                    <label key={type} className="flex items-center cursor-pointer">
+                  {["all", "gym", "trainer", "dietitian"].map((type) => (
+                    <label
+                      key={type}
+                      className="flex items-center cursor-pointer"
+                    >
                       <input
                         type="radio"
                         name="type"
@@ -147,7 +152,9 @@ export default function SearchPage() {
                         onChange={() => setSelectedType(type)}
                         className="w-4 h-4 text-primary-500"
                       />
-                      <span className="ml-2 text-foreground capitalize">{type === 'all' ? 'All' : type}</span>
+                      <span className="ml-2 text-foreground capitalize">
+                        {type === "all" ? "All" : type}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -155,7 +162,9 @@ export default function SearchPage() {
 
               {/* Price Range */}
               <div className="mb-6">
-                <h3 className="font-semibold text-foreground mb-3">Price Range</h3>
+                <h3 className="font-semibold text-foreground mb-3">
+                  Price Range
+                </h3>
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
@@ -179,7 +188,9 @@ export default function SearchPage() {
 
               {/* Quick Links */}
               <div className="pt-6 border-t border-gray-200">
-                <h3 className="font-semibold text-foreground mb-3">Browse by Type</h3>
+                <h3 className="font-semibold text-foreground mb-3">
+                  Browse by Type
+                </h3>
                 <div className="space-y-2">
                   <Link
                     href="/gyms"
@@ -229,13 +240,23 @@ export default function SearchPage() {
                 >
                   {/* Image Placeholder */}
                   <div className="relative h-40 sm:h-48 bg-gray-200">
-                    <div className={`absolute top-4 left-4 px-3 py-1 ${getTypeColor(result.type)} text-foreground text-xs sm:text-sm font-semibold`}>
+                    <div
+                      className={`absolute top-4 left-4 px-3 py-1 ${getTypeColor(result.type)} text-foreground text-xs sm:text-sm font-semibold`}
+                    >
                       {result.type.toUpperCase()}
                     </div>
                     {result.verified && (
                       <div className="absolute top-4 right-4 bg-primary-500 text-foreground px-2 sm:px-3 py-1 text-xs font-semibold flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                         <span className="hidden sm:inline">VERIFIED</span>
                       </div>
@@ -247,31 +268,49 @@ export default function SearchPage() {
                     <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 group-hover:text-primary-500 transition-colors line-clamp-2">
                       {result.name}
                     </h3>
-                    <p className="text-foreground/60 text-xs sm:text-sm mb-3 truncate">📍 {result.location}</p>
+                    <p className="text-foreground/60 text-xs sm:text-sm mb-3 truncate">
+                      📍 {result.location}
+                    </p>
 
                     {/* Rating */}
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
                       <div className="flex items-center">
                         <span>⭐</span>
-                        <span className="font-semibold text-foreground ml-1 text-sm">{result.rating}</span>
+                        <span className="font-semibold text-foreground ml-1 text-sm">
+                          {result.rating}
+                        </span>
                       </div>
-                      <span className="text-foreground/60 text-xs sm:text-sm">({result.reviews} reviews)</span>
+                      <span className="text-foreground/60 text-xs sm:text-sm">
+                        ({result.reviews} reviews)
+                      </span>
                     </div>
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-1 sm:gap-2 mb-4">
-                      {(result.type === 'gym' ? result.facilities : result.specialties)?.slice(0, 2).map((tag, index) => (
-                        <span key={index} className="px-2 sm:px-3 py-1 bg-gray-100 text-foreground text-xs">
-                          {tag}
-                        </span>
-                      ))}
+                      {(result.type === "gym"
+                        ? result.facilities
+                        : result.specialties
+                      )
+                        ?.slice(0, 2)
+                        .map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-2 sm:px-3 py-1 bg-gray-100 text-foreground text-xs"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                     </div>
 
                     {/* Price & CTA */}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div>
-                        <p className="text-xs text-foreground/60">Starting at</p>
-                        <p className="text-lg sm:text-xl font-black text-foreground">{result.price}</p>
+                        <p className="text-xs text-foreground/60">
+                          Starting at
+                        </p>
+                        <p className="text-lg sm:text-xl font-black text-foreground">
+                          {result.price}
+                        </p>
                       </div>
                       <button className="px-3 sm:px-6 py-2 text-xs sm:text-sm bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap">
                         View Details

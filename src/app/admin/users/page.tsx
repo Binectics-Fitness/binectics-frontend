@@ -203,10 +203,14 @@ export default function AdminUsersPage() {
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Total Users
               </p>
-              <p className="text-2xl sm:text-3xl font-black text-foreground mt-2">12,458</p>
+              <p className="text-2xl sm:text-3xl font-black text-foreground mt-2">
+                12,458
+              </p>
             </div>
             <div className="bg-white p-4 sm:p-6 shadow-card">
-              <p className="text-xs sm:text-sm font-medium text-foreground/60">Active</p>
+              <p className="text-xs sm:text-sm font-medium text-foreground/60">
+                Active
+              </p>
               <p className="text-2xl sm:text-3xl font-black text-primary-500 mt-2">
                 11,892
               </p>
@@ -215,13 +219,17 @@ export default function AdminUsersPage() {
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Suspended
               </p>
-              <p className="text-2xl sm:text-3xl font-black text-red-500 mt-2">566</p>
+              <p className="text-2xl sm:text-3xl font-black text-red-500 mt-2">
+                566
+              </p>
             </div>
             <div className="bg-white p-4 sm:p-6 shadow-card">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 New This Week
               </p>
-              <p className="text-2xl sm:text-3xl font-black text-foreground mt-2">284</p>
+              <p className="text-2xl sm:text-3xl font-black text-foreground mt-2">
+                284
+              </p>
             </div>
           </div>
 
@@ -331,7 +339,10 @@ export default function AdminUsersPage() {
           {/* Users Cards - Mobile View */}
           <div className="md:hidden space-y-3 mb-6">
             {users.map((user) => (
-              <div key={user.id} className="bg-white p-4 shadow-card rounded-lg border border-gray-100">
+              <div
+                key={user.id}
+                className="bg-white p-4 shadow-card rounded-lg border border-gray-100"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-foreground truncate">
@@ -347,26 +358,34 @@ export default function AdminUsersPage() {
                     {user.role.replace("_", " ")}
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2 mb-3 text-xs sm:text-sm">
                   <div>
                     <span className="text-foreground/60">Country: </span>
-                    <span className="text-foreground font-medium">{user.country}</span>
+                    <span className="text-foreground font-medium">
+                      {user.country}
+                    </span>
                   </div>
                   <div>
                     <span className="text-foreground/60">Subscriptions: </span>
-                    <span className="text-foreground font-medium">{user.subscriptions}</span>
+                    <span className="text-foreground font-medium">
+                      {user.subscriptions}
+                    </span>
                   </div>
                   <div>
                     <span className="text-foreground/60">Joined: </span>
-                    <span className="text-foreground font-medium">{user.signupDate}</span>
+                    <span className="text-foreground font-medium">
+                      {user.signupDate}
+                    </span>
                   </div>
                   <div>
-                    <span className={`px-2 py-1 text-xs font-semibold ${
-                      user.status === AdminUserStatus.ACTIVE
-                        ? "bg-primary-100 text-primary-700"
-                        : "bg-red-100 text-red-700"
-                    }`}>
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold ${
+                        user.status === AdminUserStatus.ACTIVE
+                          ? "bg-primary-100 text-primary-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
                       {user.status}
                     </span>
                   </div>

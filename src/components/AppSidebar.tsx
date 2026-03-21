@@ -248,7 +248,11 @@ export default function AppSidebar({
           <button
             onClick={() => setIsMobileMenuOpen((current) => !current)}
             className="flex h-11 w-11 items-center justify-center rounded-full border border-neutral-300 bg-white text-foreground shadow-sm"
-            aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-label={
+              isMobileMenuOpen
+                ? "Close navigation menu"
+                : "Open navigation menu"
+            }
             aria-expanded={isMobileMenuOpen}
           >
             <svg
@@ -340,7 +344,9 @@ export default function AppSidebar({
           <OrganizationSelector />
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-6">{renderTopNav(false, true)}</nav>
+        <nav className="flex-1 overflow-y-auto px-3 py-6">
+          {renderTopNav(false, true)}
+        </nav>
 
         <div className="border-t border-neutral-200 px-3 py-4">
           {renderBottomNav(false, true)}
