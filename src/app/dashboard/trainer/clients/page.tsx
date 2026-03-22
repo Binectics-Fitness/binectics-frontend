@@ -192,7 +192,8 @@ export default function TrainerClientsPage() {
     try {
       const res = await progressService.getClientJournalEntries(profileId, 20);
       if (res.success && res.data) {
-        setJournalEntries((prev) => ({ ...prev, [profileId]: res.data }));
+        const entries = res.data;
+        setJournalEntries((prev) => ({ ...prev, [profileId]: entries }));
       }
     } catch {
       // non-critical
