@@ -148,6 +148,7 @@ export default function OrgMarketplaceListingPage() {
   const handleTogglePublish = async () => {
     if (!listing || !orgId) return;
     setIsPublishing(true);
+    setFormError("");
 
     const res = listing.is_published
       ? await marketplaceService.unpublishOrgListing(orgId)
@@ -160,6 +161,8 @@ export default function OrgMarketplaceListingPage() {
           ? "Listing published! It's now visible in the marketplace."
           : "Listing unpublished.",
       );
+    } else {
+      setFormError(res.message || "Failed to update listing");
     }
     setIsPublishing(false);
   };

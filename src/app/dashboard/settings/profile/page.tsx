@@ -55,6 +55,7 @@ export default function ProfileSettingsPage() {
   const { user, updateUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
 
@@ -134,15 +135,18 @@ export default function ProfileSettingsPage() {
       if (res.success && res.data) {
         updateUser(res.data);
         setSuccessMessage("Profile saved successfully!");
+        setErrorMessage("");
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setSuccessMessage(res.message || "Failed to save profile");
-        setTimeout(() => setSuccessMessage(""), 3000);
+        setErrorMessage(res.message || "Failed to save profile");
+        setSuccessMessage("");
+        setTimeout(() => setErrorMessage(""), 3000);
       }
     } catch (error) {
       console.error("Save error:", error);
-      setSuccessMessage("An error occurred while saving");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      setErrorMessage("An error occurred while saving");
+      setSuccessMessage("");
+      setTimeout(() => setErrorMessage(""), 3000);
     } finally {
       setIsSaving(false);
     }
@@ -187,7 +191,9 @@ export default function ProfileSettingsPage() {
       </div>
 
       <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
-        <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">Gym Details</h3>
+        <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
+          Gym Details
+        </h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -430,8 +436,15 @@ export default function ProfileSettingsPage() {
     <div>
       {/* Success Message */}
       {successMessage && (
-        <div className="mb-6 rounded-lg border-2 border-primary-500 bg-primary-50 p-4 text-primary-900">
+        <div className="mb-6 rounded-lg border-2 border-green-200 bg-green-50 p-4 text-green-800">
           <p className="font-semibold">{successMessage}</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="mb-6 rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-800">
+          <p className="font-semibold">{errorMessage}</p>
         </div>
       )}
 
