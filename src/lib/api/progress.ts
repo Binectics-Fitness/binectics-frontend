@@ -36,6 +36,14 @@ export enum ActivityType {
   OTHER = "other",
 }
 
+export enum ClientJournalMood {
+  EXCELLENT = "excellent",
+  GOOD = "good",
+  OKAY = "okay",
+  LOW = "low",
+  STRESSED = "stressed",
+}
+
 // ==================== TYPES ====================
 
 export interface ClientProfile {
@@ -115,6 +123,38 @@ export interface ActivityReport {
   logged_by: string | { _id: string; first_name: string; last_name: string };
   created_at: string;
   updated_at: string;
+}
+
+export interface ClientJournalEntry {
+  _id: string;
+  client_profile_id: string;
+  client_id: string;
+  professional_id: string;
+  organization_id?: string;
+  notes: string;
+  weight_kg?: number;
+  mood?: ClientJournalMood;
+  adherence_score?: number;
+  entry_date: string;
+  logged_by: string | { _id: string; first_name: string; last_name: string };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MyJournalEntry extends ClientJournalEntry {
+  professional_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+      };
+}
+
+export interface JournalPage {
+  entries: MyJournalEntry[];
+  next_cursor: string | null;
 }
 
 export interface ProgressSummary {
@@ -231,6 +271,14 @@ export interface CreateActivityReportRequest {
   notes?: string;
 }
 
+export interface CreateClientJournalEntryRequest {
+  notes: string;
+  weight_kg?: number;
+  mood?: ClientJournalMood;
+  adherence_score?: number;
+  entry_date?: string;
+}
+
 export interface InviteClientRequest {
   email: string;
   first_name?: string;
@@ -338,6 +386,30 @@ export const progressService = {
     return await apiClient.get<ClientProfile[]>("/progress/my-profiles");
   },
 
+  async getMyJournalEntries(
+    limit = 20,
+    cursor?: string,
+  ): Promise<ApiResponse<JournalPage>> {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (cursor) params.set('cursor', cursor);
+    const res = await apiClient.get<{ data: MyJournalEntry[]; next_cursor: string | null }>(
+      `/progress/my-journals?${params.toString()}`,
+    );
+    // Normalise: the API returns { success, data: MyJournalEntry[], next_cursor }
+    // We expose it as ApiResponse<JournalPage> for consistent consumption
+    if (res.success) {
+      const raw = res as unknown as { success: boolean; data?: MyJournalEntry[]; next_cursor?: string | null; message?: string };
+      return {
+        success: true,
+        data: {
+          entries: raw.data ?? [],
+          next_cursor: raw.next_cursor ?? null,
+        },
+      };
+    }
+    return res as unknown as ApiResponse<JournalPage>;
+  },
+
   async getClientProfile(
     profileId: string,
   ): Promise<ApiResponse<ClientProfile>> {
@@ -430,6 +502,32 @@ export const progressService = {
 
   async deleteActivityReport(reportId: string): Promise<ApiResponse<void>> {
     return await apiClient.delete<void>(`/progress/activities/${reportId}`);
+  },
+
+  // ==================== CLIENT JOURNALS ====================
+
+  async createClientJournalEntry(
+    profileId: string,
+    data: CreateClientJournalEntryRequest,
+  ): Promise<ApiResponse<ClientJournalEntry>> {
+    return await apiClient.post<ClientJournalEntry>(
+      `/progress/clients/${profileId}/journals`,
+      data,
+    );
+  },
+
+  async getClientJournalEntries(
+    profileId: string,
+    limit?: number,
+  ): Promise<ApiResponse<ClientJournalEntry[]>> {
+    const query = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<ClientJournalEntry[]>(
+      `/progress/clients/${profileId}/journals${query}`,
+    );
+  },
+
+  async deleteClientJournalEntry(entryId: string): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(`/progress/journals/${entryId}`);
   },
 
   // ==================== PROGRESS SUMMARY ====================

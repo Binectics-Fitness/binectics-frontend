@@ -491,6 +491,13 @@ export default function ProgressPage() {
               Book Consultation
             </Link>
           )}
+
+          <Link
+            href="/dashboard/journals"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50"
+          >
+            View Journals
+          </Link>
         </div>
 
         {selectedProfessional && (

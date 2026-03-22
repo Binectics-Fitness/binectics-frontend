@@ -228,6 +228,37 @@ export type MarketplaceRequestStatus =
   | "rejected"
   | "cancelled";
 
+export enum MarketplaceVerificationBadge {
+  NONE = "none",
+  VERIFIED = "verified",
+  PREMIUM_VERIFIED = "premium_verified",
+  FEATURED = "featured",
+}
+
+export enum MembershipPlanType {
+  SUBSCRIPTION = "subscription",
+  ONE_TIME = "one_time",
+}
+
+export interface MarketplaceMembershipPlan {
+  _id: string;
+  organization_id: string;
+  listing_id?: string;
+  created_by: string;
+  name: string;
+  description?: string;
+  plan_type: MembershipPlanType;
+  duration_days: number;
+  price: number;
+  currency: string;
+  features: string[];
+  is_active: boolean;
+  is_public: boolean;
+  active_members: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MarketplaceListing {
   _id: string;
   organization_id?: string | { _id: string; name: string; logo?: string };
@@ -260,9 +291,29 @@ export interface MarketplaceListing {
   max_clients?: number;
   is_published: boolean;
   published_at?: string;
+  verification_badge: MarketplaceVerificationBadge;
+  badge_awarded_at?: string;
+  badge_awarded_by?: string;
+  supporting_documents_count?: number;
+  is_suspended: boolean;
+  suspension_reason?: string;
   active_client_count: number;
   average_rating: number;
   review_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MarketplaceListingDocument {
+  _id: string;
+  listing_id: string;
+  organization_id: string;
+  uploaded_by: string;
+  file_url: string;
+  file_public_id: string;
+  file_name: string;
+  mime_type: string;
+  file_size: number;
   created_at: string;
   updated_at: string;
 }
@@ -344,3 +395,76 @@ export interface ApiResponse<T = unknown> {
   message?: string;
   errors?: Record<string, string[]>;
 }
+
+// ─── Membership Subscriptions ─────────────────────────────────────────────
+
+export interface CheckIn {
+  _id: string;
+  organization_id: string;
+  listing_id: string | { _id: string; headline: string };
+  member_user_id:
+    | string
+    | { _id: string; first_name: string; last_name: string; email: string };
+  subscription_id?: string;
+  checked_in_at: string;
+  note?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export enum CheckInHistoryPeriod {
+  TODAY = "today",
+  WEEK = "week",
+  MONTH = "month",
+}
+
+export interface MyCheckInStatus {
+  has_checked_in_today: boolean;
+  today_check_in_at?: string;
+  last_check_in_at?: string;
+  last_listing_id?: string;
+}
+
+export enum MembershipSubscriptionStatus {
+  PENDING_PAYMENT = "pending_payment",
+  ACTIVE = "active",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled",
+}
+
+export interface MembershipSubscription {
+  _id: string;
+  organization_id: string;
+  plan_id:
+    | string
+    | {
+        _id: string;
+        name: string;
+        description?: string;
+        plan_type: MembershipPlanType;
+        duration_days: number;
+        price: number;
+        currency: string;
+        features: string[];
+      };
+  listing_id?:
+    | string
+    | { _id: string; headline: string; city?: string; country_code?: string };
+  member_user_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+      };
+  status: MembershipSubscriptionStatus;
+  start_date: string;
+  end_date?: string;
+  amount_paid: number;
+  currency: string;
+  payment_reference?: string;
+  created_at: string;
+  updated_at: string;
+}
+

@@ -8,11 +8,22 @@ import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { marketplaceService } from "@/lib/api/marketplace";
-import type { MarketplaceListing } from "@/lib/types";
+import type {
+  MarketplaceListing,
+  MarketplaceListingDocument,
+} from "@/lib/types";
 
 const MAX_IMAGE_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_DOCUMENT_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_GALLERY_UPLOAD_FILES = 10;
 const ALLOWED_IMAGE_UPLOAD_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+const ALLOWED_DOCUMENT_UPLOAD_TYPES = new Set([
+  "application/pdf",
   "image/png",
   "image/jpeg",
   "image/webp",
@@ -34,6 +45,13 @@ export default function OrgMarketplaceListingPage() {
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeletingProfileImage, setIsDeletingProfileImage] = useState(false);
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(
+    null,
+  );
+  const [listingDocuments, setListingDocuments] = useState<
+    MarketplaceListingDocument[]
+  >([]);
   const [deletingGalleryImageUrl, setDeletingGalleryImageUrl] = useState<
     string | null
   >(null);
@@ -123,8 +141,16 @@ export default function OrgMarketplaceListingPage() {
         setListing(res.data);
         setHasListing(true);
         populateForm(res.data);
+
+        const docsRes = await marketplaceService.getOrgListingDocuments(orgId!);
+        if (docsRes.success && docsRes.data) {
+          setListingDocuments(docsRes.data);
+        } else {
+          setListingDocuments([]);
+        }
       } else {
         setHasListing(false);
+        setListingDocuments([]);
       }
       setIsLoading(false);
     }
@@ -491,6 +517,64 @@ export default function OrgMarketplaceListingPage() {
     await handleGalleryDelete(pendingImageDeletion.imageUrl);
   };
 
+  const handleDocumentUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (!orgId) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_DOCUMENT_UPLOAD_TYPES.has(file.type)) {
+      setImageError(
+        "Unsupported file format. Allowed: PDF, PNG, JPEG, WEBP, GIF.",
+      );
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_DOCUMENT_UPLOAD_SIZE_BYTES) {
+      setImageError("Document is too large. Maximum allowed size is 10MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setImageError("");
+    setIsUploadingDocument(true);
+
+    const res = await marketplaceService.uploadOrgListingDocument(orgId, file);
+    if (res.success && res.data) {
+      setListingDocuments((current) => [res.data!, ...current]);
+      setSuccessMessage("Supporting document uploaded successfully.");
+    } else {
+      setImageError(res.message || "Failed to upload supporting document");
+    }
+
+    setIsUploadingDocument(false);
+    e.target.value = "";
+  };
+
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!orgId) return;
+    setDeletingDocumentId(documentId);
+    setImageError("");
+
+    const res = await marketplaceService.deleteOrgListingDocument(
+      orgId,
+      documentId,
+    );
+
+    if (res.success) {
+      setListingDocuments((current) =>
+        current.filter((doc) => doc._id !== documentId),
+      );
+      setSuccessMessage("Supporting document removed successfully.");
+    } else {
+      setImageError(res.message || "Failed to remove supporting document");
+    }
+
+    setDeletingDocumentId(null);
+  };
+
   if (authLoading || orgLoading || isLoading) return <DashboardLoading />;
 
   if (!orgId) {
@@ -815,6 +899,76 @@ export default function OrgMarketplaceListingPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">
+                    Supporting Documents
+                  </h2>
+                  <p className="text-xs text-foreground-secondary mt-1">
+                    Optional files to support admin badge review.
+                  </p>
+                </div>
+                <label className="rounded-xl bg-primary-500 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-600 cursor-pointer transition-colors">
+                  {isUploadingDocument ? "Uploading..." : "Upload Document"}
+                  <input
+                    type="file"
+                    accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleDocumentUpload}
+                    disabled={isUploadingDocument}
+                  />
+                </label>
+              </div>
+
+              {listingDocuments.length === 0 ? (
+                <div className="h-28 rounded-xl border border-dashed border-neutral-300 flex items-center justify-center text-sm text-foreground-secondary">
+                  No supporting documents uploaded yet
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {listingDocuments.map((document) => (
+                    <div
+                      key={document._id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {document.file_name}
+                        </p>
+                        <p className="text-xs text-foreground-secondary">
+                          {(document.file_size / 1024 / 1024).toFixed(2)} MB •{" "}
+                          {new Date(document.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={document.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary-500"
+                        >
+                          Open
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void handleDeleteDocument(document._id)
+                          }
+                          disabled={deletingDocumentId === document._id}
+                          className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {deletingDocumentId === document._id
+                            ? "Removing..."
+                            : "Remove"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Preview */}

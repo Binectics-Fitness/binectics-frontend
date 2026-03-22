@@ -1,59 +1,163 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import GymOwnerSidebar from '@/components/GymOwnerSidebar';
+import DashboardLoading from '@/components/DashboardLoading';
 import QRCode from 'qrcode';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { checkinsService } from '@/lib/api/checkins';
+import { CheckInHistoryPeriod, type CheckIn } from '@/lib/types';
 
-const HOURLY_CHECK_INS = [8, 10, 6, 4, 3, 5, 9, 12, 16, 14, 11, 13, 15, 12, 10, 9, 11, 17, 19, 18, 14, 10, 7, 5];
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function getMemberName(checkIn: CheckIn): string {
+  if (typeof checkIn.member_user_id === 'object' && checkIn.member_user_id !== null) {
+    return `${checkIn.member_user_id.first_name} ${checkIn.member_user_id.last_name}`;
+  }
+  return 'Unknown Member';
+}
+
+function getMemberInitials(checkIn: CheckIn): string {
+  if (typeof checkIn.member_user_id === 'object' && checkIn.member_user_id !== null) {
+    return `${checkIn.member_user_id.first_name.charAt(0)}${checkIn.member_user_id.last_name.charAt(0)}`;
+  }
+  return '?';
+}
+
+function getMemberEmail(checkIn: CheckIn): string {
+  if (typeof checkIn.member_user_id === 'object' && checkIn.member_user_id !== null) {
+    return checkIn.member_user_id.email;
+  }
+  return '';
+}
+
+function formatTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+// ─── Component ───────────────────────────────────────────────────────────
 
 export default function GymOwnerCheckInsPage() {
-  const { user } = useAuth();
-  const [selectedPeriod, setSelectedPeriod] = useState('today');
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const { currentOrg } = useOrganization();
+  const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('today');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
+  const [stats, setStats] = useState({ today: 0, week: 0, month: 0 });
+  const [isLoading, setIsLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Generate QR code on mount
+  // Generate the check-in URL for this org
+  const checkInUrl =
+    typeof window !== 'undefined' && currentOrg
+      ? `${window.location.origin}/check-in/${currentOrg._id}`
+      : '';
+
+  // Render QR code whenever the URL is ready
   useEffect(() => {
-    if (user && canvasRef.current) {
-      // Generate a unique check-in URL for this gym
-      const gymId = user.id; // In real app, this would be the gym ID
-      const checkInUrl = `${window.location.origin}/check-in/${gymId}`;
+    if (!checkInUrl || !canvasRef.current) return;
 
-      QRCode.toCanvas(canvasRef.current, checkInUrl, {
-        width: 256,
-        margin: 2,
-        color: {
-          dark: '#03314B',
-          light: '#FFFFFF',
-        },
-      });
+    QRCode.toCanvas(canvasRef.current, checkInUrl, {
+      width: 256,
+      margin: 2,
+      color: { dark: '#03314B', light: '#FFFFFF' },
+    }).catch((err) => console.error('QR canvas error', err));
 
-      // Also generate data URL for download
-      QRCode.toDataURL(checkInUrl, { width: 512 })
-        .then(url => setQrCodeUrl(url))
-        .catch(err => console.error(err));
+    QRCode.toDataURL(checkInUrl, { width: 512 })
+      .then((url) => setQrDataUrl(url))
+      .catch((err) => console.error('QR dataURL error', err));
+  }, [checkInUrl]);
+
+  const loadCheckIns = useCallback(async () => {
+    if (!currentOrg) return;
+    setIsLoading(true);
+    try {
+      const periodMap = {
+        today: CheckInHistoryPeriod.TODAY,
+        week: CheckInHistoryPeriod.WEEK,
+        month: CheckInHistoryPeriod.MONTH,
+      } as const;
+
+      const res = await checkinsService.getOrgCheckIns(
+        currentOrg._id,
+        periodMap[selectedPeriod],
+      );
+      if (res.success && res.data) {
+        setCheckIns(res.data);
+      }
+    } catch {
+      // silently fail — empty state shown
+    } finally {
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [currentOrg, selectedPeriod]);
+
+  useEffect(() => {
+    window.setTimeout(() => void loadCheckIns(), 0);
+  }, [loadCheckIns]);
+
+  const loadStats = useCallback(async () => {
+    if (!currentOrg) return;
+    try {
+      const [todayRes, weekRes, monthRes] = await Promise.all([
+        checkinsService.getOrgCheckIns(currentOrg._id, CheckInHistoryPeriod.TODAY),
+        checkinsService.getOrgCheckIns(currentOrg._id, CheckInHistoryPeriod.WEEK),
+        checkinsService.getOrgCheckIns(currentOrg._id, CheckInHistoryPeriod.MONTH),
+      ]);
+
+      setStats({
+        today: todayRes.success && todayRes.data ? todayRes.data.length : 0,
+        week: weekRes.success && weekRes.data ? weekRes.data.length : 0,
+        month: monthRes.success && monthRes.data ? monthRes.data.length : 0,
+      });
+    } catch {
+      setStats({ today: 0, week: 0, month: 0 });
+    }
+  }, [currentOrg]);
+
+  useEffect(() => {
+    window.setTimeout(() => void loadStats(), 0);
+  }, [loadStats]);
 
   const downloadQRCode = () => {
-    if (qrCodeUrl) {
-      const link = document.createElement('a');
-      link.download = 'gym-checkin-qr-code.png';
-      link.href = qrCodeUrl;
-      link.click();
-    }
+    if (!qrDataUrl) return;
+    const link = document.createElement('a');
+    link.download = 'gym-checkin-qr-code.png';
+    link.href = qrDataUrl;
+    link.click();
   };
 
-  const checkIns = [
-    { id: 1, memberName: 'John Smith', time: '08:15 AM', date: '2024-01-16', avatar: 'JS' },
-    { id: 2, memberName: 'Sarah Johnson', time: '09:30 AM', date: '2024-01-16', avatar: 'SJ' },
-    { id: 3, memberName: 'Mike Davis', time: '10:45 AM', date: '2024-01-16', avatar: 'MD' },
-    { id: 4, memberName: 'Emily Brown', time: '11:20 AM', date: '2024-01-16', avatar: 'EB' },
-    { id: 5, memberName: 'Alex Wilson', time: '12:05 PM', date: '2024-01-16', avatar: 'AW' },
-    { id: 6, memberName: 'Lisa Martinez', time: '01:30 PM', date: '2024-01-16', avatar: 'LM' },
-    { id: 7, memberName: 'Tom Anderson', time: '02:15 PM', date: '2024-01-16', avatar: 'TA' },
-  ];
+  // Stats derived from loaded data
+  const todayCount = stats.today;
+  const weekCount = stats.week;
+  const monthCount = stats.month;
+
+  // Most recent check-in for "Last Check-in" stat
+  const lastCheckIn =
+    checkIns.length > 0
+      ? formatTime(checkIns[0].checked_in_at)
+      : '—';
+
+  if (!currentOrg) {
+    return (
+      <div className="flex min-h-screen bg-background">
+        <GymOwnerSidebar />
+        <main className="md:ml-64 flex-1 flex items-center justify-center">
+          <p className="text-foreground/60">Select an organisation to continue.</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -70,25 +174,41 @@ export default function GymOwnerCheckInsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">Today&apos;s Check-ins</p>
-              <p className="text-3xl font-black text-foreground mt-2">87</p>
-              <p className="text-sm text-primary-500 mt-2">+12% from yesterday</p>
+              {isLoading ? (
+                <div className="h-9 w-16 bg-gray-100 animate-pulse rounded mt-2" />
+              ) : (
+                <p className="text-3xl font-black text-foreground mt-2">{todayCount}</p>
+              )}
             </div>
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">This Week</p>
-              <p className="text-3xl font-black text-foreground mt-2">456</p>
+              {isLoading ? (
+                <div className="h-9 w-16 bg-gray-100 animate-pulse rounded mt-2" />
+              ) : (
+                <p className="text-3xl font-black text-foreground mt-2">{weekCount}</p>
+              )}
             </div>
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">This Month</p>
-              <p className="text-3xl font-black text-foreground mt-2">1,847</p>
+              {isLoading ? (
+                <div className="h-9 w-16 bg-gray-100 animate-pulse rounded mt-2" />
+              ) : (
+                <p className="text-3xl font-black text-foreground mt-2">{monthCount}</p>
+              )}
             </div>
             <div className="bg-white rounded-xl shadow-card p-6">
-              <p className="text-sm font-medium text-foreground/60">Peak Hour</p>
-              <p className="text-3xl font-black text-foreground mt-2">6 PM</p>
+              <p className="text-sm font-medium text-foreground/60">Last Check-in</p>
+              {isLoading ? (
+                <div className="h-9 w-20 bg-gray-100 animate-pulse rounded mt-2" />
+              ) : (
+                <p className="text-3xl font-black text-foreground mt-2">{lastCheckIn}</p>
+              )}
             </div>
           </div>
 
-          {/* QR Code Section */}
+          {/* QR Code Section + Recent Check-ins */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* QR Card */}
             <div className="bg-accent-blue-50 border-2 border-accent-blue-200 rounded-xl p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">Your Gym QR Code</h3>
               <div className="bg-white rounded-lg p-6 flex items-center justify-center mb-4">
@@ -100,7 +220,8 @@ export default function GymOwnerCheckInsPage() {
               <div className="space-y-2">
                 <button
                   onClick={downloadQRCode}
-                  className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors flex items-center justify-center gap-2"
+                  disabled={!qrDataUrl}
+                  className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -117,48 +238,75 @@ export default function GymOwnerCheckInsPage() {
                   Print QR Code
                 </button>
               </div>
-              <div className="mt-4 p-3 bg-white rounded-lg">
-                <p className="text-xs font-semibold text-foreground/70 mb-1">Check-in URL:</p>
-                <p className="text-xs text-foreground/60 break-all">
-                  {typeof window !== 'undefined' && `${window.location.origin}/check-in/${user?.id}`}
-                </p>
-              </div>
+              {checkInUrl && (
+                <div className="mt-4 p-3 bg-white rounded-lg">
+                  <p className="text-xs font-semibold text-foreground/70 mb-1">Check-in URL:</p>
+                  <p className="text-xs text-foreground/60 break-all">{checkInUrl}</p>
+                </div>
+              )}
             </div>
 
             {/* Recent Check-ins */}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-card p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">Recent Check-ins</h3>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {checkIns.map((checkIn) => (
-                  <div
-                    key={checkIn.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-accent-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {checkIn.avatar}
+              {isLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+                        <div className="h-3 bg-gray-100 rounded w-20 animate-pulse" />
                       </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{checkIn.memberName}</p>
-                        <p className="text-sm text-foreground/60">Checked in via QR</p>
-                      </div>
+                      <div className="h-4 bg-gray-200 rounded w-16 animate-pulse" />
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-foreground">{checkIn.time}</p>
-                      <p className="text-sm text-foreground/60">{checkIn.date}</p>
-                    </div>
+                  ))}
+                </div>
+              ) : checkIns.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
                   </div>
-                ))}
-              </div>
+                  <p className="text-foreground/60 font-medium">No check-ins yet</p>
+                  <p className="text-sm text-foreground/40 mt-1">
+                    Share the QR code with your members to get started
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {checkIns.slice(0, 20).map((checkIn) => (
+                    <div
+                      key={checkIn._id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-accent-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          {getMemberInitials(checkIn)}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">{getMemberName(checkIn)}</p>
+                          <p className="text-sm text-foreground/60">{getMemberEmail(checkIn)}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-foreground">{formatTime(checkIn.checked_in_at)}</p>
+                        <p className="text-sm text-foreground/60">{formatDate(checkIn.checked_in_at)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Check-in History */}
+          {/* Check-in History with period filter */}
           <div className="bg-white rounded-xl shadow-card p-6">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
               <h3 className="text-lg font-bold text-foreground">Check-in History</h3>
               <div className="flex gap-2">
-                {['today', 'week', 'month'].map((period) => (
+                {(['today', 'week', 'month'] as const).map((period) => (
                   <button
                     key={period}
                     onClick={() => setSelectedPeriod(period)}
@@ -174,27 +322,48 @@ export default function GymOwnerCheckInsPage() {
               </div>
             </div>
 
-            {/* Hourly breakdown */}
-            <div className="grid grid-cols-12 gap-2 mb-4">
-              {Array.from({ length: 24 }, (_, i) => {
-                const hour = i;
-                const checkIns = HOURLY_CHECK_INS[i];
-                const height = Math.max(20, (checkIns / 20) * 100);
-                return (
-                  <div key={i} className="flex flex-col items-center gap-1">
-                    <div className="w-full bg-gray-100 rounded-t-lg flex items-end" style={{ height: '100px' }}>
-                      <div
-                        className="w-full bg-accent-blue-500 rounded-t-lg"
-                        style={{ height: `${height}%` }}
-                        title={`${hour}:00 - ${checkIns} check-ins`}
-                      />
-                    </div>
-                    <span className="text-xs text-foreground/60">{hour}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-center text-sm text-foreground/60">Hourly check-in distribution</p>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-16 bg-gray-50 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : checkIns.length === 0 ? (
+              <div className="text-center py-10 text-foreground/50">
+                No check-ins in this period
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-foreground/70">Member</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground/70">Email</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground/70">Date</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground/70">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {checkIns.map((checkIn) => (
+                      <tr key={checkIn._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-4 font-medium text-foreground">
+                          {getMemberName(checkIn)}
+                        </td>
+                        <td className="py-3 px-4 text-foreground/60">
+                          {getMemberEmail(checkIn)}
+                        </td>
+                        <td className="py-3 px-4 text-foreground/70">
+                          {formatDate(checkIn.checked_in_at)}
+                        </td>
+                        <td className="py-3 px-4 text-foreground/70">
+                          {formatTime(checkIn.checked_in_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </main>
