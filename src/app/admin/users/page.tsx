@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
 import { UserRole } from "@/lib/types";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { showAlert } from "@/lib/ui/dialogs";
 
 enum AdminUserStatus {
   ACTIVE = "Active",
@@ -25,6 +27,7 @@ export default function AdminUsersPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   // Mock data
   const users: AdminUser[] = [
@@ -111,19 +114,26 @@ export default function AdminUsersPage() {
   ];
 
   const handleSuspendUser = (userId: number, userName: string) => {
-    if (
-      confirm(
-        `Are you sure you want to suspend ${userName}? They will lose access to the platform.`,
-      )
-    ) {
-      alert("User suspended successfully");
-    }
+    requestConfirmation({
+      title: "Suspend user?",
+      description: `${userName} will lose access to the platform until reactivated.`,
+      confirmLabel: "Suspend User",
+      onConfirm: async () => {
+        await showAlert("User suspended successfully");
+      },
+    });
   };
 
   const handleActivateUser = (userId: number, userName: string) => {
-    if (confirm(`Are you sure you want to activate ${userName}?`)) {
-      alert("User activated successfully");
-    }
+    requestConfirmation({
+      title: "Activate user?",
+      description: `${userName} will regain access to the platform.`,
+      confirmLabel: "Activate User",
+      confirmVariant: "primary",
+      onConfirm: async () => {
+        await showAlert("User activated successfully");
+      },
+    });
   };
 
   const handleViewUser = (userId: number) => {
@@ -441,6 +451,7 @@ export default function AdminUsersPage() {
               </button>
             </div>
           </div>
+          {confirmationModal}
         </div>
       </div>
     </div>

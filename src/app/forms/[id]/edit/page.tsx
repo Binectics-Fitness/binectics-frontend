@@ -15,6 +15,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import PublishSuccessModal from "@/components/PublishSuccessModal";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import {
   DndContext,
   closestCenter,
@@ -189,6 +190,7 @@ export default function FormBuilderPage() {
   const router = useRouter();
   const params = useParams();
   const formId = params.id as string;
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   const {
     form,
@@ -410,14 +412,17 @@ export default function FormBuilderPage() {
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
-    if (!confirm("Are you sure you want to delete this question?")) {
-      return;
-    }
-
-    const success = await deleteQuestion(questionId);
-    if (!success) {
-      showToast("Failed to delete question", true);
-    }
+    requestConfirmation({
+      title: "Delete question?",
+      description: "This removes the question from the form immediately.",
+      confirmLabel: "Delete Question",
+      onConfirm: async () => {
+        const success = await deleteQuestion(questionId);
+        if (!success) {
+          showToast("Failed to delete question", true);
+        }
+      },
+    });
   };
 
   const handlePublishForm = async () => {
@@ -893,6 +898,8 @@ export default function FormBuilderPage() {
             </div>
           )}
         </div>
+
+        {confirmationModal}
 
         {/* Question Modal */}
         {showQuestionModal && (

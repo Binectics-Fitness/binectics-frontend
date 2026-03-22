@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { showAlert, showPrompt } from "@/lib/ui/dialogs";
 
 enum ReviewModerationStatus {
   PUBLISHED = "Published",
@@ -24,6 +26,7 @@ type AdminReview = {
 
 export default function AdminReviewsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   // Mock data
   const reviews: AdminReview[] = [
@@ -109,17 +112,26 @@ export default function AdminReviewsPage() {
   ];
 
   const handleApproveReview = (id: number, provider: string) => {
-    if (confirm(`Approve this review for ${provider}?`)) {
-      alert("Review approved and published");
-    }
+    requestConfirmation({
+      title: "Approve review?",
+      description: `Publish this review for ${provider} to the live platform.`,
+      confirmLabel: "Approve Review",
+      confirmVariant: "primary",
+      onConfirm: async () => {
+        await showAlert("Review approved and published");
+      },
+    });
   };
 
-  const handleRemoveReview = (id: number, provider: string) => {
-    const reason = prompt(
-      `Please provide a reason for removing this review from ${provider}:`,
-    );
+  const handleRemoveReview = async (id: number, provider: string) => {
+    const reason = await showPrompt({
+      title: "Remove review",
+      message: `Please provide a reason for removing this review from ${provider}:`,
+      placeholder: "Reason",
+      confirmLabel: "Remove",
+    });
     if (reason) {
-      alert("Review removed successfully. User will be notified.");
+      await showAlert("Review removed successfully. User will be notified.");
     }
   };
 
@@ -334,6 +346,7 @@ export default function AdminReviewsPage() {
           </div>
         </div>
       </div>
+      {confirmationModal}
     </div>
   );
 }

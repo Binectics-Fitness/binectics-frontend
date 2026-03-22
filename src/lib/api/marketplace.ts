@@ -301,6 +301,75 @@ export const marketplaceService = {
     );
   },
 
+  async uploadOrgListingProfileImage(
+    organizationId: string,
+    file: File,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return await apiClient.patchFormData<MarketplaceListing>(
+      `/marketplace/organizations/${organizationId}/listing/profile-image`,
+      formData,
+    );
+  },
+
+  async deleteOrgListingProfileImage(
+    organizationId: string,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/marketplace/organizations/${organizationId}/listing/profile-image/delete`,
+    );
+  },
+
+  async uploadOrgListingGalleryImages(
+    organizationId: string,
+    files: File[],
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+
+    return await apiClient.postFormData<MarketplaceListing>(
+      `/marketplace/organizations/${organizationId}/listing/gallery`,
+      formData,
+    );
+  },
+
+  async deleteOrgListingGalleryImage(
+    organizationId: string,
+    imageUrl: string,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/marketplace/organizations/${organizationId}/listing/gallery/delete`,
+      { image_url: imageUrl },
+    );
+  },
+
+  async replaceOrgListingGalleryImage(
+    organizationId: string,
+    oldImageUrl: string,
+    file: File,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("old_image_url", oldImageUrl);
+
+    return await apiClient.patchFormData<MarketplaceListing>(
+      `/marketplace/organizations/${organizationId}/listing/gallery/replace`,
+      formData,
+    );
+  },
+
+  async reorderOrgListingGalleryImages(
+    organizationId: string,
+    photos: string[],
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/marketplace/organizations/${organizationId}/listing/gallery/reorder`,
+      { photos },
+    );
+  },
+
   async getOrgListingRequests(
     organizationId: string,
   ): Promise<ApiResponse<MarketplaceRequest[]>> {

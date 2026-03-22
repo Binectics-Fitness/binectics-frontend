@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { formatLocal } from "@/utils/format";
 import {
@@ -100,6 +101,7 @@ export default function OrgDetailPage() {
   });
   const [creatingRole, setCreatingRole] = useState(false);
   const [roleError, setRoleError] = useState<string | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
     if (orgId && !authLoading && isAuthorized) loadAll();
@@ -189,17 +191,23 @@ export default function OrgDetailPage() {
   }
 
   async function handleRemoveMember(memberId: string) {
-    if (!confirm("Are you sure you want to remove this member?")) return;
-    try {
-      const res = await teamsService.removeMember(orgId, memberId);
-      if (res.success) {
-        setMembers((prev) => prev.filter((m) => m._id !== memberId));
-      } else {
-        setError(res.message ?? "Failed to remove member.");
-      }
-    } catch {
-      setError("Failed to remove member.");
-    }
+    requestConfirmation({
+      title: "Remove member?",
+      description: "This removes the member from the organization immediately.",
+      confirmLabel: "Remove Member",
+      onConfirm: async () => {
+        try {
+          const res = await teamsService.removeMember(orgId, memberId);
+          if (res.success) {
+            setMembers((prev) => prev.filter((m) => m._id !== memberId));
+          } else {
+            setError(res.message ?? "Failed to remove member.");
+          }
+        } catch {
+          setError("Failed to remove member.");
+        }
+      },
+    });
   }
 
   async function handleDeactivateMember(
@@ -221,23 +229,30 @@ export default function OrgDetailPage() {
   }
 
   async function handleCancelInvitation(invitationId: string) {
-    if (!confirm("Cancel this invitation?")) return;
-    try {
-      const res = await teamsService.cancelInvitation(orgId, invitationId);
-      if (res.success) {
-        setInvitations((prev) =>
-          prev.map((i) =>
-            i._id === invitationId
-              ? { ...i, status: InvitationStatus.CANCELLED }
-              : i,
-          ),
-        );
-      } else {
-        setError(res.message ?? "Failed to cancel invitation.");
-      }
-    } catch {
-      setError("Failed to cancel invitation.");
-    }
+    requestConfirmation({
+      title: "Cancel invitation?",
+      description:
+        "The recipient will no longer be able to use this invitation link.",
+      confirmLabel: "Cancel Invitation",
+      onConfirm: async () => {
+        try {
+          const res = await teamsService.cancelInvitation(orgId, invitationId);
+          if (res.success) {
+            setInvitations((prev) =>
+              prev.map((i) =>
+                i._id === invitationId
+                  ? { ...i, status: InvitationStatus.CANCELLED }
+                  : i,
+              ),
+            );
+          } else {
+            setError(res.message ?? "Failed to cancel invitation.");
+          }
+        } catch {
+          setError("Failed to cancel invitation.");
+        }
+      },
+    });
   }
 
   async function handleCreateRole(e: React.FormEvent) {
@@ -261,14 +276,16 @@ export default function OrgDetailPage() {
   }
 
   async function handleDeleteRole(roleId: string) {
-    if (
-      !confirm(
-        "Delete this role? Members using it will keep their assignment until updated.",
-      )
-    )
-      return;
-    await teamsService.deleteRole(orgId, roleId);
-    setRoles((prev) => prev.filter((r) => r._id !== roleId));
+    requestConfirmation({
+      title: "Delete custom role?",
+      description:
+        "Members using it will keep their assignment until you update them.",
+      confirmLabel: "Delete Role",
+      onConfirm: async () => {
+        await teamsService.deleteRole(orgId, roleId);
+        setRoles((prev) => prev.filter((r) => r._id !== roleId));
+      },
+    });
   }
 
   function togglePermission(perm: TeamPermission) {
@@ -975,6 +992,8 @@ export default function OrgDetailPage() {
           </div>
         </div>
       )}
+
+      {confirmationModal}
 
       {/* ─── CREATE ROLE MODAL ─── */}
       {showRoleModal && (

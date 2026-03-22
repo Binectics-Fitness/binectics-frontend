@@ -1,13 +1,14 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { authService } from "@/lib/api/auth";
 import { utilityService } from "@/lib/api/utility";
 import type { CountryItem } from "@/lib/api/utility";
 import { UserRole } from "@/lib/types";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 const FITNESS_GOAL_SUGGESTIONS = [
   "Weight Loss",
@@ -51,13 +52,38 @@ const ACTIVITY_SUGGESTIONS = [
   "Calisthenics",
 ];
 
+const MAX_IMAGE_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_UPLOAD_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+
 export default function ProfileSettingsPage() {
   const { user, updateUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
+  const [isDeletingProfileImage, setIsDeletingProfileImage] = useState(false);
+  const [isDeleteProfileImageModalOpen, setIsDeleteProfileImageModalOpen] =
+    useState(false);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
+    null,
+  );
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
+  const profileImagePreviewRef = useRef<string | null>(null);
+
+  const displayedProfileImage = profileImagePreview ?? user?.profile_picture;
+
+  const revokeProfilePreview = () => {
+    if (profileImagePreviewRef.current) {
+      URL.revokeObjectURL(profileImagePreviewRef.current);
+      profileImagePreviewRef.current = null;
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -74,6 +100,12 @@ export default function ProfileSettingsPage() {
     loadCountries();
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      revokeProfilePreview();
     };
   }, []);
 
@@ -149,6 +181,90 @@ export default function ProfileSettingsPage() {
       setTimeout(() => setErrorMessage(""), 3000);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleProfileImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (!user) return;
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_UPLOAD_TYPES.has(file.type)) {
+      setErrorMessage(
+        "Unsupported image format. Please upload PNG, JPEG, WEBP, or GIF.",
+      );
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_UPLOAD_SIZE_BYTES) {
+      setErrorMessage("Image is too large. Maximum allowed size is 5MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsUploadingProfileImage(true);
+
+    revokeProfilePreview();
+    const previewUrl = URL.createObjectURL(file);
+    profileImagePreviewRef.current = previewUrl;
+    setProfileImagePreview(previewUrl);
+
+    try {
+      const res = await authService.uploadProfilePicture(file);
+
+      if (res.success && res.data) {
+        updateUser({
+          ...user,
+          profile_picture: res.data.profile_picture || undefined,
+        });
+        setSuccessMessage("Profile image updated successfully.");
+      } else {
+        setErrorMessage(res.message || "Failed to upload profile image");
+      }
+    } catch (error) {
+      console.error("Profile image upload error:", error);
+      setErrorMessage("An error occurred while uploading the profile image");
+    } finally {
+      revokeProfilePreview();
+      setProfileImagePreview(null);
+      setIsUploadingProfileImage(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleProfileImageDelete = async () => {
+    if (!user?.profile_picture) return;
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsDeletingProfileImage(true);
+
+    try {
+      const res = await authService.deleteProfilePicture();
+
+      if (res.success) {
+        revokeProfilePreview();
+        setProfileImagePreview(null);
+        updateUser({
+          ...user,
+          profile_picture: undefined,
+        });
+        setIsDeleteProfileImageModalOpen(false);
+        setSuccessMessage("Profile image removed successfully.");
+      } else {
+        setErrorMessage(res.message || "Failed to remove profile image");
+      }
+    } catch (error) {
+      console.error("Profile image delete error:", error);
+      setErrorMessage("An error occurred while removing the profile image");
+    } finally {
+      setIsDeletingProfileImage(false);
     }
   };
 
@@ -450,6 +566,64 @@ export default function ProfileSettingsPage() {
 
       {/* Basic Information */}
       <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            {displayedProfileImage ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={displayedProfileImage}
+                alt="Profile"
+                className="h-20 w-20 rounded-2xl object-cover border border-neutral-200"
+              />
+            ) : (
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-50 text-2xl font-black text-primary-700">
+                {`${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() ||
+                  "U"}
+              </div>
+            )}
+            <div>
+              <h3 className="text-lg font-bold text-foreground sm:text-xl">
+                Profile Image
+              </h3>
+              <p className="text-sm text-foreground-secondary">
+                Upload a clear photo for your dashboard and marketplace
+                presence.
+              </p>
+              {profileImagePreview && (
+                <p className="mt-1 text-xs text-primary-600">
+                  Previewing your new image while upload completes.
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <label className="cursor-pointer rounded-lg border border-neutral-300 px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary-500 disabled:opacity-50">
+              {isUploadingProfileImage ? "Uploading..." : "Upload Image"}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={handleProfileImageUpload}
+                disabled={isUploadingProfileImage || isDeletingProfileImage}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsDeleteProfileImageModalOpen(true)}
+              disabled={
+                !user.profile_picture ||
+                isUploadingProfileImage ||
+                isDeletingProfileImage
+              }
+              className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isDeletingProfileImage ? "Removing..." : "Remove Image"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
         <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Basic Information
         </h3>
@@ -535,6 +709,16 @@ export default function ProfileSettingsPage() {
           {isSaving ? "Saving..." : "Save Profile"}
         </button>
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteProfileImageModalOpen}
+        title="Remove profile image?"
+        description="This removes your current photo from your profile until you upload a new one."
+        confirmLabel="Remove Image"
+        onConfirm={handleProfileImageDelete}
+        onCancel={() => setIsDeleteProfileImageModalOpen(false)}
+        isConfirming={isDeletingProfileImage}
+      />
     </div>
   );
 }

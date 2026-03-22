@@ -8,6 +8,8 @@ import { useForms } from "@/hooks/useForms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { showAlert } from "@/lib/ui/dialogs";
 import { formatDate } from "@/utils/format";
 
 function FormsListContent() {
@@ -19,6 +21,7 @@ function FormsListContent() {
   const [highlightedFormId, setHighlightedFormId] = useState<string | null>(
     null,
   );
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -49,19 +52,18 @@ function FormsListContent() {
   }, [searchParams]);
 
   const handleDelete = async (formId: string, formTitle: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete "${formTitle}"? This action cannot be undone.`,
-      )
-    ) {
-      return;
-    }
+    requestConfirmation({
+      title: "Delete form?",
+      description: `Delete \"${formTitle}\" permanently? This action cannot be undone.`,
+      confirmLabel: "Delete Form",
+      onConfirm: async () => {
+        const success = await deleteForm(formId);
 
-    const success = await deleteForm(formId);
-
-    if (!success) {
-      alert("Failed to delete form");
-    }
+        if (!success) {
+          await showAlert("Failed to delete form");
+        }
+      },
+    });
   };
 
   if (authLoading || (isLoading && forms.length === 0)) {
@@ -243,6 +245,7 @@ function FormsListContent() {
           </div>
         )}
       </div>
+      {confirmationModal}
     </div>
   );
 }

@@ -245,6 +245,9 @@ export interface MarketplaceListing {
   certifications: string[];
   languages: string[];
   photos: string[];
+  profile_image?: string;
+  profile_image_public_id?: string;
+  gallery_image_public_ids?: string[];
   city?: string;
   country_code?: string;
   address?: string;
