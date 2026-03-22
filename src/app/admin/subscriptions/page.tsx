@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { showAlert } from "@/lib/ui/dialogs";
 
 enum AdminSubscriptionStatus {
   ACTIVE = "ACTIVE",
@@ -25,6 +27,7 @@ type AdminSubscription = {
 
 export default function AdminSubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   // Mock data
   const subscriptions: AdminSubscription[] = [
@@ -118,13 +121,14 @@ export default function AdminSubscriptionsPage() {
   };
 
   const handleCancelSubscription = (id: number, user: string) => {
-    if (
-      confirm(
-        `Are you sure you want to cancel ${user}'s subscription? This action cannot be undone.`,
-      )
-    ) {
-      alert("Subscription cancelled successfully");
-    }
+    requestConfirmation({
+      title: "Cancel subscription?",
+      description: `Cancel ${user}'s subscription immediately? This action cannot be undone.`,
+      confirmLabel: "Cancel Subscription",
+      onConfirm: async () => {
+        await showAlert("Subscription cancelled successfully");
+      },
+    });
   };
 
   return (
@@ -353,6 +357,7 @@ export default function AdminSubscriptionsPage() {
           </div>
         </div>
       </div>
+      {confirmationModal}
     </div>
   );
 }

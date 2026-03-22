@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
 import { UserRole } from "@/lib/types";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { showAlert } from "@/lib/ui/dialogs";
 
 enum ProviderStatus {
   ACTIVE = "Active",
@@ -27,6 +29,7 @@ export default function AdminProvidersPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | UserRole>("all");
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   // Mock data
   const providers: AdminProvider[] = [
@@ -109,19 +112,26 @@ export default function AdminProvidersPage() {
   };
 
   const handleSuspendProvider = (id: number, name: string) => {
-    if (
-      confirm(
-        `Are you sure you want to suspend ${name}? Their services will be temporarily unavailable.`,
-      )
-    ) {
-      alert("Provider suspended successfully");
-    }
+    requestConfirmation({
+      title: "Suspend provider?",
+      description: `${name}'s services will be temporarily unavailable.`,
+      confirmLabel: "Suspend Provider",
+      onConfirm: async () => {
+        await showAlert("Provider suspended successfully");
+      },
+    });
   };
 
   const handleActivateProvider = (id: number, name: string) => {
-    if (confirm(`Are you sure you want to activate ${name}?`)) {
-      alert("Provider activated successfully");
-    }
+    requestConfirmation({
+      title: "Activate provider?",
+      description: `${name} will become available in the platform again.`,
+      confirmLabel: "Activate Provider",
+      confirmVariant: "primary",
+      onConfirm: async () => {
+        await showAlert("Provider activated successfully");
+      },
+    });
   };
 
   const getTypeBadgeColor = (type: UserRole) => {
@@ -527,6 +537,7 @@ export default function AdminProvidersPage() {
               </button>
             </div>
           </div>
+          {confirmationModal}
         </div>
       </div>
     </div>

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
 import { UserRole } from "@/lib/types";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { showAlert, showPrompt } from "@/lib/ui/dialogs";
 
 enum VerificationRequestStatus {
   PENDING = "PENDING",
@@ -24,6 +26,7 @@ type VerificationRequest = {
 
 export default function AdminVerificationPage() {
   const [statusFilter, setStatusFilter] = useState("pending");
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   // Mock data
   const verifications: VerificationRequest[] = [
@@ -81,19 +84,26 @@ export default function AdminVerificationPage() {
   ];
 
   const handleApprove = (id: number, name: string) => {
-    if (
-      confirm(
-        `Are you sure you want to approve ${name}? They will receive verified status.`,
-      )
-    ) {
-      alert("Verification approved successfully");
-    }
+    requestConfirmation({
+      title: "Approve verification?",
+      description: `${name} will receive verified status immediately.`,
+      confirmLabel: "Approve Verification",
+      confirmVariant: "primary",
+      onConfirm: async () => {
+        await showAlert("Verification approved successfully");
+      },
+    });
   };
 
-  const handleReject = (id: number, name: string) => {
-    const reason = prompt(`Please provide a reason for rejecting ${name}:`);
+  const handleReject = async (id: number, name: string) => {
+    const reason = await showPrompt({
+      title: "Reject verification",
+      message: `Please provide a reason for rejecting ${name}:`,
+      placeholder: "Reason",
+      confirmLabel: "Reject",
+    });
     if (reason) {
-      alert("Verification rejected. Applicant will be notified.");
+      await showAlert("Verification rejected. Applicant will be notified.");
     }
   };
 
@@ -302,6 +312,7 @@ export default function AdminVerificationPage() {
           </div>
         </div>
       </div>
+      {confirmationModal}
     </div>
   );
 }

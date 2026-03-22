@@ -156,11 +156,17 @@ export default function DietitiansPage() {
       selectedLocation === "all" ||
       (selectedLocation === "usa" && locationValue.includes("usa")) ||
       (selectedLocation === "uk" && locationValue.includes("uk")) ||
-      (selectedLocation === "asia" && (locationValue.includes("india") || locationValue.includes("singapore"))) ||
-      (selectedLocation === "europe" && (locationValue.includes("spain") || locationValue.includes("london"))) ||
+      (selectedLocation === "asia" &&
+        (locationValue.includes("india") ||
+          locationValue.includes("singapore"))) ||
+      (selectedLocation === "europe" &&
+        (locationValue.includes("spain") ||
+          locationValue.includes("london"))) ||
       (selectedLocation === "middle-east" && locationValue.includes("dubai"));
     const matchesVerified = !verifiedOnly || dietitian.verified;
-    return matchesSearch && matchesSpecialty && matchesLocation && matchesVerified;
+    return (
+      matchesSearch && matchesSpecialty && matchesLocation && matchesVerified
+    );
   });
 
   return (

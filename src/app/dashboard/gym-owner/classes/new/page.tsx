@@ -1,48 +1,61 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import GymOwnerSidebar from '@/components/GymOwnerSidebar';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import GymOwnerSidebar from "@/components/GymOwnerSidebar";
+import { showAlert } from "@/lib/ui/dialogs";
 
 export default function AddNewClassPage() {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    instructor: '',
-    category: 'Strength Training',
+    name: "",
+    description: "",
+    instructor: "",
+    category: "Strength Training",
     schedule: {
       days: [] as string[],
-      startTime: '',
-      endTime: '',
+      startTime: "",
+      endTime: "",
     },
-    duration: '',
-    capacity: '',
-    price: '',
+    duration: "",
+    capacity: "",
+    price: "",
     recurring: true,
-    startDate: '',
-    endDate: '',
+    startDate: "",
+    endDate: "",
   });
 
   const categories = [
-    'Strength Training',
-    'Cardio',
-    'Yoga',
-    'Pilates',
-    'HIIT',
-    'Cycling',
-    'Boxing',
-    'Dance',
-    'CrossFit',
-    'Swimming',
-    'Martial Arts',
-    'Other',
+    "Strength Training",
+    "Cardio",
+    "Yoga",
+    "Pilates",
+    "HIIT",
+    "Cycling",
+    "Boxing",
+    "Dance",
+    "CrossFit",
+    "Swimming",
+    "Martial Arts",
+    "Other",
   ];
 
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -54,8 +67,14 @@ export default function AddNewClassPage() {
     setFormData({ ...formData, schedule: { ...formData.schedule, days } });
   };
 
-  const handleScheduleChange = (field: 'startTime' | 'endTime', value: string) => {
-    setFormData({ ...formData, schedule: { ...formData.schedule, [field]: value } });
+  const handleScheduleChange = (
+    field: "startTime" | "endTime",
+    value: string,
+  ) => {
+    setFormData({
+      ...formData,
+      schedule: { ...formData.schedule, [field]: value },
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,11 +84,11 @@ export default function AddNewClassPage() {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      alert('Class created successfully!');
-      router.push('/dashboard/gym-owner/classes');
+      await showAlert("Class created successfully!");
+      router.push("/dashboard/gym-owner/classes");
     } catch (error) {
-      console.error('Error creating class:', error);
-      alert('Failed to create class. Please try again.');
+      console.error("Error creating class:", error);
+      await showAlert("Failed to create class. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -87,19 +106,35 @@ export default function AddNewClassPage() {
               onClick={() => router.back()}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-5 h-5 text-foreground"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
-            <h1 className="font-display text-3xl font-black text-foreground">Add New Class</h1>
+            <h1 className="font-display text-3xl font-black text-foreground">
+              Add New Class
+            </h1>
           </div>
-          <p className="text-foreground/60">Create a new fitness class for your gym members</p>
+          <p className="text-foreground/60">
+            Create a new fitness class for your gym members
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl">
           {/* Basic Information */}
           <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-            <h2 className="text-xl font-bold text-foreground mb-6">Basic Information</h2>
+            <h2 className="text-xl font-bold text-foreground mb-6">
+              Basic Information
+            </h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -185,8 +220,8 @@ export default function AddNewClassPage() {
                       onClick={() => handleDayToggle(day)}
                       className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                         formData.schedule.days.includes(day)
-                          ? 'bg-accent-blue-500 text-foreground'
-                          : 'bg-gray-100 text-foreground/60 hover:bg-gray-200'
+                          ? "bg-accent-blue-500 text-foreground"
+                          : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
                       }`}
                     >
                       {day.substring(0, 3)}
@@ -203,7 +238,9 @@ export default function AddNewClassPage() {
                   <input
                     type="time"
                     value={formData.schedule.startTime}
-                    onChange={(e) => handleScheduleChange('startTime', e.target.value)}
+                    onChange={(e) =>
+                      handleScheduleChange("startTime", e.target.value)
+                    }
                     required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
@@ -216,7 +253,9 @@ export default function AddNewClassPage() {
                   <input
                     type="time"
                     value={formData.schedule.endTime}
-                    onChange={(e) => handleScheduleChange('endTime', e.target.value)}
+                    onChange={(e) =>
+                      handleScheduleChange("endTime", e.target.value)
+                    }
                     required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
@@ -262,7 +301,9 @@ export default function AddNewClassPage() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
-                  <p className="text-xs text-foreground/60 mt-1">Leave blank for ongoing classes</p>
+                  <p className="text-xs text-foreground/60 mt-1">
+                    Leave blank for ongoing classes
+                  </p>
                 </div>
               </div>
             </div>
@@ -270,7 +311,9 @@ export default function AddNewClassPage() {
 
           {/* Capacity & Pricing */}
           <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-            <h2 className="text-xl font-bold text-foreground mb-6">Capacity & Pricing</h2>
+            <h2 className="text-xl font-bold text-foreground mb-6">
+              Capacity & Pricing
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -286,7 +329,9 @@ export default function AddNewClassPage() {
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   placeholder="20"
                 />
-                <p className="text-xs text-foreground/60 mt-1">Maximum number of participants</p>
+                <p className="text-xs text-foreground/60 mt-1">
+                  Maximum number of participants
+                </p>
               </div>
 
               <div>
@@ -303,7 +348,9 @@ export default function AddNewClassPage() {
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   placeholder="0.00"
                 />
-                <p className="text-xs text-foreground/60 mt-1">Leave blank if included in membership</p>
+                <p className="text-xs text-foreground/60 mt-1">
+                  Leave blank if included in membership
+                </p>
               </div>
             </div>
           </div>
@@ -322,7 +369,7 @@ export default function AddNewClassPage() {
               disabled={isSaving}
               className="px-8 py-3 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSaving ? 'Creating Class...' : 'Create Class'}
+              {isSaving ? "Creating Class..." : "Create Class"}
             </button>
           </div>
         </form>

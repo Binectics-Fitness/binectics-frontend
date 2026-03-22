@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./Button";
+import { showAlert } from "@/lib/ui/dialogs";
 
 interface PublishSuccessModalProps {
   formId: string;
@@ -30,7 +31,7 @@ export default function PublishSuccessModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      alert("Failed to copy link");
+      await showAlert("Failed to copy link");
     }
   };
 

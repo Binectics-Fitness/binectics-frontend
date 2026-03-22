@@ -45,6 +45,11 @@ export interface VerifyOtpRequest {
   otp: string;
 }
 
+export interface ProfilePictureResponse {
+  profile_picture: string | null;
+  profile_picture_public_id: string | null;
+}
+
 export interface ResendOtpRequest {
   email: string;
 }
@@ -182,5 +187,23 @@ export const authService = {
     data: Record<string, unknown>,
   ): Promise<ApiResponse<User>> {
     return apiClient.patch<User>("/auth/profile", data);
+  },
+
+  async uploadProfilePicture(
+    file: File,
+  ): Promise<ApiResponse<ProfilePictureResponse>> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return apiClient.patchFormData<ProfilePictureResponse>(
+      "/auth/profile/picture",
+      formData,
+    );
+  },
+
+  async deleteProfilePicture(): Promise<ApiResponse<ProfilePictureResponse>> {
+    return apiClient.patch<ProfilePictureResponse>(
+      "/auth/profile/picture/delete",
+    );
   },
 };

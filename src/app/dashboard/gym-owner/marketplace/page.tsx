@@ -1,13 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
+import ConfirmationModal from "@/components/ConfirmationModal";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
+
+const MAX_IMAGE_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_GALLERY_UPLOAD_FILES = 10;
+const ALLOWED_IMAGE_UPLOAD_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
 
 export default function OrgMarketplaceListingPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -21,8 +31,28 @@ export default function OrgMarketplaceListingPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [isDeletingProfileImage, setIsDeletingProfileImage] = useState(false);
+  const [deletingGalleryImageUrl, setDeletingGalleryImageUrl] = useState<
+    string | null
+  >(null);
+  const [pendingImageDeletion, setPendingImageDeletion] = useState<
+    { type: "profile" } | { type: "gallery"; imageUrl: string } | null
+  >(null);
+  const [replacingImageUrl, setReplacingImageUrl] = useState<string | null>(
+    null,
+  );
+  const [isReorderingGallery, setIsReorderingGallery] = useState(false);
+  const [draggedGalleryIndex, setDraggedGalleryIndex] = useState<number | null>(
+    null,
+  );
+  const [galleryReplacementPreviews, setGalleryReplacementPreviews] = useState<
+    Record<string, string>
+  >({});
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [imageError, setImageError] = useState("");
 
   const [headline, setHeadline] = useState("");
   const [bio, setBio] = useState("");
@@ -37,6 +67,30 @@ export default function OrgMarketplaceListingPage() {
   const [acceptingClients, setAcceptingClients] = useState(true);
 
   const orgId = currentOrg?._id;
+  const galleryPhotos =
+    listing?.photos.filter((photo) => photo !== listing.profile_image) ?? [];
+  const galleryReplacementPreviewsRef = useRef(galleryReplacementPreviews);
+
+  useEffect(() => {
+    galleryReplacementPreviewsRef.current = galleryReplacementPreviews;
+  }, [galleryReplacementPreviews]);
+
+  const revokeReplacementPreview = (imageUrl: string) => {
+    const previewUrl = galleryReplacementPreviewsRef.current[imageUrl];
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      Object.values(galleryReplacementPreviewsRef.current).forEach(
+        (previewUrl) => {
+          URL.revokeObjectURL(previewUrl);
+        },
+      );
+    };
+  }, []);
 
   const populateForm = (l: MarketplaceListing) => {
     setHeadline(l.headline);
@@ -148,6 +202,7 @@ export default function OrgMarketplaceListingPage() {
   const handleTogglePublish = async () => {
     if (!listing || !orgId) return;
     setIsPublishing(true);
+    setFormError("");
 
     const res = listing.is_published
       ? await marketplaceService.unpublishOrgListing(orgId)
@@ -160,8 +215,280 @@ export default function OrgMarketplaceListingPage() {
           ? "Listing published! It's now visible in the marketplace."
           : "Listing unpublished.",
       );
+    } else {
+      setFormError(res.message || "Failed to update listing");
     }
     setIsPublishing(false);
+  };
+
+  const handleProfileImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (!orgId) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_UPLOAD_TYPES.has(file.type)) {
+      setImageError(
+        "Unsupported image format. Please upload PNG, JPEG, WEBP, or GIF.",
+      );
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_UPLOAD_SIZE_BYTES) {
+      setImageError("Image is too large. Maximum allowed size is 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setImageError("");
+    setIsUploadingProfileImage(true);
+
+    const res = await marketplaceService.uploadOrgListingProfileImage(
+      orgId,
+      file,
+    );
+
+    if (res.success && res.data) {
+      setListing(res.data);
+      setSuccessMessage("Profile image updated successfully.");
+    } else {
+      setImageError(res.message || "Failed to upload profile image");
+    }
+
+    setIsUploadingProfileImage(false);
+    e.target.value = "";
+  };
+
+  const handleGalleryUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (!orgId) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (files.length > MAX_GALLERY_UPLOAD_FILES) {
+      setImageError(
+        `You can upload up to ${MAX_GALLERY_UPLOAD_FILES} images at a time.`,
+      );
+      e.target.value = "";
+      return;
+    }
+
+    const invalidTypeFile = files.find(
+      (file) => !ALLOWED_IMAGE_UPLOAD_TYPES.has(file.type),
+    );
+    if (invalidTypeFile) {
+      setImageError(
+        "Unsupported image format detected. Please upload PNG, JPEG, WEBP, or GIF only.",
+      );
+      e.target.value = "";
+      return;
+    }
+
+    const oversizedFile = files.find(
+      (file) => file.size > MAX_IMAGE_UPLOAD_SIZE_BYTES,
+    );
+    if (oversizedFile) {
+      setImageError("One or more images exceed the 5MB size limit.");
+      e.target.value = "";
+      return;
+    }
+
+    setImageError("");
+    setIsUploadingGallery(true);
+
+    const res = await marketplaceService.uploadOrgListingGalleryImages(
+      orgId,
+      files,
+    );
+
+    if (res.success && res.data) {
+      setListing(res.data);
+      setSuccessMessage("Gallery images uploaded successfully.");
+    } else {
+      setImageError(res.message || "Failed to upload gallery images");
+    }
+
+    setIsUploadingGallery(false);
+    e.target.value = "";
+  };
+
+  const handleGalleryDelete = async (imageUrl: string) => {
+    if (!listing || !orgId) return;
+
+    const previousListing = listing;
+    const nextPhotos = listing.photos.filter((photo) => photo !== imageUrl);
+    setImageError("");
+    setDeletingGalleryImageUrl(imageUrl);
+    setListing({ ...listing, photos: nextPhotos });
+
+    const res = await marketplaceService.deleteOrgListingGalleryImage(
+      orgId,
+      imageUrl,
+    );
+
+    if (res.success && res.data) {
+      setListing(res.data);
+      setPendingImageDeletion(null);
+      setSuccessMessage("Gallery image removed successfully.");
+      setDeletingGalleryImageUrl(null);
+      return;
+    }
+
+    setListing(previousListing);
+    setImageError(res.message || "Failed to remove gallery image");
+    setDeletingGalleryImageUrl(null);
+  };
+
+  const persistGalleryOrder = async (reorderedPhotos: string[]) => {
+    if (!listing || !orgId) return;
+    const previousListing = listing;
+    const optimisticPhotos = listing.profile_image
+      ? [listing.profile_image, ...reorderedPhotos]
+      : reorderedPhotos;
+
+    setImageError("");
+    setIsReorderingGallery(true);
+    setListing({ ...listing, photos: optimisticPhotos });
+
+    const res = await marketplaceService.reorderOrgListingGalleryImages(
+      orgId,
+      reorderedPhotos,
+    );
+
+    if (res.success && res.data) {
+      setListing(res.data);
+      setSuccessMessage("Gallery order updated successfully.");
+      setIsReorderingGallery(false);
+      return;
+    }
+
+    setListing(previousListing);
+    setImageError(res.message || "Failed to reorder gallery images");
+    setIsReorderingGallery(false);
+  };
+
+  const handleProfileImageDelete = async () => {
+    if (!listing || !orgId || !listing.profile_image) return;
+
+    const previousListing = listing;
+    setImageError("");
+    setIsDeletingProfileImage(true);
+    setListing({
+      ...listing,
+      profile_image: undefined,
+      photos: [...galleryPhotos],
+    });
+
+    const res = await marketplaceService.deleteOrgListingProfileImage(orgId);
+
+    if (res.success && res.data) {
+      setListing(res.data);
+      setPendingImageDeletion(null);
+      setSuccessMessage("Profile image removed successfully.");
+      setIsDeletingProfileImage(false);
+      return;
+    }
+
+    setListing(previousListing);
+    setImageError(res.message || "Failed to remove profile image");
+    setIsDeletingProfileImage(false);
+  };
+
+  const handleGalleryReplace = async (
+    imageUrl: string,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (!listing || !orgId) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_UPLOAD_TYPES.has(file.type)) {
+      setImageError(
+        "Unsupported image format. Please upload PNG, JPEG, WEBP, or GIF.",
+      );
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_UPLOAD_SIZE_BYTES) {
+      setImageError("Image is too large. Maximum allowed size is 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    const previousListing = listing;
+    setImageError("");
+    setReplacingImageUrl(imageUrl);
+
+    const previewUrl = URL.createObjectURL(file);
+    revokeReplacementPreview(imageUrl);
+    setGalleryReplacementPreviews((current) => ({
+      ...current,
+      [imageUrl]: previewUrl,
+    }));
+
+    const res = await marketplaceService.replaceOrgListingGalleryImage(
+      orgId,
+      imageUrl,
+      file,
+    );
+
+    if (res.success && res.data) {
+      setListing(res.data);
+      setSuccessMessage("Gallery image replaced successfully.");
+    } else {
+      setListing(previousListing);
+      setImageError(res.message || "Failed to replace gallery image");
+    }
+
+    revokeReplacementPreview(imageUrl);
+    setGalleryReplacementPreviews((current) => {
+      const next = { ...current };
+      delete next[imageUrl];
+      return next;
+    });
+    setReplacingImageUrl(null);
+    e.target.value = "";
+  };
+
+  const handleGalleryDragStart = (index: number) => {
+    if (isReorderingGallery || replacingImageUrl !== null) {
+      return;
+    }
+
+    setDraggedGalleryIndex(index);
+  };
+
+  const handleGalleryDrop = async (dropIndex: number) => {
+    if (
+      isReorderingGallery ||
+      draggedGalleryIndex === null ||
+      draggedGalleryIndex === dropIndex
+    ) {
+      setDraggedGalleryIndex(null);
+      return;
+    }
+
+    const reorderedPhotos = [...galleryPhotos];
+    const [movedPhoto] = reorderedPhotos.splice(draggedGalleryIndex, 1);
+    reorderedPhotos.splice(dropIndex, 0, movedPhoto);
+
+    setDraggedGalleryIndex(null);
+    await persistGalleryOrder(reorderedPhotos);
+  };
+
+  const handleConfirmImageDelete = async () => {
+    if (!pendingImageDeletion) return;
+
+    if (pendingImageDeletion.type === "profile") {
+      await handleProfileImageDelete();
+      return;
+    }
+
+    await handleGalleryDelete(pendingImageDeletion.imageUrl);
   };
 
   if (authLoading || orgLoading || isLoading) return <DashboardLoading />;
@@ -325,6 +652,171 @@ export default function OrgMarketplaceListingPage() {
               </button>
             </div>
 
+            {imageError && (
+              <div className="rounded-xl bg-red-50 border border-red-200 p-4">
+                <p className="text-sm text-red-800">{imageError}</p>
+              </div>
+            )}
+
+            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-foreground">Images</h2>
+                <div className="flex items-center gap-2">
+                  <label className="rounded-xl border-2 border-neutral-300 px-4 py-2 text-sm font-medium text-foreground hover:border-primary-500 cursor-pointer transition-colors">
+                    {isUploadingProfileImage
+                      ? "Uploading profile..."
+                      : "Upload Profile"}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleProfileImageUpload}
+                      disabled={isUploadingProfileImage || isUploadingGallery}
+                    />
+                  </label>
+                  <label className="rounded-xl bg-primary-500 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-600 cursor-pointer transition-colors">
+                    {isUploadingGallery
+                      ? "Uploading gallery..."
+                      : "Upload Gallery"}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      multiple
+                      className="hidden"
+                      onChange={handleGalleryUpload}
+                      disabled={isUploadingProfileImage || isUploadingGallery}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs font-medium text-foreground-secondary mb-2">
+                    Profile Image
+                  </p>
+                  {listing.profile_image ? (
+                    <div className="space-y-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={listing.profile_image}
+                        alt="Gym profile"
+                        className="h-40 w-full rounded-xl object-cover border border-neutral-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPendingImageDeletion({ type: "profile" })
+                        }
+                        disabled={isDeletingProfileImage}
+                        className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        {isDeletingProfileImage
+                          ? "Removing..."
+                          : "Remove profile image"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="h-40 rounded-xl border border-dashed border-neutral-300 flex items-center justify-center text-sm text-foreground-secondary">
+                      No profile image yet
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-foreground-secondary mb-2">
+                    Gallery ({galleryPhotos.length})
+                  </p>
+                  {galleryPhotos.length > 0 ? (
+                    <div className="space-y-3">
+                      {galleryPhotos.map((photo, index) => (
+                        <div
+                          key={`${photo}-${index}`}
+                          className={`flex items-center gap-3 rounded-xl border p-2 ${
+                            draggedGalleryIndex === index
+                              ? "border-primary-500 bg-primary-50"
+                              : "border-neutral-200"
+                          }`}
+                          draggable={
+                            !isReorderingGallery && replacingImageUrl === null
+                          }
+                          onDragStart={() => handleGalleryDragStart(index)}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={() => void handleGalleryDrop(index)}
+                          onDragEnd={() => setDraggedGalleryIndex(null)}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={galleryReplacementPreviews[photo] ?? photo}
+                            alt={`Gallery ${index + 1}`}
+                            className="h-20 w-20 rounded-lg object-cover border border-neutral-200"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">
+                              Gallery image {index + 1}
+                            </p>
+                            <p className="truncate text-xs text-foreground-secondary">
+                              {photo}
+                            </p>
+                            <p className="text-xs text-foreground-secondary mt-1">
+                              {isReorderingGallery
+                                ? "Saving new order..."
+                                : replacingImageUrl === photo
+                                  ? "Previewing replacement while upload finishes"
+                                  : "Drag to reorder"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="rounded-lg border border-neutral-300 px-2 py-1 text-xs font-medium text-foreground hover:border-primary-500 cursor-pointer">
+                              {replacingImageUrl === photo
+                                ? "Replacing..."
+                                : "Replace"}
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp,image/gif"
+                                className="hidden"
+                                onChange={(event) =>
+                                  void handleGalleryReplace(photo, event)
+                                }
+                                disabled={
+                                  replacingImageUrl !== null ||
+                                  deletingGalleryImageUrl !== null ||
+                                  isReorderingGallery
+                                }
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPendingImageDeletion({
+                                  type: "gallery",
+                                  imageUrl: photo,
+                                })
+                              }
+                              disabled={
+                                deletingGalleryImageUrl !== null ||
+                                replacingImageUrl !== null ||
+                                isReorderingGallery
+                              }
+                              className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              {deletingGalleryImageUrl === photo
+                                ? "Removing..."
+                                : "Remove"}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-40 rounded-xl border border-dashed border-neutral-300 flex items-center justify-center text-sm text-foreground-secondary">
+                      No gallery images yet
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Preview */}
             <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
               <h2 className="text-2xl font-black text-foreground mb-1">
@@ -468,6 +960,30 @@ export default function OrgMarketplaceListingPage() {
             </form>
           </div>
         )}
+
+        <ConfirmationModal
+          isOpen={pendingImageDeletion !== null}
+          title={
+            pendingImageDeletion?.type === "profile"
+              ? "Remove profile image?"
+              : "Remove gallery image?"
+          }
+          description={
+            pendingImageDeletion?.type === "profile"
+              ? "This removes the main image for your marketplace listing until you upload a new one."
+              : "This removes the selected gallery image from your marketplace listing."
+          }
+          confirmLabel={
+            pendingImageDeletion?.type === "profile"
+              ? "Remove Profile Image"
+              : "Remove Gallery Image"
+          }
+          onConfirm={handleConfirmImageDelete}
+          onCancel={() => setPendingImageDeletion(null)}
+          isConfirming={
+            isDeletingProfileImage || deletingGalleryImageUrl !== null
+          }
+        />
       </div>
     </div>
   );

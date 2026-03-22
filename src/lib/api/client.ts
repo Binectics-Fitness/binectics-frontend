@@ -47,6 +47,19 @@ class ApiClient {
     return headers;
   }
 
+  private getAuthHeaders(includeAuth: boolean = true): HeadersInit {
+    const headers: HeadersInit = {};
+
+    if (includeAuth) {
+      const token = this.getToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
+    return headers;
+  }
+
   /**
    * Handle API response
    */
@@ -176,6 +189,48 @@ class ApiClient {
         method: "PATCH",
         headers: this.getHeaders(includeAuth),
         body: JSON.stringify(body),
+      });
+
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Network error",
+      };
+    }
+  }
+
+  async postFormData<T>(
+    endpoint: string,
+    body: FormData,
+    includeAuth: boolean = true,
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: "POST",
+        headers: this.getAuthHeaders(includeAuth),
+        body,
+      });
+
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Network error",
+      };
+    }
+  }
+
+  async patchFormData<T>(
+    endpoint: string,
+    body: FormData,
+    includeAuth: boolean = true,
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: "PATCH",
+        headers: this.getAuthHeaders(includeAuth),
+        body,
       });
 
       return this.handleResponse<T>(response);

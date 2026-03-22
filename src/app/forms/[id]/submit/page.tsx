@@ -9,6 +9,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { showAlert } from "@/lib/ui/dialogs";
 
 export default function FormSubmitPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -82,7 +83,7 @@ export default function FormSubmitPage() {
     );
 
     if (missingRequired.length > 0) {
-      alert(
+      await showAlert(
         `Please answer all required questions (${missingRequired.length} missing)`,
       );
       return;
