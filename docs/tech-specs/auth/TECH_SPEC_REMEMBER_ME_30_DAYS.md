@@ -1,6 +1,6 @@
 # Tech Spec: Remember Me (30 Days)
 
-**Status**: Proposed (for separate PR)
+**Status**: Implemented
 **Author**: Copilot
 **Date**: 2026-03-21
 **Scope**: Frontend + API authentication contract

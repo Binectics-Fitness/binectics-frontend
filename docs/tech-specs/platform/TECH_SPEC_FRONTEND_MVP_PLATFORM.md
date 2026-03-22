@@ -327,3 +327,124 @@ Required runtime keys:
 - `docs/tech-specs/progress/TECH_SPEC_CLIENT_WEIGHT_PROGRESS.md`
 - Next.js documentation: https://nextjs.org/docs
 - Tailwind CSS documentation: https://tailwindcss.com
+
+---
+
+## Appendix A) Dashboard Mobile Responsive Navigation (Merged)
+
+This appendix merges and supersedes the standalone mobile navigation spec for dashboards.
+
+### A.1 Context
+
+Dashboard pages historically rendered desktop-style sidebar behavior on smaller screens, reducing usable content width and making key actions harder to access on phones.
+
+### A.2 Goals / Non-Goals
+
+#### Goals
+
+1. Remove persistent desktop sidebar from phone-sized viewports.
+2. Introduce mobile-first dashboard navigation that is easy to access/dismiss.
+3. Keep role-based navigation items consistent across desktop and mobile.
+4. Improve usability and accessibility without backend/API changes.
+
+#### Non-Goals
+
+- Redesign dashboard content modules/cards.
+- Add backend endpoints or change API contracts.
+- Change role permissions/information architecture.
+
+### A.3 Roles Affected
+
+- Fitness Enthusiast (user)
+- Gym Owner
+- Trainer
+- Dietitian
+- Admin
+
+### A.4 Breakpoint Behavior
+
+- **Desktop (`lg` and above)**: keep existing left sidebar behavior.
+- **Tablet (`md` to `<lg`)**: compact/overlay sidebar pattern based on available width.
+- **Mobile (`<md`)**:
+  - Hide persistent sidebar.
+  - Use top app bar + menu trigger.
+  - Open navigation as slide-over drawer.
+  - Optionally add bottom nav for high-frequency quick actions when needed.
+
+### A.5 Mobile Navigation Pattern (Primary)
+
+1. **Top App Bar**
+
+- Left: menu button (opens drawer)
+- Center: current section title
+- Right: optional notification/profile action
+
+2. **Slide-Over Drawer**
+
+- Contains full role-based nav list.
+- Uses backdrop and closes on backdrop click, Escape, and route selection.
+
+3. **Content Area**
+
+- Full width on mobile.
+- Safe bottom padding if bottom actions are present.
+
+### A.6 Information Architecture Rules
+
+- Use one shared navigation config as source of truth for desktop and mobile.
+- Do not duplicate nav definitions in separate files.
+- Share role filtering logic and active-route highlighting behavior.
+- If constrained constants are needed for nav mode/type, prefer enums over raw strings.
+
+### A.7 Accessibility Requirements
+
+1. Menu trigger must expose `aria-label` and `aria-expanded`.
+2. Drawer must use dialog/sheet semantics with focus trapping.
+3. Keyboard support:
+
+- Open via Enter/Space on trigger
+- Close via Escape
+- Keep tab sequence constrained while drawer is open
+
+4. Touch target minimum: 44x44 logical pixels.
+5. Prevent background scroll while drawer is open.
+
+### A.8 Technical Implementation Guidance
+
+- Introduce/extend a responsive dashboard shell component.
+- Keep desktop sidebar for larger viewports.
+- Add mobile drawer navigation component.
+- Close drawer on route change.
+- Keep role guards and route permission checks unchanged.
+- Use existing Tailwind tokens and design primitives only.
+
+### A.9 Performance Considerations
+
+1. Avoid rendering heavy desktop/mobile nav trees simultaneously when possible.
+2. Prefer lightweight transform/opacity transitions.
+3. Reserve top app bar height to minimize layout shift.
+
+### A.10 Acceptance Criteria
+
+1. On screens `<md`, persistent sidebar is hidden for all dashboard roles.
+2. Mobile drawer exposes all role-allowed routes.
+3. Active route indication is correct in drawer.
+4. Drawer closes automatically after route selection.
+5. Desktop navigation behavior remains unchanged.
+6. Keyboard and screen-reader behavior pass baseline accessibility checks.
+7. No backend/API changes are required.
+
+### A.11 QA Checklist
+
+Manual viewport checks: 360px, 390px, 430px, 768px, 1024px, 1280px.
+
+- Validate all role dashboards (user, gym owner, trainer, dietitian, admin).
+- Validate drawer open/close, backdrop click, Escape close, route transition close.
+- Validate no horizontal overflow in key dashboard pages.
+- Validate desktop regression behavior for sidebar and active states.
+
+### A.12 Open Questions
+
+1. Tablet (`md`) strategy: drawer-only vs compact collapsible sidebar?
+2. MVP quick access: include bottom nav for 3–5 frequent routes, or app-bar + drawer only?
+3. Keep notification/profile actions in app bar for all roles, or user role only?
