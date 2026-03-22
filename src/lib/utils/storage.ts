@@ -59,13 +59,14 @@ export const refreshTokenStorage = {
     return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
   },
 
-  set(token: string): void {
+  set(token: string, maxAge?: number): void {
     if (!isBrowser()) return;
     localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
 
     // Also set as cookie for middleware access
-    const maxAge = 7 * 24 * 60 * 60; // 7 days
-    document.cookie = `refresh_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    // maxAge is provided by the caller based on server-issued expiry (30d or 24h)
+    const cookieMaxAge = maxAge ?? 7 * 24 * 60 * 60; // default 7 days
+    document.cookie = `refresh_token=${token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax`;
   },
 
   remove(): void {

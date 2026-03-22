@@ -78,6 +78,7 @@ export default function LoginPage() {
       const result = await login({
         email: formData.email,
         password: formData.password,
+        rememberMe,
       });
 
       if (!result.success) {

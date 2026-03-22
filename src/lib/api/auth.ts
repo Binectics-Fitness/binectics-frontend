@@ -20,6 +20,8 @@ import {
 export interface LoginResponse {
   user: User;
   access_token: string;
+  refresh_token?: string;
+  refresh_token_expires_at?: string;
 }
 
 export interface AuthResponse {
@@ -71,6 +73,17 @@ export const authService = {
     if (response.success && response.data) {
       // Store access token
       apiClient.storeTokens(response.data.access_token);
+      // Store refresh token with appropriate maxAge derived from server expiry
+      if (response.data.refresh_token) {
+        const maxAge = response.data.refresh_token_expires_at
+          ? Math.floor(
+              (new Date(response.data.refresh_token_expires_at).getTime() -
+                Date.now()) /
+                1000,
+            )
+          : undefined;
+        refreshTokenStorage.set(response.data.refresh_token, maxAge);
+      }
       // Store user data
       userStorage.set(response.data.user);
     } else {
