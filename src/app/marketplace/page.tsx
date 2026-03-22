@@ -7,6 +7,7 @@ import type {
   MarketplaceListing,
   MarketplaceAccountType,
   MarketplaceSearchParams,
+  MarketplaceVerificationBadge,
 } from "@/lib/types";
 
 const ACCOUNT_TYPE_LABELS: Record<MarketplaceAccountType, string> = {
@@ -53,6 +54,32 @@ function StarRating({ rating }: { rating: number }) {
         {rating.toFixed(1)}
       </span>
     </div>
+  );
+}
+
+function ListingBadge({ badge }: { badge: MarketplaceVerificationBadge }) {
+  if (badge === "none") return null;
+
+  if (badge === "verified") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-accent-blue-100 px-2 py-0.5 text-xs font-semibold text-accent-blue-700">
+        ✓ Verified
+      </span>
+    );
+  }
+
+  if (badge === "premium_verified") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-accent-yellow-100 px-2 py-0.5 text-xs font-semibold text-accent-yellow-700">
+        ✓ Premium
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">
+      ★ Featured
+    </span>
   );
 }
 
@@ -103,6 +130,9 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
             <p className="text-sm text-foreground-secondary truncate">
               {displayName}
             </p>
+            <div className="mt-1">
+              <ListingBadge badge={listing.verification_badge} />
+            </div>
           </div>
         </div>
 
@@ -282,32 +312,32 @@ export default function MarketplacePage() {
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="mx-auto max-w-2xl">
             <div className="relative">
-            <svg
-              className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-secondary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              <svg
+                className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-secondary"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search by name, specialty, or keyword..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border-2 border-neutral-300 bg-white px-5 py-4 pl-12 pr-4 text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:pr-28"
               />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search by name, specialty, or keyword..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border-2 border-neutral-300 bg-white px-5 py-4 pl-12 pr-4 text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:pr-28"
-            />
-            <button
-              type="submit"
-              className="mt-3 w-full rounded-lg bg-primary-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-600 sm:absolute sm:right-2 sm:top-1/2 sm:mt-0 sm:w-auto sm:-translate-y-1/2 sm:py-2"
-            >
-              Search
-            </button>
+              <button
+                type="submit"
+                className="mt-3 w-full rounded-lg bg-primary-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-600 sm:absolute sm:right-2 sm:top-1/2 sm:mt-0 sm:w-auto sm:-translate-y-1/2 sm:py-2"
+              >
+                Search
+              </button>
             </div>
           </form>
         </div>

@@ -14,6 +14,11 @@ import type {
   MarketplaceSearchResult,
   MarketplaceAccountType,
   MarketplaceRequestType,
+  MarketplaceVerificationBadge,
+  MarketplaceListingDocument,
+  MarketplaceMembershipPlan,
+  MembershipPlanType,
+  MembershipSubscription,
 } from "@/lib/types";
 
 // ==================== REQUEST TYPES ====================
@@ -82,6 +87,29 @@ export interface TransferClientRequest {
   message?: string;
   goals?: string[];
 }
+
+export interface AwardGymBadgeRequest {
+  verification_badge: MarketplaceVerificationBadge;
+}
+
+export interface SuspendGymRequest {
+  reason?: string;
+}
+
+export interface CreateOrgMembershipPlanRequest {
+  name: string;
+  description?: string;
+  plan_type: MembershipPlanType;
+  duration_days: number;
+  price: number;
+  currency?: string;
+  features?: string[];
+  is_active?: boolean;
+  is_public?: boolean;
+}
+
+export type UpdateOrgMembershipPlanRequest =
+  Partial<CreateOrgMembershipPlanRequest>;
 
 // ==================== SERVICE ====================
 
@@ -255,6 +283,123 @@ export const marketplaceService = {
     );
   },
 
+  // ─── Admin Gym Moderation ───
+
+  async getAdminGymListings(): Promise<ApiResponse<MarketplaceListing[]>> {
+    return await apiClient.get<MarketplaceListing[]>("/admin/gyms");
+  },
+
+  async awardGymBadge(
+    listingId: string,
+    data: AwardGymBadgeRequest,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/admin/gyms/${listingId}/badge/award`,
+      data,
+    );
+  },
+
+  async revokeGymBadge(
+    listingId: string,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/admin/gyms/${listingId}/badge/revoke`,
+    );
+  },
+
+  async suspendGym(
+    listingId: string,
+    data?: SuspendGymRequest,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/admin/gyms/${listingId}/suspend`,
+      data ?? {},
+    );
+  },
+
+  async unsuspendGym(
+    listingId: string,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/admin/gyms/${listingId}/unsuspend`,
+    );
+  },
+
+  // ─── Membership Plans ───
+
+  async getOrgMembershipPlans(
+    organizationId: string,
+  ): Promise<ApiResponse<MarketplaceMembershipPlan[]>> {
+    return await apiClient.get<MarketplaceMembershipPlan[]>(
+      `/marketplace/organizations/${organizationId}/plans`,
+    );
+  },
+
+  async getOrgMembershipPlanById(
+    organizationId: string,
+    planId: string,
+  ): Promise<ApiResponse<MarketplaceMembershipPlan>> {
+    return await apiClient.get<MarketplaceMembershipPlan>(
+      `/marketplace/organizations/${organizationId}/plans/${planId}`,
+    );
+  },
+
+  async createOrgMembershipPlan(
+    organizationId: string,
+    data: CreateOrgMembershipPlanRequest,
+  ): Promise<ApiResponse<MarketplaceMembershipPlan>> {
+    return await apiClient.post<MarketplaceMembershipPlan>(
+      `/marketplace/organizations/${organizationId}/plans`,
+      data,
+    );
+  },
+
+  async updateOrgMembershipPlan(
+    organizationId: string,
+    planId: string,
+    data: UpdateOrgMembershipPlanRequest,
+  ): Promise<ApiResponse<MarketplaceMembershipPlan>> {
+    return await apiClient.patch<MarketplaceMembershipPlan>(
+      `/marketplace/organizations/${organizationId}/plans/${planId}`,
+      data,
+    );
+  },
+
+  async activateOrgMembershipPlan(
+    organizationId: string,
+    planId: string,
+  ): Promise<ApiResponse<MarketplaceMembershipPlan>> {
+    return await apiClient.patch<MarketplaceMembershipPlan>(
+      `/marketplace/organizations/${organizationId}/plans/${planId}/activate`,
+    );
+  },
+
+  async deactivateOrgMembershipPlan(
+    organizationId: string,
+    planId: string,
+  ): Promise<ApiResponse<MarketplaceMembershipPlan>> {
+    return await apiClient.patch<MarketplaceMembershipPlan>(
+      `/marketplace/organizations/${organizationId}/plans/${planId}/deactivate`,
+    );
+  },
+
+  async deleteOrgMembershipPlan(
+    organizationId: string,
+    planId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/marketplace/organizations/${organizationId}/plans/${planId}`,
+    );
+  },
+
+  async getPublicListingPlans(
+    listingId: string,
+  ): Promise<ApiResponse<MarketplaceMembershipPlan[]>> {
+    return await apiClient.get<MarketplaceMembershipPlan[]>(
+      `/marketplace/listings/${listingId}/plans`,
+      false,
+    );
+  },
   // ─── Organization Listing Management ───
 
   async createOrgListing(
@@ -397,6 +542,80 @@ export const marketplaceService = {
     return await apiClient.patch<MarketplaceRequest>(
       `/marketplace/organizations/${organizationId}/listing/requests/${requestId}/reject`,
       responseNote ? { response_note: responseNote } : {},
+    );
+  },
+
+  async uploadOrgListingDocument(
+    organizationId: string,
+    file: File,
+  ): Promise<ApiResponse<MarketplaceListingDocument>> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return await apiClient.postFormData<MarketplaceListingDocument>(
+      `/marketplace/organizations/${organizationId}/listing/documents`,
+      formData,
+    );
+  },
+
+  async getOrgListingDocuments(
+    organizationId: string,
+  ): Promise<ApiResponse<MarketplaceListingDocument[]>> {
+    return await apiClient.get<MarketplaceListingDocument[]>(
+      `/marketplace/organizations/${organizationId}/listing/documents`,
+    );
+  },
+
+  async deleteOrgListingDocument(
+    organizationId: string,
+    documentId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/marketplace/organizations/${organizationId}/listing/documents/${documentId}`,
+    );
+  },
+
+  async getAdminGymListingDocuments(
+    listingId: string,
+  ): Promise<ApiResponse<MarketplaceListingDocument[]>> {
+    return await apiClient.get<MarketplaceListingDocument[]>(
+      `/admin/gyms/${listingId}/documents`,
+    );
+  },
+
+  // ─── Membership Subscriptions ───
+
+  async subscribeToListingPlan(
+    listingId: string,
+    planId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.post<MembershipSubscription>(
+      `/marketplace/listings/${listingId}/subscribe`,
+      { plan_id: planId },
+    );
+  },
+
+  async getMyMembershipSubscriptions(): Promise<
+    ApiResponse<MembershipSubscription[]>
+  > {
+    return await apiClient.get<MembershipSubscription[]>(
+      "/marketplace/my-subscriptions",
+    );
+  },
+
+  async cancelMembershipSubscription(
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.delete<MembershipSubscription>(
+      `/marketplace/my-subscriptions/${subscriptionId}`,
+    );
+  },
+
+  async getOrgMembershipSubscriptions(
+    organizationId: string,
+  ): Promise<ApiResponse<MembershipSubscription[]>> {
+    return await apiClient.get<MembershipSubscription[]>(
+      `/marketplace/organizations/${organizationId}/subscriptions`,
     );
   },
 };

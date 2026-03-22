@@ -9,6 +9,8 @@ export { progressService } from "./progress";
 export { consultationsService } from "./consultations";
 export { reviewsService } from "./reviews";
 export { utilityService } from "./utility";
+export { checkinsService } from "./checkins";
+export type { ScanCheckInRequest } from "./checkins";
 export type {
   AuthResponse,
   ForgotPasswordRequest,

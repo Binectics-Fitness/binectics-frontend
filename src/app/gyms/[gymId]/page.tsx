@@ -1,19 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
+import {
+  MarketplaceVerificationBadge,
+  MarketplaceMembershipPlan,
+  MembershipPlanType,
+} from "@/lib/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function GymProfilePage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const gymId = Array.isArray(params.gymId) ? params.gymId[0] : params.gymId;
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [subscribeSuccess, setSubscribeSuccess] = useState<string | null>(null);
+  const [subscribeError, setSubscribeError] = useState<string | null>(null);
   const [reviewOwnerUserId, setReviewOwnerUserId] = useState<string | null>(
     null,
   );
+  const [verificationBadge, setVerificationBadge] =
+    useState<MarketplaceVerificationBadge>(MarketplaceVerificationBadge.NONE);
 
   // Mock gym data - in production this would come from API
   const gym = {
@@ -41,47 +55,6 @@ export default function GymProfilePage() {
       "Saturday - Sunday": "6:00 AM - 9:00 PM",
     },
     photos: ["/placeholder1.jpg", "/placeholder2.jpg", "/placeholder3.jpg"],
-    plans: [
-      {
-        id: 1,
-        name: "Day Pass",
-        type: "ONE_TIME",
-        price: 15,
-        duration: "1 day",
-        description: "Perfect for trying out the gym",
-        features: ["Full gym access", "Locker room", "Shower facilities"],
-      },
-      {
-        id: 2,
-        name: "Premium Monthly",
-        type: "SUBSCRIPTION",
-        price: 49,
-        duration: "1 month",
-        description: "Most popular plan",
-        features: [
-          "Unlimited gym access",
-          "All group classes",
-          "Locker room & showers",
-          "Free parking",
-          "1 guest pass/month",
-        ],
-      },
-      {
-        id: 3,
-        name: "Annual Membership",
-        type: "SUBSCRIPTION",
-        price: 499,
-        duration: "12 months",
-        description: "Best value - Save 15%",
-        features: [
-          "Everything in Premium",
-          "2 personal training sessions",
-          "Nutrition consultation",
-          "Priority class booking",
-          "4 guest passes/month",
-        ],
-      },
-    ],
     qrCode:
       "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=gym_123",
   };
@@ -99,6 +72,9 @@ export default function GymProfilePage() {
           : response.data.professional_id;
 
       setReviewOwnerUserId(professionalId ?? null);
+      setVerificationBadge(
+        response.data.verification_badge ?? MarketplaceVerificationBadge.NONE,
+      );
     }
 
     void loadListingOwner();
@@ -108,9 +84,56 @@ export default function GymProfilePage() {
     };
   }, [gymId]);
 
-  const handleSubscribe = (planId: number) => {
-    // In production, this would navigate to checkout
-    router.push(`/checkout?gym=${gymId}&plan=${planId}`);
+  const loadPlans = useCallback(async () => {
+    if (!gymId) return;
+    setPlansLoading(true);
+    try {
+      const response = await marketplaceService.getPublicListingPlans(
+        String(gymId),
+      );
+      if (response.success && response.data) {
+        setPlans(response.data);
+      }
+    } finally {
+      setPlansLoading(false);
+    }
+  }, [gymId]);
+
+  useEffect(() => {
+    window.setTimeout(() => void loadPlans(), 0);
+  }, [loadPlans]);
+
+  const handleSubscribe = async () => {
+    if (!selectedPlan) return;
+    if (!user) {
+      router.push(`/login?redirect=/gyms/${String(gymId)}`);
+      return;
+    }
+    setSubscribeLoading(true);
+    setSubscribeError(null);
+    setSubscribeSuccess(null);
+    try {
+      const response = await marketplaceService.subscribeToListingPlan(
+        String(gymId),
+        selectedPlan,
+      );
+      if (response.success) {
+        const plan = plans.find((p) => p._id === selectedPlan);
+        setSubscribeSuccess(
+          `You\'re now subscribed to ${plan?.name ?? "this plan"}! View your subscriptions in the dashboard.`,
+        );
+        setSelectedPlan(null);
+        void loadPlans();
+      } else {
+        setSubscribeError(
+          response.message ?? "Failed to subscribe. Please try again.",
+        );
+      }
+    } catch {
+      setSubscribeError("An unexpected error occurred. Please try again.");
+    } finally {
+      setSubscribeLoading(false);
+    }
   };
 
   return (
@@ -185,8 +208,18 @@ export default function GymProfilePage() {
                     {gym.location}
                   </p>
                 </div>
-                {gym.verified && (
-                  <div className="flex items-center gap-2 self-start bg-primary-500 px-4 py-2 font-semibold text-foreground">
+                {verificationBadge !== MarketplaceVerificationBadge.NONE && (
+                  <div
+                    className={`flex items-center gap-2 self-start px-4 py-2 font-semibold text-foreground ${
+                      verificationBadge ===
+                      MarketplaceVerificationBadge.PREMIUM_VERIFIED
+                        ? "bg-accent-yellow-500"
+                        : verificationBadge ===
+                            MarketplaceVerificationBadge.FEATURED
+                          ? "bg-accent-blue-100"
+                          : "bg-primary-500"
+                    }`}
+                  >
                     <svg
                       className="w-5 h-5"
                       fill="currentColor"
@@ -198,7 +231,13 @@ export default function GymProfilePage() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    VERIFIED
+                    {verificationBadge ===
+                    MarketplaceVerificationBadge.PREMIUM_VERIFIED
+                      ? "PREMIUM VERIFIED"
+                      : verificationBadge ===
+                          MarketplaceVerificationBadge.FEATURED
+                        ? "FEATURED"
+                        : "VERIFIED"}
                   </div>
                 )}
               </div>
@@ -308,66 +347,128 @@ export default function GymProfilePage() {
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Membership Plans
               </h2>
-              <div className="space-y-4">
-                {gym.plans.map((plan) => (
-                  <div
-                    key={plan.id}
-                    className={`p-4 border-2 cursor-pointer transition-all ${
-                      selectedPlan === plan.id
-                        ? "border-primary-500 bg-primary-500/5"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => setSelectedPlan(plan.id)}
-                  >
-                    <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h3 className="font-bold text-foreground">
-                          {plan.name}
-                        </h3>
-                        <p className="text-sm text-foreground/60">
-                          {plan.description}
-                        </p>
+
+              {subscribeSuccess && (
+                <div className="mb-4 p-4 bg-primary-500/10 border border-primary-500 text-foreground text-sm">
+                  {subscribeSuccess}
+                </div>
+              )}
+              {subscribeError && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm">
+                  {subscribeError}
+                </div>
+              )}
+
+              {plansLoading ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="h-32 bg-gray-100 animate-pulse rounded"
+                    />
+                  ))}
+                </div>
+              ) : plans.length === 0 ? (
+                <p className="text-foreground/60 text-sm py-4">
+                  No membership plans available at this time.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {plans.map((plan) => (
+                    <div
+                      key={plan._id}
+                      className={`p-4 border-2 cursor-pointer transition-all ${
+                        selectedPlan === plan._id
+                          ? "border-primary-500 bg-primary-500/5"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() => {
+                        setSelectedPlan(
+                          selectedPlan === plan._id ? null : plan._id,
+                        );
+                        setSubscribeError(null);
+                        setSubscribeSuccess(null);
+                      }}
+                    >
+                      <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-foreground">
+                              {plan.name}
+                            </h3>
+                            <span
+                              className={`text-xs px-2 py-0.5 font-semibold ${
+                                plan.plan_type === MembershipPlanType.SUBSCRIPTION
+                                  ? "bg-accent-blue-500/10 text-accent-blue-500"
+                                  : "bg-accent-yellow-500/20 text-foreground"
+                              }`}
+                            >
+                              {plan.plan_type === MembershipPlanType.SUBSCRIPTION
+                                ? "Subscription"
+                                : "One-time"}
+                            </span>
+                          </div>
+                          {plan.description && (
+                            <p className="text-sm text-foreground/60">
+                              {plan.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="sm:text-right shrink-0">
+                          <p className="text-2xl font-black text-foreground">
+                            {plan.currency} {plan.price}
+                          </p>
+                          <p className="text-xs text-foreground/60">
+                            {plan.duration_days === 1
+                              ? "1 day"
+                              : plan.duration_days % 30 === 0
+                                ? `${plan.duration_days / 30} month${
+                                    plan.duration_days / 30 === 1 ? "" : "s"
+                                  }`
+                                : `${plan.duration_days} days`}
+                          </p>
+                        </div>
                       </div>
-                      <div className="sm:text-right">
-                        <p className="text-2xl font-black text-foreground">
-                          ${plan.price}
-                        </p>
-                        <p className="text-xs text-foreground/60">
-                          {plan.duration}
-                        </p>
-                      </div>
+                      {plan.features.length > 0 && (
+                        <ul className="space-y-1 mt-3">
+                          {plan.features.map((feature, index) => (
+                            <li
+                              key={index}
+                              className="text-sm text-foreground/80 flex items-start gap-2"
+                            >
+                              <svg
+                                className="w-4 h-4 text-primary-500 mt-0.5 shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                    <ul className="space-y-1 mt-3">
-                      {plan.features.map((feature, index) => (
-                        <li
-                          key={index}
-                          className="text-sm text-foreground/80 flex items-start gap-2"
-                        >
-                          <svg
-                            className="w-4 h-4 text-primary-500 mt-0.5"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
 
               <button
-                onClick={() => selectedPlan && handleSubscribe(selectedPlan)}
-                disabled={!selectedPlan}
+                onClick={() => void handleSubscribe()}
+                disabled={!selectedPlan || subscribeLoading}
                 className="w-full mt-6 px-6 py-4 bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {selectedPlan ? "Subscribe Now" : "Select a Plan"}
+                {subscribeLoading
+                  ? "Processing..."
+                  : selectedPlan
+                    ? user
+                      ? "Subscribe Now"
+                      : "Sign in to Subscribe"
+                    : "Select a Plan"}
               </button>
 
               {/* QR Check-in */}

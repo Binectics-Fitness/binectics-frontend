@@ -1,60 +1,87 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { checkinsService } from "@/lib/api/checkins";
+import { marketplaceService } from "@/lib/api/marketplace";
+import type { MarketplaceListing } from "@/lib/types";
 
 export default function CheckInPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [isChecking, setIsChecking] = useState(false);
   const [checkInSuccess, setCheckInSuccess] = useState(false);
+  const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [listing, setListing] = useState<MarketplaceListing | null>(null);
+  const hasAutoCheckedIn = useRef(false);
 
   const gymId = params.gymId as string;
 
-  // Mock gym data - in real app, fetch from API
-  const gym = {
-    id: gymId,
-    name: "PowerHouse Fitness Downtown",
-    address: "123 Main St, New York, NY",
-    image: null,
-  };
-
-  const handleCheckIn = async () => {
-    if (!isAuthenticated) {
-      // Redirect to login with return URL
-      router.push(`/login?redirect=/check-in/${gymId}`);
-      return;
+  const loadListing = useCallback(async () => {
+    try {
+      const res = await marketplaceService.getListingById(gymId);
+      if (res.success && res.data) setListing(res.data);
+    } catch {
+      // Non-fatal: gym name simply won't show
     }
+  }, [gymId]);
 
+  useEffect(() => {
+    window.setTimeout(() => void loadListing(), 0);
+  }, [loadListing]);
+
+  const doCheckIn = useCallback(async () => {
     setIsChecking(true);
     setError("");
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In real app, call API to record check-in
-      // await fetch('/api/check-ins', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ gymId, userId: user.id }),
-      // });
-
-      setCheckInSuccess(true);
-
-      // Auto redirect after 3 seconds
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 3000);
-    } catch (err) {
-      setError("Failed to check in. Please try again.");
+      const res = await checkinsService.scan({ listing_id: gymId });
+      if (res.success) {
+        setCheckedInAt(new Date().toLocaleTimeString());
+        setCheckInSuccess(true);
+        window.setTimeout(() => router.push("/dashboard"), 3000);
+      } else {
+        setError("Failed to check in. Please try again.");
+      }
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      if (status === 409) {
+        setError("You've already checked in today. Come back tomorrow! 🏋️");
+      } else if (status === 404) {
+        setError(
+          "No active subscription found for this gym. Please subscribe first.",
+        );
+      } else {
+        setError("Failed to check in. Please try again.");
+      }
     } finally {
       setIsChecking(false);
     }
-  };
+  }, [gymId, router]);
 
+  // Auto check-in as soon as auth is resolved and user is signed in
+  // This means: scan QR → (step 1) land here → auto check-in → (step 2) success
+  // No button tap needed for authenticated users
+  useEffect(() => {
+    if (isAuthLoading) return;
+    if (!isAuthenticated) {
+      // Not signed in → redirect to login, return here after
+      router.push(`/login?redirect=/check-in/${gymId}`);
+      return;
+    }
+    if (hasAutoCheckedIn.current) return;
+    hasAutoCheckedIn.current = true;
+    window.setTimeout(() => void doCheckIn(), 0);
+  }, [isAuthLoading, isAuthenticated, gymId, router, doCheckIn]);
+
+  const gymName = listing?.headline ?? "this gym";
+  const gymAddress = listing
+    ? [listing.city, listing.country_code].filter(Boolean).join(", ")
+    : "";
+
+  // ── Success screen ──────────────────────────────────────────────
   if (checkInSuccess) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -75,10 +102,13 @@ export default function CheckInPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-black text-foreground mb-3">
-            Check-in Successful!
+            Checked In!
           </h1>
-          <p className="text-foreground/60 mb-2">You've checked in to</p>
-          <p className="text-xl font-bold text-foreground mb-6">{gym.name}</p>
+          <p className="text-foreground/60 mb-2">Welcome to</p>
+          <p className="text-xl font-bold text-foreground mb-2">{gymName}</p>
+          {checkedInAt && (
+            <p className="text-sm text-foreground/50 mb-4">at {checkedInAt}</p>
+          )}
           <p className="text-sm text-foreground/60">Enjoy your workout! 💪</p>
           <p className="text-xs text-foreground/40 mt-4">
             Redirecting to dashboard...
@@ -87,6 +117,9 @@ export default function CheckInPage() {
       </div>
     );
   }
+
+  // ── Checking in / auth loading ──────────────────────────────────
+  const isProcessing = isAuthLoading || isChecking;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -108,123 +141,71 @@ export default function CheckInPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">{gym.name}</h1>
-          <p className="text-white/80 text-sm">{gym.address}</p>
+          <h1 className="text-2xl font-black text-white mb-2">{gymName}</h1>
+          {gymAddress && <p className="text-white/80 text-sm">{gymAddress}</p>}
         </div>
 
-        {/* Check-in Form */}
-        <div className="p-8">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          {!isAuthenticated ? (
-            <div className="text-center mb-6">
-              <p className="text-foreground/60 mb-4">
-                Please sign in to check in to this gym
-              </p>
-            </div>
-          ) : (
-            <div className="text-center mb-6">
+        {/* Body */}
+        <div className="p-8 text-center">
+          {/* Member info */}
+          {user && (
+            <div className="mb-6">
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-2xl font-black text-foreground">
-                  {user?.first_name?.charAt(0)}
-                  {user?.last_name?.charAt(0)}
+                  {user.first_name?.charAt(0)}
+                  {user.last_name?.charAt(0)}
                 </span>
               </div>
-              <p className="font-semibold text-foreground mb-1">
-                {user?.first_name} {user?.last_name}
+              <p className="font-semibold text-foreground">
+                {user.first_name} {user.last_name}
               </p>
-              <p className="text-sm text-foreground/60">{user?.email}</p>
+              <p className="text-sm text-foreground/60">{user.email}</p>
             </div>
           )}
 
-          <button
-            onClick={handleCheckIn}
-            disabled={isChecking}
-            className="w-full h-14 bg-primary-500 text-foreground font-bold rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-          >
-            {isChecking ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg
-                  className="animate-spin h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Checking In...
-              </span>
-            ) : isAuthenticated ? (
-              "Check In Now"
-            ) : (
-              "Sign In to Check In"
-            )}
-          </button>
+          {/* Error state */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg text-left">
+              <p className="text-sm text-red-700 font-medium">{error}</p>
+              <button
+                onClick={() => {
+                  hasAutoCheckedIn.current = false;
+                  void doCheckIn();
+                }}
+                className="mt-3 text-sm text-accent-blue-500 font-semibold underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="font-bold text-foreground mb-3">
-              What happens next?
-            </h3>
-            <ul className="space-y-2 text-sm text-foreground/60">
-              <li className="flex items-start gap-2">
-                <svg
-                  className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5"
+          {/* Processing spinner */}
+          {isProcessing && !error && (
+            <div className="flex flex-col items-center gap-3 py-4">
+              <svg
+                className="animate-spin h-10 w-10 text-primary-500"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
                   fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Your visit will be recorded
-              </li>
-              <li className="flex items-start gap-2">
-                <svg
-                  className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Track your gym attendance
-              </li>
-              <li className="flex items-start gap-2">
-                <svg
-                  className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Build your fitness streak
-              </li>
-            </ul>
-          </div>
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <p className="text-foreground/60 font-medium">
+                {isAuthLoading ? "Verifying identity…" : "Checking in…"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

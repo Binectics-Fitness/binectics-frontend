@@ -1,545 +1,452 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { UserRole } from "@/lib/types";
+import { marketplaceService } from "@/lib/api/marketplace";
+import {
+  MarketplaceListing,
+  MarketplaceListingDocument,
+  MarketplaceVerificationBadge,
+} from "@/lib/types";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import { showAlert } from "@/lib/ui/dialogs";
+import { showAlert, showPrompt } from "@/lib/ui/dialogs";
 
-enum ProviderStatus {
-  ACTIVE = "Active",
-  SUSPENDED = "Suspended",
+function badgePillClasses(badge: MarketplaceVerificationBadge): string {
+  if (badge === MarketplaceVerificationBadge.VERIFIED) {
+    return "bg-accent-blue-100 text-accent-blue-700";
+  }
+
+  if (badge === MarketplaceVerificationBadge.PREMIUM_VERIFIED) {
+    return "bg-accent-yellow-100 text-accent-yellow-700";
+  }
+
+  if (badge === MarketplaceVerificationBadge.FEATURED) {
+    return "bg-primary-100 text-primary-700";
+  }
+
+  return "bg-neutral-100 text-foreground-secondary";
 }
 
-type AdminProvider = {
-  id: number;
-  name: string;
-  email: string;
-  type: UserRole;
-  location: string;
-  verified: boolean;
-  members: number;
-  revenue: string;
-  joinedDate: string;
-  status: ProviderStatus;
-};
+function badgeLabel(badge: MarketplaceVerificationBadge): string {
+  if (badge === MarketplaceVerificationBadge.VERIFIED) return "Verified";
+  if (badge === MarketplaceVerificationBadge.PREMIUM_VERIFIED) return "Premium";
+  if (badge === MarketplaceVerificationBadge.FEATURED) return "Featured";
+  return "None";
+}
 
 export default function AdminProvidersPage() {
-  const router = useRouter();
+  const [gymListings, setGymListings] = useState<MarketplaceListing[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"all" | UserRole>("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMutating, setIsMutating] = useState(false);
+  const [selectedDocsListingId, setSelectedDocsListingId] = useState<
+    string | null
+  >(null);
+  const [listingDocuments, setListingDocuments] = useState<
+    MarketplaceListingDocument[]
+  >([]);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
-  // Mock data
-  const providers: AdminProvider[] = [
-    {
-      id: 1,
-      name: "PowerHouse Gym",
-      email: "contact@powerhousegym.com",
-      type: UserRole.GYM_OWNER,
-      location: "Los Angeles, USA",
-      verified: true,
-      members: 342,
-      revenue: "$12,450",
-      joinedDate: "2023-06-15",
-      status: ProviderStatus.ACTIVE,
-    },
-    {
-      id: 2,
-      name: "Mike Chen",
-      email: "mike@trainer.com",
-      type: UserRole.TRAINER,
-      location: "Hong Kong",
-      verified: true,
-      members: 28,
-      revenue: "$3,200",
-      joinedDate: "2023-08-20",
-      status: ProviderStatus.ACTIVE,
-    },
-    {
-      id: 3,
-      name: "Dr. Maria Garcia",
-      email: "maria@nutrition.com",
-      type: UserRole.DIETITIAN,
-      location: "Barcelona, Spain",
-      verified: true,
-      members: 45,
-      revenue: "$5,600",
-      joinedDate: "2023-09-10",
-      status: ProviderStatus.ACTIVE,
-    },
-    {
-      id: 4,
-      name: "FitCore Studio",
-      email: "info@fitcore.uk",
-      type: UserRole.GYM_OWNER,
-      location: "London, UK",
-      verified: true,
-      members: 289,
-      revenue: "$9,870",
-      joinedDate: "2023-07-22",
-      status: ProviderStatus.ACTIVE,
-    },
-    {
-      id: 5,
-      name: "Sarah Johnson",
-      email: "sarah@personaltraining.com",
-      type: UserRole.TRAINER,
-      location: "Sydney, Australia",
-      verified: false,
-      members: 12,
-      revenue: "$1,400",
-      joinedDate: "2024-01-05",
-      status: ProviderStatus.ACTIVE,
-    },
-    {
-      id: 6,
-      name: "Elite Fitness Center",
-      email: "contact@elitefitness.com",
-      type: UserRole.GYM_OWNER,
-      location: "Dubai, UAE",
-      verified: true,
-      members: 456,
-      revenue: "$18,900",
-      joinedDate: "2023-05-10",
-      status: ProviderStatus.SUSPENDED,
-    },
-  ];
-
-  const handleViewProvider = (id: number) => {
-    router.push(`/admin/providers/${id}`);
-  };
-
-  const handleSuspendProvider = (id: number, name: string) => {
-    requestConfirmation({
-      title: "Suspend provider?",
-      description: `${name}'s services will be temporarily unavailable.`,
-      confirmLabel: "Suspend Provider",
-      onConfirm: async () => {
-        await showAlert("Provider suspended successfully");
-      },
-    });
-  };
-
-  const handleActivateProvider = (id: number, name: string) => {
-    requestConfirmation({
-      title: "Activate provider?",
-      description: `${name} will become available in the platform again.`,
-      confirmLabel: "Activate Provider",
-      confirmVariant: "primary",
-      onConfirm: async () => {
-        await showAlert("Provider activated successfully");
-      },
-    });
-  };
-
-  const getTypeBadgeColor = (type: UserRole) => {
-    switch (type) {
-      case UserRole.GYM_OWNER:
-        return "bg-accent-blue-100 text-accent-blue-700";
-      case UserRole.TRAINER:
-        return "bg-accent-yellow-100 text-accent-yellow-700";
-      case UserRole.DIETITIAN:
-        return "bg-accent-purple-100 text-accent-purple-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+  const loadGymListings = useCallback(async () => {
+    setIsLoading(true);
+    const res = await marketplaceService.getAdminGymListings();
+    if (res.success && res.data) {
+      setGymListings(res.data);
+    } else {
+      await showAlert(res.message || "Failed to load gym listings");
     }
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadGymListings();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [loadGymListings]);
+
+  const filteredGyms = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return gymListings;
+
+    return gymListings.filter((listing) => {
+      const organization =
+        typeof listing.organization_id === "object"
+          ? listing.organization_id
+          : null;
+      const owner =
+        typeof listing.professional_id === "object"
+          ? listing.professional_id
+          : null;
+
+      return (
+        listing.headline.toLowerCase().includes(q) ||
+        (organization?.name || "").toLowerCase().includes(q) ||
+        `${owner?.first_name || ""} ${owner?.last_name || ""}`
+          .toLowerCase()
+          .includes(q) ||
+        (listing.city || "").toLowerCase().includes(q)
+      );
+    });
+  }, [gymListings, searchQuery]);
+
+  const setBadge = async (
+    listingId: string,
+    badge: MarketplaceVerificationBadge,
+  ) => {
+    setIsMutating(true);
+    const res =
+      badge === MarketplaceVerificationBadge.NONE
+        ? await marketplaceService.revokeGymBadge(listingId)
+        : await marketplaceService.awardGymBadge(listingId, {
+            verification_badge: badge,
+          });
+
+    if (res.success) {
+      await loadGymListings();
+      await showAlert("Badge updated successfully");
+    } else {
+      await showAlert(res.message || "Failed to update badge");
+    }
+    setIsMutating(false);
   };
+
+  const handleSuspend = (listing: MarketplaceListing) => {
+    requestConfirmation({
+      title: "Suspend gym listing?",
+      description: "Suspended gyms will be hidden from marketplace search.",
+      confirmLabel: "Suspend",
+      onConfirm: async () => {
+        const reason = await showPrompt({
+          title: "Suspension reason (optional)",
+          message: "Enter a short reason for internal moderation history:",
+          placeholder: "Policy violation, spam, etc.",
+          confirmLabel: "Continue",
+        });
+
+        setIsMutating(true);
+        const res = await marketplaceService.suspendGym(listing._id, {
+          reason: reason || undefined,
+        });
+
+        if (res.success) {
+          await loadGymListings();
+          await showAlert("Gym suspended successfully");
+        } else {
+          await showAlert(res.message || "Failed to suspend gym");
+        }
+        setIsMutating(false);
+      },
+    });
+  };
+
+  const handleUnsuspend = (listingId: string) => {
+    requestConfirmation({
+      title: "Unsuspend gym listing?",
+      description: "The gym will become visible in marketplace search again.",
+      confirmLabel: "Unsuspend",
+      onConfirm: async () => {
+        setIsMutating(true);
+        const res = await marketplaceService.unsuspendGym(listingId);
+        if (res.success) {
+          await loadGymListings();
+          await showAlert("Gym unsuspended successfully");
+        } else {
+          await showAlert(res.message || "Failed to unsuspend gym");
+        }
+        setIsMutating(false);
+      },
+    });
+  };
+
+  const handleViewDocuments = async (listingId: string) => {
+    setSelectedDocsListingId(listingId);
+    setIsLoadingDocuments(true);
+    const res = await marketplaceService.getAdminGymListingDocuments(listingId);
+    if (res.success && res.data) {
+      setListingDocuments(res.data);
+    } else {
+      setListingDocuments([]);
+      await showAlert(res.message || "Failed to load listing documents");
+    }
+    setIsLoadingDocuments(false);
+  };
+
+  const selectedListing =
+    selectedDocsListingId == null
+      ? null
+      : gymListings.find((listing) => listing._id === selectedDocsListingId) ||
+        null;
 
   return (
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
 
       <div className="flex-1 ml-64">
-        {/* Header */}
         <header className="bg-white border-b border-gray-200">
-          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
-            <h1 className="text-2xl sm:text-3xl font-black text-foreground">
-              Provider Management
+          <div className="px-6 py-6">
+            <h1 className="text-3xl font-black text-foreground">
+              Gym Moderation
             </h1>
-            <p className="mt-1 text-sm sm:text-base text-foreground/60">
-              Manage gyms, trainers, and dietitians
+            <p className="mt-1 text-foreground/60">
+              Manage suspension and verification badges for marketplace gyms.
             </p>
           </div>
         </header>
 
-        <div className="p-4 sm:p-6 md:p-8">
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-            <div className="bg-white p-4 sm:p-6 shadow-card">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-accent-blue-100">
-                  <svg
-                    className="w-5 h-5 text-accent-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground/60">Gyms</p>
-                  <p className="text-2xl font-black text-foreground">342</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white p-6 shadow-card">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-accent-yellow-100">
-                  <svg
-                    className="w-5 h-5 text-accent-yellow-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-foreground/60">
-                    Trainers
-                  </p>
-                  <p className="text-xl sm:text-2xl font-black text-foreground">
-                    289
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white p-4 sm:p-6 shadow-card">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-accent-purple-100">
-                  <svg
-                    className="w-5 h-5 text-accent-purple-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-foreground/60">
-                    Dietitians
-                  </p>
-                  <p className="text-xl sm:text-2xl font-black text-foreground">
-                    216
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white p-4 sm:p-6 shadow-card">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-primary-100">
-                  <svg
-                    className="w-5 h-5 text-primary-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-foreground/60">
-                    Verified
-                  </p>
-                  <p className="text-xl sm:text-2xl font-black text-foreground">
-                    789
-                  </p>
-                </div>
-              </div>
-            </div>
+        <div className="p-6">
+          <div className="bg-white p-4 shadow-card mb-6">
+            <label className="block text-sm font-medium text-foreground/70 mb-2">
+              Search gyms
+            </label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by headline, gym name, owner, or city..."
+              className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
           </div>
 
-          {/* Filters */}
-          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium text-foreground/70 mb-2">
-                  Search Providers
-                </label>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name, email, or location..."
-                  className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
+          <div className="bg-white shadow-card overflow-hidden">
+            {isLoading ? (
+              <div className="p-8 text-center text-foreground/60">
+                Loading gym listings...
               </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground/70 mb-2">
-                  Filter by Type
-                </label>
-                <select
-                  value={typeFilter}
-                  onChange={(e) =>
-                    setTypeFilter(e.target.value as "all" | UserRole)
-                  }
-                  className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  <option value="all">All Types</option>
-                  <option value={UserRole.GYM_OWNER}>Gyms</option>
-                  <option value={UserRole.TRAINER}>Trainers</option>
-                  <option value={UserRole.DIETITIAN}>Dietitians</option>
-                </select>
+            ) : filteredGyms.length === 0 ? (
+              <div className="p-8 text-center text-foreground/60">
+                No gyms found.
               </div>
-            </div>
-          </div>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                      Gym
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                      Docs
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                      Badge
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-foreground uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredGyms.map((listing) => {
+                    const organization =
+                      typeof listing.organization_id === "object"
+                        ? listing.organization_id
+                        : null;
+                    const owner =
+                      typeof listing.professional_id === "object"
+                        ? listing.professional_id
+                        : null;
 
-          {/* Providers Table - Desktop View */}
-          <div className="hidden md:block bg-white shadow-card overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Provider
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Members
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Revenue
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {providers.map((provider) => (
-                  <tr key={provider.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="flex items-center gap-2">
+                    return (
+                      <tr key={listing._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
                           <p className="font-semibold text-foreground">
-                            {provider.name}
+                            {organization?.name || listing.headline}
                           </p>
-                          {provider.verified && (
-                            <span className="text-primary-500" title="Verified">
-                              ✓
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-foreground/60">
-                          {provider.email}
+                          <p className="text-sm text-foreground/60">
+                            {owner
+                              ? `${owner.first_name} ${owner.last_name}`
+                              : "Owner unavailable"}
+                            {listing.city ? ` • ${listing.city}` : ""}
+                          </p>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-foreground-secondary">
+                            {listing.supporting_documents_count ?? 0}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-3 py-1 text-xs font-semibold ${
+                              listing.is_suspended
+                                ? "bg-red-100 text-red-700"
+                                : "bg-primary-100 text-primary-700"
+                            }`}
+                          >
+                            {listing.is_suspended ? "Suspended" : "Active"}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-3 py-1 text-xs font-semibold ${badgePillClasses(
+                              listing.verification_badge,
+                            )}`}
+                          >
+                            {badgeLabel(listing.verification_badge)}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end gap-2 flex-wrap">
+                            <button
+                              disabled={isMutating}
+                              onClick={() =>
+                                setBadge(
+                                  listing._id,
+                                  MarketplaceVerificationBadge.VERIFIED,
+                                )
+                              }
+                              className="px-3 py-1 text-xs font-semibold bg-accent-blue-100 text-accent-blue-700 hover:bg-accent-blue-200 disabled:opacity-50"
+                            >
+                              Blue ✓
+                            </button>
+                            <button
+                              disabled={isMutating}
+                              onClick={() =>
+                                setBadge(
+                                  listing._id,
+                                  MarketplaceVerificationBadge.PREMIUM_VERIFIED,
+                                )
+                              }
+                              className="px-3 py-1 text-xs font-semibold bg-accent-yellow-100 text-accent-yellow-700 hover:bg-accent-yellow-200 disabled:opacity-50"
+                            >
+                              Gold ✓
+                            </button>
+                            <button
+                              disabled={isMutating}
+                              onClick={() =>
+                                setBadge(
+                                  listing._id,
+                                  MarketplaceVerificationBadge.FEATURED,
+                                )
+                              }
+                              className="px-3 py-1 text-xs font-semibold bg-primary-100 text-primary-700 hover:bg-primary-200 disabled:opacity-50"
+                            >
+                              ★ Featured
+                            </button>
+                            <button
+                              disabled={isMutating}
+                              onClick={() =>
+                                setBadge(
+                                  listing._id,
+                                  MarketplaceVerificationBadge.NONE,
+                                )
+                              }
+                              className="px-3 py-1 text-xs font-semibold bg-neutral-100 text-foreground-secondary hover:bg-neutral-200 disabled:opacity-50"
+                            >
+                              Revoke
+                            </button>
+
+                            <button
+                              disabled={isMutating}
+                              onClick={() =>
+                                void handleViewDocuments(listing._id)
+                              }
+                              className="px-3 py-1 text-xs font-semibold bg-neutral-100 text-foreground hover:bg-neutral-200 disabled:opacity-50"
+                            >
+                              Docs
+                            </button>
+
+                            {listing.is_suspended ? (
+                              <button
+                                disabled={isMutating}
+                                onClick={() => handleUnsuspend(listing._id)}
+                                className="px-3 py-1 text-xs font-semibold bg-primary-500 text-foreground hover:bg-primary-600 disabled:opacity-50"
+                              >
+                                Unsuspend
+                              </button>
+                            ) : (
+                              <button
+                                disabled={isMutating}
+                                onClick={() => handleSuspend(listing)}
+                                className="px-3 py-1 text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                              >
+                                Suspend
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {selectedListing && (
+            <div className="mt-6 rounded-2xl bg-white p-6 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">
+                    Supporting Documents
+                  </h3>
+                  <p className="text-sm text-foreground-secondary">
+                    {selectedListing.headline}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedDocsListingId(null);
+                    setListingDocuments([]);
+                  }}
+                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-medium text-foreground hover:border-neutral-400"
+                >
+                  Close
+                </button>
+              </div>
+
+              {isLoadingDocuments ? (
+                <p className="text-sm text-foreground-secondary">
+                  Loading documents...
+                </p>
+              ) : listingDocuments.length === 0 ? (
+                <p className="text-sm text-foreground-secondary">
+                  No supporting documents uploaded yet.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {listingDocuments.map((doc) => (
+                    <div
+                      key={doc._id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {doc.file_name}
+                        </p>
+                        <p className="text-xs text-foreground-secondary">
+                          {(doc.file_size / 1024 / 1024).toFixed(2)} MB •{" "}
+                          {new Date(doc.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 text-xs font-semibold ${getTypeBadgeColor(provider.type)}`}
+                      <a
+                        href={doc.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-primary-600"
                       >
-                        {provider.type.replace("_", " ")}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {provider.location}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
-                      {provider.members}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
-                      {provider.revenue}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 text-xs font-semibold ${
-                          provider.status === ProviderStatus.ACTIVE
-                            ? "bg-primary-100 text-primary-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {provider.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleViewProvider(provider.id)}
-                          className="text-red-500 hover:text-red-700 font-semibold"
-                        >
-                          View
-                        </button>
-                        {provider.status === ProviderStatus.ACTIVE ? (
-                          <button
-                            onClick={() =>
-                              handleSuspendProvider(provider.id, provider.name)
-                            }
-                            className="text-foreground/60 hover:text-red-600 font-semibold"
-                          >
-                            Suspend
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() =>
-                              handleActivateProvider(provider.id, provider.name)
-                            }
-                            className="text-primary-500 hover:text-primary-700 font-semibold"
-                          >
-                            Activate
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Providers Cards - Mobile View */}
-          <div className="md:hidden space-y-3 mb-6">
-            {providers.map((provider) => (
-              <div
-                key={provider.id}
-                className="bg-white p-4 shadow-card rounded-lg border border-gray-100"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-foreground truncate">
-                        {provider.name}
-                      </p>
-                      {provider.verified && (
-                        <span
-                          className="text-primary-500 shrink-0"
-                          title="Verified"
-                        >
-                          ✓
-                        </span>
-                      )}
+                        Open
+                      </a>
                     </div>
-                    <p className="text-xs sm:text-sm text-foreground/60 truncate">
-                      {provider.email}
-                    </p>
-                  </div>
-                  <span
-                    className={`ml-2 shrink-0 px-2 py-1 text-xs font-semibold whitespace-nowrap ${getTypeBadgeColor(provider.type)}`}
-                  >
-                    {provider.type.replace("_", " ")}
-                  </span>
+                  ))}
                 </div>
-
-                <div className="grid grid-cols-2 gap-2 mb-3 text-xs sm:text-sm">
-                  <div>
-                    <span className="text-foreground/60">Location: </span>
-                    <span className="text-foreground font-medium">
-                      {provider.location}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-foreground/60">Members: </span>
-                    <span className="text-foreground font-medium">
-                      {provider.members}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-foreground/60">Revenue: </span>
-                    <span className="text-foreground font-medium">
-                      {provider.revenue}
-                    </span>
-                  </div>
-                  <div>
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold ${
-                        provider.status === ProviderStatus.ACTIVE
-                          ? "bg-primary-100 text-primary-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {provider.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleViewProvider(provider.id)}
-                    className="flex-1 px-3 py-2 bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-colors"
-                  >
-                    View
-                  </button>
-                  {provider.status === ProviderStatus.ACTIVE ? (
-                    <button
-                      onClick={() =>
-                        handleSuspendProvider(provider.id, provider.name)
-                      }
-                      className="flex-1 px-3 py-2 border border-red-300 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors"
-                    >
-                      Suspend
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() =>
-                        handleActivateProvider(provider.id, provider.name)
-                      }
-                      className="flex-1 px-3 py-2 border border-primary-300 text-primary-600 text-xs font-semibold hover:bg-primary-50 transition-colors"
-                    >
-                      Activate
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs sm:text-sm text-foreground/60 text-center sm:text-left">
-              Showing 1 to 6 of 847 providers
-            </p>
-            <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
-              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
-                Previous
-              </button>
-              <button className="px-3 sm:px-4 py-2 bg-red-500 text-white text-sm font-semibold hover:bg-red-600">
-                1
-              </button>
-              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
-                2
-              </button>
-              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
-                3
-              </button>
-              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
-                Next
-              </button>
+              )}
             </div>
-          </div>
-          {confirmationModal}
+          )}
         </div>
       </div>
+
+      {confirmationModal}
     </div>
   );
 }

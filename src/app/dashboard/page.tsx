@@ -7,7 +7,9 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { checkinsService } from "@/lib/api/checkins";
 import { teamsService } from "@/lib/api/teams";
+import { progressService } from "@/lib/api/progress";
 import { UserRole } from "@/lib/types";
 
 export default function DashboardPage() {
@@ -15,6 +17,13 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.USER);
   const [resolvingPerspective, setResolvingPerspective] = useState(true);
+  const [checkInStatus, setCheckInStatus] = useState<{
+    has_checked_in_today: boolean;
+    today_check_in_at?: string;
+    last_check_in_at?: string;
+  } | null>(null);
+  const [journalCount, setJournalCount] = useState<number | null>(null);
+  const [hasMoreJournals, setHasMoreJournals] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -46,6 +55,51 @@ export default function DashboardPage() {
       mounted = false;
     };
   }, [isLoading, isAuthorized, user, router]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadMyCheckInStatus() {
+      if (isLoading || !isAuthorized || !user) return;
+      try {
+        const res = await checkinsService.getMyStatus();
+        if (!mounted) return;
+        if (res.success && res.data) {
+          setCheckInStatus(res.data);
+        }
+      } catch {
+        if (mounted) setCheckInStatus(null);
+      }
+    }
+
+    loadMyCheckInStatus();
+    return () => {
+      mounted = false;
+    };
+  }, [isLoading, isAuthorized, user]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadJournalCount() {
+      if (isLoading || !isAuthorized || !user) return;
+      try {
+        const res = await progressService.getMyJournalEntries(20);
+        if (!mounted) return;
+        if (res.success && res.data) {
+          setJournalCount(res.data.entries.length);
+          setHasMoreJournals(res.data.next_cursor !== null);
+        }
+      } catch {
+        // non-critical — badge stays hidden
+      }
+    }
+
+    loadJournalCount();
+    return () => {
+      mounted = false;
+    };
+  }, [isLoading, isAuthorized, user]);
 
   if (isLoading || resolvingPerspective) return <DashboardLoading />;
   if (!isAuthorized) return null;
@@ -289,6 +343,52 @@ export default function DashboardPage() {
             Keep up the great work! You&apos;re on a {userStats.currentStreak}-day
             streak.
           </p>
+          {checkInStatus && (
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-lg">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  checkInStatus.has_checked_in_today
+                    ? "bg-primary-500"
+                    : "bg-neutral-400"
+                }`}
+              />
+              <span className="text-sm text-foreground">
+                {checkInStatus.has_checked_in_today
+                  ? "Checked in today"
+                  : checkInStatus.last_check_in_at
+                    ? `Last check-in: ${new Date(
+                        checkInStatus.last_check_in_at,
+                      ).toLocaleDateString()}`
+                    : "No check-ins yet"}
+              </span>
+            </div>
+          )}
+
+          <div className="mt-4 max-w-xl rounded-lg border border-neutral-200 bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-foreground">
+                    My Journal Entries
+                  </p>
+                  {journalCount !== null && journalCount > 0 && (
+                    <span className="rounded-full bg-primary-500 px-2 py-0.5 text-xs font-bold text-foreground">
+                      {hasMoreJournals ? `${journalCount}+` : journalCount}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-foreground-secondary mt-1">
+                  View notes and progress updates from your trainer and dietitian.
+                </p>
+              </div>
+              <Link
+                href="/dashboard/journals"
+                className="rounded-lg bg-primary-500 px-3 py-2 text-xs font-semibold text-foreground hover:bg-primary-600 whitespace-nowrap"
+              >
+                View Journals
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Onboarding Banner */}

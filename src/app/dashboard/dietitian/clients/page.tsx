@@ -12,10 +12,12 @@ import type {
   ClientProfile,
   ProgressSummary,
   AddClientRequest,
-  AddClientResponse,
   ClientRequestItem,
   ClientInvitation,
+  ClientJournalEntry,
+  CreateClientJournalEntryRequest,
 } from "@/lib/api/progress";
+import { ClientJournalMood } from "@/lib/api/progress";
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
@@ -59,6 +61,10 @@ export default function DietitianClientsPage() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null,
   );
+  const [journalEntries, setJournalEntries] = useState<
+    Record<string, ClientJournalEntry[]>
+  >({});
+  const [journalSubmitting, setJournalSubmitting] = useState(false);
 
   // ─── load client profiles ─────────────────────────────────────
 
@@ -179,6 +185,86 @@ export default function DietitianClientsPage() {
   const selectedSummary = selectedProfileId
     ? summaries[selectedProfileId]
     : null;
+  const selectedJournals = selectedProfileId
+    ? journalEntries[selectedProfileId] ?? []
+    : [];
+
+  const loadJournals = useCallback(async (profileId: string) => {
+    try {
+      const res = await progressService.getClientJournalEntries(profileId, 20);
+      if (res.success && res.data) {
+        setJournalEntries((prev) => ({ ...prev, [profileId]: res.data }));
+      }
+    } catch {
+      // non-critical
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!selectedProfileId) return;
+    loadJournals(selectedProfileId);
+  }, [selectedProfileId, loadJournals]);
+
+  async function handleCreateJournal(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!selectedProfileId) return;
+
+    const fd = new FormData(e.currentTarget);
+    const notes = String(fd.get("notes") || "").trim();
+    if (!notes) {
+      setError("Journal notes are required.");
+      return;
+    }
+
+    setJournalSubmitting(true);
+    setError(null);
+
+    const payload: CreateClientJournalEntryRequest = {
+      notes,
+      mood: (fd.get("mood") as ClientJournalMood) || undefined,
+      weight_kg: fd.get("weight_kg")
+        ? Number(fd.get("weight_kg"))
+        : undefined,
+      adherence_score: fd.get("adherence_score")
+        ? Number(fd.get("adherence_score"))
+        : undefined,
+    };
+
+    try {
+      const res = await progressService.createClientJournalEntry(
+        selectedProfileId,
+        payload,
+      );
+      if (res.success && res.data) {
+        setJournalEntries((prev) => ({
+          ...prev,
+          [selectedProfileId]: [res.data, ...(prev[selectedProfileId] ?? [])],
+        }));
+        (e.currentTarget as HTMLFormElement).reset();
+      } else {
+        setError(res.message || "Failed to add journal entry.");
+      }
+    } catch {
+      setError("Failed to add journal entry.");
+    } finally {
+      setJournalSubmitting(false);
+    }
+  }
+
+  async function handleDeleteJournal(entryId: string) {
+    if (!selectedProfileId) return;
+    try {
+      await progressService.deleteClientJournalEntry(entryId);
+      setJournalEntries((prev) => ({
+        ...prev,
+        [selectedProfileId]: (prev[selectedProfileId] ?? []).filter(
+          (e) => e._id !== entryId,
+        ),
+      }));
+    } catch {
+      setError("Failed to delete journal entry.");
+    }
+  }
 
   // ─── render ───────────────────────────────────────────────────
 
@@ -372,6 +458,106 @@ export default function DietitianClientsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Client journals */}
+              <div className="mt-6">
+                <h3 className="mb-3 text-sm font-semibold text-foreground-secondary">
+                  Client Journal
+                </h3>
+
+                <form
+                  onSubmit={handleCreateJournal}
+                  className="rounded-lg border border-neutral-200 p-4"
+                >
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <select
+                      name="mood"
+                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                      defaultValue=""
+                    >
+                      <option value="">Mood (optional)</option>
+                      {Object.values(ClientJournalMood).map((mood) => (
+                        <option key={mood} value={mood}>
+                          {mood.charAt(0).toUpperCase() + mood.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      name="weight_kg"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="Weight (kg)"
+                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                    />
+                    <input
+                      name="adherence_score"
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="Adherence %"
+                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <textarea
+                    name="notes"
+                    required
+                    rows={3}
+                    placeholder="Write progress notes for this client..."
+                    className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  />
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={journalSubmitting}
+                      className="rounded-lg bg-accent-purple-500 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-purple-600 disabled:opacity-50"
+                    >
+                      {journalSubmitting ? "Saving..." : "Add Journal Entry"}
+                    </button>
+                  </div>
+                </form>
+
+                <div className="mt-4 space-y-2">
+                  {selectedJournals.length === 0 && (
+                    <p className="text-sm text-foreground-tertiary">
+                      No journal entries yet.
+                    </p>
+                  )}
+                  {selectedJournals.map((entry) => (
+                    <div
+                      key={entry._id}
+                      className="rounded-lg bg-neutral-50 px-4 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm text-foreground">{entry.notes}</p>
+                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-foreground-tertiary">
+                            <span>{formatDate(entry.entry_date)}</span>
+                            {entry.mood && (
+                              <span className="rounded-full bg-accent-purple-100 px-2 py-0.5 text-accent-purple-700">
+                                {entry.mood}
+                              </span>
+                            )}
+                            {entry.weight_kg != null && (
+                              <span>Weight: {entry.weight_kg} kg</span>
+                            )}
+                            {entry.adherence_score != null && (
+                              <span>Adherence: {entry.adherence_score}%</span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteJournal(entry._id)}
+                          className="text-xs font-medium text-red-500 hover:text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}

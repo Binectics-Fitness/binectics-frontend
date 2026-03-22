@@ -10,6 +10,7 @@ import type {
   MarketplaceReview,
   MarketplaceAccountType,
   MarketplaceRequestType,
+  MarketplaceVerificationBadge,
 } from "@/lib/types";
 
 const ACCOUNT_TYPE_LABELS: Record<MarketplaceAccountType, string> = {
@@ -94,6 +95,32 @@ function ReviewCard({ review }: { review: MarketplaceReview }) {
   );
 }
 
+function ListingBadge({ badge }: { badge: MarketplaceVerificationBadge }) {
+  if (badge === "none") return null;
+
+  if (badge === "verified") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-accent-blue-100 px-2 py-1 text-xs font-semibold text-accent-blue-700">
+        ✓ Verified
+      </span>
+    );
+  }
+
+  if (badge === "premium_verified") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-accent-yellow-100 px-2 py-1 text-xs font-semibold text-accent-yellow-700">
+        ✓ Premium
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700">
+      ★ Featured
+    </span>
+  );
+}
+
 export default function ListingDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -160,7 +187,10 @@ export default function ListingDetailPage() {
       type: requestType,
       message: requestMessage || undefined,
       goals: requestGoals
-        ? requestGoals.split(",").map((g) => g.trim()).filter(Boolean)
+        ? requestGoals
+            .split(",")
+            .map((g) => g.trim())
+            .filter(Boolean)
         : undefined,
     });
 
@@ -298,6 +328,7 @@ export default function ListingDetailPage() {
                 >
                   {ACCOUNT_TYPE_LABELS[listing.account_type]}
                 </span>
+                <ListingBadge badge={listing.verification_badge} />
               </div>
               <p className="text-foreground-secondary mb-3">{displayName}</p>
 
