@@ -7,6 +7,7 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import {
   MarketplaceVerificationBadge,
+  MarketplaceListing,
   MarketplaceMembershipPlan,
   MembershipPlanType,
 } from "@/lib/types";
@@ -28,36 +29,25 @@ export default function GymProfilePage() {
   );
   const [verificationBadge, setVerificationBadge] =
     useState<MarketplaceVerificationBadge>(MarketplaceVerificationBadge.NONE);
+  const [listing, setListing] = useState<MarketplaceListing | null>(null);
 
-  // Mock gym data - in production this would come from API
-  const gym = {
-    id: gymId,
-    name: "PowerHouse Gym",
-    location: "Los Angeles, USA",
-    address: "123 Fitness Street, Downtown LA, CA 90012",
-    rating: 4.8,
-    reviews: 342,
-    verified: true,
-    description:
-      "Premier fitness facility with state-of-the-art equipment, expert trainers, and a motivating community. We offer everything you need to reach your fitness goals in a clean, modern environment.",
-    facilities: [
-      "Cardio Equipment",
-      "Free Weights",
-      "Group Classes",
-      "Sauna",
-      "Locker Rooms",
-      "Personal Training",
-      "Juice Bar",
-      "Parking",
-    ],
-    hours: {
-      "Monday - Friday": "5:00 AM - 11:00 PM",
-      "Saturday - Sunday": "6:00 AM - 9:00 PM",
-    },
-    photos: ["/placeholder1.jpg", "/placeholder2.jpg", "/placeholder3.jpg"],
-    qrCode:
-      "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=gym_123",
-  };
+  // fallback display helpers
+  const displayName = listing
+    ? (() => {
+        const org =
+          typeof listing.organization_id === "object"
+            ? listing.organization_id
+            : null;
+        return org?.name ?? listing.headline;
+      })()
+    : "Loading...";
+  const gymLocation = listing
+    ? [listing.city, listing.country_code?.toUpperCase()]
+        .filter(Boolean)
+        .join(", ")
+    : "";
+  const gymFacilities = listing?.specialties ?? [];
+  const gymDescription = listing?.bio ?? listing?.headline ?? "";
 
   useEffect(() => {
     let mounted = true;
@@ -65,6 +55,8 @@ export default function GymProfilePage() {
     async function loadListingOwner() {
       const response = await marketplaceService.getListingById(String(gymId));
       if (!mounted || !response.success || !response.data) return;
+
+      setListing(response.data);
 
       const professionalId =
         typeof response.data.professional_id === "object"
@@ -189,7 +181,7 @@ export default function GymProfilePage() {
               <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h1 className="mb-2 text-3xl font-black text-foreground sm:text-4xl">
-                    {gym.name}
+                    {displayName}
                   </h1>
                   <p className="text-foreground/60 flex items-center gap-2">
                     <svg
@@ -205,7 +197,7 @@ export default function GymProfilePage() {
                         d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                       />
                     </svg>
-                    {gym.location}
+                    {gymLocation || "Location not available"}
                   </p>
                 </div>
                 {verificationBadge !== MarketplaceVerificationBadge.NONE && (
@@ -247,26 +239,28 @@ export default function GymProfilePage() {
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">⭐</span>
                   <span className="text-2xl font-black text-foreground">
-                    {gym.rating}
+                    {listing?.average_rating?.toFixed(1) ?? "—"}
                   </span>
                 </div>
                 <span className="text-foreground/60">
-                  ({gym.reviews} reviews)
+                  ({listing?.review_count ?? 0} reviews)
                 </span>
               </div>
 
               {/* Description */}
               <p className="text-foreground/80 mb-6 leading-relaxed">
-                {gym.description}
+                {gymDescription}
               </p>
 
               {/* Address */}
-              <div className="mb-6 p-4 bg-gray-50 border border-gray-200">
-                <p className="text-sm font-semibold text-foreground mb-1">
-                  Address
-                </p>
-                <p className="text-foreground/80">{gym.address}</p>
-              </div>
+              {listing?.bio && (
+                <div className="mb-6 p-4 bg-gray-50 border border-gray-200">
+                  <p className="text-sm font-semibold text-foreground mb-1">
+                    About
+                  </p>
+                  <p className="text-foreground/80">{listing.bio}</p>
+                </div>
+              )}
 
               {/* Quick Actions */}
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -292,44 +286,38 @@ export default function GymProfilePage() {
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Facilities & Amenities
               </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {gym.facilities.map((facility, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <svg
-                      className="w-5 h-5 text-primary-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="text-foreground">{facility}</span>
-                  </div>
-                ))}
-              </div>
+              {gymFacilities.length === 0 ? (
+                <p className="text-foreground/60">No facilities listed</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {gymFacilities.map((facility, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-primary-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="text-foreground">{facility}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Hours */}
+            {/* Hours - removed (not in API), show accepting note */}
             <div className="bg-white p-6 shadow-card">
-              <h2 className="text-2xl font-bold text-foreground mb-6">
+              <h2 className="text-2xl font-bold text-foreground mb-4">
                 Opening Hours
               </h2>
-              <div className="space-y-3">
-                {Object.entries(gym.hours).map(([days, hours]) => (
-                  <div
-                    key={days}
-                    className="flex flex-col gap-1 border-b border-gray-100 py-2 last:border-0 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <span className="font-semibold text-foreground">
-                      {days}
-                    </span>
-                    <span className="text-foreground/80">{hours}</span>
-                  </div>
-                ))}
-              </div>
+              <p className="text-foreground/60 text-sm">
+                Please contact the gym directly for current opening hours.
+              </p>
             </div>
 
             <ProviderReviewsSection
@@ -398,12 +386,14 @@ export default function GymProfilePage() {
                             </h3>
                             <span
                               className={`text-xs px-2 py-0.5 font-semibold ${
-                                plan.plan_type === MembershipPlanType.SUBSCRIPTION
+                                plan.plan_type ===
+                                MembershipPlanType.SUBSCRIPTION
                                   ? "bg-accent-blue-500/10 text-accent-blue-500"
                                   : "bg-accent-yellow-500/20 text-foreground"
                               }`}
                             >
-                              {plan.plan_type === MembershipPlanType.SUBSCRIPTION
+                              {plan.plan_type ===
+                              MembershipPlanType.SUBSCRIPTION
                                 ? "Subscription"
                                 : "One-time"}
                             </span>

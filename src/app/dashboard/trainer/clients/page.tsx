@@ -185,7 +185,7 @@ export default function TrainerClientsPage() {
     ? summaries[selectedProfileId]
     : null;
   const selectedJournals = selectedProfileId
-    ? journalEntries[selectedProfileId] ?? []
+    ? (journalEntries[selectedProfileId] ?? [])
     : [];
 
   const loadJournals = useCallback(async (profileId: string) => {
@@ -221,9 +221,7 @@ export default function TrainerClientsPage() {
     const payload: CreateClientJournalEntryRequest = {
       notes,
       mood: (fd.get("mood") as ClientJournalMood) || undefined,
-      weight_kg: fd.get("weight_kg")
-        ? Number(fd.get("weight_kg"))
-        : undefined,
+      weight_kg: fd.get("weight_kg") ? Number(fd.get("weight_kg")) : undefined,
       adherence_score: fd.get("adherence_score")
         ? Number(fd.get("adherence_score"))
         : undefined,
@@ -529,7 +527,9 @@ export default function TrainerClientsPage() {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-sm text-foreground">{entry.notes}</p>
+                          <p className="text-sm text-foreground">
+                            {entry.notes}
+                          </p>
                           <div className="mt-1 flex flex-wrap gap-2 text-xs text-foreground-tertiary">
                             <span>{formatDate(entry.entry_date)}</span>
                             {entry.mood && (

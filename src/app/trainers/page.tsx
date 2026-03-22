@@ -1,145 +1,99 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { marketplaceService } from "@/lib/api/marketplace";
+import type { MarketplaceListing } from "@/lib/types";
+
+function getDisplayName(listing: MarketplaceListing): string {
+  const pro =
+    typeof listing.professional_id === "object"
+      ? listing.professional_id
+      : null;
+  if (pro) return `${pro.first_name} ${pro.last_name}`;
+  return listing.headline;
+}
 
 export default function TrainersPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [inputValue, setInputValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-
-  // Mock trainers data
-  const trainers = [
-    {
-      id: 1,
-      name: 'Mike Chen',
-      location: 'Hong Kong',
-      rating: 5.0,
-      reviews: 128,
-      clients: 45,
-      verified: true,
-      image: '💪',
-      specialties: ['Strength Training', 'HIIT', 'Boxing'],
-      certifications: ['NASM-CPT', 'CrossFit Level 2'],
-      experience: '8 years',
-      price: '$99/session',
-      bio: 'Specialized in functional fitness and strength building.',
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      location: 'New York, USA',
-      rating: 4.9,
-      reviews: 234,
-      clients: 62,
-      verified: true,
-      image: '🏃‍♀️',
-      specialties: ['Yoga', 'Pilates', 'Mobility'],
-      certifications: ['RYT-500', 'NASM-CPT'],
-      experience: '10 years',
-      price: '$85/session',
-      bio: 'Holistic approach to fitness and wellness.',
-    },
-    {
-      id: 3,
-      name: 'David Martinez',
-      location: 'Los Angeles, USA',
-      rating: 4.8,
-      reviews: 189,
-      clients: 38,
-      verified: true,
-      image: '🥊',
-      specialties: ['Boxing', 'MMA', 'Cardio'],
-      certifications: ['ACE-CPT', 'Boxing Coach Level 3'],
-      experience: '12 years',
-      price: '$120/session',
-      bio: 'Former professional boxer, now helping others achieve peak fitness.',
-    },
-    {
-      id: 4,
-      name: 'Emma Thompson',
-      location: 'London, UK',
-      rating: 5.0,
-      reviews: 156,
-      clients: 52,
-      verified: true,
-      image: '🏋️‍♀️',
-      specialties: ['Strength Training', 'Powerlifting', 'Nutrition'],
-      certifications: ['ISSA-CPT', 'Precision Nutrition L1'],
-      experience: '6 years',
-      price: '$95/session',
-      bio: 'Empowering women through strength training.',
-    },
-    {
-      id: 5,
-      name: 'Carlos Rodriguez',
-      location: 'Barcelona, Spain',
-      rating: 4.7,
-      reviews: 98,
-      clients: 29,
-      verified: false,
-      image: '🤸',
-      specialties: ['Calisthenics', 'Bodyweight Training', 'Flexibility'],
-      certifications: ['ACE-CPT'],
-      experience: '5 years',
-      price: '$75/session',
-      bio: 'Master your bodyweight, master your life.',
-    },
-    {
-      id: 6,
-      name: 'Aisha Patel',
-      location: 'Mumbai, India',
-      rating: 4.9,
-      reviews: 167,
-      clients: 41,
-      verified: true,
-      image: '🧘‍♀️',
-      specialties: ['Yoga', 'Meditation', 'Wellness'],
-      certifications: ['RYT-500', 'Ayurveda Consultant'],
-      experience: '15 years',
-      price: '$65/session',
-      bio: 'Traditional yoga and modern fitness combined.',
-    },
-  ];
+  const [listings, setListings] = useState<MarketplaceListing[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const specialties = [
-    'All Specialties',
-    'Strength Training',
-    'HIIT',
-    'Yoga',
-    'Boxing',
-    'Pilates',
-    'Calisthenics',
-    'Powerlifting',
+    "All Specialties",
+    "Strength Training",
+    "HIIT",
+    "Yoga",
+    "Boxing",
+    "Pilates",
+    "Calisthenics",
+    "Powerlifting",
+    "CrossFit",
+    "Mobility",
   ];
 
-  const locations = [
-    { value: 'all', label: 'All Locations' },
-    { value: 'usa', label: 'United States' },
-    { value: 'uk', label: 'United Kingdom' },
-    { value: 'asia', label: 'Asia' },
-    { value: 'europe', label: 'Europe' },
-  ];
+  const fetchTrainers = useCallback(
+    async (
+      query: string,
+      specialty: string,
+      verified: boolean,
+      currentPage: number,
+    ) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const params: Record<string, unknown> = {
+          page: currentPage,
+          limit: 12,
+          account_type: "personal_trainer",
+        };
+        if (query) params.q = query;
+        if (specialty !== "all") params.specialties = specialty;
+        const res = await marketplaceService.searchListings(
+          params as Parameters<typeof marketplaceService.searchListings>[0],
+        );
+        if (res.success && res.data) {
+          let results = res.data.listings;
+          if (verified)
+            results = results.filter((l) => l.verification_badge !== "none");
+          setListings(results);
+          setTotal(res.data.total);
+          setTotalPages(res.data.total_pages);
+        } else {
+          setListings([]);
+          setTotal(0);
+          setTotalPages(1);
+        }
+      } catch {
+        setError("Failed to load trainers. Please try again.");
+        setListings([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
-  const filteredTrainers = trainers.filter((trainer) => {
-    const matchesSearch =
-      trainer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trainer.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trainer.specialties.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesSpecialty =
-      selectedSpecialty === 'all' ||
-      trainer.specialties.some((s) => s.toLowerCase() === selectedSpecialty.toLowerCase());
-    const locationValue = trainer.location.toLowerCase();
-    const matchesLocation =
-      selectedLocation === 'all' ||
-      (selectedLocation === 'usa' && locationValue.includes('usa')) ||
-      (selectedLocation === 'uk' && locationValue.includes('uk')) ||
-      (selectedLocation === 'asia' && (locationValue.includes('hong kong') || locationValue.includes('india'))) ||
-      (selectedLocation === 'europe' && (locationValue.includes('spain') || locationValue.includes('london')));
-    const matchesVerified = !verifiedOnly || trainer.verified;
-    return matchesSearch && matchesSpecialty && matchesLocation && matchesVerified;
-  });
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(value);
+      setPage(1);
+    }, 400);
+  };
+
+  useEffect(() => {
+    void fetchTrainers(searchQuery, selectedSpecialty, verifiedOnly, page);
+  }, [fetchTrainers, searchQuery, selectedSpecialty, verifiedOnly, page]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,7 +105,8 @@ export default function TrainersPage() {
               Find Your Personal Trainer
             </h1>
             <p className="text-base text-foreground/90 sm:text-lg">
-              Connect with certified trainers worldwide to reach your fitness goals
+              Connect with certified trainers worldwide to reach your fitness
+              goals
             </p>
           </div>
 
@@ -160,8 +115,8 @@ export default function TrainersPage() {
             <input
               type="text"
               placeholder="Search by name, location, or specialty..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={inputValue}
+              onChange={(e) => handleInputChange(e.target.value)}
               className="w-full px-5 py-4 pl-12 border-2 border-foreground/20 focus:outline-none focus:border-foreground"
             />
             <svg
@@ -184,34 +139,26 @@ export default function TrainersPage() {
       {/* Filters */}
       <section className="bg-background border-b border-neutral-300 py-6">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
             {/* Specialty Filter */}
             <div className="flex-1">
-              <label className="block text-sm font-semibold text-foreground mb-2">Specialty</label>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Specialty
+              </label>
               <select
                 value={selectedSpecialty}
-                onChange={(e) => setSelectedSpecialty(e.target.value)}
+                onChange={(e) => {
+                  setSelectedSpecialty(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full px-4 py-2 border-2 border-neutral-300 focus:border-accent-yellow-500 focus:outline-none"
               >
                 {specialties.map((specialty) => (
-                  <option key={specialty} value={specialty === 'All Specialties' ? 'all' : specialty}>
+                  <option
+                    key={specialty}
+                    value={specialty === "All Specialties" ? "all" : specialty}
+                  >
                     {specialty}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Location Filter */}
-            <div className="flex-1">
-              <label className="block text-sm font-semibold text-foreground mb-2">Location</label>
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-neutral-300 focus:border-accent-yellow-500 focus:outline-none"
-              >
-                {locations.map((location) => (
-                  <option key={location.value} value={location.value}>
-                    {location.label}
                   </option>
                 ))}
               </select>
@@ -220,15 +167,27 @@ export default function TrainersPage() {
             {/* Verified Only */}
             <div className="flex items-end">
               <label className="flex w-full items-center rounded-lg border-2 border-neutral-300 px-4 py-3 transition-colors hover:border-accent-yellow-500 lg:w-auto">
-                <input type="checkbox" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} className="mr-2 h-4 w-4 text-accent-yellow-500" />
-                <span className="text-foreground font-semibold">Verified only</span>
+                <input
+                  type="checkbox"
+                  checked={verifiedOnly}
+                  onChange={(e) => {
+                    setVerifiedOnly(e.target.checked);
+                    setPage(1);
+                  }}
+                  className="mr-2 h-4 w-4 text-accent-yellow-500"
+                />
+                <span className="text-foreground font-semibold">
+                  Verified only
+                </span>
               </label>
             </div>
           </div>
 
           {/* Results Count */}
           <div className="mt-4 text-sm text-foreground-secondary">
-            Showing {filteredTrainers.length} {filteredTrainers.length === 1 ? 'trainer' : 'trainers'}
+            {isLoading
+              ? "Loading..."
+              : `Showing ${total} ${total === 1 ? "trainer" : "trainers"}`}
           </div>
         </div>
       </section>
@@ -236,101 +195,221 @@ export default function TrainersPage() {
       {/* Trainers Grid */}
       <section className="bg-background py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTrainers.map((trainer) => (
-              <div
-                key={trainer.id}
-                className="flex h-full flex-col bg-white shadow-card transition-shadow hover:shadow-lg"
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="animate-pulse bg-white shadow-card">
+                  <div className="h-48 bg-gray-200" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!isLoading && !error && listings.length === 0 && (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+                No trainers found
+              </h3>
+              <p className="text-foreground-secondary mb-6">
+                Try adjusting your search or filters
+              </p>
+              <button
+                onClick={() => {
+                  setInputValue("");
+                  setSearchQuery("");
+                  setSelectedSpecialty("all");
+                  setVerifiedOnly(false);
+                  setPage(1);
+                }}
+                className="border-2 border-neutral-300 px-6 py-2 font-semibold text-foreground transition-colors hover:bg-neutral-100"
               >
-                {/* Header */}
-                <div className="flex flex-1 flex-col p-4 pb-4 sm:p-6">
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-14 w-14 items-center justify-center bg-accent-yellow-100 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
-                        {trainer.image}
-                      </div>
-                      <div>
-                        <h3 className="font-display text-lg font-bold text-foreground">{trainer.name}</h3>
-                        <p className="text-sm text-foreground-secondary">📍 {trainer.location}</p>
-                      </div>
-                    </div>
-                    {trainer.verified && (
-                      <div className="bg-primary-500 text-foreground px-2 py-1 text-xs font-semibold">
-                        ✓
-                      </div>
-                    )}
-                  </div>
+                Reset Filters
+              </button>
+            </div>
+          )}
 
-                  {/* Rating */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1">
-                      <span className="text-accent-yellow-500">★</span>
-                      <span className="font-semibold text-foreground">{trainer.rating}</span>
-                    </div>
-                    <span className="text-sm text-foreground-secondary">
-                      ({trainer.reviews} reviews)
-                    </span>
-                    <span className="text-sm text-foreground-secondary">• {trainer.clients} clients</span>
-                  </div>
+          {!isLoading && listings.length > 0 && (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {listings.map((listing) => {
+                const displayName = getDisplayName(listing);
+                const location = [
+                  listing.city,
+                  listing.country_code?.toUpperCase(),
+                ]
+                  .filter(Boolean)
+                  .join(", ");
+                const isVerifiedBadge = listing.verification_badge !== "none";
 
-                  {/* Bio */}
-                  <p className="mb-4 text-sm text-foreground-secondary">{trainer.bio}</p>
-
-                  {/* Specialties */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {trainer.specialties.slice(0, 3).map((specialty, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-accent-yellow-100 text-accent-yellow-700 text-xs font-semibold"
-                      >
-                        {specialty}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Experience & Certifications */}
-                  <div className="mb-4 space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-foreground-secondary">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      {trainer.experience} experience
-                    </div>
-                    <div className="flex items-center gap-2 text-foreground-secondary">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                        />
-                      </svg>
-                      {trainer.certifications.join(', ')}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-auto flex flex-col gap-3 border-t border-gray-200 bg-gray-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                  <div>
-                    <p className="text-xs text-foreground-secondary">Starting at</p>
-                    <p className="text-xl font-black text-foreground">{trainer.price}</p>
-                  </div>
-                  <Link
-                    href={`/trainers/${trainer.id}`}
-                    className="inline-flex items-center justify-center bg-accent-yellow-500 px-6 py-2 text-center font-semibold text-foreground transition-colors hover:bg-accent-yellow-600"
+                return (
+                  <div
+                    key={listing._id}
+                    className="flex h-full flex-col bg-white shadow-card transition-shadow hover:shadow-lg"
                   >
-                    View Profile
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+                    <div className="flex flex-1 flex-col p-4 pb-4 sm:p-6">
+                      <div className="mb-4 flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-14 w-14 items-center justify-center bg-accent-yellow-100 text-2xl sm:h-16 sm:w-16 sm:text-3xl overflow-hidden">
+                            {listing.profile_image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={listing.profile_image}
+                                alt={displayName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span>💪</span>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-display text-lg font-bold text-foreground">
+                              {displayName}
+                            </h3>
+                            {location && (
+                              <p className="text-sm text-foreground-secondary">
+                                📍 {location}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {isVerifiedBadge && (
+                          <div className="bg-primary-500 text-foreground px-2 py-1 text-xs font-semibold">
+                            ✓
+                          </div>
+                        )}
+                      </div>
+
+                      {listing.review_count > 0 && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-accent-yellow-500">★</span>
+                          <span className="font-semibold text-foreground">
+                            {listing.average_rating.toFixed(1)}
+                          </span>
+                          <span className="text-sm text-foreground-secondary">
+                            ({listing.review_count} reviews)
+                          </span>
+                          {listing.active_client_count > 0 && (
+                            <span className="text-sm text-foreground-secondary">
+                              • {listing.active_client_count} clients
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {listing.bio && (
+                        <p className="mb-4 text-sm text-foreground-secondary line-clamp-2">
+                          {listing.bio}
+                        </p>
+                      )}
+
+                      {listing.specialties &&
+                        listing.specialties.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {listing.specialties
+                              .slice(0, 3)
+                              .map((specialty, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-accent-yellow-100 text-accent-yellow-700 text-xs font-semibold"
+                                >
+                                  {specialty}
+                                </span>
+                              ))}
+                          </div>
+                        )}
+
+                      {listing.certifications &&
+                        listing.certifications.length > 0 && (
+                          <div className="flex items-center gap-2 text-sm text-foreground-secondary">
+                            <svg
+                              className="w-4 h-4 flex-shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                              />
+                            </svg>
+                            <span className="truncate">
+                              {listing.certifications.slice(0, 2).join(", ")}
+                            </span>
+                          </div>
+                        )}
+                    </div>
+
+                    <div className="mt-auto flex flex-col gap-3 border-t border-gray-200 bg-gray-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                      <div>
+                        {listing.price_from ? (
+                          <>
+                            <p className="text-xs text-foreground-secondary">
+                              Starting at
+                            </p>
+                            <p className="text-xl font-black text-foreground">
+                              {listing.price_label ??
+                                `${listing.currency ?? "$"}${listing.price_from}`}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-sm text-foreground-secondary">
+                            Contact for pricing
+                          </p>
+                        )}
+                      </div>
+                      <Link
+                        href={`/trainers/${listing._id}`}
+                        className="inline-flex items-center justify-center bg-accent-yellow-500 px-6 py-2 text-center font-semibold text-foreground transition-colors hover:bg-accent-yellow-600"
+                      >
+                        View Profile
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {!isLoading && totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 border-2 border-neutral-300 text-foreground font-semibold hover:bg-neutral-100 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              {[...Array(Math.min(totalPages, 5))].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setPage(i + 1)}
+                  className={`px-4 py-2 font-semibold ${page === i + 1 ? "bg-accent-yellow-500 text-foreground" : "border-2 border-neutral-300 text-foreground hover:bg-neutral-100"}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 border-2 border-neutral-300 text-foreground font-semibold hover:bg-neutral-100 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

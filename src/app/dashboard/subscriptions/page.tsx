@@ -131,12 +131,12 @@ export default function SubscriptionsPage() {
               </p>
             </div>
             <div className="col-span-2 bg-white p-4 shadow-card sm:col-span-1">
-              <p className="text-sm text-foreground/60 mb-1">
-                Total Invested
-              </p>
+              <p className="text-sm text-foreground/60 mb-1">Total Invested</p>
               <p className="text-2xl font-black text-foreground">
                 {subscriptions
-                  .filter((s) => s.status !== MembershipSubscriptionStatus.CANCELLED)
+                  .filter(
+                    (s) => s.status !== MembershipSubscriptionStatus.CANCELLED,
+                  )
                   .reduce((sum, s) => sum + s.amount_paid, 0)
                   .toLocaleString()}{" "}
                 <span className="text-base font-normal">
@@ -236,7 +236,8 @@ export default function SubscriptionsPage() {
                           </span>
                           {sub.end_date && (
                             <span>
-                              {sub.status === MembershipSubscriptionStatus.ACTIVE
+                              {sub.status ===
+                              MembershipSubscriptionStatus.ACTIVE
                                 ? "Expires:"
                                 : "Expired:"}{" "}
                               <span className="font-medium text-foreground">
@@ -290,4 +291,3 @@ export default function SubscriptionsPage() {
     </div>
   );
 }
-

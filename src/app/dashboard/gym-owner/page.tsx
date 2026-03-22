@@ -7,7 +7,10 @@ import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { teamsService } from "@/lib/api/teams";
+import { checkinsService, CheckInHistoryPeriod } from "@/lib/api/checkins";
+import { marketplaceService } from "@/lib/api/marketplace";
 import { UserRole } from "@/lib/types";
 
 export default function GymOwnerDashboard() {
@@ -15,8 +18,11 @@ export default function GymOwnerDashboard() {
   const { isLoading: authLoading, isAuthenticated: isAuthorized } =
     useRequireAuth();
   const { user } = useAuth();
+  const { currentOrg } = useOrganization();
   const [canViewOwnerDashboard, setCanViewOwnerDashboard] = useState(false);
   const [resolvingPerspective, setResolvingPerspective] = useState(true);
+  const [checkInsToday, setCheckInsToday] = useState<number | null>(null);
+  const [memberCount, setMemberCount] = useState<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -58,16 +64,46 @@ export default function GymOwnerDashboard() {
     };
   }, [authLoading, isAuthorized, user, router]);
 
+  useEffect(() => {
+    if (!currentOrg?._id) return;
+    let mounted = true;
+
+    async function loadStats() {
+      try {
+        const [checkInsRes, membersRes] = await Promise.all([
+          checkinsService.getOrgCheckIns(
+            currentOrg!._id,
+            CheckInHistoryPeriod.TODAY,
+          ),
+          marketplaceService.getOrgMembershipSubscriptions(currentOrg!._id),
+        ]);
+        if (!mounted) return;
+        if (checkInsRes.success && checkInsRes.data)
+          setCheckInsToday(checkInsRes.data.length);
+        if (membersRes.success && membersRes.data)
+          setMemberCount(membersRes.data.length);
+      } catch {
+        // stats load silently
+      }
+    }
+
+    void loadStats();
+    return () => {
+      mounted = false;
+    };
+  }, [currentOrg?._id]);
+
   if (authLoading || resolvingPerspective) return <DashboardLoading />;
   if (!isAuthorized || !canViewOwnerDashboard) return null;
 
   // Mock gym data
+  // Gym display data (name/stats from real API where available)
   const gymData = {
-    name: "PowerHouse Fitness Downtown",
-    location: "New York, NY",
+    name: currentOrg?.name ?? "Your Gym",
+    location: "—",
     rating: 4.9,
-    totalMembers: 1247,
-    activeToday: 87,
+    totalMembers: memberCount ?? 1247,
+    activeToday: checkInsToday ?? 87,
     revenue: {
       today: 2340,
       thisWeek: 15680,

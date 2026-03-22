@@ -112,8 +112,6 @@ export default function DashboardPage() {
 
   // Mock additional user stats (TODO: fetch from API)
   const userStats = {
-    currentStreak: 7,
-    totalVisits: 45,
     isOnboardingComplete: user.is_onboarding_complete ?? false,
   };
 
@@ -340,8 +338,11 @@ export default function DashboardPage() {
             Welcome back, {displayName}!
           </h1>
           <p className="text-sm sm:text-base text-foreground-secondary">
-            Keep up the great work! You&apos;re on a {userStats.currentStreak}-day
-            streak.
+            Keep up the great work! You&apos;re on a {userStats.currentStreak}
+            -day
+            {checkInStatus?.has_checked_in_today
+              ? "Great job checking in today! Keep up the momentum."
+              : "Ready for your next workout? Check in when you arrive."}
           </p>
           {checkInStatus && (
             <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-lg">
@@ -378,7 +379,8 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <p className="text-xs text-foreground-secondary mt-1">
-                  View notes and progress updates from your trainer and dietitian.
+                  View notes and progress updates from your trainer and
+                  dietitian.
                 </p>
               </div>
               <Link
@@ -541,7 +543,9 @@ export default function DashboardPage() {
                 href="/dashboard/explore"
                 className={`group relative overflow-hidden ${collection.color} p-6 sm:p-8 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col justify-center`}
               >
-                <div className="mb-4 text-4xl sm:text-5xl">{collection.image}</div>
+                <div className="mb-4 text-4xl sm:text-5xl">
+                  {collection.image}
+                </div>
                 <h3 className="font-display text-lg sm:text-xl font-bold text-white mb-2">
                   {collection.title}
                 </h3>
