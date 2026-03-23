@@ -193,7 +193,8 @@ export default function DietitianClientsPage() {
     try {
       const res = await progressService.getClientJournalEntries(profileId, 20);
       if (res.success && res.data) {
-        setJournalEntries((prev) => ({ ...prev, [profileId]: res.data }));
+        const entries = res.data ?? [];
+        setJournalEntries((prev) => ({ ...prev, [profileId]: entries }));
       }
     } catch {
       // non-critical
@@ -234,9 +235,10 @@ export default function DietitianClientsPage() {
         payload,
       );
       if (res.success && res.data) {
+        const newEntry = res.data;
         setJournalEntries((prev) => ({
           ...prev,
-          [selectedProfileId]: [res.data, ...(prev[selectedProfileId] ?? [])],
+          [selectedProfileId]: [newEntry, ...(prev[selectedProfileId] ?? [])],
         }));
         (e.currentTarget as HTMLFormElement).reset();
       } else {

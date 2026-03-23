@@ -338,10 +338,8 @@ export default function DashboardPage() {
             Welcome back, {displayName}!
           </h1>
           <p className="text-sm sm:text-base text-foreground-secondary">
-            Keep up the great work! You&apos;re on a {userStats.currentStreak}
-            -day
             {checkInStatus?.has_checked_in_today
-              ? "Great job checking in today! Keep up the momentum."
+              ? "Keep up the great work! Great job checking in today."
               : "Ready for your next workout? Check in when you arrive."}
           </p>
           {checkInStatus && (

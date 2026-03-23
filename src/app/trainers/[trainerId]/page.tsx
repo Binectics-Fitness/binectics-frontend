@@ -236,13 +236,15 @@ export default function TrainerProfilePage() {
                 {listing?.bio ?? listing?.headline ?? ""}
               </p>
 
-              {/* Experience */}
+              {/* Availability */}
               <div className="mb-6 p-4 bg-gray-50 border border-gray-200">
                 <p className="text-sm font-semibold text-foreground mb-1">
-                  Experience
+                  Availability
                 </p>
                 <p className="text-foreground/80">
-                  {trainer.experience} of professional training
+                  {listing?.accepting_clients
+                    ? "Currently accepting new clients"
+                    : "Not accepting new clients at the moment"}
                 </p>
               </div>
 
@@ -304,27 +306,33 @@ export default function TrainerProfilePage() {
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Certifications & Credentials
               </h2>
-              <div className="space-y-3">
-                {trainer.certifications.map((cert, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 p-3 bg-gray-50"
-                  >
-                    <svg
-                      className="w-6 h-6 text-accent-yellow-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
+              {(listing?.certifications ?? []).length === 0 ? (
+                <p className="text-foreground/60 text-sm">
+                  No certifications listed
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {(listing?.certifications ?? []).map((cert, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 bg-gray-50"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="font-medium text-foreground">{cert}</span>
-                  </div>
-                ))}
-              </div>
+                      <svg
+                        className="w-6 h-6 text-accent-yellow-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="font-medium text-foreground">{cert}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Achievements / Bio Details */}
@@ -427,8 +435,7 @@ export default function TrainerProfilePage() {
                         </div>
                         <div className="sm:text-right">
                           <p className="text-2xl font-black text-foreground">
-                            {plan.price_label ??
-                              `${plan.currency ?? "$"}${plan.price}`}
+                            {`${plan.currency ?? "$"}${plan.price}`}
                           </p>
                           {plan.duration_days && (
                             <p className="text-xs text-foreground/60">

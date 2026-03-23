@@ -434,8 +434,7 @@ export default function DietitianProfilePage() {
                         </div>
                         <div className="sm:text-right">
                           <p className="text-2xl font-black text-foreground">
-                            {plan.price_label ??
-                              `${plan.currency ?? "$"}${plan.price}`}
+                            {`${plan.currency ?? "$"}${plan.price}`}
                           </p>
                           {plan.duration_days && (
                             <p className="text-xs text-foreground/60">

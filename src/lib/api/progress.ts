@@ -141,7 +141,8 @@ export interface ClientJournalEntry {
   updated_at: string;
 }
 
-export interface MyJournalEntry extends ClientJournalEntry {
+export interface MyJournalEntry
+  extends Omit<ClientJournalEntry, "professional_id"> {
   professional_id:
     | string
     | {

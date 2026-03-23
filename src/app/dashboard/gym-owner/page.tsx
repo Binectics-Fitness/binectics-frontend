@@ -9,9 +9,9 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { teamsService } from "@/lib/api/teams";
-import { checkinsService, CheckInHistoryPeriod } from "@/lib/api/checkins";
+import { checkinsService } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
-import { UserRole } from "@/lib/types";
+import { CheckInHistoryPeriod, UserRole } from "@/lib/types";
 
 export default function GymOwnerDashboard() {
   const router = useRouter();
