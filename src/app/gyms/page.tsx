@@ -1,133 +1,92 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { marketplaceService } from "@/lib/api/marketplace";
+import type { MarketplaceListing } from "@/lib/types";
+
+function getDisplayName(listing: MarketplaceListing): string {
+  const org =
+    typeof listing.organization_id === "object"
+      ? listing.organization_id
+      : null;
+  const pro =
+    typeof listing.professional_id === "object"
+      ? listing.professional_id
+      : null;
+  if (org?.name) return org.name;
+  if (pro) return `${pro.first_name} ${pro.last_name}`;
+  return listing.headline;
+}
 
 export default function GymsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState('all');
-  const [selectedAmenity, setSelectedAmenity] = useState('all');
-
-  const gyms = [
-    {
-      id: 1,
-      name: 'FitZone Downtown',
-      city: 'New York',
-      country: 'United States',
-      countryCode: 'us',
-      flag: '🇺🇸',
-      address: '123 Broadway, New York, NY 10001',
-      rating: 4.8,
-      reviews: 245,
-      image: '🏢',
-      amenities: ['Pool', 'Sauna', 'Locker Rooms', 'Personal Training', 'Group Classes'],
-      hours: '24/7',
-      distance: '0.5 mi',
-    },
-    {
-      id: 2,
-      name: 'Strength & Power Gym',
-      city: 'Los Angeles',
-      country: 'United States',
-      countryCode: 'us',
-      flag: '🇺🇸',
-      address: '456 Sunset Blvd, Los Angeles, CA 90028',
-      rating: 4.9,
-      reviews: 312,
-      image: '💪',
-      amenities: ['Free Weights', 'CrossFit', 'Personal Training', 'Nutrition Coaching'],
-      hours: '5:00 AM - 11:00 PM',
-      distance: '1.2 mi',
-    },
-    {
-      id: 3,
-      name: 'Yoga & Wellness Studio',
-      city: 'San Francisco',
-      country: 'United States',
-      countryCode: 'us',
-      flag: '🇺🇸',
-      address: '789 Market St, San Francisco, CA 94103',
-      rating: 4.7,
-      reviews: 189,
-      image: '🧘',
-      amenities: ['Yoga', 'Pilates', 'Meditation Room', 'Massage Therapy'],
-      hours: '6:00 AM - 9:00 PM',
-      distance: '2.1 mi',
-    },
-    {
-      id: 4,
-      name: 'Premier Fitness London',
-      city: 'London',
-      country: 'United Kingdom',
-      countryCode: 'gb',
-      flag: '🇬🇧',
-      address: '10 Oxford Street, London W1D 1BS',
-      rating: 4.6,
-      reviews: 421,
-      image: '🏋️',
-      amenities: ['Pool', 'Sauna', 'Steam Room', 'Cafe', 'Personal Training'],
-      hours: '24/7',
-      distance: '0.8 mi',
-    },
-    {
-      id: 5,
-      name: 'Berlin Athletic Club',
-      city: 'Berlin',
-      country: 'Germany',
-      countryCode: 'de',
-      flag: '🇩🇪',
-      address: 'Unter den Linden 5, 10117 Berlin',
-      rating: 4.8,
-      reviews: 276,
-      image: '🏃',
-      amenities: ['Running Track', 'CrossFit', 'Group Classes', 'Locker Rooms'],
-      hours: '5:00 AM - 11:00 PM',
-      distance: '1.5 mi',
-    },
-    {
-      id: 6,
-      name: 'Tokyo Fitness Hub',
-      city: 'Tokyo',
-      country: 'Japan',
-      countryCode: 'jp',
-      flag: '🇯🇵',
-      address: '1-1 Shibuya, Tokyo 150-0002',
-      rating: 4.9,
-      reviews: 534,
-      image: '🏯',
-      amenities: ['Pool', 'Sauna', 'Personal Training', 'Nutrition Coaching', 'Spa'],
-      hours: '24/7',
-      distance: '0.3 mi',
-    },
-  ];
+  const [inputValue, setInputValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("all");
+  const [listings, setListings] = useState<MarketplaceListing[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const countries = [
-    { code: 'all', name: 'All Countries', flag: '🌍' },
-    { code: 'us', name: 'United States', flag: '🇺🇸' },
-    { code: 'gb', name: 'United Kingdom', flag: '🇬🇧' },
-    { code: 'de', name: 'Germany', flag: '🇩🇪' },
-    { code: 'jp', name: 'Japan', flag: '🇯🇵' },
+    { code: "all", name: "All Countries", flag: "🌍" },
+    { code: "US", name: "United States", flag: "🇺🇸" },
+    { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
+    { code: "DE", name: "Germany", flag: "🇩🇪" },
+    { code: "JP", name: "Japan", flag: "🇯🇵" },
+    { code: "CA", name: "Canada", flag: "🇨🇦" },
+    { code: "AU", name: "Australia", flag: "🇦🇺" },
   ];
 
-  const amenityFilters = [
-    'All Amenities',
-    'Pool',
-    'Sauna',
-    'Personal Training',
-    'Group Classes',
-    'CrossFit',
-    'Yoga',
-  ];
+  const fetchGyms = useCallback(
+    async (query: string, country: string, currentPage: number) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const params: Record<string, unknown> = {
+          page: currentPage,
+          limit: 12,
+          account_type: "gym_owner",
+        };
+        if (query) params.q = query;
+        if (country !== "all") params.country_code = country;
+        const res = await marketplaceService.searchListings(
+          params as Parameters<typeof marketplaceService.searchListings>[0],
+        );
+        if (res.success && res.data) {
+          setListings(res.data.listings);
+          setTotal(res.data.total);
+          setTotalPages(res.data.total_pages);
+        } else {
+          setListings([]);
+          setTotal(0);
+          setTotalPages(1);
+        }
+      } catch {
+        setError("Failed to load gyms. Please try again.");
+        setListings([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
-  const filteredGyms = gyms.filter((gym) => {
-    const matchesSearch = gym.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         gym.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         gym.country.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCountry = selectedCountry === 'all' || gym.countryCode === selectedCountry;
-    const matchesAmenity = selectedAmenity === 'all' ||
-                          gym.amenities.some(a => a.toLowerCase() === selectedAmenity.toLowerCase());
-    return matchesSearch && matchesCountry && matchesAmenity;
-  });
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(value);
+      setPage(1);
+    }, 400);
+  };
+
+  useEffect(() => {
+    void fetchGyms(searchQuery, selectedCountry, page);
+  }, [fetchGyms, searchQuery, selectedCountry, page]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -148,8 +107,8 @@ export default function GymsPage() {
             <input
               type="text"
               placeholder="Search by gym name, city, or country..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={inputValue}
+              onChange={(e) => handleInputChange(e.target.value)}
               className="w-full rounded-lg border-2 border-neutral-300 bg-background px-5 py-4 pl-12 text-foreground placeholder-foreground-secondary focus:border-primary-500 focus:outline-none"
             />
             <svg
@@ -158,7 +117,12 @@ export default function GymsPage() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </div>
         </div>
@@ -175,7 +139,10 @@ export default function GymsPage() {
               </label>
               <select
                 value={selectedCountry}
-                onChange={(e) => setSelectedCountry(e.target.value)}
+                onChange={(e) => {
+                  setSelectedCountry(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full rounded-lg border-2 border-neutral-300 bg-background px-4 py-2 text-foreground focus:border-primary-500 focus:outline-none"
               >
                 {countries.map((country) => (
@@ -185,29 +152,13 @@ export default function GymsPage() {
                 ))}
               </select>
             </div>
-
-            {/* Amenity Filter */}
-            <div className="flex-1">
-              <label className="block text-sm font-semibold text-foreground mb-2">
-                Amenities
-              </label>
-              <select
-                value={selectedAmenity}
-                onChange={(e) => setSelectedAmenity(e.target.value)}
-                className="w-full rounded-lg border-2 border-neutral-300 bg-background px-4 py-2 text-foreground focus:border-primary-500 focus:outline-none"
-              >
-                {amenityFilters.map((amenity) => (
-                  <option key={amenity} value={amenity === 'All Amenities' ? 'all' : amenity}>
-                    {amenity}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
           {/* Results Count */}
           <div className="mt-4 text-sm text-foreground-secondary">
-            Showing {filteredGyms.length} {filteredGyms.length === 1 ? 'gym' : 'gyms'}
+            {isLoading
+              ? "Loading..."
+              : `Showing ${total} ${total === 1 ? "gym" : "gyms"}`}
           </div>
         </div>
       </section>
@@ -215,7 +166,31 @@ export default function GymsPage() {
       {/* Gym Listings */}
       <section className="bg-background py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {filteredGyms.length === 0 ? (
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-lg border-2 border-neutral-200 overflow-hidden"
+                >
+                  <div className="h-48 bg-neutral-200" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-5 bg-neutral-200 rounded w-3/4" />
+                    <div className="h-4 bg-neutral-200 rounded w-1/2" />
+                    <div className="h-4 bg-neutral-200 rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!isLoading && !error && listings.length === 0 && (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="font-display text-2xl font-bold text-foreground mb-2">
@@ -226,103 +201,153 @@ export default function GymsPage() {
               </p>
               <button
                 onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCountry('all');
-                  setSelectedAmenity('all');
+                  setInputValue("");
+                  setSearchQuery("");
+                  setSelectedCountry("all");
+                  setPage(1);
                 }}
                 className="rounded-lg border-2 border-neutral-300 px-6 py-2 font-semibold text-foreground transition-colors hover:bg-neutral-100"
               >
                 Reset Filters
               </button>
             </div>
-          ) : (
+          )}
+
+          {!isLoading && listings.length > 0 && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredGyms.map((gym) => (
-                <div
-                  key={gym.id}
-                  className="flex h-full flex-col overflow-hidden rounded-lg border-2 border-neutral-300 bg-background transition-all hover:border-primary-500 hover:shadow-lg"
-                >
-                  {/* Image Placeholder */}
-                  <div className="h-48 bg-neutral-100 flex items-center justify-center text-6xl">
-                    {gym.image}
-                  </div>
+              {listings.map((listing) => {
+                const displayName = getDisplayName(listing);
+                const location = [
+                  listing.city,
+                  listing.country_code?.toUpperCase(),
+                ]
+                  .filter(Boolean)
+                  .join(", ");
+                const facilities = listing.specialties ?? [];
+                const isVerified = listing.verification_badge !== "none";
 
-                  {/* Content */}
-                  <div className="flex flex-1 flex-col p-4 sm:p-6">
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-display text-xl font-bold text-foreground mb-1">
-                          {gym.name}
-                        </h3>
-                        <p className="text-sm text-foreground-secondary flex items-center gap-1">
-                          {gym.flag} {gym.city}, {gym.country}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="flex items-center gap-1">
-                        <span className="text-accent-yellow-500">★</span>
-                        <span className="font-semibold text-foreground">{gym.rating}</span>
-                      </div>
-                      <span className="text-sm text-foreground-secondary">
-                        ({gym.reviews} reviews)
-                      </span>
-                    </div>
-
-                    {/* Address */}
-                    <p className="text-sm text-foreground-secondary mb-4 flex items-start gap-2">
-                      <svg className="h-4 w-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {gym.address}
-                    </p>
-
-                    {/* Hours & Distance */}
-                    <div className="mb-4 flex flex-col gap-2 text-sm text-foreground-secondary sm:flex-row sm:items-center sm:gap-4">
-                      <span className="flex items-center gap-1">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {gym.hours}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                        {gym.distance}
-                      </span>
-                    </div>
-
-                    {/* Amenities */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {gym.amenities.slice(0, 3).map((amenity, amenityIndex) => (
-                        <span
-                          key={amenityIndex}
-                          className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-foreground-secondary"
-                        >
-                          {amenity}
-                        </span>
-                      ))}
-                      {gym.amenities.length > 3 && (
-                        <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-foreground-secondary">
-                          +{gym.amenities.length - 3} more
-                        </span>
+                return (
+                  <div
+                    key={listing._id}
+                    className="flex h-full flex-col overflow-hidden rounded-lg border-2 border-neutral-300 bg-background transition-all hover:border-primary-500 hover:shadow-lg"
+                  >
+                    {/* Image */}
+                    <div className="relative h-48 bg-neutral-100 flex items-center justify-center text-6xl">
+                      {listing.profile_image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={listing.profile_image}
+                          alt={displayName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>🏋️</span>
+                      )}
+                      {isVerified && (
+                        <div className="absolute top-3 right-3 bg-primary-500 text-foreground px-2 py-1 text-xs font-semibold flex items-center gap-1">
+                          <svg
+                            className="w-3 h-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          ✓
+                        </div>
                       )}
                     </div>
 
-                    {/* CTA */}
-                    <Link
-                      href={`/gyms/${gym.id}`}
-                      className="mt-auto block w-full rounded-lg bg-primary-500 px-4 py-3 text-center font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
-                    >
-                      View Details
-                    </Link>
+                    {/* Content */}
+                    <div className="flex flex-1 flex-col p-4 sm:p-6">
+                      <div className="mb-3">
+                        <h3 className="font-display text-xl font-bold text-foreground mb-1">
+                          {displayName}
+                        </h3>
+                        {location && (
+                          <p className="text-sm text-foreground-secondary">
+                            📍 {location}
+                          </p>
+                        )}
+                      </div>
+
+                      {listing.headline && (
+                        <p className="text-sm text-foreground-secondary mb-3 line-clamp-2">
+                          {listing.headline}
+                        </p>
+                      )}
+
+                      {listing.review_count > 0 && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-accent-yellow-500">★</span>
+                          <span className="font-semibold text-foreground">
+                            {listing.average_rating.toFixed(1)}
+                          </span>
+                          <span className="text-sm text-foreground-secondary">
+                            ({listing.review_count} reviews)
+                          </span>
+                        </div>
+                      )}
+
+                      {facilities.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {facilities.slice(0, 3).map((f, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-foreground-secondary"
+                            >
+                              {f}
+                            </span>
+                          ))}
+                          {facilities.length > 3 && (
+                            <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-foreground-secondary">
+                              +{facilities.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <Link
+                        href={`/gyms/${listing._id}`}
+                        className="mt-auto block w-full rounded-lg bg-primary-500 px-4 py-3 text-center font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
+                      >
+                        View Details
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          )}
+
+          {!isLoading && totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 border-2 border-neutral-300 text-foreground font-semibold hover:bg-neutral-100 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              {[...Array(Math.min(totalPages, 5))].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setPage(i + 1)}
+                  className={`px-4 py-2 font-semibold ${page === i + 1 ? "bg-primary-500 text-foreground" : "border-2 border-neutral-300 text-foreground hover:bg-neutral-100"}`}
+                >
+                  {i + 1}
+                </button>
               ))}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 border-2 border-neutral-300 text-foreground font-semibold hover:bg-neutral-100 disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
           )}
         </div>
@@ -335,7 +360,8 @@ export default function GymsPage() {
             Ready to Start Training?
           </h2>
           <p className="text-lg text-foreground-secondary mb-8">
-            Join Binectics today and get instant access to all these gyms and more
+            Join Binectics today and get instant access to all these gyms and
+            more
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
