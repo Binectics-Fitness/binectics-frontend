@@ -135,10 +135,10 @@ export default function AdminVerificationPage() {
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
 
-      <div className="flex-1 ml-64">
+      <div className="flex-1 md:ml-64">
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
-          <div className="px-8 py-6">
+          <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <h1 className="text-3xl font-black text-foreground">
               Verification Queue
             </h1>
@@ -148,7 +148,7 @@ export default function AdminVerificationPage() {
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="bg-white p-6 shadow-card">

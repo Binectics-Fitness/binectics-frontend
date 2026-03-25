@@ -458,7 +458,7 @@ export default function ProgressPage() {
             <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
               My Progress
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-foreground-secondary">
+            <p className="mt-1 text-sm text-foreground-secondary">
               Track your weight, meals, and activities over time.
             </p>
           </div>
@@ -504,10 +504,10 @@ export default function ProgressPage() {
           <div className="mb-6 rounded-2xl bg-white px-4 sm:px-5 py-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs sm:text-sm font-semibold text-foreground">
+                <p className="text-sm font-semibold text-foreground">
                   Book with {selectedProviderName}
                 </p>
-                <p className="text-xs sm:text-sm text-foreground-secondary">
+                <p className="text-sm text-foreground-secondary">
                   Choose a date and time from this provider&apos;s consultation
                   availability.
                 </p>
@@ -545,11 +545,11 @@ export default function ProgressPage() {
                           ? `${proInfo.first_name} ${proInfo.last_name}`
                           : "Professional"}
                       </p>
-                      <p className="text-xs text-foreground-tertiary">
+                      <p className="text-sm text-foreground-tertiary">
                         {req.professional_type} &middot; {proInfo?.email}
                       </p>
                       {req.message && (
-                        <p className="mt-1 text-xs text-foreground-secondary italic">
+                        <p className="mt-1 text-sm text-foreground-secondary italic">
                           &ldquo;{req.message}&rdquo;
                         </p>
                       )}
@@ -558,14 +558,14 @@ export default function ProgressPage() {
                       <button
                         onClick={() => handleRespondToRequest(req._id, false)}
                         disabled={respondingTo === req._id}
-                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-foreground-secondary hover:bg-neutral-100 disabled:opacity-50 flex-1 sm:flex-none"
+                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-semibold text-foreground-secondary hover:bg-neutral-100 disabled:opacity-50 flex-1 sm:flex-none"
                       >
                         Decline
                       </button>
                       <button
                         onClick={() => handleRespondToRequest(req._id, true)}
                         disabled={respondingTo === req._id}
-                        className="rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-primary-600 disabled:opacity-50 flex-1 sm:flex-none"
+                        className="rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:opacity-50 flex-1 sm:flex-none"
                       >
                         Accept
                       </button>
@@ -853,7 +853,7 @@ export default function ProgressPage() {
                                 {m.description}
                               </p>
                               {m.feedback && (
-                                <p className="mt-1 text-xs italic text-foreground-tertiary">
+                                <p className="mt-1 text-sm italic text-foreground-tertiary">
                                   {m.feedback}
                                 </p>
                               )}
@@ -864,7 +864,7 @@ export default function ProgressPage() {
                                   {m.calories} kcal
                                 </span>
                               )}
-                              <p className="text-xs text-foreground-tertiary">
+                              <p className="text-sm text-foreground-tertiary">
                                 {formatDate(m.meal_date)}
                               </p>
                             </div>
@@ -919,7 +919,7 @@ export default function ProgressPage() {
                                   ` · Intensity ${a.intensity}/10`}
                               </p>
                               {a.notes && (
-                                <p className="mt-1 text-xs text-foreground-tertiary">
+                                <p className="mt-1 text-sm text-foreground-tertiary">
                                   {a.notes}
                                 </p>
                               )}

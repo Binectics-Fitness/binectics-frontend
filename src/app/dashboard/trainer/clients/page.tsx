@@ -9,8 +9,7 @@ import { progressService } from "@/lib/api/progress";
 import { UserRole } from "@/lib/types";
 import { formatLocal } from "@/utils/format";
 import type {
-  ClientProfile,
-  ProgressSummary,
+            className="rounded-lg bg-accent-yellow-500 px-3 sm:px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent-yellow-600 whitespace-nowrap"
   AddClientRequest,
   ClientRequestItem,
   ClientInvitation,
@@ -278,13 +277,13 @@ export default function TrainerClientsPage() {
             <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
               My Clients
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-foreground-secondary">
+            <p className="mt-1 text-sm text-foreground-secondary">
               Manage client profiles and track their training progress.
             </p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="rounded-lg bg-accent-yellow-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-foreground hover:bg-accent-yellow-600 whitespace-nowrap"
+            className="rounded-lg bg-accent-yellow-500 px-3 sm:px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent-yellow-600 whitespace-nowrap"
           >
             + Add Client
           </button>
@@ -420,7 +419,7 @@ export default function TrainerClientsPage() {
                         <span className="text-sm font-medium text-foreground">
                           {log.weight_kg} kg
                         </span>
-                        <span className="text-xs text-foreground-tertiary">
+                        <span className="text-sm text-foreground-tertiary">
                           {formatDate(log.recorded_at)}
                         </span>
                       </div>
@@ -445,11 +444,11 @@ export default function TrainerClientsPage() {
                           <span className="text-sm font-medium text-foreground">
                             {a.title}
                           </span>
-                          <span className="ml-2 text-xs text-foreground-tertiary">
+                          <span className="ml-2 text-sm text-foreground-tertiary">
                             {a.duration_minutes} min
                           </span>
                         </div>
-                        <span className="text-xs text-foreground-tertiary">
+                        <span className="text-sm text-foreground-tertiary">
                           {formatDate(a.performed_at)}
                         </span>
                       </div>
@@ -550,7 +549,7 @@ export default function TrainerClientsPage() {
                         <button
                           type="button"
                           onClick={() => handleDeleteJournal(entry._id)}
-                          className="text-xs font-medium text-red-500 hover:text-red-700"
+                          className="text-sm font-medium text-red-500 hover:text-red-700"
                         >
                           Delete
                         </button>
@@ -628,7 +627,7 @@ export default function TrainerClientsPage() {
                             <h3 className="text-sm font-bold text-foreground">
                               {clientName(p)}
                             </h3>
-                            <p className="text-xs text-foreground-tertiary">
+                            <p className="text-sm text-foreground-tertiary">
                               {clientEmail(p)}
                             </p>
                           </div>
@@ -641,9 +640,9 @@ export default function TrainerClientsPage() {
                       </div>
 
                       {s && (
-                        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                        <div className="mt-4 grid grid-cols-1 gap-2 text-center sm:grid-cols-3 sm:gap-4">
                           <div>
-                            <p className="text-xs text-foreground-tertiary">
+                            <p className="text-sm text-foreground-tertiary">
                               Weight
                             </p>
                             <p className="text-sm font-semibold text-foreground">
@@ -651,7 +650,7 @@ export default function TrainerClientsPage() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs text-foreground-tertiary">
+                            <p className="text-sm text-foreground-tertiary">
                               Activities
                             </p>
                             <p className="text-sm font-semibold text-foreground">
@@ -659,7 +658,7 @@ export default function TrainerClientsPage() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs text-foreground-tertiary">
+                            <p className="text-sm text-foreground-tertiary">
                               Meals
                             </p>
                             <p className="text-sm font-semibold text-foreground">
@@ -705,7 +704,7 @@ export default function TrainerClientsPage() {
                     return (
                       <div
                         key={req._id}
-                        className="flex items-center justify-between rounded-xl bg-white px-5 py-4 shadow-sm"
+                        className="flex flex-col gap-3 rounded-xl bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div>
                           <p className="text-sm font-medium text-foreground">
@@ -713,11 +712,11 @@ export default function TrainerClientsPage() {
                               ? `${clientInfo.first_name} ${clientInfo.last_name}`
                               : "Client"}
                           </p>
-                          <p className="text-xs text-foreground-tertiary">
+                          <p className="text-sm text-foreground-tertiary">
                             {clientInfo?.email}
                           </p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 self-start sm:self-auto">
                           <span
                             className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                               req.status === "PENDING"
@@ -732,7 +731,7 @@ export default function TrainerClientsPage() {
                           {req.status === "PENDING" && (
                             <button
                               onClick={() => handleCancelRequest(req._id)}
-                              className="text-xs font-medium text-red-500 hover:text-red-700"
+                              className="text-sm font-medium text-red-500 hover:text-red-700"
                             >
                               Cancel
                             </button>
@@ -755,13 +754,13 @@ export default function TrainerClientsPage() {
                   {invitations.map((inv) => (
                     <div
                       key={inv._id || inv.id || inv.email}
-                      className="flex items-center justify-between rounded-xl bg-white px-5 py-4 shadow-sm"
+                      className="flex flex-col gap-3 rounded-xl bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div>
                         <p className="text-sm font-medium text-foreground">
                           {inv.email}
                         </p>
-                        <p className="text-xs text-foreground-tertiary">
+                        <p className="text-sm text-foreground-tertiary">
                           Expires {formatDate(inv.expires_at)}
                         </p>
                       </div>
@@ -820,7 +819,7 @@ export default function TrainerClientsPage() {
                 placeholder="Optional message to the client"
               />
             </label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-medium text-foreground">
                   Starting Weight (kg)
@@ -891,7 +890,7 @@ export default function TrainerClientsPage() {
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg bg-neutral-50 p-3">
-      <p className="text-xs text-foreground-tertiary">{label}</p>
+      <p className="text-sm text-foreground-tertiary">{label}</p>
       <p className="mt-0.5 text-lg font-bold text-foreground">{value}</p>
     </div>
   );
@@ -914,7 +913,7 @@ function ModalOverlay({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">

@@ -174,7 +174,7 @@ export default function AdminDashboardPage() {
     <div className="flex min-h-screen bg-background">
       <AdminSidebar />
 
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 p-4 sm:p-6 md:ml-64 md:p-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-black text-foreground mb-2">
             Admin Dashboard

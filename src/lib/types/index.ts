@@ -425,6 +425,26 @@ export interface MyCheckInStatus {
   last_listing_id?: string;
 }
 
+export interface MyCheckInDashboardStats extends MyCheckInStatus {
+  current_streak_days: number;
+  total_check_ins: number;
+}
+
+export interface OrgCheckInDashboardStats {
+  today_check_ins: number;
+  week_check_ins: number;
+  month_check_ins: number;
+  active_members: number;
+  average_rating: number;
+  review_count: number;
+  revenue_today: number;
+  revenue_week: number;
+  revenue_month: number;
+  city?: string;
+  country_code?: string;
+  recent_check_ins: CheckIn[];
+}
+
 export enum MembershipSubscriptionStatus {
   PENDING_PAYMENT = "pending_payment",
   ACTIVE = "active",

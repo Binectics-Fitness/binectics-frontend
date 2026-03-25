@@ -135,10 +135,10 @@ export default function AdminSubscriptionsPage() {
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
 
-      <div className="flex-1 ml-64">
+      <div className="flex-1 md:ml-64">
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
-          <div className="px-8 py-6">
+          <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <h1 className="text-3xl font-black text-foreground">
               Subscription Management
             </h1>
@@ -148,7 +148,7 @@ export default function AdminSubscriptionsPage() {
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
             <div className="bg-white p-6 shadow-card">
@@ -238,29 +238,89 @@ export default function AdminSubscriptionsPage() {
           </div>
 
           {/* Subscriptions Table */}
-          <div className="bg-white shadow-card overflow-hidden">
+          <div className="mb-6 space-y-3 md:hidden">
+            {subscriptions.map((sub) => (
+              <div
+                key={sub.id}
+                className="rounded-lg border border-gray-100 bg-white p-4 shadow-card"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-foreground">
+                      {sub.user}
+                    </p>
+                    <p className="truncate text-sm text-foreground/60">
+                      {sub.userEmail}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 px-3 py-1 text-xs font-semibold ${getStatusBadgeColor(sub.status)}`}
+                  >
+                    {sub.status.replace("_", " ")}
+                  </span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <p className="font-medium text-foreground/60">Provider & Plan</p>
+                    <p className="font-semibold text-foreground">{sub.plan}</p>
+                    <p className="text-sm text-foreground/60">{sub.provider}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground/60">Amount</p>
+                    <p className="font-semibold text-foreground">{sub.amount}</p>
+                    <p className="text-sm text-foreground/60">{sub.duration}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground/60">Start Date</p>
+                    <p className="text-foreground">{sub.startDate}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground/60">Next Billing</p>
+                    <p className="text-foreground">{sub.nextBilling}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <button className="w-full text-left text-sm font-semibold text-red-500 hover:text-red-700 sm:w-auto">
+                    View
+                  </button>
+                  {sub.status === AdminSubscriptionStatus.ACTIVE && (
+                    <button
+                      onClick={() => handleCancelSubscription(sub.id, sub.user)}
+                      className="w-full text-left text-sm font-semibold text-foreground/60 hover:text-red-600 sm:w-auto"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto bg-white shadow-card md:block">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground lg:px-6 lg:py-4">
                     User
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground lg:px-6 lg:py-4">
                     Provider & Plan
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground lg:px-6 lg:py-4">
                     Amount
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground lg:px-6 lg:py-4">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground lg:px-6 lg:py-4">
                     Start Date
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground lg:px-6 lg:py-4">
                     Next Billing
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 text-right text-xs font-bold uppercase tracking-wider text-foreground lg:px-6 lg:py-4">
                     Actions
                   </th>
                 </tr>
@@ -268,7 +328,7 @@ export default function AdminSubscriptionsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {subscriptions.map((sub) => (
                   <tr key={sub.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-3 py-3 lg:px-6 lg:py-4">
                       <div>
                         <p className="font-semibold text-foreground">
                           {sub.user}
@@ -278,7 +338,7 @@ export default function AdminSubscriptionsPage() {
                         </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 lg:px-6 lg:py-4">
                       <div>
                         <p className="font-semibold text-foreground">
                           {sub.plan}
@@ -288,7 +348,7 @@ export default function AdminSubscriptionsPage() {
                         </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-3 py-3 lg:px-6 lg:py-4">
                       <p className="font-semibold text-foreground">
                         {sub.amount}
                       </p>
@@ -296,20 +356,20 @@ export default function AdminSubscriptionsPage() {
                         {sub.duration}
                       </p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-3 py-3 lg:px-6 lg:py-4">
                       <span
                         className={`px-3 py-1 text-xs font-semibold ${getStatusBadgeColor(sub.status)}`}
                       >
                         {sub.status.replace("_", " ")}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    <td className="whitespace-nowrap px-3 py-3 text-sm text-foreground lg:px-6 lg:py-4">
                       {sub.startDate}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    <td className="whitespace-nowrap px-3 py-3 text-sm text-foreground lg:px-6 lg:py-4">
                       {sub.nextBilling}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="whitespace-nowrap px-3 py-3 text-right text-sm font-medium lg:px-6 lg:py-4">
                       <div className="flex items-center justify-end gap-2">
                         <button className="text-red-500 hover:text-red-700 font-semibold">
                           View
@@ -333,7 +393,7 @@ export default function AdminSubscriptionsPage() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-foreground/60">
               Showing 1 to 6 of 3,842 subscriptions
             </p>

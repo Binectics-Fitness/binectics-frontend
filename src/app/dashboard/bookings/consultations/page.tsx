@@ -330,7 +330,7 @@ function ConsultationBookingPageContent() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-neutral-50">
       <DashboardSidebar />
 
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
@@ -338,7 +338,7 @@ function ConsultationBookingPageContent() {
           <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
             Book Consultation
           </h1>
-          <p className="mt-2 text-xs sm:text-sm text-foreground-secondary">
+          <p className="mt-2 text-sm text-foreground-secondary">
             Choose from your connected providers, then pick a date and time from
             their availability.
           </p>
@@ -479,7 +479,7 @@ function ConsultationBookingPageContent() {
                         <p className="font-semibold text-foreground">
                           {date.label}
                         </p>
-                        <p className="text-xs text-foreground-secondary">
+                        <p className="text-sm text-foreground-secondary">
                           {count} time{count === 1 ? "" : "s"} available
                         </p>
                       </button>
@@ -515,7 +515,7 @@ function ConsultationBookingPageContent() {
                           <p className="font-semibold text-foreground">
                             {formatLocal(slot.startsAt, "h:mm a")}
                           </p>
-                          <p className="mt-1 text-xs text-foreground-secondary">
+                          <p className="mt-1 text-sm text-foreground-secondary">
                             {dualTimezoneLabel(
                               slot.startsAt,
                               slot.endsAt,

@@ -141,10 +141,10 @@ export default function AdminUserDetailPage() {
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
 
-      <div className="flex-1 ml-64">
+      <div className="flex-1 md:ml-64">
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
-          <div className="px-8 py-6">
+          <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <button
               onClick={() => router.push("/admin/users")}
               className="text-sm text-foreground/60 hover:text-foreground flex items-center gap-2 mb-2"
@@ -189,7 +189,7 @@ export default function AdminUserDetailPage() {
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* User Info */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <div className="lg:col-span-2">

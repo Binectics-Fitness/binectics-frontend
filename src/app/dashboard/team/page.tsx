@@ -129,7 +129,7 @@ export default function TeamPage() {
   if (!isAuthorized) return null;
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-neutral-50">
       <DashboardSidebar />
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Header */}
@@ -138,14 +138,14 @@ export default function TeamPage() {
             <h1 className="text-2xl sm:text-3xl font-black text-foreground">
               Team Management
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-foreground-secondary">
+            <p className="mt-1 text-sm text-foreground-secondary">
               Manage your organizations, members, and roles.
             </p>
           </div>
           {canCreateOrganization && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 sm:px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors whitespace-nowrap"
             >
               <svg
                 className="h-4 w-4"
@@ -247,7 +247,7 @@ export default function TeamPage() {
                     />
                     {org.is_active ? "Active" : "Inactive"}
                   </span>
-                  <span className="text-xs text-foreground-secondary">
+                  <span className="text-sm text-foreground-secondary">
                     View team →
                   </span>
                 </div>

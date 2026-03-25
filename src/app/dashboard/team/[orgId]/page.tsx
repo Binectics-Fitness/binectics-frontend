@@ -313,7 +313,7 @@ export default function OrgDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen bg-neutral-50">
         <DashboardSidebar />
         <main className="md:ml-64 flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
@@ -324,7 +324,7 @@ export default function OrgDetailPage() {
 
   if (error || !org) {
     return (
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen bg-neutral-50">
         <DashboardSidebar />
         <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
           <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
@@ -342,11 +342,11 @@ export default function OrgDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-neutral-50">
       <DashboardSidebar />
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Breadcrumb */}
-        <div className="mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm text-foreground-secondary">
+        <div className="mb-4 sm:mb-6 flex items-center gap-2 text-sm text-foreground-secondary">
           <Link
             href="/dashboard/team"
             className="hover:text-foreground transition-colors"
@@ -376,7 +376,7 @@ export default function OrgDetailPage() {
           </div>
           <button
             onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors whitespace-nowrap"
+            className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 sm:px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors whitespace-nowrap"
           >
             <svg
               className="h-4 w-4"
@@ -401,7 +401,7 @@ export default function OrgDetailPage() {
             <p className="text-2xl font-black text-foreground">
               {members.filter((m) => m.status === MemberStatus.ACTIVE).length}
             </p>
-            <p className="mt-0.5 text-xs text-foreground-secondary">
+            <p className="mt-0.5 text-sm text-foreground-secondary">
               Active Members
             </p>
           </div>
@@ -409,7 +409,7 @@ export default function OrgDetailPage() {
             <p className="text-2xl font-black text-foreground">
               {roles.filter((r) => !r.is_default).length}
             </p>
-            <p className="mt-0.5 text-xs text-foreground-secondary">
+            <p className="mt-0.5 text-sm text-foreground-secondary">
               Custom Roles
             </p>
           </div>
@@ -420,7 +420,7 @@ export default function OrgDetailPage() {
                   .length
               }
             </p>
-            <p className="mt-0.5 text-xs text-foreground-secondary">
+            <p className="mt-0.5 text-sm text-foreground-secondary">
               Pending Invitations
             </p>
           </div>
@@ -519,7 +519,7 @@ export default function OrgDetailPage() {
                                   : "—";
                               })()}
                             </p>
-                            <p className="text-xs text-foreground-secondary">
+                            <p className="text-sm text-foreground-secondary">
                               {typeof member.user_id === "object"
                                 ? member.user_id.email
                                 : "—"}
@@ -551,7 +551,7 @@ export default function OrgDetailPage() {
                             onClick={() =>
                               handleDeactivateMember(member._id, member.status)
                             }
-                            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-secondary border border-neutral-200 hover:bg-neutral-50 transition-colors"
+                            className="rounded-lg px-3 py-1.5 text-sm font-semibold text-foreground-secondary border border-neutral-200 hover:bg-neutral-50 transition-colors"
                           >
                             {member.status === MemberStatus.ACTIVE
                               ? "Deactivate"
@@ -559,7 +559,7 @@ export default function OrgDetailPage() {
                           </button>
                           <button
                             onClick={() => handleRemoveMember(member._id)}
-                            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
+                            className="rounded-lg px-3 py-1.5 text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
                           >
                             Remove
                           </button>
@@ -656,7 +656,7 @@ export default function OrgDetailPage() {
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-neutral-400">
+                      <span className="text-sm text-neutral-400">
                         No permissions
                       </span>
                     )}
@@ -722,7 +722,7 @@ export default function OrgDetailPage() {
                         {inv.status === InvitationStatus.PENDING && (
                           <button
                             onClick={() => handleCancelInvitation(inv._id)}
-                            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
+                            className="rounded-lg px-3 py-1.5 text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
                           >
                             Cancel
                           </button>

@@ -141,8 +141,10 @@ export interface ClientJournalEntry {
   updated_at: string;
 }
 
-export interface MyJournalEntry
-  extends Omit<ClientJournalEntry, "professional_id"> {
+export interface MyJournalEntry extends Omit<
+  ClientJournalEntry,
+  "professional_id"
+> {
   professional_id:
     | string
     | {
@@ -392,14 +394,20 @@ export const progressService = {
     cursor?: string,
   ): Promise<ApiResponse<JournalPage>> {
     const params = new URLSearchParams({ limit: String(limit) });
-    if (cursor) params.set('cursor', cursor);
-    const res = await apiClient.get<{ data: MyJournalEntry[]; next_cursor: string | null }>(
-      `/progress/my-journals?${params.toString()}`,
-    );
+    if (cursor) params.set("cursor", cursor);
+    const res = await apiClient.get<{
+      data: MyJournalEntry[];
+      next_cursor: string | null;
+    }>(`/progress/my-journals?${params.toString()}`);
     // Normalise: the API returns { success, data: MyJournalEntry[], next_cursor }
     // We expose it as ApiResponse<JournalPage> for consistent consumption
     if (res.success) {
-      const raw = res as unknown as { success: boolean; data?: MyJournalEntry[]; next_cursor?: string | null; message?: string };
+      const raw = res as unknown as {
+        success: boolean;
+        data?: MyJournalEntry[];
+        next_cursor?: string | null;
+        message?: string;
+      };
       return {
         success: true,
         data: {
