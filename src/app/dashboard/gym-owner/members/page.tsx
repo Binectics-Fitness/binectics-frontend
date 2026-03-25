@@ -233,9 +233,15 @@ export default function GymOwnerMembersPage() {
                 className="px-4 py-2.5 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue-500 bg-white"
               >
                 <option value="all">All Statuses</option>
-                <option value={MembershipSubscriptionStatus.ACTIVE}>Active</option>
-                <option value={MembershipSubscriptionStatus.EXPIRED}>Expired</option>
-                <option value={MembershipSubscriptionStatus.CANCELLED}>Cancelled</option>
+                <option value={MembershipSubscriptionStatus.ACTIVE}>
+                  Active
+                </option>
+                <option value={MembershipSubscriptionStatus.EXPIRED}>
+                  Expired
+                </option>
+                <option value={MembershipSubscriptionStatus.CANCELLED}>
+                  Cancelled
+                </option>
                 <option value={MembershipSubscriptionStatus.PENDING_PAYMENT}>
                   Pending Payment
                 </option>

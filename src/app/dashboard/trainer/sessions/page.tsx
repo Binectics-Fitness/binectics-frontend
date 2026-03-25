@@ -10,13 +10,13 @@ export default function Page() {
   const userTimezone = getClientTimezone();
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-neutral-50">
       <TrainerSidebar />
 
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
           <div className="mb-3 flex items-center gap-2">
-            <h1 className="font-display text-2xl font-black text-foreground">
+            <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">
               Sessions & Schedule
             </h1>
             <TimezoneHelpBadge

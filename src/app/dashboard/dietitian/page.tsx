@@ -385,7 +385,7 @@ export default function DietitianDashboard() {
               <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-1 sm:mb-2">
                 Welcome back, {displayName}!
               </h1>
-              <p className="text-xs sm:text-sm text-foreground-secondary">
+              <p className="text-sm text-foreground-secondary">
                 {dashboardStats
                   ? `${dashboardStats.active_clients} active clients • ${dashboardStats.pending_requests} pending requests`
                   : "Loading stats..."}
@@ -393,7 +393,7 @@ export default function DietitianDashboard() {
             </div>
             <Link
               href="/dashboard/dietitian/settings"
-              className="inline-flex h-10 items-center justify-center border border-neutral-200 bg-background px-4 sm:px-6 text-xs sm:text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50 whitespace-nowrap"
+              className="inline-flex h-10 items-center justify-center border border-neutral-200 bg-background px-4 sm:px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50 whitespace-nowrap"
             >
               Edit Profile
             </Link>
@@ -418,7 +418,7 @@ export default function DietitianDashboard() {
               <p className="text-sm text-foreground-secondary mb-1">
                 {stat.label}
               </p>
-              <p className="text-xs text-foreground-tertiary">{stat.subtext}</p>
+              <p className="text-sm text-foreground-tertiary">{stat.subtext}</p>
             </div>
           ))}
         </div>
@@ -558,7 +558,7 @@ export default function DietitianDashboard() {
                             <p className="font-semibold text-foreground truncate">
                               {name}
                             </p>
-                            <p className="text-xs text-foreground-tertiary">
+                            <p className="text-sm text-foreground-tertiary">
                               {start ? `${start} kg` : "—"} →{" "}
                               {target ? `${target} kg` : "—"}
                             </p>
@@ -572,7 +572,7 @@ export default function DietitianDashboard() {
                           start !== target &&
                           (latestWeights[profile._id] ? (
                             <div>
-                              <div className="flex items-center justify-between text-xs mb-1">
+                              <div className="flex items-center justify-between text-sm mb-1">
                                 <span className="text-foreground-secondary">
                                   Progress
                                 </span>
@@ -588,7 +588,7 @@ export default function DietitianDashboard() {
                               </div>
                             </div>
                           ) : (
-                            <p className="text-xs text-foreground-tertiary">
+                            <p className="text-sm text-foreground-tertiary">
                               No weight logs yet
                             </p>
                           ))}

@@ -353,7 +353,7 @@ export default function TrainerDashboard() {
               <p className="text-sm text-foreground-secondary mb-1">
                 {stat.label}
               </p>
-              <p className="text-xs text-foreground-tertiary">{stat.subtext}</p>
+              <p className="text-sm text-foreground-tertiary">{stat.subtext}</p>
             </div>
           ))}
         </div>
@@ -489,7 +489,7 @@ export default function TrainerDashboard() {
                             <p className="font-semibold text-foreground truncate">
                               {name}
                             </p>
-                            <p className="text-xs text-foreground-tertiary">
+                            <p className="text-sm text-foreground-tertiary">
                               Joined {joined}
                             </p>
                           </div>
@@ -501,7 +501,7 @@ export default function TrainerDashboard() {
                           profile.target_weight_kg &&
                           profile.starting_weight_kg !==
                             profile.target_weight_kg && (
-                            <p className="text-xs text-foreground-tertiary">
+                            <p className="text-sm text-foreground-tertiary">
                               {profile.starting_weight_kg} kg →{" "}
                               {profile.target_weight_kg} kg
                             </p>

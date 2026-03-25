@@ -174,10 +174,10 @@ export default function AdminProviderDetailPage() {
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
 
-      <div className="flex-1 ml-64">
+      <div className="flex-1 md:ml-64">
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
-          <div className="px-8 py-6">
+          <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <button
               onClick={() => router.push("/admin/providers")}
               className="text-sm text-foreground/60 hover:text-foreground flex items-center gap-2 mb-2"
@@ -197,9 +197,9 @@ export default function AdminProviderDetailPage() {
               </svg>
               Back to Providers
             </button>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <div className="flex items-center gap-3 mb-2">
+                <div className="mb-2 flex flex-wrap items-center gap-3">
                   <h1 className="text-3xl font-black text-foreground">
                     {provider.name}
                   </h1>
@@ -216,13 +216,13 @@ export default function AdminProviderDetailPage() {
                 </div>
                 <p className="text-foreground/60">{provider.email}</p>
               </div>
-              <div className="flex gap-3">
-                <button className="px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                <button className="w-full px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors sm:w-auto">
                   Send Email
                 </button>
                 <button
                   onClick={handleSuspendProvider}
-                  className="px-6 py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
+                  className="w-full px-6 py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors sm:w-auto"
                 >
                   Suspend Provider
                 </button>
@@ -231,7 +231,7 @@ export default function AdminProviderDetailPage() {
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* Provider Info */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <div className="lg:col-span-2 space-y-6">
@@ -240,7 +240,7 @@ export default function AdminProviderDetailPage() {
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   Provider Information
                 </h2>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                   <div>
                     <p className="text-sm font-medium text-foreground/60 mb-1">
                       Business Name
@@ -273,7 +273,7 @@ export default function AdminProviderDetailPage() {
                       {provider.phone}
                     </p>
                   </div>
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <p className="text-sm font-medium text-foreground/60 mb-1">
                       Address
                     </p>

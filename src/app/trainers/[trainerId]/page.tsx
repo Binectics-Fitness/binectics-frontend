@@ -328,7 +328,9 @@ export default function TrainerProfilePage() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      <span className="font-medium text-foreground">{cert}</span>
+                      <span className="font-medium text-foreground">
+                        {cert}
+                      </span>
                     </div>
                   ))}
                 </div>

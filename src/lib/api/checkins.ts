@@ -8,7 +8,9 @@ import type {
   ApiResponse,
   CheckIn,
   CheckInHistoryPeriod,
+  MyCheckInDashboardStats,
   MyCheckInStatus,
+  OrgCheckInDashboardStats,
 } from "@/lib/types";
 
 export interface ScanCheckInRequest {
@@ -45,4 +47,14 @@ export const checkinsService = {
 
   getMyStatus: (): Promise<ApiResponse<MyCheckInStatus>> =>
     apiClient.get<MyCheckInStatus>("/checkins/my-status"),
+
+  getMyDashboardStats: (): Promise<ApiResponse<MyCheckInDashboardStats>> =>
+    apiClient.get<MyCheckInDashboardStats>("/checkins/dashboard-stats"),
+
+  getOrgDashboardStats: (
+    organizationId: string,
+  ): Promise<ApiResponse<OrgCheckInDashboardStats>> =>
+    apiClient.get<OrgCheckInDashboardStats>(
+      `/checkins/organizations/${organizationId}/dashboard-stats`,
+    ),
 };

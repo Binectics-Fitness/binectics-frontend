@@ -157,7 +157,7 @@ export default function AdminUsersPage() {
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
 
-      <div className="flex-1 ml-64">
+      <div className="flex-1 md:ml-64">
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
           <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">

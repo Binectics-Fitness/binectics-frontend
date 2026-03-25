@@ -10,18 +10,15 @@ import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { checkinsService } from "@/lib/api/checkins";
 import { teamsService } from "@/lib/api/teams";
 import { progressService } from "@/lib/api/progress";
-import { UserRole } from "@/lib/types";
+import { type MyCheckInDashboardStats, UserRole } from "@/lib/types";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.USER);
   const [resolvingPerspective, setResolvingPerspective] = useState(true);
-  const [checkInStatus, setCheckInStatus] = useState<{
-    has_checked_in_today: boolean;
-    today_check_in_at?: string;
-    last_check_in_at?: string;
-  } | null>(null);
+  const [checkInStatus, setCheckInStatus] =
+    useState<MyCheckInDashboardStats | null>(null);
   const [journalCount, setJournalCount] = useState<number | null>(null);
   const [hasMoreJournals, setHasMoreJournals] = useState(false);
 
@@ -62,7 +59,7 @@ export default function DashboardPage() {
     async function loadMyCheckInStatus() {
       if (isLoading || !isAuthorized || !user) return;
       try {
-        const res = await checkinsService.getMyStatus();
+        const res = await checkinsService.getMyDashboardStats();
         if (!mounted) return;
         if (res.success && res.data) {
           setCheckInStatus(res.data);
@@ -110,7 +107,6 @@ export default function DashboardPage() {
   // Extract user display name (first name or full name)
   const displayName = user.first_name || user.last_name || "there";
 
-  // Mock additional user stats (TODO: fetch from API)
   const userStats = {
     isOnboardingComplete: user.is_onboarding_complete ?? false,
   };
@@ -338,8 +334,12 @@ export default function DashboardPage() {
             Welcome back, {displayName}!
           </h1>
           <p className="text-sm sm:text-base text-foreground-secondary">
-            {checkInStatus?.has_checked_in_today
-              ? "Keep up the great work! Great job checking in today."
+            {checkInStatus
+              ? checkInStatus.current_streak_days > 0
+                ? `You're on a ${checkInStatus.current_streak_days}-day streak with ${checkInStatus.total_check_ins} total check-ins.`
+                : checkInStatus.total_check_ins > 0
+                  ? `You've logged ${checkInStatus.total_check_ins} check-ins so far. Ready for your next workout?`
+                  : "Ready for your first workout? Check in when you arrive."
               : "Ready for your next workout? Check in when you arrive."}
           </p>
           {checkInStatus && (
@@ -376,14 +376,14 @@ export default function DashboardPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-foreground-secondary mt-1">
+                <p className="text-sm text-foreground-secondary mt-1">
                   View notes and progress updates from your trainer and
                   dietitian.
                 </p>
               </div>
               <Link
                 href="/dashboard/journals"
-                className="rounded-lg bg-primary-500 px-3 py-2 text-xs font-semibold text-foreground hover:bg-primary-600 whitespace-nowrap"
+                className="rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-foreground hover:bg-primary-600 whitespace-nowrap"
               >
                 View Journals
               </Link>
@@ -439,7 +439,7 @@ export default function DashboardPage() {
                 <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
                   {featuredGym.name}
                 </h3>
-                <p className="text-xs sm:text-sm text-foreground-secondary mb-4">
+                <p className="text-sm text-foreground-secondary mb-4">
                   {featuredGym.location} • {featuredGym.distance} away
                 </p>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-6">
@@ -451,11 +451,11 @@ export default function DashboardPage() {
                     >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
-                    <span className="text-xs sm:text-sm font-semibold text-foreground">
+                    <span className="text-sm font-semibold text-foreground">
                       {featuredGym.rating}
                     </span>
                   </div>
-                  <span className="text-xs sm:text-sm text-foreground-secondary">
+                  <span className="text-sm text-foreground-secondary">
                     Specializes in {featuredGym.speciality}
                   </span>
                 </div>
@@ -481,7 +481,7 @@ export default function DashboardPage() {
             <h2 className="font-display text-xl sm:text-2xl font-black text-foreground mb-2">
               Recommended for you
             </h2>
-            <p className="text-xs sm:text-sm text-foreground-secondary">
+            <p className="text-sm text-foreground-secondary">
               We think you&apos;ll like these
             </p>
           </div>
@@ -500,10 +500,10 @@ export default function DashboardPage() {
                 <h3 className="font-display text-base sm:text-lg font-bold text-foreground mb-2 group-hover:text-primary-500 transition-colors">
                   {gym.name}
                 </h3>
-                <p className="text-xs sm:text-sm text-foreground-secondary mb-3">
+                <p className="text-sm text-foreground-secondary mb-3">
                   {gym.trainer}
                 </p>
-                <div className="flex items-center justify-between text-xs text-foreground-tertiary mb-4">
+                <div className="flex items-center justify-between text-sm text-foreground-tertiary mb-4">
                   <span>{gym.type}</span>
                   <span>{gym.duration}</span>
                 </div>
@@ -515,7 +515,7 @@ export default function DashboardPage() {
                   >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
-                  <span className="text-xs sm:text-sm font-semibold text-foreground">
+                  <span className="text-sm font-semibold text-foreground">
                     {gym.rating}
                   </span>
                 </div>
@@ -530,7 +530,7 @@ export default function DashboardPage() {
             <h2 className="font-display text-xl sm:text-2xl font-black text-foreground mb-2">
               Collections for you
             </h2>
-            <p className="text-xs sm:text-sm text-foreground-secondary">
+            <p className="text-sm text-foreground-secondary">
               Curated workout programs and nutrition plans
             </p>
           </div>
@@ -547,7 +547,7 @@ export default function DashboardPage() {
                 <h3 className="font-display text-lg sm:text-xl font-bold text-white mb-2">
                   {collection.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-white/90">
+                <p className="text-sm text-white/90">
                   {collection.count} programs
                 </p>
               </Link>

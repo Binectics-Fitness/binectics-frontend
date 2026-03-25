@@ -439,6 +439,13 @@ interface JournalEntry {
 
 ## Development Milestones
 
+### 📊 Current Reality Check (2026-03-24)
+
+- ~115 `page.tsx` routes currently exist in `src/app`
+- Core auth, dashboards, admin, marketplace, teams, forms, and static pages are implemented
+- Remaining placeholder routes: 15 pages (mostly trainer/dietitian/user dashboard sub-pages)
+- Current top priority is Phase 2 UX consistency across mobile and tablet screens
+
 ### ✅ Phase 1: Landing Page (COMPLETED)
 
 - [x] Hero section with global messaging
@@ -459,54 +466,63 @@ interface JournalEntry {
 
 ### 🔄 Phase 2: Mobile & Tablet Optimization (IN PROGRESS)
 
-- [ ] Responsive navbar with mobile menu
-- [ ] Mobile-optimized hero section
-- [ ] Stack grid layouts on mobile
-- [ ] Touch-friendly button sizes
-- [ ] Tablet breakpoint optimizations
-- [ ] Test on various screen sizes
+- [x] Responsive navbar with mobile menu
+- [x] Mobile-optimized hero section
+- [x] Stack grid layouts on mobile (major dashboard routes)
+- [x] Touch-friendly button sizing on primary nav patterns
+- [x] Tablet breakpoint optimization for sidebar-based layouts
+- [x] Samsung/Android text autoscaling consistency fix (`text-size-adjust: 100%`)
+- [x] Admin mobile spacing normalization (`md:ml-64` and responsive paddings)
+- [x] Placeholder dashboard route layout normalization (all 15 Coming Soon routes)
+- [x] Non-placeholder dashboard typography baseline normalization (`text-sm` floor on key mobile copy)
+- [x] Team/bookings/staff dashboard surface harmonization (`bg-neutral-50` wrappers)
+- [x] Final `text-xs -> text-sm` sweep on active dashboard user/trainer/dietitian pages
+- [x] Follow-up `text-xs -> text-sm` pass on team/org details, consultation booking helpers, progress requests, and provider client detail views
+- [x] QA pass fixes for provider/admin detail screens (stacked header actions, mobile-safe info grids, subscription mobile card view)
+- [ ] Full mobile QA pass on all dashboard/admin/detail routes
 
-### 📋 Phase 3: Authentication Flow (NEXT)
+### 🔄 Phase 3: Authentication Flow (MOSTLY COMPLETE)
 
-- [ ] Register page with role selection
-- [ ] Role-specific signup forms
-- [ ] Login page
-- [ ] Password reset flow
-- [ ] Email verification
-- [ ] JWT implementation
+- [x] Register page with role selection
+- [x] Role-specific signup forms
+- [x] Login page
+- [x] Password reset flow
+- [x] Email verification
+- [x] JWT implementation (frontend integration)
 
-### 📋 Phase 4: Core User Features
+### 🔄 Phase 4: Core User Features (IN PROGRESS)
 
-- [ ] User dashboard
-- [ ] Search & discovery
-- [ ] Profile pages (gyms, trainers, dietitians)
-- [ ] Subscription flow
-- [ ] Payment integration
+- [x] User dashboard
+- [x] Search & discovery
+- [x] Profile pages (gyms, trainers, dietitians)
+- [x] Subscription flow (frontend)
+- [ ] End-to-end payment integration hardening
 
-### 📋 Phase 5: Provider Dashboards
+### 🔄 Phase 5: Provider Dashboards (IN PROGRESS)
 
-- [ ] Gym owner dashboard
-- [ ] Trainer dashboard
-- [ ] Dietitian dashboard
-- [ ] Plan management
-- [ ] Client management
-- [ ] Journal system
+- [x] Gym owner dashboard
+- [x] Trainer dashboard
+- [x] Dietitian dashboard
+- [x] Plan management (gym owner complete; trainer/dietitian placeholders remain)
+- [x] Client management
+- [x] Journal system
 
-### 📋 Phase 6: Verification & QR
+### 🔄 Phase 6: Verification & QR (IN PROGRESS)
 
-- [ ] Verification application flow
-- [ ] Admin verification panel
-- [ ] QR code generation
-- [ ] QR check-in system
-- [ ] Attendance tracking
+- [x] Verification application flow
+- [x] Admin verification panel
+- [x] QR code generation (frontend flow)
+- [x] QR check-in system
+- [x] Attendance tracking views
 
-### 📋 Phase 7: Admin Panel
+### 🔄 Phase 7: Admin Panel (IN PROGRESS)
 
-- [ ] Admin authentication
-- [ ] User management
-- [ ] Provider management
-- [ ] Metrics dashboard
-- [ ] Platform settings
+- [x] Admin authentication
+- [x] User management
+- [x] Provider management
+- [x] Metrics dashboard
+- [x] Platform settings
+- [ ] Responsive polish and QA on all admin routes
 
 ---
 
@@ -680,12 +696,12 @@ NEXT_PUBLIC_MAINTENANCE_MODE=false
 ## Next Steps
 
 1. **Mobile & Tablet Optimization** (Current)
-   - Responsive navigation
-   - Mobile-first grid layouts
-   - Touch-friendly interactions
+   - Complete full-device QA pass (Samsung, iPhone, tablets)
+   - Normalize font hierarchy and spacing on remaining outlier pages
+   - Resolve final layout inconsistencies on edge-case detail screens
 
 2. **Complete Feature Pages**
-   - Implement remaining placeholder pages
+   - Implement remaining 15 placeholder pages
    - Add real content and functionality
    - Integrate with Azure backend API
 
@@ -703,7 +719,7 @@ NEXT_PUBLIC_MAINTENANCE_MODE=false
 
 ## Known Issues / Tech Debt
 
-- [ ] No loading states yet
+- [ ] Loading states are inconsistent across routes
 - [ ] No error boundaries
 - [ ] No form validation library chosen
 - [ ] No testing setup (unit/integration/e2e)
@@ -711,6 +727,7 @@ NEXT_PUBLIC_MAINTENANCE_MODE=false
 - [ ] No monitoring/logging setup
 - [ ] No SEO optimization (meta tags, sitemap, etc.)
 - [ ] No analytics integration
+- [ ] Some dashboard/provider pages are still placeholders (15 routes)
 
 ---
 
@@ -722,6 +739,6 @@ NEXT_PUBLIC_MAINTENANCE_MODE=false
 
 ---
 
-**Last Updated**: 2025-11-22
+**Last Updated**: 2026-03-25
 **Current Phase**: Mobile & Tablet Optimization
-**Progress**: ~15% (Landing page complete, 111 pages remaining)
+**Progress**: ~88% (major route surface complete, 15 placeholder pages remaining; final cross-device QA pending)

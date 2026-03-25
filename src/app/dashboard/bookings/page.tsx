@@ -146,7 +146,7 @@ export default function BookingsPage() {
           <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-2">
             My Bookings
           </h1>
-          <p className="text-xs sm:text-sm text-foreground-secondary">
+          <p className="text-sm text-foreground-secondary">
             Manage your gym visits, trainer sessions, and consultations
           </p>
         </div>
@@ -250,7 +250,7 @@ export default function BookingsPage() {
                         {providerName} - {typeName}
                       </h3>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
                         <div>
                           <p className="text-foreground-tertiary mb-1">
                             Date & Time

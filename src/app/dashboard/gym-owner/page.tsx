@@ -10,8 +10,42 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { teamsService } from "@/lib/api/teams";
 import { checkinsService } from "@/lib/api/checkins";
-import { marketplaceService } from "@/lib/api/marketplace";
-import { CheckInHistoryPeriod, UserRole } from "@/lib/types";
+import {
+  type CheckIn,
+  type OrgCheckInDashboardStats,
+  UserRole,
+} from "@/lib/types";
+
+function getMemberName(checkIn: CheckIn): string {
+  if (
+    typeof checkIn.member_user_id === "object" &&
+    checkIn.member_user_id !== null
+  ) {
+    return `${checkIn.member_user_id.first_name} ${checkIn.member_user_id.last_name}`;
+  }
+  return "Unknown Member";
+}
+
+function getMemberInitials(checkIn: CheckIn): string {
+  if (
+    typeof checkIn.member_user_id === "object" &&
+    checkIn.member_user_id !== null
+  ) {
+    return `${checkIn.member_user_id.first_name.charAt(0)}${checkIn.member_user_id.last_name.charAt(0)}`;
+  }
+  return "?";
+}
+
+function formatRelativeTime(dateStr: string): string {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const diffMinutes = Math.max(1, Math.floor(diffMs / 60000));
+  if (diffMinutes < 60)
+    return `${diffMinutes} minute${diffMinutes === 1 ? "" : "s"} ago`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24)
+    return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
 
 export default function GymOwnerDashboard() {
   const router = useRouter();
@@ -19,10 +53,12 @@ export default function GymOwnerDashboard() {
     useRequireAuth();
   const { user } = useAuth();
   const { currentOrg } = useOrganization();
+  const organizationId = currentOrg?._id;
   const [canViewOwnerDashboard, setCanViewOwnerDashboard] = useState(false);
   const [resolvingPerspective, setResolvingPerspective] = useState(true);
-  const [checkInsToday, setCheckInsToday] = useState<number | null>(null);
-  const [memberCount, setMemberCount] = useState<number | null>(null);
+  const [orgStats, setOrgStats] = useState<OrgCheckInDashboardStats | null>(
+    null,
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -65,23 +101,16 @@ export default function GymOwnerDashboard() {
   }, [authLoading, isAuthorized, user, router]);
 
   useEffect(() => {
-    if (!currentOrg?._id) return;
+    if (!organizationId) return;
+    const safeOrganizationId = organizationId;
     let mounted = true;
 
     async function loadStats() {
       try {
-        const [checkInsRes, membersRes] = await Promise.all([
-          checkinsService.getOrgCheckIns(
-            currentOrg!._id,
-            CheckInHistoryPeriod.TODAY,
-          ),
-          marketplaceService.getOrgMembershipSubscriptions(currentOrg!._id),
-        ]);
+        const res =
+          await checkinsService.getOrgDashboardStats(safeOrganizationId);
         if (!mounted) return;
-        if (checkInsRes.success && checkInsRes.data)
-          setCheckInsToday(checkInsRes.data.length);
-        if (membersRes.success && membersRes.data)
-          setMemberCount(membersRes.data.length);
+        if (res.success && res.data) setOrgStats(res.data);
       } catch {
         // stats load silently
       }
@@ -91,33 +120,34 @@ export default function GymOwnerDashboard() {
     return () => {
       mounted = false;
     };
-  }, [currentOrg?._id]);
+  }, [organizationId]);
 
   if (authLoading || resolvingPerspective) return <DashboardLoading />;
   if (!isAuthorized || !canViewOwnerDashboard) return null;
 
-  // Mock gym data
-  // Gym display data (name/stats from real API where available)
+  const locationLabel = [orgStats?.city, orgStats?.country_code]
+    .filter(Boolean)
+    .join(", ");
+
   const gymData = {
     name: currentOrg?.name ?? "Your Gym",
-    location: "—",
-    rating: 4.9,
-    totalMembers: memberCount ?? 1247,
-    activeToday: checkInsToday ?? 87,
+    location: locationLabel || "Location unavailable",
+    rating: orgStats?.average_rating ?? 0,
+    reviewCount: orgStats?.review_count ?? 0,
+    totalMembers: orgStats?.active_members ?? 0,
+    activeToday: orgStats?.today_check_ins ?? 0,
     revenue: {
-      today: 2340,
-      thisWeek: 15680,
-      thisMonth: 67450,
+      today: orgStats?.revenue_today ?? 0,
+      thisWeek: orgStats?.revenue_week ?? 0,
+      thisMonth: orgStats?.revenue_month ?? 0,
     },
   };
 
-  // Stats cards
   const stats = [
     {
       label: "Check-ins Today",
-      value: "87",
-      change: "+12%",
-      changeType: "positive",
+      value: orgStats ? gymData.activeToday.toLocaleString() : "—",
+      meta: "Live activity",
       icon: (
         <svg
           className="h-6 w-6"
@@ -138,9 +168,8 @@ export default function GymOwnerDashboard() {
     },
     {
       label: "Revenue Today",
-      value: `$${gymData.revenue.today.toLocaleString()}`,
-      change: "+8%",
-      changeType: "positive",
+      value: orgStats ? `$${gymData.revenue.today.toLocaleString()}` : "—",
+      meta: `$${gymData.revenue.thisWeek.toLocaleString()} this week`,
       icon: (
         <svg
           className="h-6 w-6"
@@ -161,9 +190,8 @@ export default function GymOwnerDashboard() {
     },
     {
       label: "Active Members",
-      value: gymData.totalMembers.toLocaleString(),
-      change: "+24",
-      changeType: "positive",
+      value: orgStats ? gymData.totalMembers.toLocaleString() : "—",
+      meta: "Current active plans",
       icon: (
         <svg
           className="h-6 w-6"
@@ -184,9 +212,12 @@ export default function GymOwnerDashboard() {
     },
     {
       label: "Avg. Rating",
-      value: gymData.rating.toFixed(1),
-      change: "+0.2",
-      changeType: "positive",
+      value:
+        orgStats && gymData.reviewCount > 0 ? gymData.rating.toFixed(1) : "—",
+      meta:
+        orgStats && gymData.reviewCount > 0
+          ? `${gymData.reviewCount} review${gymData.reviewCount === 1 ? "" : "s"}`
+          : "No reviews yet",
       icon: (
         <svg
           className="h-6 w-6"
@@ -207,109 +238,7 @@ export default function GymOwnerDashboard() {
     },
   ];
 
-  // Recent check-ins
-  const recentCheckins = [
-    {
-      name: "John Doe",
-      time: "2 minutes ago",
-      plan: "Pro",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Sarah Johnson",
-      time: "15 minutes ago",
-      plan: "Elite",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Mike Chen",
-      time: "28 minutes ago",
-      plan: "Pro",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Emily Davis",
-      time: "45 minutes ago",
-      plan: "Starter",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "James Wilson",
-      time: "1 hour ago",
-      plan: "Pro",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-  ];
+  const recentCheckins = orgStats?.recent_check_ins ?? [];
 
   // Upcoming classes
   const upcomingClasses = [
@@ -466,14 +395,8 @@ export default function GymOwnerDashboard() {
                 >
                   {stat.icon}
                 </div>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-                    stat.changeType === "positive"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {stat.change}
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold bg-neutral-100 text-foreground-secondary">
+                  {stat.meta}
                 </span>
               </div>
               <p className="text-sm text-foreground-secondary mb-1">
@@ -520,29 +443,35 @@ export default function GymOwnerDashboard() {
               </Link>
             </div>
             <div className="bg-background p-6 shadow-card">
-              <ul className="space-y-4">
-                {recentCheckins.map((checkin, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-2xl">
-                      {checkin.avatar}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground">
-                        {checkin.name}
-                      </p>
-                      <p className="text-sm text-foreground-secondary">
-                        {checkin.time}
-                      </p>
-                    </div>
-                    <span className=" bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">
-                      {checkin.plan}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              {recentCheckins.length === 0 ? (
+                <p className="text-sm text-foreground-secondary">
+                  No recent check-ins yet.
+                </p>
+              ) : (
+                <ul className="space-y-4">
+                  {recentCheckins.map((checkin) => (
+                    <li
+                      key={checkin._id}
+                      className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-sm font-bold text-foreground">
+                        {getMemberInitials(checkin)}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-foreground">
+                          {getMemberName(checkin)}
+                        </p>
+                        <p className="text-sm text-foreground-secondary">
+                          {formatRelativeTime(checkin.checked_in_at)}
+                        </p>
+                      </div>
+                      <span className=" bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">
+                        Checked in
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 
