@@ -9,11 +9,12 @@ import { progressService } from "@/lib/api/progress";
 import { UserRole } from "@/lib/types";
 import { formatLocal } from "@/utils/format";
 import type {
-            className="rounded-lg bg-accent-yellow-500 px-3 sm:px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent-yellow-600 whitespace-nowrap"
+  ClientProfile,
   AddClientRequest,
   ClientRequestItem,
   ClientInvitation,
   ClientJournalEntry,
+  ProgressSummary,
   CreateClientJournalEntryRequest,
 } from "@/lib/api/progress";
 import { ClientJournalMood } from "@/lib/api/progress";
