@@ -217,10 +217,10 @@ export default function ConsultationAvailabilityManager({
     <div className="flex min-h-screen bg-background">
       {sidebar}
 
-      <main className="ml-64 flex-1 p-8">
-        <div className="mb-8 flex items-center justify-between">
+      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="font-display text-3xl font-black text-foreground">
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
               Consultation Availability
             </h1>
             <p className="mt-2 text-foreground-secondary">{description}</p>
@@ -229,7 +229,7 @@ export default function ConsultationAvailabilityManager({
           <button
             onClick={saveAvailability}
             disabled={isSaving}
-            className="rounded-lg bg-primary-500 px-5 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-primary-500 px-5 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             {isSaving ? "Saving..." : "Save Availability"}
           </button>

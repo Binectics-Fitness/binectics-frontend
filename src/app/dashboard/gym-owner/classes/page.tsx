@@ -166,9 +166,9 @@ export default function GymOwnerClassesPage() {
       <GymOwnerSidebar />
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-black text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground">
                 Classes & Schedules
               </h1>
               <p className="text-foreground/60 mt-1">
@@ -177,7 +177,7 @@ export default function GymOwnerClassesPage() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="h-12 px-6 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 flex items-center gap-2"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent-blue-500 px-6 font-semibold text-white hover:bg-accent-blue-600 sm:w-auto"
             >
               <svg
                 className="w-5 h-5"
@@ -196,7 +196,7 @@ export default function GymOwnerClassesPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Total Classes
@@ -237,7 +237,78 @@ export default function GymOwnerClassesPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-card overflow-hidden">
+          <div className="md:hidden space-y-3 mb-6">
+            {classes.map((classItem) => {
+              const utilizationPercent =
+                (classItem.enrolled / classItem.capacity) * 100;
+              return (
+                <div
+                  key={classItem.id}
+                  className="rounded-xl border border-gray-100 bg-white p-4 shadow-card"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-foreground">
+                        {classItem.name}
+                      </p>
+                      <p className="mt-0.5 text-sm text-foreground/60">
+                        {classItem.instructor}
+                      </p>
+                    </div>
+                    <span className="inline-flex rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">
+                      {classItem.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                    <p className="text-foreground/60">{classItem.schedule}</p>
+                    <p className="text-foreground/60">{classItem.duration}</p>
+                    <p className="text-foreground/60">
+                      Capacity:{" "}
+                      <span className="font-medium text-foreground">
+                        {classItem.capacity}
+                      </span>
+                    </p>
+                    <p className="text-foreground/60">
+                      Enrolled:{" "}
+                      <span className="font-medium text-foreground">
+                        {classItem.enrolled}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="mt-2 h-2 rounded-full bg-gray-200">
+                    <div
+                      className={`h-full rounded-full ${
+                        utilizationPercent >= 90
+                          ? "bg-red-500"
+                          : utilizationPercent >= 70
+                            ? "bg-accent-yellow-500"
+                            : "bg-primary-500"
+                      }`}
+                      style={{ width: `${utilizationPercent}%` }}
+                    />
+                  </div>
+
+                  <div className="mt-4 flex gap-2">
+                    <button className="flex-1 rounded-lg border border-accent-blue-200 px-3 py-2 text-sm font-medium text-accent-blue-600 hover:bg-accent-blue-50">
+                      Edit
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleDeleteClass(classItem.id, classItem.name)
+                      }
+                      className="flex-1 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hidden md:block bg-white rounded-xl shadow-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
@@ -340,7 +411,7 @@ export default function GymOwnerClassesPage() {
 
           {showCreateModal && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-2xl p-4 sm:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 <h2 className="text-2xl font-black text-foreground mb-6">
                   Create New Class
                 </h2>
@@ -547,7 +618,7 @@ export default function GymOwnerClassesPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                     <button
                       type="button"
                       onClick={() => setShowCreateModal(false)}
