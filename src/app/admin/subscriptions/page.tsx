@@ -262,13 +262,17 @@ export default function AdminSubscriptionsPage() {
 
                 <div className="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <p className="font-medium text-foreground/60">Provider & Plan</p>
+                    <p className="font-medium text-foreground/60">
+                      Provider & Plan
+                    </p>
                     <p className="font-semibold text-foreground">{sub.plan}</p>
                     <p className="text-sm text-foreground/60">{sub.provider}</p>
                   </div>
                   <div>
                     <p className="font-medium text-foreground/60">Amount</p>
-                    <p className="font-semibold text-foreground">{sub.amount}</p>
+                    <p className="font-semibold text-foreground">
+                      {sub.amount}
+                    </p>
                     <p className="text-sm text-foreground/60">{sub.duration}</p>
                   </div>
                   <div>
@@ -276,7 +280,9 @@ export default function AdminSubscriptionsPage() {
                     <p className="text-foreground">{sub.startDate}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-foreground/60">Next Billing</p>
+                    <p className="font-medium text-foreground/60">
+                      Next Billing
+                    </p>
                     <p className="text-foreground">{sub.nextBilling}</p>
                   </div>
                 </div>
