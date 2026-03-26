@@ -40,12 +40,12 @@ export default function GymOwnerRevenuePage() {
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-black text-foreground">Revenue & Earnings</h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground">Revenue & Earnings</h1>
             <p className="text-foreground/60 mt-1">Track your gym&apos;s financial performance</p>
           </div>
 
           {/* Revenue Breakdown */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">Total Revenue (This Month)</p>
               <p className="text-3xl font-black text-foreground mt-2">${revenueData.month.toLocaleString()}</p>
@@ -91,7 +91,7 @@ export default function GymOwnerRevenuePage() {
           <div className="bg-white rounded-xl shadow-card p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-foreground">Revenue Trends</h3>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {['week', 'month', 'year'].map((period) => (
                   <button
                     key={period}
@@ -117,7 +117,51 @@ export default function GymOwnerRevenuePage() {
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-bold text-foreground">Recent Transactions</h3>
             </div>
-            <div className="overflow-x-auto">
+
+            {/* Mobile cards */}
+            <div className="divide-y divide-gray-200 md:hidden">
+              {transactions.map((tx) => (
+                <div key={tx.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-foreground">{tx.member}</p>
+                      {tx.trainer && <p className="text-sm text-foreground/60">with {tx.trainer}</p>}
+                      <p className="text-sm text-foreground/60">{tx.plan}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                        tx.status === 'completed'
+                          ? 'bg-primary-100 text-primary-700'
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}
+                    >
+                      {tx.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span
+                      className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                        tx.type === 'Membership'
+                          ? 'bg-primary-100 text-primary-700'
+                          : 'bg-accent-blue-100 text-accent-blue-700'
+                      }`}
+                    >
+                      {tx.type}
+                    </span>
+                    <span className="text-sm font-semibold text-foreground">Total: ${tx.amount}</span>
+                    {tx.type === 'Membership' ? (
+                      <span className="text-sm font-semibold text-primary-600">Your share: ${tx.amount}</span>
+                    ) : (
+                      <span className="text-sm font-semibold text-primary-600">Your share: ${tx.gymShare} <span className="text-foreground/60 font-normal">(30%)</span></span>
+                    )}
+                    <span className="text-sm text-foreground/60">{tx.date}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -178,6 +222,7 @@ export default function GymOwnerRevenuePage() {
                   ))}
                 </tbody>
               </table>
+            </div>
             </div>
           </div>
         </div>
