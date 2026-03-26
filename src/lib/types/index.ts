@@ -276,6 +276,8 @@ export interface MarketplaceListing {
   specialties: string[];
   certifications: string[];
   languages: string[];
+  facilities: string[];
+  amenities: string[];
   photos: string[];
   profile_image?: string;
   profile_image_public_id?: string;

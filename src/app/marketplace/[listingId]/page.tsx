@@ -272,6 +272,7 @@ export default function ListingDetailPage() {
     typeof listing.organization_id === "object"
       ? listing.organization_id
       : null;
+  const isGymListing = listing.account_type === "gym_owner";
   const displayName = org
     ? org.name
     : professional
@@ -369,14 +370,19 @@ export default function ListingDetailPage() {
             </p>
           </div>
 
-          {/* Specialties */}
-          {listing.specialties.length > 0 && (
+          {/* Specialties / Facilities */}
+          {(isGymListing
+            ? (listing.facilities ?? []).length > 0
+            : listing.specialties.length > 0) && (
             <div className="mb-6">
               <h2 className="text-lg font-bold text-foreground mb-3">
-                Specialties
+                {isGymListing ? "Facilities" : "Specialties"}
               </h2>
               <div className="flex flex-wrap gap-2">
-                {listing.specialties.map((s) => (
+                {(isGymListing
+                  ? listing.facilities ?? []
+                  : listing.specialties
+                ).map((s) => (
                   <span
                     key={s}
                     className="rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700"
@@ -388,14 +394,19 @@ export default function ListingDetailPage() {
             </div>
           )}
 
-          {/* Certifications */}
-          {listing.certifications.length > 0 && (
+          {/* Certifications / Amenities */}
+          {(isGymListing
+            ? (listing.amenities ?? []).length > 0
+            : listing.certifications.length > 0) && (
             <div className="mb-6">
               <h2 className="text-lg font-bold text-foreground mb-3">
-                Certifications
+                {isGymListing ? "Amenities" : "Certifications"}
               </h2>
               <div className="flex flex-wrap gap-2">
-                {listing.certifications.map((c) => (
+                {(isGymListing
+                  ? listing.amenities ?? []
+                  : listing.certifications
+                ).map((c) => (
                   <span
                     key={c}
                     className="rounded-full bg-neutral-100 px-3 py-1 text-sm text-foreground-secondary"

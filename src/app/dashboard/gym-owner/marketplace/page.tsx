@@ -76,6 +76,8 @@ export default function OrgMarketplaceListingPage() {
   const [bio, setBio] = useState("");
   const [specialties, setSpecialties] = useState("");
   const [certifications, setCertifications] = useState("");
+  const [facilities, setFacilities] = useState("");
+  const [amenities, setAmenities] = useState("");
   const [languages, setLanguages] = useState("");
   const [city, setCity] = useState("");
   const [countryCode, setCountryCode] = useState("");
@@ -115,6 +117,8 @@ export default function OrgMarketplaceListingPage() {
     setBio(l.bio);
     setSpecialties(l.specialties.join(", "));
     setCertifications(l.certifications.join(", "));
+    setFacilities((l.facilities ?? []).join(", "));
+    setAmenities((l.amenities ?? []).join(", "));
     setLanguages(l.languages.join(", "));
     setCity(l.city || "");
     setCountryCode(l.country_code || "");
@@ -175,6 +179,8 @@ export default function OrgMarketplaceListingPage() {
       bio,
       specialties: splitComma(specialties),
       certifications: splitComma(certifications),
+      facilities: splitComma(facilities),
+      amenities: splitComma(amenities),
       languages: splitComma(languages),
       city: city || undefined,
       country_code: countryCode || undefined,
@@ -206,6 +212,8 @@ export default function OrgMarketplaceListingPage() {
       bio,
       specialties: splitComma(specialties),
       certifications: splitComma(certifications),
+      facilities: splitComma(facilities),
+      amenities: splitComma(amenities),
       languages: splitComma(languages),
       city: city || undefined,
       country_code: countryCode || undefined,
@@ -670,6 +678,10 @@ export default function OrgMarketplaceListingPage() {
                 setSpecialties={setSpecialties}
                 certifications={certifications}
                 setCertifications={setCertifications}
+                facilities={facilities}
+                setFacilities={setFacilities}
+                amenities={amenities}
+                setAmenities={setAmenities}
                 languages={languages}
                 setLanguages={setLanguages}
                 city={city}
@@ -773,6 +785,11 @@ export default function OrgMarketplaceListingPage() {
                   </label>
                 </div>
               </div>
+              <p className="mb-4 text-xs text-foreground-secondary">
+                Add a strong profile image and clear gallery photos of your gym
+                floor, equipment, and amenities to improve marketplace
+                conversion.
+              </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
@@ -981,13 +998,13 @@ export default function OrgMarketplaceListingPage() {
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                {listing.specialties.length > 0 && (
+                {(listing.facilities ?? []).length > 0 && (
                   <div>
                     <p className="text-xs font-medium text-foreground-secondary mb-1">
-                      Specialties
+                      Facilities
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {listing.specialties.map((s) => (
+                      {listing.facilities.map((s) => (
                         <span
                           key={s}
                           className="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700"
@@ -998,13 +1015,13 @@ export default function OrgMarketplaceListingPage() {
                     </div>
                   </div>
                 )}
-                {listing.certifications.length > 0 && (
+                {(listing.amenities ?? []).length > 0 && (
                   <div>
                     <p className="text-xs font-medium text-foreground-secondary mb-1">
-                      Certifications
+                      Amenities
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {listing.certifications.map((c) => (
+                      {listing.amenities.map((c) => (
                         <span
                           key={c}
                           className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-foreground-secondary"
@@ -1077,6 +1094,10 @@ export default function OrgMarketplaceListingPage() {
                 setSpecialties={setSpecialties}
                 certifications={certifications}
                 setCertifications={setCertifications}
+                facilities={facilities}
+                setFacilities={setFacilities}
+                amenities={amenities}
+                setAmenities={setAmenities}
                 languages={languages}
                 setLanguages={setLanguages}
                 city={city}
@@ -1154,6 +1175,10 @@ function FormFields({
   setSpecialties,
   certifications,
   setCertifications,
+  facilities,
+  setFacilities,
+  amenities,
+  setAmenities,
   languages,
   setLanguages,
   city,
@@ -1177,6 +1202,10 @@ function FormFields({
   setSpecialties: (v: string) => void;
   certifications: string;
   setCertifications: (v: string) => void;
+  facilities: string;
+  setFacilities: (v: string) => void;
+  amenities: string;
+  setAmenities: (v: string) => void;
   languages: string;
   setLanguages: (v: string) => void;
   city: string;
@@ -1227,14 +1256,14 @@ function FormFields({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
-            Specialties
+            Facilities
           </label>
           <input
             type="text"
-            value={specialties}
-            onChange={(e) => setSpecialties(e.target.value)}
+            value={facilities}
+            onChange={(e) => setFacilities(e.target.value)}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-            placeholder="CrossFit, Powerlifting, Yoga"
+            placeholder="Free Weights, Cardio Zone, Yoga Studio"
           />
           <p className="text-xs text-foreground-secondary mt-1">
             Comma-separated
@@ -1242,14 +1271,14 @@ function FormFields({
         </div>
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
-            Certifications
+            Amenities
           </label>
           <input
             type="text"
-            value={certifications}
-            onChange={(e) => setCertifications(e.target.value)}
+            value={amenities}
+            onChange={(e) => setAmenities(e.target.value)}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-            placeholder="ISO 9001, Certified Gym"
+            placeholder="WiFi, Showers, Parking"
           />
           <p className="text-xs text-foreground-secondary mt-1">
             Comma-separated

@@ -30,6 +30,8 @@ export interface CreateListingRequest {
   specialties?: string[];
   certifications?: string[];
   languages?: string[];
+  facilities?: string[];
+  amenities?: string[];
   photos?: string[];
   city?: string;
   country_code?: string;
@@ -49,6 +51,8 @@ export interface UpdateListingRequest {
   specialties?: string[];
   certifications?: string[];
   languages?: string[];
+  facilities?: string[];
+  amenities?: string[];
   photos?: string[];
   city?: string;
   country_code?: string;
