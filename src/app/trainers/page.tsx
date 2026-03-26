@@ -105,8 +105,25 @@ export default function TrainersPage() {
   };
 
   useEffect(() => {
-    void fetchTrainers(searchQuery, selectedSpecialty, verifiedOnly, page, geoLat, geoLng, radiusKm);
-  }, [fetchTrainers, searchQuery, selectedSpecialty, verifiedOnly, page, geoLat, geoLng, radiusKm]);
+    void fetchTrainers(
+      searchQuery,
+      selectedSpecialty,
+      verifiedOnly,
+      page,
+      geoLat,
+      geoLng,
+      radiusKm,
+    );
+  }, [
+    fetchTrainers,
+    searchQuery,
+    selectedSpecialty,
+    verifiedOnly,
+    page,
+    geoLat,
+    geoLng,
+    radiusKm,
+  ]);
 
   return (
     <div className="min-h-screen bg-background">

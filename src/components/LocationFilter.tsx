@@ -162,9 +162,7 @@ export default function LocationFilter({
         </button>
       )}
 
-      {geo.error && (
-        <p className="mt-2 text-xs text-red-500">{geo.error}</p>
-      )}
+      {geo.error && <p className="mt-2 text-xs text-red-500">{geo.error}</p>}
     </div>
   );
 }

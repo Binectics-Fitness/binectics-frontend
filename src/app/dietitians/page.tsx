@@ -103,8 +103,25 @@ export default function DietitiansPage() {
   };
 
   useEffect(() => {
-    void fetchDietitians(searchQuery, selectedSpecialty, verifiedOnly, page, geoLat, geoLng, radiusKm);
-  }, [fetchDietitians, searchQuery, selectedSpecialty, verifiedOnly, page, geoLat, geoLng, radiusKm]);
+    void fetchDietitians(
+      searchQuery,
+      selectedSpecialty,
+      verifiedOnly,
+      page,
+      geoLat,
+      geoLng,
+      radiusKm,
+    );
+  }, [
+    fetchDietitians,
+    searchQuery,
+    selectedSpecialty,
+    verifiedOnly,
+    page,
+    geoLat,
+    geoLng,
+    radiusKm,
+  ]);
 
   return (
     <div className="min-h-screen bg-background">

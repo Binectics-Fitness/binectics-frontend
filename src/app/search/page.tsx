@@ -142,8 +142,27 @@ export default function SearchPage() {
   };
 
   useEffect(() => {
-    void fetchResults(searchQuery, selectedType, verifiedOnly, sortBy, page, geoLat, geoLng, radiusKm);
-  }, [fetchResults, searchQuery, selectedType, verifiedOnly, sortBy, page, geoLat, geoLng, radiusKm]);
+    void fetchResults(
+      searchQuery,
+      selectedType,
+      verifiedOnly,
+      sortBy,
+      page,
+      geoLat,
+      geoLng,
+      radiusKm,
+    );
+  }, [
+    fetchResults,
+    searchQuery,
+    selectedType,
+    verifiedOnly,
+    sortBy,
+    page,
+    geoLat,
+    geoLng,
+    radiusKm,
+  ]);
 
   return (
     <div className="min-h-screen bg-background">

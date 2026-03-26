@@ -155,9 +155,7 @@ export default function PhotoGallery({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedIndex(
-                  (prev) => (prev + 1) % allPhotos.length,
-                );
+                setSelectedIndex((prev) => (prev + 1) % allPhotos.length);
               }}
               className="absolute right-4 text-white/80 hover:text-white z-10"
               aria-label="Next photo"

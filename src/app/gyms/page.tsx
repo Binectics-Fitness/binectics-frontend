@@ -46,7 +46,14 @@ export default function GymsPage() {
   ];
 
   const fetchGyms = useCallback(
-    async (query: string, country: string, currentPage: number, lat: number | null, lng: number | null, radius: number) => {
+    async (
+      query: string,
+      country: string,
+      currentPage: number,
+      lat: number | null,
+      lng: number | null,
+      radius: number,
+    ) => {
       setIsLoading(true);
       setError(null);
       try {
@@ -95,7 +102,14 @@ export default function GymsPage() {
   };
 
   useEffect(() => {
-    void fetchGyms(searchQuery, selectedCountry, page, geoLat, geoLng, radiusKm);
+    void fetchGyms(
+      searchQuery,
+      selectedCountry,
+      page,
+      geoLat,
+      geoLng,
+      radiusKm,
+    );
   }, [fetchGyms, searchQuery, selectedCountry, page, geoLat, geoLng, radiusKm]);
 
   return (

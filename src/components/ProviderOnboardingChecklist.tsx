@@ -339,9 +339,7 @@ export default function ProviderOnboardingChecklist({
             steps.slice(0, index).every((s) => s.isComplete || !s.isRequired);
           const isLocked =
             !step.isComplete &&
-            steps
-              .slice(0, index)
-              .some((s) => s.isRequired && !s.isComplete);
+            steps.slice(0, index).some((s) => s.isRequired && !s.isComplete);
 
           return (
             <div key={step.id} className="flex gap-4">

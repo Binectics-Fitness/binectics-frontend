@@ -393,7 +393,7 @@ export default function ListingDetailPage() {
               </h2>
               <div className="flex flex-wrap gap-2">
                 {(isGymListing
-                  ? listing.facilities ?? []
+                  ? (listing.facilities ?? [])
                   : listing.specialties
                 ).map((s) => (
                   <span
@@ -417,7 +417,7 @@ export default function ListingDetailPage() {
               </h2>
               <div className="flex flex-wrap gap-2">
                 {(isGymListing
-                  ? listing.amenities ?? []
+                  ? (listing.amenities ?? [])
                   : listing.certifications
                 ).map((c) => (
                   <span
