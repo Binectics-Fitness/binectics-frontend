@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
+import PhotoGallery from "@/components/PhotoGallery";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import type {
@@ -153,18 +154,13 @@ export default function TrainerProfilePage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Profile Image & Quick Stats */}
             <div className="space-y-6">
-              <div className="flex h-72 items-center justify-center bg-accent-yellow-100 sm:h-96">
-                {listing?.profile_image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={listing.profile_image}
-                    alt={displayName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-7xl sm:text-9xl">💪</span>
-                )}
-              </div>
+              <PhotoGallery
+                photos={listing?.photos ?? []}
+                profileImage={listing?.profile_image}
+                alt={displayName}
+                fallbackEmoji="💪"
+                accentBg="bg-accent-yellow-100"
+              />
 
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-3 sm:gap-4">

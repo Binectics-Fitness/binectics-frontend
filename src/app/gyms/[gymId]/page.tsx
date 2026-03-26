@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
+import PhotoGallery from "@/components/PhotoGallery";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import {
@@ -161,19 +162,13 @@ export default function GymProfilePage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Image Gallery */}
             <div className="space-y-4">
-              <div className="flex h-72 items-center justify-center bg-gray-200 sm:h-96">
-                <span className="text-6xl sm:text-8xl">🏋️</span>
-              </div>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="flex h-20 items-center justify-center bg-gray-200 sm:h-24"
-                  >
-                    <span className="text-3xl sm:text-4xl">📸</span>
-                  </div>
-                ))}
-              </div>
+              <PhotoGallery
+                photos={listing?.photos ?? []}
+                profileImage={listing?.profile_image}
+                alt={displayName}
+                fallbackEmoji="🏋️"
+                accentBg="bg-gray-200"
+              />
             </div>
 
             {/* Gym Info */}

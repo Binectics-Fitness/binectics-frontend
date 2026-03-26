@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
+import PhotoGallery from "@/components/PhotoGallery";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import type {
@@ -150,18 +151,14 @@ export default function DietitianProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {/* Profile Image & Quick Stats */}
             <div className="space-y-4 sm:space-y-6">
-              {/* Profile Image */}
-              <div className="h-48 sm:h-64 md:h-96 bg-accent-purple-100 flex items-center justify-center rounded-lg overflow-hidden">
-                {listing?.profile_image ? (
-                  <img
-                    src={listing.profile_image}
-                    alt={displayName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-6xl sm:text-7xl md:text-9xl">🥗</span>
-                )}
-              </div>
+              {/* Profile Image Gallery */}
+              <PhotoGallery
+                photos={listing?.photos ?? []}
+                profileImage={listing?.profile_image}
+                alt={displayName}
+                fallbackEmoji="🥗"
+                accentBg="bg-accent-purple-100"
+              />
 
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-2 sm:gap-4">

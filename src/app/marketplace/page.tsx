@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import LocationFilter from "@/components/LocationFilter";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type {
   MarketplaceListing,
@@ -244,6 +245,9 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState<"rating" | "newest" | "nearest">(
     "newest",
   );
+  const [geoLat, setGeoLat] = useState<number | null>(null);
+  const [geoLng, setGeoLng] = useState<number | null>(null);
+  const [radiusKm, setRadiusKm] = useState(25);
 
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
@@ -258,6 +262,11 @@ export default function MarketplacePage() {
     if (city.trim()) params.city = city.trim();
     if (selectedSpecialty) params.specialties = selectedSpecialty;
     if (minRating) params.min_rating = minRating;
+    if (geoLat !== null && geoLng !== null) {
+      params.lat = geoLat;
+      params.lng = geoLng;
+      params.radius_km = radiusKm;
+    }
 
     const res = await marketplaceService.searchListings(params);
     if (res.success && res.data) {
@@ -274,6 +283,9 @@ export default function MarketplacePage() {
     selectedSpecialty,
     minRating,
     sortBy,
+    geoLat,
+    geoLng,
+    radiusKm,
   ]);
 
   useEffect(() => {
@@ -292,6 +304,9 @@ export default function MarketplacePage() {
     setSelectedSpecialty("");
     setMinRating("");
     setSortBy("newest");
+    setGeoLat(null);
+    setGeoLng(null);
+    setRadiusKm(25);
     setPage(1);
   };
 
@@ -418,6 +433,25 @@ export default function MarketplacePage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Location Filter */}
+              <div className="mb-6">
+                <LocationFilter
+                  lat={geoLat}
+                  lng={geoLng}
+                  radiusKm={radiusKm}
+                  onLocationChange={(lat, lng) => {
+                    setGeoLat(lat);
+                    setGeoLng(lng);
+                    if (lat !== null && lng !== null) setSortBy("nearest");
+                    setPage(1);
+                  }}
+                  onRadiusChange={(km) => {
+                    setRadiusKm(km);
+                    setPage(1);
+                  }}
+                />
               </div>
 
               {/* Min Rating */}

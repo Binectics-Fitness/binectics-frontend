@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import LocationFilter from "@/components/LocationFilter";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
 
@@ -23,6 +24,9 @@ export default function GymsPage() {
   const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("all");
+  const [geoLat, setGeoLat] = useState<number | null>(null);
+  const [geoLng, setGeoLng] = useState<number | null>(null);
+  const [radiusKm, setRadiusKm] = useState(25);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -42,7 +46,7 @@ export default function GymsPage() {
   ];
 
   const fetchGyms = useCallback(
-    async (query: string, country: string, currentPage: number) => {
+    async (query: string, country: string, currentPage: number, lat: number | null, lng: number | null, radius: number) => {
       setIsLoading(true);
       setError(null);
       try {
@@ -53,6 +57,12 @@ export default function GymsPage() {
         };
         if (query) params.q = query;
         if (country !== "all") params.country_code = country;
+        if (lat !== null && lng !== null) {
+          params.lat = lat;
+          params.lng = lng;
+          params.radius_km = radius;
+          params.sort = "nearest";
+        }
         const res = await marketplaceService.searchListings(
           params as Parameters<typeof marketplaceService.searchListings>[0],
         );
@@ -85,8 +95,8 @@ export default function GymsPage() {
   };
 
   useEffect(() => {
-    void fetchGyms(searchQuery, selectedCountry, page);
-  }, [fetchGyms, searchQuery, selectedCountry, page]);
+    void fetchGyms(searchQuery, selectedCountry, page, geoLat, geoLng, radiusKm);
+  }, [fetchGyms, searchQuery, selectedCountry, page, geoLat, geoLng, radiusKm]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,6 +161,24 @@ export default function GymsPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Location Filter */}
+            <div className="flex-1">
+              <LocationFilter
+                lat={geoLat}
+                lng={geoLng}
+                radiusKm={radiusKm}
+                onLocationChange={(lat, lng) => {
+                  setGeoLat(lat);
+                  setGeoLng(lng);
+                  setPage(1);
+                }}
+                onRadiusChange={(km) => {
+                  setRadiusKm(km);
+                  setPage(1);
+                }}
+              />
             </div>
           </div>
 

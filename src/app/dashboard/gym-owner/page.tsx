@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
+import ProviderOnboardingChecklist from "@/components/ProviderOnboardingChecklist";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -381,6 +382,9 @@ export default function GymOwnerDashboard() {
             </Link>
           </div>
         </div>
+
+        {/* Onboarding Checklist */}
+        <ProviderOnboardingChecklist className="mb-8" />
 
         {/* Stats Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">

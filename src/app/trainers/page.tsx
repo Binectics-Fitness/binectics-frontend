@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import LocationFilter from "@/components/LocationFilter";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
 
@@ -19,6 +20,9 @@ export default function TrainersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [geoLat, setGeoLat] = useState<number | null>(null);
+  const [geoLng, setGeoLng] = useState<number | null>(null);
+  const [radiusKm, setRadiusKm] = useState(25);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -46,6 +50,9 @@ export default function TrainersPage() {
       specialty: string,
       verified: boolean,
       currentPage: number,
+      lat: number | null,
+      lng: number | null,
+      radius: number,
     ) => {
       setIsLoading(true);
       setError(null);
@@ -57,6 +64,12 @@ export default function TrainersPage() {
         };
         if (query) params.q = query;
         if (specialty !== "all") params.specialties = specialty;
+        if (lat !== null && lng !== null) {
+          params.lat = lat;
+          params.lng = lng;
+          params.radius_km = radius;
+          params.sort = "nearest";
+        }
         const res = await marketplaceService.searchListings(
           params as Parameters<typeof marketplaceService.searchListings>[0],
         );
@@ -92,8 +105,8 @@ export default function TrainersPage() {
   };
 
   useEffect(() => {
-    void fetchTrainers(searchQuery, selectedSpecialty, verifiedOnly, page);
-  }, [fetchTrainers, searchQuery, selectedSpecialty, verifiedOnly, page]);
+    void fetchTrainers(searchQuery, selectedSpecialty, verifiedOnly, page, geoLat, geoLng, radiusKm);
+  }, [fetchTrainers, searchQuery, selectedSpecialty, verifiedOnly, page, geoLat, geoLng, radiusKm]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -139,7 +152,7 @@ export default function TrainersPage() {
       {/* Filters */}
       <section className="bg-background border-b border-neutral-300 py-6">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             {/* Specialty Filter */}
             <div className="flex-1">
               <label className="block text-sm font-semibold text-foreground mb-2">
@@ -162,6 +175,24 @@ export default function TrainersPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Location Filter */}
+            <div className="flex-1">
+              <LocationFilter
+                lat={geoLat}
+                lng={geoLng}
+                radiusKm={radiusKm}
+                onLocationChange={(lat, lng) => {
+                  setGeoLat(lat);
+                  setGeoLng(lng);
+                  setPage(1);
+                }}
+                onRadiusChange={(km) => {
+                  setRadiusKm(km);
+                  setPage(1);
+                }}
+              />
             </div>
 
             {/* Verified Only */}

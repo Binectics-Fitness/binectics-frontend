@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import PhotoGallery from "@/components/PhotoGallery";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
@@ -361,6 +362,18 @@ export default function ListingDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Photo Gallery */}
+          {(listing.photos.length > 0 || listing.profile_image) && (
+            <div className="mb-6">
+              <PhotoGallery
+                photos={listing.photos}
+                profileImage={listing.profile_image}
+                alt={listing.headline}
+                fallbackEmoji={isGymListing ? "🏋️" : "📸"}
+              />
+            </div>
+          )}
 
           {/* Bio */}
           <div className="mb-6">

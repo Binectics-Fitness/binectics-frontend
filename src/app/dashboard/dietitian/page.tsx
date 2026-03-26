@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
+import ProviderOnboardingChecklist from "@/components/ProviderOnboardingChecklist";
 import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
@@ -399,6 +400,9 @@ export default function DietitianDashboard() {
             </Link>
           </div>
         </div>
+
+        {/* Onboarding Checklist */}
+        <ProviderOnboardingChecklist className="mb-8" />
 
         {/* Stats Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">

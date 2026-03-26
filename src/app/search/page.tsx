@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import LocationFilter from "@/components/LocationFilter";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type {
   MarketplaceListing,
@@ -68,6 +69,9 @@ export default function SearchPage() {
   const [selectedType, setSelectedType] = useState<TypeFilter>("all");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sortBy, setSortBy] = useState("relevance");
+  const [geoLat, setGeoLat] = useState<number | null>(null);
+  const [geoLng, setGeoLng] = useState<number | null>(null);
+  const [radiusKm, setRadiusKm] = useState(25);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -83,6 +87,9 @@ export default function SearchPage() {
       verified: boolean,
       sort: string,
       currentPage: number,
+      lat: number | null,
+      lng: number | null,
+      radius: number,
     ) => {
       setIsLoading(true);
       setError(null);
@@ -94,6 +101,12 @@ export default function SearchPage() {
         if (query) params.q = query;
         if (type !== "all") params.account_type = type;
         if (sort === "rating") params.sort = "rating_desc";
+        if (lat !== null && lng !== null) {
+          params.lat = lat;
+          params.lng = lng;
+          params.radius_km = radius;
+          if (sort !== "rating") params.sort = "nearest";
+        }
         const res = await marketplaceService.searchListings(
           params as Parameters<typeof marketplaceService.searchListings>[0],
         );
@@ -129,8 +142,8 @@ export default function SearchPage() {
   };
 
   useEffect(() => {
-    void fetchResults(searchQuery, selectedType, verifiedOnly, sortBy, page);
-  }, [fetchResults, searchQuery, selectedType, verifiedOnly, sortBy, page]);
+    void fetchResults(searchQuery, selectedType, verifiedOnly, sortBy, page, geoLat, geoLng, radiusKm);
+  }, [fetchResults, searchQuery, selectedType, verifiedOnly, sortBy, page, geoLat, geoLng, radiusKm]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -222,6 +235,24 @@ export default function SearchPage() {
                   <span className="ml-2 text-foreground">Verified only</span>
                 </label>
               </div>
+              {/* Location Filter */}
+              <div className="mb-6">
+                <LocationFilter
+                  lat={geoLat}
+                  lng={geoLng}
+                  radiusKm={radiusKm}
+                  onLocationChange={(lat, lng) => {
+                    setGeoLat(lat);
+                    setGeoLng(lng);
+                    setPage(1);
+                  }}
+                  onRadiusChange={(km) => {
+                    setRadiusKm(km);
+                    setPage(1);
+                  }}
+                />
+              </div>
+
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">
                   Browse by Type
