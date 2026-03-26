@@ -223,7 +223,6 @@ export default function GymOwnerRevenuePage() {
                 </tbody>
               </table>
             </div>
-            </div>
           </div>
         </div>
       </main>
