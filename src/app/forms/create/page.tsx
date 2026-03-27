@@ -10,8 +10,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import DashboardLoading from "@/components/DashboardLoading";
-import OrganizationSelector from "@/components/OrganizationSelector";
-import { Building2, User } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 export default function CreateFormPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -77,28 +76,14 @@ export default function CreateFormPage() {
             Start by giving your form a title and description
           </p>
 
-          {/* Organization Selector */}
-          <div className="mb-4">
-            <label className="block text-sm font-semibold text-foreground mb-2">
-              Form Scope
-            </label>
-            <OrganizationSelector />
-          </div>
-
           {/* Context Banner */}
-          {currentOrg ? (
+          {currentOrg && (
             <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2.5 rounded-lg text-sm">
               <Building2 className="h-4 w-4 flex-shrink-0" />
               <span>
-                <strong>Organization Form:</strong> This form will be created for{" "}
-                <strong>{currentOrg.name}</strong> and visible to all members.
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 text-neutral-600 px-4 py-2.5 rounded-lg text-sm">
-              <User className="h-4 w-4 flex-shrink-0" />
-              <span>
-                <strong>Personal Form:</strong> This form will only be visible to you.
+                <strong>Organization Form:</strong> This form will be created
+                for <strong>{currentOrg.name}</strong> and visible to all
+                members.
               </span>
             </div>
           )}

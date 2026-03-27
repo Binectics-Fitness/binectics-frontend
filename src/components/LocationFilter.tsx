@@ -35,11 +35,7 @@ export default function LocationFilter({
 
   // Sync geolocation result to parent when it arrives
   useEffect(() => {
-    if (
-      geo.lat !== null &&
-      geo.lng !== null &&
-      !geo.loading
-    ) {
+    if (geo.lat !== null && geo.lng !== null && !geo.loading) {
       onLocationChangeRef.current(geo.lat, geo.lng);
     }
   }, [geo.lat, geo.lng, geo.loading]);
@@ -162,7 +158,8 @@ export default function LocationFilter({
             )}
           </button>
           <p className="mt-1.5 text-xs text-foreground/40">
-            Your location is used only to find nearby providers and is not stored.
+            Your location is used only to find nearby providers and is not
+            stored.
           </p>
         </>
       )}

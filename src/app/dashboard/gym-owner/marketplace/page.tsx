@@ -9,10 +9,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import TagInput from "@/components/TagInput";
 import { marketplaceService } from "@/lib/api/marketplace";
-import {
-  utilityService,
-  type PlatformConfig,
-} from "@/lib/api/utility";
+import { utilityService, type PlatformConfig } from "@/lib/api/utility";
 import type {
   MarketplaceListing,
   MarketplaceListingDocument,
@@ -29,6 +26,8 @@ const ALLOWED_IMAGE_UPLOAD_TYPES = new Set([
 ]);
 const ALLOWED_DOCUMENT_UPLOAD_TYPES = new Set([
   "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "image/png",
   "image/jpeg",
   "image/webp",
@@ -195,9 +194,8 @@ export default function OrgMarketplaceListingPage() {
     });
   }, []);
 
-  const activeCurrencies = platformConfig?.currencies.filter(
-    (c) => c.is_active,
-  ) ?? [];
+  const activeCurrencies =
+    platformConfig?.currencies.filter((c) => c.is_active) ?? [];
 
   const splitComma = (s: string) =>
     s
@@ -572,7 +570,7 @@ export default function OrgMarketplaceListingPage() {
 
     if (!ALLOWED_DOCUMENT_UPLOAD_TYPES.has(file.type)) {
       setImageError(
-        "Unsupported file format. Allowed: PDF, PNG, JPEG, WEBP, GIF.",
+        "Unsupported file format. Allowed: PDF, Word (.doc/.docx), PNG, JPEG, WEBP, GIF.",
       );
       e.target.value = "";
       return;
@@ -993,7 +991,7 @@ export default function OrgMarketplaceListingPage() {
                   {isUploadingDocument ? "Uploading..." : "Upload Document"}
                   <input
                     type="file"
-                    accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
+                    accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp,image/gif"
                     className="hidden"
                     onChange={handleDocumentUpload}
                     disabled={isUploadingDocument}
@@ -1286,7 +1284,12 @@ function FormFields({
   acceptingClients: boolean;
   setAcceptingClients: (v: boolean) => void;
   platformConfig: PlatformConfig | null;
-  activeCurrencies: { code: string; name: string; symbol: string; is_active: boolean }[];
+  activeCurrencies: {
+    code: string;
+    name: string;
+    symbol: string;
+    is_active: boolean;
+  }[];
 }) {
   return (
     <>
@@ -1372,6 +1375,10 @@ function FormFields({
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
             placeholder="London"
           />
+          <p className="text-xs text-foreground-secondary mt-1">
+            Enter your primary city. If your gym operates in multiple cities,
+            you can create separate listings for each location.
+          </p>
         </div>
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">

@@ -93,21 +93,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const now = Date.now();
     const timeUntilExpiry = expiryTime - now;
 
-    // Show warning 2 minutes before expiry
-    const warningTime = timeUntilExpiry - 2 * 60 * 1000;
+    // Auto-refresh 5 minutes before expiry
+    const autoRefreshTime = timeUntilExpiry - 5 * 60 * 1000;
 
-    let warningTimeout: NodeJS.Timeout;
+    let refreshTimeout: NodeJS.Timeout;
     let expiryTimeout: NodeJS.Timeout;
 
-    if (warningTime > 0) {
-      warningTimeout = setTimeout(() => {
+    const attemptAutoRefresh = async () => {
+      const response = await authService.refreshToken();
+      if (response.success && response.data) {
+        apiClient.storeTokens(
+          response.data.access_token,
+          response.data.refresh_token,
+        );
+        // Force re-run of this effect by updating user (triggers new timeout)
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) setUser(currentUser);
+      } else {
+        // Auto-refresh failed — show the session modal as fallback
         setShowSessionModal(true);
         setSessionEnded(false);
-      }, warningTime);
+      }
+    };
+
+    if (autoRefreshTime > 0) {
+      refreshTimeout = setTimeout(attemptAutoRefresh, autoRefreshTime);
     } else if (timeUntilExpiry > 0) {
-      // If less than 2 minutes remaining, show warning immediately
-      setShowSessionModal(true);
-      setSessionEnded(false);
+      // Less than 5 minutes remaining — refresh immediately
+      attemptAutoRefresh();
     }
 
     if (timeUntilExpiry > 0) {
@@ -116,13 +129,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSessionEnded(true);
       }, timeUntilExpiry);
     } else {
-      // Token already expired
-      setShowSessionModal(true);
-      setSessionEnded(true);
+      // Token already expired — try refreshing before giving up
+      attemptAutoRefresh();
     }
 
     return () => {
-      if (warningTimeout) clearTimeout(warningTimeout);
+      if (refreshTimeout) clearTimeout(refreshTimeout);
       if (expiryTimeout) clearTimeout(expiryTimeout);
     };
   }, [user]);
@@ -140,6 +152,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         response.data.access_token,
         response.data.refresh_token,
       );
+      // Re-trigger session monitoring
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) setUser(currentUser);
     } else {
       // Token refresh failed - force logout
       await logout();
