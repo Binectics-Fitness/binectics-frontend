@@ -25,6 +25,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/gym-owner/staff",
   useSearchParams: () => new URLSearchParams(),
 }));
+vi.mock("@/components/GymOwnerSidebar", () => ({ default: () => null }));
 
 describe("Staff List Page", () => {
   beforeEach(() => {
@@ -35,23 +36,27 @@ describe("Staff List Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
           email: "john@example.com",
         },
         team_role_id: { _id: "role-1", name: "Trainer" },
+        created_at: new Date().toISOString(),
+        joined_at: new Date().toISOString(),
       },
       {
         _id: "member-2",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "Jane",
           last_name: "Smith",
           email: "jane@example.com",
         },
         team_role_id: { _id: "role-1", name: "Trainer" },
+        created_at: new Date().toISOString(),
+        joined_at: new Date().toISOString(),
       },
     ];
 
@@ -86,7 +91,7 @@ describe("Staff List Page", () => {
       {
         _id: "inv-1",
         email: "invited@example.com",
-        status: "PENDING",
+        status: "pending",
         sent_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       },
@@ -109,23 +114,27 @@ describe("Staff List Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
           email: "john@example.com",
         },
         team_role_id: { _id: "role-1", name: "Trainer" },
+        created_at: new Date().toISOString(),
+        joined_at: new Date().toISOString(),
       },
       {
         _id: "member-2",
-        status: "INACTIVE",
+        status: "inactive",
         user_id: {
           first_name: "Jane",
           last_name: "Smith",
           email: "jane@example.com",
         },
         team_role_id: { _id: "role-1", name: "Trainer" },
+        created_at: new Date().toISOString(),
+        joined_at: new Date().toISOString(),
       },
     ];
 
@@ -148,9 +157,9 @@ describe("Staff List Page", () => {
       expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     });
 
-    // Click inactive filter
-    const inactiveButton = screen.getByRole("button", { name: /inactive/i });
-    await userEvent.click(inactiveButton);
+    // Select inactive filter
+    const filterSelect = screen.getByDisplayValue("All statuses");
+    await userEvent.selectOptions(filterSelect, "inactive");
 
     await waitFor(() => {
       expect(screen.queryByText("John Doe")).not.toBeInTheDocument();
@@ -162,23 +171,27 @@ describe("Staff List Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
           email: "john@example.com",
         },
         team_role_id: { _id: "role-1", name: "Trainer" },
+        created_at: new Date().toISOString(),
+        joined_at: new Date().toISOString(),
       },
       {
         _id: "member-2",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "Jane",
           last_name: "Smith",
           email: "jane@example.com",
         },
         team_role_id: { _id: "role-1", name: "Trainer" },
+        created_at: new Date().toISOString(),
+        joined_at: new Date().toISOString(),
       },
     ];
 
@@ -234,13 +247,15 @@ describe("Staff List Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
           email: "john@example.com",
         },
         team_role_id: { _id: "role-1", name: "Trainer" },
+        created_at: new Date().toISOString(),
+        joined_at: new Date().toISOString(),
       },
     ];
 

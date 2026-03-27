@@ -36,6 +36,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/gym-owner/staff/member-1",
   useSearchParams: () => new URLSearchParams(),
 }));
+vi.mock("@/components/GymOwnerSidebar", () => ({ default: () => null }));
 
 describe("Trainer Detail Page", () => {
   beforeEach(() => {
@@ -46,7 +47,7 @@ describe("Trainer Detail Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -81,7 +82,7 @@ describe("Trainer Detail Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -106,7 +107,8 @@ describe("Trainer Detail Page", () => {
     render(<TrainerDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/active/i)).toBeInTheDocument();
+      const activeElements = screen.getAllByText(/active/i);
+      expect(activeElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -114,7 +116,7 @@ describe("Trainer Detail Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -148,7 +150,7 @@ describe("Trainer Detail Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -172,7 +174,7 @@ describe("Trainer Detail Page", () => {
 
     const updatedMember = {
       ...mockMembers[0],
-      status: "INACTIVE",
+      status: "inactive",
     };
 
     vi.mocked(teamsService.teamsService.updateMember).mockResolvedValue({
@@ -184,17 +186,18 @@ describe("Trainer Detail Page", () => {
     render(<TrainerDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/active/i)).toBeInTheDocument();
+      const activeElements = screen.getAllByText(/active/i);
+      expect(activeElements.length).toBeGreaterThanOrEqual(1);
     });
 
-    const toggleButton = screen.getByRole("button", { name: /pause/i });
+    const toggleButton = screen.getByRole("button", { name: /pause access/i });
     await userEvent.click(toggleButton);
 
     await waitFor(() => {
       expect(teamsService.teamsService.updateMember).toHaveBeenCalledWith(
         "org-123",
         "member-1",
-        { status: "INACTIVE" }
+        { status: "inactive" }
       );
     });
   });
@@ -203,7 +206,7 @@ describe("Trainer Detail Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -236,7 +239,7 @@ describe("Trainer Detail Page", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    const removeButton = screen.getByRole("button", { name: /remove member/i });
+    const removeButton = screen.getByRole("button", { name: /remove from organization/i });
     await userEvent.click(removeButton);
 
     await waitFor(() => {
@@ -267,7 +270,7 @@ describe("Trainer Detail Page", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -300,7 +303,7 @@ describe("Trainer Detail Page", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    const toggleButton = screen.getByRole("button", { name: /pause/i });
+    const toggleButton = screen.getByRole("button", { name: /pause access/i });
     await userEvent.click(toggleButton);
 
     await waitFor(() => {

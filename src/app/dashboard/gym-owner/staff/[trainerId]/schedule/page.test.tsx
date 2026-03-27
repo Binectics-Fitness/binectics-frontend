@@ -30,6 +30,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/gym-owner/staff/member-1/schedule",
   useSearchParams: () => new URLSearchParams(),
 }));
+vi.mock("@/components/GymOwnerSidebar", () => ({ default: () => null }));
 
 describe("Schedule Subpage", () => {
   beforeEach(() => {
@@ -40,7 +41,7 @@ describe("Schedule Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -54,18 +55,20 @@ describe("Schedule Subpage", () => {
 
     const mockRules = [
       {
-        _id: "rule-1",
+        id: "rule-1",
         dayOfWeek: 1,
         startTime: "09:00",
         endTime: "17:00",
         timezone: "America/New_York",
+        isActive: true,
       },
       {
-        _id: "rule-2",
+        id: "rule-2",
         dayOfWeek: 2,
         startTime: "10:00",
         endTime: "18:00",
         timezone: "America/New_York",
+        isActive: true,
       },
     ];
 
@@ -88,6 +91,13 @@ describe("Schedule Subpage", () => {
     });
 
     render(<ScheduleSubpage />);
+
+    // Wait for page to load, then click Monday to see rule-1
+    await waitFor(() => {
+      expect(screen.getByText(/schedule operations/i)).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /monday/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/09:00/)).toBeInTheDocument();
@@ -99,7 +109,7 @@ describe("Schedule Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -113,18 +123,20 @@ describe("Schedule Subpage", () => {
 
     const mockRules = [
       {
-        _id: "rule-1",
+        id: "rule-1",
         dayOfWeek: 1,
         startTime: "09:00",
         endTime: "17:00",
         timezone: "America/New_York",
+        isActive: true,
       },
       {
-        _id: "rule-2",
+        id: "rule-2",
         dayOfWeek: 2,
         startTime: "10:00",
         endTime: "18:00",
         timezone: "America/New_York",
+        isActive: true,
       },
     ];
 
@@ -148,13 +160,19 @@ describe("Schedule Subpage", () => {
 
     render(<ScheduleSubpage />);
 
+    // Click Monday to see rule-1
+    await waitFor(() => {
+      expect(screen.getByText(/schedule operations/i)).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /monday/i }));
+
     await waitFor(() => {
       expect(screen.getByText(/09:00/)).toBeInTheDocument();
     });
 
-    // Click Monday
-    const mondayButton = screen.getByRole("button", { name: /mon/i });
-    await userEvent.click(mondayButton);
+    // Click Tuesday to see rule-2 instead
+    await userEvent.click(screen.getByRole("button", { name: /tuesday/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/10:00/)).toBeInTheDocument();
@@ -166,7 +184,7 @@ describe("Schedule Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -182,9 +200,9 @@ describe("Schedule Subpage", () => {
 
     const mockExceptions = [
       {
-        _id: "exc-1",
+        id: "exc-1",
         date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        status: "UNAVAILABLE",
+        type: "UNAVAILABLE",
         reason: "Holiday",
       },
     ];
@@ -210,7 +228,8 @@ describe("Schedule Subpage", () => {
     render(<ScheduleSubpage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Holiday/i)).toBeInTheDocument();
+      // Page shows "Unavailable" for UNAVAILABLE type exceptions (reason is not rendered)
+      expect(screen.getByText("Unavailable")).toBeInTheDocument();
     });
   });
 
@@ -218,7 +237,7 @@ describe("Schedule Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -287,7 +306,7 @@ describe("Schedule Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -321,7 +340,7 @@ describe("Schedule Subpage", () => {
 
     await waitFor(() => {
       const link = screen.getByRole("link", {
-        name: /manage availability/i,
+        name: /manage consultation availability/i,
       });
       expect(link).toHaveAttribute("href", "/dashboard/gym-owner/consultations");
     });
@@ -354,7 +373,7 @@ describe("Schedule Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",

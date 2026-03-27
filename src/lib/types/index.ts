@@ -481,6 +481,7 @@ export interface MembershipSubscription {
         last_name: string;
         email: string;
       };
+  enrolled_by?: string;
   status: MembershipSubscriptionStatus;
   start_date: string;
   end_date?: string;

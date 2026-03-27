@@ -1,4 +1,10 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description: "Learn about Binectics — the global fitness ecosystem connecting gyms, trainers, and dietitians in 50+ countries.",
+};
 
 export default function AboutPage() {
   const stats = [

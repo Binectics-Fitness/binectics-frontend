@@ -10,6 +10,7 @@ import {
   MembershipSubscription,
   MembershipSubscriptionStatus,
   MembershipPlanType,
+  MarketplaceMembershipPlan,
 } from "@/lib/types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -99,6 +100,18 @@ export default function GymOwnerMembersPage() {
   >("all");
   const [planFilter, setPlanFilter] = useState("all");
 
+  // ─── Enroll Modal State ─────────────────────────────────────────
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [enrollEmail, setEnrollEmail] = useState("");
+  const [enrollPlanId, setEnrollPlanId] = useState("");
+  const [enrollStatus, setEnrollStatus] = useState<"active" | "pending_payment">("active");
+  const [enrollAmountPaid, setEnrollAmountPaid] = useState("");
+  const [enrollPaymentRef, setEnrollPaymentRef] = useState("");
+  const [enrollSubmitting, setEnrollSubmitting] = useState(false);
+  const [enrollError, setEnrollError] = useState("");
+  const [enrollSuccess, setEnrollSuccess] = useState("");
+  const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
+
   const organizationId = currentOrg?._id;
 
   const loadMembers = useCallback(async () => {
@@ -119,11 +132,23 @@ export default function GymOwnerMembersPage() {
     setIsLoading(false);
   }, [organizationId]);
 
+  const loadPlans = useCallback(async () => {
+    if (!organizationId) return;
+    const response =
+      await marketplaceService.getOrgMembershipPlans(organizationId);
+    if (response.success && response.data) {
+      setPlans(response.data.filter((p) => p.is_active));
+    }
+  }, [organizationId]);
+
   useEffect(() => {
     if (authLoading || orgLoading || !user) return;
-    const id = window.setTimeout(() => void loadMembers(), 0);
+    const id = window.setTimeout(() => {
+      void loadMembers();
+      void loadPlans();
+    }, 0);
     return () => window.clearTimeout(id);
-  }, [authLoading, orgLoading, user, loadMembers]);
+  }, [authLoading, orgLoading, user, loadMembers, loadPlans]);
 
   const uniquePlanNames = useMemo(() => {
     const names = new Set(subscriptions.map(getPlanName));
@@ -143,6 +168,40 @@ export default function GymOwnerMembersPage() {
       return true;
     });
   }, [subscriptions, statusFilter, planFilter, searchQuery]);
+
+  const handleEnrollMember = async () => {
+    if (!organizationId || !enrollEmail.trim() || !enrollPlanId) return;
+    setEnrollError("");
+    setEnrollSuccess("");
+    setEnrollSubmitting(true);
+    const response = await marketplaceService.enrollMember(organizationId, {
+      email: enrollEmail.trim(),
+      plan_id: enrollPlanId,
+      status: enrollStatus,
+      ...(enrollAmountPaid !== "" && {
+        amount_paid: Number(enrollAmountPaid),
+      }),
+      ...(enrollPaymentRef.trim() && {
+        payment_reference: enrollPaymentRef.trim(),
+      }),
+    });
+    if (response.success) {
+      setEnrollSuccess("Member enrolled successfully!");
+      setEnrollEmail("");
+      setEnrollPlanId("");
+      setEnrollStatus("active");
+      setEnrollAmountPaid("");
+      setEnrollPaymentRef("");
+      void loadMembers();
+      setTimeout(() => {
+        setShowEnrollModal(false);
+        setEnrollSuccess("");
+      }, 1500);
+    } else {
+      setEnrollError(response.message ?? "Failed to enroll member");
+    }
+    setEnrollSubmitting(false);
+  };
 
   const stats = useMemo(
     () => ({
@@ -168,11 +227,23 @@ export default function GymOwnerMembersPage() {
       <GymOwnerSidebar />
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-black text-foreground">Members</h1>
-            <p className="text-foreground/60 mt-1">
-              Manage your gym members and subscriptions
-            </p>
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-black text-foreground">Members</h1>
+              <p className="text-foreground/60 mt-1">
+                Manage your gym members and subscriptions
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setEnrollError("");
+                setEnrollSuccess("");
+                setShowEnrollModal(true);
+              }}
+              className="h-12 px-6 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 active:bg-primary-700"
+            >
+              + Add Member
+            </button>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-8 md:grid-cols-4">
@@ -281,7 +352,7 @@ export default function GymOwnerMembersPage() {
                 </h3>
                 <p className="text-sm text-foreground/60">
                   {subscriptions.length === 0
-                    ? "Members will appear here once they subscribe to one of your plans."
+                    ? "Members will appear here once they subscribe to a plan or you add them manually."
                     : "Try adjusting your search or filters."}
                 </p>
               </div>
@@ -374,6 +445,166 @@ export default function GymOwnerMembersPage() {
             )}
           </div>
         </div>
+
+        {/* ─── Enroll Member Modal ─────────────────────────────────── */}
+        {showEnrollModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-foreground">
+                  Add Member
+                </h2>
+                <button
+                  onClick={() => setShowEnrollModal(false)}
+                  className="text-foreground/40 hover:text-foreground text-2xl leading-none"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+
+              {enrollError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                  {enrollError}
+                </div>
+              )}
+              {enrollSuccess && (
+                <div className="mb-4 p-3 bg-primary-500/10 border border-primary-500/30 text-primary-700 text-sm rounded-lg">
+                  {enrollSuccess}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Member Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={enrollEmail}
+                    onChange={(e) => setEnrollEmail(e.target.value)}
+                    placeholder="member@example.com"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                  />
+                  <p className="text-xs text-foreground/50 mt-1">
+                    The member must have a Binectics account
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Membership Plan <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={enrollPlanId}
+                    onChange={(e) => setEnrollPlanId(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm bg-white"
+                  >
+                    <option value="">Select a plan…</option>
+                    {plans.map((plan) => (
+                      <option key={plan._id} value={plan._id}>
+                        {plan.name} — {plan.currency} {plan.price} /{" "}
+                        {plan.duration_days}d
+                      </option>
+                    ))}
+                  </select>
+                  {plans.length === 0 && (
+                    <p className="text-xs text-foreground/50 mt-1">
+                      No active plans found. Create a plan first.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Payment Status
+                  </label>
+                  <div className="flex gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="enrollStatus"
+                        value="active"
+                        checked={enrollStatus === "active"}
+                        onChange={() => setEnrollStatus("active")}
+                        className="accent-primary-500"
+                      />
+                      <span className="text-sm text-foreground">
+                        Payment collected
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="enrollStatus"
+                        value="pending_payment"
+                        checked={enrollStatus === "pending_payment"}
+                        onChange={() => setEnrollStatus("pending_payment")}
+                        className="accent-accent-yellow-500"
+                      />
+                      <span className="text-sm text-foreground">
+                        Pending payment
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Amount Paid{" "}
+                    <span className="text-foreground/50 font-normal">
+                      (optional — defaults to plan price, use 0 for free/comp)
+                    </span>
+                  </label>
+                  <input
+                    type="number"
+                    value={enrollAmountPaid}
+                    onChange={(e) => setEnrollAmountPaid(e.target.value)}
+                    placeholder="Leave blank for plan price"
+                    min={0}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Payment Reference{" "}
+                    <span className="text-foreground/50 font-normal">
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={enrollPaymentRef}
+                    onChange={(e) => setEnrollPaymentRef(e.target.value)}
+                    placeholder="e.g. receipt #, cash, bank transfer"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowEnrollModal(false)}
+                  className="flex-1 h-12 border border-gray-200 text-foreground font-semibold rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEnrollMember}
+                  disabled={
+                    enrollSubmitting ||
+                    !enrollEmail.trim() ||
+                    !enrollPlanId
+                  }
+                  className="flex-1 h-12 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {enrollSubmitting ? "Enrolling…" : "Enroll Member"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

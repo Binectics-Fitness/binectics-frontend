@@ -7,6 +7,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { utilityService, type PlatformCurrency } from "@/lib/api/utility";
 import type { MarketplaceMembershipPlan } from "@/lib/types";
 import { MembershipPlanType } from "@/lib/types";
 
@@ -34,6 +35,15 @@ export default function EditPlanPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState("");
+  const [currencies, setCurrencies] = useState<PlatformCurrency[]>([]);
+
+  useEffect(() => {
+    utilityService.getPlatformConfig().then((res) => {
+      if (res.success && res.data) {
+        setCurrencies(res.data.currencies.filter((c) => c.is_active));
+      }
+    });
+  }, []);
 
   useEffect(() => {
     async function loadPlan() {
@@ -94,8 +104,18 @@ export default function EditPlanPage() {
       return;
     }
 
+    if (parsedPrice > 999999.99) {
+      setPageError("Price cannot exceed 999,999.99");
+      return;
+    }
+
     if (!Number.isInteger(parsedDuration) || parsedDuration < 1) {
       setPageError("Duration must be at least 1 day");
+      return;
+    }
+
+    if (parsedDuration > 3650) {
+      setPageError("Duration cannot exceed 3,650 days (~10 years)");
       return;
     }
 
@@ -189,6 +209,7 @@ export default function EditPlanPage() {
                   <input
                     type="number"
                     min={1}
+                    max={3650}
                     required
                     value={durationDays}
                     onChange={(event) => setDurationDays(event.target.value)}
@@ -201,6 +222,7 @@ export default function EditPlanPage() {
                   <input
                     type="number"
                     min={0}
+                    max={999999.99}
                     step="0.01"
                     required
                     value={price}
@@ -211,14 +233,22 @@ export default function EditPlanPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">Currency *</label>
-                  <input
-                    type="text"
-                    maxLength={3}
+                  <select
                     required
                     value={currency}
-                    onChange={(event) => setCurrency(event.target.value.toUpperCase())}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 uppercase"
-                  />
+                    onChange={(event) => setCurrency(event.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                  >
+                    {currencies.length === 0 ? (
+                      <option value={currency}>{currency}</option>
+                    ) : (
+                      currencies.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code} — {c.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">

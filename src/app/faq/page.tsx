@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { Accordion } from "@/components";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "FAQ",
+  description: "Frequently asked questions about Binectics — subscriptions, payments, consultations, QR check-ins, and more.",
+};
 
 export default function FAQPage() {
   const categories = [

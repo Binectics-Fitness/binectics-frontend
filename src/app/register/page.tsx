@@ -1,4 +1,10 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Register",
+  description: "Create your Binectics account. Join as a fitness enthusiast, gym owner, personal trainer, or dietitian.",
+};
 
 export default function RegisterPage() {
   const roles = [

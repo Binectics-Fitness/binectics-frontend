@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Input } from "@/components";
+import { authService } from "@/lib/api/auth";
 
 export default function ResetPasswordPage() {
   const params = useParams();
@@ -15,6 +16,7 @@ export default function ResetPasswordPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,9 +48,29 @@ export default function ResetPasswordPage() {
 
     if (!validateForm()) return;
 
-    // TODO: API call to reset password with token
-    console.log("Password reset:", { token, password: formData.password });
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      const res = await authService.resetPassword({
+        token,
+        password: formData.password,
+      });
+      if (res.success) {
+        setSubmitted(true);
+      } else {
+        setErrors({
+          password:
+            res.message || "Reset failed. The link may have expired.",
+        });
+      }
+    } catch {
+      setErrors({
+        password: "Something went wrong. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,9 +139,10 @@ export default function ResetPasswordPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+                  disabled={isSubmitting}
+                  className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Reset Password
+                  {isSubmitting ? "Resetting..." : "Reset Password"}
                 </button>
 
                 {/* Back to Login */}

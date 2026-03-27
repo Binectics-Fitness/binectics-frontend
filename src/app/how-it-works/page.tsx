@@ -1,4 +1,10 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "How It Works",
+  description: "Discover how Binectics works — browse fitness providers, subscribe to plans, book consultations, and track your progress.",
+};
 
 export default function HowItWorksPage() {
   const steps = [

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { utilityService, type PlatformCurrency } from "@/lib/api/utility";
 import { MembershipPlanType } from "@/lib/types";
 
 export default function CreatePlanPage() {
@@ -27,8 +28,17 @@ export default function CreatePlanPage() {
   const [newFeature, setNewFeature] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pageError, setPageError] = useState("");
+  const [currencies, setCurrencies] = useState<PlatformCurrency[]>([]);
 
   const organizationId = currentOrg?._id;
+
+  useEffect(() => {
+    utilityService.getPlatformConfig().then((res) => {
+      if (res.success && res.data) {
+        setCurrencies(res.data.currencies.filter((c) => c.is_active));
+      }
+    });
+  }, []);
 
   const addFeature = () => {
     const trimmed = newFeature.trim();
@@ -59,8 +69,18 @@ export default function CreatePlanPage() {
       return;
     }
 
+    if (price > 999999.99) {
+      setPageError("Price cannot exceed 999,999.99");
+      return;
+    }
+
     if (!Number.isInteger(durationDays) || durationDays < 1) {
       setPageError("Duration must be at least 1 day");
+      return;
+    }
+
+    if (durationDays > 3650) {
+      setPageError("Duration cannot exceed 3,650 days (~10 years)");
       return;
     }
 
@@ -162,6 +182,7 @@ export default function CreatePlanPage() {
                   <input
                     type="number"
                     min={1}
+                    max={3650}
                     required
                     value={formData.duration_days}
                     onChange={(event) =>
@@ -176,6 +197,7 @@ export default function CreatePlanPage() {
                   <input
                     type="number"
                     min={0}
+                    max={999999.99}
                     step="0.01"
                     required
                     value={formData.price}
@@ -189,17 +211,24 @@ export default function CreatePlanPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">Currency *</label>
-                  <input
-                    type="text"
-                    maxLength={3}
+                  <select
                     required
                     value={formData.currency}
                     onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))
+                      setFormData((prev) => ({ ...prev, currency: event.target.value }))
                     }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 uppercase"
-                    placeholder="USD"
-                  />
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                  >
+                    {currencies.length === 0 ? (
+                      <option value="USD">USD — US Dollar</option>
+                    ) : (
+                      currencies.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code} — {c.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">

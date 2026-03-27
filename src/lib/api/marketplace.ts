@@ -115,6 +115,14 @@ export interface CreateOrgMembershipPlanRequest {
 export type UpdateOrgMembershipPlanRequest =
   Partial<CreateOrgMembershipPlanRequest>;
 
+export interface EnrollMemberRequest {
+  email: string;
+  plan_id: string;
+  status?: "active" | "pending_payment";
+  amount_paid?: number;
+  payment_reference?: string;
+}
+
 // ==================== SERVICE ====================
 
 export const marketplaceService = {
@@ -620,6 +628,16 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MembershipSubscription[]>> {
     return await apiClient.get<MembershipSubscription[]>(
       `/marketplace/organizations/${organizationId}/subscriptions`,
+    );
+  },
+
+  async enrollMember(
+    organizationId: string,
+    data: EnrollMemberRequest,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.post<MembershipSubscription>(
+      `/marketplace/organizations/${organizationId}/subscriptions/enroll`,
+      data,
     );
   },
 };

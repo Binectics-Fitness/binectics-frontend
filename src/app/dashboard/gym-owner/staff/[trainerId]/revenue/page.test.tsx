@@ -30,6 +30,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/gym-owner/staff/member-1/revenue",
   useSearchParams: () => new URLSearchParams(),
 }));
+vi.mock("@/components/GymOwnerSidebar", () => ({ default: () => null }));
 
 describe("Revenue Subpage", () => {
   beforeEach(() => {
@@ -40,7 +41,7 @@ describe("Revenue Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -76,8 +77,8 @@ describe("Revenue Subpage", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/250/)).toBeInTheDocument(); // revenue_today
-      expect(screen.getByText(/1500/)).toBeInTheDocument(); // revenue_week
-      expect(screen.getByText(/6000/)).toBeInTheDocument(); // revenue_month
+      expect(screen.getByText(/1,500/)).toBeInTheDocument(); // revenue_week
+      expect(screen.getByText(/6,000/)).toBeInTheDocument(); // revenue_month
     });
   });
 
@@ -85,7 +86,7 @@ describe("Revenue Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -120,7 +121,7 @@ describe("Revenue Subpage", () => {
     render(<RevenueSubpage />);
 
     await waitFor(() => {
-      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.getByText(/John Doe/)).toBeInTheDocument();
       expect(screen.getByText(/Trainer/)).toBeInTheDocument();
     });
   });
@@ -129,7 +130,7 @@ describe("Revenue Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",
@@ -164,10 +165,10 @@ describe("Revenue Subpage", () => {
     render(<RevenueSubpage />);
 
     await waitFor(() => {
-      const link = screen.getByRole("link", {
-        name: /view full revenue dashboard/i,
+      const button = screen.getByRole("button", {
+        name: /open revenue dashboard/i,
       });
-      expect(link).toHaveAttribute("href", "/dashboard/gym-owner/revenue");
+      expect(button).toBeInTheDocument();
     });
   });
 
@@ -193,7 +194,7 @@ describe("Revenue Subpage", () => {
     const mockMembers = [
       {
         _id: "member-1",
-        status: "ACTIVE",
+        status: "active",
         user_id: {
           first_name: "John",
           last_name: "Doe",

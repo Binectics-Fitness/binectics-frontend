@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components";
+import { authService } from "@/lib/api/auth";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateEmail = () => {
     if (!email.trim()) {
@@ -26,9 +28,21 @@ export default function ForgotPasswordPage() {
 
     if (!validateEmail()) return;
 
-    // TODO: API call to send reset email
-    console.log("Password reset requested for:", email);
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const res = await authService.forgotPassword({ email });
+      if (res.success) {
+        setSubmitted(true);
+      } else {
+        setError(res.message || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,9 +98,10 @@ export default function ForgotPasswordPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+                  disabled={isSubmitting}
+                  className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send Reset Link
+                  {isSubmitting ? "Sending..." : "Send Reset Link"}
                 </button>
 
                 {/* Back to Login */}
