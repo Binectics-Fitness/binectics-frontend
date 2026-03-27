@@ -133,7 +133,7 @@ export default function UserRegisterPage() {
     <div className="min-h-screen bg-background-secondary">
       {/* Main Content */}
       <main className="py-12 sm:py-16">
-        <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <Link
             href="/register"

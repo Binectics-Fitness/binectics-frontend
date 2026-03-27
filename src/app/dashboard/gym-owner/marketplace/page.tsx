@@ -7,7 +7,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import TagInput from "@/components/TagInput";
 import { marketplaceService } from "@/lib/api/marketplace";
+import {
+  utilityService,
+  type PlatformConfig,
+} from "@/lib/api/utility";
 import type {
   MarketplaceListing,
   MarketplaceListingDocument,
@@ -77,15 +82,19 @@ export default function OrgMarketplaceListingPage() {
   const [bio, setBio] = useState("");
   const [specialties, setSpecialties] = useState("");
   const [certifications, setCertifications] = useState("");
-  const [facilities, setFacilities] = useState("");
-  const [amenities, setAmenities] = useState("");
-  const [languages, setLanguages] = useState("");
+  const [facilities, setFacilities] = useState<string[]>([]);
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const [countryCode, setCountryCode] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [priceFrom, setPriceFrom] = useState("");
   const [priceLabel, setPriceLabel] = useState("");
   const [acceptingClients, setAcceptingClients] = useState(true);
+
+  const [platformConfig, setPlatformConfig] = useState<PlatformConfig | null>(
+    null,
+  );
 
   const orgId = currentOrg?._id;
   const galleryPhotos =
@@ -118,9 +127,9 @@ export default function OrgMarketplaceListingPage() {
     setBio(l.bio);
     setSpecialties(l.specialties.join(", "));
     setCertifications(l.certifications.join(", "));
-    setFacilities((l.facilities ?? []).join(", "));
-    setAmenities((l.amenities ?? []).join(", "));
-    setLanguages(l.languages.join(", "));
+    setFacilities(l.facilities ?? []);
+    setAmenities(l.amenities ?? []);
+    setLanguages(l.languages ?? []);
     setCity(l.city || "");
     setCountryCode(l.country_code || "");
     setCurrency(l.currency || "USD");
@@ -160,6 +169,13 @@ export default function OrgMarketplaceListingPage() {
         } else {
           setHasListing(false);
           setListingDocuments([]);
+          // Pre-populate from org data so users don't re-enter the same info
+          if (currentOrg?.description) {
+            setBio(currentOrg.description);
+          }
+          if (currentOrg?.name) {
+            setHeadline(currentOrg.name);
+          }
         }
       } catch {
         setLoadError(
@@ -170,6 +186,18 @@ export default function OrgMarketplaceListingPage() {
     }
     loadListing();
   }, [authLoading, orgLoading, user, orgId, router]);
+
+  useEffect(() => {
+    utilityService.getPlatformConfig().then((res) => {
+      if (res.success && res.data) {
+        setPlatformConfig(res.data);
+      }
+    });
+  }, []);
+
+  const activeCurrencies = platformConfig?.currencies.filter(
+    (c) => c.is_active,
+  ) ?? [];
 
   const splitComma = (s: string) =>
     s
@@ -189,9 +217,9 @@ export default function OrgMarketplaceListingPage() {
       bio,
       specialties: splitComma(specialties),
       certifications: splitComma(certifications),
-      facilities: splitComma(facilities),
-      amenities: splitComma(amenities),
-      languages: splitComma(languages),
+      facilities,
+      amenities,
+      languages,
       city: city || undefined,
       country_code: countryCode || undefined,
       currency,
@@ -222,9 +250,9 @@ export default function OrgMarketplaceListingPage() {
       bio,
       specialties: splitComma(specialties),
       certifications: splitComma(certifications),
-      facilities: splitComma(facilities),
-      amenities: splitComma(amenities),
-      languages: splitComma(languages),
+      facilities,
+      amenities,
+      languages,
       city: city || undefined,
       country_code: countryCode || undefined,
       currency,
@@ -727,6 +755,8 @@ export default function OrgMarketplaceListingPage() {
                 setPriceLabel={setPriceLabel}
                 acceptingClients={acceptingClients}
                 setAcceptingClients={setAcceptingClients}
+                platformConfig={platformConfig}
+                activeCurrencies={activeCurrencies}
               />
               <div className="flex gap-3 pt-2">
                 <button
@@ -1143,6 +1173,8 @@ export default function OrgMarketplaceListingPage() {
                 setPriceLabel={setPriceLabel}
                 acceptingClients={acceptingClients}
                 setAcceptingClients={setAcceptingClients}
+                platformConfig={platformConfig}
+                activeCurrencies={activeCurrencies}
               />
               <div className="flex gap-3 pt-2">
                 <button
@@ -1224,6 +1256,8 @@ function FormFields({
   setPriceLabel,
   acceptingClients,
   setAcceptingClients,
+  platformConfig,
+  activeCurrencies,
 }: {
   headline: string;
   setHeadline: (v: string) => void;
@@ -1233,12 +1267,12 @@ function FormFields({
   setSpecialties: (v: string) => void;
   certifications: string;
   setCertifications: (v: string) => void;
-  facilities: string;
-  setFacilities: (v: string) => void;
-  amenities: string;
-  setAmenities: (v: string) => void;
-  languages: string;
-  setLanguages: (v: string) => void;
+  facilities: string[];
+  setFacilities: (v: string[]) => void;
+  amenities: string[];
+  setAmenities: (v: string[]) => void;
+  languages: string[];
+  setLanguages: (v: string[]) => void;
   city: string;
   setCity: (v: string) => void;
   countryCode: string;
@@ -1251,6 +1285,8 @@ function FormFields({
   setPriceLabel: (v: string) => void;
   acceptingClients: boolean;
   setAcceptingClients: (v: boolean) => void;
+  platformConfig: PlatformConfig | null;
+  activeCurrencies: { code: string; name: string; symbol: string; is_active: boolean }[];
 }) {
   return (
     <>
@@ -1289,31 +1325,25 @@ function FormFields({
           <label className="text-sm font-medium text-foreground mb-1.5 block">
             Facilities
           </label>
-          <input
-            type="text"
+          <TagInput
             value={facilities}
-            onChange={(e) => setFacilities(e.target.value)}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-            placeholder="Free Weights, Cardio Zone, Yoga Studio"
+            onChange={setFacilities}
+            suggestions={platformConfig?.facility_suggestions ?? []}
+            placeholder="e.g. Free Weights, Cardio Zone"
+            name="facilities"
           />
-          <p className="text-xs text-foreground-secondary mt-1">
-            Comma-separated
-          </p>
         </div>
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
             Amenities
           </label>
-          <input
-            type="text"
+          <TagInput
             value={amenities}
-            onChange={(e) => setAmenities(e.target.value)}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-            placeholder="WiFi, Showers, Parking"
+            onChange={setAmenities}
+            suggestions={platformConfig?.amenity_suggestions ?? []}
+            placeholder="e.g. WiFi, Showers, Parking"
+            name="amenities"
           />
-          <p className="text-xs text-foreground-secondary mt-1">
-            Comma-separated
-          </p>
         </div>
       </div>
 
@@ -1321,12 +1351,12 @@ function FormFields({
         <label className="text-sm font-medium text-foreground mb-1.5 block">
           Languages
         </label>
-        <input
-          type="text"
+        <TagInput
           value={languages}
-          onChange={(e) => setLanguages(e.target.value)}
-          className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-          placeholder="English, Spanish"
+          onChange={setLanguages}
+          suggestions={platformConfig?.languages ?? []}
+          placeholder="e.g. English, Spanish"
+          name="languages"
         />
       </div>
 
@@ -1368,12 +1398,15 @@ function FormFields({
             onChange={(e) => setCurrency(e.target.value)}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
           >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="NGN">NGN</option>
-            <option value="CAD">CAD</option>
-            <option value="AUD">AUD</option>
+            {activeCurrencies.length > 0 ? (
+              activeCurrencies.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.code} – {c.name} ({c.symbol})
+                </option>
+              ))
+            ) : (
+              <option value="USD">USD – US Dollar ($)</option>
+            )}
           </select>
         </div>
         <div>

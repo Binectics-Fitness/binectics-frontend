@@ -94,7 +94,7 @@ export default function TrainerRegisterPage() {
   return (
     <div className="min-h-screen bg-background-secondary">
       <main className="py-12 sm:py-16">
-        <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8">
           <Link
             href="/register"
             className="inline-flex items-center gap-2 text-sm font-medium text-foreground-secondary transition-colors hover:text-accent-blue-500 mb-8"
