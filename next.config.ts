@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com", // For demo/placeholder images
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com", // Cloudinary for provider photos
+      },
     ],
     formats: ["image/avif", "image/webp"],
   },

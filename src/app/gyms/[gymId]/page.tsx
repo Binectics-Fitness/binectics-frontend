@@ -47,7 +47,8 @@ export default function GymProfilePage() {
         .filter(Boolean)
         .join(", ")
     : "";
-  const gymFacilities = listing?.specialties ?? [];
+  const gymFacilities = listing?.facilities ?? [];
+  const gymAmenities = listing?.amenities ?? [];
   const gymDescription = listing?.bio ?? listing?.headline ?? "";
 
   useEffect(() => {
@@ -281,26 +282,60 @@ export default function GymProfilePage() {
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Facilities & Amenities
               </h2>
-              {gymFacilities.length === 0 ? (
+              {gymFacilities.length === 0 && gymAmenities.length === 0 ? (
                 <p className="text-foreground/60">No facilities listed</p>
               ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {gymFacilities.map((facility, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <svg
-                        className="w-5 h-5 text-primary-500"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="text-foreground">{facility}</span>
+                <div className="space-y-6">
+                  {gymFacilities.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground/60 uppercase tracking-wider mb-3">
+                        Facilities
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        {gymFacilities.map((facility, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-primary-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span className="text-foreground">{facility}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+                  {gymAmenities.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground/60 uppercase tracking-wider mb-3">
+                        Amenities
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        {gymAmenities.map((amenity, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-accent-blue-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span className="text-foreground">{amenity}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

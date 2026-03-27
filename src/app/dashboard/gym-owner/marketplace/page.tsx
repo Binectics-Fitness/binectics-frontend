@@ -71,6 +71,7 @@ export default function OrgMarketplaceListingPage() {
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [imageError, setImageError] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   const [headline, setHeadline] = useState("");
   const [bio, setBio] = useState("");
@@ -140,21 +141,30 @@ export default function OrgMarketplaceListingPage() {
     }
 
     async function loadListing() {
-      const res = await marketplaceService.getOrgListing(orgId!);
-      if (res.success && res.data) {
-        setListing(res.data);
-        setHasListing(true);
-        populateForm(res.data);
+      setLoadError("");
+      try {
+        const res = await marketplaceService.getOrgListing(orgId!);
+        if (res.success && res.data) {
+          setListing(res.data);
+          setHasListing(true);
+          populateForm(res.data);
 
-        const docsRes = await marketplaceService.getOrgListingDocuments(orgId!);
-        if (docsRes.success && docsRes.data) {
-          setListingDocuments(docsRes.data);
+          const docsRes = await marketplaceService.getOrgListingDocuments(
+            orgId!,
+          );
+          if (docsRes.success && docsRes.data) {
+            setListingDocuments(docsRes.data);
+          } else {
+            setListingDocuments([]);
+          }
         } else {
+          setHasListing(false);
           setListingDocuments([]);
         }
-      } else {
-        setHasListing(false);
-        setListingDocuments([]);
+      } catch {
+        setLoadError(
+          "Failed to load your listing. Please check your connection and try again.",
+        );
       }
       setIsLoading(false);
     }
@@ -597,6 +607,27 @@ export default function OrgMarketplaceListingPage() {
               Select an organization from the sidebar to manage its marketplace
               listing.
             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex-1 overflow-y-auto bg-background-secondary">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
+          <div className="rounded-2xl bg-white p-12 shadow-card text-center">
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              Unable to Load Listing
+            </h3>
+            <p className="text-foreground-secondary mb-4">{loadError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>

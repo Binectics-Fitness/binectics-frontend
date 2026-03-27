@@ -116,6 +116,7 @@ export default function ProviderOnboardingChecklist({
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [teamMemberCount, setTeamMemberCount] = useState(0);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const [statusError, setStatusError] = useState("");
 
   // Org creation form
   const [showOrgForm, setShowOrgForm] = useState(false);
@@ -138,25 +139,36 @@ export default function ProviderOnboardingChecklist({
   const checkStatus = useCallback(async () => {
     if (!user || !config) return;
     setIsCheckingStatus(true);
+    setStatusError("");
 
     try {
       // Check marketplace listing
       if (currentOrg?._id) {
-        const listingRes = await marketplaceService.getOrgListing(
-          currentOrg._id,
-        );
-        if (listingRes.success && listingRes.data) {
-          setListing(listingRes.data);
+        try {
+          const listingRes = await marketplaceService.getOrgListing(
+            currentOrg._id,
+          );
+          if (listingRes.success && listingRes.data) {
+            setListing(listingRes.data);
+          }
+        } catch {
+          // 404 is expected when no listing exists — ignore
         }
       }
 
       // Check team members
       if (currentOrg?._id) {
-        const membersRes = await teamsService.getMembers(currentOrg._id);
-        if (membersRes.success && membersRes.data) {
-          setTeamMemberCount(membersRes.data.length);
+        try {
+          const membersRes = await teamsService.getMembers(currentOrg._id);
+          if (membersRes.success && membersRes.data) {
+            setTeamMemberCount(membersRes.data.length);
+          }
+        } catch {
+          // Non-critical — team count defaults to 0
         }
       }
+    } catch {
+      setStatusError("Failed to load onboarding status. Please refresh.");
     } finally {
       setIsCheckingStatus(false);
     }
@@ -275,6 +287,23 @@ export default function ProviderOnboardingChecklist({
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  // Show error state if status check failed
+  if (statusError) {
+    return (
+      <div
+        className={`rounded-2xl border-2 ${colors.border} ${colors.bg} p-6 ${className}`}
+      >
+        <p className="text-sm text-red-600 mb-3">{statusError}</p>
+        <button
+          onClick={() => void checkStatus()}
+          className={`rounded-lg px-4 py-2 text-sm font-semibold ${colors.button}`}
+        >
+          Retry
+        </button>
       </div>
     );
   }

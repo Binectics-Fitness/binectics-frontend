@@ -100,6 +100,7 @@ export default function SearchPage() {
         };
         if (query) params.q = query;
         if (type !== "all") params.account_type = type;
+        if (verified) params.verified_only = true;
         if (sort === "rating") params.sort = "rating_desc";
         if (lat !== null && lng !== null) {
           params.lat = lat;
@@ -111,10 +112,7 @@ export default function SearchPage() {
           params as Parameters<typeof marketplaceService.searchListings>[0],
         );
         if (res.success && res.data) {
-          let results = res.data.listings;
-          if (verified)
-            results = results.filter((l) => isVerified(l.verification_badge));
-          setListings(results);
+          setListings(res.data.listings);
           setTotal(res.data.total);
           setTotalPages(res.data.total_pages);
         } else {

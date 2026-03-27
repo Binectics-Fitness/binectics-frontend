@@ -62,6 +62,7 @@ export default function DietitiansPage() {
         };
         if (query) params.q = query;
         if (specialty !== "all") params.specialties = specialty;
+        if (verified) params.verified_only = true;
         if (lat !== null && lng !== null) {
           params.lat = lat;
           params.lng = lng;
@@ -72,10 +73,7 @@ export default function DietitiansPage() {
           params as Parameters<typeof marketplaceService.searchListings>[0],
         );
         if (res.success && res.data) {
-          let results = res.data.listings;
-          if (verified)
-            results = results.filter((l) => l.verification_badge !== "none");
-          setListings(results);
+          setListings(res.data.listings);
           setTotal(res.data.total);
           setTotalPages(res.data.total_pages);
         } else {

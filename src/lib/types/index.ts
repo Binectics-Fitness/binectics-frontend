@@ -376,6 +376,7 @@ export interface MarketplaceSearchParams {
   specialties?: string;
   q?: string;
   accepting_clients?: boolean;
+  verified_only?: boolean;
   min_rating?: number;
   sort?: "rating" | "newest" | "nearest";
   page?: number;

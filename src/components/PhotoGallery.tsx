@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 interface PhotoGalleryProps {
   photos: string[];
@@ -47,13 +48,14 @@ export default function PhotoGallery({
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
-          className="block w-full h-72 sm:h-96 overflow-hidden bg-gray-100 cursor-zoom-in"
+          className="relative block w-full h-72 sm:h-96 overflow-hidden bg-gray-100 cursor-zoom-in"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={mainPhoto}
             alt={alt}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover"
           />
         </button>
 
@@ -65,17 +67,18 @@ export default function PhotoGallery({
                 key={i}
                 type="button"
                 onClick={() => setSelectedIndex(i)}
-                className={`h-20 sm:h-24 overflow-hidden ${
+                className={`relative h-20 sm:h-24 overflow-hidden ${
                   i === selectedIndex
                     ? "ring-2 ring-primary-500"
                     : "opacity-70 hover:opacity-100"
                 } transition-all`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={photo}
                   alt={`${alt} ${i + 1}`}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 25vw, 12.5vw"
+                  className="object-cover"
                 />
               </button>
             ))}
