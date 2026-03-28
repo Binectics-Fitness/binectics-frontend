@@ -2,40 +2,46 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  notificationPreferencesSchema,
+  type NotificationPreferencesFormData,
+} from '@/lib/schemas/settings';
 
 export default function NotificationsSettingsPage() {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const [notifications, setNotifications] = useState({
-    // Email Notifications
-    emailSubscriptionUpdates: true,
-    emailPaymentReceipts: true,
-    emailBookingConfirmations: true,
-    emailCancellations: true,
-    emailReminders: true,
-    emailNewsletter: false,
-    emailPromotions: false,
-
-    // Push Notifications
-    pushBookings: true,
-    pushPayments: true,
-    pushMessages: true,
-    pushReminders: true,
-    pushPromotions: false,
-
-    // SMS Notifications
-    smsBookingReminders: false,
-    smsPaymentAlerts: false,
-    smsUrgentOnly: true,
+  const { watch, setValue, handleSubmit } = useForm<NotificationPreferencesFormData>({
+    resolver: zodResolver(notificationPreferencesSchema),
+    defaultValues: {
+      emailSubscriptionUpdates: true,
+      emailPaymentReceipts: true,
+      emailBookingConfirmations: true,
+      emailCancellations: true,
+      emailReminders: true,
+      emailNewsletter: false,
+      emailPromotions: false,
+      pushBookings: true,
+      pushPayments: true,
+      pushMessages: true,
+      pushReminders: true,
+      pushPromotions: false,
+      smsBookingReminders: false,
+      smsPaymentAlerts: false,
+      smsUrgentOnly: true,
+    },
   });
 
-  const handleToggle = (key: keyof typeof notifications) => {
-    setNotifications({ ...notifications, [key]: !notifications[key] });
+  const notifications = watch();
+
+  const handleToggle = (key: keyof NotificationPreferencesFormData) => {
+    setValue(key, !notifications[key]);
   };
 
-  const handleSave = async () => {
+  const onSave = async () => {
     setIsSaving(true);
     setSuccessMessage('');
 
@@ -195,7 +201,7 @@ export default function NotificationsSettingsPage() {
       {/* Save Button */}
       <div className="flex justify-stretch sm:justify-end">
         <button
-          onClick={handleSave}
+          onClick={handleSubmit(onSave)}
           disabled={isSaving}
           className="w-full rounded-lg bg-primary-500 px-8 py-3 font-semibold text-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >

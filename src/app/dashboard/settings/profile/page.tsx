@@ -2,6 +2,8 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
 import { utilityService } from "@/lib/api/utility";
 import type { CountryItem } from "@/lib/api/utility";
@@ -9,6 +11,10 @@ import { UserRole } from "@/lib/types";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import {
+  profileSettingsSchema,
+  type ProfileSettingsFormData,
+} from "@/lib/schemas/settings";
 
 const FITNESS_GOAL_SUGGESTIONS = [
   "Weight Loss",
@@ -109,58 +115,54 @@ export default function ProfileSettingsPage() {
     };
   }, []);
 
-  const [formData, setFormData] = useState({
-    // Basic Info
-    firstName: user?.first_name || "",
-    lastName: user?.last_name || "",
-    email: user?.email || "",
-    phone: user?.phone_number || "",
-    country: user?.country_code || "",
-
-    // Gym Owner specific
-    businessName: "",
-    businessRegistration: "",
-    gymName: "",
-    gymAddress: "",
-    gymCity: "",
-    gymDescription: "",
-    facilities: [] as string[],
-
-    // Trainer/Dietitian specific
-    bio: "",
-    specialties: [] as string[],
-    certifications: [] as string[],
-    experience: "",
-
-    // User specific
-    fitnessGoals: (user?.fitness_goals || []) as string[],
-    preferences: (user?.preferred_activities || []) as string[],
+  const {
+    register: registerField,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<ProfileSettingsFormData>({
+    resolver: zodResolver(profileSettingsSchema),
+    defaultValues: {
+      firstName: user?.first_name || "",
+      lastName: user?.last_name || "",
+      email: user?.email || "",
+      phone: user?.phone_number || "",
+      country: user?.country_code || "",
+      businessName: "",
+      businessRegistration: "",
+      gymName: "",
+      gymAddress: "",
+      gymCity: "",
+      gymDescription: "",
+      facilities: [],
+      bio: "",
+      specialties: [],
+      certifications: [],
+      experience: "",
+      fitnessGoals: (user?.fitness_goals || []) as string[],
+      preferences: (user?.preferred_activities || []) as string[],
+    },
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const formData = watch();
 
-  const handleSave = async () => {
+  const onSave = async (data: ProfileSettingsFormData) => {
     setIsSaving(true);
     setSuccessMessage("");
 
     try {
       const payload: Record<string, unknown> = {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        phone_number: formData.phone,
-        country_code: formData.country,
-        fitness_goals: formData.fitnessGoals,
-        preferred_activities: formData.preferences,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        phone_number: data.phone,
+        country_code: data.country,
+        fitness_goals: data.fitnessGoals,
+        preferred_activities: data.preferences,
       };
 
-      if (formData.businessName) payload.company_name = formData.businessName;
-      if (formData.bio) payload.bio = formData.bio;
+      if (data.businessName) payload.company_name = data.businessName;
+      if (data.bio) payload.bio = data.bio;
 
       const res = await authService.updateProfile(payload);
 
@@ -283,9 +285,7 @@ export default function ProfileSettingsPage() {
             </label>
             <input
               type="text"
-              name="businessName"
-              value={formData.businessName}
-              onChange={handleInputChange}
+              {...registerField("businessName")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
               placeholder="Your business name"
             />
@@ -296,9 +296,7 @@ export default function ProfileSettingsPage() {
             </label>
             <input
               type="text"
-              name="businessRegistration"
-              value={formData.businessRegistration}
-              onChange={handleInputChange}
+              {...registerField("businessRegistration")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
               placeholder="Registration number"
             />
@@ -317,9 +315,7 @@ export default function ProfileSettingsPage() {
             </label>
             <input
               type="text"
-              name="gymName"
-              value={formData.gymName}
-              onChange={handleInputChange}
+              {...registerField("gymName")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
               placeholder="Enter gym name"
             />
@@ -329,9 +325,7 @@ export default function ProfileSettingsPage() {
               Description
             </label>
             <textarea
-              name="gymDescription"
-              value={formData.gymDescription}
-              onChange={handleInputChange}
+              {...registerField("gymDescription")}
               rows={4}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
               placeholder="Tell members about your gym..."
@@ -344,9 +338,7 @@ export default function ProfileSettingsPage() {
               </label>
               <input
                 type="text"
-                name="gymAddress"
-                value={formData.gymAddress}
-                onChange={handleInputChange}
+                {...registerField("gymAddress")}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                 placeholder="Street address"
               />
@@ -357,9 +349,7 @@ export default function ProfileSettingsPage() {
               </label>
               <input
                 type="text"
-                name="gymCity"
-                value={formData.gymCity}
-                onChange={handleInputChange}
+                {...registerField("gymCity")}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                 placeholder="City"
               />
@@ -381,9 +371,7 @@ export default function ProfileSettingsPage() {
             Professional Bio
           </label>
           <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleInputChange}
+            {...registerField("bio")}
             rows={4}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
             placeholder="Tell clients about your experience and approach..."
@@ -395,12 +383,11 @@ export default function ProfileSettingsPage() {
           </label>
           <input
             type="text"
-            name="specialties"
             onChange={(e) => {
               const specialties = e.target.value
                 .split(",")
                 .map((s) => s.trim());
-              setFormData({ ...formData, specialties });
+              setValue("specialties", specialties);
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
             placeholder="e.g., Strength Training, Weight Loss, Sports Performance"
@@ -412,12 +399,11 @@ export default function ProfileSettingsPage() {
           </label>
           <input
             type="text"
-            name="certifications"
             onChange={(e) => {
               const certifications = e.target.value
                 .split(",")
                 .map((s) => s.trim());
-              setFormData({ ...formData, certifications });
+              setValue("certifications", certifications);
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
             placeholder="e.g., NASM-CPT, ACE, CSCS"
@@ -429,9 +415,7 @@ export default function ProfileSettingsPage() {
           </label>
           <input
             type="text"
-            name="experience"
-            value={formData.experience}
-            onChange={handleInputChange}
+            {...registerField("experience")}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
             placeholder="e.g., 5 years"
           />
@@ -451,9 +435,7 @@ export default function ProfileSettingsPage() {
             Professional Bio
           </label>
           <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleInputChange}
+            {...registerField("bio")}
             rows={4}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
             placeholder="Tell clients about your approach to nutrition and wellness..."
@@ -465,12 +447,11 @@ export default function ProfileSettingsPage() {
           </label>
           <input
             type="text"
-            name="specialties"
             onChange={(e) => {
               const specialties = e.target.value
                 .split(",")
                 .map((s) => s.trim());
-              setFormData({ ...formData, specialties });
+              setValue("specialties", specialties);
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
             placeholder="e.g., Weight Management, Sports Nutrition, Clinical Nutrition"
@@ -482,12 +463,11 @@ export default function ProfileSettingsPage() {
           </label>
           <input
             type="text"
-            name="certifications"
             onChange={(e) => {
               const certifications = e.target.value
                 .split(",")
                 .map((s) => s.trim());
-              setFormData({ ...formData, certifications });
+              setValue("certifications", certifications);
             }}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
             placeholder="e.g., RD, RDN, LD, CDN"
@@ -499,9 +479,7 @@ export default function ProfileSettingsPage() {
           </label>
           <input
             type="text"
-            name="experience"
-            value={formData.experience}
-            onChange={handleInputChange}
+            {...registerField("experience")}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
             placeholder="e.g., 7 years"
           />
@@ -524,7 +502,7 @@ export default function ProfileSettingsPage() {
             name="fitnessGoals"
             value={formData.fitnessGoals}
             onChange={(goals) =>
-              setFormData({ ...formData, fitnessGoals: goals })
+              setValue("fitnessGoals", goals)
             }
             suggestions={FITNESS_GOAL_SUGGESTIONS}
             placeholder="Type to search or add a goal…"
@@ -538,7 +516,7 @@ export default function ProfileSettingsPage() {
             name="preferences"
             value={formData.preferences}
             onChange={(prefs) =>
-              setFormData({ ...formData, preferences: prefs })
+              setValue("preferences", prefs)
             }
             suggestions={ACTIVITY_SUGGESTIONS}
             placeholder="Type to search or add an activity…"
@@ -634,11 +612,12 @@ export default function ProfileSettingsPage() {
             </label>
             <input
               type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleInputChange}
+              {...registerField("firstName")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
+            {errors.firstName && (
+              <p className="mt-1 text-sm text-red-500">{errors.firstName.message}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -646,11 +625,12 @@ export default function ProfileSettingsPage() {
             </label>
             <input
               type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleInputChange}
+              {...registerField("lastName")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
+            {errors.lastName && (
+              <p className="mt-1 text-sm text-red-500">{errors.lastName.message}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -658,7 +638,6 @@ export default function ProfileSettingsPage() {
             </label>
             <input
               type="email"
-              name="email"
               value={formData.email}
               disabled
               className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-foreground/50 cursor-not-allowed"
@@ -670,9 +649,7 @@ export default function ProfileSettingsPage() {
             </label>
             <input
               type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
+              {...registerField("phone")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="+1 (555) 000-0000"
             />
@@ -683,8 +660,8 @@ export default function ProfileSettingsPage() {
             </label>
             <SearchableSelect
               name="country"
-              value={formData.country}
-              onChange={(val) => setFormData({ ...formData, country: val })}
+              value={formData.country ?? ""}
+              onChange={(val) => setValue("country", val)}
               options={countries.map((c) => ({ label: c.name, value: c.code }))}
               placeholder="Select a country"
               loading={countriesLoading}
@@ -702,7 +679,7 @@ export default function ProfileSettingsPage() {
       {/* Save Button */}
       <div className="flex justify-stretch sm:justify-end">
         <button
-          onClick={handleSave}
+          onClick={handleSubmit(onSave)}
           disabled={isSaving}
           className="w-full rounded-lg bg-primary-500 px-8 py-3 font-semibold text-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >

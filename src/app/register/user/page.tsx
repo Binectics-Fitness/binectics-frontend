@@ -2,128 +2,68 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input, PasswordInput } from "@/components";
 import { AccountType } from "@/lib/types";
+import { registerSchema, type RegisterFormData } from "@/lib/schemas/auth";
+import { mapApiErrors } from "@/lib/utils/form-errors";
+
+const REGISTER_FIELDS = [
+  "firstName",
+  "lastName",
+  "email",
+  "password",
+  "confirmPassword",
+] as const;
 
 export default function UserRegisterPage() {
-  const { register, isLoading: authLoading } = useAuth();
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    acceptTos: false,
+  const { register: authRegister, isLoading: authLoading } = useAuth();
+
+  const {
+    register: registerField,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      acceptTos: false,
+    },
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState<string>("");
   const [apiErrors, setApiErrors] = useState<string[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    const fieldValue = type === "checkbox" ? checked : value;
-    setFormData((prev) => ({ ...prev, [name]: fieldValue }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-    if (apiError) {
-      setApiError("");
-    }
-    if (apiErrors.length > 0) {
-      setApiErrors([]);
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 12) {
-      newErrors.password = "Password must be at least 12 characters";
-    } else if (
-      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(formData.password)
-    ) {
-      newErrors.password =
-        "Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    if (!formData.acceptTos) {
-      newErrors.acceptTos = "You must accept the terms of service";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setApiError("");
+  const onSubmit = async (data: RegisterFormData) => {
     setApiErrors([]);
-
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      const result = await register({
-        email: formData.email,
-        password: formData.password,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
+      const result = await authRegister({
+        email: data.email,
+        password: data.password,
+        first_name: data.firstName,
+        last_name: data.lastName,
         role: AccountType.FITNESS_MEMBER,
-        accept_tos: formData.acceptTos,
+        accept_tos: data.acceptTos,
       });
 
       if (!result.success) {
-        // Check if there are detailed validation errors from the API
-        if (result.errors && typeof result.errors === "object") {
-          // Flatten all error messages from the errors object
-          const errorMessages: string[] = [];
-          Object.entries(result.errors).forEach(([field, messages]) => {
-            if (Array.isArray(messages)) {
-              errorMessages.push(...messages);
-            }
-          });
-
-          if (errorMessages.length > 0) {
-            setApiErrors(errorMessages);
-          } else {
-            setApiError(
-              result.error || "Registration failed. Please try again.",
-            );
-          }
-        } else {
-          setApiError(result.error || "Registration failed. Please try again.");
+        const unmapped = mapApiErrors(result, setError, REGISTER_FIELDS);
+        if (unmapped.length > 0) {
+          setApiErrors(unmapped);
         }
       }
       // Success redirect is handled by AuthContext
     } catch (error) {
-      setApiError("An unexpected error occurred. Please try again.");
+      setApiErrors(["An unexpected error occurred. Please try again."]);
     } finally {
       setIsLoading(false);
     }
@@ -184,9 +124,9 @@ export default function UserRegisterPage() {
           </div>
 
           {/* Registration Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* API Error Messages */}
-            {(apiError || apiErrors.length > 0) && (
+            {apiErrors.length > 0 && (
               <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
                 <div className="flex gap-3">
                   <svg
@@ -201,16 +141,11 @@ export default function UserRegisterPage() {
                     />
                   </svg>
                   <div className="flex-1">
-                    {apiError && (
-                      <p className="text-sm text-red-800">{apiError}</p>
-                    )}
-                    {apiErrors.length > 0 && (
-                      <ul className="text-sm text-red-800 space-y-1">
-                        {apiErrors.map((error, index) => (
-                          <li key={index}>• {error}</li>
-                        ))}
-                      </ul>
-                    )}
+                    <ul className="text-sm text-red-800 space-y-1">
+                      {apiErrors.map((error, index) => (
+                        <li key={index}>• {error}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -222,21 +157,15 @@ export default function UserRegisterPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Input
                     label="First Name"
-                    name="firstName"
                     placeholder="John"
-                    required
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    error={errors.firstName}
+                    error={errors.firstName?.message}
+                    {...registerField("firstName")}
                   />
                   <Input
                     label="Last Name"
-                    name="lastName"
                     placeholder="Doe"
-                    required
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    error={errors.lastName}
+                    error={errors.lastName?.message}
+                    {...registerField("lastName")}
                   />
                 </div>
 
@@ -244,35 +173,26 @@ export default function UserRegisterPage() {
                 <Input
                   label="Email Address"
                   type="email"
-                  name="email"
                   placeholder="john@example.com"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={errors.email}
+                  error={errors.email?.message}
+                  {...registerField("email")}
                 />
 
                 {/* Password */}
                 <PasswordInput
                   label="Password"
-                  name="password"
                   placeholder="••••••••"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  error={errors.password}
+                  error={errors.password?.message}
                   helperText="Min 12 characters with uppercase, lowercase, number, and special character (!@#$%^&*)"
+                  {...registerField("password")}
                 />
 
                 {/* Confirm Password */}
                 <PasswordInput
                   label="Confirm Password"
-                  name="confirmPassword"
                   placeholder="••••••••"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  error={errors.confirmPassword}
+                  error={errors.confirmPassword?.message}
+                  {...registerField("confirmPassword")}
                 />
               </div>
             </div>
@@ -282,10 +202,8 @@ export default function UserRegisterPage() {
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  name="acceptTos"
-                  checked={formData.acceptTos}
-                  onChange={handleChange}
                   className="mt-1 h-4 w-4 rounded border-neutral-300 text-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  {...registerField("acceptTos")}
                 />
                 <span className="text-sm text-foreground-secondary">
                   I agree to the{" "}
@@ -307,7 +225,7 @@ export default function UserRegisterPage() {
                 </span>
               </label>
               {errors.acceptTos && (
-                <p className="text-sm text-red-600 ml-7">{errors.acceptTos}</p>
+                <p className="text-sm text-red-600 ml-7">{errors.acceptTos.message}</p>
               )}
             </div>
 

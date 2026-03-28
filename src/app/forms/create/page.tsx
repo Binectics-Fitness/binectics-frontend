@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useFormCreate } from "@/hooks/useForms";
-import type { CreateFormRequest } from "@/lib/api/forms";
+import {
+  createFormSchema,
+  type CreateFormFormData,
+} from "@/lib/schemas/forms";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
@@ -17,18 +22,31 @@ export default function CreateFormPage() {
   const { currentOrg } = useOrganization();
   const router = useRouter();
   const { createForm, isCreating, error: createError } = useFormCreate();
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [showBranding, setShowBranding] = useState(false);
 
-  const error = validationError || createError;
-  const isSubmitting = isCreating;
-
-  const [formData, setFormData] = useState<CreateFormRequest>({
-    title: "",
-    description: "",
-    allow_multiple_submissions: false,
-    require_authentication: true,
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CreateFormFormData>({
+    resolver: zodResolver(createFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      allow_multiple_submissions: false,
+      require_authentication: true,
+      company_name: "",
+      company_description: "",
+      custom_logo: "",
+      custom_header_color: "",
+    },
   });
+
+  const formData = watch();
+  const error = errors.title?.message || createError;
+  const isSubmitting = isCreating;
 
   if (authLoading) {
     return <DashboardLoading />;
@@ -39,16 +57,8 @@ export default function CreateFormPage() {
     return null;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
-
-    if (!formData.title.trim()) {
-      setValidationError("Form title is required");
-      return;
-    }
-
-    const result = await createForm(formData, currentOrg?._id);
+  const onSubmit = async (data: CreateFormFormData) => {
+    const result = await createForm(data, currentOrg?._id);
 
     if (result) {
       // Redirect to form builder
@@ -91,7 +101,7 @@ export default function CreateFormPage() {
 
         {/* Form */}
         <div className="bg-white rounded-xl shadow-card p-8">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
@@ -111,13 +121,12 @@ export default function CreateFormPage() {
                 id="title"
                 type="text"
                 placeholder="e.g., Customer Satisfaction Survey"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                required
+                {...register("title")}
                 maxLength={255}
               />
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>
+              )}
             </div>
 
             {/* Description */}
@@ -133,10 +142,7 @@ export default function CreateFormPage() {
                 rows={4}
                 className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Describe what this form is for..."
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                {...register("description")}
                 maxLength={1000}
               />
             </div>
@@ -158,10 +164,7 @@ export default function CreateFormPage() {
                     className="sr-only peer"
                     checked={formData.allow_multiple_submissions}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        allow_multiple_submissions: e.target.checked,
-                      })
+                      setValue("allow_multiple_submissions", e.target.checked)
                     }
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -183,10 +186,7 @@ export default function CreateFormPage() {
                     className="sr-only peer"
                     checked={formData.require_authentication}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        require_authentication: e.target.checked,
-                      })
+                      setValue("require_authentication", e.target.checked)
                     }
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -237,13 +237,7 @@ export default function CreateFormPage() {
                     <Input
                       type="text"
                       placeholder="e.g., FitLife Nutrition"
-                      value={formData.company_name || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          company_name: e.target.value,
-                        })
-                      }
+                      {...register("company_name")}
                       maxLength={255}
                     />
                   </div>
@@ -256,13 +250,7 @@ export default function CreateFormPage() {
                     <Input
                       type="text"
                       placeholder="e.g., Personalized nutrition for your goals"
-                      value={formData.company_description || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          company_description: e.target.value,
-                        })
-                      }
+                      {...register("company_description")}
                       maxLength={500}
                     />
                   </div>
@@ -275,13 +263,7 @@ export default function CreateFormPage() {
                     <Input
                       type="url"
                       placeholder="https://your-domain.com/logo.png"
-                      value={formData.custom_logo || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          custom_logo: e.target.value,
-                        })
-                      }
+                      {...register("custom_logo")}
                     />
                     {formData.custom_logo && (
                       <div className="mt-2 flex items-center gap-3">
@@ -311,23 +293,14 @@ export default function CreateFormPage() {
                         type="color"
                         value={formData.custom_header_color || "#00d991"}
                         onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            custom_header_color: e.target.value,
-                          })
+                          setValue("custom_header_color", e.target.value)
                         }
                         className="w-10 h-10 rounded cursor-pointer border border-neutral-200"
                       />
                       <Input
                         type="text"
                         placeholder="#00d991"
-                        value={formData.custom_header_color || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            custom_header_color: e.target.value,
-                          })
-                        }
+                        {...register("custom_header_color")}
                         maxLength={100}
                       />
                     </div>

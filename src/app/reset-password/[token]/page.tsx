@@ -3,70 +3,51 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components";
 import { authService } from "@/lib/api/auth";
+import {
+  resetPasswordSchema,
+  type ResetPasswordFormData,
+} from "@/lib/schemas/auth";
 
 export default function ResetPasswordPage() {
   const params = useParams();
   const token = params.token as string;
 
-  const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
+  const {
+    register: registerField,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: "", confirmPassword: "" },
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
+  const onSubmit = async (data: ResetPasswordFormData) => {
     setIsSubmitting(true);
-    setErrors({});
 
     try {
       const res = await authService.resetPassword({
         token,
-        password: formData.password,
+        password: data.password,
       });
       if (res.success) {
         setSubmitted(true);
       } else {
-        setErrors({
-          password:
+        setError("password", {
+          message:
             res.message || "Reset failed. The link may have expired.",
         });
       }
     } catch {
-      setErrors({
-        password: "Something went wrong. Please try again.",
+      setError("password", {
+        message: "Something went wrong. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -108,30 +89,24 @@ export default function ResetPasswordPage() {
               </div>
 
               {/* Reset Form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
                   <div className="space-y-5">
                     <Input
                       label="New Password"
                       type="password"
-                      name="password"
                       placeholder="••••••••"
-                      required
-                      value={formData.password}
-                      onChange={handleChange}
-                      error={errors.password}
+                      error={errors.password?.message}
                       helperText="Minimum 8 characters"
+                      {...registerField("password")}
                     />
 
                     <Input
                       label="Confirm Password"
                       type="password"
-                      name="confirmPassword"
                       placeholder="••••••••"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      error={errors.confirmPassword}
+                      error={errors.confirmPassword?.message}
+                      {...registerField("confirmPassword")}
                     />
                   </div>
                 </div>

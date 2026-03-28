@@ -2,44 +2,43 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components";
 import { authService } from "@/lib/api/auth";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordFormData,
+} from "@/lib/schemas/auth";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const {
+    register: registerField,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
+
+  const [apiError, setApiError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateEmail = () => {
-    if (!email.trim()) {
-      setError("Email is required");
-      return false;
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Please enter a valid email");
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateEmail()) return;
-
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsSubmitting(true);
-    setError("");
+    setApiError("");
 
     try {
-      const res = await authService.forgotPassword({ email });
+      const res = await authService.forgotPassword({ email: data.email });
       if (res.success) {
         setSubmitted(true);
       } else {
-        setError(res.message || "Something went wrong. Please try again.");
+        setApiError(res.message || "Something went wrong. Please try again.");
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setApiError("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -78,20 +77,14 @@ export default function ForgotPasswordPage() {
               </div>
 
               {/* Reset Form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
                   <Input
                     label="Email Address"
                     type="email"
-                    name="email"
                     placeholder="john@example.com"
-                    required
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError("");
-                    }}
-                    error={error}
+                    error={errors.email?.message || apiError}
+                    {...registerField("email")}
                   />
                 </div>
 
@@ -150,7 +143,7 @@ export default function ForgotPasswordPage() {
               <p className="mt-3 text-base text-foreground-secondary">
                 We sent a password reset link to
               </p>
-              <p className="mt-1 font-semibold text-foreground">{email}</p>
+              <p className="mt-1 font-semibold text-foreground">{getValues("email")}</p>
               <p className="mt-6 text-sm text-foreground-secondary">
                 Didn't receive the email?{" "}
                 <button

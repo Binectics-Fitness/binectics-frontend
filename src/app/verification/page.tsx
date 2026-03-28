@@ -3,15 +3,28 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input, Button } from "@/components";
 import { useVerification } from "@/hooks/useVerification";
+import {
+  verificationOtpSchema,
+  type VerificationOtpFormData,
+} from "@/lib/schemas/contact";
 
 function VerificationForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
 
-  const [otp, setOtp] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<VerificationOtpFormData>({
+    resolver: zodResolver(verificationOtpSchema),
+    defaultValues: { otp: "" },
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { verifyOtp, resendOtp, isVerifying, isResending } = useVerification();
@@ -35,8 +48,7 @@ function VerificationForm() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: VerificationOtpFormData) => {
     setError("");
     setSuccess("");
 
@@ -45,12 +57,7 @@ function VerificationForm() {
       return;
     }
 
-    if (otp.length !== 6) {
-      setError("Please enter a valid 6-digit code");
-      return;
-    }
-
-    const result = await verifyOtp(email, otp);
+    const result = await verifyOtp(email, data.otp);
 
     if (result.success) {
       setSuccess("Account verified successfully! Redirecting to login...");
@@ -78,7 +85,7 @@ function VerificationForm() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label
                 htmlFor="otp"
@@ -88,15 +95,15 @@ function VerificationForm() {
               </label>
               <Input
                 id="otp"
-                name="otp"
                 type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                {...register("otp")}
                 placeholder="000000"
-                required
                 className="text-center tracking-widest text-lg"
                 maxLength={6}
               />
+              {errors.otp && (
+                <p className="mt-1 text-sm text-red-500">{errors.otp.message}</p>
+              )}
             </div>
 
             {error && (

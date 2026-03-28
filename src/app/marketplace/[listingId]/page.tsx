@@ -13,6 +13,14 @@ import type {
   MarketplaceRequestType,
   MarketplaceVerificationBadge,
 } from "@/lib/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  marketplaceRequestSchema,
+  marketplaceReviewSchema,
+  type MarketplaceRequestFormData,
+  type MarketplaceReviewFormData,
+} from "@/lib/schemas/marketplace";
 
 const ACCOUNT_TYPE_LABELS: Record<MarketplaceAccountType, string> = {
   gym_owner: "Gym",
@@ -136,19 +144,45 @@ export default function ListingDetailPage() {
 
   // Request modal state
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [requestType, setRequestType] =
-    useState<MarketplaceRequestType>("connection");
-  const [requestMessage, setRequestMessage] = useState("");
-  const [requestGoals, setRequestGoals] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestSuccess, setRequestSuccess] = useState(false);
   const [requestError, setRequestError] = useState("");
 
+  const {
+    register: registerRequest,
+    handleSubmit: handleRequestSubmit,
+    watch: watchRequest,
+    reset: resetRequest,
+  } = useForm<MarketplaceRequestFormData>({
+    resolver: zodResolver(marketplaceRequestSchema),
+    defaultValues: {
+      requestType: "connection",
+      requestMessage: "",
+      requestGoals: "",
+    },
+  });
+
+  const requestType = watchRequest("requestType");
+
   // Review form state
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const {
+    register: registerReview,
+    handleSubmit: handleReviewSubmit,
+    watch: watchReview,
+    setValue: setReviewValue,
+    reset: resetReview,
+  } = useForm<MarketplaceReviewFormData>({
+    resolver: zodResolver(marketplaceReviewSchema),
+    defaultValues: {
+      reviewRating: 5,
+      reviewComment: "",
+    },
+  });
+
+  const reviewRating = watchReview("reviewRating");
 
   useEffect(() => {
     async function loadData() {
@@ -174,8 +208,7 @@ export default function ListingDetailPage() {
     loadData();
   }, [listingId]);
 
-  const handleSendRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendRequest = async (data: MarketplaceRequestFormData) => {
     if (!user) {
       router.push(`/login?redirect=/marketplace/${listingId}`);
       return;
@@ -185,10 +218,10 @@ export default function ListingDetailPage() {
     setRequestError("");
 
     const res = await marketplaceService.sendRequest(listingId, {
-      type: requestType,
-      message: requestMessage || undefined,
-      goals: requestGoals
-        ? requestGoals
+      type: data.requestType as MarketplaceRequestType,
+      message: data.requestMessage || undefined,
+      goals: data.requestGoals
+        ? data.requestGoals
             .split(",")
             .map((g) => g.trim())
             .filter(Boolean)
@@ -203,22 +236,20 @@ export default function ListingDetailPage() {
     setIsSubmitting(false);
   };
 
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitReview = async (data: MarketplaceReviewFormData) => {
     if (!user) return;
 
     setIsSubmittingReview(true);
     const res = await marketplaceService.createReview(listingId, {
-      rating: reviewRating,
-      comment: reviewComment || undefined,
+      rating: data.reviewRating,
+      comment: data.reviewComment || undefined,
     });
 
     if (res.success && res.data) {
       setReviews((prev) => [res.data!, ...prev]);
       setReviewTotal((t) => t + 1);
       setShowReviewForm(false);
-      setReviewComment("");
-      setReviewRating(5);
+      resetReview();
     }
     setIsSubmittingReview(false);
   };
@@ -507,7 +538,7 @@ export default function ListingDetailPage() {
           {/* Review Form */}
           {showReviewForm && (
             <form
-              onSubmit={handleSubmitReview}
+              onSubmit={handleReviewSubmit(handleSubmitReview)}
               className="rounded-xl bg-background-secondary p-5 mb-6"
             >
               <div className="mb-4">
@@ -519,7 +550,7 @@ export default function ListingDetailPage() {
                     <button
                       key={star}
                       type="button"
-                      onClick={() => setReviewRating(star)}
+                      onClick={() => setReviewValue("reviewRating", star)}
                       className="focus:outline-none"
                     >
                       <svg
@@ -538,8 +569,7 @@ export default function ListingDetailPage() {
                   Comment (optional)
                 </label>
                 <textarea
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
+                  {...registerReview("reviewComment")}
                   rows={3}
                   className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none resize-none"
                   placeholder="Share your experience..."
@@ -611,8 +641,7 @@ export default function ListingDetailPage() {
                   onClick={() => {
                     setShowRequestModal(false);
                     setRequestSuccess(false);
-                    setRequestMessage("");
-                    setRequestGoals("");
+                    resetRequest();
                   }}
                   className="rounded-xl bg-primary-500 px-8 py-2.5 text-sm font-semibold text-white hover:bg-primary-600 transition-colors"
                 >
@@ -620,7 +649,7 @@ export default function ListingDetailPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSendRequest}>
+              <form onSubmit={handleRequestSubmit(handleSendRequest)}>
                 <h3 className="text-xl font-bold text-foreground mb-1">
                   Connect with {displayName}
                 </h3>
@@ -640,10 +669,7 @@ export default function ListingDetailPage() {
                       Request Type
                     </label>
                     <select
-                      value={requestType}
-                      onChange={(e) =>
-                        setRequestType(e.target.value as MarketplaceRequestType)
-                      }
+                      {...registerRequest("requestType")}
                       className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
                     >
                       <option value="connection">
@@ -658,8 +684,7 @@ export default function ListingDetailPage() {
                       Message
                     </label>
                     <textarea
-                      value={requestMessage}
-                      onChange={(e) => setRequestMessage(e.target.value)}
+                      {...registerRequest("requestMessage")}
                       rows={3}
                       className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none resize-none"
                       placeholder="Tell the professional about yourself..."
@@ -673,8 +698,7 @@ export default function ListingDetailPage() {
                       </label>
                       <input
                         type="text"
-                        value={requestGoals}
-                        onChange={(e) => setRequestGoals(e.target.value)}
+                        {...registerRequest("requestGoals")}
                         className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
                         placeholder="e.g. weight loss, muscle gain"
                       />

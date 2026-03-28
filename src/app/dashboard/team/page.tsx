@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
@@ -13,6 +15,10 @@ import {
   type CreateOrganizationRequest,
   AccountType,
 } from "@/lib/api/teams";
+import {
+  createOrganizationSchema,
+  type CreateOrganizationFormData,
+} from "@/lib/schemas/teams";
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   [AccountType.GYM_OWNER]: "Gym Owner",
@@ -48,10 +54,14 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateOrganizationRequest>({
-    name: "",
-    description: "",
-    account_type: AccountType.FITNESS_MEMBER,
+  const {
+    register: registerCreate,
+    handleSubmit: handleCreateSubmit,
+    reset: resetCreateForm,
+    formState: { errors: createFormErrors },
+  } = useForm<CreateOrganizationFormData>({
+    resolver: zodResolver(createOrganizationSchema),
+    defaultValues: { name: "", description: "" },
   });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -83,9 +93,7 @@ export default function TeamPage() {
     }
   }
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-
+  async function handleCreate(data: CreateOrganizationFormData) {
     if (!canCreateOrganization) {
       setCreateError("Only organization owners can create organizations.");
       return;
@@ -95,7 +103,8 @@ export default function TeamPage() {
     setCreateError(null);
     try {
       const payload: CreateOrganizationRequest = {
-        ...createForm,
+        name: data.name,
+        description: data.description,
         account_type: getAccountType(user?.role),
       };
       const res = await teamsService.createOrganization(payload);
@@ -110,11 +119,7 @@ export default function TeamPage() {
           },
         ]);
         setShowCreateModal(false);
-        setCreateForm({
-          name: "",
-          description: "",
-          account_type: AccountType.FITNESS_MEMBER,
-        });
+        resetCreateForm();
       } else {
         setCreateError(res.message ?? "Failed to create organization.");
       }
@@ -285,7 +290,7 @@ export default function TeamPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
+            <form onSubmit={handleCreateSubmit(handleCreate)} className="p-6 space-y-4">
               {createError && (
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
                   {createError}
@@ -298,14 +303,13 @@ export default function TeamPage() {
                 </label>
                 <input
                   type="text"
-                  required
-                  value={createForm.name}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, name: e.target.value }))
-                  }
+                  {...registerCreate("name")}
                   placeholder="e.g. FitZone Gym"
                   className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                 />
+                {createFormErrors.name && (
+                  <p className="mt-1 text-sm text-red-500">{createFormErrors.name.message}</p>
+                )}
               </div>
 
               <div>
@@ -314,13 +318,7 @@ export default function TeamPage() {
                 </label>
                 <textarea
                   rows={3}
-                  value={createForm.description}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({
-                      ...f,
-                      description: e.target.value,
-                    }))
-                  }
+                  {...registerCreate("description")}
                   placeholder="Short description of your organization..."
                   className="w-full resize-none rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                 />

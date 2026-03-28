@@ -1,81 +1,40 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components";
+import { contactSchema, type ContactFormData } from "@/lib/schemas/contact";
 
 interface ContactFormProps {
   categories: Array<{ value: string; label: string }>;
 }
 
 export function ContactForm({ categories }: ContactFormProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    category: "general",
-    message: "",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      category: "general",
+      message: "",
+    },
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.subject.trim()) {
-      newErrors.subject = "Subject is required";
-    }
-
-    if (!formData.message.trim()) {
-      newErrors.message = "Message is required";
-    } else if (formData.message.trim().length < 20) {
-      newErrors.message = "Message must be at least 20 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+  const onSubmit = (data: ContactFormData) => {
     // In production, this would send to the backend
     setSubmitted(true);
 
     // Reset form after 3 seconds
     setTimeout(() => {
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        category: "general",
-        message: "",
-      });
+      reset();
       setSubmitted(false);
     }, 3000);
   };
@@ -109,26 +68,20 @@ export function ContactForm({ categories }: ContactFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Input
           label="Your Name"
-          name="name"
           type="text"
-          value={formData.name}
-          onChange={handleChange}
-          error={errors.name}
-          required
+          {...register("name")}
+          error={errors.name?.message}
           placeholder="John Doe"
         />
         <Input
           label="Email Address"
-          name="email"
           type="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={errors.email}
-          required
+          {...register("email")}
+          error={errors.email?.message}
           placeholder="john@example.com"
         />
       </div>
@@ -142,9 +95,7 @@ export function ContactForm({ categories }: ContactFormProps) {
         </label>
         <select
           id="category"
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
+          {...register("category")}
           className="w-full rounded-lg border border-neutral-200 bg-background px-4 py-3 text-foreground transition-colors focus:border-accent-blue-500 focus:outline-none focus:ring-2 focus:ring-accent-blue-500/20"
         >
           {categories.map((cat) => (
@@ -157,12 +108,9 @@ export function ContactForm({ categories }: ContactFormProps) {
 
       <Input
         label="Subject"
-        name="subject"
         type="text"
-        value={formData.subject}
-        onChange={handleChange}
-        error={errors.subject}
-        required
+        {...register("subject")}
+        error={errors.subject?.message}
         placeholder="How can we help you?"
       />
 
@@ -175,10 +123,8 @@ export function ContactForm({ categories }: ContactFormProps) {
         </label>
         <textarea
           id="message"
-          name="message"
           rows={6}
-          value={formData.message}
-          onChange={handleChange}
+          {...register("message")}
           placeholder="Tell us more about your inquiry..."
           className={`w-full rounded-lg border ${
             errors.message
@@ -187,7 +133,7 @@ export function ContactForm({ categories }: ContactFormProps) {
           } bg-background px-4 py-3 text-foreground transition-colors focus:outline-none focus:ring-2`}
         />
         {errors.message && (
-          <p className="mt-1 text-sm text-red-500">{errors.message}</p>
+          <p className="mt-1 text-sm text-red-500">{errors.message.message}</p>
         )}
       </div>
 

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
@@ -14,13 +16,18 @@ import {
   type TeamRole,
   type OrganizationMember,
   type TeamInvitation,
-  type InviteMemberRequest,
-  type AddMemberDirectRequest,
-  type CreateTeamRoleRequest,
   MemberStatus,
   InvitationStatus,
   TeamPermission,
 } from "@/lib/api/teams";
+import {
+  inviteMemberSchema,
+  addMemberDirectSchema,
+  createRoleSchema,
+  type InviteMemberFormData,
+  type AddMemberDirectFormData,
+  type CreateRoleFormData,
+} from "@/lib/schemas/teams";
 
 type Tab = "members" | "roles" | "invitations";
 
@@ -74,31 +81,51 @@ export default function OrgDetailPage() {
   const [addMode, setAddMode] = useState<"invite" | "direct">("invite");
 
   // Invite-by-email form
-  const [inviteForm, setInviteForm] = useState<InviteMemberRequest>({
-    email: "",
-    team_role_id: "",
+  const {
+    register: registerInvite,
+    handleSubmit: handleInviteSubmit,
+    reset: resetInviteForm,
+    formState: { errors: inviteFormErrors },
+  } = useForm<InviteMemberFormData>({
+    resolver: zodResolver(inviteMemberSchema),
+    defaultValues: { email: "", team_role_id: "" },
   });
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   // Direct-add form
-  const [directForm, setDirectForm] = useState<AddMemberDirectRequest>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
-    team_role_id: "",
+  const {
+    register: registerDirect,
+    handleSubmit: handleDirectSubmit,
+    reset: resetDirectForm,
+    formState: { errors: directFormErrors },
+  } = useForm<AddMemberDirectFormData>({
+    resolver: zodResolver(addMemberDirectSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email: "",
+      password: "",
+      team_role_id: "",
+    },
   });
   const [directAdding, setDirectAdding] = useState(false);
   const [directError, setDirectError] = useState<string | null>(null);
 
   // Create role modal
   const [showRoleModal, setShowRoleModal] = useState(false);
-  const [roleForm, setRoleForm] = useState<CreateTeamRoleRequest>({
-    name: "",
-    code: "",
-    permissions: [],
+  const {
+    register: registerRole,
+    handleSubmit: handleRoleSubmit,
+    watch: watchRole,
+    setValue: setRoleValue,
+    reset: resetRoleForm,
+    formState: { errors: roleFormErrors },
+  } = useForm<CreateRoleFormData>({
+    resolver: zodResolver(createRoleSchema),
+    defaultValues: { name: "", code: "", permissions: [] },
   });
+  const rolePermissions = watchRole("permissions");
   const [creatingRole, setCreatingRole] = useState(false);
   const [roleError, setRoleError] = useState<string | null>(null);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
@@ -140,17 +167,16 @@ export default function OrgDetailPage() {
     }
   }
 
-  async function handleInvite(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleInvite(data: InviteMemberFormData) {
     setInviting(true);
     setInviteError(null);
     try {
-      const res = await teamsService.inviteMember(orgId, inviteForm);
+      const res = await teamsService.inviteMember(orgId, data);
       if (res.success && res.data) {
         // Reload all data to get populated fields
         await loadAll();
         setShowInviteModal(false);
-        setInviteForm({ email: "", team_role_id: "" });
+        resetInviteForm();
         setActiveTab("invitations");
       } else {
         setInviteError(res.message ?? "Failed to send invitation.");
@@ -162,23 +188,16 @@ export default function OrgDetailPage() {
     }
   }
 
-  async function handleAddDirect(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleAddDirect(data: AddMemberDirectFormData) {
     setDirectAdding(true);
     setDirectError(null);
     try {
-      const res = await teamsService.addMemberDirect(orgId, directForm);
+      const res = await teamsService.addMemberDirect(orgId, data);
       if (res.success && res.data) {
         // Reload all data to get populated fields
         await loadAll();
         setShowInviteModal(false);
-        setDirectForm({
-          first_name: "",
-          last_name: "",
-          email: "",
-          password: "",
-          team_role_id: "",
-        });
+        resetDirectForm();
         setActiveTab("members");
       } else {
         setDirectError(res.message ?? "Failed to add member.");
@@ -255,16 +274,18 @@ export default function OrgDetailPage() {
     });
   }
 
-  async function handleCreateRole(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreateRole(data: CreateRoleFormData) {
     setCreatingRole(true);
     setRoleError(null);
     try {
-      const res = await teamsService.createRole(orgId, roleForm);
+      const res = await teamsService.createRole(orgId, {
+        ...data,
+        permissions: data.permissions as TeamPermission[],
+      });
       if (res.success && res.data) {
         setRoles((prev) => [...prev, res.data!]);
         setShowRoleModal(false);
-        setRoleForm({ name: "", code: "", permissions: [] });
+        resetRoleForm();
       } else {
         setRoleError(res.message ?? "Failed to create role.");
       }
@@ -289,12 +310,11 @@ export default function OrgDetailPage() {
   }
 
   function togglePermission(perm: TeamPermission) {
-    setRoleForm((f) => ({
-      ...f,
-      permissions: f.permissions.includes(perm)
-        ? f.permissions.filter((p) => p !== perm)
-        : [...f.permissions, perm],
-    }));
+    const current = rolePermissions;
+    const updated = current.includes(perm)
+      ? current.filter((p) => p !== perm)
+      : [...current, perm];
+    setRoleValue("permissions", updated);
   }
 
   function getRoleName(roleId: string) {
@@ -800,7 +820,7 @@ export default function OrgDetailPage() {
 
             {/* ── Send Invite form ── */}
             {addMode === "invite" && (
-              <form onSubmit={handleInvite} className="p-6 space-y-4">
+              <form onSubmit={handleInviteSubmit(handleInvite)} className="p-6 space-y-4">
                 <p className="text-sm text-foreground-secondary">
                   An invitation link will be emailed to the address below. They
                   must accept to join.
@@ -816,28 +836,20 @@ export default function OrgDetailPage() {
                   </label>
                   <input
                     type="email"
-                    required
-                    value={inviteForm.email}
-                    onChange={(e) =>
-                      setInviteForm((f) => ({ ...f, email: e.target.value }))
-                    }
+                    {...registerInvite("email")}
                     placeholder="colleague@example.com"
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
+                  {inviteFormErrors.email && (
+                    <p className="mt-1 text-sm text-red-500">{inviteFormErrors.email.message}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-1.5">
                     Role <span className="text-red-500">*</span>
                   </label>
                   <select
-                    required
-                    value={inviteForm.team_role_id}
-                    onChange={(e) =>
-                      setInviteForm((f) => ({
-                        ...f,
-                        team_role_id: e.target.value,
-                      }))
-                    }
+                    {...registerInvite("team_role_id")}
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
                   >
                     <option value="">Select a role...</option>
@@ -847,6 +859,9 @@ export default function OrgDetailPage() {
                       </option>
                     ))}
                   </select>
+                  {inviteFormErrors.team_role_id && (
+                    <p className="mt-1 text-sm text-red-500">{inviteFormErrors.team_role_id.message}</p>
+                  )}
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button
@@ -869,7 +884,7 @@ export default function OrgDetailPage() {
 
             {/* ── Add Directly form ── */}
             {addMode === "direct" && (
-              <form onSubmit={handleAddDirect} className="p-6 space-y-4">
+              <form onSubmit={handleDirectSubmit(handleAddDirect)} className="p-6 space-y-4">
                 <p className="text-sm text-foreground-secondary">
                   A new account will be created and the member can log in
                   immediately with the password you set.
@@ -886,17 +901,13 @@ export default function OrgDetailPage() {
                     </label>
                     <input
                       type="text"
-                      required
-                      value={directForm.first_name}
-                      onChange={(e) =>
-                        setDirectForm((f) => ({
-                          ...f,
-                          first_name: e.target.value,
-                        }))
-                      }
+                      {...registerDirect("first_name")}
                       placeholder="John"
                       className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                     />
+                    {directFormErrors.first_name && (
+                      <p className="mt-1 text-sm text-red-500">{directFormErrors.first_name.message}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
@@ -904,17 +915,13 @@ export default function OrgDetailPage() {
                     </label>
                     <input
                       type="text"
-                      required
-                      value={directForm.last_name}
-                      onChange={(e) =>
-                        setDirectForm((f) => ({
-                          ...f,
-                          last_name: e.target.value,
-                        }))
-                      }
+                      {...registerDirect("last_name")}
                       placeholder="Doe"
                       className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                     />
+                    {directFormErrors.last_name && (
+                      <p className="mt-1 text-sm text-red-500">{directFormErrors.last_name.message}</p>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -923,14 +930,13 @@ export default function OrgDetailPage() {
                   </label>
                   <input
                     type="email"
-                    required
-                    value={directForm.email}
-                    onChange={(e) =>
-                      setDirectForm((f) => ({ ...f, email: e.target.value }))
-                    }
+                    {...registerDirect("email")}
                     placeholder="member@example.com"
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
+                  {directFormErrors.email && (
+                    <p className="mt-1 text-sm text-red-500">{directFormErrors.email.message}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-1.5">
@@ -938,29 +944,20 @@ export default function OrgDetailPage() {
                   </label>
                   <input
                     type="password"
-                    required
-                    minLength={8}
-                    value={directForm.password}
-                    onChange={(e) =>
-                      setDirectForm((f) => ({ ...f, password: e.target.value }))
-                    }
-                    placeholder="Min. 8 characters"
+                    {...registerDirect("password")}
+                    placeholder="Min. 12 characters"
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
+                  {directFormErrors.password && (
+                    <p className="mt-1 text-sm text-red-500">{directFormErrors.password.message}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-1.5">
                     Role <span className="text-red-500">*</span>
                   </label>
                   <select
-                    required
-                    value={directForm.team_role_id}
-                    onChange={(e) =>
-                      setDirectForm((f) => ({
-                        ...f,
-                        team_role_id: e.target.value,
-                      }))
-                    }
+                    {...registerDirect("team_role_id")}
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
                   >
                     <option value="">Select a role...</option>
@@ -970,6 +967,9 @@ export default function OrgDetailPage() {
                       </option>
                     ))}
                   </select>
+                  {directFormErrors.team_role_id && (
+                    <p className="mt-1 text-sm text-red-500">{directFormErrors.team_role_id.message}</p>
+                  )}
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button
@@ -1022,7 +1022,7 @@ export default function OrgDetailPage() {
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleCreateRole} className="p-6 space-y-4">
+            <form onSubmit={handleRoleSubmit(handleCreateRole)} className="p-6 space-y-4">
               {roleError && (
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
                   {roleError}
@@ -1035,14 +1035,13 @@ export default function OrgDetailPage() {
                   </label>
                   <input
                     type="text"
-                    required
-                    value={roleForm.name}
-                    onChange={(e) =>
-                      setRoleForm((f) => ({ ...f, name: e.target.value }))
-                    }
+                    {...registerRole("name")}
                     placeholder="e.g. Front Desk"
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
+                  {roleFormErrors.name && (
+                    <p className="mt-1 text-sm text-red-500">{roleFormErrors.name.message}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-1.5">
@@ -1050,17 +1049,17 @@ export default function OrgDetailPage() {
                   </label>
                   <input
                     type="text"
-                    required
-                    value={roleForm.code}
-                    onChange={(e) =>
-                      setRoleForm((f) => ({
-                        ...f,
-                        code: e.target.value.toLowerCase().replace(/\s+/g, "_"),
-                      }))
-                    }
+                    {...registerRole("code", {
+                      onChange: (e) => {
+                        e.target.value = e.target.value.toLowerCase().replace(/\s+/g, "_");
+                      },
+                    })}
                     placeholder="e.g. front_desk"
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-mono text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
+                  {roleFormErrors.code && (
+                    <p className="mt-1 text-sm text-red-500">{roleFormErrors.code.message}</p>
+                  )}
                 </div>
               </div>
               <div>
@@ -1075,7 +1074,7 @@ export default function OrgDetailPage() {
                     >
                       <input
                         type="checkbox"
-                        checked={roleForm.permissions.includes(perm)}
+                        checked={rolePermissions.includes(perm)}
                         onChange={() => togglePermission(perm)}
                         className="h-4 w-4 rounded border-neutral-300 accent-primary-500"
                       />

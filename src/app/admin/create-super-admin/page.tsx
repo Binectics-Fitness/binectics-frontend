@@ -1,17 +1,32 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
 import { AccountType } from "@/lib/types";
+import {
+  createSuperAdminSchema,
+  type CreateSuperAdminFormData,
+} from "@/lib/schemas/admin";
 
 export default function CreateSuperAdminPage() {
-  const [formData, setFormData] = useState({
-    firstName: "Super",
-    lastName: "Admin",
-    email: "admin@binectics.com",
-    password: "Admin@123456",
-    country: "United States",
+  const {
+    register,
+    watch,
+    handleSubmit: rhfHandleSubmit,
+    formState: { errors },
+  } = useForm<CreateSuperAdminFormData>({
+    resolver: zodResolver(createSuperAdminSchema),
+    defaultValues: {
+      firstName: "Super",
+      lastName: "Admin",
+      email: "admin@binectics.com",
+      password: "Admin@123456",
+      country: "United States",
+    },
   });
+  const formData = watch();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -186,46 +201,31 @@ export default function CreateSuperAdminPage() {
             <input
               type="text"
               placeholder="First Name"
-              value={formData.firstName}
-              onChange={(e) =>
-                setFormData({ ...formData, firstName: e.target.value })
-              }
+              {...register("firstName")}
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="text"
               placeholder="Last Name"
-              value={formData.lastName}
-              onChange={(e) =>
-                setFormData({ ...formData, lastName: e.target.value })
-              }
+              {...register("lastName")}
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="email"
               placeholder="Email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
+              {...register("email")}
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
             <input
               type="password"
               placeholder="Password"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
+              {...register("password")}
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
             <input
               type="text"
               placeholder="Country"
-              value={formData.country}
-              onChange={(e) =>
-                setFormData({ ...formData, country: e.target.value })
-              }
+              {...register("country")}
               className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
           </div>

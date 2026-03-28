@@ -3,26 +3,37 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { showAlert } from "@/lib/ui/dialogs";
+import {
+  changePasswordSchema,
+  type ChangePasswordFormData,
+} from "@/lib/schemas/settings";
 
 export default function AccountSettingsPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [passwords, setPasswords] = useState({
-    current: "",
-    new: "",
-    confirm: "",
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { current: "", new: "", confirm: "" },
   });
 
-  const handlePasswordChange = async () => {
+  const onPasswordChange = async () => {
     setIsChangingPassword(true);
     // Simulate password change
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsChangingPassword(false);
-    setPasswords({ current: "", new: "", confirm: "" });
+    reset();
     await showAlert("Password changed successfully!");
   };
 
@@ -48,19 +59,19 @@ export default function AccountSettingsPage() {
         <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Change Password
         </h3>
-        <div className="max-w-xl space-y-4">
+        <form onSubmit={handleSubmit(onPasswordChange)} className="max-w-xl space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
               Current Password
             </label>
             <input
               type="password"
-              value={passwords.current}
-              onChange={(e) =>
-                setPasswords({ ...passwords, current: e.target.value })
-              }
+              {...register("current")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
+            {errors.current && (
+              <p className="mt-1 text-sm text-red-500">{errors.current.message}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -68,12 +79,12 @@ export default function AccountSettingsPage() {
             </label>
             <input
               type="password"
-              value={passwords.new}
-              onChange={(e) =>
-                setPasswords({ ...passwords, new: e.target.value })
-              }
+              {...register("new")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
+            {errors.new && (
+              <p className="mt-1 text-sm text-red-500">{errors.new.message}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -81,21 +92,21 @@ export default function AccountSettingsPage() {
             </label>
             <input
               type="password"
-              value={passwords.confirm}
-              onChange={(e) =>
-                setPasswords({ ...passwords, confirm: e.target.value })
-              }
+              {...register("confirm")}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
+            {errors.confirm && (
+              <p className="mt-1 text-sm text-red-500">{errors.confirm.message}</p>
+            )}
           </div>
           <button
-            onClick={handlePasswordChange}
+            type="submit"
             disabled={isChangingPassword}
             className="w-full rounded-lg bg-primary-500 px-6 py-3 font-semibold text-foreground transition-colors hover:bg-primary-600 sm:w-auto"
           >
             {isChangingPassword ? "Changing..." : "Change Password"}
           </button>
-        </div>
+        </form>
       </div>
 
       {/* Danger Zone */}

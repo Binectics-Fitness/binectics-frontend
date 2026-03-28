@@ -18,6 +18,14 @@ import type {
   CreateClientJournalEntryRequest,
 } from "@/lib/api/progress";
 import { ClientJournalMood } from "@/lib/api/progress";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  addClientSchema,
+  createJournalSchema,
+  type AddClientFormData,
+  type CreateJournalFormData,
+} from "@/lib/schemas/progress";
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
@@ -65,6 +73,40 @@ export default function TrainerClientsPage() {
     Record<string, ClientJournalEntry[]>
   >({});
   const [journalSubmitting, setJournalSubmitting] = useState(false);
+
+  const {
+    register: registerAddClient,
+    handleSubmit: handleAddClientSubmit,
+    reset: resetAddClient,
+    formState: { errors: addClientErrors },
+  } = useForm<AddClientFormData>({
+    resolver: zodResolver(addClientSchema),
+    defaultValues: {
+      email: "",
+      first_name: "",
+      message: "",
+      notes: "",
+      starting_weight_kg: "",
+      target_weight_kg: "",
+      height_cm: "",
+      goals: "",
+    },
+  });
+
+  const {
+    register: registerJournal,
+    handleSubmit: handleJournalSubmit,
+    reset: resetJournal,
+    formState: { errors: journalErrors },
+  } = useForm<CreateJournalFormData>({
+    resolver: zodResolver(createJournalSchema),
+    defaultValues: {
+      notes: "",
+      mood: "",
+      weight_kg: "",
+      adherence_score: "",
+    },
+  });
 
   // ─── load client profiles ─────────────────────────────────────
 
@@ -125,37 +167,36 @@ export default function TrainerClientsPage() {
 
   // ─── form handlers ────────────────────────────────────────────
 
-  async function handleAddClient(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleAddClient(data: AddClientFormData) {
     setSubmitting(true);
     setError(null);
     setSuccessMessage(null);
-    const fd = new FormData(e.currentTarget);
-    const data: AddClientRequest = {
-      email: fd.get("email") as string,
-      first_name: (fd.get("first_name") as string) || undefined,
-      message: (fd.get("message") as string) || undefined,
-      notes: (fd.get("notes") as string) || undefined,
-      starting_weight_kg: fd.get("starting_weight_kg")
-        ? Number(fd.get("starting_weight_kg"))
+    const payload: AddClientRequest = {
+      email: data.email,
+      first_name: data.first_name || undefined,
+      message: data.message || undefined,
+      notes: data.notes || undefined,
+      starting_weight_kg: data.starting_weight_kg
+        ? Number(data.starting_weight_kg)
         : undefined,
-      target_weight_kg: fd.get("target_weight_kg")
-        ? Number(fd.get("target_weight_kg"))
+      target_weight_kg: data.target_weight_kg
+        ? Number(data.target_weight_kg)
         : undefined,
-      height_cm: fd.get("height_cm") ? Number(fd.get("height_cm")) : undefined,
-      goals: (fd.get("goals") as string)
-        ? (fd.get("goals") as string)
+      height_cm: data.height_cm ? Number(data.height_cm) : undefined,
+      goals: data.goals
+        ? data.goals
             .split(",")
             .map((g) => g.trim())
             .filter(Boolean)
         : undefined,
     };
     const res = currentOrg
-      ? await progressService.addClientInOrg(currentOrg._id, data)
-      : await progressService.addClient(data);
+      ? await progressService.addClientInOrg(currentOrg._id, payload)
+      : await progressService.addClient(payload);
     setSubmitting(false);
     if (res.success && res.data) {
       setShowAddModal(false);
+      resetAddClient();
       setSuccessMessage(res.data.message);
       loadProfiles();
       loadInvitations();
@@ -205,26 +246,18 @@ export default function TrainerClientsPage() {
     loadJournals(selectedProfileId);
   }, [selectedProfileId, loadJournals]);
 
-  async function handleCreateJournal(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleCreateJournal(data: CreateJournalFormData) {
     if (!selectedProfileId) return;
-
-    const fd = new FormData(e.currentTarget);
-    const notes = String(fd.get("notes") || "").trim();
-    if (!notes) {
-      setError("Journal notes are required.");
-      return;
-    }
 
     setJournalSubmitting(true);
     setError(null);
 
     const payload: CreateClientJournalEntryRequest = {
-      notes,
-      mood: (fd.get("mood") as ClientJournalMood) || undefined,
-      weight_kg: fd.get("weight_kg") ? Number(fd.get("weight_kg")) : undefined,
-      adherence_score: fd.get("adherence_score")
-        ? Number(fd.get("adherence_score"))
+      notes: data.notes,
+      mood: (data.mood as ClientJournalMood) || undefined,
+      weight_kg: data.weight_kg ? Number(data.weight_kg) : undefined,
+      adherence_score: data.adherence_score
+        ? Number(data.adherence_score)
         : undefined,
     };
 
@@ -239,7 +272,7 @@ export default function TrainerClientsPage() {
           ...prev,
           [selectedProfileId]: [newEntry, ...(prev[selectedProfileId] ?? [])],
         }));
-        (e.currentTarget as HTMLFormElement).reset();
+        resetJournal();
       } else {
         setError(res.message || "Failed to add journal entry.");
       }
@@ -465,12 +498,12 @@ export default function TrainerClientsPage() {
                 </h3>
 
                 <form
-                  onSubmit={handleCreateJournal}
+                  onSubmit={handleJournalSubmit(handleCreateJournal)}
                   className="rounded-lg border border-neutral-200 p-4"
                 >
                   <div className="grid gap-3 sm:grid-cols-3">
                     <select
-                      name="mood"
+                      {...registerJournal("mood")}
                       className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                       defaultValue=""
                     >
@@ -482,7 +515,7 @@ export default function TrainerClientsPage() {
                       ))}
                     </select>
                     <input
-                      name="weight_kg"
+                      {...registerJournal("weight_kg")}
                       type="number"
                       min="0"
                       step="0.1"
@@ -490,7 +523,7 @@ export default function TrainerClientsPage() {
                       className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                     />
                     <input
-                      name="adherence_score"
+                      {...registerJournal("adherence_score")}
                       type="number"
                       min="0"
                       max="100"
@@ -499,12 +532,12 @@ export default function TrainerClientsPage() {
                     />
                   </div>
                   <textarea
-                    name="notes"
-                    required
+                    {...registerJournal("notes")}
                     rows={3}
                     placeholder="Write progress notes for this client..."
                     className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                   />
+                  {journalErrors.notes && <p className="text-xs text-red-600 mt-1">{journalErrors.notes.message}</p>}
                   <div className="mt-3 flex justify-end">
                     <button
                       type="submit"
@@ -780,7 +813,7 @@ export default function TrainerClientsPage() {
       {/* ─── Add Client Modal ──────────────────────────────── */}
       {showAddModal && (
         <ModalOverlay onClose={() => setShowAddModal(false)} title="Add Client">
-          <form onSubmit={handleAddClient} className="space-y-4">
+          <form onSubmit={handleAddClientSubmit(handleAddClient)} className="space-y-4">
             <p className="text-sm text-foreground-secondary">
               Enter the client&apos;s email. If they have a Binectics account, a
               connection request will be sent for their approval. Otherwise,
@@ -791,19 +824,19 @@ export default function TrainerClientsPage() {
                 Email Address *
               </span>
               <input
-                name="email"
+                {...registerAddClient("email")}
                 type="email"
-                required
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="client@example.com"
               />
+              {addClientErrors.email && <p className="text-xs text-red-600 mt-1">{addClientErrors.email.message}</p>}
             </label>
             <label className="block">
               <span className="text-sm font-medium text-foreground">
                 First Name
               </span>
               <input
-                name="first_name"
+                {...registerAddClient("first_name")}
                 type="text"
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="Optional"
@@ -814,7 +847,7 @@ export default function TrainerClientsPage() {
                 Message
               </span>
               <textarea
-                name="message"
+                {...registerAddClient("message")}
                 rows={2}
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="Optional message to the client"
@@ -826,7 +859,7 @@ export default function TrainerClientsPage() {
                   Starting Weight (kg)
                 </span>
                 <input
-                  name="starting_weight_kg"
+                  {...registerAddClient("starting_weight_kg")}
                   type="number"
                   step="0.1"
                   className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
@@ -837,7 +870,7 @@ export default function TrainerClientsPage() {
                   Target Weight (kg)
                 </span>
                 <input
-                  name="target_weight_kg"
+                  {...registerAddClient("target_weight_kg")}
                   type="number"
                   step="0.1"
                   className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
@@ -849,7 +882,7 @@ export default function TrainerClientsPage() {
                 Height (cm)
               </span>
               <input
-                name="height_cm"
+                {...registerAddClient("height_cm")}
                 type="number"
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
               />
@@ -857,7 +890,7 @@ export default function TrainerClientsPage() {
             <label className="block">
               <span className="text-sm font-medium text-foreground">Goals</span>
               <input
-                name="goals"
+                {...registerAddClient("goals")}
                 type="text"
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="Comma-separated, e.g. Build muscle, Increase strength"
@@ -866,7 +899,7 @@ export default function TrainerClientsPage() {
             <label className="block">
               <span className="text-sm font-medium text-foreground">Notes</span>
               <textarea
-                name="notes"
+                {...registerAddClient("notes")}
                 rows={2}
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="Any notes about this client"

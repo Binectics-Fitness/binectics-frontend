@@ -2,11 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import DashboardLoading from "@/components/DashboardLoading";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { teamsService, type TeamRole } from "@/lib/api/teams";
+import {
+  inviteMemberSchema,
+  type InviteMemberFormData,
+} from "@/lib/schemas/teams";
 
 function findDefaultRoleId(roles: TeamRole[]): string {
   const trainerLikeRole = roles.find((role) => {
@@ -31,10 +37,21 @@ export default function InviteTrainerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    email: "",
-    team_role_id: "",
+
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    setValue,
+    watch,
+    formState: { errors: formErrors },
+  } = useForm<InviteMemberFormData>({
+    resolver: zodResolver(inviteMemberSchema),
+    defaultValues: {
+      email: "",
+      team_role_id: "",
+    },
   });
+  const formData = watch();
 
   useEffect(() => {
     if (authLoading || orgLoading || !isAuthorized) return;
@@ -58,10 +75,9 @@ export default function InviteTrainerPage() {
         if (response.success && response.data) {
           const roleData = response.data;
           setRoles(roleData);
-          setFormData((current) => ({
-            ...current,
-            team_role_id: current.team_role_id || findDefaultRoleId(roleData),
-          }));
+          if (!formData.team_role_id) {
+            setValue("team_role_id", findDefaultRoleId(roleData));
+          }
         } else {
           setRoles([]);
           setError(response.message ?? "Failed to load team roles.");
@@ -90,9 +106,7 @@ export default function InviteTrainerPage() {
     [formData.team_role_id, roles],
   );
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-
+  async function onSubmit(data: InviteMemberFormData) {
     if (!currentOrg?._id) {
       setError("Select an organization before sending invitations.");
       return;
@@ -105,7 +119,7 @@ export default function InviteTrainerPage() {
     try {
       const response = await teamsService.inviteMember(
         currentOrg._id,
-        formData,
+        data,
       );
 
       if (!response.success) {
@@ -193,7 +207,7 @@ export default function InviteTrainerPage() {
             </div>
           ) : (
             <form
-              onSubmit={handleSubmit}
+              onSubmit={rhfHandleSubmit(onSubmit)}
               className="rounded-xl bg-white p-4 shadow-card sm:p-6 md:p-8"
             >
               <div className="mb-8">
@@ -207,17 +221,13 @@ export default function InviteTrainerPage() {
                     </label>
                     <input
                       type="email"
-                      value={formData.email}
-                      onChange={(event) =>
-                        setFormData((current) => ({
-                          ...current,
-                          email: event.target.value,
-                        }))
-                      }
+                      {...register("email")}
                       className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-accent-blue-500 focus:outline-none"
                       placeholder="coach@example.com"
-                      required
                     />
+                    {formErrors.email && (
+                      <p className="mt-1 text-sm text-red-500">{formErrors.email.message}</p>
+                    )}
                   </div>
 
                   <div>
@@ -225,15 +235,8 @@ export default function InviteTrainerPage() {
                       Team Role
                     </label>
                     <select
-                      value={formData.team_role_id}
-                      onChange={(event) =>
-                        setFormData((current) => ({
-                          ...current,
-                          team_role_id: event.target.value,
-                        }))
-                      }
+                      {...register("team_role_id")}
                       className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-accent-blue-500 focus:outline-none"
-                      required
                       disabled={roles.length === 0}
                     >
                       {roles.length === 0 ? (

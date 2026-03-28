@@ -3,18 +3,26 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input, PasswordInput } from "@/components";
 import { InactivityNotification } from "@/components/InactivityNotification";
 import { getDashboardRoute } from "@/lib/constants/routes";
 import { UserRole } from "@/lib/types";
+import { loginSchema, type LoginFormData } from "@/lib/schemas/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading: authLoading, user } = useAuth();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+
+  const {
+    register: registerField,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
   });
 
   // Redirect if already logged in
@@ -30,54 +38,18 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string>("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-    if (apiError) {
-      setApiError("");
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginFormData) => {
     setApiError("");
-
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
 
     try {
       const result = await login({
-        email: formData.email,
-        password: formData.password,
+        email: data.email,
+        password: data.password,
         rememberMe,
       });
 
@@ -113,7 +85,7 @@ export default function LoginPage() {
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* API Error Message */}
             {apiError && (
               <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
@@ -140,12 +112,9 @@ export default function LoginPage() {
                 <Input
                   label="Email Address"
                   type="email"
-                  name="email"
                   placeholder="john@example.com"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={errors.email}
+                  error={errors.email?.message}
+                  {...registerField("email")}
                 />
 
                 {/* Password */}
@@ -167,13 +136,10 @@ export default function LoginPage() {
                   </div>
                   <PasswordInput
                     id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
                     placeholder="••••••••"
-                    required
-                    error={errors.password}
+                    error={errors.password?.message}
                     className="h-12"
+                    {...registerField("password")}
                   />
                 </div>
 

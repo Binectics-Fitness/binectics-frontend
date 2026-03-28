@@ -2,40 +2,51 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { showAlert } from "@/lib/ui/dialogs";
+import {
+  privacySettingsSchema,
+  type PrivacySettingsFormData,
+} from "@/lib/schemas/settings";
 
 export default function PrivacySettingsPage() {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const [privacy, setPrivacy] = useState({
-    profileVisibility: "public" as "public" | "private" | "members",
-    showEmail: false,
-    showPhone: false,
-    showLocation: true,
-    showProgress: false,
-    allowActivityTracking: true,
-    allowPerformanceAnalytics: true,
-    shareDataWithProviders: true,
-    allowDirectMessages: true,
-    allowProviderMessages: true,
-    allowMarketingEmails: false,
-    shareWithThirdParties: false,
-    allowAnonymousData: true,
+  const { watch, setValue, handleSubmit } = useForm<PrivacySettingsFormData>({
+    resolver: zodResolver(privacySettingsSchema),
+    defaultValues: {
+      profileVisibility: "public",
+      showEmail: false,
+      showPhone: false,
+      showLocation: true,
+      showProgress: false,
+      allowActivityTracking: true,
+      allowPerformanceAnalytics: true,
+      shareDataWithProviders: true,
+      allowDirectMessages: true,
+      allowProviderMessages: true,
+      allowMarketingEmails: false,
+      shareWithThirdParties: false,
+      allowAnonymousData: true,
+    },
   });
 
-  const handleToggle = (key: keyof typeof privacy) => {
+  const privacy = watch();
+
+  const handleToggle = (key: keyof PrivacySettingsFormData) => {
     if (typeof privacy[key] === "boolean") {
-      setPrivacy({ ...privacy, [key]: !privacy[key] as any });
+      setValue(key, !privacy[key] as any);
     }
   };
 
   const handleVisibilityChange = (value: "public" | "private" | "members") => {
-    setPrivacy({ ...privacy, profileVisibility: value });
+    setValue("profileVisibility", value);
   };
 
-  const handleSave = async () => {
+  const onSave = async () => {
     setIsSaving(true);
     setSuccessMessage("");
     try {
@@ -317,7 +328,7 @@ export default function PrivacySettingsPage() {
 
       <div className="flex justify-stretch sm:justify-end">
         <button
-          onClick={handleSave}
+          onClick={handleSubmit(onSave)}
           disabled={isSaving}
           className="w-full rounded-lg bg-primary-500 px-8 py-3 font-semibold text-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >

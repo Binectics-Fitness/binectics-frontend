@@ -3,18 +3,24 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { InactivityNotification } from "@/components/InactivityNotification";
 import { UserRole } from "@/lib/types";
+import { adminLoginSchema, type AdminLoginFormData } from "@/lib/schemas/admin";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { login, user, isLoading: authLoading } = useAuth();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+  const {
+    register: registerField,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AdminLoginFormData>({
+    resolver: zodResolver(adminLoginSchema),
+    defaultValues: { email: "", password: "" },
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string>("");
 
@@ -25,48 +31,14 @@ export default function AdminLoginPage() {
     }
   }, [user, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-    if (apiError) {
-      setApiError("");
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: AdminLoginFormData) => {
     setApiError("");
-
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
 
     try {
       const result = await login({
-        email: formData.email,
-        password: formData.password,
+        email: data.email,
+        password: data.password,
       });
 
       if (!result.success) {
@@ -115,7 +87,7 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="bg-white shadow-card p-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white shadow-card p-8">
           {/* API Error Message */}
           {apiError && (
             <div className="mb-6 p-4 bg-red-50 border-2 border-red-500">
@@ -149,17 +121,14 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
+                {...registerField("email")}
                 placeholder="admin@binectics.com"
-                required
                 className={`w-full h-12 border-2 ${
                   errors.email ? "border-red-500" : "border-gray-200"
                 } px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-red-500 transition-colors`}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
               )}
             </div>
 
@@ -175,17 +144,14 @@ export default function AdminLoginPage() {
               <input
                 type="password"
                 id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
+                {...registerField("password")}
                 placeholder="••••••••"
-                required
                 className={`w-full h-12 border-2 ${
                   errors.password ? "border-red-500" : "border-gray-200"
                 } px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-red-500 transition-colors`}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
               )}
             </div>
           </div>

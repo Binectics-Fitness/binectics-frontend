@@ -7,6 +7,17 @@ import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  marketplaceListingSchema,
+  type MarketplaceListingFormData,
+} from "@/lib/schemas/marketplace";
+import type {
+  UseFormRegister,
+  FieldErrors,
+  UseFormSetValue,
+} from "react-hook-form";
 
 const ACCOUNT_TYPE_OPTIONS: {
   value: MarketplaceAccountType;
@@ -32,33 +43,48 @@ export default function MyMarketplaceListingPage() {
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const [accountType, setAccountType] =
-    useState<MarketplaceAccountType>("personal_trainer");
-  const [headline, setHeadline] = useState("");
-  const [bio, setBio] = useState("");
-  const [specialties, setSpecialties] = useState("");
-  const [certifications, setCertifications] = useState("");
-  const [languages, setLanguages] = useState("");
-  const [city, setCity] = useState("");
-  const [countryCode, setCountryCode] = useState("");
-  const [currency, setCurrency] = useState("USD");
-  const [priceFrom, setPriceFrom] = useState("");
-  const [priceLabel, setPriceLabel] = useState("");
-  const [acceptingClients, setAcceptingClients] = useState(true);
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<MarketplaceListingFormData>({
+    resolver: zodResolver(marketplaceListingSchema),
+    defaultValues: {
+      accountType: "personal_trainer",
+      headline: "",
+      bio: "",
+      specialties: "",
+      certifications: "",
+      languages: "",
+      city: "",
+      countryCode: "",
+      currency: "USD",
+      priceFrom: "",
+      priceLabel: "",
+      acceptingClients: true,
+    },
+  });
+
+  const formData = watch();
 
   const populateForm = (l: MarketplaceListing) => {
-    setAccountType(l.account_type);
-    setHeadline(l.headline);
-    setBio(l.bio);
-    setSpecialties(l.specialties.join(", "));
-    setCertifications(l.certifications.join(", "));
-    setLanguages(l.languages.join(", "));
-    setCity(l.city || "");
-    setCountryCode(l.country_code || "");
-    setCurrency(l.currency || "USD");
-    setPriceFrom(l.price_from != null ? String(l.price_from) : "");
-    setPriceLabel(l.price_label || "");
-    setAcceptingClients(l.accepting_clients);
+    reset({
+      accountType: l.account_type,
+      headline: l.headline,
+      bio: l.bio,
+      specialties: l.specialties.join(", "),
+      certifications: l.certifications.join(", "),
+      languages: l.languages.join(", "),
+      city: l.city || "",
+      countryCode: l.country_code || "",
+      currency: l.currency || "USD",
+      priceFrom: l.price_from != null ? String(l.price_from) : "",
+      priceLabel: l.price_label || "",
+      acceptingClients: l.accepting_clients,
+    });
   };
 
   useEffect(() => {
@@ -88,24 +114,23 @@ export default function MyMarketplaceListingPage() {
       .map((x) => x.trim())
       .filter(Boolean);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreate = async (data: MarketplaceListingFormData) => {
     setFormError("");
     setIsSaving(true);
 
     const res = await marketplaceService.createMyListing({
-      account_type: accountType,
-      headline,
-      bio,
-      specialties: splitComma(specialties),
-      certifications: splitComma(certifications),
-      languages: splitComma(languages),
-      city: city || undefined,
-      country_code: countryCode || undefined,
-      currency,
-      price_from: priceFrom ? Number(priceFrom) : undefined,
-      price_label: priceLabel || undefined,
-      accepting_clients: acceptingClients,
+      account_type: (data.accountType || "personal_trainer") as MarketplaceAccountType,
+      headline: data.headline,
+      bio: data.bio,
+      specialties: splitComma(data.specialties),
+      certifications: splitComma(data.certifications),
+      languages: splitComma(data.languages),
+      city: data.city || undefined,
+      country_code: data.countryCode || undefined,
+      currency: data.currency,
+      price_from: data.priceFrom ? Number(data.priceFrom) : undefined,
+      price_label: data.priceLabel || undefined,
+      accepting_clients: data.acceptingClients,
     });
 
     if (res.success && res.data) {
@@ -119,23 +144,22 @@ export default function MyMarketplaceListingPage() {
     setIsSaving(false);
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdate = async (data: MarketplaceListingFormData) => {
     setFormError("");
     setIsSaving(true);
 
     const res = await marketplaceService.updateMyListing({
-      headline,
-      bio,
-      specialties: splitComma(specialties),
-      certifications: splitComma(certifications),
-      languages: splitComma(languages),
-      city: city || undefined,
-      country_code: countryCode || undefined,
-      currency,
-      price_from: priceFrom ? Number(priceFrom) : undefined,
-      price_label: priceLabel || undefined,
-      accepting_clients: acceptingClients,
+      headline: data.headline,
+      bio: data.bio,
+      specialties: splitComma(data.specialties),
+      certifications: splitComma(data.certifications),
+      languages: splitComma(data.languages),
+      city: data.city || undefined,
+      country_code: data.countryCode || undefined,
+      currency: data.currency,
+      price_from: data.priceFrom ? Number(data.priceFrom) : undefined,
+      price_label: data.priceLabel || undefined,
+      accepting_clients: data.acceptingClients,
     });
 
     if (res.success && res.data) {
@@ -242,31 +266,11 @@ export default function MyMarketplaceListingPage() {
             </p>
             <ListingForm
               isCreate
-              accountType={accountType}
-              setAccountType={setAccountType}
-              headline={headline}
-              setHeadline={setHeadline}
-              bio={bio}
-              setBio={setBio}
-              specialties={specialties}
-              setSpecialties={setSpecialties}
-              certifications={certifications}
-              setCertifications={setCertifications}
-              languages={languages}
-              setLanguages={setLanguages}
-              city={city}
-              setCity={setCity}
-              countryCode={countryCode}
-              setCountryCode={setCountryCode}
-              currency={currency}
-              setCurrency={setCurrency}
-              priceFrom={priceFrom}
-              setPriceFrom={setPriceFrom}
-              priceLabel={priceLabel}
-              setPriceLabel={setPriceLabel}
-              acceptingClients={acceptingClients}
-              setAcceptingClients={setAcceptingClients}
-              onSubmit={handleCreate}
+              register={register}
+              errors={errors}
+              formData={formData}
+              setValue={setValue}
+              onSubmit={rhfHandleSubmit(handleCreate)}
               isSaving={isSaving}
               formError={formError}
               onCancel={undefined}
@@ -405,31 +409,11 @@ export default function MyMarketplaceListingPage() {
             </h2>
             <ListingForm
               isCreate={false}
-              accountType={accountType}
-              setAccountType={setAccountType}
-              headline={headline}
-              setHeadline={setHeadline}
-              bio={bio}
-              setBio={setBio}
-              specialties={specialties}
-              setSpecialties={setSpecialties}
-              certifications={certifications}
-              setCertifications={setCertifications}
-              languages={languages}
-              setLanguages={setLanguages}
-              city={city}
-              setCity={setCity}
-              countryCode={countryCode}
-              setCountryCode={setCountryCode}
-              currency={currency}
-              setCurrency={setCurrency}
-              priceFrom={priceFrom}
-              setPriceFrom={setPriceFrom}
-              priceLabel={priceLabel}
-              setPriceLabel={setPriceLabel}
-              acceptingClients={acceptingClients}
-              setAcceptingClients={setAcceptingClients}
-              onSubmit={handleUpdate}
+              register={register}
+              errors={errors}
+              formData={formData}
+              setValue={setValue}
+              onSubmit={rhfHandleSubmit(handleUpdate)}
               isSaving={isSaving}
               formError={formError}
               onCancel={() => {
@@ -448,30 +432,10 @@ export default function MyMarketplaceListingPage() {
 
 interface ListingFormProps {
   isCreate: boolean;
-  accountType: MarketplaceAccountType;
-  setAccountType: (v: MarketplaceAccountType) => void;
-  headline: string;
-  setHeadline: (v: string) => void;
-  bio: string;
-  setBio: (v: string) => void;
-  specialties: string;
-  setSpecialties: (v: string) => void;
-  certifications: string;
-  setCertifications: (v: string) => void;
-  languages: string;
-  setLanguages: (v: string) => void;
-  city: string;
-  setCity: (v: string) => void;
-  countryCode: string;
-  setCountryCode: (v: string) => void;
-  currency: string;
-  setCurrency: (v: string) => void;
-  priceFrom: string;
-  setPriceFrom: (v: string) => void;
-  priceLabel: string;
-  setPriceLabel: (v: string) => void;
-  acceptingClients: boolean;
-  setAcceptingClients: (v: boolean) => void;
+  register: UseFormRegister<MarketplaceListingFormData>;
+  errors: FieldErrors<MarketplaceListingFormData>;
+  formData: MarketplaceListingFormData;
+  setValue: UseFormSetValue<MarketplaceListingFormData>;
   onSubmit: (e: React.FormEvent) => void;
   isSaving: boolean;
   formError: string;
@@ -480,30 +444,10 @@ interface ListingFormProps {
 
 function ListingForm({
   isCreate,
-  accountType,
-  setAccountType,
-  headline,
-  setHeadline,
-  bio,
-  setBio,
-  specialties,
-  setSpecialties,
-  certifications,
-  setCertifications,
-  languages,
-  setLanguages,
-  city,
-  setCity,
-  countryCode,
-  setCountryCode,
-  currency,
-  setCurrency,
-  priceFrom,
-  setPriceFrom,
-  priceLabel,
-  setPriceLabel,
-  acceptingClients,
-  setAcceptingClients,
+  register,
+  errors,
+  formData,
+  setValue,
   onSubmit,
   isSaving,
   formError,
@@ -523,10 +467,7 @@ function ListingForm({
             Professional Type *
           </label>
           <select
-            value={accountType}
-            onChange={(e) =>
-              setAccountType(e.target.value as MarketplaceAccountType)
-            }
+            {...register("accountType")}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
           >
             {ACCOUNT_TYPE_OPTIONS.map((o) => (
@@ -544,13 +485,12 @@ function ListingForm({
         </label>
         <input
           type="text"
-          value={headline}
-          onChange={(e) => setHeadline(e.target.value)}
-          required
+          {...register("headline")}
           maxLength={200}
           className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
           placeholder="e.g. Certified Personal Trainer Specializing in Weight Loss"
         />
+        {errors.headline && <p className="text-xs text-red-600 mt-1">{errors.headline.message}</p>}
       </div>
 
       <div>
@@ -558,14 +498,13 @@ function ListingForm({
           Bio *
         </label>
         <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          required
+          {...register("bio")}
           maxLength={3000}
           rows={4}
           className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none resize-none"
           placeholder="Tell potential clients about yourself, your approach, and experience..."
         />
+        {errors.bio && <p className="text-xs text-red-600 mt-1">{errors.bio.message}</p>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -575,8 +514,7 @@ function ListingForm({
           </label>
           <input
             type="text"
-            value={specialties}
-            onChange={(e) => setSpecialties(e.target.value)}
+            {...register("specialties")}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
             placeholder="Weight Loss, HIIT, Yoga"
           />
@@ -590,8 +528,7 @@ function ListingForm({
           </label>
           <input
             type="text"
-            value={certifications}
-            onChange={(e) => setCertifications(e.target.value)}
+            {...register("certifications")}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
             placeholder="ACE, NASM, ISSA"
           />
@@ -607,8 +544,7 @@ function ListingForm({
         </label>
         <input
           type="text"
-          value={languages}
-          onChange={(e) => setLanguages(e.target.value)}
+          {...register("languages")}
           className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
           placeholder="English, Spanish"
         />
@@ -621,8 +557,7 @@ function ListingForm({
           </label>
           <input
             type="text"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
+            {...register("city")}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
             placeholder="London"
           />
@@ -633,8 +568,7 @@ function ListingForm({
           </label>
           <input
             type="text"
-            value={countryCode}
-            onChange={(e) => setCountryCode(e.target.value)}
+            {...register("countryCode")}
             maxLength={10}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
             placeholder="GB"
@@ -648,8 +582,7 @@ function ListingForm({
             Currency
           </label>
           <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
+            {...register("currency")}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
           >
             <option value="USD">USD</option>
@@ -666,8 +599,7 @@ function ListingForm({
           </label>
           <input
             type="number"
-            value={priceFrom}
-            onChange={(e) => setPriceFrom(e.target.value)}
+            {...register("priceFrom")}
             min={0}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
             placeholder="50"
@@ -679,8 +611,7 @@ function ListingForm({
           </label>
           <input
             type="text"
-            value={priceLabel}
-            onChange={(e) => setPriceLabel(e.target.value)}
+            {...register("priceLabel")}
             maxLength={50}
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
             placeholder="session"
@@ -692,8 +623,8 @@ function ListingForm({
         <label className="relative inline-flex cursor-pointer items-center">
           <input
             type="checkbox"
-            checked={acceptingClients}
-            onChange={(e) => setAcceptingClients(e.target.checked)}
+            checked={formData.acceptingClients}
+            onChange={(e) => setValue("acceptingClients", e.target.checked)}
             className="peer sr-only"
           />
           <div className="h-6 w-11 rounded-full bg-neutral-300 peer-checked:bg-primary-500 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full" />

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,22 +11,36 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { utilityService, type PlatformCurrency } from "@/lib/api/utility";
 import { MembershipPlanType } from "@/lib/types";
+import {
+  membershipPlanSchema,
+  type MembershipPlanFormData,
+} from "@/lib/schemas/plans";
 
 export default function CreatePlanPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const { currentOrg, isLoading: orgLoading } = useOrganization();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    plan_type: MembershipPlanType.SUBSCRIPTION,
-    duration_days: "30",
-    price: "",
-    currency: "USD",
-    features: [] as string[],
-    is_public: true,
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<MembershipPlanFormData>({
+    resolver: zodResolver(membershipPlanSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      plan_type: MembershipPlanType.SUBSCRIPTION,
+      duration_days: "30",
+      price: "",
+      currency: "USD",
+      features: [],
+      is_public: true,
+    },
   });
+  const formData = watch();
   const [newFeature, setNewFeature] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pageError, setPageError] = useState("");
@@ -43,44 +59,17 @@ export default function CreatePlanPage() {
   const addFeature = () => {
     const trimmed = newFeature.trim();
     if (!trimmed) return;
-    setFormData((prev) => ({ ...prev, features: [...prev.features, trimmed] }));
+    setValue("features", [...formData.features, trimmed]);
     setNewFeature("");
   };
 
   const removeFeature = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      features: prev.features.filter((_, idx) => idx !== index),
-    }));
+    setValue("features", formData.features.filter((_, idx) => idx !== index));
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const onSubmit = async (data: MembershipPlanFormData) => {
     if (!organizationId) {
       setPageError("No active organization selected");
-      return;
-    }
-
-    const price = Number(formData.price);
-    const durationDays = Number(formData.duration_days);
-
-    if (!Number.isFinite(price) || price < 0) {
-      setPageError("Price must be a valid positive number");
-      return;
-    }
-
-    if (price > 999999.99) {
-      setPageError("Price cannot exceed 999,999.99");
-      return;
-    }
-
-    if (!Number.isInteger(durationDays) || durationDays < 1) {
-      setPageError("Duration must be at least 1 day");
-      return;
-    }
-
-    if (durationDays > 3650) {
-      setPageError("Duration cannot exceed 3,650 days (~10 years)");
       return;
     }
 
@@ -90,14 +79,14 @@ export default function CreatePlanPage() {
     const response = await marketplaceService.createOrgMembershipPlan(
       organizationId,
       {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        plan_type: formData.plan_type,
-        duration_days: durationDays,
-        price,
-        currency: formData.currency.trim().toUpperCase(),
-        features: formData.features,
-        is_public: formData.is_public,
+        name: data.name.trim(),
+        description: data.description?.trim() || undefined,
+        plan_type: data.plan_type as MembershipPlanType,
+        duration_days: Number(data.duration_days),
+        price: Number(data.price),
+        currency: data.currency.trim().toUpperCase(),
+        features: data.features,
+        is_public: data.is_public,
       },
     );
 
@@ -142,7 +131,7 @@ export default function CreatePlanPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="bg-white rounded-xl shadow-card p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -150,26 +139,19 @@ export default function CreatePlanPage() {
                   <label className="block text-sm font-medium text-foreground/70 mb-2">Plan Name *</label>
                   <input
                     type="text"
-                    required
-                    value={formData.name}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, name: event.target.value }))
-                    }
+                    {...register("name")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                     placeholder="Monthly Unlimited"
                   />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">Plan Type *</label>
                   <select
-                    value={formData.plan_type}
-                    onChange={(event) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        plan_type: event.target.value as MembershipPlanType,
-                      }))
-                    }
+                    {...register("plan_type")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   >
                     <option value={MembershipPlanType.SUBSCRIPTION}>Subscription</option>
@@ -183,13 +165,12 @@ export default function CreatePlanPage() {
                     type="number"
                     min={1}
                     max={3650}
-                    required
-                    value={formData.duration_days}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, duration_days: event.target.value }))
-                    }
+                    {...register("duration_days")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
+                  {errors.duration_days && (
+                    <p className="mt-1 text-sm text-red-500">{errors.duration_days.message}</p>
+                  )}
                 </div>
 
                 <div>
@@ -199,24 +180,19 @@ export default function CreatePlanPage() {
                     min={0}
                     max={999999.99}
                     step="0.01"
-                    required
-                    value={formData.price}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, price: event.target.value }))
-                    }
+                    {...register("price")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                     placeholder="49"
                   />
+                  {errors.price && (
+                    <p className="mt-1 text-sm text-red-500">{errors.price.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">Currency *</label>
                   <select
-                    required
-                    value={formData.currency}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, currency: event.target.value }))
-                    }
+                    {...register("currency")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   >
                     {currencies.length === 0 ? (
@@ -235,10 +211,7 @@ export default function CreatePlanPage() {
                   <label className="block text-sm font-medium text-foreground/70 mb-2">Description</label>
                   <textarea
                     rows={4}
-                    value={formData.description}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, description: event.target.value }))
-                    }
+                    {...register("description")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                     placeholder="Describe what this plan includes"
                   />
@@ -293,7 +266,7 @@ export default function CreatePlanPage() {
                 type="checkbox"
                 checked={formData.is_public}
                 onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, is_public: event.target.checked }))
+                  setValue("is_public", event.target.checked)
                 }
                 className="h-4 w-4 rounded border-gray-300 text-accent-blue-500 focus:ring-accent-blue-500"
               />
