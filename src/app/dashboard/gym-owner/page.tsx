@@ -394,7 +394,8 @@ export default function GymOwnerDashboard() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]">
+              className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div
                   className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 ${stat.color} ${stat.iconColor}`}

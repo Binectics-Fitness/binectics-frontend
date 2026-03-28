@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 
 export interface AccordionItemProps {
   title: string;
@@ -34,8 +34,8 @@ function AccordionItem({
     <div
       className={`overflow-hidden rounded-xl border bg-white transition-all duration-300 ${
         isOpen
-          ? 'border-primary-500/30 shadow-[var(--shadow-card)]'
-          : 'border-neutral-200 hover:border-neutral-300'
+          ? "border-primary-500/30 shadow-[var(--shadow-card)]"
+          : "border-neutral-200 hover:border-neutral-300"
       }`}
     >
       <button
@@ -43,14 +43,16 @@ function AccordionItem({
         className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-neutral-50"
         aria-expanded={isOpen}
       >
-        <span className={`font-medium pr-4 transition-colors duration-200 ${isOpen ? 'text-foreground' : 'text-foreground'}`}>
+        <span
+          className={`font-medium pr-4 transition-colors duration-200 ${isOpen ? "text-foreground" : "text-foreground"}`}
+        >
           {item.title}
         </span>
         <div
           className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
             isOpen
-              ? 'bg-primary-500/10 text-primary-600 rotate-180'
-              : 'bg-neutral-100 text-foreground-secondary'
+              ? "bg-primary-500/10 text-primary-600 rotate-180"
+              : "bg-neutral-100 text-foreground-secondary"
           }`}
         >
           <svg
@@ -82,7 +84,10 @@ function AccordionItem({
   );
 }
 
-export const Accordion: React.FC<AccordionProps> = ({ items, className = '' }) => {
+export const Accordion: React.FC<AccordionProps> = ({
+  items,
+  className = "",
+}) => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleItem = (index: number) => {

@@ -1,78 +1,78 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import PricingToggle from './PricingToggle';
+import { useState } from "react";
+import Link from "next/link";
+import PricingToggle from "./PricingToggle";
 
 export default function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(false);
 
   const plans = [
     {
-      name: 'Starter',
+      name: "Starter",
       monthlyPrice: 29,
       annualPrice: 23,
-      description: 'Perfect for casual fitness enthusiasts',
-      color: 'blue',
+      description: "Perfect for casual fitness enthusiasts",
+      color: "blue",
       popular: false,
       features: [
-        'Access to 100+ verified gyms',
-        '5 gym visits per month',
-        'Basic progress tracking',
-        'QR check-in',
-        'Community access',
-        'Mobile app access',
+        "Access to 100+ verified gyms",
+        "5 gym visits per month",
+        "Basic progress tracking",
+        "QR check-in",
+        "Community access",
+        "Mobile app access",
       ],
     },
     {
-      name: 'Pro',
+      name: "Pro",
       monthlyPrice: 59,
       annualPrice: 47,
-      description: 'For dedicated athletes and travelers',
-      color: 'yellow',
+      description: "For dedicated athletes and travelers",
+      color: "yellow",
       popular: true,
       features: [
-        'Unlimited access to 500+ gyms',
-        'Book personal trainers',
-        'Book dietitian consultations',
-        'Advanced progress tracking',
-        'Priority gym access',
-        'Exclusive community events',
-        'Workout plans library',
-        'Nutrition guides',
+        "Unlimited access to 500+ gyms",
+        "Book personal trainers",
+        "Book dietitian consultations",
+        "Advanced progress tracking",
+        "Priority gym access",
+        "Exclusive community events",
+        "Workout plans library",
+        "Nutrition guides",
       ],
     },
     {
-      name: 'Elite',
+      name: "Elite",
       monthlyPrice: 99,
       annualPrice: 79,
-      description: 'Ultimate fitness experience',
-      color: 'purple',
+      description: "Ultimate fitness experience",
+      color: "purple",
       popular: false,
       features: [
-        'Everything in Pro',
-        'Unlimited trainer sessions (2/week)',
-        'Unlimited dietitian consultations',
-        'Personalized workout plans',
-        'Custom meal plans',
-        'VIP gym access',
-        'Dedicated success manager',
-        'Early access to new features',
-        'Priority customer support',
+        "Everything in Pro",
+        "Unlimited trainer sessions (2/week)",
+        "Unlimited dietitian consultations",
+        "Personalized workout plans",
+        "Custom meal plans",
+        "VIP gym access",
+        "Dedicated success manager",
+        "Early access to new features",
+        "Priority customer support",
       ],
     },
   ];
 
   const colorClasses = {
-    blue: 'bg-accent-blue-500 text-white',
-    yellow: 'bg-accent-yellow-500 text-foreground',
-    purple: 'bg-accent-purple-500 text-white',
+    blue: "bg-accent-blue-500 text-white",
+    yellow: "bg-accent-yellow-500 text-foreground",
+    purple: "bg-accent-purple-500 text-white",
   };
 
   const borderClasses = {
-    blue: 'border-accent-blue-200',
-    yellow: 'border-accent-yellow-300',
-    purple: 'border-accent-purple-200',
+    blue: "border-accent-blue-200",
+    yellow: "border-accent-yellow-300",
+    purple: "border-accent-purple-200",
   };
 
   return (
@@ -94,16 +94,19 @@ export default function PricingSection() {
 
         <div className="mt-16 grid gap-8 lg:grid-cols-3">
           {plans.map((plan, index) => {
-            const currentPrice = isAnnual ? plan.annualPrice : plan.monthlyPrice;
-            const period = isAnnual ? 'month, billed annually' : 'month';
+            const currentPrice = isAnnual
+              ? plan.annualPrice
+              : plan.monthlyPrice;
+            const period = isAnnual ? "month, billed annually" : "month";
 
             return (
               <div
                 key={index}
                 className={`relative rounded-3xl bg-white p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] ${
                   plan.popular
-                    ? 'border-2 ' + borderClasses[plan.color as keyof typeof borderClasses]
-                    : 'border border-neutral-200'
+                    ? "border-2 " +
+                      borderClasses[plan.color as keyof typeof borderClasses]
+                    : "border border-neutral-200"
                 }`}
               >
                 {plan.popular && (
@@ -115,8 +118,12 @@ export default function PricingSection() {
                 )}
 
                 <div className="text-center">
-                  <h3 className="font-display text-2xl font-bold text-foreground">{plan.name}</h3>
-                  <p className="mt-2 text-sm text-foreground-secondary">{plan.description}</p>
+                  <h3 className="font-display text-2xl font-bold text-foreground">
+                    {plan.name}
+                  </h3>
+                  <p className="mt-2 text-sm text-foreground-secondary">
+                    {plan.description}
+                  </p>
 
                   <div className="mt-6">
                     {isAnnual && (
@@ -130,7 +137,9 @@ export default function PricingSection() {
                       <span className="font-display text-5xl font-black text-foreground">
                         ${currentPrice}
                       </span>
-                      <span className="text-foreground-secondary">/{isAnnual ? 'mo' : 'month'}</span>
+                      <span className="text-foreground-secondary">
+                        /{isAnnual ? "mo" : "month"}
+                      </span>
                     </div>
                     {isAnnual && (
                       <p className="mt-2 text-sm text-foreground-secondary">
@@ -163,7 +172,9 @@ export default function PricingSection() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      <span className="text-sm text-foreground-secondary">{feature}</span>
+                      <span className="text-sm text-foreground-secondary">
+                        {feature}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -174,8 +185,11 @@ export default function PricingSection() {
 
         <div className="mt-12 text-center">
           <p className="text-sm text-foreground-secondary">
-            All plans include a 14-day free trial • No credit card required •{' '}
-            <Link href="#" className="font-medium text-accent-blue-500 hover:text-accent-blue-600">
+            All plans include a 14-day free trial • No credit card required •{" "}
+            <Link
+              href="#"
+              className="font-medium text-accent-blue-500 hover:text-accent-blue-600"
+            >
               Compare plans
             </Link>
           </p>

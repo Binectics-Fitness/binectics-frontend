@@ -59,9 +59,7 @@ export default function ConsultationCatalogPage() {
 
   const filteredTypes = useMemo(() => {
     if (roleFilter === "all") return types.filter((t) => t.isActive);
-    return types.filter(
-      (t) => t.isActive && t.providerRole === roleFilter,
-    );
+    return types.filter((t) => t.isActive && t.providerRole === roleFilter);
   }, [types, roleFilter]);
 
   const groupedByRole = useMemo(() => {

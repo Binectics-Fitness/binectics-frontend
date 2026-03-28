@@ -205,7 +205,9 @@ export default function BookingsPage() {
       setRescheduleSelectedDate("");
       await loadAllBookings();
     } else {
-      const msg = (res.message ?? "Failed to reschedule booking.").toLowerCase();
+      const msg = (
+        res.message ?? "Failed to reschedule booking."
+      ).toLowerCase();
       const isConflict =
         msg.includes("conflict") ||
         msg.includes("taken") ||
@@ -246,7 +248,10 @@ export default function BookingsPage() {
     for (const slot of rescheduleSlots) {
       const key = formatLocal(slot.startsAt, "yyyy-MM-dd");
       if (!dates.has(key)) {
-        dates.set(key, { key, label: formatLocal(slot.startsAt, "EEE, MMM d") });
+        dates.set(key, {
+          key,
+          label: formatLocal(slot.startsAt, "EEE, MMM d"),
+        });
       }
     }
     return Array.from(dates.values());

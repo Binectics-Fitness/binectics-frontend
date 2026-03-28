@@ -61,7 +61,9 @@ export default function Modal({
         className={`relative w-full ${sizeMap[size]} rounded-2xl bg-white p-6 shadow-[var(--shadow-elevated)] transition-all duration-200`}
         style={{
           opacity: isAnimating ? 1 : 0,
-          transform: isAnimating ? "scale(1) translateY(0)" : "scale(0.97) translateY(8px)",
+          transform: isAnimating
+            ? "scale(1) translateY(0)"
+            : "scale(0.97) translateY(8px)",
         }}
         onClick={(e) => e.stopPropagation()}
       >

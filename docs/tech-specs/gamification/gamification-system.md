@@ -234,7 +234,7 @@ interface LeaderboardEntry {
     country?: string;
   };
   value: number;
-  trend: 'up' | 'down' | 'same';
+  trend: "up" | "down" | "same";
 }
 
 // Matches GET /gamification/providers
@@ -334,24 +334,34 @@ export const gamificationApi = {
   getChallenges: (params?) => fetchWithAuth(`${BASE}/challenges`, { params }),
   getChallenge: (id: string) => fetchWithAuth(`${BASE}/challenges/${id}`),
   getMyChallenges: () => fetchWithAuth(`${BASE}/challenges/my`),
-  joinChallenge: (id: string) => fetchWithAuth(`${BASE}/challenges/${id}/join`, { method: 'POST' }),
+  joinChallenge: (id: string) =>
+    fetchWithAuth(`${BASE}/challenges/${id}/join`, { method: "POST" }),
 
   // Leaderboard
-  getLeaderboard: (params: LeaderboardQuery) => fetchWithAuth(`${BASE}/leaderboard`, { params }),
+  getLeaderboard: (params: LeaderboardQuery) =>
+    fetchWithAuth(`${BASE}/leaderboard`, { params }),
 
   // Providers
   getProviders: () => fetchWithAuth(`${BASE}/providers`),
-  connectProvider: (provider: string) => fetchWithAuth(`${BASE}/providers/${provider}/connect`, { method: 'POST' }),
-  disconnectProvider: (provider: string) => fetchWithAuth(`${BASE}/providers/${provider}`, { method: 'DELETE' }),
-  syncProvider: (provider: string) => fetchWithAuth(`${BASE}/providers/${provider}/sync`, { method: 'POST' }),
+  connectProvider: (provider: string) =>
+    fetchWithAuth(`${BASE}/providers/${provider}/connect`, { method: "POST" }),
+  disconnectProvider: (provider: string) =>
+    fetchWithAuth(`${BASE}/providers/${provider}`, { method: "DELETE" }),
+  syncProvider: (provider: string) =>
+    fetchWithAuth(`${BASE}/providers/${provider}/sync`, { method: "POST" }),
 
   // Activity
   getActivity: (params?) => fetchWithAuth(`${BASE}/activity`, { params }),
 
   // Admin
   getFlags: (params?) => fetchWithAuth(`${BASE}/admin/flags`, { params }),
-  approveFlag: (id: string) => fetchWithAuth(`${BASE}/admin/flags/${id}/approve`, { method: 'PATCH' }),
-  rejectFlag: (id: string, notes: string) => fetchWithAuth(`${BASE}/admin/flags/${id}/reject`, { method: 'PATCH', body: { admin_notes: notes } }),
+  approveFlag: (id: string) =>
+    fetchWithAuth(`${BASE}/admin/flags/${id}/approve`, { method: "PATCH" }),
+  rejectFlag: (id: string, notes: string) =>
+    fetchWithAuth(`${BASE}/admin/flags/${id}/reject`, {
+      method: "PATCH",
+      body: { admin_notes: notes },
+    }),
 };
 ```
 

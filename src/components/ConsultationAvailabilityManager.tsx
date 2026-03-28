@@ -1,10 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import DashboardLoading from "@/components/DashboardLoading";
 import TimezoneHelpBadge from "@/components/TimezoneHelpBadge";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { dualTimezoneLabel, formatLocal, getClientTimezone } from "@/utils/format";
+import {
+  dualTimezoneLabel,
+  formatLocal,
+  getClientTimezone,
+} from "@/utils/format";
 import { UserRole } from "@/lib/types";
 import {
   consultationsService,
@@ -175,7 +185,10 @@ export default function ConsultationAvailabilityManager({
 
   const createType = async () => {
     if (!newType.name.trim()) {
-      setMessage({ text: "Consultation type name is required.", type: "error" });
+      setMessage({
+        text: "Consultation type name is required.",
+        type: "error",
+      });
       return;
     }
 
@@ -183,7 +196,10 @@ export default function ConsultationAvailabilityManager({
       newType.defaultDurationMinutes < 5 ||
       newType.defaultDurationMinutes > 240
     ) {
-      setMessage({ text: "Duration must be between 5 and 240 minutes.", type: "error" });
+      setMessage({
+        text: "Duration must be between 5 and 240 minutes.",
+        type: "error",
+      });
       return;
     }
 
@@ -206,9 +222,15 @@ export default function ConsultationAvailabilityManager({
         defaultDurationMinutes: 30,
         isActive: true,
       });
-      setMessage({ text: "Consultation type created successfully.", type: "success" });
+      setMessage({
+        text: "Consultation type created successfully.",
+        type: "success",
+      });
     } else {
-      setMessage({ text: response.message ?? "Failed to create consultation type.", type: "error" });
+      setMessage({
+        text: response.message ?? "Failed to create consultation type.",
+        type: "error",
+      });
     }
 
     setIsCreatingType(false);
@@ -216,7 +238,10 @@ export default function ConsultationAvailabilityManager({
 
   const addRule = () => {
     if (newRule.startTime >= newRule.endTime) {
-      setMessage({ text: "Start time must be earlier than end time.", type: "error" });
+      setMessage({
+        text: "Start time must be earlier than end time.",
+        type: "error",
+      });
       return;
     }
 
@@ -248,9 +273,15 @@ export default function ConsultationAvailabilityManager({
 
     if (response.success && response.data) {
       setRules(response.data);
-      setMessage({ text: "Availability updated successfully.", type: "success" });
+      setMessage({
+        text: "Availability updated successfully.",
+        type: "success",
+      });
     } else {
-      setMessage({ text: response.message ?? "Failed to update availability.", type: "error" });
+      setMessage({
+        text: response.message ?? "Failed to update availability.",
+        type: "error",
+      });
     }
 
     setIsSaving(false);
@@ -268,7 +299,10 @@ export default function ConsultationAvailabilityManager({
 
   const createException = async () => {
     if (!newException.date) {
-      setMessage({ text: "Date is required for the exception.", type: "error" });
+      setMessage({
+        text: "Date is required for the exception.",
+        type: "error",
+      });
       return;
     }
 
@@ -307,7 +341,10 @@ export default function ConsultationAvailabilityManager({
       });
       setMessage({ text: "Exception added successfully.", type: "success" });
     } else {
-      setMessage({ text: res.message ?? "Failed to create exception.", type: "error" });
+      setMessage({
+        text: res.message ?? "Failed to create exception.",
+        type: "error",
+      });
     }
 
     setIsCreatingException(false);
@@ -318,14 +355,21 @@ export default function ConsultationAvailabilityManager({
     if (res.success) {
       setExceptions((prev) => prev.filter((e) => e.id !== id));
     } else {
-      setMessage({ text: res.message ?? "Failed to remove exception.", type: "error" });
+      setMessage({
+        text: res.message ?? "Failed to remove exception.",
+        type: "error",
+      });
     }
   };
 
   // --- Provider Bookings ---
   const loadBookings = useCallback(async () => {
     setLoadingBookings(true);
-    const params: { status?: ConsultationBookingStatus; from?: string; to?: string } = {};
+    const params: {
+      status?: ConsultationBookingStatus;
+      from?: string;
+      to?: string;
+    } = {};
     const now = new Date();
 
     if (bookingsFilter === "upcoming") {
@@ -350,7 +394,10 @@ export default function ConsultationAvailabilityManager({
       await loadBookings();
       setMessage({ text: "Booking marked as completed.", type: "success" });
     } else {
-      setMessage({ text: res.message ?? "Failed to complete booking.", type: "error" });
+      setMessage({
+        text: res.message ?? "Failed to complete booking.",
+        type: "error",
+      });
     }
     setActioningBookingId(null);
   };
@@ -364,7 +411,10 @@ export default function ConsultationAvailabilityManager({
       await loadBookings();
       setMessage({ text: "Booking cancelled.", type: "success" });
     } else {
-      setMessage({ text: res.message ?? "Failed to cancel booking.", type: "error" });
+      setMessage({
+        text: res.message ?? "Failed to cancel booking.",
+        type: "error",
+      });
     }
     setActioningBookingId(null);
   };
@@ -482,8 +532,7 @@ export default function ConsultationAvailabilityManager({
   const rescheduleTimesForDate = useMemo(() => {
     if (!rescheduleSelectedDate) return [];
     return rescheduleSlots.filter(
-      (s) =>
-        formatLocal(s.startsAt, "yyyy-MM-dd") === rescheduleSelectedDate,
+      (s) => formatLocal(s.startsAt, "yyyy-MM-dd") === rescheduleSelectedDate,
     );
   }, [rescheduleSlots, rescheduleSelectedDate]);
 
@@ -755,7 +804,8 @@ export default function ConsultationAvailabilityManager({
 
               <p className="mt-3 text-xs text-foreground-secondary">
                 Rules are saved in your selected timezone. Client booking times
-                are displayed in each client&apos;s local timezone automatically.
+                are displayed in each client&apos;s local timezone
+                automatically.
               </p>
             </section>
 
@@ -931,8 +981,7 @@ export default function ConsultationAvailabilityManager({
                           </p>
                           <span
                             className={`rounded px-2 py-0.5 text-xs font-semibold ${
-                              exc.type ===
-                              AvailabilityExceptionType.UNAVAILABLE
+                              exc.type === AvailabilityExceptionType.UNAVAILABLE
                                 ? "bg-red-100 text-red-700"
                                 : "bg-yellow-100 text-yellow-700"
                             }`}
@@ -944,7 +993,7 @@ export default function ConsultationAvailabilityManager({
                         </div>
                         <p className="text-xs text-foreground-secondary">
                           {exc.type ===
-                          AvailabilityExceptionType.CUSTOM_HOURS &&
+                            AvailabilityExceptionType.CUSTOM_HOURS &&
                           exc.startTime &&
                           exc.endTime
                             ? `${exc.startTime} – ${exc.endTime}`
@@ -1016,8 +1065,7 @@ export default function ConsultationAvailabilityManager({
                     />
                   </svg>
                   <p className="text-lg font-semibold text-foreground mb-2">
-                    No {bookingsFilter === "all" ? "" : bookingsFilter}{" "}
-                    bookings
+                    No {bookingsFilter === "all" ? "" : bookingsFilter} bookings
                   </p>
                   <p className="text-sm text-foreground-secondary">
                     Client bookings will appear here once someone books a

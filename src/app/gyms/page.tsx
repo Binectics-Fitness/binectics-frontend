@@ -215,9 +215,7 @@ export default function GymsPage() {
             </div>
           )}
 
-          {isLoading && (
-            <CardSkeleton count={6} columns="3" />
-          )}
+          {isLoading && <CardSkeleton count={6} columns="3" />}
 
           {!isLoading && !error && listings.length === 0 && (
             <div className="text-center py-16">

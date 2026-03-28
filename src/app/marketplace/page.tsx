@@ -511,7 +511,9 @@ export default function MarketplacePage() {
             </div>
 
             {/* Loading */}
-            {isLoading && <CardSkeleton count={6} columns="2" variant="avatar" />}
+            {isLoading && (
+              <CardSkeleton count={6} columns="2" variant="avatar" />
+            )}
 
             {/* Empty State */}
             {!isLoading && listings.length === 0 && (

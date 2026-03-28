@@ -180,17 +180,18 @@ Use CSS variable shadows instead of Tailwind utility shadows for cards and eleva
 
 ```tsx
 // ✅ Correct
-className="shadow-[var(--shadow-card)]"
-className="hover:shadow-[var(--shadow-card-hover)]"
-className="shadow-[var(--shadow-elevated)]"
+className = "shadow-[var(--shadow-card)]";
+className = "hover:shadow-[var(--shadow-card-hover)]";
+className = "shadow-[var(--shadow-elevated)]";
 
 // ❌ Wrong
-className="shadow-card"
-className="hover:shadow-xl"
-className="shadow-lg"
+className = "shadow-card";
+className = "hover:shadow-xl";
+className = "shadow-lg";
 ```
 
 Available shadow variables:
+
 - `--shadow-card` — Default card elevation
 - `--shadow-card-hover` — Hover state for interactive cards
 - `--shadow-elevated` — Modals, popovers, elevated surfaces
@@ -233,7 +234,7 @@ Available gradients: `gradient-section-green`, `gradient-section-blue`, `gradien
 Use `card-accent-*` for top-border accent lines on cards:
 
 ```tsx
-className="card-accent-blue rounded-xl bg-white"
+className = "card-accent-blue rounded-xl bg-white";
 ```
 
 Available: `card-accent-green`, `card-accent-blue`, `card-accent-yellow`, `card-accent-purple`
@@ -242,12 +243,12 @@ Available: `card-accent-green`, `card-accent-blue`, `card-accent-yellow`, `card-
 
 Each role has a designated accent color. Apply consistently across dashboards, badges, and role-specific UI:
 
-| Role | Primary Accent | Icon Glow | Card Accent | Gradient Bar |
-|------|---------------|-----------|-------------|-------------|
-| Gym Owner | Blue (`accent-blue-*`) | `icon-glow-blue` | `card-accent-blue` | `from-accent-blue-500 to-accent-blue-600` |
-| Trainer | Yellow (`accent-yellow-*`) | `icon-glow-yellow` | `card-accent-yellow` | `from-accent-yellow-500 to-accent-yellow-600` |
-| Dietitian | Purple (`accent-purple-*`) | `icon-glow-purple` | `card-accent-purple` | `from-accent-purple-500 to-accent-purple-600` |
-| General/Marketplace | Green (`primary-*`) | `icon-glow-green` | `card-accent-green` | `from-primary-500 to-primary-600` |
+| Role                | Primary Accent             | Icon Glow          | Card Accent          | Gradient Bar                                  |
+| ------------------- | -------------------------- | ------------------ | -------------------- | --------------------------------------------- |
+| Gym Owner           | Blue (`accent-blue-*`)     | `icon-glow-blue`   | `card-accent-blue`   | `from-accent-blue-500 to-accent-blue-600`     |
+| Trainer             | Yellow (`accent-yellow-*`) | `icon-glow-yellow` | `card-accent-yellow` | `from-accent-yellow-500 to-accent-yellow-600` |
+| Dietitian           | Purple (`accent-purple-*`) | `icon-glow-purple` | `card-accent-purple` | `from-accent-purple-500 to-accent-purple-600` |
+| General/Marketplace | Green (`primary-*`)        | `icon-glow-green`  | `card-accent-green`  | `from-primary-500 to-primary-600`             |
 
 ### Dashboard Header Pattern
 
@@ -294,6 +295,6 @@ Use existing shared components before creating new ones:
 Use the project's easing variable for smooth animations:
 
 ```tsx
-className="transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+className = "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
 // or via CSS: var(--ease-out-expo)
 ```

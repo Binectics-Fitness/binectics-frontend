@@ -136,9 +136,12 @@
   --radius-3xl: 1.5rem;
 
   /* Enhanced shadow scale */
-  --shadow-card: 0 2px 8px -2px rgb(0 0 0 / 0.06), 0 4px 16px -4px rgb(0 0 0 / 0.06);
-  --shadow-card-hover: 0 8px 24px -4px rgb(0 0 0 / 0.1), 0 4px 12px -2px rgb(0 0 0 / 0.06);
-  --shadow-elevated: 0 12px 32px -8px rgb(0 0 0 / 0.12), 0 4px 8px rgb(0 0 0 / 0.04);
+  --shadow-card:
+    0 2px 8px -2px rgb(0 0 0 / 0.06), 0 4px 16px -4px rgb(0 0 0 / 0.06);
+  --shadow-card-hover:
+    0 8px 24px -4px rgb(0 0 0 / 0.1), 0 4px 12px -2px rgb(0 0 0 / 0.06);
+  --shadow-elevated:
+    0 12px 32px -8px rgb(0 0 0 / 0.12), 0 4px 8px rgb(0 0 0 / 0.04);
 
   /* Transition presets */
   --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
@@ -297,14 +300,30 @@ button {
 }
 
 /* Stagger delay utility classes (for card grids, list items) */
-.stagger-1 { animation-delay: 50ms; }
-.stagger-2 { animation-delay: 100ms; }
-.stagger-3 { animation-delay: 150ms; }
-.stagger-4 { animation-delay: 200ms; }
-.stagger-5 { animation-delay: 250ms; }
-.stagger-6 { animation-delay: 300ms; }
-.stagger-7 { animation-delay: 350ms; }
-.stagger-8 { animation-delay: 400ms; }
+.stagger-1 {
+  animation-delay: 50ms;
+}
+.stagger-2 {
+  animation-delay: 100ms;
+}
+.stagger-3 {
+  animation-delay: 150ms;
+}
+.stagger-4 {
+  animation-delay: 200ms;
+}
+.stagger-5 {
+  animation-delay: 250ms;
+}
+.stagger-6 {
+  animation-delay: 300ms;
+}
+.stagger-7 {
+  animation-delay: 350ms;
+}
+.stagger-8 {
+  animation-delay: 400ms;
+}
 
 /* ─── Gradient presets ───────────────────────────────────────── */
 
@@ -331,15 +350,27 @@ button {
 
 /* Subtle tinted section backgrounds */
 .gradient-section-green {
-  background: linear-gradient(180deg, rgba(0, 217, 145, 0.04) 0%, transparent 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 217, 145, 0.04) 0%,
+    transparent 100%
+  );
 }
 
 .gradient-section-blue {
-  background: linear-gradient(180deg, rgba(2, 103, 242, 0.04) 0%, transparent 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(2, 103, 242, 0.04) 0%,
+    transparent 100%
+  );
 }
 
 .gradient-section-purple {
-  background: linear-gradient(180deg, rgba(168, 85, 247, 0.04) 0%, transparent 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(168, 85, 247, 0.04) 0%,
+    transparent 100%
+  );
 }
 
 .gradient-section-warm {
@@ -433,8 +464,14 @@ button {
     transform: none !important;
   }
 
-  .stagger-1, .stagger-2, .stagger-3, .stagger-4,
-  .stagger-5, .stagger-6, .stagger-7, .stagger-8 {
+  .stagger-1,
+  .stagger-2,
+  .stagger-3,
+  .stagger-4,
+  .stagger-5,
+  .stagger-6,
+  .stagger-7,
+  .stagger-8 {
     animation-delay: 0ms !important;
   }
 }

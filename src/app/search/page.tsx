@@ -358,7 +358,7 @@ export default function SearchPage() {
                       href={getListingLink(listing)}
                       className="bg-white rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 group overflow-hidden"
                     >
-                        <div className="relative h-40 sm:h-48 bg-neutral-200 overflow-hidden">
+                      <div className="relative h-40 sm:h-48 bg-neutral-200 overflow-hidden">
                         {listing.profile_image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
