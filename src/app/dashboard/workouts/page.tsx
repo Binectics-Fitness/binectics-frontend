@@ -1,15 +1,29 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { UserRole } from "@/lib/types";
+import { UserRole, PlanStatus, DifficultyLevel } from "@/lib/types";
 import {
   progressService,
   ClientProfile,
   ActivityReport,
+  WorkoutPlan,
 } from "@/lib/api/progress";
+
+const difficultyColors: Record<string, string> = {
+  [DifficultyLevel.BEGINNER]: "bg-green-100 text-green-700",
+  [DifficultyLevel.INTERMEDIATE]: "bg-yellow-100 text-yellow-700",
+  [DifficultyLevel.ADVANCED]: "bg-red-100 text-red-700",
+};
+
+const statusColors: Record<string, string> = {
+  [PlanStatus.ACTIVE]: "bg-green-100 text-green-700",
+  [PlanStatus.INACTIVE]: "bg-neutral-100 text-neutral-600",
+  [PlanStatus.ARCHIVED]: "bg-red-100 text-red-600",
+};
 
 export default function Page() {
   const {
@@ -20,6 +34,8 @@ export default function Page() {
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [activities, setActivities] = useState<ActivityReport[]>([]);
+  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
@@ -56,11 +72,30 @@ export default function Page() {
     }
   }, []);
 
+  const loadWorkoutPlans = useCallback(async () => {
+    setPlansLoading(true);
+    try {
+      const res = await progressService.getMyWorkoutPlans();
+      if (res.success && res.data) {
+        setWorkoutPlans(res.data);
+      }
+    } catch {
+      setWorkoutPlans([]);
+    } finally {
+      setPlansLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (selectedProfile) {
       loadActivities(selectedProfile);
     }
   }, [selectedProfile, loadActivities]);
+
+  useEffect(() => {
+    if (!isAuthorized) return;
+    loadWorkoutPlans();
+  }, [isAuthorized, loadWorkoutPlans]);
 
   if (authLoading || !isAuthorized) return <DashboardLoading />;
 
@@ -173,6 +208,87 @@ export default function Page() {
               <p className="font-semibold text-foreground">
                 {professionalName}
               </p>
+            </div>
+
+            {/* Assigned Workout Plans */}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-3">
+                Assigned Workout Plans
+              </h2>
+              {plansLoading ? (
+                <div className="flex justify-center py-6">
+                  <div className="h-6 w-6 animate-spin rounded-full border-4 border-accent-blue-500 border-t-transparent" />
+                </div>
+              ) : workoutPlans.length === 0 ? (
+                <div className="bg-white rounded-xl border border-neutral-200 p-6 text-center">
+                  <p className="text-neutral-500 text-sm">
+                    No workout plans assigned yet. Your trainer will create one
+                    for you.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {workoutPlans.map((plan) => {
+                    const trainerName =
+                      typeof plan.professional_id === "object"
+                        ? `${plan.professional_id.first_name} ${plan.professional_id.last_name}`
+                        : "Trainer";
+                    return (
+                      <Link
+                        key={plan._id}
+                        href={`/dashboard/workouts/${plan._id}`}
+                        className="block rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 hover:border-accent-blue-300 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="text-sm font-semibold text-foreground line-clamp-1">
+                            {plan.title}
+                          </h3>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                              statusColors[plan.status] ??
+                              "bg-neutral-100 text-neutral-600"
+                            }`}
+                          >
+                            {plan.status}
+                          </span>
+                        </div>
+                        {plan.description && (
+                          <p className="text-sm text-neutral-500 line-clamp-2 mb-2">
+                            {plan.description}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+                          <span>By {trainerName}</span>
+                          <span>·</span>
+                          <span>
+                            {plan.exercises.length} exercise
+                            {plan.exercises.length !== 1 ? "s" : ""}
+                          </span>
+                          {plan.difficulty_level && (
+                            <>
+                              <span>·</span>
+                              <span
+                                className={`rounded-full px-2 py-0.5 font-medium ${
+                                  difficultyColors[plan.difficulty_level] ??
+                                  "bg-neutral-100 text-neutral-600"
+                                }`}
+                              >
+                                {plan.difficulty_level}
+                              </span>
+                            </>
+                          )}
+                          {plan.frequency && (
+                            <>
+                              <span>·</span>
+                              <span>{plan.frequency}</span>
+                            </>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Activities List */}

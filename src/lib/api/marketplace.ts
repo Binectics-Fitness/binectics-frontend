@@ -629,6 +629,15 @@ export const marketplaceService = {
     );
   },
 
+  async toggleAutoRenew(
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/my-subscriptions/${subscriptionId}/auto-renew`,
+      {},
+    );
+  },
+
   async getOrgMembershipSubscriptions(
     organizationId: string,
   ): Promise<ApiResponse<MembershipSubscription[]>> {

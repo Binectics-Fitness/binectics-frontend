@@ -54,3 +54,29 @@ export const workoutPlanSchema = z.object({
 });
 
 export type WorkoutPlanFormData = z.infer<typeof workoutPlanSchema>;
+
+// ─── Diet Meal ──────────────────────────────────────────────────
+
+export const dietMealSchema = z.object({
+  meal_type: z.string().min(1, "Meal type is required"),
+  title: z.string().min(1, "Meal title is required").max(200).trim(),
+  description: z.string().max(2000).optional(),
+  foods: z.array(z.string()).optional(),
+  calories: z.number().min(0).max(10000).optional(),
+  notes: z.string().max(500).optional(),
+  order: z.number().min(1).max(100),
+});
+
+export type DietMealFormData = z.infer<typeof dietMealSchema>;
+
+// ─── Create/Edit Diet Plan (platform) ───────────────────────────
+
+export const dietPlanSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200).trim(),
+  description: z.string().max(5000).optional(),
+  delivery_type: z.string().min(1, "Delivery type is required"),
+  meals: z.array(dietMealSchema).optional(),
+  dietitian_notes: z.string().max(3000).optional(),
+});
+
+export type DietPlanFormData = z.infer<typeof dietPlanSchema>;

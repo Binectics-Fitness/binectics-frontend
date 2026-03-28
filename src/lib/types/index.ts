@@ -488,6 +488,7 @@ export interface MembershipSubscription {
   amount_paid: number;
   currency: string;
   payment_reference?: string;
+  auto_renew: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -510,4 +511,33 @@ export enum PlanStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",
   ARCHIVED = "archived",
+}
+
+export enum DietPlanDeliveryType {
+  PLATFORM = "platform",
+  DOCUMENT = "document",
+}
+
+export enum MealSlot {
+  BREAKFAST = "breakfast",
+  MORNING_SNACK = "morning_snack",
+  LUNCH = "lunch",
+  AFTERNOON_SNACK = "afternoon_snack",
+  DINNER = "dinner",
+  EVENING_SNACK = "evening_snack",
+}
+
+export enum RecommendationCategory {
+  RECOVERY = "recovery",
+  HYDRATION = "hydration",
+  NUTRITION = "nutrition",
+  LIFESTYLE = "lifestyle",
+  EXERCISE = "exercise",
+  GENERAL = "general",
+}
+
+export enum RecommendationPlanType {
+  WORKOUT_PLAN = "workout_plan",
+  DIET_PLAN = "diet_plan",
+  GENERAL = "general",
 }

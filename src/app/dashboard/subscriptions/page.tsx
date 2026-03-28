@@ -45,6 +45,7 @@ export default function SubscriptionsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const loadSubscriptions = useCallback(async () => {
     setLoading(true);
@@ -73,6 +74,25 @@ export default function SubscriptionsPage() {
       }
     } finally {
       setCancellingId(null);
+    }
+  };
+
+  const handleToggleAutoRenew = async (subscriptionId: string) => {
+    setTogglingId(subscriptionId);
+    try {
+      const response =
+        await marketplaceService.toggleAutoRenew(subscriptionId);
+      if (response.success && response.data) {
+        setSubscriptions((prev) =>
+          prev.map((s) =>
+            s._id === subscriptionId
+              ? { ...s, auto_renew: response.data!.auto_renew }
+              : s,
+          ),
+        );
+      }
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -268,7 +288,36 @@ export default function SubscriptionsPage() {
                           )}
                       </div>
                       {sub.status === MembershipSubscriptionStatus.ACTIVE && (
-                        <div className="shrink-0">
+                        <div className="shrink-0 flex flex-col gap-3 items-end">
+                          {planDetails?.plan_type ===
+                            MembershipPlanType.SUBSCRIPTION && (
+                            <button
+                              onClick={() =>
+                                void handleToggleAutoRenew(sub._id)
+                              }
+                              disabled={togglingId === sub._id}
+                              className="flex items-center gap-2 text-sm disabled:opacity-50"
+                            >
+                              <span className="text-foreground/60 font-medium">
+                                Auto-renew
+                              </span>
+                              <span
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                                  sub.auto_renew
+                                    ? "bg-primary-500"
+                                    : "bg-gray-300"
+                                }`}
+                              >
+                                <span
+                                  className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+                                    sub.auto_renew
+                                      ? "translate-x-[18px]"
+                                      : "translate-x-[3px]"
+                                  }`}
+                                />
+                              </span>
+                            </button>
+                          )}
                           <button
                             onClick={() => void handleCancel(sub._id)}
                             disabled={cancellingId === sub._id}

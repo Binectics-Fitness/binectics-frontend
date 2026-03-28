@@ -57,4 +57,15 @@ export const checkinsService = {
     apiClient.get<OrgCheckInDashboardStats>(
       `/checkins/organizations/${organizationId}/dashboard-stats`,
     ),
+
+  /**
+   * Get check-in history for the authenticated member.
+   * Returns check-ins with populated listing headline/city.
+   */
+  getMyHistory: (
+    period?: CheckInHistoryPeriod,
+  ): Promise<ApiResponse<CheckIn[]>> => {
+    const query = period ? `?period=${period}` : "";
+    return apiClient.get<CheckIn[]>(`/checkins/my-history${query}`);
+  },
 };

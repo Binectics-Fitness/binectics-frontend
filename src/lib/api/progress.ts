@@ -1,12 +1,12 @@
 /**
  * Progress Tracking API Service
  * Handles client profiles, weight logs, meal feedback, activity reports,
- * progress summaries, client invitations, and workout plans.
+ * progress summaries, client invitations, workout plans, and diet plans.
  */
 
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
-import { DifficultyLevel, PlanStatus } from "@/lib/types";
+import { DifficultyLevel, PlanStatus, DietPlanDeliveryType, MealSlot, RecommendationCategory, RecommendationPlanType } from "@/lib/types";
 
 // ==================== ENUMS ====================
 
@@ -387,6 +387,141 @@ export interface UpdateWorkoutPlanRequest {
   trainer_notes?: string;
   frequency?: string;
   difficulty_level?: DifficultyLevel;
+  status?: PlanStatus;
+}
+
+// ==================== DIET PLAN TYPES ====================
+
+export interface DietMeal {
+  meal_type: MealSlot;
+  title: string;
+  description?: string;
+  foods: string[];
+  calories?: number;
+  notes?: string;
+  order: number;
+}
+
+export interface DietPlan {
+  _id: string;
+  professional_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+      };
+  organization_id?: string;
+  created_by:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+      };
+  client_profile_id: string;
+  client_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+      };
+  title: string;
+  description?: string;
+  delivery_type: DietPlanDeliveryType;
+  meals: DietMeal[];
+  dietitian_notes?: string;
+  document_file_name?: string;
+  document_mime_type?: string;
+  document_file_size?: number;
+  status: PlanStatus;
+  version: number;
+  assigned_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DietPlanDocumentAccess {
+  download_url: string;
+  format: string;
+  expires_in_seconds: number;
+}
+
+// ==================== RECOMMENDATION TYPES ====================
+
+export interface Recommendation {
+  _id: string;
+  professional_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+      };
+  organization_id?: string;
+  client_profile_id: string;
+  client_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+      };
+  title: string;
+  content: string;
+  category: RecommendationCategory;
+  plan_id?: string;
+  plan_type?: RecommendationPlanType;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateRecommendationRequest {
+  title: string;
+  content: string;
+  category?: RecommendationCategory;
+  plan_id?: string;
+  plan_type?: RecommendationPlanType;
+}
+
+export interface UpdateRecommendationRequest {
+  title?: string;
+  content?: string;
+  category?: RecommendationCategory;
+  is_active?: boolean;
+}
+
+// ==================== DIET PLAN REQUEST TYPES ====================
+
+export interface CreateDietMealRequest {
+  meal_type: MealSlot;
+  title: string;
+  description?: string;
+  foods?: string[];
+  calories?: number;
+  notes?: string;
+  order: number;
+}
+
+export interface CreateDietPlanRequest {
+  title: string;
+  description?: string;
+  delivery_type: DietPlanDeliveryType;
+  meals?: CreateDietMealRequest[];
+  dietitian_notes?: string;
+}
+
+export interface UpdateDietPlanRequest {
+  title?: string;
+  description?: string;
+  meals?: CreateDietMealRequest[];
+  dietitian_notes?: string;
   status?: PlanStatus;
 }
 
@@ -823,6 +958,305 @@ export const progressService = {
   ): Promise<ApiResponse<WorkoutPlan>> {
     return await apiClient.get<WorkoutPlan>(
       `/progress/my-workout-plans/${planId}`,
+    );
+  },
+
+  // ==================== DIET PLANS — Professional ====================
+
+  async createDietPlan(
+    profileId: string,
+    data: CreateDietPlanRequest,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.post<DietPlan>(
+      `/progress/clients/${profileId}/diet-plans`,
+      data,
+    );
+  },
+
+  async createDietPlanWithDocument(
+    profileId: string,
+    formData: FormData,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.postFormData<DietPlan>(
+      `/progress/clients/${profileId}/diet-plans`,
+      formData,
+    );
+  },
+
+  async getDietPlans(
+    profileId: string,
+    limit?: number,
+  ): Promise<ApiResponse<DietPlan[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<DietPlan[]>(
+      `/progress/clients/${profileId}/diet-plans${params}`,
+    );
+  },
+
+  async getDietPlanById(
+    profileId: string,
+    planId: string,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.get<DietPlan>(
+      `/progress/clients/${profileId}/diet-plans/${planId}`,
+    );
+  },
+
+  async updateDietPlan(
+    profileId: string,
+    planId: string,
+    data: UpdateDietPlanRequest,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.patch<DietPlan>(
+      `/progress/clients/${profileId}/diet-plans/${planId}`,
+      data,
+    );
+  },
+
+  async replaceDietPlanDocument(
+    profileId: string,
+    planId: string,
+    formData: FormData,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.patchFormData<DietPlan>(
+      `/progress/clients/${profileId}/diet-plans/${planId}/document`,
+      formData,
+    );
+  },
+
+  async archiveDietPlan(
+    profileId: string,
+    planId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/progress/clients/${profileId}/diet-plans/${planId}`,
+    );
+  },
+
+  async getDietPlanDocumentAccess(
+    profileId: string,
+    planId: string,
+  ): Promise<ApiResponse<DietPlanDocumentAccess>> {
+    return await apiClient.get<DietPlanDocumentAccess>(
+      `/progress/clients/${profileId}/diet-plans/${planId}/document-access`,
+    );
+  },
+
+  // ==================== DIET PLANS — Organization ====================
+
+  async createDietPlanInOrg(
+    organizationId: string,
+    profileId: string,
+    data: CreateDietPlanRequest,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.post<DietPlan>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/diet-plans`,
+      data,
+    );
+  },
+
+  async createDietPlanWithDocumentInOrg(
+    organizationId: string,
+    profileId: string,
+    formData: FormData,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.postFormData<DietPlan>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/diet-plans`,
+      formData,
+    );
+  },
+
+  async getDietPlansInOrg(
+    organizationId: string,
+    profileId: string,
+    limit?: number,
+  ): Promise<ApiResponse<DietPlan[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<DietPlan[]>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/diet-plans${params}`,
+    );
+  },
+
+  async updateDietPlanInOrg(
+    organizationId: string,
+    profileId: string,
+    planId: string,
+    data: UpdateDietPlanRequest,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.patch<DietPlan>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/diet-plans/${planId}`,
+      data,
+    );
+  },
+
+  async replaceDietPlanDocumentInOrg(
+    organizationId: string,
+    profileId: string,
+    planId: string,
+    formData: FormData,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.patchFormData<DietPlan>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/diet-plans/${planId}/document`,
+      formData,
+    );
+  },
+
+  async archiveDietPlanInOrg(
+    organizationId: string,
+    profileId: string,
+    planId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/diet-plans/${planId}`,
+    );
+  },
+
+  async getDietPlanDocumentAccessInOrg(
+    organizationId: string,
+    profileId: string,
+    planId: string,
+  ): Promise<ApiResponse<DietPlanDocumentAccess>> {
+    return await apiClient.get<DietPlanDocumentAccess>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/diet-plans/${planId}/document-access`,
+    );
+  },
+
+  // ==================== DIET PLANS — User-facing (my plans) ====================
+
+  async getMyDietPlans(
+    limit?: number,
+  ): Promise<ApiResponse<DietPlan[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<DietPlan[]>(
+      `/progress/my-diet-plans${params}`,
+    );
+  },
+
+  async getMyDietPlanById(
+    planId: string,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.get<DietPlan>(
+      `/progress/my-diet-plans/${planId}`,
+    );
+  },
+
+  async getMyDietPlanDocumentAccess(
+    planId: string,
+  ): Promise<ApiResponse<DietPlanDocumentAccess>> {
+    return await apiClient.get<DietPlanDocumentAccess>(
+      `/progress/my-diet-plans/${planId}/document-access`,
+    );
+  },
+
+  // ==================== RECOMMENDATIONS — Professional ====================
+
+  async createRecommendation(
+    profileId: string,
+    data: CreateRecommendationRequest,
+  ): Promise<ApiResponse<Recommendation>> {
+    return await apiClient.post<Recommendation>(
+      `/progress/clients/${profileId}/recommendations`,
+      data,
+    );
+  },
+
+  async getRecommendations(
+    profileId: string,
+  ): Promise<ApiResponse<Recommendation[]>> {
+    return await apiClient.get<Recommendation[]>(
+      `/progress/clients/${profileId}/recommendations`,
+    );
+  },
+
+  async getRecommendationById(
+    profileId: string,
+    recommendationId: string,
+  ): Promise<ApiResponse<Recommendation>> {
+    return await apiClient.get<Recommendation>(
+      `/progress/clients/${profileId}/recommendations/${recommendationId}`,
+    );
+  },
+
+  async updateRecommendation(
+    profileId: string,
+    recommendationId: string,
+    data: UpdateRecommendationRequest,
+  ): Promise<ApiResponse<Recommendation>> {
+    return await apiClient.patch<Recommendation>(
+      `/progress/clients/${profileId}/recommendations/${recommendationId}`,
+      data,
+    );
+  },
+
+  async deleteRecommendation(
+    profileId: string,
+    recommendationId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/progress/clients/${profileId}/recommendations/${recommendationId}`,
+    );
+  },
+
+  // ==================== RECOMMENDATIONS — Organization ====================
+
+  async createRecommendationInOrg(
+    organizationId: string,
+    profileId: string,
+    data: CreateRecommendationRequest,
+  ): Promise<ApiResponse<Recommendation>> {
+    return await apiClient.post<Recommendation>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/recommendations`,
+      data,
+    );
+  },
+
+  async getRecommendationsInOrg(
+    organizationId: string,
+    profileId: string,
+  ): Promise<ApiResponse<Recommendation[]>> {
+    return await apiClient.get<Recommendation[]>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/recommendations`,
+    );
+  },
+
+  async updateRecommendationInOrg(
+    organizationId: string,
+    profileId: string,
+    recommendationId: string,
+    data: UpdateRecommendationRequest,
+  ): Promise<ApiResponse<Recommendation>> {
+    return await apiClient.patch<Recommendation>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/recommendations/${recommendationId}`,
+      data,
+    );
+  },
+
+  async deleteRecommendationInOrg(
+    organizationId: string,
+    profileId: string,
+    recommendationId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/recommendations/${recommendationId}`,
+    );
+  },
+
+  // ==================== RECOMMENDATIONS — User-facing (my recommendations) ====================
+
+  async getMyRecommendations(
+    limit?: number,
+  ): Promise<ApiResponse<Recommendation[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<Recommendation[]>(
+      `/progress/my-recommendations${params}`,
+    );
+  },
+
+  async getMyRecommendationById(
+    recommendationId: string,
+  ): Promise<ApiResponse<Recommendation>> {
+    return await apiClient.get<Recommendation>(
+      `/progress/my-recommendations/${recommendationId}`,
     );
   },
 };

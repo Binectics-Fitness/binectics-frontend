@@ -6,6 +6,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import QRCode from "qrcode";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { checkinsService } from "@/lib/api/checkins";
+import { marketplaceService } from "@/lib/api/marketplace";
 import { CheckInHistoryPeriod, type CheckIn } from "@/lib/types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -66,12 +67,31 @@ export default function GymOwnerCheckInsPage() {
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [stats, setStats] = useState({ today: 0, week: 0, month: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [listingId, setListingId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Generate the check-in URL for this org
+  // Fetch the org's marketplace listing to get the correct listing ID for QR
+  useEffect(() => {
+    if (!currentOrg) return;
+    let mounted = true;
+    async function fetchListing() {
+      try {
+        const res = await marketplaceService.getOrgListing(currentOrg!._id);
+        if (mounted && res.success && res.data) {
+          setListingId(res.data._id);
+        }
+      } catch {
+        // Listing may not exist yet
+      }
+    }
+    void fetchListing();
+    return () => { mounted = false; };
+  }, [currentOrg]);
+
+  // Generate the check-in URL using the listing ID (not org ID)
   const checkInUrl =
-    typeof window !== "undefined" && currentOrg
-      ? `${window.location.origin}/check-in/${currentOrg._id}`
+    typeof window !== "undefined" && listingId
+      ? `${window.location.origin}/check-in/${listingId}`
       : "";
 
   // Render QR code whenever the URL is ready
