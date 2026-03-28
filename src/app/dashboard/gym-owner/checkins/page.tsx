@@ -85,7 +85,9 @@ export default function GymOwnerCheckInsPage() {
       }
     }
     void fetchListing();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [currentOrg]);
 
   // Generate the check-in URL using the listing ID (not org ID)
@@ -221,7 +223,7 @@ export default function GymOwnerCheckInsPage() {
                 Today&apos;s Check-ins
               </p>
               {isLoading ? (
-                <div className="h-9 w-16 bg-gray-100 animate-pulse rounded mt-2" />
+                <div className="h-9 w-16 bg-neutral-100 animate-pulse rounded mt-2" />
               ) : (
                 <p className="text-3xl font-black text-foreground mt-2">
                   {todayCount}
@@ -233,7 +235,7 @@ export default function GymOwnerCheckInsPage() {
                 This Week
               </p>
               {isLoading ? (
-                <div className="h-9 w-16 bg-gray-100 animate-pulse rounded mt-2" />
+                <div className="h-9 w-16 bg-neutral-100 animate-pulse rounded mt-2" />
               ) : (
                 <p className="text-3xl font-black text-foreground mt-2">
                   {weekCount}
@@ -245,7 +247,7 @@ export default function GymOwnerCheckInsPage() {
                 This Month
               </p>
               {isLoading ? (
-                <div className="h-9 w-16 bg-gray-100 animate-pulse rounded mt-2" />
+                <div className="h-9 w-16 bg-neutral-100 animate-pulse rounded mt-2" />
               ) : (
                 <p className="text-3xl font-black text-foreground mt-2">
                   {monthCount}
@@ -257,7 +259,7 @@ export default function GymOwnerCheckInsPage() {
                 Last Check-in
               </p>
               {isLoading ? (
-                <div className="h-9 w-20 bg-gray-100 animate-pulse rounded mt-2" />
+                <div className="h-9 w-20 bg-neutral-100 animate-pulse rounded mt-2" />
               ) : (
                 <p className="text-3xl font-black text-foreground mt-2">
                   {lastCheckIn}
@@ -344,12 +346,12 @@ export default function GymOwnerCheckInsPage() {
                       key={i}
                       className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
                     >
-                      <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+                      <div className="w-10 h-10 bg-neutral-200 rounded-full animate-pulse" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
-                        <div className="h-3 bg-gray-100 rounded w-20 animate-pulse" />
+                        <div className="h-4 bg-neutral-200 rounded w-32 animate-pulse" />
+                        <div className="h-3 bg-neutral-100 rounded w-20 animate-pulse" />
                       </div>
-                      <div className="h-4 bg-gray-200 rounded w-16 animate-pulse" />
+                      <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
                     </div>
                   ))}
                 </div>
@@ -440,7 +442,7 @@ export default function GymOwnerCheckInsPage() {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-16 bg-gray-50 rounded-lg animate-pulse"
+                    className="h-16 bg-neutral-100 rounded-lg animate-pulse"
                   />
                 ))}
               </div>

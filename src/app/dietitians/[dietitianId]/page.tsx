@@ -398,7 +398,7 @@ export default function DietitianProfilePage() {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="h-24 bg-gray-100 animate-pulse rounded"
+                      className="h-24 bg-neutral-100 animate-pulse rounded"
                     />
                   ))}
                 </div>

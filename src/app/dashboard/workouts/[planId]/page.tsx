@@ -99,9 +99,7 @@ export default function UserWorkoutPlanDetailPage() {
           <DashboardLoading />
         ) : !plan ? (
           <div className="rounded-2xl bg-white p-8 shadow-card text-center">
-            <p className="text-foreground-secondary">
-              Workout plan not found.
-            </p>
+            <p className="text-foreground-secondary">Workout plan not found.</p>
           </div>
         ) : (
           <div className="space-y-6">

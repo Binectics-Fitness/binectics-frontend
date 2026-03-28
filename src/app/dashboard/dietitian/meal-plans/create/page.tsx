@@ -11,10 +11,7 @@ import { UserRole, DietPlanDeliveryType, MealSlot } from "@/lib/types";
 import type { ClientProfile, CreateDietMealRequest } from "@/lib/api/progress";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  dietPlanSchema,
-  type DietPlanFormData,
-} from "@/lib/schemas/progress";
+import { dietPlanSchema, type DietPlanFormData } from "@/lib/schemas/progress";
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
@@ -261,7 +258,8 @@ function CreateDietPlanContent() {
             const formData = new FormData();
             formData.append("title", data.title.trim());
             formData.append("delivery_type", DietPlanDeliveryType.DOCUMENT);
-            if (data.description) formData.append("description", data.description);
+            if (data.description)
+              formData.append("description", data.description);
             if (data.dietitian_notes)
               formData.append("dietitian_notes", data.dietitian_notes);
             formData.append("file", selectedFile!);
@@ -377,126 +375,179 @@ function CreateDietPlanContent() {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Delivery Type */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
-              <h2 className="text-lg font-bold text-foreground mb-4">
-                Delivery Method
-              </h2>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors ${
-                    deliveryType === DietPlanDeliveryType.PLATFORM
-                      ? "border-accent-purple-500 bg-accent-purple-50"
-                      : "border-neutral-200 hover:border-neutral-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    {...register("delivery_type")}
-                    value={DietPlanDeliveryType.PLATFORM}
-                    className="mt-1"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      Platform Meals
-                    </p>
-                    <p className="text-xs text-foreground-secondary mt-0.5">
-                      Create structured meals directly in the app
-                    </p>
-                  </div>
+          {/* Delivery Type */}
+          <div className="rounded-2xl bg-white p-6 shadow-card">
+            <h2 className="text-lg font-bold text-foreground mb-4">
+              Delivery Method
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label
+                className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors ${
+                  deliveryType === DietPlanDeliveryType.PLATFORM
+                    ? "border-accent-purple-500 bg-accent-purple-50"
+                    : "border-neutral-200 hover:border-neutral-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  {...register("delivery_type")}
+                  value={DietPlanDeliveryType.PLATFORM}
+                  className="mt-1"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Platform Meals
+                  </p>
+                  <p className="text-xs text-foreground-secondary mt-0.5">
+                    Create structured meals directly in the app
+                  </p>
+                </div>
+              </label>
+              <label
+                className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors ${
+                  deliveryType === DietPlanDeliveryType.DOCUMENT
+                    ? "border-accent-purple-500 bg-accent-purple-50"
+                    : "border-neutral-200 hover:border-neutral-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  {...register("delivery_type")}
+                  value={DietPlanDeliveryType.DOCUMENT}
+                  className="mt-1"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Upload Document
+                  </p>
+                  <p className="text-xs text-foreground-secondary mt-0.5">
+                    Upload a PDF or DOCX meal plan document
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Plan Details */}
+          <div className="rounded-2xl bg-white p-6 shadow-card">
+            <h2 className="text-lg font-bold text-foreground mb-4">
+              Plan Details
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                  Title *
                 </label>
-                <label
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors ${
-                    deliveryType === DietPlanDeliveryType.DOCUMENT
-                      ? "border-accent-purple-500 bg-accent-purple-50"
-                      : "border-neutral-200 hover:border-neutral-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    {...register("delivery_type")}
-                    value={DietPlanDeliveryType.DOCUMENT}
-                    className="mt-1"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      Upload Document
-                    </p>
-                    <p className="text-xs text-foreground-secondary mt-0.5">
-                      Upload a PDF or DOCX meal plan document
-                    </p>
-                  </div>
+                <input
+                  {...register("title")}
+                  placeholder="e.g. Week 1 — Calorie Deficit Plan"
+                  className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
+                />
+                {errors.title && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.title.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                  Description
                 </label>
+                <textarea
+                  {...register("description")}
+                  rows={3}
+                  placeholder="Describe the diet plan..."
+                  className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                  Dietitian Notes
+                </label>
+                <textarea
+                  {...register("dietitian_notes")}
+                  rows={2}
+                  placeholder="Private notes about this client's dietary needs..."
+                  className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
+                />
               </div>
             </div>
+          </div>
 
-            {/* Plan Details */}
+          {/* Document Upload (when delivery_type === 'document') */}
+          {deliveryType === DietPlanDeliveryType.DOCUMENT && (
             <div className="rounded-2xl bg-white p-6 shadow-card">
               <h2 className="text-lg font-bold text-foreground mb-4">
-                Plan Details
+                Document Upload
               </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground-secondary mb-1">
-                    Title *
-                  </label>
-                  <input
-                    {...register("title")}
-                    placeholder="e.g. Week 1 — Calorie Deficit Plan"
-                    className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
+              <div
+                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-300 p-8 hover:border-accent-purple-400 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx,.doc"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <svg
+                  className="h-10 w-10 text-neutral-400 mb-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                   />
-                  {errors.title && (
-                    <p className="mt-1 text-xs text-red-600">
-                      {errors.title.message}
+                </svg>
+                {selectedFile ? (
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-foreground">
+                      {selectedFile.name}
                     </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground-secondary mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    {...register("description")}
-                    rows={3}
-                    placeholder="Describe the diet plan..."
-                    className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground-secondary mb-1">
-                    Dietitian Notes
-                  </label>
-                  <textarea
-                    {...register("dietitian_notes")}
-                    rows={2}
-                    placeholder="Private notes about this client's dietary needs..."
-                    className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
-                  />
-                </div>
+                    <p className="text-xs text-foreground-secondary mt-1">
+                      {(selectedFile.size / 1024).toFixed(1)} KB — Click to
+                      change
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-foreground-secondary">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-foreground-secondary mt-1">
+                      PDF or DOCX (max 10 MB)
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
+          )}
 
-            {/* Document Upload (when delivery_type === 'document') */}
-            {deliveryType === DietPlanDeliveryType.DOCUMENT && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
-                <h2 className="text-lg font-bold text-foreground mb-4">
-                  Document Upload
-                </h2>
-                <div
-                  className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-300 p-8 hover:border-accent-purple-400 transition-colors cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
+          {/* Meals (when delivery_type === 'platform') */}
+          {deliveryType === DietPlanDeliveryType.PLATFORM && (
+            <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground">Meals</h2>
+                <button
+                  type="button"
+                  onClick={() =>
+                    append({
+                      meal_type: "",
+                      title: "",
+                      order: fields.length + 1,
+                    })
+                  }
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-accent-purple-600 hover:text-accent-purple-700"
                 >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.docx,.doc"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
                   <svg
-                    className="h-10 w-10 text-neutral-400 mb-3"
+                    className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -504,178 +555,125 @@ function CreateDietPlanContent() {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  {selectedFile ? (
-                    <div className="text-center">
-                      <p className="text-sm font-semibold text-foreground">
-                        {selectedFile.name}
-                      </p>
-                      <p className="text-xs text-foreground-secondary mt-1">
-                        {(selectedFile.size / 1024).toFixed(1)} KB — Click to
-                        change
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-foreground-secondary">
-                        Click to upload or drag and drop
-                      </p>
-                      <p className="text-xs text-foreground-secondary mt-1">
-                        PDF or DOCX (max 10 MB)
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Meals (when delivery_type === 'platform') */}
-            {deliveryType === DietPlanDeliveryType.PLATFORM && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-foreground">Meals</h2>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      append({
-                        meal_type: "",
-                        title: "",
-                        order: fields.length + 1,
-                      })
-                    }
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-accent-purple-600 hover:text-accent-purple-700"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    Add Meal
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {fields.map((field, index) => (
-                    <MealRowEditor
-                      key={field.id}
-                      index={index}
-                      register={register}
-                      remove={remove}
-                      errors={errors}
-                      totalCount={fields.length}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Assign to Client(s) */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-lg font-bold text-foreground">
-                    Assign to Client(s)
-                  </h2>
-                  <p className="text-xs text-foreground-secondary mt-0.5">
-                    Select one or more clients to receive this meal plan
-                  </p>
-                </div>
-                {selectedProfileIds.length > 0 && (
-                  <span className="text-sm font-medium text-accent-purple-600">
-                    {selectedProfileIds.length} selected
-                  </span>
-                )}
+                  Add Meal
+                </button>
               </div>
 
-              {loadingProfiles ? (
-                <DashboardLoading />
-              ) : profiles.length === 0 ? (
-                <p className="text-sm text-foreground-secondary">
-                  No clients found.{" "}
-                  <a
-                    href="/dashboard/dietitian/clients"
-                    className="text-accent-purple-600 hover:underline"
-                  >
-                    Add a client
-                  </a>{" "}
-                  first.
+              <div className="space-y-4">
+                {fields.map((field, index) => (
+                  <MealRowEditor
+                    key={field.id}
+                    index={index}
+                    register={register}
+                    remove={remove}
+                    errors={errors}
+                    totalCount={fields.length}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Assign to Client(s) */}
+          <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  Assign to Client(s)
+                </h2>
+                <p className="text-xs text-foreground-secondary mt-0.5">
+                  Select one or more clients to receive this meal plan
                 </p>
-              ) : (
-                <>
-                  <div className="mb-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedProfileIds(
-                          selectedProfileIds.length === profiles.length
-                            ? []
-                            : profiles.map((p) => p._id),
-                        )
-                      }
-                      className="text-sm font-medium text-accent-purple-600 hover:text-accent-purple-700"
-                    >
-                      {selectedProfileIds.length === profiles.length
-                        ? "Deselect All"
-                        : "Select All"}
-                    </button>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto rounded-lg border border-neutral-200 divide-y divide-neutral-100">
-                    {profiles.map((p) => (
-                      <label
-                        key={p._id}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedProfileIds.includes(p._id)}
-                          onChange={(e) =>
-                            setSelectedProfileIds(
-                              e.target.checked
-                                ? [...selectedProfileIds, p._id]
-                                : selectedProfileIds.filter((id) => id !== p._id),
-                            )
-                          }
-                          className="h-4 w-4 rounded border-neutral-300 text-accent-purple-500 focus:ring-accent-purple-500"
-                        />
-                        <span className="text-sm text-foreground">
-                          {clientName(p)}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </>
+              </div>
+              {selectedProfileIds.length > 0 && (
+                <span className="text-sm font-medium text-accent-purple-600">
+                  {selectedProfileIds.length} selected
+                </span>
               )}
             </div>
 
-            {/* Submit */}
-            <div className="flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex h-11 items-center justify-center rounded-lg bg-accent-purple-500 px-6 text-sm font-semibold text-white hover:bg-accent-purple-600 disabled:opacity-50"
-              >
-                {submitting ? "Creating…" : "Create Meal Plan"}
-              </button>
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="inline-flex h-11 items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 text-sm font-medium text-foreground hover:bg-neutral-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+            {loadingProfiles ? (
+              <DashboardLoading />
+            ) : profiles.length === 0 ? (
+              <p className="text-sm text-foreground-secondary">
+                No clients found.{" "}
+                <a
+                  href="/dashboard/dietitian/clients"
+                  className="text-accent-purple-600 hover:underline"
+                >
+                  Add a client
+                </a>{" "}
+                first.
+              </p>
+            ) : (
+              <>
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedProfileIds(
+                        selectedProfileIds.length === profiles.length
+                          ? []
+                          : profiles.map((p) => p._id),
+                      )
+                    }
+                    className="text-sm font-medium text-accent-purple-600 hover:text-accent-purple-700"
+                  >
+                    {selectedProfileIds.length === profiles.length
+                      ? "Deselect All"
+                      : "Select All"}
+                  </button>
+                </div>
+                <div className="max-h-60 overflow-y-auto rounded-lg border border-neutral-200 divide-y divide-neutral-100">
+                  {profiles.map((p) => (
+                    <label
+                      key={p._id}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedProfileIds.includes(p._id)}
+                        onChange={(e) =>
+                          setSelectedProfileIds(
+                            e.target.checked
+                              ? [...selectedProfileIds, p._id]
+                              : selectedProfileIds.filter((id) => id !== p._id),
+                          )
+                        }
+                        className="h-4 w-4 rounded border-neutral-300 text-accent-purple-500 focus:ring-accent-purple-500"
+                      />
+                      <span className="text-sm text-foreground">
+                        {clientName(p)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Submit */}
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-accent-purple-500 px-6 text-sm font-semibold text-white hover:bg-accent-purple-600 disabled:opacity-50"
+            >
+              {submitting ? "Creating…" : "Create Meal Plan"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 text-sm font-medium text-foreground hover:bg-neutral-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </main>
     </div>
   );

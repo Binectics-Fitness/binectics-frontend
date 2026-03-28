@@ -88,8 +88,7 @@ export default function UserDietPlanDetailPage() {
       ? `${plan.professional_id.first_name} ${plan.professional_id.last_name}`
       : "Dietitian";
 
-  const isDocument =
-    plan?.delivery_type === DietPlanDeliveryType.DOCUMENT;
+  const isDocument = plan?.delivery_type === DietPlanDeliveryType.DOCUMENT;
 
   const sortedMeals = plan
     ? [...plan.meals].sort((a, b) => a.order - b.order)

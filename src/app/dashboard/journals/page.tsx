@@ -231,7 +231,10 @@ export default function MyJournalsPage() {
         ) : (
           <div className="space-y-4">
             {filteredEntries.map((entry) => (
-              <article key={entry._id} className="rounded-2xl bg-white p-5 shadow-sm">
+              <article
+                key={entry._id}
+                className="rounded-2xl bg-white p-5 shadow-sm"
+              >
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <span className="text-sm font-semibold text-foreground">
                     {getProfessionalName(entry)}

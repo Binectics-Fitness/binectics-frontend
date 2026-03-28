@@ -40,7 +40,8 @@ function difficultyColor(level?: DifficultyLevel): string {
   if (!level) return "bg-neutral-100 text-neutral-600";
   const colors: Record<DifficultyLevel, string> = {
     [DifficultyLevel.BEGINNER]: "bg-green-100 text-green-700",
-    [DifficultyLevel.INTERMEDIATE]: "bg-accent-yellow-100 text-accent-yellow-700",
+    [DifficultyLevel.INTERMEDIATE]:
+      "bg-accent-yellow-100 text-accent-yellow-700",
     [DifficultyLevel.ADVANCED]: "bg-red-100 text-red-700",
   };
   return colors[level] || "bg-neutral-100 text-neutral-600";
@@ -162,8 +163,12 @@ export default function TrainerWorkoutsPage() {
   if (isLoading || orgLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
 
-  const activePlans = workoutPlans.filter((p) => p.status === PlanStatus.ACTIVE);
-  const inactivePlans = workoutPlans.filter((p) => p.status !== PlanStatus.ACTIVE);
+  const activePlans = workoutPlans.filter(
+    (p) => p.status === PlanStatus.ACTIVE,
+  );
+  const inactivePlans = workoutPlans.filter(
+    (p) => p.status !== PlanStatus.ACTIVE,
+  );
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
@@ -253,7 +258,9 @@ export default function TrainerWorkoutsPage() {
                 </p>
               </div>
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <p className="text-sm text-foreground-secondary">Active Plans</p>
+                <p className="text-sm text-foreground-secondary">
+                  Active Plans
+                </p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {activePlans.length}
                 </p>

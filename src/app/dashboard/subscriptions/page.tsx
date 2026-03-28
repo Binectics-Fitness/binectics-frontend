@@ -80,8 +80,7 @@ export default function SubscriptionsPage() {
   const handleToggleAutoRenew = async (subscriptionId: string) => {
     setTogglingId(subscriptionId);
     try {
-      const response =
-        await marketplaceService.toggleAutoRenew(subscriptionId);
+      const response = await marketplaceService.toggleAutoRenew(subscriptionId);
       if (response.success && response.data) {
         setSubscriptions((prev) =>
           prev.map((s) =>

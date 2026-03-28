@@ -24,10 +24,12 @@ Recent Vercel build failures were caused by a TypeScript error in the Paystack p
 ## Implementation Details
 
 ### 1. Removal of `react-paystack`
+
 - Deleted the `react-paystack` package from `package.json`.
 - Removed all imports and usages of `react-paystack` in the codebase.
 
 ### 2. Inline Script Integration
+
 - Added the Paystack inline script to the checkout page using a `<script>` tag.
 - Created a `launchPaystack` function that:
   - Checks for the presence of `window.PaystackPop`.
@@ -35,6 +37,7 @@ Recent Vercel build failures were caused by a TypeScript error in the Paystack p
   - Handles payment success and failure callbacks.
 
 ### 3. TypeScript Global Declaration
+
 - Added the following global declaration to the relevant file:
   ```ts
   declare global {
@@ -46,6 +49,7 @@ Recent Vercel build failures were caused by a TypeScript error in the Paystack p
 - This prevents TypeScript errors when accessing `window.PaystackPop`.
 
 ### 4. Null Check for Config
+
 - Added a guard clause:
   ```ts
   if (!config) return;
@@ -53,18 +57,22 @@ Recent Vercel build failures were caused by a TypeScript error in the Paystack p
 - This ensures the Paystack modal is only launched with a valid config.
 
 ## Security & Compatibility Notes
+
 - **No secret keys** are exposed in the frontend code; only the public key is used.
 - The integration is compatible with React 19 and Next.js 16 (App Router).
 - The solution avoids deprecated or unsupported packages.
 
 ## Testing & Deployment
+
 - Verified that the build passes locally (`npm run build`) and on Vercel.
 - Manual test: Confirmed that the Paystack modal launches and processes payments as expected.
 - No backend changes required; this is a frontend-only integration.
 
 ## References
+
 - [Paystack Inline Documentation](https://paystack.com/docs/payments/accept-payments/#inline)
 - [Vercel Build Logs]
 
 ---
+
 **Last updated:** 2026-03-28

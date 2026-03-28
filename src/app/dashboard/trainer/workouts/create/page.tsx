@@ -9,7 +9,10 @@ import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { progressService } from "@/lib/api/progress";
 import { UserRole, DifficultyLevel } from "@/lib/types";
-import type { ClientProfile, CreateWorkoutExerciseRequest } from "@/lib/api/progress";
+import type {
+  ClientProfile,
+  CreateWorkoutExerciseRequest,
+} from "@/lib/api/progress";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -155,7 +158,8 @@ function CreateWorkoutPlanContent() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
 
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState(preselectedProfileId);
+  const [selectedProfileId, setSelectedProfileId] =
+    useState(preselectedProfileId);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -319,9 +323,7 @@ function CreateWorkoutPlanContent() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Client Selection */}
             <div className="rounded-2xl bg-white p-6 shadow-card">
-              <h2 className="text-lg font-bold text-foreground mb-4">
-                Client
-              </h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">Client</h2>
               <select
                 value={selectedProfileId}
                 onChange={(e) => setSelectedProfileId(e.target.value)}
@@ -416,9 +418,7 @@ function CreateWorkoutPlanContent() {
             {/* Exercises */}
             <div className="rounded-2xl bg-white p-6 shadow-card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground">
-                  Exercises
-                </h2>
+                <h2 className="text-lg font-bold text-foreground">Exercises</h2>
                 <button
                   type="button"
                   onClick={() =>

@@ -40,6 +40,11 @@ export { default as ProfessionalsTab } from "./ProfessionalsTab";
 export { default as DashboardSidebar } from "./DashboardSidebar";
 export { default as DashboardLoading } from "./DashboardLoading";
 export { default as TrainerSidebar } from "./TrainerSidebar";
+
+// Loading Components
+export { LoadingSpinner } from "./LoadingSpinner";
+export type { default as LoadingSpinnerDefault } from "./LoadingSpinner";
+export { CardSkeleton } from "./CardSkeleton";
 export { default as DietitianSidebar } from "./DietitianSidebar";
 export { default as GymOwnerSidebar } from "./GymOwnerSidebar";
 export { default as AdminSidebar } from "./AdminSidebar";

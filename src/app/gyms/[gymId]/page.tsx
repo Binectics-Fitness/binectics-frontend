@@ -382,7 +382,7 @@ export default function GymProfilePage() {
                   {[1, 2].map((i) => (
                     <div
                       key={i}
-                      className="h-32 bg-gray-100 animate-pulse rounded"
+                      className="h-32 bg-neutral-100 animate-pulse rounded"
                     />
                   ))}
                 </div>

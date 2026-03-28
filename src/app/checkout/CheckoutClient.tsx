@@ -33,7 +33,6 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 
-
 // ==================== STRIPE CARD FORM ====================
 
 function StripeCardForm({
@@ -245,9 +244,8 @@ function FlutterwaveButton({
       const { closePaymentModal } = await import("flutterwave-react-v3");
 
       // Use the Flutterwave inline script approach
-      const FlutterwaveCheckout = (
-        window as unknown as Record<string, unknown>
-      ).FlutterwaveCheckout as
+      const FlutterwaveCheckout = (window as unknown as Record<string, unknown>)
+        .FlutterwaveCheckout as
         | ((config: Record<string, unknown>) => void)
         | undefined;
 
@@ -256,7 +254,10 @@ function FlutterwaveButton({
           ...config,
           callback: (response: Record<string, unknown>) => {
             closePaymentModal();
-            if (response.status === "successful" || response.status === "completed") {
+            if (
+              response.status === "successful" ||
+              response.status === "completed"
+            ) {
               onSuccess(
                 `flutterwave_${String(response.transaction_id || response.tx_ref || txRef)}`,
               );
@@ -306,7 +307,9 @@ function CheckoutContent() {
   const [paymentError, setPaymentError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const gateway = plan ? getPaymentGateway(plan.currency) : PaymentGateway.STRIPE;
+  const gateway = plan
+    ? getPaymentGateway(plan.currency)
+    : PaymentGateway.STRIPE;
 
   const loadCheckoutData = useCallback(async () => {
     if (!listingId || !planId) return;
@@ -372,7 +375,8 @@ function CheckoutContent() {
         );
       } else {
         setPaymentError(
-          res.message || "Failed to activate subscription. Please contact support.",
+          res.message ||
+            "Failed to activate subscription. Please contact support.",
         );
       }
     } catch {

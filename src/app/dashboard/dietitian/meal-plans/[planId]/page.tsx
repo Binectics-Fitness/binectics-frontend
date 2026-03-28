@@ -11,8 +11,17 @@ import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { progressService } from "@/lib/api/progress";
-import { UserRole, PlanStatus, DietPlanDeliveryType, MealSlot } from "@/lib/types";
-import type { DietPlan, ClientProfile, CreateDietMealRequest } from "@/lib/api/progress";
+import {
+  UserRole,
+  PlanStatus,
+  DietPlanDeliveryType,
+  MealSlot,
+} from "@/lib/types";
+import type {
+  DietPlan,
+  ClientProfile,
+  CreateDietMealRequest,
+} from "@/lib/api/progress";
 import { formatLocal } from "@/utils/format";
 
 // ─── Helpers ───────────────────────────────────────────────────────
@@ -54,7 +63,8 @@ function deliveryLabel(type: DietPlanDeliveryType): string {
 
 function deliveryColor(type: DietPlanDeliveryType): string {
   const colors: Record<DietPlanDeliveryType, string> = {
-    [DietPlanDeliveryType.PLATFORM]: "bg-accent-purple-100 text-accent-purple-700",
+    [DietPlanDeliveryType.PLATFORM]:
+      "bg-accent-purple-100 text-accent-purple-700",
     [DietPlanDeliveryType.DOCUMENT]: "bg-accent-blue-100 text-accent-blue-700",
   };
   return colors[type] || "bg-neutral-100 text-neutral-600";
@@ -151,7 +161,9 @@ function DietPlanDetailContent() {
         setError(res.message || "Failed to get download link");
       }
     } catch {
-      setError("Failed to get download link. The signed URL may have expired — please try again.");
+      setError(
+        "Failed to get download link. The signed URL may have expired — please try again.",
+      );
     }
     setDownloadingDoc(false);
   };
@@ -193,15 +205,17 @@ function DietPlanDetailContent() {
     setAssignError("");
 
     try {
-      const meals: CreateDietMealRequest[] = (plan.meals || []).map((m, idx) => ({
-        meal_type: m.meal_type,
-        title: m.title,
-        description: m.description || undefined,
-        foods: m.foods && m.foods.length > 0 ? m.foods : undefined,
-        calories: m.calories || undefined,
-        notes: m.notes || undefined,
-        order: idx + 1,
-      }));
+      const meals: CreateDietMealRequest[] = (plan.meals || []).map(
+        (m, idx) => ({
+          meal_type: m.meal_type,
+          title: m.title,
+          description: m.description || undefined,
+          foods: m.foods && m.foods.length > 0 ? m.foods : undefined,
+          calories: m.calories || undefined,
+          notes: m.notes || undefined,
+          order: idx + 1,
+        }),
+      );
 
       const payload = {
         title: plan.title,
@@ -216,7 +230,11 @@ function DietPlanDetailContent() {
       for (const clientProfileId of selectedClients) {
         try {
           const res = orgId
-            ? await progressService.createDietPlanInOrg(orgId, clientProfileId, payload)
+            ? await progressService.createDietPlanInOrg(
+                orgId,
+                clientProfileId,
+                payload,
+              )
             : await progressService.createDietPlan(clientProfileId, payload);
           if (!res.success) {
             failedClients.push(clientProfileId);
@@ -229,7 +247,9 @@ function DietPlanDetailContent() {
       if (failedClients.length === 0) {
         setAssignModalOpen(false);
         setAssignError("");
-        setSuccessMessage(`Plan assigned to ${selectedClients.length} client(s) successfully`);
+        setSuccessMessage(
+          `Plan assigned to ${selectedClients.length} client(s) successfully`,
+        );
         setTimeout(() => setSuccessMessage(""), 5000);
       } else if (failedClients.length < selectedClients.length) {
         setAssignError(
@@ -381,25 +401,41 @@ function DietPlanDetailContent() {
             </div>
 
             {/* Assign Modal */}
-            <Modal open={assignModalOpen} onClose={() => setAssignModalOpen(false)} title="Assign Meal Plan to Clients">
+            <Modal
+              open={assignModalOpen}
+              onClose={() => setAssignModalOpen(false)}
+              title="Assign Meal Plan to Clients"
+            >
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Select Clients</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Select Clients
+                  </label>
                   <div className="max-h-48 overflow-y-auto border rounded-lg p-2">
                     {clientList.length === 0 ? (
-                      <div className="text-sm text-foreground-secondary">No clients found.</div>
+                      <div className="text-sm text-foreground-secondary">
+                        No clients found.
+                      </div>
                     ) : (
                       clientList.map((client) => (
-                        <label key={client._id} className="flex items-center gap-2 py-1">
+                        <label
+                          key={client._id}
+                          className="flex items-center gap-2 py-1"
+                        >
                           <input
                             type="checkbox"
                             value={client._id}
                             checked={selectedClients.includes(client._id)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedClients((prev) => [...prev, client._id]);
+                                setSelectedClients((prev) => [
+                                  ...prev,
+                                  client._id,
+                                ]);
                               } else {
-                                setSelectedClients((prev) => prev.filter((id) => id !== client._id));
+                                setSelectedClients((prev) =>
+                                  prev.filter((id) => id !== client._id),
+                                );
                               }
                             }}
                           />
@@ -409,7 +445,9 @@ function DietPlanDetailContent() {
                     )}
                   </div>
                 </div>
-                {assignError && <div className="text-sm text-red-600">{assignError}</div>}
+                {assignError && (
+                  <div className="text-sm text-red-600">{assignError}</div>
+                )}
                 <div className="flex justify-end gap-2 mt-4">
                   <button
                     type="button"

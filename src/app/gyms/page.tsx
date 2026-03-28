@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import LocationFilter from "@/components/LocationFilter";
+import { CardSkeleton } from "@/components/CardSkeleton";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
 
@@ -215,21 +216,7 @@ export default function GymsPage() {
           )}
 
           {isLoading && (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse rounded-lg border-2 border-neutral-200 overflow-hidden"
-                >
-                  <div className="h-48 bg-neutral-200" />
-                  <div className="p-6 space-y-3">
-                    <div className="h-5 bg-neutral-200 rounded w-3/4" />
-                    <div className="h-4 bg-neutral-200 rounded w-1/2" />
-                    <div className="h-4 bg-neutral-200 rounded w-2/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <CardSkeleton count={6} columns="3" />
           )}
 
           {!isLoading && !error && listings.length === 0 && (

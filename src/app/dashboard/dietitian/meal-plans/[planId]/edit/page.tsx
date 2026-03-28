@@ -8,14 +8,16 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { progressService } from "@/lib/api/progress";
-import { UserRole, PlanStatus, DietPlanDeliveryType, MealSlot } from "@/lib/types";
+import {
+  UserRole,
+  PlanStatus,
+  DietPlanDeliveryType,
+  MealSlot,
+} from "@/lib/types";
 import type { DietPlan, CreateDietMealRequest } from "@/lib/api/progress";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  dietPlanSchema,
-  type DietPlanFormData,
-} from "@/lib/schemas/progress";
+import { dietPlanSchema, type DietPlanFormData } from "@/lib/schemas/progress";
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
@@ -250,7 +252,8 @@ function EditDietPlanContent() {
         title: data.title.trim(),
         description: data.description || undefined,
         meals:
-          plan?.delivery_type === DietPlanDeliveryType.PLATFORM && meals.length > 0
+          plan?.delivery_type === DietPlanDeliveryType.PLATFORM &&
+          meals.length > 0
             ? meals
             : undefined,
         dietitian_notes: data.dietitian_notes || undefined,

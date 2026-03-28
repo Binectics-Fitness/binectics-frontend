@@ -340,7 +340,7 @@ export default function GymOwnerMembersPage() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="h-12 bg-gray-100 animate-pulse rounded"
+                    className="h-12 bg-neutral-100 animate-pulse rounded"
                   />
                 ))}
               </div>

@@ -37,26 +37,29 @@ Dietitians can create meal plans independently, without selecting a client first
 - Existing plans with profileId can be migrated to the new model by moving profileId to assignedTo[].
 
 ---
-# Gamification System – Technical Specification
 
+# Gamification System – Technical Specification
 
 ## 1. Feature Overview
 
-The Binectics Gamification System is a premium, multi-role, anti-cheat rewards engine designed to drive engagement, retention, and verified achievement across the fitness ecosystem. It is architected to:
+The Binectics Gamification System is a premium, multi-role, anti-cheat rewards engine designed to drive engagement, retention, and verified achievement across the fitness ecosystem. All gamification logic (points calculation, badge awards, anti-cheat validation, leaderboard ranking, challenge lifecycle, and provider token management) is **backend-driven**. The frontend is a display and interaction layer that consumes the gamification API.
 
 - **Motivate and reward all user types:**
   - Fitness enthusiasts earn points, badges, and leaderboard ranks for verified activity (workouts, check-ins, challenge participation).
   - Trainers and dietitians can create and manage challenges, track client progress, and earn professional recognition badges.
   - Gym owners can sponsor challenges, view gym-specific leaderboards, and reward top-performing members.
 - **Integrate with trusted health data sources:**
-  - Users can connect Samsung Health, Google Fit, and Strava accounts via OAuth (frontend-only, secure public flows).
+  - Users can connect Samsung Health, Google Fit, and Strava accounts via an OAuth flow initiated from the frontend and completed by the backend (token exchange, encrypted storage, and refresh are all server-side).
   - Only verified activity (QR check-ins, API-sourced workouts/steps) is eligible for rewards, ensuring fairness and anti-cheat integrity.
 - **Support both free and premium tiers:**
   - Free users access basic points, badges, and public leaderboards.
   - Premium/verified users unlock advanced challenges, exclusive badges, and professional recognition.
 - **Enforce anti-cheat and verification:**
   - All rewards require verified activity; suspicious events are flagged for admin review.
+  - Anti-cheat validation runs server-side on every activity event before points are awarded.
   - Admins have audit tools to review, approve, or revoke rewards based on anti-cheat signals.
+
+> **Architecture note:** See `binectics-api/docs/gamification/TECH_SPEC_GAMIFICATION.md` for the backend domain model, endpoints, points engine, and anti-cheat service design.
 
 ### System Data Flow Diagram
 
@@ -77,23 +80,24 @@ flowchart TD
 ```
 
 **Legend:**
+
 - Users connect external providers (Samsung Health, Google Fit, Strava) to sync activity data.
 - The Gamification Engine processes verified data, awards points/badges, updates leaderboards, and manages challenges.
 - The Anti-Cheat System flags suspicious activity for admin review and audit.
 
-
 ## 2. Goals & Motivation
+
 - Increase user engagement and retention.
 - Encourage healthy competition and social sharing.
 - Reward verified activity and platform participation.
 - Differentiate Binectics with a trusted, anti-cheat gamification layer.
 
 ## 3. User Roles & Access
+
 - **Fitness Enthusiast:** Earns points, badges, and ranks via workouts, check-ins, and challenges.
 - **Trainer/Dietitian:** Can create challenges, view client progress, and earn professional badges.
 - **Gym Owner:** Can sponsor challenges, view gym leaderboard, and reward top members.
 - **Admin:** Manages badge definitions, reviews flagged activity, and audits anti-cheat logs.
-
 
 ## 4. Core Mechanics
 
@@ -148,75 +152,236 @@ flowchart TD
     J -->|Approve/Reject| H
 ```
 
-
 ## 5. Integration (External APIs)
+
 - **Samsung Health, Google Fit, Strava:**
-  - OAuth-based connection flow (frontend-only, no secret keys).
-  - Read-only access to activity data (steps, workouts, calories).
-  - Data mapped to platform events (e.g., steps → points, workouts → badges).
-  - User can disconnect at any time.
+  - **OAuth flow:** Frontend calls `POST /gamification/providers/:provider/connect` to get a redirect URL, then redirects the user. The backend handles the OAuth callback (`GET /gamification/providers/:provider/callback`), exchanges the authorization code for tokens, encrypts them, and stores them server-side. No OAuth tokens are ever stored or handled in the frontend.
+  - **Sync:** Backend periodically syncs activity data from connected providers (every 6 hours). Users can trigger a manual sync via `POST /gamification/providers/:provider/sync`. Synced data is validated by the anti-cheat service before awarding points.
+  - **Disconnect:** Frontend calls `DELETE /gamification/providers/:provider` to revoke access and remove the connection.
+  - **Frontend displays:** Connection status, last sync time, and provider name — fetched from `GET /gamification/providers`.
 
 ## 6. Data Model (Frontend Types)
-- `GamificationProfile`: { userId, points, badges[], streak, rank, connectedProviders[] }
-- `Badge`: { id, name, description, icon, criteria, isVerified }
-- `Challenge`: { id, name, type, startDate, endDate, participants[], leaderboard[] }
-- `LeaderboardEntry`: { userId, points, rank, avatarUrl }
-- `ProviderConnection`: { provider, status, lastSync }
+
+Frontend types map to backend API response shapes. The backend owns all gamification state; the frontend only displays it.
+
+```ts
+// Matches GET /gamification/profile
+interface GamificationProfile {
+  user_id: string;
+  total_points: number;
+  weekly_points: number;
+  monthly_points: number;
+  level: number;
+  current_streak_days: number;
+  longest_streak_days: number;
+  last_activity_at: string | null;
+  badge_count: number;
+  challenges_completed: number;
+  rank: {
+    global: number;
+    country: number | null;
+  };
+}
+
+// Matches GET /gamification/badges (definition) and GET /gamification/badges/my (earned)
+interface BadgeDefinition {
+  _id: string;
+  name: string;
+  description: string;
+  icon_url: string;
+  tier: BadgeTier;
+  trigger_event: GamificationEventType;
+  threshold: number;
+  is_active: boolean;
+}
+
+interface UserBadge {
+  _id: string;
+  badge_definition_id: BadgeDefinition;
+  awarded_at: string;
+  trigger_event_id?: string;
+}
+
+// Matches GET /gamification/challenges/:id
+interface Challenge {
+  _id: string;
+  title: string;
+  description: string;
+  challenge_type: ChallengeType;
+  status: ChallengeStatus;
+  target_value: number;
+  start_date: string;
+  end_date: string;
+  participant_count: number;
+  reward_points: number;
+  reward_badge: BadgeDefinition | null;
+  my_progress: {
+    progress_value: number;
+    is_completed: boolean;
+    rank: number;
+  } | null;
+  leaderboard: LeaderboardEntry[];
+}
+
+// Matches GET /gamification/leaderboard entries
+interface LeaderboardEntry {
+  rank: number;
+  user_id: {
+    _id: string;
+    first_name: string;
+    last_name: string;
+    profile_picture?: string;
+    country?: string;
+  };
+  value: number;
+  trend: 'up' | 'down' | 'same';
+}
+
+// Matches GET /gamification/providers
+interface ProviderConnection {
+  provider: ActivityProvider;
+  status: ProviderConnectionStatus;
+  last_sync_at: string | null;
+  provider_user_id: string | null;
+}
+
+// Matches GET /gamification/activity
+interface ActivityEvent {
+  _id: string;
+  event_type: GamificationEventType;
+  source: ActivitySource;
+  provider?: ActivityProvider;
+  points_awarded: number;
+  metadata: Record<string, unknown>;
+  is_verified: boolean;
+  activity_date: string;
+}
+```
+
+> **Enums** (`BadgeTier`, `ChallengeType`, `ChallengeStatus`, `GamificationEventType`, `ActivityProvider`, `ActivitySource`, `ProviderConnectionStatus`, `LeaderboardScope`, `LeaderboardPeriod`) are shared between frontend and backend. Frontend copies live in `src/lib/enums/` or `src/utils/enums.ts`.
 
 ## 7. UI/UX Patterns
+
 - Gamification dashboard (points, badges, streaks, leaderboards)
 - Challenge cards with join/progress/claim actions
 - Badge gallery (earned, locked, premium)
 - Provider connection UI (Samsung/Google/Strava connect/disconnect)
 - Anti-cheat status indicators (verified/unverified)
 
-
 ## 8. Security, Anti-Cheat & Verification
+
+All security-critical logic runs on the backend. The frontend displays verification status and anti-cheat indicators but does not perform validation.
 
 - **Verified Activity Only:**
   - All points, badges, and leaderboard entries require data from trusted sources (QR, Samsung Health, Google Fit, Strava).
-  - Manual or suspicious input is ignored for rewards.
+  - The backend `AntiCheatService` validates every activity event before awarding points.
+  - The frontend displays `is_verified` status on activity events and badges.
 
-- **Anti-Cheat Logic:**
-  - Every activity event is checked for source and plausibility.
-  - Examples of flagged events:
-    - Step counts exceeding human limits (e.g., 100K steps/day)
-    - Multiple gym check-ins in rapid succession
-    - Challenge results inconsistent with synced data
-  - Flagged events are sent to admin audit tools for review.
+- **Anti-Cheat (Backend-Driven):**
+  - Every activity event is checked server-side for source and plausibility before points are awarded.
+  - Flagged events are stored with `is_verified: false` and zero points until admin review.
+  - Examples of server-side flags:
+    - Steps > 50,000/day
+    - Check-ins > 3/day
+    - Calories > 5,000/day
+    - Workout duration > 300 min/day
+  - Frontend shows flagged status on activity events but cannot approve/reject (admin-only).
 
 ```mermaid
 flowchart TD
-    A[Activity Event] --> B{Is Source Verified?}
+    A[Activity Event] --> B{Backend: Is Source Verified?}
     B -- No --> C[No Reward]
-    B -- Yes --> D{Is Activity Plausible?}
+    B -- Yes --> D{Backend: Is Activity Plausible?}
     D -- No --> E[Flag for Review]
     D -- Yes --> F[Reward Points/Badge]
-    E --> G[Admin Audit]
+    E --> G[Admin Audit Panel]
     G -- Approve --> F
     G -- Reject --> H[No Reward]
-    E --> H
 ```
 
-- **Admin Audit Tools:**
-  - Admins can view flagged events, review user history, and approve or reject rewards.
-  - All audit actions are logged for transparency.
+- **Admin Audit Tools (Admin Dashboard):**
+  - Admin frontend fetches flagged events from `GET /gamification/admin/flags`.
+  - Approve: `PATCH /gamification/admin/flags/:id/approve` — backend retroactively awards points.
+  - Reject: `PATCH /gamification/admin/flags/:id/reject` — no points awarded.
+  - All audit actions are logged server-side.
 
 - **Token Security:**
-  - No sensitive tokens are stored in the frontend; OAuth tokens are short-lived and securely managed.
-
+  - OAuth tokens are **never stored or handled in the frontend**. The backend encrypts tokens at rest (AES-256) and manages refresh cycles.
+  - The frontend only stores the user's JWT for API authentication.
+  - OAuth flow: frontend redirects to provider → provider redirects to backend callback → backend stores tokens → frontend receives connection status.
 
 ## 9. API/Client Interactions
-- All gamification logic is frontend-only; data is fetched from the external API and mapped client-side
-- No backend code or database in this repo (see Claude.MD absolute rule)
-- Use enums for all badge types, challenge types, and provider names
-- All API calls use `NEXT_PUBLIC_API_URL` and OAuth public flows
+
+The frontend is a **display and interaction layer**. All gamification logic (points calculation, badge awards, anti-cheat validation, leaderboard ranking, challenge lifecycle, provider token management) is **backend-driven**. No backend code exists in this repo — the frontend calls the external API.
+
+### API Service Layer
+
+All API calls go through `NEXT_PUBLIC_API_URL`. Create a dedicated gamification API service:
+
+```ts
+// src/services/gamification.service.ts
+const BASE = `${process.env.NEXT_PUBLIC_API_URL}/gamification`;
+
+export const gamificationApi = {
+  // Profile
+  getProfile: () => fetchWithAuth(`${BASE}/profile`),
+
+  // Badges
+  getBadgeDefinitions: () => fetchWithAuth(`${BASE}/badges`),
+  getMyBadges: () => fetchWithAuth(`${BASE}/badges/my`),
+
+  // Challenges
+  getChallenges: (params?) => fetchWithAuth(`${BASE}/challenges`, { params }),
+  getChallenge: (id: string) => fetchWithAuth(`${BASE}/challenges/${id}`),
+  getMyChallenges: () => fetchWithAuth(`${BASE}/challenges/my`),
+  joinChallenge: (id: string) => fetchWithAuth(`${BASE}/challenges/${id}/join`, { method: 'POST' }),
+
+  // Leaderboard
+  getLeaderboard: (params: LeaderboardQuery) => fetchWithAuth(`${BASE}/leaderboard`, { params }),
+
+  // Providers
+  getProviders: () => fetchWithAuth(`${BASE}/providers`),
+  connectProvider: (provider: string) => fetchWithAuth(`${BASE}/providers/${provider}/connect`, { method: 'POST' }),
+  disconnectProvider: (provider: string) => fetchWithAuth(`${BASE}/providers/${provider}`, { method: 'DELETE' }),
+  syncProvider: (provider: string) => fetchWithAuth(`${BASE}/providers/${provider}/sync`, { method: 'POST' }),
+
+  // Activity
+  getActivity: (params?) => fetchWithAuth(`${BASE}/activity`, { params }),
+
+  // Admin
+  getFlags: (params?) => fetchWithAuth(`${BASE}/admin/flags`, { params }),
+  approveFlag: (id: string) => fetchWithAuth(`${BASE}/admin/flags/${id}/approve`, { method: 'PATCH' }),
+  rejectFlag: (id: string, notes: string) => fetchWithAuth(`${BASE}/admin/flags/${id}/reject`, { method: 'PATCH', body: { admin_notes: notes } }),
+};
+```
+
+### Frontend Responsibilities
+
+- **Display** gamification profile, badges, leaderboards, challenges, activity history, and provider connections.
+- **Initiate** actions: join challenges, connect/disconnect providers, trigger syncs.
+- **Use enums** for all badge tiers, challenge types/statuses, event types, provider names, leaderboard scopes.
+- **No client-side computation** of points, badge eligibility, streak resets, or leaderboard ranking — all state comes from API responses.
+- **Optimistic UI** only for user-initiated actions (join challenge, connect provider) with rollback on API error.
+
+### What the Frontend Does NOT Do
+
+- ❌ Calculate points or determine badge awards
+- ❌ Store or handle OAuth tokens (backend-only)
+- ❌ Validate anti-cheat thresholds
+- ❌ Manage challenge lifecycle transitions
+- ❌ Compute leaderboard rankings
+- ❌ Refresh provider tokens
 
 ## 10. Testing & Rollout Plan
-- Unit tests for all gamification logic (points, badge awarding, streaks)
-- Mocked API responses for Samsung/Google/Strava
-- Manual QA for anti-cheat and verification flows
-- Feature flag for staged rollout (NEXT_PUBLIC_ENABLE_GAMIFICATION)
+
+- **Unit tests** for gamification API service layer (mocked API responses).
+- **Component tests** for gamification dashboard, badge gallery, challenge cards, leaderboard table, and provider connection UI.
+- **Mocked API responses** for all `/gamification/*` endpoints — no real backend required for frontend tests.
+- **Integration tests** for OAuth provider redirect flow (verify redirect URL is opened, connection status updates after callback).
+- **Manual QA** for anti-cheat indicators, flagged event display, and admin approve/reject flows.
+- **Feature flag** for staged rollout: `NEXT_PUBLIC_ENABLE_GAMIFICATION`.
+- **No frontend tests for points calculation, badge eligibility, or leaderboard ranking** — that logic is backend-owned and tested in `binectics-api`.
 
 ---
+
 **Last updated:** 2026-03-28

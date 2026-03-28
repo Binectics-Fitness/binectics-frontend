@@ -30,20 +30,14 @@ function formatDate(dateStr: string): string {
 }
 
 function getListingName(checkIn: CheckIn): string {
-  if (
-    typeof checkIn.listing_id === "object" &&
-    checkIn.listing_id !== null
-  ) {
+  if (typeof checkIn.listing_id === "object" && checkIn.listing_id !== null) {
     return (checkIn.listing_id as { headline?: string }).headline ?? "Gym";
   }
   return "Gym";
 }
 
 function getListingCity(checkIn: CheckIn): string {
-  if (
-    typeof checkIn.listing_id === "object" &&
-    checkIn.listing_id !== null
-  ) {
+  if (typeof checkIn.listing_id === "object" && checkIn.listing_id !== null) {
     const listing = checkIn.listing_id as {
       city?: string;
       country_code?: string;
@@ -205,7 +199,7 @@ export default function MemberCheckInsPage() {
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
-                    className="h-16 bg-gray-50 rounded-lg animate-pulse"
+                    className="h-16 bg-neutral-100 rounded-lg animate-pulse"
                   />
                 ))}
               </div>

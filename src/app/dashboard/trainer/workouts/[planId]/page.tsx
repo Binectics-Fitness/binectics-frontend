@@ -41,7 +41,8 @@ function difficultyColor(level?: DifficultyLevel): string {
   if (!level) return "bg-neutral-100 text-neutral-600";
   const colors: Record<DifficultyLevel, string> = {
     [DifficultyLevel.BEGINNER]: "bg-green-100 text-green-700",
-    [DifficultyLevel.INTERMEDIATE]: "bg-accent-yellow-100 text-accent-yellow-700",
+    [DifficultyLevel.INTERMEDIATE]:
+      "bg-accent-yellow-100 text-accent-yellow-700",
     [DifficultyLevel.ADVANCED]: "bg-red-100 text-red-700",
   };
   return colors[level] || "bg-neutral-100 text-neutral-600";
@@ -95,7 +96,7 @@ function WorkoutPlanDetailContent() {
         } else {
           // Try getting by ID directly (solo endpoint)
           const single = orgId
-            ? null  // org endpoint doesn't have getById, use list
+            ? null // org endpoint doesn't have getById, use list
             : await progressService.getWorkoutPlanById(profileId, planId);
           if (single?.success && single.data) {
             setPlan(single.data);

@@ -256,11 +256,7 @@ function EditWorkoutPlanContent() {
             planId,
             payload,
           )
-        : await progressService.updateWorkoutPlan(
-            profileId,
-            planId,
-            payload,
-          );
+        : await progressService.updateWorkoutPlan(profileId, planId, payload);
 
       if (res.success) {
         router.push(
@@ -419,9 +415,7 @@ function EditWorkoutPlanContent() {
             {/* Exercises */}
             <div className="rounded-2xl bg-white p-6 shadow-card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground">
-                  Exercises
-                </h2>
+                <h2 className="text-lg font-bold text-foreground">Exercises</h2>
                 <button
                   type="button"
                   onClick={() =>

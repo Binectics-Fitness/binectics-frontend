@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import LocationFilter from "@/components/LocationFilter";
+import { CardSkeleton } from "@/components/CardSkeleton";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type {
   MarketplaceListing,
@@ -509,26 +510,7 @@ export default function MarketplacePage() {
             </div>
 
             {/* Loading */}
-            {isLoading && (
-              <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="animate-pulse rounded-2xl bg-white p-4 shadow-card sm:p-6"
-                  >
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="h-14 w-14 rounded-xl bg-neutral-200" />
-                      <div className="flex-1">
-                        <div className="h-5 w-3/4 rounded bg-neutral-200 mb-2" />
-                        <div className="h-4 w-1/2 rounded bg-neutral-200" />
-                      </div>
-                    </div>
-                    <div className="h-4 w-full rounded bg-neutral-200 mb-2" />
-                    <div className="h-4 w-2/3 rounded bg-neutral-200" />
-                  </div>
-                ))}
-              </div>
-            )}
+            {isLoading && <CardSkeleton count={6} columns="2" variant="avatar" />}
 
             {/* Empty State */}
             {!isLoading && listings.length === 0 && (

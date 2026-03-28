@@ -6,7 +6,14 @@
 
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
-import { DifficultyLevel, PlanStatus, DietPlanDeliveryType, MealSlot, RecommendationCategory, RecommendationPlanType } from "@/lib/types";
+import {
+  DifficultyLevel,
+  PlanStatus,
+  DietPlanDeliveryType,
+  MealSlot,
+  RecommendationCategory,
+  RecommendationPlanType,
+} from "@/lib/types";
 
 // ==================== ENUMS ====================
 
@@ -944,9 +951,7 @@ export const progressService = {
 
   // ==================== WORKOUT PLANS — User-facing (my plans) ====================
 
-  async getMyWorkoutPlans(
-    limit?: number,
-  ): Promise<ApiResponse<WorkoutPlan[]>> {
+  async getMyWorkoutPlans(limit?: number): Promise<ApiResponse<WorkoutPlan[]>> {
     const params = limit ? `?limit=${limit}` : "";
     return await apiClient.get<WorkoutPlan[]>(
       `/progress/my-workout-plans${params}`,
@@ -1123,21 +1128,13 @@ export const progressService = {
 
   // ==================== DIET PLANS — User-facing (my plans) ====================
 
-  async getMyDietPlans(
-    limit?: number,
-  ): Promise<ApiResponse<DietPlan[]>> {
+  async getMyDietPlans(limit?: number): Promise<ApiResponse<DietPlan[]>> {
     const params = limit ? `?limit=${limit}` : "";
-    return await apiClient.get<DietPlan[]>(
-      `/progress/my-diet-plans${params}`,
-    );
+    return await apiClient.get<DietPlan[]>(`/progress/my-diet-plans${params}`);
   },
 
-  async getMyDietPlanById(
-    planId: string,
-  ): Promise<ApiResponse<DietPlan>> {
-    return await apiClient.get<DietPlan>(
-      `/progress/my-diet-plans/${planId}`,
-    );
+  async getMyDietPlanById(planId: string): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.get<DietPlan>(`/progress/my-diet-plans/${planId}`);
   },
 
   async getMyDietPlanDocumentAccess(

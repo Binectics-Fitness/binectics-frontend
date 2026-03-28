@@ -36,7 +36,8 @@ function deliveryLabel(type: DietPlanDeliveryType): string {
 
 function deliveryColor(type: DietPlanDeliveryType): string {
   const colors: Record<DietPlanDeliveryType, string> = {
-    [DietPlanDeliveryType.PLATFORM]: "bg-accent-purple-100 text-accent-purple-700",
+    [DietPlanDeliveryType.PLATFORM]:
+      "bg-accent-purple-100 text-accent-purple-700",
     [DietPlanDeliveryType.DOCUMENT]: "bg-accent-blue-100 text-accent-blue-700",
   };
   return colors[type] || "bg-neutral-100 text-neutral-600";
@@ -92,14 +93,19 @@ export default function DietitianMealPlansPage() {
 
       const allPlans: DietPlan[] = [];
       for (const result of planResults) {
-        if (result.status === "fulfilled" && result.value.success && result.value.data) {
+        if (
+          result.status === "fulfilled" &&
+          result.value.success &&
+          result.value.data
+        ) {
           allPlans.push(...result.value.data);
         }
       }
 
       // Sort by most recently assigned first
       allPlans.sort(
-        (a, b) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime(),
+        (a, b) =>
+          new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime(),
       );
       setDietPlans(allPlans);
     } catch {
@@ -172,24 +178,24 @@ export default function DietitianMealPlansPage() {
             </p>
           </div>
           <Link
-              href="/dashboard/dietitian/meal-plans/create"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-purple-500 px-5 text-sm font-semibold text-white hover:bg-accent-purple-600"
+            href="/dashboard/dietitian/meal-plans/create"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-purple-500 px-5 text-sm font-semibold text-white hover:bg-accent-purple-600"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              New Meal Plan
-            </Link>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            New Meal Plan
+          </Link>
         </div>
 
         {error && (
@@ -221,7 +227,9 @@ export default function DietitianMealPlansPage() {
                 </p>
               </div>
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <p className="text-sm text-foreground-secondary">Active Plans</p>
+                <p className="text-sm text-foreground-secondary">
+                  Active Plans
+                </p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {activePlans.length}
                 </p>
@@ -310,13 +318,15 @@ export default function DietitianMealPlansPage() {
                             </svg>
                             {planClientName(plan)}
                           </span>
-                          {plan.delivery_type === DietPlanDeliveryType.PLATFORM && (
+                          {plan.delivery_type ===
+                            DietPlanDeliveryType.PLATFORM && (
                             <span>
                               {plan.meals.length} meal
                               {plan.meals.length !== 1 ? "s" : ""}
                             </span>
                           )}
-                          {plan.delivery_type === DietPlanDeliveryType.DOCUMENT &&
+                          {plan.delivery_type ===
+                            DietPlanDeliveryType.DOCUMENT &&
                             plan.document_file_name && (
                               <span className="flex items-center gap-1">
                                 <svg
