@@ -20,6 +20,12 @@ import type {
 import { PaymentGateway, MembershipPlanType } from "@/lib/types";
 import DashboardLoading from "@/components/DashboardLoading";
 import { Button } from "@/components/Button";
+
+declare global {
+  interface Window {
+    PaystackPop?: any;
+  }
+}
 import {
   CardElement,
   Elements,
@@ -153,6 +159,11 @@ function PaystackButton({
   };
 
   function launchPaystack() {
+    if (!config) {
+      setIsProcessing(false);
+      onError("Paystack is not configured");
+      return;
+    }
     if (!window.PaystackPop) {
       setIsProcessing(false);
       onError("Paystack script not loaded");
