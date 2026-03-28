@@ -39,7 +39,9 @@ export default function DietitianReviewsPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sort, setSort] = useState<"newest" | "oldest" | "rating_high" | "rating_low">("newest");
+  const [sort, setSort] = useState<
+    "newest" | "oldest" | "rating_high" | "rating_low"
+  >("newest");
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -57,7 +59,11 @@ export default function DietitianReviewsPage() {
     if (!user) return;
     setLoadingData(true);
     reviewsService
-      .getTargetReviews(ReviewTargetType.DIETITIAN, user.id, { page, limit: 10, sort })
+      .getTargetReviews(ReviewTargetType.DIETITIAN, user.id, {
+        page,
+        limit: 10,
+        sort,
+      })
       .then((res) => {
         if (res.success && res.data) {
           setReviews(res.data.reviews);
@@ -70,10 +76,14 @@ export default function DietitianReviewsPage() {
   const handleRespond = async (reviewId: string) => {
     if (!responseText.trim()) return;
     setSubmitting(true);
-    const payload: CreateProviderResponseRequest = { message: responseText.trim() };
+    const payload: CreateProviderResponseRequest = {
+      message: responseText.trim(),
+    };
     const res = await reviewsService.createProviderResponse(reviewId, payload);
     if (res.success && res.data) {
-      setReviews((prev) => prev.map((r) => (r.id === reviewId ? res.data! : r)));
+      setReviews((prev) =>
+        prev.map((r) => (r.id === reviewId ? res.data! : r)),
+      );
       setRespondingTo(null);
       setResponseText("");
     }
@@ -108,27 +118,44 @@ export default function DietitianReviewsPage() {
                 </p>
                 <StarRating rating={Math.round(aggregate.averageRating)} />
                 <p className="mt-1 text-sm text-foreground-secondary">
-                  {aggregate.totalReviews} review{aggregate.totalReviews !== 1 ? "s" : ""}
+                  {aggregate.totalReviews} review
+                  {aggregate.totalReviews !== 1 ? "s" : ""}
                 </p>
               </div>
             </div>
 
             <div className="rounded-2xl bg-white p-6 shadow-card">
-              <h3 className="mb-3 text-sm font-semibold text-foreground-secondary">Rating Breakdown</h3>
+              <h3 className="mb-3 text-sm font-semibold text-foreground-secondary">
+                Rating Breakdown
+              </h3>
               <div className="space-y-2">
                 {[5, 4, 3, 2, 1].map((star) => {
                   const count = ratingBreakdown[String(star)] || 0;
-                  const pct = aggregate.totalReviews > 0 ? (count / aggregate.totalReviews) * 100 : 0;
+                  const pct =
+                    aggregate.totalReviews > 0
+                      ? (count / aggregate.totalReviews) * 100
+                      : 0;
                   return (
                     <div key={star} className="flex items-center gap-2 text-sm">
-                      <span className="w-3 text-foreground-secondary">{star}</span>
-                      <svg className="h-3.5 w-3.5 text-accent-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <span className="w-3 text-foreground-secondary">
+                        {star}
+                      </span>
+                      <svg
+                        className="h-3.5 w-3.5 text-accent-yellow-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                       <div className="flex-1 h-2 rounded-full bg-neutral-100">
-                        <div className="h-2 rounded-full bg-accent-yellow-500 transition-all" style={{ width: `${pct}%` }} />
+                        <div
+                          className="h-2 rounded-full bg-accent-yellow-500 transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
-                      <span className="w-8 text-right text-foreground-secondary">{count}</span>
+                      <span className="w-8 text-right text-foreground-secondary">
+                        {count}
+                      </span>
                     </div>
                   );
                 })}
@@ -141,7 +168,10 @@ export default function DietitianReviewsPage() {
           <h2 className="text-lg font-bold text-foreground">All Reviews</h2>
           <select
             value={sort}
-            onChange={(e) => { setSort(e.target.value as typeof sort); setPage(1); }}
+            onChange={(e) => {
+              setSort(e.target.value as typeof sort);
+              setPage(1);
+            }}
             className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-foreground"
           >
             <option value="newest">Newest First</option>
@@ -156,14 +186,22 @@ export default function DietitianReviewsPage() {
             <DashboardLoading />
           ) : reviews.length === 0 ? (
             <div className="rounded-2xl bg-white p-8 shadow-card">
-              <EmptyState title="No Reviews Yet" description="When clients leave reviews, they will appear here." />
+              <EmptyState
+                title="No Reviews Yet"
+                description="When clients leave reviews, they will appear here."
+              />
             </div>
           ) : (
             reviews.map((review) => (
-              <div key={review.id} className="rounded-2xl bg-white p-6 shadow-card">
+              <div
+                key={review.id}
+                className="rounded-2xl bg-white p-6 shadow-card"
+              >
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-semibold text-foreground">{review.reviewerName}</p>
+                    <p className="font-semibold text-foreground">
+                      {review.reviewerName}
+                    </p>
                     <div className="mt-1 flex items-center gap-2">
                       <StarRating rating={review.rating} />
                       <span className="text-sm text-foreground-secondary">
@@ -174,13 +212,19 @@ export default function DietitianReviewsPage() {
                 </div>
 
                 {review.comment && (
-                  <p className="mt-3 text-sm text-foreground-secondary">{review.comment}</p>
+                  <p className="mt-3 text-sm text-foreground-secondary">
+                    {review.comment}
+                  </p>
                 )}
 
                 {review.providerResponse && (
                   <div className="mt-4 rounded-lg bg-neutral-50 p-4">
-                    <p className="text-xs font-semibold text-foreground-secondary">Your Response</p>
-                    <p className="mt-1 text-sm text-foreground">{review.providerResponse.message}</p>
+                    <p className="text-xs font-semibold text-foreground-secondary">
+                      Your Response
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {review.providerResponse.message}
+                    </p>
                   </div>
                 )}
 
@@ -204,7 +248,10 @@ export default function DietitianReviewsPage() {
                             {submitting ? "Sending..." : "Send Response"}
                           </button>
                           <button
-                            onClick={() => { setRespondingTo(null); setResponseText(""); }}
+                            onClick={() => {
+                              setRespondingTo(null);
+                              setResponseText("");
+                            }}
                             className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-foreground-secondary"
                           >
                             Cancel
@@ -235,7 +282,9 @@ export default function DietitianReviewsPage() {
             >
               Previous
             </button>
-            <span className="text-sm text-foreground-secondary">Page {page} of {totalPages}</span>
+            <span className="text-sm text-foreground-secondary">
+              Page {page} of {totalPages}
+            </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}

@@ -32,9 +32,7 @@ export default function LoginError({
             />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">
-          Login Error
-        </h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">Login Error</h2>
         <p className="text-sm text-neutral-500 mb-6">
           Something went wrong while logging in. Please try again.
         </p>

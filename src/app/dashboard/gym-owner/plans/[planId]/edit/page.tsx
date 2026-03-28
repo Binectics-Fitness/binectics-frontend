@@ -108,7 +108,10 @@ export default function EditPlanPage() {
   };
 
   const removeFeature = (index: number) => {
-    setValue("features", formData.features.filter((_, idx) => idx !== index));
+    setValue(
+      "features",
+      formData.features.filter((_, idx) => idx !== index),
+    );
   };
 
   const onSubmit = async (data: MembershipPlanFormData) => {
@@ -158,14 +161,28 @@ export default function EditPlanPage() {
             onClick={() => router.push(`/dashboard/gym-owner/plans/${planId}`)}
             className="text-accent-blue-500 hover:text-accent-blue-700 font-medium mb-4 flex items-center gap-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back to Plan
           </button>
 
-          <h1 className="text-3xl font-black text-foreground mb-2">Edit Plan</h1>
-          <p className="text-foreground/60 mb-8">Update membership plan details</p>
+          <h1 className="text-3xl font-black text-foreground mb-2">
+            Edit Plan
+          </h1>
+          <p className="text-foreground/60 mb-8">
+            Update membership plan details
+          </p>
 
           {pageError && (
             <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 mb-6">
@@ -177,55 +194,83 @@ export default function EditPlanPage() {
             <div className="bg-white rounded-xl shadow-card p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Plan Name *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Plan Name *
+                  </label>
                   <input
                     type="text"
                     {...register("name")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
-                  {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
+                  {errors.name && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.name.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Plan Type *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Plan Type *
+                  </label>
                   <select
                     {...register("plan_type")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   >
-                    <option value={MembershipPlanType.SUBSCRIPTION}>Subscription</option>
-                    <option value={MembershipPlanType.ONE_TIME}>One-time</option>
+                    <option value={MembershipPlanType.SUBSCRIPTION}>
+                      Subscription
+                    </option>
+                    <option value={MembershipPlanType.ONE_TIME}>
+                      One-time
+                    </option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Duration (days) *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Duration (days) *
+                  </label>
                   <input
                     type="number"
                     {...register("duration_days")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
-                  {errors.duration_days && <p className="text-sm text-red-600 mt-1">{errors.duration_days.message}</p>}
+                  {errors.duration_days && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.duration_days.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Price *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Price *
+                  </label>
                   <input
                     type="number"
                     step="0.01"
                     {...register("price")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
-                  {errors.price && <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>}
+                  {errors.price && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.price.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Currency *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Currency *
+                  </label>
                   <select
                     {...register("currency")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   >
                     {currencies.length === 0 ? (
-                      <option value={formData.currency}>{formData.currency}</option>
+                      <option value={formData.currency}>
+                        {formData.currency}
+                      </option>
                     ) : (
                       currencies.map((c) => (
                         <option key={c.code} value={c.code}>
@@ -237,7 +282,9 @@ export default function EditPlanPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Description
+                  </label>
                   <textarea
                     rows={4}
                     {...register("description")}
@@ -248,7 +295,9 @@ export default function EditPlanPage() {
             </div>
 
             <div className="bg-white rounded-xl shadow-card p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4">Plan Features</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4">
+                Plan Features
+              </h3>
               <div className="flex gap-2 mb-4">
                 <input
                   type="text"
@@ -267,7 +316,10 @@ export default function EditPlanPage() {
 
               <div className="space-y-2">
                 {formData.features.map((feature, index) => (
-                  <div key={`${feature}-${index}`} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                  <div
+                    key={`${feature}-${index}`}
+                    className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
+                  >
                     <span className="text-foreground">{feature}</span>
                     <button
                       type="button"
@@ -279,7 +331,9 @@ export default function EditPlanPage() {
                   </div>
                 ))}
                 {formData.features.length === 0 && (
-                  <p className="text-sm text-foreground/50">No features configured.</p>
+                  <p className="text-sm text-foreground/50">
+                    No features configured.
+                  </p>
                 )}
               </div>
             </div>
@@ -288,7 +342,9 @@ export default function EditPlanPage() {
               <input
                 type="checkbox"
                 checked={formData.is_public}
-                onChange={(event) => setValue("is_public", event.target.checked)}
+                onChange={(event) =>
+                  setValue("is_public", event.target.checked)
+                }
                 className="h-4 w-4 rounded border-gray-300 text-accent-blue-500 focus:ring-accent-blue-500"
               />
               Show this plan publicly in marketplace listing
@@ -297,7 +353,9 @@ export default function EditPlanPage() {
             <div className="flex gap-4">
               <button
                 type="button"
-                onClick={() => router.push(`/dashboard/gym-owner/plans/${planId}`)}
+                onClick={() =>
+                  router.push(`/dashboard/gym-owner/plans/${planId}`)
+                }
                 className="flex-1 px-6 py-3 bg-gray-200 text-foreground font-semibold rounded-lg hover:bg-gray-300"
               >
                 Cancel

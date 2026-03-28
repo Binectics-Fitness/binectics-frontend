@@ -41,8 +41,7 @@ export default function ResetPasswordPage() {
         setSubmitted(true);
       } else {
         setError("password", {
-          message:
-            res.message || "Reset failed. The link may have expired.",
+          message: res.message || "Reset failed. The link may have expired.",
         });
       }
     } catch {

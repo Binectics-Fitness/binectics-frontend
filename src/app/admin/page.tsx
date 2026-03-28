@@ -87,7 +87,10 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white shadow-card p-8">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-white shadow-card p-8"
+        >
           {/* API Error Message */}
           {apiError && (
             <div className="mb-6 p-4 bg-red-50 border-2 border-red-500">
@@ -128,7 +131,9 @@ export default function AdminLoginPage() {
                 } px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-red-500 transition-colors`}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
@@ -151,7 +156,9 @@ export default function AdminLoginPage() {
                 } px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-red-500 transition-colors`}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.password.message}
+                </p>
               )}
             </div>
           </div>

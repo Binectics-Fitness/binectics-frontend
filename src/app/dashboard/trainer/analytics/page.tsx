@@ -28,11 +28,15 @@ import { marketplaceService } from "@/lib/api/marketplace";
 export default function TrainerAnalyticsPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null,
+  );
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [reviewAgg, setReviewAgg] = useState<ReviewAggregate | null>(null);
-  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>(
+    [],
+  );
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -85,14 +89,15 @@ export default function TrainerAnalyticsPage() {
   if (isLoading || orgLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
 
-  if (loadingData) return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <TrainerSidebar />
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <DashboardLoading />
-      </main>
-    </div>
-  );
+  if (loadingData)
+    return (
+      <div className="flex min-h-screen bg-neutral-50">
+        <TrainerSidebar />
+        <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
+          <DashboardLoading />
+        </main>
+      </div>
+    );
 
   const completedBookings = bookings.filter(
     (b) => b.status === ConsultationBookingStatus.COMPLETED,
@@ -176,9 +181,7 @@ export default function TrainerAnalyticsPage() {
               </div>
 
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <p className="text-sm text-foreground-secondary">
-                  Avg Rating
-                </p>
+                <p className="text-sm text-foreground-secondary">Avg Rating</p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {reviewAgg ? reviewAgg.averageRating.toFixed(1) : "—"}
                 </p>

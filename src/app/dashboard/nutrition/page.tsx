@@ -5,7 +5,12 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
-import { progressService, ClientProfile, MealFeedback, MealRating } from "@/lib/api/progress";
+import {
+  progressService,
+  ClientProfile,
+  MealFeedback,
+  MealRating,
+} from "@/lib/api/progress";
 
 const ratingColors: Record<string, string> = {
   [MealRating.GREAT]: "bg-green-100 text-green-700",
@@ -15,7 +20,11 @@ const ratingColors: Record<string, string> = {
 };
 
 export default function Page() {
-  const { user, isLoading: authLoading, isAuthorized } = useRoleGuard(UserRole.USER);
+  const {
+    user,
+    isLoading: authLoading,
+    isAuthorized,
+  } = useRoleGuard(UserRole.USER);
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [meals, setMeals] = useState<MealFeedback[]>([]);
@@ -88,9 +97,19 @@ export default function Page() {
           </div>
         ) : profiles.length === 0 ? (
           <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center">
-            <h2 className="text-lg font-semibold text-foreground mb-2">No Nutrition Data Yet</h2>
-            <p className="text-sm text-neutral-500 mb-4">Once you&apos;re connected with a dietitian or trainer, your meal feedback will appear here.</p>
-            <a href="/dietitians" className="inline-flex px-4 py-2 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors">Browse Dietitians</a>
+            <h2 className="text-lg font-semibold text-foreground mb-2">
+              No Nutrition Data Yet
+            </h2>
+            <p className="text-sm text-neutral-500 mb-4">
+              Once you&apos;re connected with a dietitian or trainer, your meal
+              feedback will appear here.
+            </p>
+            <a
+              href="/dietitians"
+              className="inline-flex px-4 py-2 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors"
+            >
+              Browse Dietitians
+            </a>
           </div>
         ) : (
           <div className="space-y-6">
@@ -104,7 +123,7 @@ export default function Page() {
                       : "Professional";
                   const role =
                     typeof p.professional_id === "object"
-                      ? p.professional_id.user_role?.role?.name ?? ""
+                      ? (p.professional_id.user_role?.role?.name ?? "")
                       : "";
                   return (
                     <button
@@ -131,7 +150,9 @@ export default function Page() {
             {/* Professional Info */}
             <div className="bg-white rounded-xl border border-neutral-200 p-4 sm:p-5">
               <p className="text-sm text-neutral-500">Managed by</p>
-              <p className="font-semibold text-foreground">{professionalName}</p>
+              <p className="font-semibold text-foreground">
+                {professionalName}
+              </p>
             </div>
 
             {/* Meals List */}
@@ -159,7 +180,8 @@ export default function Page() {
                       {meal.rating && (
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                            ratingColors[meal.rating] ?? "bg-neutral-100 text-neutral-700"
+                            ratingColors[meal.rating] ??
+                            "bg-neutral-100 text-neutral-700"
                           }`}
                         >
                           {meal.rating}

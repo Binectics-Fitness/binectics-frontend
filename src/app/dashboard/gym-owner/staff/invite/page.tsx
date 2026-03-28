@@ -117,10 +117,7 @@ export default function InviteTrainerPage() {
     setSuccessMessage(null);
 
     try {
-      const response = await teamsService.inviteMember(
-        currentOrg._id,
-        data,
-      );
+      const response = await teamsService.inviteMember(currentOrg._id, data);
 
       if (!response.success) {
         setError(response.message ?? "Failed to send invitation.");
@@ -226,7 +223,9 @@ export default function InviteTrainerPage() {
                       placeholder="coach@example.com"
                     />
                     {formErrors.email && (
-                      <p className="mt-1 text-sm text-red-500">{formErrors.email.message}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {formErrors.email.message}
+                      </p>
                     )}
                   </div>
 

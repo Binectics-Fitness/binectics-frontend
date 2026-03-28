@@ -46,10 +46,7 @@ export function getPaymentGateway(currency: string): PaymentGateway {
   const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
   const flutterwaveKey = process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
 
-  if (
-    paystackKey &&
-    ["NGN", "GHS", "KES", "ZAR"].includes(upper)
-  ) {
+  if (paystackKey && ["NGN", "GHS", "KES", "ZAR"].includes(upper)) {
     return PaymentGateway.PAYSTACK;
   }
 

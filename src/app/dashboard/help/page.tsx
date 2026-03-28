@@ -13,11 +13,11 @@ const faqSections = [
     items: [
       {
         q: "How do I find a gym or trainer near me?",
-        a: 'Go to the Marketplace from the sidebar or use the Search page. You can filter by location, type (gym, trainer, dietitian), price range, and verified status.',
+        a: "Go to the Marketplace from the sidebar or use the Search page. You can filter by location, type (gym, trainer, dietitian), price range, and verified status.",
       },
       {
         q: "How do I subscribe to a plan?",
-        a: "Visit a gym, trainer, or dietitian profile and browse their available plans. Click \"Subscribe\" on the plan you want, then complete the checkout process.",
+        a: 'Visit a gym, trainer, or dietitian profile and browse their available plans. Click "Subscribe" on the plan you want, then complete the checkout process.',
       },
       {
         q: "What does the Verified badge mean?",
@@ -31,7 +31,7 @@ const faqSections = [
     items: [
       {
         q: "How do I view my active subscriptions?",
-        a: 'Go to Dashboard → Subscriptions to see all your active, expired, and cancelled subscriptions. You can also cancel or manage renewals from there.',
+        a: "Go to Dashboard → Subscriptions to see all your active, expired, and cancelled subscriptions. You can also cancel or manage renewals from there.",
       },
       {
         q: "What payment methods are supported?",
@@ -49,11 +49,11 @@ const faqSections = [
     items: [
       {
         q: "How do I book a consultation?",
-        a: "Visit a trainer or dietitian profile and click \"Book Consultation\". Select an available time slot, add any notes, and confirm the booking.",
+        a: 'Visit a trainer or dietitian profile and click "Book Consultation". Select an available time slot, add any notes, and confirm the booking.',
       },
       {
         q: "How do I reschedule or cancel a booking?",
-        a: 'Go to Dashboard → Schedule to see your upcoming bookings. Click on a booking to reschedule or cancel it. Cancellation policies may vary by provider.',
+        a: "Go to Dashboard → Schedule to see your upcoming bookings. Click on a booking to reschedule or cancel it. Cancellation policies may vary by provider.",
       },
       {
         q: "What happens if I miss a session?",
@@ -75,7 +75,7 @@ const faqSections = [
       },
       {
         q: "How do I see my meal feedback?",
-        a: 'Go to Dashboard → Nutrition to see all meal feedback logged by your dietitian, including meal type, ratings, calories, and personalized feedback.',
+        a: "Go to Dashboard → Nutrition to see all meal feedback logged by your dietitian, including meal type, ratings, calories, and personalized feedback.",
       },
     ],
   },
@@ -89,7 +89,7 @@ const faqSections = [
       },
       {
         q: "Where do I find my check-in history?",
-        a: 'Your recent check-ins appear on your Dashboard. For full history, visit Dashboard → Check-ins.',
+        a: "Your recent check-ins appear on your Dashboard. For full history, visit Dashboard → Check-ins.",
       },
     ],
   },
@@ -99,7 +99,7 @@ const faqSections = [
     items: [
       {
         q: "How do I update my profile?",
-        a: 'Go to Dashboard → Settings to update your name, email, profile picture, country, and other personal details.',
+        a: "Go to Dashboard → Settings to update your name, email, profile picture, country, and other personal details.",
       },
       {
         q: "How do I change my password?",

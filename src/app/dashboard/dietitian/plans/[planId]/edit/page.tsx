@@ -67,7 +67,10 @@ export default function DietitianEditPlanPage() {
       if (!organizationId || !planId) return;
       setIsLoading(true);
       setPageError("");
-      const response = await marketplaceService.getOrgMembershipPlanById(organizationId, planId);
+      const response = await marketplaceService.getOrgMembershipPlanById(
+        organizationId,
+        planId,
+      );
       if (response.success && response.data) {
         const p = response.data;
         setPlan(p);
@@ -98,23 +101,30 @@ export default function DietitianEditPlanPage() {
   };
 
   const removeFeature = (index: number) => {
-    setValue("features", formData.features.filter((_, idx) => idx !== index));
+    setValue(
+      "features",
+      formData.features.filter((_, idx) => idx !== index),
+    );
   };
 
   const onSubmit = async (data: MembershipPlanFormData) => {
     if (!organizationId || !planId) return;
     setIsSaving(true);
     setPageError("");
-    const response = await marketplaceService.updateOrgMembershipPlan(organizationId, planId, {
-      name: data.name.trim(),
-      description: data.description?.trim() || undefined,
-      plan_type: data.plan_type as MembershipPlanType,
-      duration_days: Number(data.duration_days),
-      price: Number(data.price),
-      currency: data.currency.trim().toUpperCase(),
-      features: data.features,
-      is_public: data.is_public,
-    });
+    const response = await marketplaceService.updateOrgMembershipPlan(
+      organizationId,
+      planId,
+      {
+        name: data.name.trim(),
+        description: data.description?.trim() || undefined,
+        plan_type: data.plan_type as MembershipPlanType,
+        duration_days: Number(data.duration_days),
+        price: Number(data.price),
+        currency: data.currency.trim().toUpperCase(),
+        features: data.features,
+        is_public: data.is_public,
+      },
+    );
     if (response.success && response.data) {
       router.push(`/dashboard/dietitian/plans/${response.data._id}`);
       return;
@@ -135,14 +145,28 @@ export default function DietitianEditPlanPage() {
             onClick={() => router.push(`/dashboard/dietitian/plans/${planId}`)}
             className="text-accent-purple-500 hover:text-accent-purple-700 font-medium mb-4 flex items-center gap-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back to Plan
           </button>
 
-          <h1 className="text-3xl font-black text-foreground mb-2">Edit Plan</h1>
-          <p className="text-foreground/60 mb-8">Update your service plan details</p>
+          <h1 className="text-3xl font-black text-foreground mb-2">
+            Edit Plan
+          </h1>
+          <p className="text-foreground/60 mb-8">
+            Update your service plan details
+          </p>
 
           {pageError && (
             <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 mb-6">
@@ -154,48 +178,105 @@ export default function DietitianEditPlanPage() {
             <div className="bg-white rounded-xl shadow-card p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Plan Name *</label>
-                  <input type="text" {...register("name")} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500" />
-                  {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Plan Name *
+                  </label>
+                  <input
+                    type="text"
+                    {...register("name")}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.name.message}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Plan Type *</label>
-                  <select {...register("plan_type")} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500">
-                    <option value={MembershipPlanType.SUBSCRIPTION}>Subscription</option>
-                    <option value={MembershipPlanType.ONE_TIME}>One-time</option>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Plan Type *
+                  </label>
+                  <select
+                    {...register("plan_type")}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+                  >
+                    <option value={MembershipPlanType.SUBSCRIPTION}>
+                      Subscription
+                    </option>
+                    <option value={MembershipPlanType.ONE_TIME}>
+                      One-time
+                    </option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Duration (days) *</label>
-                  <input type="number" {...register("duration_days")} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500" />
-                  {errors.duration_days && <p className="text-sm text-red-600 mt-1">{errors.duration_days.message}</p>}
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Duration (days) *
+                  </label>
+                  <input
+                    type="number"
+                    {...register("duration_days")}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+                  />
+                  {errors.duration_days && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.duration_days.message}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Price *</label>
-                  <input type="number" step="0.01" {...register("price")} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500" />
-                  {errors.price && <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>}
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Price *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    {...register("price")}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+                  />
+                  {errors.price && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.price.message}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Currency *</label>
-                  <select {...register("currency")} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500">
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Currency *
+                  </label>
+                  <select
+                    {...register("currency")}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+                  >
                     {currencies.length === 0 ? (
-                      <option value={formData.currency}>{formData.currency}</option>
+                      <option value={formData.currency}>
+                        {formData.currency}
+                      </option>
                     ) : (
                       currencies.map((c) => (
-                        <option key={c.code} value={c.code}>{c.code} — {c.name}</option>
+                        <option key={c.code} value={c.code}>
+                          {c.code} — {c.name}
+                        </option>
                       ))
                     )}
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Description</label>
-                  <textarea rows={4} {...register("description")} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500" />
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    {...register("description")}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+                  />
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-card p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4">Plan Features</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4">
+                Plan Features
+              </h3>
               <div className="flex gap-2 mb-4">
                 <input
                   type="text"
@@ -203,18 +284,35 @@ export default function DietitianEditPlanPage() {
                   onChange={(e) => setFeatureInput(e.target.value)}
                   className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
                 />
-                <button type="button" onClick={addFeature} className="px-6 py-3 bg-accent-purple-500 text-white font-semibold rounded-lg hover:bg-accent-purple-600">
+                <button
+                  type="button"
+                  onClick={addFeature}
+                  className="px-6 py-3 bg-accent-purple-500 text-white font-semibold rounded-lg hover:bg-accent-purple-600"
+                >
                   Add
                 </button>
               </div>
               <div className="space-y-2">
                 {formData.features.map((feature, index) => (
-                  <div key={`${feature}-${index}`} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                  <div
+                    key={`${feature}-${index}`}
+                    className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
+                  >
                     <span className="text-foreground">{feature}</span>
-                    <button type="button" onClick={() => removeFeature(index)} className="text-red-500 hover:text-red-700">Remove</button>
+                    <button
+                      type="button"
+                      onClick={() => removeFeature(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
                   </div>
                 ))}
-                {formData.features.length === 0 && <p className="text-sm text-foreground/50">No features configured.</p>}
+                {formData.features.length === 0 && (
+                  <p className="text-sm text-foreground/50">
+                    No features configured.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -229,10 +327,20 @@ export default function DietitianEditPlanPage() {
             </label>
 
             <div className="flex gap-4">
-              <button type="button" onClick={() => router.push(`/dashboard/dietitian/plans/${planId}`)} className="flex-1 px-6 py-3 bg-gray-200 text-foreground font-semibold rounded-lg hover:bg-gray-300">
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(`/dashboard/dietitian/plans/${planId}`)
+                }
+                className="flex-1 px-6 py-3 bg-gray-200 text-foreground font-semibold rounded-lg hover:bg-gray-300"
+              >
                 Cancel
               </button>
-              <button type="submit" disabled={isSaving} className="flex-1 px-6 py-3 bg-accent-purple-500 text-white font-semibold rounded-lg hover:bg-accent-purple-600 disabled:opacity-50">
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="flex-1 px-6 py-3 bg-accent-purple-500 text-white font-semibold rounded-lg hover:bg-accent-purple-600 disabled:opacity-50"
+              >
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>
             </div>

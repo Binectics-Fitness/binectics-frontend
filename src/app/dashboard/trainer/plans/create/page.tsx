@@ -64,7 +64,10 @@ export default function TrainerCreatePlanPage() {
   };
 
   const removeFeature = (index: number) => {
-    setValue("features", formData.features.filter((_, idx) => idx !== index));
+    setValue(
+      "features",
+      formData.features.filter((_, idx) => idx !== index),
+    );
   };
 
   const onSubmit = async (data: MembershipPlanFormData) => {
@@ -111,14 +114,28 @@ export default function TrainerCreatePlanPage() {
             onClick={() => router.push("/dashboard/trainer/plans")}
             className="text-accent-yellow-600 hover:text-accent-yellow-700 font-medium mb-4 flex items-center gap-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back to Plans
           </button>
 
-          <h1 className="text-3xl font-black text-foreground mb-2">Create New Plan</h1>
-          <p className="text-foreground/60 mb-8">Set up a training plan for your clients</p>
+          <h1 className="text-3xl font-black text-foreground mb-2">
+            Create New Plan
+          </h1>
+          <p className="text-foreground/60 mb-8">
+            Set up a training plan for your clients
+          </p>
 
           {pageError && (
             <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 mb-6">
@@ -128,32 +145,48 @@ export default function TrainerCreatePlanPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="bg-white rounded-xl shadow-card p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4">Basic Information</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4">
+                Basic Information
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Plan Name *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Plan Name *
+                  </label>
                   <input
                     type="text"
                     {...register("name")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
                     placeholder="e.g. Monthly Personal Training"
                   />
-                  {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.name.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Plan Type *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Plan Type *
+                  </label>
                   <select
                     {...register("plan_type")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
                   >
-                    <option value={MembershipPlanType.SUBSCRIPTION}>Subscription</option>
-                    <option value={MembershipPlanType.ONE_TIME}>One-time</option>
+                    <option value={MembershipPlanType.SUBSCRIPTION}>
+                      Subscription
+                    </option>
+                    <option value={MembershipPlanType.ONE_TIME}>
+                      One-time
+                    </option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Duration (days) *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Duration (days) *
+                  </label>
                   <input
                     type="number"
                     min={1}
@@ -161,11 +194,17 @@ export default function TrainerCreatePlanPage() {
                     {...register("duration_days")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
                   />
-                  {errors.duration_days && <p className="mt-1 text-sm text-red-500">{errors.duration_days.message}</p>}
+                  {errors.duration_days && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.duration_days.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Price *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Price *
+                  </label>
                   <input
                     type="number"
                     min={0}
@@ -175,11 +214,17 @@ export default function TrainerCreatePlanPage() {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
                     placeholder="49"
                   />
-                  {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price.message}</p>}
+                  {errors.price && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.price.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Currency *</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Currency *
+                  </label>
                   <select
                     {...register("currency")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
@@ -197,7 +242,9 @@ export default function TrainerCreatePlanPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                    Description
+                  </label>
                   <textarea
                     rows={4}
                     {...register("description")}
@@ -209,7 +256,9 @@ export default function TrainerCreatePlanPage() {
             </div>
 
             <div className="bg-white rounded-xl shadow-card p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4">Plan Features</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4">
+                Plan Features
+              </h3>
               <div className="flex gap-2 mb-4">
                 <input
                   type="text"
@@ -227,13 +276,24 @@ export default function TrainerCreatePlanPage() {
                 </button>
               </div>
               {formData.features.length === 0 ? (
-                <p className="text-sm text-foreground/50">No features added yet.</p>
+                <p className="text-sm text-foreground/50">
+                  No features added yet.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {formData.features.map((feature, index) => (
-                    <div key={`${feature}-${index}`} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                    <div
+                      key={`${feature}-${index}`}
+                      className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
+                    >
                       <span className="text-foreground">{feature}</span>
-                      <button type="button" onClick={() => removeFeature(index)} className="text-red-500 hover:text-red-700">Remove</button>
+                      <button
+                        type="button"
+                        onClick={() => removeFeature(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
                     </div>
                   ))}
                 </div>

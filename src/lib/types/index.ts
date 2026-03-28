@@ -497,3 +497,17 @@ export enum PaymentGateway {
   FLUTTERWAVE = "flutterwave",
   PAYSTACK = "paystack",
 }
+
+// ─── Workout & Diet Plan Enums ────────────────────────────────────────────
+
+export enum DifficultyLevel {
+  BEGINNER = "beginner",
+  INTERMEDIATE = "intermediate",
+  ADVANCED = "advanced",
+}
+
+export enum PlanStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  ARCHIVED = "archived",
+}

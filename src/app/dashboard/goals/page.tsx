@@ -12,7 +12,11 @@ import {
 } from "@/lib/api/progress";
 
 export default function Page() {
-  const { user, isLoading: authLoading, isAuthorized } = useRoleGuard(UserRole.USER);
+  const {
+    user,
+    isLoading: authLoading,
+    isAuthorized,
+  } = useRoleGuard(UserRole.USER);
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
@@ -98,9 +102,19 @@ export default function Page() {
           </div>
         ) : profiles.length === 0 ? (
           <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center">
-            <h2 className="text-lg font-semibold text-foreground mb-2">No Goals Set Yet</h2>
-            <p className="text-sm text-neutral-500 mb-4">Connect with a trainer or dietitian to set your fitness goals and track your progress.</p>
-            <a href="/marketplace" className="inline-flex px-4 py-2 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors">Browse Marketplace</a>
+            <h2 className="text-lg font-semibold text-foreground mb-2">
+              No Goals Set Yet
+            </h2>
+            <p className="text-sm text-neutral-500 mb-4">
+              Connect with a trainer or dietitian to set your fitness goals and
+              track your progress.
+            </p>
+            <a
+              href="/marketplace"
+              className="inline-flex px-4 py-2 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors"
+            >
+              Browse Marketplace
+            </a>
           </div>
         ) : (
           <div className="space-y-6">
@@ -132,7 +146,9 @@ export default function Page() {
             {/* Professional Info */}
             <div className="bg-white rounded-xl border border-neutral-200 p-4 sm:p-5">
               <p className="text-sm text-neutral-500">Managed by</p>
-              <p className="font-semibold text-foreground">{professionalName}</p>
+              <p className="font-semibold text-foreground">
+                {professionalName}
+              </p>
             </div>
 
             {summaryLoading ? (
@@ -148,23 +164,24 @@ export default function Page() {
             ) : (
               <>
                 {/* Goals List */}
-                {selectedProfileData?.goals && selectedProfileData.goals.length > 0 && (
-                  <div className="bg-white rounded-xl border border-neutral-200 p-4 sm:p-5">
-                    <h2 className="text-lg font-semibold text-foreground mb-3">
-                      Your Goals
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProfileData.goals.map((goal, i) => (
-                        <span
-                          key={i}
-                          className="px-3 py-1.5 rounded-full bg-primary-50 text-primary-700 text-sm font-medium"
-                        >
-                          {goal}
-                        </span>
-                      ))}
+                {selectedProfileData?.goals &&
+                  selectedProfileData.goals.length > 0 && (
+                    <div className="bg-white rounded-xl border border-neutral-200 p-4 sm:p-5">
+                      <h2 className="text-lg font-semibold text-foreground mb-3">
+                        Your Goals
+                      </h2>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedProfileData.goals.map((goal, i) => (
+                          <span
+                            key={i}
+                            className="px-3 py-1.5 rounded-full bg-primary-50 text-primary-700 text-sm font-medium"
+                          >
+                            {goal}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Weight Progress */}
                 <div className="bg-white rounded-xl border border-neutral-200 p-4 sm:p-5">
@@ -200,9 +217,11 @@ export default function Page() {
                       <p className="text-xs text-neutral-500">Change</p>
                       <p
                         className={`text-lg font-bold ${
-                          summary.weight.change_kg != null && summary.weight.change_kg < 0
+                          summary.weight.change_kg != null &&
+                          summary.weight.change_kg < 0
                             ? "text-green-600"
-                            : summary.weight.change_kg != null && summary.weight.change_kg > 0
+                            : summary.weight.change_kg != null &&
+                                summary.weight.change_kg > 0
                               ? "text-red-600"
                               : "text-foreground"
                         }`}
@@ -264,7 +283,9 @@ export default function Page() {
                     Nutrition Summary (30 days)
                   </h2>
                   <p className="text-sm text-neutral-600">
-                    <span className="font-semibold text-foreground">{summary.meals.total_count}</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      {summary.meals.total_count}
+                    </span>{" "}
                     meal{summary.meals.total_count !== 1 ? "s" : ""} logged
                   </p>
                 </div>

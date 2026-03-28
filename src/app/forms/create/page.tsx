@@ -7,10 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useFormCreate } from "@/hooks/useForms";
-import {
-  createFormSchema,
-  type CreateFormFormData,
-} from "@/lib/schemas/forms";
+import { createFormSchema, type CreateFormFormData } from "@/lib/schemas/forms";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
@@ -125,7 +122,9 @@ export default function CreateFormPage() {
                 maxLength={255}
               />
               {errors.title && (
-                <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.title.message}
+                </p>
               )}
             </div>
 

@@ -20,7 +20,11 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Page() {
-  const { user, isLoading: authLoading, isAuthorized } = useRoleGuard(UserRole.USER);
+  const {
+    user,
+    isLoading: authLoading,
+    isAuthorized,
+  } = useRoleGuard(UserRole.USER);
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
   const [upcoming, setUpcoming] = useState<ConsultationBooking[]>([]);
   const [past, setPast] = useState<ConsultationBooking[]>([]);
@@ -82,9 +86,18 @@ export default function Page() {
           </div>
         ) : upcoming.length === 0 && past.length === 0 ? (
           <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center">
-            <h2 className="text-lg font-semibold text-foreground mb-2">No Bookings Yet</h2>
-            <p className="text-sm text-neutral-500 mb-4">Book a consultation with a trainer or dietitian to get started.</p>
-            <a href="/marketplace" className="inline-flex px-4 py-2 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors">Browse Marketplace</a>
+            <h2 className="text-lg font-semibold text-foreground mb-2">
+              No Bookings Yet
+            </h2>
+            <p className="text-sm text-neutral-500 mb-4">
+              Book a consultation with a trainer or dietitian to get started.
+            </p>
+            <a
+              href="/marketplace"
+              className="inline-flex px-4 py-2 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors"
+            >
+              Browse Marketplace
+            </a>
           </div>
         ) : (
           <div className="space-y-6">
@@ -115,9 +128,7 @@ export default function Page() {
             {/* Bookings List */}
             {bookings.length === 0 ? (
               <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center">
-                <p className="text-neutral-500 text-sm">
-                  No {tab} bookings.
-                </p>
+                <p className="text-neutral-500 text-sm">No {tab} bookings.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -129,7 +140,8 @@ export default function Page() {
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          statusColors[b.status] ?? "bg-neutral-100 text-neutral-600"
+                          statusColors[b.status] ??
+                          "bg-neutral-100 text-neutral-600"
                         }`}
                       >
                         {b.status.replace(/_/g, " ")}

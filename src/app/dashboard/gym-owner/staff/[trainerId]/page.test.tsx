@@ -197,7 +197,7 @@ describe("Trainer Detail Page", () => {
       expect(teamsService.teamsService.updateMember).toHaveBeenCalledWith(
         "org-123",
         "member-1",
-        { status: "inactive" }
+        { status: "inactive" },
       );
     });
   });
@@ -239,13 +239,15 @@ describe("Trainer Detail Page", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    const removeButton = screen.getByRole("button", { name: /remove from organization/i });
+    const removeButton = screen.getByRole("button", {
+      name: /remove from organization/i,
+    });
     await userEvent.click(removeButton);
 
     await waitFor(() => {
       expect(teamsService.teamsService.removeMember).toHaveBeenCalledWith(
         "org-123",
-        "member-1"
+        "member-1",
       );
     });
   });
@@ -260,9 +262,7 @@ describe("Trainer Detail Page", () => {
     render(<TrainerDetailPage />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/could not be found/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/could not be found/i)).toBeInTheDocument();
     });
   });
 

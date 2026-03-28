@@ -132,9 +132,14 @@ export default function FormResponsesPage() {
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3">
               {responses.map((response, index) => (
-                <div key={response._id} className="bg-white rounded-xl shadow-card p-4">
+                <div
+                  key={response._id}
+                  className="bg-white rounded-xl shadow-card p-4"
+                >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-foreground">#{index + 1}</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      #{index + 1}
+                    </span>
                     <button
                       onClick={() => setSelectedResponse(response)}
                       className="text-primary-600 hover:text-primary-700 text-sm font-medium"
@@ -247,7 +252,9 @@ export default function FormResponsesPage() {
                 </div>
                 <div className="text-sm font-bold text-foreground">
                   {responses.length > 0
-                    ? formatResponseDate(responses[responses.length - 1].submitted_at)
+                    ? formatResponseDate(
+                        responses[responses.length - 1].submitted_at,
+                      )
                     : "-"}
                 </div>
               </div>
@@ -265,7 +272,8 @@ export default function FormResponsesPage() {
                     Response Details
                   </h2>
                   <p className="text-sm text-foreground-secondary mt-1">
-                    Submitted on {formatResponseDate(selectedResponse.submitted_at)}
+                    Submitted on{" "}
+                    {formatResponseDate(selectedResponse.submitted_at)}
                   </p>
                 </div>
                 <button

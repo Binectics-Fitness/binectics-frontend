@@ -32,9 +32,7 @@ export default function AdminError({
             />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">
-          Admin Error
-        </h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">Admin Error</h2>
         <p className="text-sm text-neutral-500 mb-6">
           An error occurred while loading this page. Please try again.
         </p>

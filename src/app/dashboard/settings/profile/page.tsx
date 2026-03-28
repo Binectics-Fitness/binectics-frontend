@@ -501,9 +501,7 @@ export default function ProfileSettingsPage() {
           <TagInput
             name="fitnessGoals"
             value={formData.fitnessGoals}
-            onChange={(goals) =>
-              setValue("fitnessGoals", goals)
-            }
+            onChange={(goals) => setValue("fitnessGoals", goals)}
             suggestions={FITNESS_GOAL_SUGGESTIONS}
             placeholder="Type to search or add a goal…"
           />
@@ -515,9 +513,7 @@ export default function ProfileSettingsPage() {
           <TagInput
             name="preferences"
             value={formData.preferences}
-            onChange={(prefs) =>
-              setValue("preferences", prefs)
-            }
+            onChange={(prefs) => setValue("preferences", prefs)}
             suggestions={ACTIVITY_SUGGESTIONS}
             placeholder="Type to search or add an activity…"
           />
@@ -616,7 +612,9 @@ export default function ProfileSettingsPage() {
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.firstName && (
-              <p className="mt-1 text-sm text-red-500">{errors.firstName.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.firstName.message}
+              </p>
             )}
           </div>
           <div>
@@ -629,7 +627,9 @@ export default function ProfileSettingsPage() {
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.lastName && (
-              <p className="mt-1 text-sm text-red-500">{errors.lastName.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.lastName.message}
+              </p>
             )}
           </div>
           <div>

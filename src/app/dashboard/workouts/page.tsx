@@ -5,10 +5,18 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
-import { progressService, ClientProfile, ActivityReport } from "@/lib/api/progress";
+import {
+  progressService,
+  ClientProfile,
+  ActivityReport,
+} from "@/lib/api/progress";
 
 export default function Page() {
-  const { user, isLoading: authLoading, isAuthorized } = useRoleGuard(UserRole.USER);
+  const {
+    user,
+    isLoading: authLoading,
+    isAuthorized,
+  } = useRoleGuard(UserRole.USER);
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [activities, setActivities] = useState<ActivityReport[]>([]);
@@ -65,8 +73,14 @@ export default function Page() {
 
   // Stats
   const totalWorkouts = activities.length;
-  const totalMinutes = activities.reduce((s, a) => s + (a.duration_minutes || 0), 0);
-  const totalCalories = activities.reduce((s, a) => s + (a.calories_burned || 0), 0);
+  const totalMinutes = activities.reduce(
+    (s, a) => s + (a.duration_minutes || 0),
+    0,
+  );
+  const totalCalories = activities.reduce(
+    (s, a) => s + (a.calories_burned || 0),
+    0,
+  );
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
@@ -86,9 +100,19 @@ export default function Page() {
           </div>
         ) : profiles.length === 0 ? (
           <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center">
-            <h2 className="text-lg font-semibold text-foreground mb-2">No Workout Data Yet</h2>
-            <p className="text-sm text-neutral-500 mb-4">Once you&apos;re connected with a trainer, your activity reports will appear here.</p>
-            <a href="/trainers" className="inline-flex px-4 py-2 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors">Browse Trainers</a>
+            <h2 className="text-lg font-semibold text-foreground mb-2">
+              No Workout Data Yet
+            </h2>
+            <p className="text-sm text-neutral-500 mb-4">
+              Once you&apos;re connected with a trainer, your activity reports
+              will appear here.
+            </p>
+            <a
+              href="/trainers"
+              className="inline-flex px-4 py-2 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors"
+            >
+              Browse Trainers
+            </a>
           </div>
         ) : (
           <div className="space-y-6">
@@ -122,7 +146,9 @@ export default function Page() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white rounded-xl border border-neutral-200 p-4">
                   <p className="text-sm text-neutral-500">Total Workouts</p>
-                  <p className="text-2xl font-bold text-foreground">{totalWorkouts}</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {totalWorkouts}
+                  </p>
                 </div>
                 <div className="bg-white rounded-xl border border-neutral-200 p-4">
                   <p className="text-sm text-neutral-500">Total Duration</p>
@@ -144,7 +170,9 @@ export default function Page() {
             {/* Professional Info */}
             <div className="bg-white rounded-xl border border-neutral-200 p-4 sm:p-5">
               <p className="text-sm text-neutral-500">Managed by</p>
-              <p className="font-semibold text-foreground">{professionalName}</p>
+              <p className="font-semibold text-foreground">
+                {professionalName}
+              </p>
             </div>
 
             {/* Activities List */}
@@ -177,9 +205,7 @@ export default function Page() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm text-neutral-600">
-                      <span>
-                        ⏱ {act.duration_minutes} min
-                      </span>
+                      <span>⏱ {act.duration_minutes} min</span>
                       {act.calories_burned != null && (
                         <span>🔥 {act.calories_burned} kcal</span>
                       )}
@@ -188,7 +214,9 @@ export default function Page() {
                       )}
                     </div>
                     {act.notes && (
-                      <p className="mt-2 text-sm text-neutral-500">{act.notes}</p>
+                      <p className="mt-2 text-sm text-neutral-500">
+                        {act.notes}
+                      </p>
                     )}
                   </div>
                 ))}

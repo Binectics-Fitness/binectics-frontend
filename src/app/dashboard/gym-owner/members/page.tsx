@@ -104,7 +104,9 @@ export default function GymOwnerMembersPage() {
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [enrollEmail, setEnrollEmail] = useState("");
   const [enrollPlanId, setEnrollPlanId] = useState("");
-  const [enrollStatus, setEnrollStatus] = useState<"active" | "pending_payment">("active");
+  const [enrollStatus, setEnrollStatus] = useState<
+    "active" | "pending_payment"
+  >("active");
   const [enrollAmountPaid, setEnrollAmountPaid] = useState("");
   const [enrollPaymentRef, setEnrollPaymentRef] = useState("");
   const [enrollSubmitting, setEnrollSubmitting] = useState(false);
@@ -593,9 +595,7 @@ export default function GymOwnerMembersPage() {
                 <button
                   onClick={handleEnrollMember}
                   disabled={
-                    enrollSubmitting ||
-                    !enrollEmail.trim() ||
-                    !enrollPlanId
+                    enrollSubmitting || !enrollEmail.trim() || !enrollPlanId
                   }
                   className="flex-1 h-12 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

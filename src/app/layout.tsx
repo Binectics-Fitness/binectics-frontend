@@ -57,9 +57,7 @@ export default function RootLayout({
       <body className="antialiased" suppressHydrationWarning>
         <AuthProvider>
           <OrganizationProvider>
-            <ConditionalLayout>
-              {children}
-            </ConditionalLayout>
+            <ConditionalLayout>{children}</ConditionalLayout>
             <CookieConsent />
           </OrganizationProvider>
         </AuthProvider>

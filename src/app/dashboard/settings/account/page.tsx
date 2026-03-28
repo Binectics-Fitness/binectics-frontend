@@ -59,7 +59,10 @@ export default function AccountSettingsPage() {
         <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Change Password
         </h3>
-        <form onSubmit={handleSubmit(onPasswordChange)} className="max-w-xl space-y-4">
+        <form
+          onSubmit={handleSubmit(onPasswordChange)}
+          className="max-w-xl space-y-4"
+        >
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-2">
               Current Password
@@ -70,7 +73,9 @@ export default function AccountSettingsPage() {
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.current && (
-              <p className="mt-1 text-sm text-red-500">{errors.current.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.current.message}
+              </p>
             )}
           </div>
           <div>
@@ -96,7 +101,9 @@ export default function AccountSettingsPage() {
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.confirm && (
-              <p className="mt-1 text-sm text-red-500">{errors.confirm.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.confirm.message}
+              </p>
             )}
           </div>
           <button

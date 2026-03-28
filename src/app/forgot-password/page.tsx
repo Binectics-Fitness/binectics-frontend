@@ -143,7 +143,9 @@ export default function ForgotPasswordPage() {
               <p className="mt-3 text-base text-foreground-secondary">
                 We sent a password reset link to
               </p>
-              <p className="mt-1 font-semibold text-foreground">{getValues("email")}</p>
+              <p className="mt-1 font-semibold text-foreground">
+                {getValues("email")}
+              </p>
               <p className="mt-6 text-sm text-foreground-secondary">
                 Didn't receive the email?{" "}
                 <button

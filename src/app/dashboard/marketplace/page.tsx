@@ -119,7 +119,8 @@ export default function MyMarketplaceListingPage() {
     setIsSaving(true);
 
     const res = await marketplaceService.createMyListing({
-      account_type: (data.accountType || "personal_trainer") as MarketplaceAccountType,
+      account_type: (data.accountType ||
+        "personal_trainer") as MarketplaceAccountType,
       headline: data.headline,
       bio: data.bio,
       specialties: splitComma(data.specialties),
@@ -490,7 +491,9 @@ function ListingForm({
           className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
           placeholder="e.g. Certified Personal Trainer Specializing in Weight Loss"
         />
-        {errors.headline && <p className="text-xs text-red-600 mt-1">{errors.headline.message}</p>}
+        {errors.headline && (
+          <p className="text-xs text-red-600 mt-1">{errors.headline.message}</p>
+        )}
       </div>
 
       <div>
@@ -504,7 +507,9 @@ function ListingForm({
           className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none resize-none"
           placeholder="Tell potential clients about yourself, your approach, and experience..."
         />
-        {errors.bio && <p className="text-xs text-red-600 mt-1">{errors.bio.message}</p>}
+        {errors.bio && (
+          <p className="text-xs text-red-600 mt-1">{errors.bio.message}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

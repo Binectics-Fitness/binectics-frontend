@@ -31,7 +31,10 @@ export default function DietitianPlanDetailPage() {
     if (!organizationId || !planId) return;
     setIsLoading(true);
     setPageError("");
-    const response = await marketplaceService.getOrgMembershipPlanById(organizationId, planId);
+    const response = await marketplaceService.getOrgMembershipPlanById(
+      organizationId,
+      planId,
+    );
     if (response.success && response.data) {
       setPlan(response.data);
     } else {
@@ -49,8 +52,14 @@ export default function DietitianPlanDetailPage() {
     if (!organizationId || !plan) return;
     setIsMutating(true);
     const response = plan.is_active
-      ? await marketplaceService.deactivateOrgMembershipPlan(organizationId, plan._id)
-      : await marketplaceService.activateOrgMembershipPlan(organizationId, plan._id);
+      ? await marketplaceService.deactivateOrgMembershipPlan(
+          organizationId,
+          plan._id,
+        )
+      : await marketplaceService.activateOrgMembershipPlan(
+          organizationId,
+          plan._id,
+        );
     if (response.success && response.data) setPlan(response.data);
     else setPageError(response.message || "Failed to update plan status");
     setIsMutating(false);
@@ -60,11 +69,15 @@ export default function DietitianPlanDetailPage() {
     if (!organizationId || !plan) return;
     requestConfirmation({
       title: "Delete plan?",
-      description: "All active subscriptions should be migrated before deleting this plan.",
+      description:
+        "All active subscriptions should be migrated before deleting this plan.",
       confirmLabel: "Delete Plan",
       onConfirm: async () => {
         setIsMutating(true);
-        const response = await marketplaceService.deleteOrgMembershipPlan(organizationId, plan._id);
+        const response = await marketplaceService.deleteOrgMembershipPlan(
+          organizationId,
+          plan._id,
+        );
         if (response.success) {
           router.push("/dashboard/dietitian/plans");
           return;
@@ -83,8 +96,13 @@ export default function DietitianPlanDetailPage() {
         <DietitianSidebar />
         <main className="md:ml-64 flex-1 p-6 md:p-8">
           <div className="max-w-4xl mx-auto">
-            <p className="text-foreground/70">{pageError || "Plan not found"}</p>
-            <Link href="/dashboard/dietitian/plans" className="inline-flex mt-4 text-accent-purple-500 hover:text-accent-purple-700 font-medium">
+            <p className="text-foreground/70">
+              {pageError || "Plan not found"}
+            </p>
+            <Link
+              href="/dashboard/dietitian/plans"
+              className="inline-flex mt-4 text-accent-purple-500 hover:text-accent-purple-700 font-medium"
+            >
               Back to plans
             </Link>
           </div>
@@ -102,8 +120,18 @@ export default function DietitianPlanDetailPage() {
             onClick={() => router.push("/dashboard/dietitian/plans")}
             className="text-accent-purple-500 hover:text-accent-purple-700 font-medium mb-4 flex items-center gap-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back to Plans
           </button>
@@ -116,8 +144,12 @@ export default function DietitianPlanDetailPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-black text-foreground">{plan.name}</h1>
-              <p className="text-foreground/60 mt-1">{plan.description || "No description provided"}</p>
+              <h1 className="text-3xl font-black text-foreground">
+                {plan.name}
+              </h1>
+              <p className="text-foreground/60 mt-1">
+                {plan.description || "No description provided"}
+              </p>
             </div>
             <div className="flex gap-3">
               <Link
@@ -139,34 +171,49 @@ export default function DietitianPlanDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">Price</p>
-              <p className="text-3xl font-black text-foreground mt-2">{plan.currency} {plan.price}</p>
+              <p className="text-3xl font-black text-foreground mt-2">
+                {plan.currency} {plan.price}
+              </p>
             </div>
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">Duration</p>
-              <p className="text-3xl font-black text-foreground mt-2">{plan.duration_days}d</p>
+              <p className="text-3xl font-black text-foreground mt-2">
+                {plan.duration_days}d
+              </p>
             </div>
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">Type</p>
               <p className="text-3xl font-black text-foreground mt-2">
-                {plan.plan_type === MembershipPlanType.SUBSCRIPTION ? "Sub" : "One"}
+                {plan.plan_type === MembershipPlanType.SUBSCRIPTION
+                  ? "Sub"
+                  : "One"}
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">Status</p>
-              <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold mt-2 ${plan.is_active ? "bg-primary-100 text-primary-700" : "bg-gray-100 text-gray-700"}`}>
+              <span
+                className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold mt-2 ${plan.is_active ? "bg-primary-100 text-primary-700" : "bg-gray-100 text-gray-700"}`}
+              >
                 {plan.is_active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-            <h3 className="text-lg font-bold text-foreground mb-4">Plan Features</h3>
+            <h3 className="text-lg font-bold text-foreground mb-4">
+              Plan Features
+            </h3>
             {plan.features.length === 0 ? (
-              <p className="text-sm text-foreground/50">No features configured.</p>
+              <p className="text-sm text-foreground/50">
+                No features configured.
+              </p>
             ) : (
               <ul className="space-y-2">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 text-foreground">
+                  <li
+                    key={feature}
+                    className="flex items-center gap-2 text-foreground"
+                  >
                     <span className="inline-flex h-2 w-2 rounded-full bg-accent-purple-500" />
                     {feature}
                   </li>

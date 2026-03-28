@@ -142,8 +142,10 @@ export default function TrainerSessionsPage() {
 
           <p className="text-sm text-foreground/60">
             Your current browser timezone is{" "}
-            <span className="font-semibold text-foreground">{userTimezone}</span>.
-            All session times below are displayed in this timezone.
+            <span className="font-semibold text-foreground">
+              {userTimezone}
+            </span>
+            . All session times below are displayed in this timezone.
           </p>
         </section>
 
@@ -178,8 +180,18 @@ export default function TrainerSessionsPage() {
         ) : bookings.length === 0 ? (
           <div className="rounded-2xl bg-white p-12 shadow-card text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-yellow-100">
-              <svg className="h-8 w-8 text-accent-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="h-8 w-8 text-accent-yellow-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-bold text-foreground mb-2">
@@ -204,9 +216,12 @@ export default function TrainerSessionsPage() {
         ) : (
           <div className="space-y-4">
             {bookings.map((booking) => {
-              const isPending = booking.status === ConsultationBookingStatus.PENDING;
-              const isConfirmed = booking.status === ConsultationBookingStatus.CONFIRMED;
-              const canComplete = isConfirmed && new Date(booking.startsAt) <= new Date();
+              const isPending =
+                booking.status === ConsultationBookingStatus.PENDING;
+              const isConfirmed =
+                booking.status === ConsultationBookingStatus.CONFIRMED;
+              const canComplete =
+                isConfirmed && new Date(booking.startsAt) <= new Date();
               const canCancel = isPending || isConfirmed;
               const isActionLoading = actionLoadingId === booking.id;
 
@@ -218,7 +233,9 @@ export default function TrainerSessionsPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[booking.status]}`}>
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[booking.status]}`}
+                        >
                           {booking.status}
                         </span>
                         {booking.consultationTypeId && (
@@ -235,7 +252,9 @@ export default function TrainerSessionsPage() {
                         Client: {booking.clientUserId.slice(-8)}
                       </p>
                       {booking.notes && (
-                        <p className="text-sm text-foreground/60 mt-1">{booking.notes}</p>
+                        <p className="text-sm text-foreground/60 mt-1">
+                          {booking.notes}
+                        </p>
                       )}
                       {booking.cancelReason && (
                         <p className="text-xs text-red-600 mt-1">

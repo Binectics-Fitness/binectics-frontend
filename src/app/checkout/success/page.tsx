@@ -52,7 +52,7 @@ function SuccessContent() {
   const displayName =
     listing && typeof listing.professional_id === "object"
       ? `${listing.professional_id.first_name} ${listing.professional_id.last_name}`
-      : listing?.headline ?? "Provider";
+      : (listing?.headline ?? "Provider");
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

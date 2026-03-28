@@ -1,11 +1,12 @@
 /**
  * Progress Tracking API Service
  * Handles client profiles, weight logs, meal feedback, activity reports,
- * progress summaries, and client invitations.
+ * progress summaries, client invitations, and workout plans.
  */
 
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
+import { DifficultyLevel, PlanStatus } from "@/lib/types";
 
 // ==================== ENUMS ====================
 
@@ -190,6 +191,59 @@ export interface ClientInvitation {
   expires_at: string;
 }
 
+// ==================== WORKOUT PLAN TYPES ====================
+
+export interface WorkoutExercise {
+  name: string;
+  description?: string;
+  sets?: number;
+  reps?: number;
+  duration_minutes?: number;
+  rest_seconds?: number;
+  order: number;
+  notes?: string;
+}
+
+export interface WorkoutPlan {
+  _id: string;
+  professional_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+      };
+  organization_id?: string;
+  created_by:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+      };
+  client_profile_id: string;
+  client_id:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+      };
+  title: string;
+  description?: string;
+  exercises: WorkoutExercise[];
+  trainer_notes?: string;
+  frequency?: string;
+  difficulty_level?: DifficultyLevel;
+  status: PlanStatus;
+  version: number;
+  assigned_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // ==================== REQUEST TYPES ====================
 
 export interface AddClientRequest {
@@ -302,6 +356,38 @@ export interface DashboardStats {
   total_clients: number;
   pending_requests: number;
   pending_invitations: number;
+}
+
+// ==================== WORKOUT PLAN REQUEST TYPES ====================
+
+export interface CreateWorkoutExerciseRequest {
+  name: string;
+  description?: string;
+  sets?: number;
+  reps?: number;
+  duration_minutes?: number;
+  rest_seconds?: number;
+  order: number;
+  notes?: string;
+}
+
+export interface CreateWorkoutPlanRequest {
+  title: string;
+  description?: string;
+  exercises?: CreateWorkoutExerciseRequest[];
+  trainer_notes?: string;
+  frequency?: string;
+  difficulty_level?: DifficultyLevel;
+}
+
+export interface UpdateWorkoutPlanRequest {
+  title?: string;
+  description?: string;
+  exercises?: CreateWorkoutExerciseRequest[];
+  trainer_notes?: string;
+  frequency?: string;
+  difficulty_level?: DifficultyLevel;
+  status?: PlanStatus;
 }
 
 // ==================== SERVICE ====================
@@ -622,5 +708,121 @@ export const progressService = {
 
   async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
     return await apiClient.get<DashboardStats>("/progress/dashboard-stats");
+  },
+
+  // ==================== WORKOUT PLANS — Professional ====================
+
+  async createWorkoutPlan(
+    profileId: string,
+    data: CreateWorkoutPlanRequest,
+  ): Promise<ApiResponse<WorkoutPlan>> {
+    return await apiClient.post<WorkoutPlan>(
+      `/progress/clients/${profileId}/workout-plans`,
+      data,
+    );
+  },
+
+  async getWorkoutPlans(
+    profileId: string,
+    limit?: number,
+  ): Promise<ApiResponse<WorkoutPlan[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<WorkoutPlan[]>(
+      `/progress/clients/${profileId}/workout-plans${params}`,
+    );
+  },
+
+  async getWorkoutPlanById(
+    profileId: string,
+    planId: string,
+  ): Promise<ApiResponse<WorkoutPlan>> {
+    return await apiClient.get<WorkoutPlan>(
+      `/progress/clients/${profileId}/workout-plans/${planId}`,
+    );
+  },
+
+  async updateWorkoutPlan(
+    profileId: string,
+    planId: string,
+    data: UpdateWorkoutPlanRequest,
+  ): Promise<ApiResponse<WorkoutPlan>> {
+    return await apiClient.patch<WorkoutPlan>(
+      `/progress/clients/${profileId}/workout-plans/${planId}`,
+      data,
+    );
+  },
+
+  async archiveWorkoutPlan(
+    profileId: string,
+    planId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/progress/clients/${profileId}/workout-plans/${planId}`,
+    );
+  },
+
+  // ==================== WORKOUT PLANS — Organization ====================
+
+  async createWorkoutPlanInOrg(
+    organizationId: string,
+    profileId: string,
+    data: CreateWorkoutPlanRequest,
+  ): Promise<ApiResponse<WorkoutPlan>> {
+    return await apiClient.post<WorkoutPlan>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/workout-plans`,
+      data,
+    );
+  },
+
+  async getWorkoutPlansInOrg(
+    organizationId: string,
+    profileId: string,
+    limit?: number,
+  ): Promise<ApiResponse<WorkoutPlan[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<WorkoutPlan[]>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/workout-plans${params}`,
+    );
+  },
+
+  async updateWorkoutPlanInOrg(
+    organizationId: string,
+    profileId: string,
+    planId: string,
+    data: UpdateWorkoutPlanRequest,
+  ): Promise<ApiResponse<WorkoutPlan>> {
+    return await apiClient.patch<WorkoutPlan>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/workout-plans/${planId}`,
+      data,
+    );
+  },
+
+  async archiveWorkoutPlanInOrg(
+    organizationId: string,
+    profileId: string,
+    planId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/progress/organizations/${organizationId}/clients/${profileId}/workout-plans/${planId}`,
+    );
+  },
+
+  // ==================== WORKOUT PLANS — User-facing (my plans) ====================
+
+  async getMyWorkoutPlans(
+    limit?: number,
+  ): Promise<ApiResponse<WorkoutPlan[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<WorkoutPlan[]>(
+      `/progress/my-workout-plans${params}`,
+    );
+  },
+
+  async getMyWorkoutPlanById(
+    planId: string,
+  ): Promise<ApiResponse<WorkoutPlan>> {
+    return await apiClient.get<WorkoutPlan>(
+      `/progress/my-workout-plans/${planId}`,
+    );
   },
 };

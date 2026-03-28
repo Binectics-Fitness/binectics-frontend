@@ -31,12 +31,8 @@ export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 export const registerSchema = z
   .object({
-    firstName: nameSchema.pipe(
-      z.string().min(1, "First name is required"),
-    ),
-    lastName: nameSchema.pipe(
-      z.string().min(1, "Last name is required"),
-    ),
+    firstName: nameSchema.pipe(z.string().min(1, "First name is required")),
+    lastName: nameSchema.pipe(z.string().min(1, "Last name is required")),
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string(),

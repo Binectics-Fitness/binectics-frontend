@@ -1,53 +1,98 @@
-import Link from 'next/link';
-import type { Metadata } from 'next';
+import Link from "next/link";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "Learn about Binectics — the global fitness ecosystem connecting gyms, trainers, and dietitians in 50+ countries.",
+  description:
+    "Learn about Binectics — the global fitness ecosystem connecting gyms, trainers, and dietitians in 50+ countries.",
 };
 
 export default function AboutPage() {
   const stats = [
-    { value: '500+', label: 'Gyms Worldwide' },
-    { value: '10K+', label: 'Active Members' },
-    { value: '50+', label: 'Countries' },
-    { value: '4.9/5', label: 'Average Rating' },
+    { value: "500+", label: "Gyms Worldwide" },
+    { value: "10K+", label: "Active Members" },
+    { value: "50+", label: "Countries" },
+    { value: "4.9/5", label: "Average Rating" },
   ];
 
   const values = [
     {
-      title: 'Global Access',
-      description: 'One subscription works everywhere. From Tokyo to Toronto, your fitness never stops.',
+      title: "Global Access",
+      description:
+        "One subscription works everywhere. From Tokyo to Toronto, your fitness never stops.",
       icon: (
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       ),
     },
     {
-      title: 'Verified Professionals',
-      description: 'Every gym, trainer, and dietitian is verified with credentials and background checks.',
+      title: "Verified Professionals",
+      description:
+        "Every gym, trainer, and dietitian is verified with credentials and background checks.",
       icon: (
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+          />
         </svg>
       ),
     },
     {
-      title: 'Seamless Technology',
-      description: 'QR check-ins, progress tracking, and integrated payments make fitness effortless.',
+      title: "Seamless Technology",
+      description:
+        "QR check-ins, progress tracking, and integrated payments make fitness effortless.",
       icon: (
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
         </svg>
       ),
     },
     {
-      title: 'Community First',
-      description: 'Built by fitness enthusiasts, for fitness enthusiasts. Your success is our mission.',
+      title: "Community First",
+      description:
+        "Built by fitness enthusiasts, for fitness enthusiasts. Your success is our mission.",
       icon: (
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+          />
         </svg>
       ),
     },
@@ -55,32 +100,37 @@ export default function AboutPage() {
 
   const team = [
     {
-      name: 'Mission',
-      title: 'What We Believe',
-      description: 'Fitness should be accessible to everyone, everywhere. We\'re breaking down barriers and connecting the global fitness community.',
+      name: "Mission",
+      title: "What We Believe",
+      description:
+        "Fitness should be accessible to everyone, everywhere. We're breaking down barriers and connecting the global fitness community.",
     },
     {
-      name: 'Vision',
-      title: 'Where We\'re Going',
-      description: 'To become the world\'s largest fitness ecosystem, empowering millions to achieve their health goals through verified professionals and cutting-edge technology.',
+      name: "Vision",
+      title: "Where We're Going",
+      description:
+        "To become the world's largest fitness ecosystem, empowering millions to achieve their health goals through verified professionals and cutting-edge technology.",
     },
     {
-      name: 'Commitment',
-      title: 'Our Promise',
-      description: 'Safety, quality, and trust. Every professional is verified, every gym is validated, and every member is protected.',
+      name: "Commitment",
+      title: "Our Promise",
+      description:
+        "Safety, quality, and trust. Every professional is verified, every gym is validated, and every member is protected.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background-secondary">{/* Hero Section */}
+    <div className="min-h-screen bg-background-secondary">
+      {/* Hero Section */}
       <section className="bg-background py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="font-display text-3xl font-black text-foreground sm:text-5xl lg:text-6xl">
             Your global fitness ecosystem
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
-            Binectics connects verified gyms, certified trainers, and expert dietitians worldwide.
-            One platform, unlimited possibilities, 50+ countries.
+            Binectics connects verified gyms, certified trainers, and expert
+            dietitians worldwide. One platform, unlimited possibilities, 50+
+            countries.
           </p>
         </div>
       </section>
@@ -113,18 +163,22 @@ export default function AboutPage() {
           </div>
           <div className="prose prose-lg max-w-none">
             <p className="text-lg text-foreground-secondary leading-relaxed">
-              Binectics was born from a simple frustration: finding quality fitness services while traveling
-              shouldn't be complicated. Our founders, fitness enthusiasts who frequently traveled for work,
-              struggled to maintain their training routines across different cities and countries.
+              Binectics was born from a simple frustration: finding quality
+              fitness services while traveling shouldn't be complicated. Our
+              founders, fitness enthusiasts who frequently traveled for work,
+              struggled to maintain their training routines across different
+              cities and countries.
             </p>
             <p className="mt-6 text-lg text-foreground-secondary leading-relaxed">
-              We envisioned a world where your gym membership, personal trainer, and nutrition coach
-              traveled with you. Where verification badges meant something. Where QR codes replaced
-              membership cards. Where one subscription opened doors to fitness facilities worldwide.
+              We envisioned a world where your gym membership, personal trainer,
+              and nutrition coach traveled with you. Where verification badges
+              meant something. Where QR codes replaced membership cards. Where
+              one subscription opened doors to fitness facilities worldwide.
             </p>
             <p className="mt-6 text-lg text-foreground-secondary leading-relaxed">
-              Today, Binectics serves over 10,000 members across 50+ countries, connecting them with
-              500+ verified gyms and hundreds of certified professionals. We're just getting started.
+              Today, Binectics serves over 10,000 members across 50+ countries,
+              connecting them with 500+ verified gyms and hundreds of certified
+              professionals. We're just getting started.
             </p>
           </div>
         </div>

@@ -57,7 +57,9 @@ describe("Invite Trainer Page", () => {
     render(<InviteTrainerPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("option", { name: "Trainer" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "Trainer" }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -86,11 +88,13 @@ describe("Invite Trainer Page", () => {
     const { container } = render(<InviteTrainerPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("option", { name: "Trainer Coach" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "Trainer Coach" }),
+      ).toBeInTheDocument();
     });
 
     // Check if trainer role is selected by default in dropdown
-    const roleSelect = container.querySelector('select') as HTMLSelectElement;
+    const roleSelect = container.querySelector("select") as HTMLSelectElement;
     if (roleSelect) {
       expect(roleSelect.value).toBe("role-1");
     }
@@ -145,11 +149,15 @@ describe("Invite Trainer Page", () => {
     render(<InviteTrainerPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /send invitation/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /send invitation/i }),
+      ).toBeInTheDocument();
     });
 
     const emailInput = screen.getByPlaceholderText("coach@example.com");
-    const submitButton = screen.getByRole("button", { name: /send invitation/i });
+    const submitButton = screen.getByRole("button", {
+      name: /send invitation/i,
+    });
 
     await userEvent.type(emailInput, "newtainer@example.com");
     await userEvent.click(submitButton);
@@ -160,7 +168,7 @@ describe("Invite Trainer Page", () => {
         expect.objectContaining({
           email: "newtainer@example.com",
           team_role_id: "role-1",
-        })
+        }),
       );
     });
   });
@@ -189,11 +197,15 @@ describe("Invite Trainer Page", () => {
     render(<InviteTrainerPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /send invitation/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /send invitation/i }),
+      ).toBeInTheDocument();
     });
 
     const emailInput = screen.getByPlaceholderText("coach@example.com");
-    const submitButton = screen.getByRole("button", { name: /send invitation/i });
+    const submitButton = screen.getByRole("button", {
+      name: /send invitation/i,
+    });
 
     await userEvent.type(emailInput, "trainer@example.com");
     await userEvent.click(submitButton);
@@ -227,19 +239,21 @@ describe("Invite Trainer Page", () => {
     render(<InviteTrainerPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /send invitation/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /send invitation/i }),
+      ).toBeInTheDocument();
     });
 
     const emailInput = screen.getByPlaceholderText("coach@example.com");
-    const submitButton = screen.getByRole("button", { name: /send invitation/i });
+    const submitButton = screen.getByRole("button", {
+      name: /send invitation/i,
+    });
 
     await userEvent.type(emailInput, "trainer@example.com");
     await userEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/already exists/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/already exists/i)).toBeInTheDocument();
     });
   });
 
@@ -275,11 +289,17 @@ describe("Invite Trainer Page", () => {
     render(<InviteTrainerPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /send invitation/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /send invitation/i }),
+      ).toBeInTheDocument();
     });
 
-    const emailInput = screen.getByPlaceholderText("coach@example.com") as HTMLInputElement;
-    const submitButton = screen.getByRole("button", { name: /send invitation/i });
+    const emailInput = screen.getByPlaceholderText(
+      "coach@example.com",
+    ) as HTMLInputElement;
+    const submitButton = screen.getByRole("button", {
+      name: /send invitation/i,
+    });
 
     // Try invalid email
     await userEvent.type(emailInput, "invalid-email");
@@ -314,14 +334,16 @@ describe("Invite Trainer Page", () => {
     const { container } = render(<InviteTrainerPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("option", { name: "Trainer" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "Trainer" }),
+      ).toBeInTheDocument();
     });
 
     // Initial role shows 1 permission in count
     expect(screen.getByText(/permissions included/i)).toBeInTheDocument();
 
     // Change role to Instructor
-    const roleSelect = container.querySelector('select') as HTMLSelectElement;
+    const roleSelect = container.querySelector("select") as HTMLSelectElement;
     if (roleSelect) {
       await userEvent.selectOptions(roleSelect, "role-2");
 

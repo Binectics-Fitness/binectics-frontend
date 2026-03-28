@@ -28,11 +28,15 @@ import { marketplaceService } from "@/lib/api/marketplace";
 export default function DietitianAnalyticsPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null,
+  );
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [reviewAgg, setReviewAgg] = useState<ReviewAggregate | null>(null);
-  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>(
+    [],
+  );
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -85,23 +89,39 @@ export default function DietitianAnalyticsPage() {
   if (isLoading || orgLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
 
-  if (loadingData) return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <DietitianSidebar />
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <DashboardLoading />
-      </main>
-    </div>
-  );
+  if (loadingData)
+    return (
+      <div className="flex min-h-screen bg-neutral-50">
+        <DietitianSidebar />
+        <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
+          <DashboardLoading />
+        </main>
+      </div>
+    );
 
-  const completedBookings = bookings.filter((b) => b.status === ConsultationBookingStatus.COMPLETED);
-  const cancelledBookings = bookings.filter((b) => b.status === ConsultationBookingStatus.CANCELLED);
-  const noShowBookings = bookings.filter((b) => b.status === ConsultationBookingStatus.NO_SHOW);
-  const completionRate = bookings.length > 0 ? Math.round((completedBookings.length / bookings.length) * 100) : 0;
+  const completedBookings = bookings.filter(
+    (b) => b.status === ConsultationBookingStatus.COMPLETED,
+  );
+  const cancelledBookings = bookings.filter(
+    (b) => b.status === ConsultationBookingStatus.CANCELLED,
+  );
+  const noShowBookings = bookings.filter(
+    (b) => b.status === ConsultationBookingStatus.NO_SHOW,
+  );
+  const completionRate =
+    bookings.length > 0
+      ? Math.round((completedBookings.length / bookings.length) * 100)
+      : 0;
   const activeClients = clients.filter((c) => c.is_active).length;
-  const activeSubs = subscriptions.filter((s) => s.status === MembershipSubscriptionStatus.ACTIVE);
+  const activeSubs = subscriptions.filter(
+    (s) => s.status === MembershipSubscriptionStatus.ACTIVE,
+  );
   const totalRevenue = subscriptions
-    .filter((s) => s.status === MembershipSubscriptionStatus.ACTIVE || s.status === MembershipSubscriptionStatus.EXPIRED)
+    .filter(
+      (s) =>
+        s.status === MembershipSubscriptionStatus.ACTIVE ||
+        s.status === MembershipSubscriptionStatus.EXPIRED,
+    )
     .reduce((sum, s) => sum + s.amount_paid, 0);
 
   const hasData =
@@ -115,8 +135,12 @@ export default function DietitianAnalyticsPage() {
 
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="mb-6">
-          <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">Analytics</h1>
-          <p className="mt-1 text-sm text-foreground-secondary">Overview of your practice performance</p>
+          <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">
+            Analytics
+          </h1>
+          <p className="mt-1 text-sm text-foreground-secondary">
+            Overview of your practice performance
+          </p>
         </div>
 
         {!hasData ? (
@@ -132,54 +156,98 @@ export default function DietitianAnalyticsPage() {
           <>
             <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <p className="text-sm text-foreground-secondary">Total Clients</p>
+                <p className="text-sm text-foreground-secondary">
+                  Total Clients
+                </p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {dashboardStats?.total_clients ?? clients.length}
                 </p>
-                <p className="mt-1 text-sm text-primary-600">{activeClients} active</p>
+                <p className="mt-1 text-sm text-primary-600">
+                  {activeClients} active
+                </p>
               </div>
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <p className="text-sm text-foreground-secondary">Consultations</p>
-                <p className="mt-1 text-3xl font-black text-foreground">{bookings.length}</p>
-                <p className="mt-1 text-sm text-primary-600">{completedBookings.length} completed</p>
+                <p className="text-sm text-foreground-secondary">
+                  Consultations
+                </p>
+                <p className="mt-1 text-3xl font-black text-foreground">
+                  {bookings.length}
+                </p>
+                <p className="mt-1 text-sm text-primary-600">
+                  {completedBookings.length} completed
+                </p>
               </div>
               <div className="rounded-2xl bg-white p-6 shadow-card">
                 <p className="text-sm text-foreground-secondary">Avg Rating</p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {reviewAgg ? reviewAgg.averageRating.toFixed(1) : "—"}
                 </p>
-                <p className="mt-1 text-sm text-foreground-secondary">{reviewAgg?.totalReviews ?? 0} reviews</p>
+                <p className="mt-1 text-sm text-foreground-secondary">
+                  {reviewAgg?.totalReviews ?? 0} reviews
+                </p>
               </div>
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <p className="text-sm text-foreground-secondary">Completion Rate</p>
-                <p className="mt-1 text-3xl font-black text-foreground">{completionRate}%</p>
-                <p className="mt-1 text-sm text-foreground-secondary">of all consultations</p>
+                <p className="text-sm text-foreground-secondary">
+                  Completion Rate
+                </p>
+                <p className="mt-1 text-3xl font-black text-foreground">
+                  {completionRate}%
+                </p>
+                <p className="mt-1 text-sm text-foreground-secondary">
+                  of all consultations
+                </p>
               </div>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <h2 className="mb-4 text-lg font-bold text-foreground">Consultation Breakdown</h2>
+                <h2 className="mb-4 text-lg font-bold text-foreground">
+                  Consultation Breakdown
+                </h2>
                 <div className="space-y-3">
                   {[
-                    { label: "Completed", count: completedBookings.length, color: "bg-primary-500" },
-                    { label: "Cancelled", count: cancelledBookings.length, color: "bg-red-500" },
-                    { label: "No Show", count: noShowBookings.length, color: "bg-accent-yellow-500" },
+                    {
+                      label: "Completed",
+                      count: completedBookings.length,
+                      color: "bg-primary-500",
+                    },
+                    {
+                      label: "Cancelled",
+                      count: cancelledBookings.length,
+                      color: "bg-red-500",
+                    },
+                    {
+                      label: "No Show",
+                      count: noShowBookings.length,
+                      color: "bg-accent-yellow-500",
+                    },
                     {
                       label: "Pending/Confirmed",
-                      count: bookings.length - completedBookings.length - cancelledBookings.length - noShowBookings.length,
+                      count:
+                        bookings.length -
+                        completedBookings.length -
+                        cancelledBookings.length -
+                        noShowBookings.length,
                       color: "bg-accent-purple-500",
                     },
                   ].map((item) => {
-                    const pct = bookings.length > 0 ? (item.count / bookings.length) * 100 : 0;
+                    const pct =
+                      bookings.length > 0
+                        ? (item.count / bookings.length) * 100
+                        : 0;
                     return (
                       <div key={item.label}>
                         <div className="flex justify-between text-sm">
                           <span className="text-foreground">{item.label}</span>
-                          <span className="text-foreground-secondary">{item.count}</span>
+                          <span className="text-foreground-secondary">
+                            {item.count}
+                          </span>
                         </div>
                         <div className="mt-1 h-2 rounded-full bg-neutral-100">
-                          <div className={`h-2 rounded-full ${item.color} transition-all`} style={{ width: `${pct}%` }} />
+                          <div
+                            className={`h-2 rounded-full ${item.color} transition-all`}
+                            style={{ width: `${pct}%` }}
+                          />
                         </div>
                       </div>
                     );
@@ -188,22 +256,35 @@ export default function DietitianAnalyticsPage() {
               </div>
 
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <h2 className="mb-4 text-lg font-bold text-foreground">Revenue Overview</h2>
+                <h2 className="mb-4 text-lg font-bold text-foreground">
+                  Revenue Overview
+                </h2>
                 {currentOrg ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between rounded-lg bg-neutral-50 p-4">
-                      <span className="text-sm text-foreground-secondary">Total Revenue</span>
+                      <span className="text-sm text-foreground-secondary">
+                        Total Revenue
+                      </span>
                       <span className="text-lg font-bold text-foreground">
-                        {subscriptions[0]?.currency || "USD"} {totalRevenue.toLocaleString()}
+                        {subscriptions[0]?.currency || "USD"}{" "}
+                        {totalRevenue.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between rounded-lg bg-neutral-50 p-4">
-                      <span className="text-sm text-foreground-secondary">Active Subscriptions</span>
-                      <span className="text-lg font-bold text-foreground">{activeSubs.length}</span>
+                      <span className="text-sm text-foreground-secondary">
+                        Active Subscriptions
+                      </span>
+                      <span className="text-lg font-bold text-foreground">
+                        {activeSubs.length}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between rounded-lg bg-neutral-50 p-4">
-                      <span className="text-sm text-foreground-secondary">Pending Requests</span>
-                      <span className="text-lg font-bold text-foreground">{dashboardStats?.pending_requests ?? 0}</span>
+                      <span className="text-sm text-foreground-secondary">
+                        Pending Requests
+                      </span>
+                      <span className="text-lg font-bold text-foreground">
+                        {dashboardStats?.pending_requests ?? 0}
+                      </span>
                     </div>
                   </div>
                 ) : (

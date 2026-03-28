@@ -26,3 +26,31 @@ export const createJournalSchema = z.object({
 });
 
 export type CreateJournalFormData = z.infer<typeof createJournalSchema>;
+
+// ─── Workout Exercise ───────────────────────────────────────────
+
+export const workoutExerciseSchema = z.object({
+  name: z.string().min(1, "Exercise name is required").max(200).trim(),
+  description: z.string().max(1000).optional(),
+  sets: z.number().min(1).max(100).optional(),
+  reps: z.number().min(1).max(1000).optional(),
+  duration_minutes: z.number().min(1).max(600).optional(),
+  rest_seconds: z.number().min(0).max(600).optional(),
+  order: z.number().min(1).max(100),
+  notes: z.string().max(500).optional(),
+});
+
+export type WorkoutExerciseFormData = z.infer<typeof workoutExerciseSchema>;
+
+// ─── Create/Edit Workout Plan ───────────────────────────────────
+
+export const workoutPlanSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200).trim(),
+  description: z.string().max(3000).optional(),
+  exercises: z.array(workoutExerciseSchema).optional(),
+  trainer_notes: z.string().max(3000).optional(),
+  frequency: z.string().max(100).optional(),
+  difficulty_level: z.string().optional(),
+});
+
+export type WorkoutPlanFormData = z.infer<typeof workoutPlanSchema>;

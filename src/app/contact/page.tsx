@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "Get in touch with the Binectics team. We're here to help with questions about gyms, trainers, dietitians, and your fitness journey.",
+  description:
+    "Get in touch with the Binectics team. We're here to help with questions about gyms, trainers, dietitians, and your fitness journey.",
 };
 
 export default function ContactPage() {

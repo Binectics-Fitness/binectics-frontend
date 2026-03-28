@@ -93,7 +93,9 @@ describe("Staff List Page", () => {
         email: "invited@example.com",
         status: "pending",
         sent_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expires_at: new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
     ];
 
@@ -237,9 +239,7 @@ describe("Staff List Page", () => {
     render(<StaffPage />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/failed to load/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
     });
   });
 

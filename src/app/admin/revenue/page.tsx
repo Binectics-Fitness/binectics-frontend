@@ -264,25 +264,37 @@ export default function AdminRevenuePage() {
                     <div key={txn.id} className="p-4 space-y-2">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-sm font-semibold text-foreground">{txn.user}</p>
-                          <p className="text-xs text-foreground/60">{txn.provider} - {txn.plan}</p>
+                          <p className="text-sm font-semibold text-foreground">
+                            {txn.user}
+                          </p>
+                          <p className="text-xs text-foreground/60">
+                            {txn.provider} - {txn.plan}
+                          </p>
                         </div>
-                        <span className={`px-2 py-0.5 text-xs font-semibold ${getStatusBadgeColor(txn.status)}`}>
+                        <span
+                          className={`px-2 py-0.5 text-xs font-semibold ${getStatusBadgeColor(txn.status)}`}
+                        >
                           {txn.status}
                         </span>
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-sm">
                         <div>
                           <p className="text-foreground/60 text-xs">Amount</p>
-                          <p className="font-semibold text-foreground">{txn.amount}</p>
+                          <p className="font-semibold text-foreground">
+                            {txn.amount}
+                          </p>
                         </div>
                         <div>
                           <p className="text-foreground/60 text-xs">Fee</p>
-                          <p className="font-semibold text-primary-600">{txn.platformFee}</p>
+                          <p className="font-semibold text-primary-600">
+                            {txn.platformFee}
+                          </p>
                         </div>
                         <div>
                           <p className="text-foreground/60 text-xs">Date</p>
-                          <p className="font-semibold text-foreground">{txn.date}</p>
+                          <p className="font-semibold text-foreground">
+                            {txn.date}
+                          </p>
                         </div>
                       </div>
                     </div>

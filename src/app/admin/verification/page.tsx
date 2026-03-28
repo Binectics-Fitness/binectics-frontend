@@ -220,7 +220,10 @@ export default function AdminVerificationPage() {
           {/* Verification List */}
           <div className="space-y-4">
             {verifications.map((verification) => (
-              <div key={verification.id} className="bg-white p-4 sm:p-6 shadow-card">
+              <div
+                key={verification.id}
+                className="bg-white p-4 sm:p-6 shadow-card"
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">

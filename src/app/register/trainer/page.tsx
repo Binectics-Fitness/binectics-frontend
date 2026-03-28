@@ -229,7 +229,9 @@ export default function TrainerRegisterPage() {
                 </span>
               </label>
               {errors.acceptTos && (
-                <p className="text-sm text-red-600 ml-7">{errors.acceptTos.message}</p>
+                <p className="text-sm text-red-600 ml-7">
+                  {errors.acceptTos.message}
+                </p>
               )}
             </div>
 

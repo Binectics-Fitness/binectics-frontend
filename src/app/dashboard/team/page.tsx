@@ -290,7 +290,10 @@ export default function TeamPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit(handleCreate)} className="p-6 space-y-4">
+            <form
+              onSubmit={handleCreateSubmit(handleCreate)}
+              className="p-6 space-y-4"
+            >
               {createError && (
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
                   {createError}
@@ -308,7 +311,9 @@ export default function TeamPage() {
                   className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                 />
                 {createFormErrors.name && (
-                  <p className="mt-1 text-sm text-red-500">{createFormErrors.name.message}</p>
+                  <p className="mt-1 text-sm text-red-500">
+                    {createFormErrors.name.message}
+                  </p>
                 )}
               </div>
 

@@ -39,7 +39,9 @@ export default function TrainerReviewsPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sort, setSort] = useState<"newest" | "oldest" | "rating_high" | "rating_low">("newest");
+  const [sort, setSort] = useState<
+    "newest" | "oldest" | "rating_high" | "rating_low"
+  >("newest");
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -76,7 +78,9 @@ export default function TrainerReviewsPage() {
   const handleRespond = async (reviewId: string) => {
     if (!responseText.trim()) return;
     setSubmitting(true);
-    const payload: CreateProviderResponseRequest = { message: responseText.trim() };
+    const payload: CreateProviderResponseRequest = {
+      message: responseText.trim(),
+    };
     const res = await reviewsService.createProviderResponse(reviewId, payload);
     if (res.success && res.data) {
       setReviews((prev) =>

@@ -537,7 +537,11 @@ export default function TrainerClientsPage() {
                     placeholder="Write progress notes for this client..."
                     className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                   />
-                  {journalErrors.notes && <p className="text-xs text-red-600 mt-1">{journalErrors.notes.message}</p>}
+                  {journalErrors.notes && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {journalErrors.notes.message}
+                    </p>
+                  )}
                   <div className="mt-3 flex justify-end">
                     <button
                       type="submit"
@@ -813,7 +817,10 @@ export default function TrainerClientsPage() {
       {/* ─── Add Client Modal ──────────────────────────────── */}
       {showAddModal && (
         <ModalOverlay onClose={() => setShowAddModal(false)} title="Add Client">
-          <form onSubmit={handleAddClientSubmit(handleAddClient)} className="space-y-4">
+          <form
+            onSubmit={handleAddClientSubmit(handleAddClient)}
+            className="space-y-4"
+          >
             <p className="text-sm text-foreground-secondary">
               Enter the client&apos;s email. If they have a Binectics account, a
               connection request will be sent for their approval. Otherwise,
@@ -829,7 +836,11 @@ export default function TrainerClientsPage() {
                 className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="client@example.com"
               />
-              {addClientErrors.email && <p className="text-xs text-red-600 mt-1">{addClientErrors.email.message}</p>}
+              {addClientErrors.email && (
+                <p className="text-xs text-red-600 mt-1">
+                  {addClientErrors.email.message}
+                </p>
+              )}
             </label>
             <label className="block">
               <span className="text-sm font-medium text-foreground">

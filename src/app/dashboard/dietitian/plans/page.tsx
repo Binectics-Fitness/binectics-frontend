@@ -63,7 +63,10 @@ export default function DietitianPlansPage() {
       confirmLabel: "Delete Plan",
       onConfirm: async () => {
         setMutatingId(plan._id);
-        const res = await marketplaceService.deleteOrgMembershipPlan(orgId, plan._id);
+        const res = await marketplaceService.deleteOrgMembershipPlan(
+          orgId,
+          plan._id,
+        );
         if (res.success) await refreshPlans();
         else setError(res.message || "Failed to delete plan");
         setMutatingId(null);
@@ -99,8 +102,18 @@ export default function DietitianPlansPage() {
               href="/dashboard/dietitian/plans/create"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-purple-500 px-5 text-sm font-semibold text-white hover:bg-accent-purple-600"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Create Plan
             </Link>
@@ -129,15 +142,25 @@ export default function DietitianPlansPage() {
             <div className="mb-8 grid gap-4 sm:grid-cols-3">
               <div className="rounded-2xl bg-white p-6 shadow-card">
                 <p className="text-sm text-foreground-secondary">Total Plans</p>
-                <p className="mt-1 text-3xl font-black text-foreground">{stats.total}</p>
+                <p className="mt-1 text-3xl font-black text-foreground">
+                  {stats.total}
+                </p>
               </div>
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <p className="text-sm text-foreground-secondary">Active Plans</p>
-                <p className="mt-1 text-3xl font-black text-foreground">{stats.activePlans}</p>
+                <p className="text-sm text-foreground-secondary">
+                  Active Plans
+                </p>
+                <p className="mt-1 text-3xl font-black text-foreground">
+                  {stats.activePlans}
+                </p>
               </div>
               <div className="rounded-2xl bg-white p-6 shadow-card">
-                <p className="text-sm text-foreground-secondary">Active Members</p>
-                <p className="mt-1 text-3xl font-black text-foreground">{stats.activeMembers}</p>
+                <p className="text-sm text-foreground-secondary">
+                  Active Members
+                </p>
+                <p className="mt-1 text-3xl font-black text-foreground">
+                  {stats.activeMembers}
+                </p>
               </div>
             </div>
 
@@ -146,19 +169,36 @@ export default function DietitianPlansPage() {
                 <table className="w-full text-sm">
                   <thead className="border-b border-neutral-200 bg-neutral-50">
                     <tr>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">Plan</th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">Type</th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">Price</th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">Duration</th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">Members</th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">Status</th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">Actions</th>
+                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
+                        Plan
+                      </th>
+                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
+                        Price
+                      </th>
+                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
+                        Duration
+                      </th>
+                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
+                        Members
+                      </th>
+                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
                     {plans.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-10 text-center text-foreground-secondary">
+                        <td
+                          colSpan={7}
+                          className="px-6 py-10 text-center text-foreground-secondary"
+                        >
                           No plans yet. Create your first plan to get started.
                         </td>
                       </tr>
@@ -166,7 +206,9 @@ export default function DietitianPlansPage() {
                       plans.map((plan) => (
                         <tr key={plan._id} className="hover:bg-neutral-50">
                           <td className="px-6 py-4">
-                            <p className="font-semibold text-foreground">{plan.name}</p>
+                            <p className="font-semibold text-foreground">
+                              {plan.name}
+                            </p>
                             {plan.description && (
                               <p className="text-xs text-foreground-secondary line-clamp-1 mt-0.5">
                                 {plan.description}
@@ -176,19 +218,27 @@ export default function DietitianPlansPage() {
                           <td className="px-6 py-4">
                             <span
                               className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                                plan.plan_type === MembershipPlanType.SUBSCRIPTION
+                                plan.plan_type ===
+                                MembershipPlanType.SUBSCRIPTION
                                   ? "bg-accent-purple-100 text-accent-purple-700"
                                   : "bg-primary-100 text-primary-700"
                               }`}
                             >
-                              {plan.plan_type === MembershipPlanType.SUBSCRIPTION ? "Subscription" : "One-time"}
+                              {plan.plan_type ===
+                              MembershipPlanType.SUBSCRIPTION
+                                ? "Subscription"
+                                : "One-time"}
                             </span>
                           </td>
                           <td className="px-6 py-4 font-semibold text-foreground">
                             {plan.currency} {plan.price}
                           </td>
-                          <td className="px-6 py-4 text-foreground-secondary">{plan.duration_days} days</td>
-                          <td className="px-6 py-4 text-foreground-secondary">{plan.active_members}</td>
+                          <td className="px-6 py-4 text-foreground-secondary">
+                            {plan.duration_days} days
+                          </td>
+                          <td className="px-6 py-4 text-foreground-secondary">
+                            {plan.active_members}
+                          </td>
                           <td className="px-6 py-4">
                             <span
                               className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${

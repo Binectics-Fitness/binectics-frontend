@@ -102,7 +102,9 @@ function VerificationForm() {
                 maxLength={6}
               />
               {errors.otp && (
-                <p className="mt-1 text-sm text-red-500">{errors.otp.message}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.otp.message}
+                </p>
               )}
             </div>
 

@@ -539,7 +539,9 @@ export default function DietitianClientsPage() {
                     className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                   />
                   {journalErrors.notes && (
-                    <p className="mt-1 text-xs text-red-500">{journalErrors.notes.message}</p>
+                    <p className="mt-1 text-xs text-red-500">
+                      {journalErrors.notes.message}
+                    </p>
                   )}
                   <div className="mt-3 flex justify-end">
                     <button
@@ -816,7 +818,10 @@ export default function DietitianClientsPage() {
       {/* ─── Add Client Modal ──────────────────────────────── */}
       {showAddModal && (
         <ModalOverlay onClose={() => setShowAddModal(false)} title="Add Client">
-          <form onSubmit={handleAddClientSubmit(handleAddClient)} className="space-y-4">
+          <form
+            onSubmit={handleAddClientSubmit(handleAddClient)}
+            className="space-y-4"
+          >
             <p className="text-sm text-foreground-secondary">
               Enter the client&apos;s email. If they have a Binectics account, a
               connection request will be sent for their approval. Otherwise,
@@ -833,7 +838,9 @@ export default function DietitianClientsPage() {
                 placeholder="client@example.com"
               />
               {addClientErrors.email && (
-                <p className="mt-1 text-xs text-red-500">{addClientErrors.email.message}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {addClientErrors.email.message}
+                </p>
               )}
             </label>
             <label className="block">

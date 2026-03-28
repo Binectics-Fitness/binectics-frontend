@@ -28,7 +28,9 @@ function getPlanName(sub: MembershipSubscription): string {
 export default function DietitianEarningsPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>(
+    [],
+  );
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -93,13 +95,27 @@ export default function DietitianEarningsPage() {
               <div className="rounded-2xl bg-white p-6 shadow-card">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                    <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="h-6 w-6 text-primary-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-foreground-secondary">Total Revenue</p>
-                    <p className="text-2xl font-bold text-foreground">{currency} {totalRevenue.toLocaleString()}</p>
+                    <p className="text-sm text-foreground-secondary">
+                      Total Revenue
+                    </p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {currency} {totalRevenue.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -107,13 +123,27 @@ export default function DietitianEarningsPage() {
               <div className="rounded-2xl bg-white p-6 shadow-card">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-purple-100">
-                    <svg className="h-6 w-6 text-accent-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    <svg
+                      className="h-6 w-6 text-accent-purple-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-foreground-secondary">Active Subscriptions</p>
-                    <p className="text-2xl font-bold text-foreground">{activeSubs.length}</p>
+                    <p className="text-sm text-foreground-secondary">
+                      Active Subscriptions
+                    </p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {activeSubs.length}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -121,20 +151,36 @@ export default function DietitianEarningsPage() {
               <div className="rounded-2xl bg-white p-6 shadow-card">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-yellow-100">
-                    <svg className="h-6 w-6 text-accent-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <svg
+                      className="h-6 w-6 text-accent-yellow-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-foreground-secondary">Active Revenue</p>
-                    <p className="text-2xl font-bold text-foreground">{currency} {activeRevenue.toLocaleString()}</p>
+                    <p className="text-sm text-foreground-secondary">
+                      Active Revenue
+                    </p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {currency} {activeRevenue.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="rounded-2xl bg-white p-6 shadow-card">
-              <h2 className="mb-4 text-lg font-bold text-foreground">Recent Subscriptions</h2>
+              <h2 className="mb-4 text-lg font-bold text-foreground">
+                Recent Subscriptions
+              </h2>
 
               {subscriptions.length === 0 ? (
                 <EmptyState
@@ -148,29 +194,46 @@ export default function DietitianEarningsPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-neutral-200 text-left">
-                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">Member</th>
-                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">Plan</th>
-                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">Amount</th>
-                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">Status</th>
-                        <th className="pb-3 font-semibold text-foreground-secondary">Date</th>
+                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">
+                          Member
+                        </th>
+                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">
+                          Plan
+                        </th>
+                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">
+                          Amount
+                        </th>
+                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">
+                          Status
+                        </th>
+                        <th className="pb-3 font-semibold text-foreground-secondary">
+                          Date
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-100">
                       {subscriptions.slice(0, 20).map((sub) => (
                         <tr key={sub._id}>
-                          <td className="py-3 pr-4 font-medium text-foreground">{getMemberName(sub)}</td>
-                          <td className="py-3 pr-4 text-foreground-secondary">{getPlanName(sub)}</td>
+                          <td className="py-3 pr-4 font-medium text-foreground">
+                            {getMemberName(sub)}
+                          </td>
+                          <td className="py-3 pr-4 text-foreground-secondary">
+                            {getPlanName(sub)}
+                          </td>
                           <td className="py-3 pr-4 font-medium text-foreground">
                             {sub.currency} {sub.amount_paid.toLocaleString()}
                           </td>
                           <td className="py-3 pr-4">
                             <span
                               className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                sub.status === MembershipSubscriptionStatus.ACTIVE
+                                sub.status ===
+                                MembershipSubscriptionStatus.ACTIVE
                                   ? "bg-primary-100 text-primary-700"
-                                  : sub.status === MembershipSubscriptionStatus.PENDING_PAYMENT
+                                  : sub.status ===
+                                      MembershipSubscriptionStatus.PENDING_PAYMENT
                                     ? "bg-accent-yellow-100 text-accent-yellow-700"
-                                    : sub.status === MembershipSubscriptionStatus.EXPIRED
+                                    : sub.status ===
+                                        MembershipSubscriptionStatus.EXPIRED
                                       ? "bg-neutral-100 text-neutral-600"
                                       : "bg-red-100 text-red-700"
                               }`}

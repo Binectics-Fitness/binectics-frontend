@@ -49,7 +49,8 @@ export default function DietitianNutritionPlansPage() {
 
     promise
       .then((res) => {
-        if (res.success && res.data) setClients(res.data.filter((c) => c.is_active));
+        if (res.success && res.data)
+          setClients(res.data.filter((c) => c.is_active));
       })
       .finally(() => setLoadingClients(false));
   }, [user, currentOrg, orgLoading]);

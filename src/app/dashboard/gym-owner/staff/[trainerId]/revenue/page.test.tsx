@@ -67,7 +67,9 @@ describe("Revenue Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(checkinsService.checkinsService.getOrgDashboardStats).mockResolvedValue({
+    vi.mocked(
+      checkinsService.checkinsService.getOrgDashboardStats,
+    ).mockResolvedValue({
       success: true,
       data: mockOrgStats,
       message: "Success",
@@ -112,7 +114,9 @@ describe("Revenue Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(checkinsService.checkinsService.getOrgDashboardStats).mockResolvedValue({
+    vi.mocked(
+      checkinsService.checkinsService.getOrgDashboardStats,
+    ).mockResolvedValue({
       success: true,
       data: mockOrgStats,
       message: "Success",
@@ -156,7 +160,9 @@ describe("Revenue Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(checkinsService.checkinsService.getOrgDashboardStats).mockResolvedValue({
+    vi.mocked(
+      checkinsService.checkinsService.getOrgDashboardStats,
+    ).mockResolvedValue({
       success: true,
       data: mockOrgStats,
       message: "Success",
@@ -178,7 +184,9 @@ describe("Revenue Subpage", () => {
       message: "Failed to load member",
     });
 
-    vi.mocked(checkinsService.checkinsService.getOrgDashboardStats).mockResolvedValue({
+    vi.mocked(
+      checkinsService.checkinsService.getOrgDashboardStats,
+    ).mockResolvedValue({
       success: false,
       message: "Failed to load stats",
     });
@@ -220,7 +228,9 @@ describe("Revenue Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(checkinsService.checkinsService.getOrgDashboardStats).mockResolvedValue({
+    vi.mocked(
+      checkinsService.checkinsService.getOrgDashboardStats,
+    ).mockResolvedValue({
       success: true,
       data: mockOrgStats,
       message: "Success",
@@ -230,7 +240,7 @@ describe("Revenue Subpage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/organization-level earnings/i)
+        screen.getByText(/organization-level earnings/i),
       ).toBeInTheDocument();
     });
   });

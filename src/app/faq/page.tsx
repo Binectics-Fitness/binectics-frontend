@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Frequently asked questions about Binectics — subscriptions, payments, consultations, QR check-ins, and more.",
+  description:
+    "Frequently asked questions about Binectics — subscriptions, payments, consultations, QR check-ins, and more.",
 };
 
 export default function FAQPage() {

@@ -62,6 +62,4 @@ export const marketplaceReviewSchema = z.object({
   reviewComment: z.string().optional(),
 });
 
-export type MarketplaceReviewFormData = z.infer<
-  typeof marketplaceReviewSchema
->;
+export type MarketplaceReviewFormData = z.infer<typeof marketplaceReviewSchema>;

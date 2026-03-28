@@ -820,7 +820,10 @@ export default function OrgDetailPage() {
 
             {/* ── Send Invite form ── */}
             {addMode === "invite" && (
-              <form onSubmit={handleInviteSubmit(handleInvite)} className="p-6 space-y-4">
+              <form
+                onSubmit={handleInviteSubmit(handleInvite)}
+                className="p-6 space-y-4"
+              >
                 <p className="text-sm text-foreground-secondary">
                   An invitation link will be emailed to the address below. They
                   must accept to join.
@@ -841,7 +844,9 @@ export default function OrgDetailPage() {
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
                   {inviteFormErrors.email && (
-                    <p className="mt-1 text-sm text-red-500">{inviteFormErrors.email.message}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                      {inviteFormErrors.email.message}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -860,7 +865,9 @@ export default function OrgDetailPage() {
                     ))}
                   </select>
                   {inviteFormErrors.team_role_id && (
-                    <p className="mt-1 text-sm text-red-500">{inviteFormErrors.team_role_id.message}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                      {inviteFormErrors.team_role_id.message}
+                    </p>
                   )}
                 </div>
                 <div className="flex gap-3 pt-2">
@@ -884,7 +891,10 @@ export default function OrgDetailPage() {
 
             {/* ── Add Directly form ── */}
             {addMode === "direct" && (
-              <form onSubmit={handleDirectSubmit(handleAddDirect)} className="p-6 space-y-4">
+              <form
+                onSubmit={handleDirectSubmit(handleAddDirect)}
+                className="p-6 space-y-4"
+              >
                 <p className="text-sm text-foreground-secondary">
                   A new account will be created and the member can log in
                   immediately with the password you set.
@@ -906,7 +916,9 @@ export default function OrgDetailPage() {
                       className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                     />
                     {directFormErrors.first_name && (
-                      <p className="mt-1 text-sm text-red-500">{directFormErrors.first_name.message}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {directFormErrors.first_name.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -920,7 +932,9 @@ export default function OrgDetailPage() {
                       className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                     />
                     {directFormErrors.last_name && (
-                      <p className="mt-1 text-sm text-red-500">{directFormErrors.last_name.message}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {directFormErrors.last_name.message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -935,7 +949,9 @@ export default function OrgDetailPage() {
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
                   {directFormErrors.email && (
-                    <p className="mt-1 text-sm text-red-500">{directFormErrors.email.message}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                      {directFormErrors.email.message}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -949,7 +965,9 @@ export default function OrgDetailPage() {
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
                   {directFormErrors.password && (
-                    <p className="mt-1 text-sm text-red-500">{directFormErrors.password.message}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                      {directFormErrors.password.message}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -968,7 +986,9 @@ export default function OrgDetailPage() {
                     ))}
                   </select>
                   {directFormErrors.team_role_id && (
-                    <p className="mt-1 text-sm text-red-500">{directFormErrors.team_role_id.message}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                      {directFormErrors.team_role_id.message}
+                    </p>
                   )}
                 </div>
                 <div className="flex gap-3 pt-2">
@@ -1022,7 +1042,10 @@ export default function OrgDetailPage() {
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleRoleSubmit(handleCreateRole)} className="p-6 space-y-4">
+            <form
+              onSubmit={handleRoleSubmit(handleCreateRole)}
+              className="p-6 space-y-4"
+            >
               {roleError && (
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
                   {roleError}
@@ -1040,7 +1063,9 @@ export default function OrgDetailPage() {
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
                   {roleFormErrors.name && (
-                    <p className="mt-1 text-sm text-red-500">{roleFormErrors.name.message}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                      {roleFormErrors.name.message}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1051,14 +1076,18 @@ export default function OrgDetailPage() {
                     type="text"
                     {...registerRole("code", {
                       onChange: (e) => {
-                        e.target.value = e.target.value.toLowerCase().replace(/\s+/g, "_");
+                        e.target.value = e.target.value
+                          .toLowerCase()
+                          .replace(/\s+/g, "_");
                       },
                     })}
                     placeholder="e.g. front_desk"
                     className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-mono text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
                   />
                   {roleFormErrors.code && (
-                    <p className="mt-1 text-sm text-red-500">{roleFormErrors.code.message}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                      {roleFormErrors.code.message}
+                    </p>
                   )}
                 </div>
               </div>

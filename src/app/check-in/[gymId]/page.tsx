@@ -141,7 +141,9 @@ export default function CheckInPage() {
               />
             </svg>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-white mb-2">{gymName}</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-white mb-2">
+            {gymName}
+          </h1>
           {gymAddress && <p className="text-white/80 text-sm">{gymAddress}</p>}
         </div>
 

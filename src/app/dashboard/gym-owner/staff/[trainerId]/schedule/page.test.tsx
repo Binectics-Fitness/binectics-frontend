@@ -78,13 +78,17 @@ describe("Schedule Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyAvailability).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyAvailability,
+    ).mockResolvedValue({
       success: true,
       data: mockRules,
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyExceptions).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyExceptions,
+    ).mockResolvedValue({
       success: true,
       data: [],
       message: "Success",
@@ -146,13 +150,17 @@ describe("Schedule Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyAvailability).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyAvailability,
+    ).mockResolvedValue({
       success: true,
       data: mockRules,
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyExceptions).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyExceptions,
+    ).mockResolvedValue({
       success: true,
       data: [],
       message: "Success",
@@ -213,13 +221,17 @@ describe("Schedule Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyAvailability).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyAvailability,
+    ).mockResolvedValue({
       success: true,
       data: mockRules,
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyExceptions).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyExceptions,
+    ).mockResolvedValue({
       success: true,
       data: mockExceptions,
       message: "Success",
@@ -280,13 +292,17 @@ describe("Schedule Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyAvailability).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyAvailability,
+    ).mockResolvedValue({
       success: true,
       data: mockRules,
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyExceptions).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyExceptions,
+    ).mockResolvedValue({
       success: true,
       data: mockExceptions,
       message: "Success",
@@ -324,13 +340,17 @@ describe("Schedule Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyAvailability).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyAvailability,
+    ).mockResolvedValue({
       success: true,
       data: [],
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyExceptions).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyExceptions,
+    ).mockResolvedValue({
       success: true,
       data: [],
       message: "Success",
@@ -342,7 +362,10 @@ describe("Schedule Subpage", () => {
       const link = screen.getByRole("link", {
         name: /manage consultation availability/i,
       });
-      expect(link).toHaveAttribute("href", "/dashboard/gym-owner/consultations");
+      expect(link).toHaveAttribute(
+        "href",
+        "/dashboard/gym-owner/consultations",
+      );
     });
   });
 
@@ -352,12 +375,16 @@ describe("Schedule Subpage", () => {
       message: "Failed to load member",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyAvailability).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyAvailability,
+    ).mockResolvedValue({
       success: false,
       message: "Failed to load rules",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyExceptions).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyExceptions,
+    ).mockResolvedValue({
       success: false,
       message: "Failed to load exceptions",
     });
@@ -391,13 +418,17 @@ describe("Schedule Subpage", () => {
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyAvailability).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyAvailability,
+    ).mockResolvedValue({
       success: true,
       data: [],
       message: "Success",
     });
 
-    vi.mocked(consultationsService.consultationsService.getMyExceptions).mockResolvedValue({
+    vi.mocked(
+      consultationsService.consultationsService.getMyExceptions,
+    ).mockResolvedValue({
       success: true,
       data: [],
       message: "Success",

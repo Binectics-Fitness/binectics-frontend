@@ -745,7 +745,10 @@ export default function OrgMarketplaceListingPage() {
               Set up your public profile so potential members can find and
               connect with your gym.
             </p>
-            <form onSubmit={rhfHandleSubmit(handleCreate)} className="space-y-5">
+            <form
+              onSubmit={rhfHandleSubmit(handleCreate)}
+              className="space-y-5"
+            >
               {formError && (
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3">
                   <p className="text-sm text-red-800">{formError}</p>
@@ -1141,7 +1144,10 @@ export default function OrgMarketplaceListingPage() {
             <h2 className="text-xl font-bold text-foreground mb-6">
               Edit Listing
             </h2>
-            <form onSubmit={rhfHandleSubmit(handleUpdate)} className="space-y-5">
+            <form
+              onSubmit={rhfHandleSubmit(handleUpdate)}
+              className="space-y-5"
+            >
               {formError && (
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3">
                   <p className="text-sm text-red-800">{formError}</p>
@@ -1241,7 +1247,9 @@ function FormFields({
           className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
           placeholder="e.g. Modern Fitness Center in Downtown London"
         />
-        {errors.headline && <p className="text-xs text-red-600 mt-1">{errors.headline.message}</p>}
+        {errors.headline && (
+          <p className="text-xs text-red-600 mt-1">{errors.headline.message}</p>
+        )}
       </div>
 
       <div>
@@ -1255,7 +1263,9 @@ function FormFields({
           className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none resize-none"
           placeholder="Describe your gym, what makes it unique, facilities offered..."
         />
-        {errors.bio && <p className="text-xs text-red-600 mt-1">{errors.bio.message}</p>}
+        {errors.bio && (
+          <p className="text-xs text-red-600 mt-1">{errors.bio.message}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
