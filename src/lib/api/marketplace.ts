@@ -600,10 +600,16 @@ export const marketplaceService = {
   async subscribeToListingPlan(
     listingId: string,
     planId: string,
+    paymentReference?: string,
+    amountPaid?: number,
   ): Promise<ApiResponse<MembershipSubscription>> {
     return await apiClient.post<MembershipSubscription>(
       `/marketplace/listings/${listingId}/subscribe`,
-      { plan_id: planId },
+      {
+        plan_id: planId,
+        ...(paymentReference && { payment_reference: paymentReference }),
+        ...(amountPaid !== undefined && { amount_paid: amountPaid }),
+      },
     );
   },
 

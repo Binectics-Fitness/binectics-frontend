@@ -96,7 +96,7 @@ export default function DietitianPlansPage() {
           </div>
           {orgId && (
             <Link
-              href="/dashboard/gym-owner/plans/create"
+              href="/dashboard/dietitian/plans/create"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-purple-500 px-5 text-sm font-semibold text-white hover:bg-accent-purple-600"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

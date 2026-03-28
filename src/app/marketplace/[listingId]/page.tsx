@@ -8,11 +8,13 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
   MarketplaceListing,
+  MarketplaceMembershipPlan,
   MarketplaceReview,
   MarketplaceAccountType,
   MarketplaceRequestType,
   MarketplaceVerificationBadge,
 } from "@/lib/types";
+import { formatPrice } from "@/lib/api/payment";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -137,6 +139,7 @@ export default function ListingDetailPage() {
   const listingId = params.listingId as string;
 
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
+  const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
   const [reviews, setReviews] = useState<MarketplaceReview[]>([]);
   const [reviewTotal, setReviewTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -187,9 +190,10 @@ export default function ListingDetailPage() {
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
-      const [listingRes, reviewsRes] = await Promise.all([
+      const [listingRes, reviewsRes, plansRes] = await Promise.all([
         marketplaceService.getListingById(listingId),
         marketplaceService.getListingReviews(listingId),
+        marketplaceService.getPublicListingPlans(listingId),
       ]);
 
       if (listingRes.success && listingRes.data) {
@@ -201,6 +205,10 @@ export default function ListingDetailPage() {
       if (reviewsRes.success && reviewsRes.data) {
         setReviews(reviewsRes.data.reviews);
         setReviewTotal(reviewsRes.data.total);
+      }
+
+      if (plansRes.success && plansRes.data) {
+        setPlans(plansRes.data.filter((p) => p.is_active && p.is_public));
       }
 
       setIsLoading(false);
@@ -501,6 +509,80 @@ export default function ListingDetailPage() {
               </p>
             )}
           </div>
+
+          {/* Membership Plans */}
+          {plans.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-lg font-bold text-foreground mb-3">
+                Membership Plans
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {plans.map((plan) => (
+                  <div
+                    key={plan._id}
+                    className="rounded-xl border-2 border-neutral-200 p-5 hover:border-primary-300 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-base font-bold text-foreground">
+                        {plan.name}
+                      </h3>
+                      <span className="shrink-0 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
+                        {plan.plan_type === "subscription"
+                          ? "Subscription"
+                          : "One-time"}
+                      </span>
+                    </div>
+                    {plan.description && (
+                      <p className="text-sm text-foreground-secondary mb-3">
+                        {plan.description}
+                      </p>
+                    )}
+                    <div className="flex items-baseline gap-1 mb-3">
+                      <span className="text-2xl font-black text-foreground">
+                        {formatPrice(plan.price, plan.currency)}
+                      </span>
+                      {plan.plan_type === "subscription" && (
+                        <span className="text-sm text-foreground-secondary">
+                          / {plan.duration_days} days
+                        </span>
+                      )}
+                      {plan.plan_type === "one_time" &&
+                        plan.duration_days > 0 && (
+                          <span className="text-sm text-foreground-secondary">
+                            for {plan.duration_days} days
+                          </span>
+                        )}
+                    </div>
+                    {plan.features.length > 0 && (
+                      <ul className="mb-4 space-y-1">
+                        {plan.features.map((f, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 text-sm text-foreground-secondary"
+                          >
+                            <span className="mt-0.5 text-primary-500">✓</span>
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <button
+                      onClick={() =>
+                        router.push(
+                          `/checkout?listing=${listingId}&plan=${plan._id}`,
+                        )
+                      }
+                      className="w-full rounded-lg bg-primary-500 py-2.5 text-sm font-semibold text-white hover:bg-primary-600 transition-colors"
+                    >
+                      {plan.price === 0
+                        ? "Get Free Plan"
+                        : `Subscribe — ${formatPrice(plan.price, plan.currency)}`}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* CTA */}
           {listing.accepting_clients ? (

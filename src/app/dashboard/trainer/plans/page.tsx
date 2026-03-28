@@ -96,8 +96,8 @@ export default function TrainerPlansPage() {
           </div>
           {orgId && (
             <Link
-              href="/dashboard/gym-owner/plans/create"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-blue-500 px-5 text-sm font-semibold text-white hover:bg-accent-blue-600"
+              href="/dashboard/trainer/plans/create"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-yellow-500 px-5 text-sm font-semibold text-foreground hover:bg-accent-yellow-600"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description:
+    "Fitness tips, industry insights, and updates from the Binectics team. Stay informed about workouts, nutrition, and the global fitness community.",
+};
 
 export default function BlogPage() {
   const posts = [

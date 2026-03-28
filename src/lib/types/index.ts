@@ -491,3 +491,9 @@ export interface MembershipSubscription {
   created_at: string;
   updated_at: string;
 }
+
+export enum PaymentGateway {
+  STRIPE = "stripe",
+  FLUTTERWAVE = "flutterwave",
+  PAYSTACK = "paystack",
+}

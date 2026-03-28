@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: "Careers",
+  description:
+    "Join the Binectics team and help build the world's leading fitness ecosystem. View open positions in engineering, design, marketing, and more.",
+};
 
 export default function CareersPage() {
   const openPositions = [

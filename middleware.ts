@@ -2,10 +2,18 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Routes that require authentication
-const protectedRoutes = ["/dashboard", "/admin/"];
+const protectedRoutes = [
+  "/dashboard",
+  "/admin/",
+  "/forms",
+  "/check-in",
+  "/checkout",
+  "/teams",
+  "/verification",
+];
 
 // Routes that should redirect to dashboard if already authenticated
-const authRoutes = ["/login", "/register", "/admin"];
+const authRoutes = ["/login", "/register"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
