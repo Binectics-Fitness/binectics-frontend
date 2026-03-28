@@ -54,7 +54,7 @@ export default function FormAnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         <Breadcrumb
           items={[
@@ -66,9 +66,9 @@ export default function FormAnalyticsPage() {
         />
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-display text-3xl font-black text-foreground mb-2">
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-2">
               Analytics
             </h1>
             <p className="text-foreground-secondary">{form.title}</p>
@@ -135,7 +135,7 @@ export default function FormAnalyticsPage() {
               <h2 className="font-display text-xl font-bold text-foreground mb-6">
                 Submission Trend (Last 30 Days)
               </h2>
-              <div className="h-64 flex items-end justify-start gap-3 px-4 pb-8">
+              <div className="h-48 sm:h-64 flex items-end justify-start gap-2 sm:gap-3 px-2 sm:px-4 pb-4 sm:pb-8 overflow-x-auto">
                 {analytics.submission_trend.map((point) => {
                   const maxCount = Math.max(
                     ...analytics.submission_trend.map((p) => p.count),
@@ -145,8 +145,7 @@ export default function FormAnalyticsPage() {
                   return (
                     <div
                       key={point.date}
-                      className="flex flex-col items-center justify-end"
-                      style={{ width: "40px" }}
+                      className="flex flex-col items-center justify-end min-w-[28px] sm:min-w-[40px]"
                     >
                       <div
                         className="w-full bg-primary-500 rounded-t-md hover:bg-primary-600 transition-all duration-200 relative group cursor-pointer shadow-sm"

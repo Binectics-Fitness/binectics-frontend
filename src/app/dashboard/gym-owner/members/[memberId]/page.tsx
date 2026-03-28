@@ -98,7 +98,7 @@ export default function MemberDetailPage() {
               </svg>
               Back to Members
             </button>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
               <div className="w-20 h-20 bg-accent-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-black">
                 {member.avatar}
               </div>
@@ -120,7 +120,7 @@ export default function MemberDetailPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-card p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Total Visits
@@ -153,9 +153,9 @@ export default function MemberDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Member Info */}
-            <div className="col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-6">
               {/* Contact Information */}
               <div className="bg-white rounded-xl shadow-card p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">

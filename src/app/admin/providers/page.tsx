@@ -214,14 +214,144 @@ export default function AdminProvidersPage() {
 
           <div className="bg-white shadow-card overflow-hidden">
             {isLoading ? (
-              <div className="p-8 text-center text-foreground/60">
+              <div className="p-6 sm:p-8 text-center text-foreground/60">
                 Loading gym listings...
               </div>
             ) : filteredGyms.length === 0 ? (
-              <div className="p-8 text-center text-foreground/60">
+              <div className="p-6 sm:p-8 text-center text-foreground/60">
                 No gyms found.
               </div>
             ) : (
+              <>
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-200">
+                  {filteredGyms.map((listing) => {
+                    const organization =
+                      typeof listing.organization_id === "object"
+                        ? listing.organization_id
+                        : null;
+                    const owner =
+                      typeof listing.professional_id === "object"
+                        ? listing.professional_id
+                        : null;
+
+                    return (
+                      <div key={listing._id} className="p-4 space-y-3">
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {organization?.name || listing.headline}
+                          </p>
+                          <p className="text-sm text-foreground/60">
+                            {owner
+                              ? `${owner.first_name} ${owner.last_name}`
+                              : "Owner unavailable"}
+                            {listing.city ? ` • ${listing.city}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-foreground-secondary">
+                            {listing.supporting_documents_count ?? 0} docs
+                          </span>
+                          <span
+                            className={`px-3 py-1 text-xs font-semibold ${
+                              listing.is_suspended
+                                ? "bg-red-100 text-red-700"
+                                : "bg-primary-100 text-primary-700"
+                            }`}
+                          >
+                            {listing.is_suspended ? "Suspended" : "Active"}
+                          </span>
+                          <span
+                            className={`px-3 py-1 text-xs font-semibold ${badgePillClasses(
+                              listing.verification_badge,
+                            )}`}
+                          >
+                            {badgeLabel(listing.verification_badge)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            disabled={isMutating}
+                            onClick={() =>
+                              setBadge(
+                                listing._id,
+                                MarketplaceVerificationBadge.VERIFIED,
+                              )
+                            }
+                            className="px-3 py-1 text-xs font-semibold bg-accent-blue-100 text-accent-blue-700 hover:bg-accent-blue-200 disabled:opacity-50"
+                          >
+                            Blue ✓
+                          </button>
+                          <button
+                            disabled={isMutating}
+                            onClick={() =>
+                              setBadge(
+                                listing._id,
+                                MarketplaceVerificationBadge.PREMIUM_VERIFIED,
+                              )
+                            }
+                            className="px-3 py-1 text-xs font-semibold bg-accent-yellow-100 text-accent-yellow-700 hover:bg-accent-yellow-200 disabled:opacity-50"
+                          >
+                            Gold ✓
+                          </button>
+                          <button
+                            disabled={isMutating}
+                            onClick={() =>
+                              setBadge(
+                                listing._id,
+                                MarketplaceVerificationBadge.FEATURED,
+                              )
+                            }
+                            className="px-3 py-1 text-xs font-semibold bg-primary-100 text-primary-700 hover:bg-primary-200 disabled:opacity-50"
+                          >
+                            ★ Featured
+                          </button>
+                          <button
+                            disabled={isMutating}
+                            onClick={() =>
+                              setBadge(
+                                listing._id,
+                                MarketplaceVerificationBadge.NONE,
+                              )
+                            }
+                            className="px-3 py-1 text-xs font-semibold bg-neutral-100 text-foreground-secondary hover:bg-neutral-200 disabled:opacity-50"
+                          >
+                            Revoke
+                          </button>
+                          <button
+                            disabled={isMutating}
+                            onClick={() =>
+                              void handleViewDocuments(listing._id)
+                            }
+                            className="px-3 py-1 text-xs font-semibold bg-neutral-100 text-foreground hover:bg-neutral-200 disabled:opacity-50"
+                          >
+                            Docs
+                          </button>
+                          {listing.is_suspended ? (
+                            <button
+                              disabled={isMutating}
+                              onClick={() => handleUnsuspend(listing._id)}
+                              className="px-3 py-1 text-xs font-semibold bg-primary-500 text-foreground hover:bg-primary-600 disabled:opacity-50"
+                            >
+                              Unsuspend
+                            </button>
+                          ) : (
+                            <button
+                              disabled={isMutating}
+                              onClick={() => handleSuspend(listing)}
+                              className="px-3 py-1 text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                            >
+                              Suspend
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -380,6 +510,8 @@ export default function AdminProvidersPage() {
                   })}
                 </tbody>
               </table>
+                </div>
+              </>
             )}
           </div>
 

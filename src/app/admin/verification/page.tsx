@@ -176,11 +176,11 @@ export default function AdminVerificationPage() {
           </div>
 
           {/* Filters */}
-          <div className="bg-white p-6 shadow-card mb-6">
-            <div className="flex gap-4">
+          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
+            <div className="flex flex-wrap gap-2 sm:gap-4">
               <button
                 onClick={() => setStatusFilter("pending")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "pending"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -196,7 +196,7 @@ export default function AdminVerificationPage() {
               </button>
               <button
                 onClick={() => setStatusFilter("approved")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "approved"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -206,7 +206,7 @@ export default function AdminVerificationPage() {
               </button>
               <button
                 onClick={() => setStatusFilter("rejected")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "rejected"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -220,7 +220,7 @@ export default function AdminVerificationPage() {
           {/* Verification List */}
           <div className="space-y-4">
             {verifications.map((verification) => (
-              <div key={verification.id} className="bg-white p-6 shadow-card">
+              <div key={verification.id} className="bg-white p-4 sm:p-6 shadow-card">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -285,12 +285,12 @@ export default function AdminVerificationPage() {
 
                 {/* Actions */}
                 {verification.status === VerificationRequestStatus.PENDING && (
-                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                     <button
                       onClick={() =>
                         handleApprove(verification.id, verification.applicant)
                       }
-                      className="flex-1 px-6 py-3 bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors"
+                      className="flex-1 px-4 py-2 sm:px-6 sm:py-3 bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors text-sm sm:text-base"
                     >
                       ✓ Approve Verification
                     </button>
@@ -298,11 +298,11 @@ export default function AdminVerificationPage() {
                       onClick={() =>
                         handleReject(verification.id, verification.applicant)
                       }
-                      className="flex-1 px-6 py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
+                      className="flex-1 px-4 py-2 sm:px-6 sm:py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors text-sm sm:text-base"
                     >
                       ✗ Reject Application
                     </button>
-                    <button className="px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors">
+                    <button className="px-4 py-2 sm:px-6 sm:py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base">
                       View Documents
                     </button>
                   </div>

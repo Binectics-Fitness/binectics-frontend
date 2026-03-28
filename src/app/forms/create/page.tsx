@@ -67,7 +67,7 @@ export default function CreateFormPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
       <div className="max-w-3xl mx-auto">
         <Breadcrumb
           items={[
@@ -100,7 +100,7 @@ export default function CreateFormPage() {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-xl shadow-card p-8">
+        <div className="bg-white rounded-xl shadow-card p-4 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Error Message */}
             {error && (

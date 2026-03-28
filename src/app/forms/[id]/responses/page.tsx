@@ -77,7 +77,7 @@ export default function FormResponsesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         <Breadcrumb
           items={[
@@ -89,9 +89,9 @@ export default function FormResponsesPage() {
         />
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-display text-3xl font-black text-foreground mb-2">
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-2">
               Form Responses
             </h1>
             <p className="text-foreground-secondary">{form.title}</p>
@@ -129,8 +129,36 @@ export default function FormResponsesPage() {
           </div>
         ) : (
           <>
-            {/* Responses Table */}
-            <div className="bg-white rounded-xl shadow-card overflow-hidden">
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {responses.map((response, index) => (
+                <div key={response._id} className="bg-white rounded-xl shadow-card p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-foreground">#{index + 1}</span>
+                    <button
+                      onClick={() => setSelectedResponse(response)}
+                      className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                  <div className="text-sm font-medium text-foreground mb-1">
+                    {response.submitted_by || "Anonymous"}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-foreground-secondary">
+                    <span>{formatResponseDate(response.submitted_at)}</span>
+                    <span>
+                      {response.completion_time_seconds
+                        ? formatDuration(response.completion_time_seconds)
+                        : "-"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block bg-white rounded-xl shadow-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-neutral-50 border-b border-neutral-200">

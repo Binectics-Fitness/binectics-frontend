@@ -130,7 +130,7 @@ export default function CreateSuperAdminPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-8">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-4 sm:p-8">
         <h1 className="text-3xl font-black text-foreground mb-2">
           Create Super Admin Account
         </h1>
@@ -197,7 +197,7 @@ export default function CreateSuperAdminPage() {
           <h2 className="text-lg font-bold text-foreground mb-4">
             Edit Details (Optional)
           </h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="text"
               placeholder="First Name"
@@ -254,7 +254,7 @@ export default function CreateSuperAdminPage() {
             {isLoading ? "Creating Accounts..." : "Create All 4 Accounts"}
           </button>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button
               onClick={() => createAccount(AccountType.GYM_OWNER)}
               disabled={isLoading}

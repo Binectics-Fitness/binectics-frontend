@@ -174,13 +174,13 @@ export default function AdminUserDetailPage() {
               <div className="flex gap-3">
                 <button
                   onClick={handleSendEmail}
-                  className="px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors"
+                  className="px-4 py-2 sm:px-6 sm:py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base"
                 >
                   Send Email
                 </button>
                 <button
                   onClick={handleSuspendUser}
-                  className="px-6 py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
+                  className="px-4 py-2 sm:px-6 sm:py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors text-sm sm:text-base"
                 >
                   Suspend User
                 </button>
@@ -197,7 +197,7 @@ export default function AdminUserDetailPage() {
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   User Information
                 </h2>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <p className="text-sm font-medium text-foreground/60 mb-1">
                       Full Name
@@ -289,7 +289,7 @@ export default function AdminUserDetailPage() {
                           {sub.status}
                         </span>
                       </div>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-foreground/60">Amount</p>
                           <p className="font-semibold text-foreground">

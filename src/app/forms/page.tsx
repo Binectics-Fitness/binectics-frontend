@@ -75,7 +75,7 @@ function FormsListContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         <Breadcrumb
           items={[
@@ -190,7 +190,7 @@ function FormsListContent() {
                   </div>
 
                   {/* Form Stats */}
-                  <div className="grid grid-cols-2 gap-3 mb-4 py-3 border-t border-b border-neutral-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 py-3 border-t border-b border-neutral-100">
                     <div>
                       <p className="text-xs text-foreground-tertiary">
                         Responses
@@ -210,7 +210,7 @@ function FormsListContent() {
                   </div>
 
                   {/* Actions */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Link
                       href={`/forms/${form._id}/edit`}
                       className="text-center px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-foreground text-sm font-medium rounded transition-colors"
@@ -225,7 +225,7 @@ function FormsListContent() {
                     </Link>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                     <Link
                       href={`/forms/${form._id}/analytics`}
                       className="text-center px-3 py-2 bg-accent-blue-100 hover:bg-accent-blue-200 text-accent-blue-700 text-sm font-medium rounded transition-colors"

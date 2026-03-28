@@ -471,7 +471,7 @@ export default function FormBuilderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
       <div className="max-w-5xl mx-auto">
         <Breadcrumb
           items={[
@@ -482,9 +482,9 @@ export default function FormBuilderPage() {
         />
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-display text-3xl font-black text-foreground mb-2">
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-2">
               {form.title}
             </h1>
             <p className="text-foreground-secondary">

@@ -162,7 +162,7 @@ export default function AdminRevenuePage() {
 
         <div className="p-4 sm:p-6 md:p-8">
           {/* Revenue Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div className="bg-white p-6 shadow-card">
               <p className="text-sm font-medium text-foreground/60">
                 Total Revenue (MTD)
@@ -204,11 +204,11 @@ export default function AdminRevenuePage() {
           </div>
 
           {/* Time Filter */}
-          <div className="bg-white p-6 shadow-card mb-6">
-            <div className="flex gap-3">
+          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 onClick={() => setTimeFilter("today")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   timeFilter === "today"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -218,7 +218,7 @@ export default function AdminRevenuePage() {
               </button>
               <button
                 onClick={() => setTimeFilter("week")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   timeFilter === "week"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -228,7 +228,7 @@ export default function AdminRevenuePage() {
               </button>
               <button
                 onClick={() => setTimeFilter("month")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   timeFilter === "month"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -238,7 +238,7 @@ export default function AdminRevenuePage() {
               </button>
               <button
                 onClick={() => setTimeFilter("year")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   timeFilter === "year"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -253,12 +253,43 @@ export default function AdminRevenuePage() {
             {/* Recent Transactions */}
             <div className="lg:col-span-2">
               <div className="bg-white shadow-card overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                   <h2 className="text-xl font-bold text-foreground">
                     Recent Transactions
                   </h2>
                 </div>
-                <div className="overflow-x-auto">
+                {/* Mobile card view */}
+                <div className="md:hidden divide-y divide-gray-200">
+                  {transactions.map((txn) => (
+                    <div key={txn.id} className="p-4 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{txn.user}</p>
+                          <p className="text-xs text-foreground/60">{txn.provider} - {txn.plan}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 text-xs font-semibold ${getStatusBadgeColor(txn.status)}`}>
+                          {txn.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <p className="text-foreground/60 text-xs">Amount</p>
+                          <p className="font-semibold text-foreground">{txn.amount}</p>
+                        </div>
+                        <div>
+                          <p className="text-foreground/60 text-xs">Fee</p>
+                          <p className="font-semibold text-primary-600">{txn.platformFee}</p>
+                        </div>
+                        <div>
+                          <p className="text-foreground/60 text-xs">Date</p>
+                          <p className="font-semibold text-foreground">{txn.date}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>

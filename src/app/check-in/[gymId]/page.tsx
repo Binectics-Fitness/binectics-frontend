@@ -85,7 +85,7 @@ export default function CheckInPage() {
   if (checkInSuccess) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-4 sm:p-8 text-center">
           <div className="w-20 h-20 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg
               className="w-10 h-10 text-white"
@@ -141,12 +141,12 @@ export default function CheckInPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">{gymName}</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-white mb-2">{gymName}</h1>
           {gymAddress && <p className="text-white/80 text-sm">{gymAddress}</p>}
         </div>
 
         {/* Body */}
-        <div className="p-8 text-center">
+        <div className="p-4 sm:p-8 text-center">
           {/* Member info */}
           {user && (
             <div className="mb-6">

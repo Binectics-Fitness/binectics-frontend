@@ -263,7 +263,7 @@ export default function FormSubmitPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-card p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-xl shadow-card p-6 sm:p-8 max-w-md w-full text-center">
           <div className="text-red-500 text-5xl mb-4">⚠️</div>
           <h2 className="font-display text-2xl font-bold text-foreground mb-2">
             Form Not Available
@@ -285,7 +285,7 @@ export default function FormSubmitPage() {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full overflow-hidden">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-8 text-white">
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-6 sm:p-8 text-white">
             <div className="text-center">
               <div className="text-5xl mb-4">🔒</div>
               <h1 className="font-display text-3xl font-black mb-2">
@@ -298,8 +298,7 @@ export default function FormSubmitPage() {
           </div>
 
           {/* Content Section */}
-          <div className="p-8">
-            {/* Form Preview */}
+          <div className="p-6 sm:p-8">
             <div className="bg-neutral-50 rounded-lg p-6 mb-6">
               <h2 className="font-display text-xl font-bold text-foreground mb-2">
                 {form.title}
@@ -434,7 +433,7 @@ export default function FormSubmitPage() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-card p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-xl shadow-card p-6 sm:p-8 max-w-md w-full text-center">
           <div className="text-green-500 text-5xl mb-4">✓</div>
           <h2 className="font-display text-2xl font-bold text-foreground mb-2">
             Form Submitted!
@@ -505,7 +504,7 @@ export default function FormSubmitPage() {
           )}
 
           {/* Form Header */}
-          <div className="bg-white rounded-xl shadow-card p-8 mb-6">
+          <div className="bg-white rounded-xl shadow-card p-6 sm:p-8 mb-6">
             <h1 className="font-display text-3xl font-black text-foreground mb-4">
               {form.title}
             </h1>

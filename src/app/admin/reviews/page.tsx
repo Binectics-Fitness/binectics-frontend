@@ -184,11 +184,11 @@ export default function AdminReviewsPage() {
           </div>
 
           {/* Filters */}
-          <div className="bg-white p-6 shadow-card mb-6">
-            <div className="flex gap-3">
+          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 onClick={() => setStatusFilter("all")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "all"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -198,7 +198,7 @@ export default function AdminReviewsPage() {
               </button>
               <button
                 onClick={() => setStatusFilter("flagged")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "flagged"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -208,7 +208,7 @@ export default function AdminReviewsPage() {
               </button>
               <button
                 onClick={() => setStatusFilter("published")}
-                className={`px-6 py-3 font-semibold ${
+                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "published"
                     ? "bg-red-500 text-foreground"
                     : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
@@ -224,7 +224,7 @@ export default function AdminReviewsPage() {
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className={`bg-white p-6 shadow-card ${review.flagged ? "border-2 border-red-500" : ""}`}
+                className={`bg-white p-4 sm:p-6 shadow-card ${review.flagged ? "border-2 border-red-500" : ""}`}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
@@ -283,8 +283,8 @@ export default function AdminReviewsPage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
-                  <button className="px-6 py-2 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                  <button className="px-4 py-2 sm:px-6 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base">
                     View Full Details
                   </button>
                   {review.flagged ? (
@@ -293,7 +293,7 @@ export default function AdminReviewsPage() {
                         onClick={() =>
                           handleApproveReview(review.id, review.provider)
                         }
-                        className="flex-1 px-6 py-2 bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors"
+                        className="flex-1 px-4 py-2 sm:px-6 bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors text-sm sm:text-base"
                       >
                         ✓ Approve Review
                       </button>
@@ -301,7 +301,7 @@ export default function AdminReviewsPage() {
                         onClick={() =>
                           handleRemoveReview(review.id, review.provider)
                         }
-                        className="flex-1 px-6 py-2 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
+                        className="flex-1 px-4 py-2 sm:px-6 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors text-sm sm:text-base"
                       >
                         ✗ Remove Review
                       </button>
@@ -322,7 +322,7 @@ export default function AdminReviewsPage() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <p className="text-sm text-foreground/60">
               Showing 1 to 6 of 2,847 reviews
             </p>
