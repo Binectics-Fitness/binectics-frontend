@@ -9,7 +9,6 @@ const protectedRoutes = [
   "/check-in",
   "/checkout",
   "/teams",
-  "/verification",
 ];
 
 // Routes that should redirect to dashboard if already authenticated
