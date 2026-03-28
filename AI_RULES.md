@@ -160,3 +160,12 @@ See `/Users/daniel/Documents/GitHub/binectics-api/AI_RULES.md` for backend conve
 
 All pages build successfully with these type changes (verified Feb 23, 2026).
 Component updates may be needed as API integration progresses.
+
+## No Frontend Workarounds for Backend Gaps
+
+**ABSOLUTE RULE: DO NOT WORK AROUND MISSING BACKEND DATA ON THE FRONTEND**
+
+- If the backend API does not return the data the frontend needs (e.g. missing field population, missing endpoint), fix it at the source in the backend
+- Do not add extra API calls, lookup maps, or local state hacks on the frontend to compensate for incomplete backend responses
+- If a Mongoose query should `.populate()` a ref field, add the populate call in the backend service — do not fetch related data separately on the frontend
+- If an endpoint is missing, create it in the backend — do not cobble together multiple calls client-side as a substitute

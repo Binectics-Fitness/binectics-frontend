@@ -308,7 +308,7 @@ export default function DietitianDashboard() {
           />
         </svg>
       ),
-      href: "/dashboard/dietitian/meal-plans/new",
+      href: "/dashboard/dietitian/meal-plans/create",
       color: "bg-primary-500",
     },
     {

@@ -1,11 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
-import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { progressService } from "@/lib/api/progress";
@@ -156,14 +154,12 @@ function MealRowEditor({
 
 function CreateDietPlanContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const preselectedProfileId = searchParams.get("profileId") || "";
 
   const { isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
 
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState(preselectedProfileId);
+  const [selectedProfileIds, setSelectedProfileIds] = useState<string[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -207,15 +203,12 @@ function CreateDietPlanContent() {
       if (res.success && res.data) {
         const active = res.data.filter((p) => p.is_active);
         setProfiles(active);
-        if (!selectedProfileId && active.length > 0) {
-          setSelectedProfileId(active[0]._id);
-        }
       }
     } catch {
       setError("Failed to load clients");
     }
     setLoadingProfiles(false);
-  }, [orgId, selectedProfileId]);
+  }, [orgId]);
 
   useEffect(() => {
     if (!isAuthorized || orgLoading) return;
@@ -244,8 +237,8 @@ function CreateDietPlanContent() {
   };
 
   const onSubmit = async (data: DietPlanFormData) => {
-    if (!selectedProfileId) {
-      setError("Please select a client");
+    if (selectedProfileIds.length === 0) {
+      setError("Please select at least one client");
       return;
     }
     setSubmitting(true);
@@ -253,75 +246,86 @@ function CreateDietPlanContent() {
 
     try {
       if (data.delivery_type === DietPlanDeliveryType.DOCUMENT) {
-        // Document-based plan — use FormData
         if (!selectedFile) {
           setError("Please select a document to upload");
           setSubmitting(false);
           return;
         }
-        const formData = new FormData();
-        formData.append("title", data.title.trim());
-        formData.append("delivery_type", DietPlanDeliveryType.DOCUMENT);
-        if (data.description) formData.append("description", data.description);
-        if (data.dietitian_notes)
-          formData.append("dietitian_notes", data.dietitian_notes);
-        formData.append("file", selectedFile);
+      }
 
-        const res = orgId
-          ? await progressService.createDietPlanWithDocumentInOrg(
-              orgId,
-              selectedProfileId,
-              formData,
-            )
-          : await progressService.createDietPlanWithDocument(
-              selectedProfileId,
-              formData,
-            );
+      const failedClients: string[] = [];
 
-        if (res.success && res.data) {
-          router.push(
-            `/dashboard/dietitian/meal-plans/${res.data._id}?profileId=${selectedProfileId}`,
-          );
-        } else {
-          setError(res.message || "Failed to create diet plan");
+      for (const profileId of selectedProfileIds) {
+        try {
+          if (data.delivery_type === DietPlanDeliveryType.DOCUMENT) {
+            const formData = new FormData();
+            formData.append("title", data.title.trim());
+            formData.append("delivery_type", DietPlanDeliveryType.DOCUMENT);
+            if (data.description) formData.append("description", data.description);
+            if (data.dietitian_notes)
+              formData.append("dietitian_notes", data.dietitian_notes);
+            formData.append("file", selectedFile!);
+
+            const res = orgId
+              ? await progressService.createDietPlanWithDocumentInOrg(
+                  orgId,
+                  profileId,
+                  formData,
+                )
+              : await progressService.createDietPlanWithDocument(
+                  profileId,
+                  formData,
+                );
+
+            if (!res.success) {
+              failedClients.push(profileId);
+            }
+          } else {
+            const meals: CreateDietMealRequest[] = (data.meals || [])
+              .filter((m) => m.title.trim() && m.meal_type)
+              .map((m, idx) => ({
+                meal_type: m.meal_type as MealSlot,
+                title: m.title.trim(),
+                description: m.description || undefined,
+                foods: undefined,
+                calories: m.calories || undefined,
+                notes: m.notes || undefined,
+                order: idx + 1,
+              }));
+
+            const payload = {
+              title: data.title.trim(),
+              description: data.description || undefined,
+              delivery_type: DietPlanDeliveryType.PLATFORM,
+              meals: meals.length > 0 ? meals : undefined,
+              dietitian_notes: data.dietitian_notes || undefined,
+            };
+
+            const res = orgId
+              ? await progressService.createDietPlanInOrg(
+                  orgId,
+                  profileId,
+                  payload,
+                )
+              : await progressService.createDietPlan(profileId, payload);
+
+            if (!res.success) {
+              failedClients.push(profileId);
+            }
+          }
+        } catch {
+          failedClients.push(profileId);
         }
+      }
+
+      if (failedClients.length === 0) {
+        router.push("/dashboard/dietitian/meal-plans");
+      } else if (failedClients.length < selectedProfileIds.length) {
+        setError(
+          `Created for ${selectedProfileIds.length - failedClients.length} client(s), but failed for ${failedClients.length}. Check the meal plans list.`,
+        );
       } else {
-        // Platform-based plan — JSON
-        const meals: CreateDietMealRequest[] = (data.meals || [])
-          .filter((m) => m.title.trim() && m.meal_type)
-          .map((m, idx) => ({
-            meal_type: m.meal_type as MealSlot,
-            title: m.title.trim(),
-            description: m.description || undefined,
-            foods: undefined,
-            calories: m.calories || undefined,
-            notes: m.notes || undefined,
-            order: idx + 1,
-          }));
-
-        const payload = {
-          title: data.title.trim(),
-          description: data.description || undefined,
-          delivery_type: DietPlanDeliveryType.PLATFORM,
-          meals: meals.length > 0 ? meals : undefined,
-          dietitian_notes: data.dietitian_notes || undefined,
-        };
-
-        const res = orgId
-          ? await progressService.createDietPlanInOrg(
-              orgId,
-              selectedProfileId,
-              payload,
-            )
-          : await progressService.createDietPlan(selectedProfileId, payload);
-
-        if (res.success && res.data) {
-          router.push(
-            `/dashboard/dietitian/meal-plans/${res.data._id}?profileId=${selectedProfileId}`,
-          );
-        } else {
-          setError(res.message || "Failed to create diet plan");
-        }
+        setError("Failed to create diet plan for all selected clients");
       }
     } catch {
       setError("Failed to create diet plan");
@@ -362,7 +366,7 @@ function CreateDietPlanContent() {
             Create Meal Plan
           </h1>
           <p className="mt-1 text-sm text-foreground-secondary">
-            Build a structured meal plan or upload a document for your client
+            Build a structured meal plan or upload a document for your clients
           </p>
         </div>
 
@@ -372,37 +376,7 @@ function CreateDietPlanContent() {
           </div>
         )}
 
-        {loadingProfiles ? (
-          <DashboardLoading />
-        ) : profiles.length === 0 ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card">
-            <EmptyState
-              title="No Clients"
-              description="Add a client first before creating a meal plan."
-              actionLabel="Go to Clients"
-              actionHref="/dashboard/dietitian/clients"
-            />
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Client Selection */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
-              <h2 className="text-lg font-bold text-foreground mb-4">
-                Client
-              </h2>
-              <select
-                value={selectedProfileId}
-                onChange={(e) => setSelectedProfileId(e.target.value)}
-                className="w-full max-w-xs rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
-              >
-                {profiles.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {clientName(p)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Delivery Type */}
             <div className="rounded-2xl bg-white p-6 shadow-card">
               <h2 className="text-lg font-bold text-foreground mb-4">
@@ -606,6 +580,84 @@ function CreateDietPlanContent() {
               </div>
             )}
 
+            {/* Assign to Client(s) */}
+            <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">
+                    Assign to Client(s)
+                  </h2>
+                  <p className="text-xs text-foreground-secondary mt-0.5">
+                    Select one or more clients to receive this meal plan
+                  </p>
+                </div>
+                {selectedProfileIds.length > 0 && (
+                  <span className="text-sm font-medium text-accent-purple-600">
+                    {selectedProfileIds.length} selected
+                  </span>
+                )}
+              </div>
+
+              {loadingProfiles ? (
+                <DashboardLoading />
+              ) : profiles.length === 0 ? (
+                <p className="text-sm text-foreground-secondary">
+                  No clients found.{" "}
+                  <a
+                    href="/dashboard/dietitian/clients"
+                    className="text-accent-purple-600 hover:underline"
+                  >
+                    Add a client
+                  </a>{" "}
+                  first.
+                </p>
+              ) : (
+                <>
+                  <div className="mb-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedProfileIds(
+                          selectedProfileIds.length === profiles.length
+                            ? []
+                            : profiles.map((p) => p._id),
+                        )
+                      }
+                      className="text-sm font-medium text-accent-purple-600 hover:text-accent-purple-700"
+                    >
+                      {selectedProfileIds.length === profiles.length
+                        ? "Deselect All"
+                        : "Select All"}
+                    </button>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto rounded-lg border border-neutral-200 divide-y divide-neutral-100">
+                    {profiles.map((p) => (
+                      <label
+                        key={p._id}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedProfileIds.includes(p._id)}
+                          onChange={(e) =>
+                            setSelectedProfileIds(
+                              e.target.checked
+                                ? [...selectedProfileIds, p._id]
+                                : selectedProfileIds.filter((id) => id !== p._id),
+                            )
+                          }
+                          className="h-4 w-4 rounded border-neutral-300 text-accent-purple-500 focus:ring-accent-purple-500"
+                        />
+                        <span className="text-sm text-foreground">
+                          {clientName(p)}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Submit */}
             <div className="flex items-center gap-3">
               <button
@@ -624,18 +676,11 @@ function CreateDietPlanContent() {
               </button>
             </div>
           </form>
-        )}
       </main>
     </div>
   );
 }
 
-// ─── Page wrapper with Suspense (required for useSearchParams) ────
-
 export default function CreateDietPlanPage() {
-  return (
-    <Suspense fallback={<DashboardLoading />}>
-      <CreateDietPlanContent />
-    </Suspense>
-  );
+  return <CreateDietPlanContent />;
 }

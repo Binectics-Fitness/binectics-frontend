@@ -15,9 +15,9 @@ import { formatLocal } from "@/utils/format";
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
-function clientName(profile: ClientProfile): string {
-  if (typeof profile.client_id === "object") {
-    return `${profile.client_id.first_name} ${profile.client_id.last_name}`;
+function planClientName(plan: DietPlan): string {
+  if (typeof plan.client_id === "object") {
+    return `${plan.client_id.first_name} ${plan.client_id.last_name}`;
   }
   return "Client";
 }
@@ -59,68 +59,59 @@ export default function DietitianMealPlansPage() {
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [dietPlans, setDietPlans] = useState<DietPlan[]>([]);
-  const [loadingProfiles, setLoadingProfiles] = useState(true);
-  const [loadingPlans, setLoadingPlans] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const orgId = currentOrg?._id;
 
-  const loadProfiles = useCallback(async () => {
+  const loadAllPlans = useCallback(async () => {
     setError("");
-    setLoadingProfiles(true);
+    setLoading(true);
     try {
-      const res = orgId
+      const profileRes = orgId
         ? await progressService.getOrgClientProfiles(orgId)
         : await progressService.getMyClientProfiles();
-      if (res.success && res.data) {
-        const active = res.data.filter((p) => p.is_active);
-        setProfiles(active);
-        if (active.length > 0 && !selectedProfileId) {
-          setSelectedProfileId(active[0]._id);
-        }
-      } else {
-        setError(res.message || "Failed to load clients");
+      if (!profileRes.success || !profileRes.data) {
+        setError(profileRes.message || "Failed to load clients");
+        setLoading(false);
+        return;
       }
-    } catch {
-      setError("Failed to load clients");
-    }
-    setLoadingProfiles(false);
-  }, [orgId, selectedProfileId]);
+      const active = profileRes.data.filter((p) => p.is_active);
+      setProfiles(active);
 
-  const loadPlans = useCallback(async () => {
-    if (!selectedProfileId) {
-      setDietPlans([]);
-      return;
-    }
-    setError("");
-    setLoadingPlans(true);
-    try {
-      const res = orgId
-        ? await progressService.getDietPlansInOrg(orgId, selectedProfileId)
-        : await progressService.getDietPlans(selectedProfileId);
-      if (res.success && res.data) {
-        setDietPlans(res.data);
-      } else {
-        setError(res.message || "Failed to load diet plans");
+      // Fetch diet plans for all clients in parallel
+      const planResults = await Promise.allSettled(
+        active.map((p) =>
+          orgId
+            ? progressService.getDietPlansInOrg(orgId, p._id)
+            : progressService.getDietPlans(p._id),
+        ),
+      );
+
+      const allPlans: DietPlan[] = [];
+      for (const result of planResults) {
+        if (result.status === "fulfilled" && result.value.success && result.value.data) {
+          allPlans.push(...result.value.data);
+        }
       }
+
+      // Sort by most recently assigned first
+      allPlans.sort(
+        (a, b) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime(),
+      );
+      setDietPlans(allPlans);
     } catch {
-      setError("Failed to load diet plans");
+      setError("Failed to load meal plans");
     }
-    setLoadingPlans(false);
-  }, [selectedProfileId, orgId]);
+    setLoading(false);
+  }, [orgId]);
 
   useEffect(() => {
     if (!isAuthorized || orgLoading) return;
-    loadProfiles();
-  }, [isAuthorized, orgLoading, loadProfiles]);
-
-  useEffect(() => {
-    if (!selectedProfileId) return;
-    loadPlans();
-  }, [selectedProfileId, loadPlans]);
+    loadAllPlans();
+  }, [isAuthorized, orgLoading, loadAllPlans]);
 
   const handleArchive = (plan: DietPlan) => {
     requestConfirmation({
@@ -133,15 +124,15 @@ export default function DietitianMealPlansPage() {
           const res = orgId
             ? await progressService.archiveDietPlanInOrg(
                 orgId,
-                selectedProfileId,
+                plan.client_profile_id,
                 plan._id,
               )
             : await progressService.archiveDietPlan(
-                selectedProfileId,
+                plan.client_profile_id,
                 plan._id,
               );
           if (res.success) {
-            await loadPlans();
+            await loadAllPlans();
           } else {
             setError(res.message || "Failed to archive plan");
           }
@@ -180,9 +171,8 @@ export default function DietitianMealPlansPage() {
               Create and manage diet plans for your clients
             </p>
           </div>
-          {selectedProfileId && (
-            <Link
-              href={`/dashboard/dietitian/meal-plans/create?profileId=${selectedProfileId}`}
+          <Link
+              href="/dashboard/dietitian/meal-plans/create"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-purple-500 px-5 text-sm font-semibold text-white hover:bg-accent-purple-600"
             >
               <svg
@@ -200,7 +190,6 @@ export default function DietitianMealPlansPage() {
               </svg>
               New Meal Plan
             </Link>
-          )}
         </div>
 
         {error && (
@@ -210,7 +199,7 @@ export default function DietitianMealPlansPage() {
         )}
 
         {/* Client Selector */}
-        {loadingProfiles ? (
+        {loading ? (
           <DashboardLoading />
         ) : profiles.length === 0 ? (
           <div className="rounded-2xl bg-white p-8 shadow-card">
@@ -223,27 +212,6 @@ export default function DietitianMealPlansPage() {
           </div>
         ) : (
           <>
-            <div className="mb-6">
-              <label
-                htmlFor="client-select"
-                className="block text-sm font-medium text-foreground-secondary mb-2"
-              >
-                Select Client
-              </label>
-              <select
-                id="client-select"
-                value={selectedProfileId}
-                onChange={(e) => setSelectedProfileId(e.target.value)}
-                className="w-full max-w-xs rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
-              >
-                {profiles.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {clientName(p)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Stats */}
             <div className="mb-8 grid gap-4 sm:grid-cols-4">
               <div className="rounded-2xl bg-white p-6 shadow-card">
@@ -277,15 +245,13 @@ export default function DietitianMealPlansPage() {
             </div>
 
             {/* Plans List */}
-            {loadingPlans ? (
-              <DashboardLoading />
-            ) : dietPlans.length === 0 ? (
+            {dietPlans.length === 0 ? (
               <div className="rounded-2xl bg-white p-8 shadow-card">
                 <EmptyState
                   title="No Meal Plans"
-                  description="Create a meal plan for this client to get started."
+                  description="Create a meal plan to get started."
                   actionLabel="Create Meal Plan"
-                  actionHref={`/dashboard/dietitian/meal-plans/create?profileId=${selectedProfileId}`}
+                  actionHref="/dashboard/dietitian/meal-plans/create"
                 />
               </div>
             ) : (
@@ -299,7 +265,7 @@ export default function DietitianMealPlansPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                           <Link
-                            href={`/dashboard/dietitian/meal-plans/${plan._id}?profileId=${selectedProfileId}`}
+                            href={`/dashboard/dietitian/meal-plans/${plan._id}?profileId=${plan.client_profile_id}`}
                             className="text-lg font-bold text-foreground hover:text-accent-purple-600"
                           >
                             {plan.title}
@@ -328,6 +294,22 @@ export default function DietitianMealPlansPage() {
                         )}
 
                         <div className="flex flex-wrap gap-4 text-sm text-foreground-secondary">
+                          <span className="flex items-center gap-1">
+                            <svg
+                              className="h-3.5 w-3.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
+                            {planClientName(plan)}
+                          </span>
                           {plan.delivery_type === DietPlanDeliveryType.PLATFORM && (
                             <span>
                               {plan.meals.length} meal
@@ -359,13 +341,13 @@ export default function DietitianMealPlansPage() {
 
                       <div className="flex items-center gap-2 shrink-0">
                         <Link
-                          href={`/dashboard/dietitian/meal-plans/${plan._id}?profileId=${selectedProfileId}`}
+                          href={`/dashboard/dietitian/meal-plans/${plan._id}?profileId=${plan.client_profile_id}`}
                           className="inline-flex h-9 items-center rounded-lg border border-neutral-300 bg-white px-3 text-sm font-medium text-foreground hover:bg-neutral-50"
                         >
                           View
                         </Link>
                         <Link
-                          href={`/dashboard/dietitian/meal-plans/${plan._id}/edit?profileId=${selectedProfileId}`}
+                          href={`/dashboard/dietitian/meal-plans/${plan._id}/edit?profileId=${plan.client_profile_id}`}
                           className="inline-flex h-9 items-center rounded-lg border border-neutral-300 bg-white px-3 text-sm font-medium text-foreground hover:bg-neutral-50"
                         >
                           Edit

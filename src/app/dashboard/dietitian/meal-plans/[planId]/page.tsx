@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useEffect, useState, useCallback } from "react";
+import Modal from "@/components/Modal";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 import DietitianSidebar from "@/components/DietitianSidebar";
@@ -11,7 +12,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { progressService } from "@/lib/api/progress";
 import { UserRole, PlanStatus, DietPlanDeliveryType, MealSlot } from "@/lib/types";
-import type { DietPlan } from "@/lib/api/progress";
+import type { DietPlan, ClientProfile, CreateDietMealRequest } from "@/lib/api/progress";
 import { formatLocal } from "@/utils/format";
 
 // ─── Helpers ───────────────────────────────────────────────────────
@@ -23,6 +24,13 @@ function formatDate(iso: string) {
 function clientFullName(plan: DietPlan): string {
   if (typeof plan.client_id === "object") {
     return `${plan.client_id.first_name} ${plan.client_id.last_name}`;
+  }
+  return "Client";
+}
+
+function profileName(profile: ClientProfile): string {
+  if (typeof profile.client_id === "object") {
+    return `${profile.client_id.first_name} ${profile.client_id.last_name}`;
   }
   return "Client";
 }
@@ -148,6 +156,94 @@ function DietPlanDetailContent() {
     setDownloadingDoc(false);
   };
 
+  // ─── Assignment to additional clients ─────────────────────────────
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [clientList, setClientList] = useState<ClientProfile[]>([]);
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const loadClients = useCallback(async () => {
+    try {
+      const res = orgId
+        ? await progressService.getOrgClientProfiles(orgId)
+        : await progressService.getMyClientProfiles();
+      if (res.success && res.data) {
+        setClientList(res.data.filter((p) => p.is_active));
+      }
+    } catch {
+      setClientList([]);
+    }
+  }, [orgId]);
+
+  const openAssignModal = () => {
+    setAssignError("");
+    setSelectedClients([]);
+    setAssignModalOpen(true);
+    loadClients();
+  };
+
+  const handleAssign = async () => {
+    if (!plan || selectedClients.length === 0) {
+      setAssignError("Select at least one client");
+      return;
+    }
+    setAssigning(true);
+    setAssignError("");
+
+    try {
+      const meals: CreateDietMealRequest[] = (plan.meals || []).map((m, idx) => ({
+        meal_type: m.meal_type,
+        title: m.title,
+        description: m.description || undefined,
+        foods: m.foods && m.foods.length > 0 ? m.foods : undefined,
+        calories: m.calories || undefined,
+        notes: m.notes || undefined,
+        order: idx + 1,
+      }));
+
+      const payload = {
+        title: plan.title,
+        description: plan.description || undefined,
+        delivery_type: DietPlanDeliveryType.PLATFORM,
+        meals: meals.length > 0 ? meals : undefined,
+        dietitian_notes: plan.dietitian_notes || undefined,
+      };
+
+      const failedClients: string[] = [];
+
+      for (const clientProfileId of selectedClients) {
+        try {
+          const res = orgId
+            ? await progressService.createDietPlanInOrg(orgId, clientProfileId, payload)
+            : await progressService.createDietPlan(clientProfileId, payload);
+          if (!res.success) {
+            failedClients.push(clientProfileId);
+          }
+        } catch {
+          failedClients.push(clientProfileId);
+        }
+      }
+
+      if (failedClients.length === 0) {
+        setAssignModalOpen(false);
+        setAssignError("");
+        setSuccessMessage(`Plan assigned to ${selectedClients.length} client(s) successfully`);
+        setTimeout(() => setSuccessMessage(""), 5000);
+      } else if (failedClients.length < selectedClients.length) {
+        setAssignError(
+          `Assigned to ${selectedClients.length - failedClients.length} client(s), but failed for ${failedClients.length}.`,
+        );
+      } else {
+        setAssignError("Failed to assign plan to selected clients");
+      }
+    } catch {
+      setAssignError("Failed to assign plan");
+    }
+    setAssigning(false);
+  };
+
   const handleArchive = () => {
     if (!plan) return;
     requestConfirmation({
@@ -210,6 +306,12 @@ function DietPlanDetailContent() {
           </div>
         )}
 
+        {successMessage && (
+          <div className="mb-6 rounded-lg border-2 border-green-200 bg-green-50 p-4">
+            <p className="text-sm text-green-800">{successMessage}</p>
+          </div>
+        )}
+
         {loadingPlan ? (
           <DashboardLoading />
         ) : !plan ? (
@@ -253,11 +355,19 @@ function DietPlanDetailContent() {
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
                   <Link
-                    href={`/dashboard/dietitian/meal-plans/${plan._id}/edit?profileId=${profileId}`}
+                    href={`/dashboard/dietitian/meal-plans/${plan._id}/edit`}
                     className="inline-flex h-10 items-center justify-center rounded-lg bg-accent-purple-500 px-5 text-sm font-semibold text-white hover:bg-accent-purple-600"
                   >
                     Edit Plan
                   </Link>
+                  {plan.delivery_type === DietPlanDeliveryType.PLATFORM && (
+                    <button
+                      onClick={openAssignModal}
+                      className="inline-flex h-10 items-center justify-center rounded-lg border border-accent-blue-200 bg-white px-5 text-sm font-medium text-accent-blue-600 hover:bg-accent-blue-50"
+                    >
+                      Assign to Client(s)
+                    </button>
+                  )}
                   {plan.status !== PlanStatus.ARCHIVED && (
                     <button
                       onClick={handleArchive}
@@ -269,6 +379,57 @@ function DietPlanDetailContent() {
                 </div>
               </div>
             </div>
+
+            {/* Assign Modal */}
+            <Modal open={assignModalOpen} onClose={() => setAssignModalOpen(false)} title="Assign Meal Plan to Clients">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Select Clients</label>
+                  <div className="max-h-48 overflow-y-auto border rounded-lg p-2">
+                    {clientList.length === 0 ? (
+                      <div className="text-sm text-foreground-secondary">No clients found.</div>
+                    ) : (
+                      clientList.map((client) => (
+                        <label key={client._id} className="flex items-center gap-2 py-1">
+                          <input
+                            type="checkbox"
+                            value={client._id}
+                            checked={selectedClients.includes(client._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedClients((prev) => [...prev, client._id]);
+                              } else {
+                                setSelectedClients((prev) => prev.filter((id) => id !== client._id));
+                              }
+                            }}
+                          />
+                          <span>{profileName(client)}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+                {assignError && <div className="text-sm text-red-600">{assignError}</div>}
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                    onClick={() => setAssignModalOpen(false)}
+                    disabled={assigning}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg bg-accent-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-blue-600"
+                    onClick={handleAssign}
+                    disabled={assigning}
+                  >
+                    {assigning ? "Assigning..." : "Assign"}
+                  </button>
+                </div>
+              </div>
+            </Modal>
 
             {/* Plan Info Cards */}
             <div className="grid gap-4 sm:grid-cols-3">
