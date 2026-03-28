@@ -26,7 +26,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { usePaystackPayment } from "react-paystack";
+
 
 // ==================== STRIPE CARD FORM ====================
 
@@ -130,37 +130,50 @@ function PaystackButton({
   const reference = generateTxRef("PS");
   const config = buildPaystackConfig({ amount, currency, email, reference });
 
-  const initializePayment = usePaystackPayment(
-    config
-      ? {
-          publicKey: config.publicKey,
-          email: config.email,
-          amount: config.amount,
-          currency: config.currency,
-          reference: config.reference,
-        }
-      : { publicKey: "", email: "", amount: 0, reference: "" },
-  );
-
   const handleClick = () => {
     if (!config) {
       onError("Paystack is not configured");
       return;
     }
     setIsProcessing(true);
-    initializePayment({
-      onSuccess: (ref) => {
-        const txRef =
-          typeof ref === "object" && ref !== null && "reference" in ref
-            ? String((ref as Record<string, unknown>).reference)
-            : reference;
-        onSuccess(`paystack_${txRef}`);
+    // Dynamically load Paystack script if not present
+    if (!window.PaystackPop) {
+      const script = document.createElement("script");
+      script.src = "https://js.paystack.co/v1/inline.js";
+      script.async = true;
+      script.onload = () => launchPaystack();
+      script.onerror = () => {
+        setIsProcessing(false);
+        onError("Failed to load Paystack script");
+      };
+      document.body.appendChild(script);
+    } else {
+      launchPaystack();
+    }
+  };
+
+  function launchPaystack() {
+    if (!window.PaystackPop) {
+      setIsProcessing(false);
+      onError("Paystack script not loaded");
+      return;
+    }
+    const handler = window.PaystackPop.setup({
+      key: config.publicKey,
+      email: config.email,
+      amount: config.amount,
+      currency: config.currency,
+      ref: config.reference,
+      callback: function (response: any) {
+        setIsProcessing(false);
+        onSuccess(`paystack_${response.reference}`);
       },
-      onClose: () => {
+      onClose: function () {
         setIsProcessing(false);
       },
     });
-  };
+    handler.openIframe();
+  }
 
   return (
     <Button
