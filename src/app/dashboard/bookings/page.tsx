@@ -9,10 +9,15 @@ import {
   consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
+  type ConsultationSlot,
   type ConsultationType,
 } from "@/lib/api/consultations";
 import { progressService, type ClientProfile } from "@/lib/api/progress";
-import { formatLocal } from "@/utils/format";
+import {
+  dualTimezoneLabel,
+  formatLocal,
+  getClientTimezone,
+} from "@/utils/format";
 
 export default function BookingsPage() {
   const { isAuthenticated, isLoading } = useRequireAuth();
@@ -133,6 +138,127 @@ export default function BookingsPage() {
     setActioningBookingId(null);
   };
 
+  // --- Reschedule ---
+  const [rescheduleTarget, setRescheduleTarget] =
+    useState<ConsultationBooking | null>(null);
+  const [rescheduleSlots, setRescheduleSlots] = useState<ConsultationSlot[]>(
+    [],
+  );
+  const [rescheduleLoadingSlots, setRescheduleLoadingSlots] = useState(false);
+  const [rescheduleSelectedDate, setRescheduleSelectedDate] = useState("");
+  const [rescheduleSelectedSlot, setRescheduleSelectedSlot] =
+    useState<ConsultationSlot | null>(null);
+  const [rescheduleReason, setRescheduleReason] = useState("");
+  const [rescheduling, setRescheduling] = useState(false);
+
+  const openReschedule = async (booking: ConsultationBooking) => {
+    setRescheduleTarget(booking);
+    setRescheduleSelectedSlot(null);
+    setRescheduleSelectedDate("");
+    setRescheduleReason("");
+    setRescheduleSlots([]);
+    setRescheduleLoadingSlots(true);
+    setError(null);
+
+    const dateFrom = new Date().toISOString().slice(0, 10);
+    const dateTo = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+
+    const res = await consultationsService.getProviderSlots(
+      booking.providerId,
+      {
+        consultationTypeId: booking.consultationTypeId,
+        dateFrom,
+        dateTo,
+      },
+    );
+
+    if (res.success && res.data) {
+      const available = res.data.filter((s) => s.isAvailable);
+      setRescheduleSlots(available);
+      const first = available[0];
+      if (first) {
+        setRescheduleSelectedDate(formatLocal(first.startsAt, "yyyy-MM-dd"));
+      }
+    }
+    setRescheduleLoadingSlots(false);
+  };
+
+  const confirmReschedule = async () => {
+    if (!rescheduleTarget || !rescheduleSelectedSlot) return;
+    setRescheduling(true);
+    setError(null);
+
+    const res = await consultationsService.rescheduleBooking(
+      rescheduleTarget.id,
+      {
+        startsAt: rescheduleSelectedSlot.startsAt,
+        reason: rescheduleReason.trim() || undefined,
+      },
+    );
+
+    if (res.success) {
+      setRescheduleTarget(null);
+      setRescheduleReason("");
+      setRescheduleSelectedSlot(null);
+      setRescheduleSelectedDate("");
+      await loadAllBookings();
+    } else {
+      const msg = (res.message ?? "Failed to reschedule booking.").toLowerCase();
+      const isConflict =
+        msg.includes("conflict") ||
+        msg.includes("taken") ||
+        msg.includes("unavailable") ||
+        msg.includes("already booked") ||
+        msg.includes("no longer available") ||
+        msg.includes("slot");
+      if (isConflict) {
+        setRescheduleSelectedSlot(null);
+        setError("__slot_taken__");
+        // Re-fetch fresh slots for the reschedule target
+        if (rescheduleTarget) {
+          const now = new Date();
+          const twoWeeks = new Date(now.getTime() + 14 * 86400000);
+          const fresh = await consultationsService.getProviderSlots(
+            rescheduleTarget.providerId,
+            {
+              consultationTypeId: rescheduleTarget.consultationTypeId,
+              dateFrom: now.toISOString(),
+              dateTo: twoWeeks.toISOString(),
+            },
+          );
+          if (fresh.success && fresh.data) {
+            setRescheduleSlots(
+              fresh.data.filter((s: ConsultationSlot) => s.isAvailable),
+            );
+          }
+        }
+      } else {
+        setError(res.message ?? "Failed to reschedule booking.");
+      }
+    }
+    setRescheduling(false);
+  };
+
+  const rescheduleSlotDates = useMemo(() => {
+    const dates = new Map<string, { key: string; label: string }>();
+    for (const slot of rescheduleSlots) {
+      const key = formatLocal(slot.startsAt, "yyyy-MM-dd");
+      if (!dates.has(key)) {
+        dates.set(key, { key, label: formatLocal(slot.startsAt, "EEE, MMM d") });
+      }
+    }
+    return Array.from(dates.values());
+  }, [rescheduleSlots]);
+
+  const rescheduleTimesForDate = useMemo(() => {
+    if (!rescheduleSelectedDate) return [];
+    return rescheduleSlots.filter(
+      (s) => formatLocal(s.startsAt, "yyyy-MM-dd") === rescheduleSelectedDate,
+    );
+  }, [rescheduleSlots, rescheduleSelectedDate]);
+
   if (isLoading) return <DashboardLoading />;
   if (!isAuthenticated) return null;
 
@@ -180,8 +306,21 @@ export default function BookingsPage() {
         </div>
 
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+          <div
+            className={`mb-6 rounded-lg px-4 py-3 text-sm ${
+              error === "__slot_taken__"
+                ? "bg-amber-50 text-amber-800 border border-amber-200"
+                : "bg-red-50 text-red-700"
+            }`}
+          >
+            {error === "__slot_taken__" ? (
+              <span>
+                That time slot was just taken. The available times have been
+                refreshed — please pick a new slot.
+              </span>
+            ) : (
+              error
+            )}
           </div>
         )}
 
@@ -278,6 +417,13 @@ export default function BookingsPage() {
 
                     {isCancelable && (
                       <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto lg:ml-6">
+                        <button
+                          disabled={actioningBookingId === booking.id}
+                          onClick={() => openReschedule(booking)}
+                          className="px-4 py-2 text-sm font-medium text-accent-blue-500 hover:bg-accent-blue-50 transition-colors text-center disabled:opacity-50"
+                        >
+                          Reschedule
+                        </button>
                         <Link
                           href={`/dashboard/bookings/consultations?providerId=${encodeURIComponent(booking.providerId)}`}
                           className="px-4 py-2 text-sm font-medium text-foreground-secondary hover:bg-neutral-100 transition-colors text-center"
@@ -333,6 +479,141 @@ export default function BookingsPage() {
             </div>
           )}
         </div>
+
+        {/* Reschedule Modal */}
+        {rescheduleTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-[var(--shadow-elevated)] max-h-[90vh] overflow-y-auto">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  Reschedule Booking
+                </h2>
+                <button
+                  onClick={() => setRescheduleTarget(null)}
+                  className="rounded-lg p-1 text-foreground-tertiary hover:bg-neutral-100"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <p className="mb-4 text-sm text-foreground-secondary">
+                Current time:{" "}
+                <span className="font-medium text-foreground">
+                  {formatLocal(
+                    rescheduleTarget.startsAt,
+                    "EEE, MMM d • h:mm a",
+                  )}
+                </span>
+              </p>
+
+              {rescheduleLoadingSlots ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-r-transparent" />
+                </div>
+              ) : rescheduleSlots.length === 0 ? (
+                <p className="py-8 text-center text-sm text-foreground-secondary">
+                  No available slots found in the next 14 days.
+                </p>
+              ) : (
+                <>
+                  <p className="mb-2 text-sm font-semibold text-foreground">
+                    Pick a new date
+                  </p>
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {rescheduleSlotDates.map((d) => (
+                      <button
+                        key={d.key}
+                        onClick={() => {
+                          setRescheduleSelectedDate(d.key);
+                          setRescheduleSelectedSlot(null);
+                        }}
+                        className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                          rescheduleSelectedDate === d.key
+                            ? "border-primary-500 bg-primary-100 font-semibold text-foreground"
+                            : "border-neutral-300 text-foreground-secondary hover:bg-neutral-50"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {rescheduleTimesForDate.length > 0 && (
+                    <>
+                      <p className="mb-2 text-sm font-semibold text-foreground">
+                        Pick a new time
+                      </p>
+                      <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {rescheduleTimesForDate.map((slot) => {
+                          const selected =
+                            rescheduleSelectedSlot?.startsAt === slot.startsAt;
+                          return (
+                            <button
+                              key={slot.startsAt}
+                              onClick={() => setRescheduleSelectedSlot(slot)}
+                              className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                                selected
+                                  ? "border-primary-500 bg-primary-100"
+                                  : "border-neutral-300 hover:bg-neutral-50"
+                              }`}
+                            >
+                              <p className="font-semibold text-foreground">
+                                {formatLocal(slot.startsAt, "h:mm a")}
+                              </p>
+                              <p className="mt-0.5 text-xs text-foreground-secondary">
+                                {dualTimezoneLabel(
+                                  slot.startsAt,
+                                  slot.endsAt,
+                                  slot.providerTimezone,
+                                )}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  <input
+                    type="text"
+                    value={rescheduleReason}
+                    onChange={(e) => setRescheduleReason(e.target.value)}
+                    placeholder="Reason for rescheduling (optional)"
+                    className="mb-4 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  />
+                </>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setRescheduleTarget(null)}
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-foreground-secondary hover:bg-neutral-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmReschedule}
+                  disabled={!rescheduleSelectedSlot || rescheduling}
+                  className="rounded-lg bg-primary-500 px-5 py-2 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {rescheduling ? "Rescheduling..." : "Confirm Reschedule"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
@@ -322,7 +323,21 @@ function ConsultationBookingPageContent() {
         status: res.data.status,
       });
     } else {
-      setError(res.message ?? "Booking failed.");
+      const msg = (res.message ?? "Booking failed.").toLowerCase();
+      const isConflict =
+        msg.includes("conflict") ||
+        msg.includes("taken") ||
+        msg.includes("unavailable") ||
+        msg.includes("already booked") ||
+        msg.includes("no longer available") ||
+        msg.includes("slot");
+      if (isConflict) {
+        setSelectedSlot(null);
+        setError("__slot_taken__");
+        void loadSlots();
+      } else {
+        setError(res.message ?? "Booking failed.");
+      }
     }
   };
 
@@ -345,8 +360,32 @@ function ConsultationBookingPageContent() {
         </div>
 
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+          <div
+            className={`mb-6 rounded-lg px-4 py-3 text-sm ${
+              error === "__slot_taken__"
+                ? "bg-amber-50 text-amber-800 border border-amber-200"
+                : "bg-red-50 text-red-700"
+            }`}
+          >
+            {error === "__slot_taken__" ? (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <span>
+                  That slot was just taken by another user. We&apos;ve refreshed
+                  the available times — please pick a new slot.
+                </span>
+                <button
+                  onClick={() => {
+                    setError(null);
+                    void loadSlots();
+                  }}
+                  className="shrink-0 rounded-lg bg-amber-600 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-700 transition-colors"
+                >
+                  Refresh Slots
+                </button>
+              </div>
+            ) : (
+              error
+            )}
           </div>
         )}
 
@@ -390,42 +429,52 @@ function ConsultationBookingPageContent() {
                 </p>
               </div>
             ) : (
-              <input
-                type="text"
-                value={providerId}
-                onChange={(e) => setProviderId(e.target.value)}
-                placeholder="Provider ID"
-                className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-              />
+              <div className="col-span-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm">
+                <p className="font-medium text-foreground mb-1">
+                  No connected providers found
+                </p>
+                <p className="text-foreground-secondary">
+                  Subscribe to a trainer or dietitian first, then come back to
+                  book a consultation.{" "}
+                  <Link
+                    href="/search"
+                    className="font-semibold text-accent-blue-500 hover:underline"
+                  >
+                    Browse providers
+                  </Link>
+                </p>
+              </div>
             )}
 
-            <select
-              value={selectedTypeId}
-              onChange={(e) => setSelectedTypeId(e.target.value)}
-              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-              disabled={filteredTypes.length === 0}
-            >
-              <option value="">
-                {filteredTypes.length === 0
-                  ? "No consultation types available"
-                  : "Select Consultation Type"}
-              </option>
-              {filteredTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
+            <div>
+              <select
+                value={selectedTypeId}
+                onChange={(e) => setSelectedTypeId(e.target.value)}
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                disabled={filteredTypes.length === 0}
+              >
+                <option value="">
+                  {filteredTypes.length === 0
+                    ? "No consultation types available"
+                    : "Select Consultation Type"}
                 </option>
-              ))}
-            </select>
+                {filteredTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name} ({type.defaultDurationMinutes} min)
+                  </option>
+                ))}
+              </select>
+              {selectedType?.description && (
+                <p className="mt-1.5 text-xs text-foreground-secondary">
+                  {selectedType.description}
+                </p>
+              )}
+            </div>
 
-            {isPrefilledProvider ? (
-              <div className="rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-sm text-foreground-secondary">
-                Available times refresh automatically when you change provider
-                or consultation type.
-              </div>
-            ) : (
+            {(isPrefilledProvider || connectedProviders.length > 0) && (
               <button
                 onClick={loadSlots}
-                disabled={loadingSlots}
+                disabled={loadingSlots || !providerId || !selectedTypeId}
                 className="rounded-lg bg-accent-blue-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingSlots ? "Loading..." : "Load Slots"}
@@ -552,7 +601,9 @@ function ConsultationBookingPageContent() {
                 Consultation Type
               </p>
               <p className="mt-1 font-medium text-foreground">
-                {selectedType?.name || "Not selected"}
+                {selectedType
+                  ? `${selectedType.name} (${selectedType.defaultDurationMinutes} min)`
+                  : "Not selected"}
               </p>
             </div>
             <div>
