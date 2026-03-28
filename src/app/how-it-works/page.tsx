@@ -185,7 +185,7 @@ export default function HowItWorksPage() {
             {steps.map((step, index) => (
               <div
                 key={index}
-                className="relative rounded-2xl bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="relative rounded-2xl bg-background p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
               >
                 <div className="absolute -top-4 left-6">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg">
@@ -257,7 +257,7 @@ export default function HowItWorksPage() {
             {professionalJourney.map((professional, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)]"
               >
                 <h3
                   className={`mb-6 font-display text-2xl font-black text-foreground`}

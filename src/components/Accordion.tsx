@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export interface AccordionItemProps {
   title: string;
@@ -10,6 +10,76 @@ export interface AccordionItemProps {
 export interface AccordionProps {
   items: AccordionItemProps[];
   className?: string;
+}
+
+function AccordionItem({
+  item,
+  isOpen,
+  onToggle,
+}: {
+  item: AccordionItemProps;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      setHeight(isOpen ? contentRef.current.scrollHeight : 0);
+    }
+  }, [isOpen]);
+
+  return (
+    <div
+      className={`overflow-hidden rounded-xl border bg-white transition-all duration-300 ${
+        isOpen
+          ? 'border-primary-500/30 shadow-[var(--shadow-card)]'
+          : 'border-neutral-200 hover:border-neutral-300'
+      }`}
+    >
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-neutral-50"
+        aria-expanded={isOpen}
+      >
+        <span className={`font-medium pr-4 transition-colors duration-200 ${isOpen ? 'text-foreground' : 'text-foreground'}`}>
+          {item.title}
+        </span>
+        <div
+          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+            isOpen
+              ? 'bg-primary-500/10 text-primary-600 rotate-180'
+              : 'bg-neutral-100 text-foreground-secondary'
+          }`}
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </button>
+      <div
+        style={{ height }}
+        className="transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      >
+        <div ref={contentRef}>
+          <div className="border-t border-neutral-100 px-6 py-4 text-sm leading-relaxed text-foreground-secondary">
+            {item.content}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export const Accordion: React.FC<AccordionProps> = ({ items, className = '' }) => {
@@ -22,44 +92,12 @@ export const Accordion: React.FC<AccordionProps> = ({ items, className = '' }) =
   return (
     <div className={`space-y-3 ${className}`}>
       {items.map((item, index) => (
-        <div
+        <AccordionItem
           key={index}
-          className="overflow-hidden rounded-xl border border-neutral-200 bg-background transition-all hover:border-neutral-300"
-        >
-          <button
-            onClick={() => toggleItem(index)}
-            className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-neutral-50"
-            aria-expanded={openIndex === index}
-          >
-            <span className="font-medium text-foreground pr-4">{item.title}</span>
-            <svg
-              className={`h-5 w-5 flex-shrink-0 text-foreground-secondary transition-transform ${
-                openIndex === index ? 'rotate-180' : ''
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-          <div
-            className={`transition-all duration-300 ease-in-out ${
-              openIndex === index
-                ? 'max-h-96 opacity-100'
-                : 'max-h-0 opacity-0'
-            }`}
-          >
-            <div className="border-t border-neutral-200 px-6 py-4 text-sm text-foreground-secondary">
-              {item.content}
-            </div>
-          </div>
-        </div>
+          item={item}
+          isOpen={openIndex === index}
+          onToggle={() => toggleItem(index)}
+        />
       ))}
     </div>
   );

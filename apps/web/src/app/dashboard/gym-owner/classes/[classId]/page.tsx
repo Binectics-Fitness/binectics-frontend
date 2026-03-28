@@ -80,15 +80,15 @@ export default function ClassDetailPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Enrolled</p>
               <p className="text-3xl font-black text-foreground mt-2">{classData.enrolled}</p>
               <p className="text-sm text-foreground/60 mt-1">of {classData.capacity} capacity</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Utilization</p>
               <p className="text-3xl font-black text-foreground mt-2">{utilizationPercentage}%</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+              <div className="w-full bg-neutral-200 rounded-full h-2 mt-3">
                 <div
                   className={`h-2 rounded-full ${
                     utilizationPercentage >= 90
@@ -101,12 +101,12 @@ export default function ClassDetailPage() {
                 />
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Waitlist</p>
               <p className="text-3xl font-black text-foreground mt-2">{classData.waitlist}</p>
               <p className="text-sm text-foreground/60 mt-1">members waiting</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Status</p>
               <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 mt-2">
                 {classData.status}
@@ -117,13 +117,13 @@ export default function ClassDetailPage() {
           <div className="grid grid-cols-3 gap-6">
             {/* Left Column - Enrolled Members */}
             <div className="col-span-2">
-              <div className="bg-white rounded-xl shadow-card p-6 mb-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Enrolled Members ({enrolledMembers.length})
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="border-b border-gray-200">
+                    <thead className="border-b border-neutral-200">
                       <tr>
                         <th className="text-left py-2 text-sm font-semibold text-foreground/60">Member</th>
                         <th className="text-left py-2 text-sm font-semibold text-foreground/60">Email</th>
@@ -134,7 +134,7 @@ export default function ClassDetailPage() {
                     </thead>
                     <tbody>
                       {enrolledMembers.map((member) => (
-                        <tr key={member.id} className="border-b border-gray-100 last:border-0">
+                        <tr key={member.id} className="border-b border-neutral-100 last:border-0">
                           <td className="py-3 font-medium text-foreground">{member.name}</td>
                           <td className="py-3 text-foreground/60">{member.email}</td>
                           <td className="py-3 text-foreground/60">{member.joinedDate}</td>
@@ -164,13 +164,13 @@ export default function ClassDetailPage() {
               </div>
 
               {/* Upcoming Sessions */}
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Upcoming Sessions</h3>
                 <div className="space-y-3">
                   {upcomingSessions.map((session) => (
                     <div
                       key={session.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg"
                     >
                       <div>
                         <p className="font-semibold text-foreground">{session.date}</p>
@@ -189,7 +189,7 @@ export default function ClassDetailPage() {
 
             {/* Right Column - Class Details */}
             <div>
-              <div className="bg-white rounded-xl shadow-card p-6 mb-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Class Details</h3>
                 <div className="space-y-4">
                   <div>
@@ -215,12 +215,12 @@ export default function ClassDetailPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Description</h3>
                 <p className="text-foreground/80">{classData.description}</p>
               </div>
 
-              <div className="bg-white rounded-xl shadow-card p-6 mt-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mt-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Quick Actions</h3>
                 <div className="space-y-2">
                   <button className="w-full px-4 py-2 text-left text-accent-blue-500 hover:bg-accent-blue-50 rounded-lg font-medium">

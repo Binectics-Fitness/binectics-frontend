@@ -25,7 +25,7 @@ function ImageCardSkeleton() {
 
 function AvatarCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-2xl bg-white p-6 shadow-card">
+    <div className="animate-pulse rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
       <div className="mb-4 flex items-start gap-4">
         <div className="h-14 w-14 rounded-xl bg-neutral-200" />
         <div className="flex-1">

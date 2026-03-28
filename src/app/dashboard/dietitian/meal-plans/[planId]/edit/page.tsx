@@ -389,7 +389,7 @@ function EditDietPlanContent() {
         {loadingPlan ? (
           <DashboardLoading />
         ) : !plan ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)] text-center">
             <p className="text-foreground-secondary">Diet plan not found.</p>
           </div>
         ) : (
@@ -404,7 +404,7 @@ function EditDietPlanContent() {
             )}
 
             {/* Plan Details */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-lg font-bold text-foreground mb-4">
                 Plan Details
               </h2>
@@ -453,7 +453,7 @@ function EditDietPlanContent() {
 
             {/* Document Replace Section (for document-based plans) */}
             {plan.delivery_type === DietPlanDeliveryType.DOCUMENT && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-lg font-bold text-foreground mb-4">
                   Replace Document
                 </h2>
@@ -510,7 +510,7 @@ function EditDietPlanContent() {
 
             {/* Meals (for platform plans) */}
             {plan.delivery_type === DietPlanDeliveryType.PLATFORM && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-foreground">Meals</h2>
                   <button

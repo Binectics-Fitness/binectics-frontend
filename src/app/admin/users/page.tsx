@@ -149,7 +149,7 @@ export default function AdminUsersPage() {
       case UserRole.DIETITIAN:
         return "bg-accent-purple-100 text-accent-purple-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-neutral-100 text-neutral-700";
     }
   };
 
@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
 
       <div className="flex-1 md:ml-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-white border-b border-neutral-200">
           <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
             <h1 className="text-2xl sm:text-3xl font-black text-foreground">
               User Management
@@ -172,7 +172,7 @@ export default function AdminUsersPage() {
 
         <div className="p-4 sm:p-6 md:p-8">
           {/* Filters */}
-          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
+          <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)] mb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="sm:col-span-2 lg:col-span-1">
                 <label className="block text-sm font-medium text-foreground/70 mb-2">
@@ -183,7 +183,7 @@ export default function AdminUsersPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by name or email..."
-                  className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-3 border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
               <div>
@@ -195,7 +195,7 @@ export default function AdminUsersPage() {
                   onChange={(e) =>
                     setRoleFilter(e.target.value as "all" | UserRole)
                   }
-                  className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-3 border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="all">All Roles</option>
                   <option value={UserRole.USER}>Users</option>
@@ -209,7 +209,7 @@ export default function AdminUsersPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-            <div className="bg-white p-4 sm:p-6 shadow-card">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Total Users
               </p>
@@ -217,7 +217,7 @@ export default function AdminUsersPage() {
                 12,458
               </p>
             </div>
-            <div className="bg-white p-4 sm:p-6 shadow-card">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Active
               </p>
@@ -225,7 +225,7 @@ export default function AdminUsersPage() {
                 11,892
               </p>
             </div>
-            <div className="bg-white p-4 sm:p-6 shadow-card">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Suspended
               </p>
@@ -233,7 +233,7 @@ export default function AdminUsersPage() {
                 566
               </p>
             </div>
-            <div className="bg-white p-4 sm:p-6 shadow-card">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 New This Week
               </p>
@@ -244,9 +244,9 @@ export default function AdminUsersPage() {
           </div>
 
           {/* Users Table - Desktop View */}
-          <div className="hidden md:block bg-white shadow-card overflow-hidden">
+          <div className="hidden md:block bg-white shadow-[var(--shadow-card)] overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-neutral-50">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
                     User
@@ -273,7 +273,7 @@ export default function AdminUsersPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-neutral-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <p className="font-semibold text-foreground">
@@ -351,7 +351,7 @@ export default function AdminUsersPage() {
             {users.map((user) => (
               <div
                 key={user.id}
-                className="bg-white p-4 shadow-card rounded-lg border border-gray-100"
+                className="bg-white p-4 shadow-[var(--shadow-card)] rounded-lg border border-neutral-100"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
@@ -434,19 +434,19 @@ export default function AdminUsersPage() {
               Showing 1 to 8 of 12,458 users
             </p>
             <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
-              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-neutral-200 text-foreground/60 text-sm font-semibold hover:bg-neutral-50">
                 Previous
               </button>
               <button className="px-3 sm:px-4 py-2 bg-red-500 text-white text-sm font-semibold hover:bg-red-600">
                 1
               </button>
-              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-neutral-200 text-foreground/60 text-sm font-semibold hover:bg-neutral-50">
                 2
               </button>
-              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-neutral-200 text-foreground/60 text-sm font-semibold hover:bg-neutral-50">
                 3
               </button>
-              <button className="px-3 sm:px-4 py-2 border border-gray-200 text-foreground/60 text-sm font-semibold hover:bg-gray-50">
+              <button className="px-3 sm:px-4 py-2 border border-neutral-200 text-foreground/60 text-sm font-semibold hover:bg-neutral-50">
                 Next
               </button>
             </div>

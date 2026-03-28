@@ -127,7 +127,7 @@ export default function TrainerPlansPage() {
         )}
 
         {!orgId ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
             <EmptyState
               title="No Organization"
               description="Create or join an organization to manage membership plans."
@@ -140,13 +140,13 @@ export default function TrainerPlansPage() {
         ) : (
           <>
             <div className="mb-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Total Plans</p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {stats.total}
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Active Plans
                 </p>
@@ -154,7 +154,7 @@ export default function TrainerPlansPage() {
                   {stats.activePlans}
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Active Members
                 </p>
@@ -164,7 +164,7 @@ export default function TrainerPlansPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white shadow-card overflow-hidden">
+            <div className="rounded-2xl bg-white shadow-[var(--shadow-card)] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="border-b border-neutral-200 bg-neutral-50">

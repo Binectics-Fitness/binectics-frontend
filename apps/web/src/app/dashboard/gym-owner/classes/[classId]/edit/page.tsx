@@ -80,7 +80,7 @@ export default function EditClassPage() {
 
           <h1 className="text-3xl font-black text-foreground mb-8">Edit Class</h1>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-card p-8">
+          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-[var(--shadow-card)] p-8">
             {/* Basic Information */}
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4">Basic Information</h2>
@@ -93,7 +93,7 @@ export default function EditClassPage() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="e.g., Morning Yoga"
                     required
                   />
@@ -107,7 +107,7 @@ export default function EditClassPage() {
                     type="text"
                     value={formData.instructor}
                     onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="e.g., Sarah Johnson"
                     required
                   />
@@ -120,7 +120,7 @@ export default function EditClassPage() {
                   <select
                     value={formData.level}
                     onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     required
                   >
                     <option value="Beginner">Beginner</option>
@@ -138,7 +138,7 @@ export default function EditClassPage() {
                     type="number"
                     value={formData.capacity}
                     onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="20"
                     min="1"
                     required
@@ -153,7 +153,7 @@ export default function EditClassPage() {
                     type="number"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="60"
                     min="1"
                     required
@@ -168,7 +168,7 @@ export default function EditClassPage() {
                     type="text"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="e.g., Studio A"
                     required
                   />
@@ -182,7 +182,7 @@ export default function EditClassPage() {
                     type="text"
                     value={formData.equipment}
                     onChange={(e) => setFormData({ ...formData, equipment: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="e.g., Yoga mat, blocks"
                   />
                 </div>
@@ -194,7 +194,7 @@ export default function EditClassPage() {
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="Describe the class..."
                     rows={4}
                   />
@@ -219,7 +219,7 @@ export default function EditClassPage() {
                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                           formData.days.includes(day)
                             ? 'bg-accent-blue-500 text-white'
-                            : 'bg-gray-100 text-foreground hover:bg-gray-200'
+                            : 'bg-neutral-100 text-foreground hover:bg-neutral-200'
                         }`}
                       >
                         {day.substring(0, 3)}
@@ -236,7 +236,7 @@ export default function EditClassPage() {
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -248,7 +248,7 @@ export default function EditClassPage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-6 py-3 border-2 border-gray-300 text-foreground font-semibold rounded-lg hover:bg-gray-50"
+                className="px-6 py-3 border-2 border-neutral-300 text-foreground font-semibold rounded-lg hover:bg-neutral-50"
               >
                 Cancel
               </button>

@@ -122,7 +122,7 @@ export default function PressPage() {
             {pressReleases.map((release, index) => (
               <article
                 key={index}
-                className="rounded-2xl bg-neutral-100 p-6 sm:p-8 shadow-card transition-all duration-300 hover:shadow-xl"
+                className="rounded-2xl bg-neutral-100 p-6 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
               >
                 <div className="flex flex-wrap items-center gap-3 mb-4">
                   <span className="rounded-full bg-primary-500 px-3 py-1 text-xs font-semibold text-white">
@@ -166,7 +166,7 @@ export default function PressPage() {
             {pressKit.map((item, index) => (
               <button
                 key={index}
-                className="group text-left rounded-2xl bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="group text-left rounded-2xl bg-background p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
               >
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 text-primary-600 group-hover:bg-primary-500 group-hover:text-white transition-colors">
                   {item.icon}

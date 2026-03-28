@@ -110,13 +110,13 @@ export default function AdminSubscriptionsPage() {
       case AdminSubscriptionStatus.ACTIVE:
         return "bg-primary-100 text-primary-700";
       case AdminSubscriptionStatus.CANCELLED:
-        return "bg-gray-100 text-gray-700";
+        return "bg-neutral-100 text-neutral-700";
       case AdminSubscriptionStatus.EXPIRED:
         return "bg-red-100 text-red-700";
       case AdminSubscriptionStatus.PENDING_PAYMENT:
         return "bg-accent-yellow-100 text-accent-yellow-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-neutral-100 text-neutral-700";
     }
   };
 
@@ -137,7 +137,7 @@ export default function AdminSubscriptionsPage() {
 
       <div className="flex-1 md:ml-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-white border-b border-neutral-200">
           <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <h1 className="text-3xl font-black text-foreground">
               Subscription Management
@@ -151,17 +151,17 @@ export default function AdminSubscriptionsPage() {
         <div className="p-4 sm:p-6 md:p-8">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Total Subscriptions
               </p>
               <p className="text-3xl font-black text-foreground mt-2">3,842</p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">Active</p>
               <p className="text-3xl font-black text-primary-500 mt-2">2,987</p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Pending Payment
               </p>
@@ -169,27 +169,27 @@ export default function AdminSubscriptionsPage() {
                 156
               </p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Cancelled
               </p>
-              <p className="text-3xl font-black text-gray-500 mt-2">423</p>
+              <p className="text-3xl font-black text-neutral-500 mt-2">423</p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">Expired</p>
               <p className="text-3xl font-black text-red-500 mt-2">276</p>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="bg-white p-6 shadow-card mb-6">
+          <div className="bg-white p-6 shadow-[var(--shadow-card)] mb-6">
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setStatusFilter("all")}
                 className={`px-6 py-3 font-semibold ${
                   statusFilter === "all"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 All
@@ -199,7 +199,7 @@ export default function AdminSubscriptionsPage() {
                 className={`px-6 py-3 font-semibold ${
                   statusFilter === "active"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 Active
@@ -209,7 +209,7 @@ export default function AdminSubscriptionsPage() {
                 className={`px-6 py-3 font-semibold ${
                   statusFilter === "pending"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 Pending Payment
@@ -219,7 +219,7 @@ export default function AdminSubscriptionsPage() {
                 className={`px-6 py-3 font-semibold ${
                   statusFilter === "cancelled"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 Cancelled
@@ -229,7 +229,7 @@ export default function AdminSubscriptionsPage() {
                 className={`px-6 py-3 font-semibold ${
                   statusFilter === "expired"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 Expired
@@ -242,7 +242,7 @@ export default function AdminSubscriptionsPage() {
             {subscriptions.map((sub) => (
               <div
                 key={sub.id}
-                className="rounded-lg border border-gray-100 bg-white p-4 shadow-card"
+                className="rounded-lg border border-neutral-100 bg-white p-4 shadow-[var(--shadow-card)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -304,9 +304,9 @@ export default function AdminSubscriptionsPage() {
             ))}
           </div>
 
-          <div className="hidden overflow-x-auto bg-white shadow-card md:block">
+          <div className="hidden overflow-x-auto bg-white shadow-[var(--shadow-card)] md:block">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-neutral-50">
                 <tr>
                   <th className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground lg:px-6 lg:py-4">
                     User
@@ -333,7 +333,7 @@ export default function AdminSubscriptionsPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {subscriptions.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-gray-50">
+                  <tr key={sub.id} className="hover:bg-neutral-50">
                     <td className="whitespace-nowrap px-3 py-3 lg:px-6 lg:py-4">
                       <div>
                         <p className="font-semibold text-foreground">
@@ -404,19 +404,19 @@ export default function AdminSubscriptionsPage() {
               Showing 1 to 6 of 3,842 subscriptions
             </p>
             <div className="flex gap-2">
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-4 py-2 border border-neutral-200 text-foreground/60 font-semibold hover:bg-neutral-50">
                 Previous
               </button>
               <button className="px-4 py-2 bg-red-500 text-foreground font-semibold hover:bg-red-600">
                 1
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-4 py-2 border border-neutral-200 text-foreground/60 font-semibold hover:bg-neutral-50">
                 2
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-4 py-2 border border-neutral-200 text-foreground/60 font-semibold hover:bg-neutral-50">
                 3
               </button>
-              <button className="px-4 py-2 border border-gray-200 text-foreground/60 font-semibold hover:bg-gray-50">
+              <button className="px-4 py-2 border border-neutral-200 text-foreground/60 font-semibold hover:bg-neutral-50">
                 Next
               </button>
             </div>

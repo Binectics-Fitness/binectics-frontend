@@ -76,6 +76,11 @@ export default function LoginPage() {
         <div className="mx-auto w-full max-w-md px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl icon-glow-green">
+              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </div>
             <h1 className="font-display text-3xl font-black text-foreground sm:text-4xl">
               Welcome back
             </h1>
@@ -106,7 +111,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
+            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
               <div className="space-y-5">
                 {/* Email */}
                 <Input

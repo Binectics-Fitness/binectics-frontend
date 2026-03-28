@@ -167,7 +167,7 @@ export default function PrivacyPage() {
             {sections.map((section, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-6 sm:p-10 shadow-card"
+                className="rounded-2xl bg-background p-6 sm:p-10 shadow-[var(--shadow-card)]"
               >
                 <h2 className="font-display text-2xl font-black text-foreground mb-6 sm:text-3xl">
                   {section.title}

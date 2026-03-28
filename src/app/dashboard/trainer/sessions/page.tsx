@@ -21,7 +21,7 @@ const STATUS_COLORS: Record<ConsultationBookingStatus, string> = {
   [ConsultationBookingStatus.CONFIRMED]: "bg-blue-100 text-blue-800",
   [ConsultationBookingStatus.COMPLETED]: "bg-green-100 text-green-800",
   [ConsultationBookingStatus.CANCELLED]: "bg-red-100 text-red-800",
-  [ConsultationBookingStatus.NO_SHOW]: "bg-gray-100 text-gray-800",
+  [ConsultationBookingStatus.NO_SHOW]: "bg-neutral-100 text-neutral-800",
 };
 
 function formatDateTime(iso: string, tz: string): string {
@@ -121,7 +121,7 @@ export default function TrainerSessionsPage() {
 
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Header with timezone info */}
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
+        <section className="mb-8 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
           <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-2">
               <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">
@@ -150,7 +150,7 @@ export default function TrainerSessionsPage() {
         </section>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-1 rounded-lg bg-white p-1 shadow-card w-fit">
+        <div className="mb-6 flex gap-1 rounded-lg bg-white p-1 shadow-[var(--shadow-card)] w-fit">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -178,7 +178,7 @@ export default function TrainerSessionsPage() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-yellow-500 border-t-transparent" />
           </div>
         ) : bookings.length === 0 ? (
-          <div className="rounded-2xl bg-white p-12 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-yellow-100">
               <svg
                 className="h-8 w-8 text-accent-yellow-600"
@@ -228,7 +228,7 @@ export default function TrainerSessionsPage() {
               return (
                 <div
                   key={booking.id}
-                  className="rounded-xl bg-white p-4 sm:p-6 shadow-card"
+                  className="rounded-xl bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">

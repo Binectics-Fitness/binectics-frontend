@@ -69,7 +69,7 @@ export default function NotificationsSettingsPage() {
       )}
 
       {/* Email Notifications */}
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -135,7 +135,7 @@ export default function NotificationsSettingsPage() {
       </div>
 
       {/* Push Notifications */}
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -189,7 +189,7 @@ export default function NotificationsSettingsPage() {
       </div>
 
       {/* SMS Notifications */}
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -263,7 +263,7 @@ function NotificationToggle({
   onChange: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-gray-100 py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-3 border-b border-neutral-100 py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex-1 pr-2">
         <p className="font-semibold text-foreground">{label}</p>
         <p className="text-sm text-foreground/60 mt-1">{description}</p>
@@ -271,7 +271,7 @@ function NotificationToggle({
       <button
         onClick={onChange}
         className={`relative inline-flex h-6 w-11 flex-shrink-0 self-start cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:self-auto ${
-          checked ? "bg-primary-500" : "bg-gray-200"
+          checked ? "bg-primary-500" : "bg-neutral-200"
         }`}
       >
         <span

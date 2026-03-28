@@ -16,18 +16,29 @@ export function LoadingSpinner({
   fullScreen = true,
 }: LoadingSpinnerProps) {
   const spinner = (
-    <div className="text-center">
-      <div
-        className={`inline-block ${sizeMap[size]} animate-spin rounded-full border-solid border-primary-500 border-r-transparent`}
-      />
-      {label && <p className="mt-4 text-sm text-neutral-500">{label}</p>}
+    <div className="text-center animate-fade-in">
+      <div className="relative inline-flex">
+        <div
+          className={`${sizeMap[size]} animate-spin rounded-full border-solid border-primary-500 border-r-transparent`}
+        />
+        {/* Subtle glow behind spinner */}
+        <div
+          className={`absolute inset-0 ${sizeMap[size]} rounded-full opacity-20 blur-md`}
+          style={{ background: "#00d991" }}
+        />
+      </div>
+      {label && (
+        <p className="mt-4 text-sm font-medium text-foreground-secondary">
+          {label}
+        </p>
+      )}
     </div>
   );
 
   if (!fullScreen) return spinner;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+    <div className="flex min-h-screen items-center justify-center gradient-section-green">
       {spinner}
     </div>
   );

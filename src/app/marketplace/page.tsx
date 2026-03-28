@@ -106,7 +106,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
   return (
     <Link
       href={`/marketplace/${listing._id}`}
-      className="group block h-full rounded-2xl bg-white shadow-card transition-shadow duration-200 hover:shadow-lg"
+      className="group block h-full rounded-2xl bg-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5"
     >
       <div className="flex h-full flex-col p-6 sm:p-8">
         {/* Header */}
@@ -314,8 +314,9 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="border-b border-neutral-200 bg-background-secondary py-10 sm:py-16">
-        <div className="mx-auto max-w-5xl px-4 text-center">
+      <section className="relative overflow-hidden border-b border-neutral-200 bg-background-secondary py-10 sm:py-16">
+        <div className="absolute inset-0 gradient-section-green" />
+        <div className="relative mx-auto max-w-5xl px-4 text-center">
           <h1 className="mb-4 font-display text-3xl font-black text-foreground sm:text-5xl">
             Find Your Perfect{" "}
             <span className="text-primary-500">Fitness Professional</span>
@@ -346,7 +347,7 @@ export default function MarketplacePage() {
                 placeholder="Search by name, specialty, or keyword..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border-2 border-neutral-300 bg-white px-5 py-4 pl-12 pr-4 text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:pr-28"
+                className="w-full rounded-xl border border-neutral-200 bg-white px-5 py-4 pl-12 pr-4 text-foreground shadow-[var(--shadow-card)] placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:shadow-[var(--shadow-card-hover)] sm:pr-28"
               />
               <button
                 type="submit"
@@ -364,7 +365,7 @@ export default function MarketplacePage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:gap-8">
           {/* Filters Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="rounded-2xl bg-white p-4 shadow-card sm:p-6 lg:sticky lg:top-20">
+            <div className="rounded-2xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6 lg:sticky lg:top-20">
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">Filters</h2>
                 <button
@@ -514,7 +515,7 @@ export default function MarketplacePage() {
 
             {/* Empty State */}
             {!isLoading && listings.length === 0 && (
-              <div className="rounded-2xl bg-white p-8 text-center shadow-card sm:p-12">
+              <div className="rounded-2xl bg-white p-8 text-center shadow-[var(--shadow-card)] sm:p-12">
                 <svg
                   className="mx-auto h-16 w-16 text-neutral-300 mb-4"
                   fill="none"

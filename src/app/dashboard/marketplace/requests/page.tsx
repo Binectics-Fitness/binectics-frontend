@@ -119,7 +119,7 @@ export default function MarketplaceRequestsPage() {
         )}
 
         {requests.length === 0 && (
-          <div className="rounded-2xl bg-white p-12 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
             <svg
               className="mx-auto h-16 w-16 text-neutral-300 mb-4"
               fill="none"
@@ -209,7 +209,7 @@ function RequestCard({
   const isPending = request.status === "pending";
 
   return (
-    <div className="rounded-xl bg-white p-5 shadow-card">
+    <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center overflow-hidden">

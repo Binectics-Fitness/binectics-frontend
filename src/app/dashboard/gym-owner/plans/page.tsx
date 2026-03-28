@@ -142,28 +142,28 @@ export default function GymOwnerPlansPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Total Plans</p>
               <p className="text-3xl font-black text-foreground mt-2">{stats.totalPlans}</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Active Plans</p>
               <p className="text-3xl font-black text-foreground mt-2">{stats.activePlans}</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Active Members</p>
               <p className="text-3xl font-black text-foreground mt-2">{stats.activeMembers}</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Avg Plan Price</p>
               <p className="text-3xl font-black text-foreground mt-2">${stats.averagePrice}</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-card overflow-hidden">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Plan</th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Type</th>
@@ -183,7 +183,7 @@ export default function GymOwnerPlansPage() {
                     </tr>
                   ) : (
                     plans.map((plan) => (
-                      <tr key={plan._id} className="hover:bg-gray-50">
+                      <tr key={plan._id} className="hover:bg-neutral-50">
                         <td className="px-6 py-4">
                           <p className="font-semibold text-foreground">{plan.name}</p>
                           {plan.description && (
@@ -213,7 +213,7 @@ export default function GymOwnerPlansPage() {
                             className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
                               plan.is_active
                                 ? "bg-primary-100 text-primary-700"
-                                : "bg-gray-100 text-gray-700"
+                                : "bg-neutral-100 text-neutral-700"
                             }`}
                           >
                             {plan.is_active ? "Active" : "Inactive"}

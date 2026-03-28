@@ -164,8 +164,8 @@ export default function GymOwnerDashboard() {
           />
         </svg>
       ),
-      color: "bg-accent-blue-100",
-      iconColor: "text-accent-blue-600",
+      color: "icon-glow-blue",
+      iconColor: "",
     },
     {
       label: "Revenue Today",
@@ -186,8 +186,8 @@ export default function GymOwnerDashboard() {
           />
         </svg>
       ),
-      color: "bg-primary-100",
-      iconColor: "text-primary-600",
+      color: "icon-glow-green",
+      iconColor: "",
     },
     {
       label: "Active Members",
@@ -208,8 +208,8 @@ export default function GymOwnerDashboard() {
           />
         </svg>
       ),
-      color: "bg-accent-yellow-100",
-      iconColor: "text-accent-yellow-600",
+      color: "icon-glow-yellow",
+      iconColor: "",
     },
     {
       label: "Avg. Rating",
@@ -234,8 +234,8 @@ export default function GymOwnerDashboard() {
           />
         </svg>
       ),
-      color: "bg-accent-purple-100",
-      iconColor: "text-accent-purple-600",
+      color: "icon-glow-purple",
+      iconColor: "",
     },
   ];
 
@@ -366,13 +366,16 @@ export default function GymOwnerDashboard() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="font-display text-3xl font-black text-foreground mb-2">
-                {gymData.name}
-              </h1>
-              <p className="text-foreground-secondary">
-                {gymData.location} • Managing your fitness empire
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-1 rounded-full bg-gradient-to-b from-accent-blue-500 to-accent-blue-600" />
+              <div>
+                <h1 className="font-display text-3xl font-black text-foreground mb-2">
+                  {gymData.name}
+                </h1>
+                <p className="text-foreground-secondary">
+                  {gymData.location} • Managing your fitness empire
+                </p>
+              </div>
             </div>
             <Link
               href="/dashboard/gym-owner/settings"
@@ -391,11 +394,10 @@ export default function GymOwnerDashboard() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl"
-            >
+              className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]">
               <div className="flex items-start justify-between mb-4">
                 <div
-                  className={`flex h-12 w-12 items-center justify-center  ${stat.color} ${stat.iconColor}`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 ${stat.color} ${stat.iconColor}`}
                 >
                   {stat.icon}
                 </div>
@@ -423,7 +425,7 @@ export default function GymOwnerDashboard() {
               <Link
                 key={index}
                 href={action.href}
-                className={`group  ${action.color} p-6 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                className={`group rounded-xl ${action.color} p-6 text-center shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
               >
                 <div className="text-4xl mb-3">{action.icon}</div>
                 <p className="font-semibold text-white">{action.label}</p>
@@ -446,7 +448,7 @@ export default function GymOwnerDashboard() {
                 View All
               </Link>
             </div>
-            <div className="bg-background p-6 shadow-card">
+            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
               {recentCheckins.length === 0 ? (
                 <p className="text-sm text-foreground-secondary">
                   No recent check-ins yet.
@@ -492,7 +494,7 @@ export default function GymOwnerDashboard() {
                 Manage
               </Link>
             </div>
-            <div className="bg-background p-6 shadow-card">
+            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
               <ul className="space-y-4">
                 {upcomingClasses.map((classItem, index) => (
                   <li

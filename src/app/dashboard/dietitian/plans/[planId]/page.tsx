@@ -169,19 +169,19 @@ export default function DietitianPlanDetailPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Price</p>
               <p className="text-3xl font-black text-foreground mt-2">
                 {plan.currency} {plan.price}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Duration</p>
               <p className="text-3xl font-black text-foreground mt-2">
                 {plan.duration_days}d
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Type</p>
               <p className="text-3xl font-black text-foreground mt-2">
                 {plan.plan_type === MembershipPlanType.SUBSCRIPTION
@@ -189,17 +189,17 @@ export default function DietitianPlanDetailPage() {
                   : "One"}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Status</p>
               <span
-                className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold mt-2 ${plan.is_active ? "bg-primary-100 text-primary-700" : "bg-gray-100 text-gray-700"}`}
+                className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold mt-2 ${plan.is_active ? "bg-primary-100 text-primary-700" : "bg-neutral-100 text-neutral-700"}`}
               >
                 {plan.is_active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-card p-6 mb-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-6">
             <h3 className="text-lg font-bold text-foreground mb-4">
               Plan Features
             </h3>
@@ -222,7 +222,7 @@ export default function DietitianPlanDetailPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl shadow-card p-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
             <h3 className="text-lg font-bold text-foreground mb-4">Actions</h3>
             <div className="flex flex-wrap gap-3">
               <button

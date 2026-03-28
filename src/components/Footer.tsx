@@ -77,7 +77,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="border-t border-neutral-300 bg-background">
+    <footer className="border-t border-neutral-200 bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         {/* Main Footer Content */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-6">

@@ -124,7 +124,7 @@ export default function TrainerProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Back Button */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => router.back()}
@@ -164,19 +164,19 @@ export default function TrainerProfilePage() {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                <div className="bg-gray-50 p-3 text-center sm:p-4">
+                <div className="bg-neutral-50 p-3 text-center rounded-xl sm:p-4">
                   <p className="text-xl font-black text-foreground sm:text-2xl">
                     {listing?.average_rating?.toFixed(1) ?? "—"}
                   </p>
                   <p className="text-sm text-foreground/60">Rating</p>
                 </div>
-                <div className="bg-gray-50 p-3 text-center sm:p-4">
+                <div className="bg-neutral-50 p-3 text-center rounded-xl sm:p-4">
                   <p className="text-xl font-black text-foreground sm:text-2xl">
                     {listing?.review_count ?? 0}
                   </p>
                   <p className="text-sm text-foreground/60">Reviews</p>
                 </div>
-                <div className="bg-gray-50 p-3 text-center sm:p-4">
+                <div className="bg-neutral-50 p-3 text-center rounded-xl sm:p-4">
                   <p className="text-xl font-black text-foreground sm:text-2xl">
                     {listing?.active_client_count ?? 0}
                   </p>
@@ -233,7 +233,7 @@ export default function TrainerProfilePage() {
               </p>
 
               {/* Availability */}
-              <div className="mb-6 p-4 bg-gray-50 border border-gray-200">
+              <div className="mb-6 p-4 bg-neutral-50 border border-neutral-200 rounded-xl">
                 <p className="text-sm font-semibold text-foreground mb-1">
                   Availability
                 </p>
@@ -298,7 +298,7 @@ export default function TrainerProfilePage() {
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Certifications */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Certifications & Credentials
               </h2>
@@ -311,7 +311,7 @@ export default function TrainerProfilePage() {
                   {(listing?.certifications ?? []).map((cert, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-3 p-3 bg-gray-50"
+                      className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg"
                     >
                       <svg
                         className="w-6 h-6 text-accent-yellow-500"
@@ -335,7 +335,7 @@ export default function TrainerProfilePage() {
 
             {/* Achievements / Bio Details */}
             {listing?.bio && (
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
                 <h2 className="text-2xl font-bold text-foreground mb-6">
                   About
                 </h2>
@@ -346,12 +346,12 @@ export default function TrainerProfilePage() {
             )}
 
             {/* Availability - removed (not in API response), show accepting clients status */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-4">
                 Availability
               </h2>
               {listing?.accepting_clients ? (
-                <div className="flex items-center gap-3 p-4 bg-primary-50 border border-primary-200">
+                <div className="flex items-center gap-3 p-4 bg-primary-50 border border-primary-200 rounded-xl">
                   <svg
                     className="w-5 h-5 text-primary-500"
                     fill="currentColor"
@@ -384,7 +384,7 @@ export default function TrainerProfilePage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 shadow-card lg:sticky lg:top-4">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)] lg:sticky lg:top-4">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Training Packages
               </h2>
@@ -413,10 +413,10 @@ export default function TrainerProfilePage() {
                   {plans.map((plan) => (
                     <div
                       key={plan._id}
-                      className={`p-4 border-2 cursor-pointer transition-all ${
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
                         selectedPlan === plan._id
                           ? "border-accent-yellow-500 bg-accent-yellow-500/5"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-neutral-200 hover:border-neutral-300"
                       }`}
                       onClick={() => setSelectedPlan(plan._id)}
                     >

@@ -228,7 +228,7 @@ export default function PricingPage() {
             {memberPlans.map((plan, index) => (
               <div
                 key={index}
-                className={`relative rounded-2xl bg-background p-6 sm:p-8 shadow-card transition-all duration-300 hover:shadow-xl ${
+                className={`relative rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] ${
                   plan.popular ? 'ring-2 ring-primary-500' : ''
                 }`}
               >
@@ -309,7 +309,7 @@ export default function PricingPage() {
             {professionalPlans.map((plan, index) => (
               <div
                 key={index}
-                className={`relative rounded-2xl bg-neutral-100 p-6 shadow-card transition-all duration-300 hover:shadow-xl ${
+                className={`relative rounded-2xl bg-neutral-100 p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] ${
                   plan.popular ? 'ring-2 ring-accent-blue-500' : ''
                 }`}
               >
@@ -376,7 +376,7 @@ export default function PricingPage() {
           </div>
           <div className="space-y-6">
             {faqs.map((faq, index) => (
-              <div key={index} className="rounded-2xl bg-background p-6 shadow-card">
+              <div key={index} className="rounded-2xl bg-background p-6 shadow-[var(--shadow-card)]">
                 <h3 className="font-bold text-lg text-foreground mb-3">
                   {faq.question}
                 </h3>

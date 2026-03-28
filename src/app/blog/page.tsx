@@ -122,7 +122,7 @@ export default function BlogPage() {
             {posts.map((post, index) => (
               <article
                 key={index}
-                className="group rounded-2xl bg-neutral-100 overflow-hidden shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="group rounded-2xl bg-neutral-100 overflow-hidden shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
               >
                 <div className="flex h-48 items-center justify-center bg-gradient-to-br from-primary-500 to-accent-blue-500 text-6xl">
                   {post.image}

@@ -120,7 +120,7 @@ export default function UnsubscribePage() {
         </div>
 
         {/* Preference Options */}
-        <div className="rounded-2xl bg-background p-8 shadow-card mb-8">
+        <div className="rounded-2xl bg-background p-8 shadow-[var(--shadow-card)] mb-8">
           <h2 className="font-bold text-xl text-foreground mb-6">
             Choose what you want to receive
           </h2>

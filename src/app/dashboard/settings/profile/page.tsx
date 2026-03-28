@@ -274,7 +274,7 @@ export default function ProfileSettingsPage() {
 
   const renderGymOwnerFields = () => (
     <>
-      <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Business Information
         </h3>
@@ -286,7 +286,7 @@ export default function ProfileSettingsPage() {
             <input
               type="text"
               {...registerField("businessName")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
               placeholder="Your business name"
             />
           </div>
@@ -297,14 +297,14 @@ export default function ProfileSettingsPage() {
             <input
               type="text"
               {...registerField("businessRegistration")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
               placeholder="Registration number"
             />
           </div>
         </div>
       </div>
 
-      <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Gym Details
         </h3>
@@ -316,7 +316,7 @@ export default function ProfileSettingsPage() {
             <input
               type="text"
               {...registerField("gymName")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
               placeholder="Enter gym name"
             />
           </div>
@@ -327,7 +327,7 @@ export default function ProfileSettingsPage() {
             <textarea
               {...registerField("gymDescription")}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
               placeholder="Tell members about your gym..."
             />
           </div>
@@ -339,7 +339,7 @@ export default function ProfileSettingsPage() {
               <input
                 type="text"
                 {...registerField("gymAddress")}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                 placeholder="Street address"
               />
             </div>
@@ -350,7 +350,7 @@ export default function ProfileSettingsPage() {
               <input
                 type="text"
                 {...registerField("gymCity")}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                 placeholder="City"
               />
             </div>
@@ -361,7 +361,7 @@ export default function ProfileSettingsPage() {
   );
 
   const renderTrainerFields = () => (
-    <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+    <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
       <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
         Professional Information
       </h3>
@@ -373,7 +373,7 @@ export default function ProfileSettingsPage() {
           <textarea
             {...registerField("bio")}
             rows={4}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
             placeholder="Tell clients about your experience and approach..."
           />
         </div>
@@ -389,7 +389,7 @@ export default function ProfileSettingsPage() {
                 .map((s) => s.trim());
               setValue("specialties", specialties);
             }}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
             placeholder="e.g., Strength Training, Weight Loss, Sports Performance"
           />
         </div>
@@ -405,7 +405,7 @@ export default function ProfileSettingsPage() {
                 .map((s) => s.trim());
               setValue("certifications", certifications);
             }}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
             placeholder="e.g., NASM-CPT, ACE, CSCS"
           />
         </div>
@@ -416,7 +416,7 @@ export default function ProfileSettingsPage() {
           <input
             type="text"
             {...registerField("experience")}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
             placeholder="e.g., 5 years"
           />
         </div>
@@ -425,7 +425,7 @@ export default function ProfileSettingsPage() {
   );
 
   const renderDietitianFields = () => (
-    <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+    <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
       <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
         Professional Information
       </h3>
@@ -437,7 +437,7 @@ export default function ProfileSettingsPage() {
           <textarea
             {...registerField("bio")}
             rows={4}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
             placeholder="Tell clients about your approach to nutrition and wellness..."
           />
         </div>
@@ -453,7 +453,7 @@ export default function ProfileSettingsPage() {
                 .map((s) => s.trim());
               setValue("specialties", specialties);
             }}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
             placeholder="e.g., Weight Management, Sports Nutrition, Clinical Nutrition"
           />
         </div>
@@ -469,7 +469,7 @@ export default function ProfileSettingsPage() {
                 .map((s) => s.trim());
               setValue("certifications", certifications);
             }}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
             placeholder="e.g., RD, RDN, LD, CDN"
           />
         </div>
@@ -480,7 +480,7 @@ export default function ProfileSettingsPage() {
           <input
             type="text"
             {...registerField("experience")}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
             placeholder="e.g., 7 years"
           />
         </div>
@@ -489,7 +489,7 @@ export default function ProfileSettingsPage() {
   );
 
   const renderUserFields = () => (
-    <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+    <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
       <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
         Fitness Goals & Preferences
       </h3>
@@ -539,7 +539,7 @@ export default function ProfileSettingsPage() {
       )}
 
       {/* Basic Information */}
-      <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             {displayedProfileImage ? (
@@ -597,7 +597,7 @@ export default function ProfileSettingsPage() {
         </div>
       </div>
 
-      <div className="mb-6 rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Basic Information
         </h3>
@@ -609,7 +609,7 @@ export default function ProfileSettingsPage() {
             <input
               type="text"
               {...registerField("firstName")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.firstName && (
               <p className="mt-1 text-sm text-red-500">
@@ -624,7 +624,7 @@ export default function ProfileSettingsPage() {
             <input
               type="text"
               {...registerField("lastName")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.lastName && (
               <p className="mt-1 text-sm text-red-500">
@@ -640,7 +640,7 @@ export default function ProfileSettingsPage() {
               type="email"
               value={formData.email}
               disabled
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-foreground/50 cursor-not-allowed"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg bg-neutral-50 text-foreground/50 cursor-not-allowed"
             />
           </div>
           <div>
@@ -650,7 +650,7 @@ export default function ProfileSettingsPage() {
             <input
               type="tel"
               {...registerField("phone")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="+1 (555) 000-0000"
             />
           </div>

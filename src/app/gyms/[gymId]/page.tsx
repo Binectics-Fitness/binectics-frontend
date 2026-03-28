@@ -133,7 +133,7 @@ export default function GymProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Back Button */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => router.back()}
@@ -168,7 +168,7 @@ export default function GymProfilePage() {
                 profileImage={listing?.profile_image}
                 alt={displayName}
                 fallbackEmoji="🏋️"
-                accentBg="bg-gray-200"
+                accentBg="bg-accent-blue-100"
               />
             </div>
 
@@ -250,7 +250,7 @@ export default function GymProfilePage() {
 
               {/* Address */}
               {listing?.bio && (
-                <div className="mb-6 p-4 bg-gray-50 border border-gray-200">
+                <div className="mb-6 p-4 bg-neutral-50 border border-neutral-200 rounded-xl">
                   <p className="text-sm font-semibold text-foreground mb-1">
                     About
                   </p>
@@ -263,7 +263,7 @@ export default function GymProfilePage() {
                 <button className="flex-1 px-6 py-3 bg-accent-blue-500 text-foreground font-semibold hover:bg-accent-blue-600 transition-colors">
                   Get Directions
                 </button>
-                <button className="px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-accent-blue-500 transition-colors">
+                <button className="px-6 py-3 border border-neutral-200 rounded-lg text-foreground font-semibold hover:border-accent-blue-500 transition-colors">
                   Share
                 </button>
               </div>
@@ -278,7 +278,7 @@ export default function GymProfilePage() {
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Facilities */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Facilities & Amenities
               </h2>
@@ -341,7 +341,7 @@ export default function GymProfilePage() {
             </div>
 
             {/* Hours - removed (not in API), show accepting note */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-4">
                 Opening Hours
               </h2>
@@ -361,7 +361,7 @@ export default function GymProfilePage() {
 
           {/* Right Column - Plans & CTA */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 shadow-card lg:sticky lg:top-4">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)] lg:sticky lg:top-4">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Membership Plans
               </h2>
@@ -395,10 +395,10 @@ export default function GymProfilePage() {
                   {plans.map((plan) => (
                     <div
                       key={plan._id}
-                      className={`p-4 border-2 cursor-pointer transition-all ${
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
                         selectedPlan === plan._id
                           ? "border-primary-500 bg-primary-500/5"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-neutral-200 hover:border-neutral-300"
                       }`}
                       onClick={() => {
                         setSelectedPlan(
@@ -492,11 +492,11 @@ export default function GymProfilePage() {
               </button>
 
               {/* QR Check-in */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mt-6 pt-6 border-t border-neutral-200">
                 <h3 className="font-semibold text-foreground mb-3">
                   QR Check-in
                 </h3>
-                <div className="bg-gray-50 p-4 text-center">
+                <div className="bg-neutral-50 p-4 text-center rounded-xl">
                   <div className="w-32 h-32 bg-white mx-auto mb-2 flex items-center justify-center">
                     <span className="text-6xl">📱</span>
                   </div>

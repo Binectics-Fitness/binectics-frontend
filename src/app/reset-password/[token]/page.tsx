@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
 
               {/* Reset Form */}
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
+                <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)]">
                   <div className="space-y-5">
                     <Input
                       label="New Password"

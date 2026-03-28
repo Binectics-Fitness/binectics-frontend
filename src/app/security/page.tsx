@@ -156,7 +156,7 @@ export default function SecurityPage() {
             {securityFeatures.map((feature, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
               >
                 <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-${feature.color}-500 text-white`}>
                   {feature.icon}
@@ -188,7 +188,7 @@ export default function SecurityPage() {
             {certifications.map((cert, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-neutral-100 p-6 sm:p-8 text-center shadow-card"
+                className="rounded-2xl bg-neutral-100 p-6 sm:p-8 text-center shadow-[var(--shadow-card)]"
               >
                 <div className="mb-4 text-4xl sm:text-5xl">{cert.image}</div>
                 <h3 className="font-display text-lg font-black text-foreground mb-2">
@@ -218,7 +218,7 @@ export default function SecurityPage() {
             {bestPractices.map((practice, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-6 shadow-card"
+                className="rounded-2xl bg-background p-6 shadow-[var(--shadow-card)]"
               >
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
                   <span className="text-lg font-black text-primary-600">{index + 1}</span>
@@ -278,7 +278,7 @@ export default function SecurityPage() {
       {/* Data Protection */}
       <section className="bg-neutral-100 py-16 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-2xl bg-background p-8 sm:p-10 shadow-card">
+          <div className="rounded-2xl bg-background p-8 sm:p-10 shadow-[var(--shadow-card)]">
             <h2 className="font-display text-2xl font-black text-foreground mb-6 sm:text-3xl">
               Data Protection & Privacy
             </h2>

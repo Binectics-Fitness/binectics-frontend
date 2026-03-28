@@ -140,7 +140,7 @@ export default function SettingsLayout({
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -196,7 +196,7 @@ export default function SettingsLayout({
                     className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                       isActive
                         ? "bg-primary-500 text-foreground shadow-md"
-                        : "text-foreground/60 hover:bg-gray-100 hover:text-foreground"
+                        : "text-foreground/60 hover:bg-neutral-100 hover:text-foreground"
                     }`}
                   >
                     {tab.icon}

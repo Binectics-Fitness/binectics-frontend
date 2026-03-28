@@ -218,7 +218,7 @@ export default function TrainerWorkoutsPage() {
         {loadingProfiles ? (
           <DashboardLoading />
         ) : profiles.length === 0 ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
             <EmptyState
               title="No Clients Yet"
               description="Add a client from the Clients page to start creating workout plans."
@@ -251,13 +251,13 @@ export default function TrainerWorkoutsPage() {
 
             {/* Stats */}
             <div className="mb-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Total Plans</p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {workoutPlans.length}
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Active Plans
                 </p>
@@ -265,7 +265,7 @@ export default function TrainerWorkoutsPage() {
                   {activePlans.length}
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Total Exercises
                 </p>
@@ -279,7 +279,7 @@ export default function TrainerWorkoutsPage() {
             {loadingPlans ? (
               <DashboardLoading />
             ) : workoutPlans.length === 0 ? (
-              <div className="rounded-2xl bg-white p-8 shadow-card">
+              <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
                 <EmptyState
                   title="No Workout Plans"
                   description="Create a workout plan for this client to get started."
@@ -292,7 +292,7 @@ export default function TrainerWorkoutsPage() {
                 {[...activePlans, ...inactivePlans].map((plan) => (
                   <div
                     key={plan._id}
-                    className="rounded-2xl bg-white p-6 shadow-card"
+                    className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                       <div className="flex-1 min-w-0">

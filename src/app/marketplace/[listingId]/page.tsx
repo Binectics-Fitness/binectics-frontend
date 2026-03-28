@@ -69,7 +69,7 @@ function ReviewCard({ review }: { review: MarketplaceReview }) {
   });
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-card">
+    <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center overflow-hidden">
@@ -268,7 +268,7 @@ export default function ListingDetailPage() {
         <div className="mx-auto max-w-4xl px-4 py-12">
           <div className="animate-pulse">
             <div className="h-8 w-48 rounded bg-neutral-200 mb-8" />
-            <div className="rounded-2xl bg-white p-8 shadow-card">
+            <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
               <div className="flex items-start gap-6 mb-6">
                 <div className="h-20 w-20 rounded-xl bg-neutral-200" />
                 <div className="flex-1">
@@ -342,7 +342,7 @@ export default function ListingDetailPage() {
 
       <div className="mx-auto max-w-4xl px-4 py-8">
         {/* Main Card */}
-        <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card mb-8">
+        <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)] mb-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start gap-6 mb-6">
             <div className="h-20 w-20 shrink-0 rounded-xl bg-neutral-200 overflow-hidden flex items-center justify-center">
@@ -602,7 +602,7 @@ export default function ListingDetailPage() {
         </div>
 
         {/* Reviews Section */}
-        <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+        <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-foreground">
               Reviews ({reviewTotal})

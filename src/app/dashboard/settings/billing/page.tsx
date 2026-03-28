@@ -58,7 +58,7 @@ export default function BillingSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3 sm:items-center">
             <svg
@@ -87,7 +87,7 @@ export default function BillingSettingsPage() {
         </div>
 
         {isAddingCard && (
-          <div className="mb-6 rounded-lg border-2 border-primary-200 bg-gray-50 p-4">
+          <div className="mb-6 rounded-lg border-2 border-primary-200 bg-neutral-50 p-4">
             <h4 className="font-bold text-foreground mb-4">Add New Card</h4>
             <div className="space-y-4">
               <div>
@@ -97,7 +97,7 @@ export default function BillingSettingsPage() {
                 <input
                   type="text"
                   placeholder="1234 5678 9012 3456"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -108,7 +108,7 @@ export default function BillingSettingsPage() {
                   <input
                     type="text"
                     placeholder="MM/YY"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
                 <div>
@@ -118,7 +118,7 @@ export default function BillingSettingsPage() {
                   <input
                     type="text"
                     placeholder="123"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
               </div>
@@ -134,7 +134,7 @@ export default function BillingSettingsPage() {
                 </button>
                 <button
                   onClick={() => setIsAddingCard(false)}
-                  className="w-full rounded-lg bg-gray-200 px-4 py-2 font-semibold text-foreground transition-colors hover:bg-gray-300 sm:w-auto"
+                  className="w-full rounded-lg bg-neutral-200 px-4 py-2 font-semibold text-foreground transition-colors hover:bg-neutral-300 sm:w-auto"
                 >
                   Cancel
                 </button>
@@ -147,7 +147,7 @@ export default function BillingSettingsPage() {
           {paymentMethods.map((method) => (
             <div
               key={method.id}
-              className="flex flex-col gap-4 rounded-lg border-2 border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-4 rounded-lg border-2 border-neutral-200 p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-start gap-4 sm:items-center">
                 <div className="w-12 h-8 bg-linear-to-r from-accent-blue-500 to-accent-purple-500 rounded flex items-center justify-center">
@@ -188,7 +188,7 @@ export default function BillingSettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -211,7 +211,7 @@ export default function BillingSettingsPage() {
           {subscriptions.map((sub) => (
             <div
               key={sub.id}
-              className="p-4 border-2 border-gray-200 rounded-lg"
+              className="p-4 border-2 border-neutral-200 rounded-lg"
             >
               <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -231,7 +231,7 @@ export default function BillingSettingsPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col gap-3 border-t border-gray-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 border-t border-neutral-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <span className="px-3 py-1 bg-primary-100 text-primary-700 text-xs font-semibold rounded-full">
                   {sub.status}
                 </span>
@@ -249,7 +249,7 @@ export default function BillingSettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -271,7 +271,7 @@ export default function BillingSettingsPage() {
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
+              <tr className="border-b border-neutral-200">
                 <th className="text-left py-3 px-4 font-semibold text-foreground/70 text-sm">
                   Date
                 </th>
@@ -293,7 +293,7 @@ export default function BillingSettingsPage() {
               {invoices.map((invoice) => (
                 <tr
                   key={invoice.id}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b border-neutral-100 hover:bg-neutral-50"
                 >
                   <td className="py-3 px-4 text-foreground">{invoice.date}</td>
                   <td className="py-3 px-4 text-foreground">
@@ -321,7 +321,7 @@ export default function BillingSettingsPage() {
           {invoices.map((invoice) => (
             <div
               key={invoice.id}
-              className="rounded-lg border border-gray-200 p-4"
+              className="rounded-lg border border-neutral-200 p-4"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -336,7 +336,7 @@ export default function BillingSettingsPage() {
                   {invoice.status}
                 </span>
               </div>
-              <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+              <div className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3">
                 <p className="text-lg font-black text-foreground">
                   ${invoice.amount}
                 </p>
@@ -349,7 +349,7 @@ export default function BillingSettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -376,13 +376,13 @@ export default function BillingSettingsPage() {
             <input
               type="email"
               defaultValue={user.email}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <p className="text-xs text-foreground/60 mt-2">
               Invoices and receipts will be sent to this email
             </p>
           </div>
-          <div className="flex flex-col gap-3 border-t border-gray-200 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-neutral-200 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="pr-2">
               <p className="font-semibold text-foreground">
                 Auto-Renew Subscriptions

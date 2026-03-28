@@ -186,7 +186,7 @@ export default function AdminDashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-card p-6">
+            <div key={index} className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 rounded-lg ${stat.color}`}>
                   <div className={stat.iconColor}>{stat.icon}</div>
@@ -215,7 +215,7 @@ export default function AdminDashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Pending Actions
               </h2>
@@ -223,7 +223,7 @@ export default function AdminDashboardPage() {
                 {pendingActions.map((action) => (
                   <div
                     key={action.id}
-                    className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                    className="p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 cursor-pointer transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -237,7 +237,7 @@ export default function AdminDashboardPage() {
                                 ? "bg-red-100 text-red-700"
                                 : action.priority === "medium"
                                   ? "bg-accent-yellow-100 text-accent-yellow-700"
-                                  : "bg-gray-200 text-gray-700"
+                                  : "bg-neutral-200 text-neutral-700"
                             }`}
                           >
                             {action.priority}
@@ -268,7 +268,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Recent Activity
               </h2>
@@ -276,7 +276,7 @@ export default function AdminDashboardPage() {
                 {recentActivity.map((activity, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-0"
+                    className="flex items-start gap-4 pb-4 border-b border-neutral-100 last:border-0"
                   >
                     <div
                       className={`p-2 rounded-lg ${
@@ -336,7 +336,7 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
               href="/admin/verification"
-              className="bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-shadow"
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-primary-100 rounded-lg">
@@ -365,7 +365,7 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/users"
-              className="bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-shadow"
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-accent-blue-100 rounded-lg">
@@ -392,7 +392,7 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/providers"
-              className="bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-shadow"
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-accent-yellow-100 rounded-lg">
@@ -421,7 +421,7 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/analytics"
-              className="bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-shadow"
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-accent-purple-100 rounded-lg">

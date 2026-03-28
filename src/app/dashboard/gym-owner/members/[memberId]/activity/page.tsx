@@ -35,31 +35,31 @@ export default function MemberActivityPage() {
           <p className="text-foreground/60 mb-8">Complete check-in history</p>
 
           <div className="grid grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Total Check-ins</p>
               <p className="text-3xl font-black text-foreground mt-2">{checkIns.length}</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">This Month</p>
               <p className="text-3xl font-black text-foreground mt-2">15</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Avg Per Week</p>
               <p className="text-3xl font-black text-foreground mt-2">3.5</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Current Streak</p>
               <p className="text-3xl font-black text-primary-500 mt-2">7 days</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-card overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-200">
               <h3 className="font-bold text-foreground">Check-in History</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-neutral-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-bold text-foreground">Date</th>
                     <th className="px-6 py-3 text-left text-sm font-bold text-foreground">Check-in Time</th>
@@ -68,7 +68,7 @@ export default function MemberActivityPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {checkIns.map((checkIn) => (
-                    <tr key={checkIn.id} className="hover:bg-gray-50">
+                    <tr key={checkIn.id} className="hover:bg-neutral-50">
                       <td className="px-6 py-4 font-medium text-foreground">{checkIn.date}</td>
                       <td className="px-6 py-4 text-foreground/60">{checkIn.time}</td>
                       <td className="px-6 py-4 text-foreground/60">{checkIn.duration}</td>

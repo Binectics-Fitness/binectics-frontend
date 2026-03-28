@@ -196,7 +196,7 @@ export default function AboutPage() {
             {values.map((value, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="rounded-2xl bg-background p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
               >
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
                   {value.icon}

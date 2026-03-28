@@ -144,7 +144,7 @@ export default function DietitianAnalyticsPage() {
         </div>
 
         {!hasData ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
             <EmptyState
               title="No Data Yet"
               description="Start working with clients to see your analytics here."
@@ -155,7 +155,7 @@ export default function DietitianAnalyticsPage() {
         ) : (
           <>
             <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Total Clients
                 </p>
@@ -166,7 +166,7 @@ export default function DietitianAnalyticsPage() {
                   {activeClients} active
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Consultations
                 </p>
@@ -177,7 +177,7 @@ export default function DietitianAnalyticsPage() {
                   {completedBookings.length} completed
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Avg Rating</p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {reviewAgg ? reviewAgg.averageRating.toFixed(1) : "—"}
@@ -186,7 +186,7 @@ export default function DietitianAnalyticsPage() {
                   {reviewAgg?.totalReviews ?? 0} reviews
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Completion Rate
                 </p>
@@ -200,7 +200,7 @@ export default function DietitianAnalyticsPage() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="mb-4 text-lg font-bold text-foreground">
                   Consultation Breakdown
                 </h2>
@@ -255,7 +255,7 @@ export default function DietitianAnalyticsPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="mb-4 text-lg font-bold text-foreground">
                   Revenue Overview
                 </h2>

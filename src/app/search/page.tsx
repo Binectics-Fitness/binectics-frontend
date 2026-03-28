@@ -166,7 +166,7 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Search Section */}
-      <div className="bg-primary-500 py-8 sm:py-16">
+      <div className="gradient-section-green py-8 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-3">
@@ -177,20 +177,20 @@ export default function SearchPage() {
             </p>
           </div>
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white shadow-lg p-2 flex flex-col sm:flex-row gap-2">
+            <div className="bg-white shadow-[var(--shadow-elevated)] rounded-2xl p-2 flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={inputValue}
                 onChange={(e) => handleInputChange(e.target.value)}
                 placeholder="Search gyms, trainers, dietitians..."
-                className="flex-1 px-4 py-3 border-2 border-gray-200 focus:outline-none focus:border-primary-500"
+                className="flex-1 px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500"
               />
               <button
                 onClick={() => {
                   setSearchQuery(inputValue);
                   setPage(1);
                 }}
-                className="px-6 sm:px-8 py-3 bg-accent-blue-500 text-foreground font-semibold hover:bg-accent-blue-600 transition-colors whitespace-nowrap"
+                className="px-6 sm:px-8 py-3 bg-accent-blue-500 text-foreground font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors whitespace-nowrap"
               >
                 Search
               </button>
@@ -204,7 +204,7 @@ export default function SearchPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 shadow-card sticky top-4">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)] sticky top-4">
               <h2 className="text-xl font-bold text-foreground mb-6">
                 Filters
               </h2>
@@ -271,26 +271,26 @@ export default function SearchPage() {
                 />
               </div>
 
-              <div className="pt-6 border-t border-gray-200">
+              <div className="pt-6 border-t border-neutral-200">
                 <h3 className="font-semibold text-foreground mb-3">
                   Browse by Type
                 </h3>
                 <div className="space-y-2">
                   <Link
                     href="/gyms"
-                    className="block px-4 py-2 bg-accent-blue-100 text-accent-blue-700 font-semibold hover:bg-accent-blue-200 transition-colors"
+                    className="block px-4 py-2 bg-accent-blue-100 text-accent-blue-700 rounded-lg font-semibold hover:bg-accent-blue-200 transition-colors"
                   >
                     All Gyms
                   </Link>
                   <Link
                     href="/trainers"
-                    className="block px-4 py-2 bg-accent-yellow-100 text-accent-yellow-700 font-semibold hover:bg-accent-yellow-200 transition-colors"
+                    className="block px-4 py-2 bg-accent-yellow-100 text-accent-yellow-700 rounded-lg font-semibold hover:bg-accent-yellow-200 transition-colors"
                   >
                     All Trainers
                   </Link>
                   <Link
                     href="/dietitians"
-                    className="block px-4 py-2 bg-accent-purple-100 text-accent-purple-700 font-semibold hover:bg-accent-purple-200 transition-colors"
+                    className="block px-4 py-2 bg-accent-purple-100 text-accent-purple-700 rounded-lg font-semibold hover:bg-accent-purple-200 transition-colors"
                   >
                     All Dietitians
                   </Link>
@@ -311,7 +311,7 @@ export default function SearchPage() {
                   setSortBy(e.target.value);
                   setPage(1);
                 }}
-                className="w-full sm:w-auto order-1 sm:order-2 px-4 py-2 border-2 border-gray-200 focus:outline-none focus:border-primary-500 text-sm"
+                className="w-full sm:w-auto order-1 sm:order-2 px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
               >
                 <option value="relevance">Most Relevant</option>
                 <option value="rating">Highest Rated</option>
@@ -356,9 +356,9 @@ export default function SearchPage() {
                     <Link
                       key={listing._id}
                       href={getListingLink(listing)}
-                      className="bg-white shadow-card hover:shadow-lg transition-shadow group"
+                      className="bg-white rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 group overflow-hidden"
                     >
-                      <div className="relative h-40 sm:h-48 bg-gray-200 overflow-hidden">
+                        <div className="relative h-40 sm:h-48 bg-neutral-200 overflow-hidden">
                         {listing.profile_image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -367,7 +367,7 @@ export default function SearchPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-5xl text-gray-400">
+                          <div className="w-full h-full flex items-center justify-center text-5xl text-neutral-400">
                             {listing.account_type === "gym_owner"
                               ? "🏋️"
                               : listing.account_type === "personal_trainer"
@@ -425,14 +425,14 @@ export default function SearchPage() {
                             {tags.slice(0, 2).map((tag, index) => (
                               <span
                                 key={index}
-                                className="px-2 sm:px-3 py-1 bg-gray-100 text-foreground text-xs"
+                                className="px-2 sm:px-3 py-1 bg-neutral-100 text-foreground text-xs rounded"
                               >
                                 {tag}
                               </span>
                             ))}
                           </div>
                         )}
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-between pt-4 border-t border-neutral-200">
                           <div>
                             {listing.price_from ? (
                               <>
@@ -466,7 +466,7 @@ export default function SearchPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-2 sm:px-4 py-2 border-2 border-gray-200 text-foreground text-xs sm:text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+                  className="px-2 sm:px-4 py-2 border border-neutral-200 rounded-lg text-foreground text-xs sm:text-sm font-semibold hover:bg-neutral-50 disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -474,7 +474,7 @@ export default function SearchPage() {
                   <button
                     key={i + 1}
                     onClick={() => setPage(i + 1)}
-                    className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold ${page === i + 1 ? "bg-primary-500 text-foreground" : "border-2 border-gray-200 text-foreground hover:bg-gray-50"}`}
+                    className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg ${page === i + 1 ? "bg-primary-500 text-foreground" : "border border-neutral-200 text-foreground hover:bg-neutral-50"}`}
                   >
                     {i + 1}
                   </button>
@@ -482,7 +482,7 @@ export default function SearchPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-2 sm:px-4 py-2 border-2 border-gray-200 text-foreground text-xs sm:text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+                  className="px-2 sm:px-4 py-2 border border-neutral-200 rounded-lg text-foreground text-xs sm:text-sm font-semibold hover:bg-neutral-50 disabled:opacity-50"
                 >
                   Next
                 </button>

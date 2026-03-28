@@ -19,7 +19,7 @@ import { formatLocal } from "@/utils/format";
 const STATUS_STYLES: Record<MemberStatus, string> = {
   [MemberStatus.ACTIVE]: "bg-primary-100 text-primary-700",
   [MemberStatus.PENDING]: "bg-yellow-100 text-yellow-700",
-  [MemberStatus.INACTIVE]: "bg-gray-100 text-gray-700",
+  [MemberStatus.INACTIVE]: "bg-neutral-100 text-neutral-700",
 };
 
 function getMemberUser(member: OrganizationMember) {
@@ -215,7 +215,7 @@ export default function StaffPage() {
           </div>
 
           {!currentOrg ? (
-            <div className="rounded-xl bg-white p-8 shadow-card">
+            <div className="rounded-xl bg-white p-8 shadow-[var(--shadow-card)]">
               <h2 className="text-xl font-bold text-foreground">
                 No organization selected
               </h2>
@@ -227,7 +227,7 @@ export default function StaffPage() {
           ) : (
             <>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-xl bg-white p-6 shadow-card">
+                <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                   <p className="text-sm font-medium text-foreground/60">
                     Total Staff
                   </p>
@@ -238,7 +238,7 @@ export default function StaffPage() {
                     {activeMembers} active right now
                   </p>
                 </div>
-                <div className="rounded-xl bg-white p-6 shadow-card">
+                <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                   <p className="text-sm font-medium text-foreground/60">
                     Pending Invites
                   </p>
@@ -249,7 +249,7 @@ export default function StaffPage() {
                     Waiting for acceptance
                   </p>
                 </div>
-                <div className="rounded-xl bg-white p-6 shadow-card">
+                <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                   <p className="text-sm font-medium text-foreground/60">
                     Inactive Members
                   </p>
@@ -260,7 +260,7 @@ export default function StaffPage() {
                     Access currently paused
                   </p>
                 </div>
-                <div className="rounded-xl bg-white p-6 shadow-card">
+                <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                   <p className="text-sm font-medium text-foreground/60">
                     Role Coverage
                   </p>
@@ -282,7 +282,7 @@ export default function StaffPage() {
                 </div>
               )}
 
-              <div className="rounded-xl bg-white p-6 shadow-card">
+              <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <div className="flex flex-col gap-4 lg:flex-row">
                   <div className="flex-1">
                     <label className="mb-2 block text-sm font-semibold text-foreground">
@@ -293,7 +293,7 @@ export default function StaffPage() {
                       placeholder="Search by name, email, or role"
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
-                      className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 focus:border-accent-blue-500 focus:outline-none"
+                      className="w-full rounded-lg border-2 border-neutral-200 px-4 py-3 focus:border-accent-blue-500 focus:outline-none"
                     />
                   </div>
                   <div className="w-full lg:max-w-xs">
@@ -307,7 +307,7 @@ export default function StaffPage() {
                           event.target.value as "all" | MemberStatus,
                         )
                       }
-                      className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 focus:border-accent-blue-500 focus:outline-none"
+                      className="w-full rounded-lg border-2 border-neutral-200 px-4 py-3 focus:border-accent-blue-500 focus:outline-none"
                     >
                       <option value="all">All statuses</option>
                       <option value={MemberStatus.ACTIVE}>Active</option>
@@ -319,8 +319,8 @@ export default function StaffPage() {
               </div>
 
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-                <div className="rounded-xl bg-white shadow-card">
-                  <div className="border-b border-gray-100 px-6 py-4">
+                <div className="rounded-xl bg-white shadow-[var(--shadow-card)]">
+                  <div className="border-b border-neutral-100 px-6 py-4">
                     <h2 className="text-lg font-bold text-foreground">
                       Team Directory
                     </h2>
@@ -345,7 +345,7 @@ export default function StaffPage() {
                               `/dashboard/gym-owner/staff/${member._id}`,
                             )
                           }
-                          className="flex w-full flex-col gap-4 px-6 py-5 text-left hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
+                          className="flex w-full flex-col gap-4 px-6 py-5 text-left hover:bg-neutral-50 sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div className="flex items-start gap-4">
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-blue-500 text-sm font-bold text-white">
@@ -387,7 +387,7 @@ export default function StaffPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="rounded-xl bg-white p-6 shadow-card">
+                  <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                     <h2 className="text-lg font-bold text-foreground">
                       Pending Invitations
                     </h2>
@@ -411,7 +411,7 @@ export default function StaffPage() {
                           return (
                             <div
                               key={invitation._id}
-                              className="rounded-lg border border-gray-200 p-4"
+                              className="rounded-lg border border-neutral-200 p-4"
                             >
                               <p className="font-semibold text-foreground">
                                 {invitation.email}
@@ -433,7 +433,7 @@ export default function StaffPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl bg-white p-6 shadow-card">
+                  <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                     <h2 className="text-lg font-bold text-foreground">
                       What changed
                     </h2>

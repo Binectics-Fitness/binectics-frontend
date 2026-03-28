@@ -19,7 +19,7 @@ export default function ComingSoonPage({
 }: ComingSoonPageProps) {
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-1 sm:px-2">
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-6 text-center shadow-card sm:p-8">
+      <div className="w-full max-w-2xl rounded-2xl bg-white p-6 text-center shadow-[var(--shadow-card)] sm:p-8">
         {icon && <div className="mb-6 flex justify-center">{icon}</div>}
         <h2 className="text-2xl font-black text-foreground sm:text-3xl">
           {title}

@@ -111,7 +111,7 @@ export default function VerifyEmailPage() {
               Sign In to Your Account
             </Link>
           </div>
-          <div className="mt-8 rounded-2xl bg-background p-6 shadow-card text-left">
+          <div className="mt-8 rounded-2xl bg-background p-6 shadow-[var(--shadow-card)] text-left">
             <h3 className="font-bold text-foreground mb-3">What's Next?</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">

@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500 text-foreground mb-4">
+          <div className="icon-glow-green inline-flex items-center justify-center w-16 h-16 rounded-2xl text-foreground mb-4">
             <svg
               className="w-8 h-8"
               fill="none"
@@ -89,11 +89,11 @@ export default function AdminLoginPage() {
         {/* Login Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-white shadow-card p-8"
+          className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-8"
         >
           {/* API Error Message */}
           {apiError && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-500">
+            <div className="mb-6 p-4 bg-red-50 border border-red-300 rounded-xl">
               <div className="flex gap-3">
                 <svg
                   className="h-5 w-5 shrink-0 text-red-600 mt-0.5"
@@ -126,9 +126,9 @@ export default function AdminLoginPage() {
                 id="email"
                 {...registerField("email")}
                 placeholder="admin@binectics.com"
-                className={`w-full h-12 border-2 ${
-                  errors.email ? "border-red-500" : "border-gray-200"
-                } px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-red-500 transition-colors`}
+                className={`w-full h-12 border ${
+                  errors.email ? "border-red-500" : "border-neutral-200"
+                } rounded-lg px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary-500 transition-colors`}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-500">
@@ -151,9 +151,9 @@ export default function AdminLoginPage() {
                 id="password"
                 {...registerField("password")}
                 placeholder="••••••••"
-                className={`w-full h-12 border-2 ${
-                  errors.password ? "border-red-500" : "border-gray-200"
-                } px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-red-500 transition-colors`}
+                className={`w-full h-12 border ${
+                  errors.password ? "border-red-500" : "border-neutral-200"
+                } rounded-lg px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary-500 transition-colors`}
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-500">
@@ -167,13 +167,13 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={isLoading || authLoading}
-            className="w-full h-12 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            className="w-full h-12 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
             {isLoading || authLoading ? "Signing in..." : "Sign In as Admin"}
           </button>
 
           {/* Info */}
-          <div className="mt-6 p-4 bg-gray-50 border border-gray-200">
+          <div className="mt-6 p-4 bg-neutral-50 border border-neutral-200 rounded-xl">
             <p className="text-xs text-foreground/60 mb-2">
               <strong>Admin Access Only</strong>
             </p>
@@ -182,7 +182,7 @@ export default function AdminLoginPage() {
               please use the{" "}
               <Link
                 href="/login"
-                className="text-red-500 hover:text-red-600 font-semibold"
+                className="text-primary-500 hover:text-primary-600 font-semibold"
               >
                 user login page
               </Link>
@@ -191,7 +191,7 @@ export default function AdminLoginPage() {
           </div>
 
           {/* Demo Account Info */}
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200">
+          <div className="mt-4 p-4 bg-accent-blue-50 border border-accent-blue-200 rounded-xl">
             <p className="text-xs text-foreground/70">
               <strong>Demo Account:</strong>
             </p>

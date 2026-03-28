@@ -193,7 +193,7 @@ export default function InviteTrainerPage() {
           )}
 
           {!currentOrg ? (
-            <div className="rounded-xl bg-white p-8 shadow-card">
+            <div className="rounded-xl bg-white p-8 shadow-[var(--shadow-card)]">
               <h2 className="text-xl font-bold text-foreground">
                 No organization selected
               </h2>
@@ -205,7 +205,7 @@ export default function InviteTrainerPage() {
           ) : (
             <form
               onSubmit={rhfHandleSubmit(onSubmit)}
-              className="rounded-xl bg-white p-4 shadow-card sm:p-6 md:p-8"
+              className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6 md:p-8"
             >
               <div className="mb-8">
                 <h2 className="text-lg font-bold text-foreground sm:text-xl">
@@ -219,7 +219,7 @@ export default function InviteTrainerPage() {
                     <input
                       type="email"
                       {...register("email")}
-                      className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-accent-blue-500 focus:outline-none"
+                      className="w-full rounded-lg border-2 border-neutral-200 px-4 py-3 text-sm focus:border-accent-blue-500 focus:outline-none"
                       placeholder="coach@example.com"
                     />
                     {formErrors.email && (
@@ -235,7 +235,7 @@ export default function InviteTrainerPage() {
                     </label>
                     <select
                       {...register("team_role_id")}
-                      className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-accent-blue-500 focus:outline-none"
+                      className="w-full rounded-lg border-2 border-neutral-200 px-4 py-3 text-sm focus:border-accent-blue-500 focus:outline-none"
                       disabled={roles.length === 0}
                     >
                       {roles.length === 0 ? (
@@ -285,7 +285,7 @@ export default function InviteTrainerPage() {
                 </div>
               </div>
 
-              <div className="mb-8 rounded-lg bg-gray-50 p-6">
+              <div className="mb-8 rounded-lg bg-neutral-50 p-6">
                 <h3 className="font-bold text-foreground">
                   What this invite does
                 </h3>
@@ -309,7 +309,7 @@ export default function InviteTrainerPage() {
                 <button
                   type="button"
                   onClick={() => router.push("/dashboard/gym-owner/staff")}
-                  className="rounded-lg border-2 border-gray-300 px-6 py-3 font-semibold text-foreground hover:bg-gray-50"
+                  className="rounded-lg border-2 border-neutral-300 px-6 py-3 font-semibold text-foreground hover:bg-neutral-50"
                 >
                   Cancel
                 </button>

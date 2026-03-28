@@ -89,7 +89,7 @@ export default function DietitianNutritionPlansPage() {
         {loadingClients ? (
           <DashboardLoading />
         ) : clients.length === 0 ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
             <EmptyState
               title="No Active Clients"
               description="Add clients to start tracking their nutrition progress."
@@ -100,7 +100,7 @@ export default function DietitianNutritionPlansPage() {
         ) : (
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Client List */}
-            <div className="rounded-2xl bg-white p-6 shadow-card lg:col-span-1">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] lg:col-span-1">
               <h2 className="mb-4 text-lg font-bold text-foreground">
                 Clients ({clients.length})
               </h2>
@@ -129,7 +129,7 @@ export default function DietitianNutritionPlansPage() {
             </div>
 
             {/* Meal Feedback */}
-            <div className="rounded-2xl bg-white p-6 shadow-card lg:col-span-2">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] lg:col-span-2">
               {!selectedClientId ? (
                 <div className="flex h-full items-center justify-center py-12">
                   <p className="text-sm text-foreground-secondary">

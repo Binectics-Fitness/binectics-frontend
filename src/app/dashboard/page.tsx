@@ -330,9 +330,12 @@ export default function DashboardPage() {
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-2">
-            Welcome back, {displayName}!
-          </h1>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="hidden sm:block h-8 w-1 rounded-full bg-gradient-to-b from-primary-500 to-primary-600" />
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
+              Welcome back, {displayName}!
+            </h1>
+          </div>
           <p className="text-sm sm:text-base text-foreground-secondary">
             {checkInStatus
               ? checkInStatus.current_streak_days > 0
@@ -343,11 +346,11 @@ export default function DashboardPage() {
               : "Ready for your next workout? Check in when you arrive."}
           </p>
           {checkInStatus && (
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-lg">
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-xl shadow-[var(--shadow-card)]">
               <span
-                className={`h-2 w-2 rounded-full ${
+                className={`h-2.5 w-2.5 rounded-full ${
                   checkInStatus.has_checked_in_today
-                    ? "bg-primary-500"
+                    ? "bg-primary-500 shadow-glow-green"
                     : "bg-neutral-400"
                 }`}
               />
@@ -363,7 +366,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="mt-4 max-w-xl rounded-lg border border-neutral-200 bg-white p-4">
+          <div className="mt-4 max-w-xl rounded-xl border border-neutral-200 bg-white p-4 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -406,7 +409,7 @@ export default function DashboardPage() {
               placeholder="Search gyms, trainers, workouts, or nutrition plans..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-neutral-200 bg-background py-3 pl-12 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="w-full rounded-xl border border-neutral-200 bg-white py-3 pl-12 pr-4 text-sm shadow-[var(--shadow-card)] transition-all duration-200 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:shadow-[var(--shadow-card-hover)]"
             />
             <svg
               className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground-tertiary"
@@ -490,7 +493,7 @@ export default function DashboardPage() {
               <Link
                 key={index}
                 href="/dashboard/book"
-                className="group bg-background p-4 sm:p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col"
+                className="group bg-white p-4 sm:p-6 rounded-xl shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 h-full flex flex-col"
               >
                 <div
                   className={`mb-4 inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center ${gym.color} text-2xl sm:text-3xl`}
@@ -539,7 +542,7 @@ export default function DashboardPage() {
               <Link
                 key={index}
                 href="/dashboard/explore"
-                className={`group relative overflow-hidden ${collection.color} p-6 sm:p-8 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col justify-center`}
+                className={`group relative overflow-hidden rounded-xl ${collection.color} p-6 sm:p-8 text-center shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1 h-full flex flex-col justify-center`}
               >
                 <div className="mb-4 text-4xl sm:text-5xl">
                   {collection.image}

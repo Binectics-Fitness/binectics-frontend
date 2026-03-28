@@ -183,13 +183,13 @@ function WorkoutPlanDetailContent() {
         {loadingPlan ? (
           <DashboardLoading />
         ) : !plan ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)] text-center">
             <p className="text-foreground-secondary">Workout plan not found.</p>
           </div>
         ) : (
           <div className="space-y-6">
             {/* Header Card */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -237,7 +237,7 @@ function WorkoutPlanDetailContent() {
 
             {/* Plan Info */}
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Difficulty</p>
                 <div className="mt-2">
                   <span
@@ -247,13 +247,13 @@ function WorkoutPlanDetailContent() {
                   </span>
                 </div>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Frequency</p>
                 <p className="mt-1 text-xl font-bold text-foreground">
                   {plan.frequency || "Not set"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Exercises</p>
                 <p className="mt-1 text-xl font-bold text-foreground">
                   {plan.exercises.length}
@@ -263,7 +263,7 @@ function WorkoutPlanDetailContent() {
 
             {/* Trainer Notes */}
             {plan.trainer_notes && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-lg font-bold text-foreground mb-3">
                   Trainer Notes
                 </h2>
@@ -274,7 +274,7 @@ function WorkoutPlanDetailContent() {
             )}
 
             {/* Exercises */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-lg font-bold text-foreground mb-4">
                 Exercises ({plan.exercises.length})
               </h2>

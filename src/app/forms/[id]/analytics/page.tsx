@@ -92,7 +92,7 @@ export default function FormAnalyticsPage() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-card p-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
             <div className="text-sm font-semibold text-foreground-secondary mb-2">
               Total Responses
             </div>
@@ -100,7 +100,7 @@ export default function FormAnalyticsPage() {
               {analytics.total_responses}
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-card p-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
             <div className="text-sm font-semibold text-foreground-secondary mb-2">
               Completion Rate
             </div>
@@ -110,7 +110,7 @@ export default function FormAnalyticsPage() {
               {formatPercentage(analytics.completion_rate)}
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-card p-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
             <div className="text-sm font-semibold text-foreground-secondary mb-2">
               Avg. Completion Time
             </div>
@@ -118,7 +118,7 @@ export default function FormAnalyticsPage() {
               {formatDuration(analytics.average_completion_time)}
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-card p-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
             <div className="text-sm font-semibold text-foreground-secondary mb-2">
               Total Questions
             </div>
@@ -131,7 +131,7 @@ export default function FormAnalyticsPage() {
         {/* Submission Trend Chart */}
         {analytics.submission_trend &&
           analytics.submission_trend.length > 0 && (
-            <div className="bg-white rounded-xl shadow-card p-6 mb-8">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-8">
               <h2 className="font-display text-xl font-bold text-foreground mb-6">
                 Submission Trend (Last 30 Days)
               </h2>
@@ -189,7 +189,7 @@ export default function FormAnalyticsPage() {
           {analytics.questions.map((questionAnalytics, index) => (
             <div
               key={questionAnalytics.question_id}
-              className="bg-white rounded-xl shadow-card p-6"
+              className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6"
             >
               <div className="mb-4">
                 <h3 className="font-semibold text-foreground mb-1">
@@ -294,7 +294,7 @@ export default function FormAnalyticsPage() {
 
         {/* No Data State */}
         {analytics.total_responses === 0 && (
-          <div className="bg-white rounded-xl shadow-card p-12 text-center">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-12 text-center">
             <div className="text-6xl mb-4">📊</div>
             <h2 className="font-display text-2xl font-bold text-foreground mb-2">
               No Analytics Yet

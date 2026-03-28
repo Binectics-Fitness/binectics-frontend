@@ -428,7 +428,7 @@ function CheckoutContent() {
   if (!listingId || !planId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-card p-6 sm:p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 sm:p-8 max-w-md w-full text-center">
           <div className="text-5xl mb-4">🛒</div>
           <h2 className="font-display text-2xl font-bold text-foreground mb-2">
             No Plan Selected
@@ -447,7 +447,7 @@ function CheckoutContent() {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-card p-6 sm:p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 sm:p-8 max-w-md w-full text-center">
           <div className="text-5xl mb-4">⚠️</div>
           <h2 className="font-display text-2xl font-bold text-foreground mb-2">
             Checkout Error
@@ -487,7 +487,7 @@ function CheckoutContent() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Order Summary */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-card p-6 sticky top-8">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 sticky top-8">
               <h2 className="font-display text-lg font-bold text-foreground mb-4">
                 Order Summary
               </h2>
@@ -564,7 +564,7 @@ function CheckoutContent() {
 
           {/* Payment Form */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-6">
                 {isFree ? "Confirm Subscription" : "Payment Details"}
               </h2>

@@ -16,7 +16,7 @@ export default function PhotoGallery({
   profileImage,
   alt = "Photo",
   fallbackEmoji = "📸",
-  accentBg = "bg-gray-200",
+  accentBg = "bg-neutral-200",
 }: PhotoGalleryProps) {
   const allPhotos = [
     ...(profileImage ? [profileImage] : []),
@@ -48,7 +48,7 @@ export default function PhotoGallery({
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
-          className="relative block w-full h-72 sm:h-96 overflow-hidden bg-gray-100 cursor-zoom-in"
+          className="relative block w-full h-72 sm:h-96 overflow-hidden bg-neutral-100 cursor-zoom-in"
         >
           <Image
             src={mainPhoto}

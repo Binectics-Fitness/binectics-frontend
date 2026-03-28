@@ -241,7 +241,7 @@ export default function ConsultationAvailabilityManager({
           </div>
         )}
 
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
+        <section className="mb-8 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
           <h2 className="mb-4 text-xl font-bold text-foreground">
             Consultation Types
           </h2>
@@ -342,7 +342,7 @@ export default function ConsultationAvailabilityManager({
           </div>
         </section>
 
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow-card">
+        <section className="mb-8 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">
               Add Availability Rule
@@ -414,7 +414,7 @@ export default function ConsultationAvailabilityManager({
           </p>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-card">
+        <section className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-foreground">Current Rules</h2>
             <span className="text-sm text-foreground-secondary">

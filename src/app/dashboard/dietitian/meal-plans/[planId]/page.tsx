@@ -335,13 +335,13 @@ function DietPlanDetailContent() {
         {loadingPlan ? (
           <DashboardLoading />
         ) : !plan ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)] text-center">
             <p className="text-foreground-secondary">Diet plan not found.</p>
           </div>
         ) : (
           <div className="space-y-6">
             {/* Header Card */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -471,7 +471,7 @@ function DietPlanDetailContent() {
 
             {/* Plan Info Cards */}
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Delivery Type
                 </p>
@@ -484,7 +484,7 @@ function DietPlanDetailContent() {
                 </div>
               </div>
               {plan.delivery_type === DietPlanDeliveryType.PLATFORM && (
-                <div className="rounded-2xl bg-white p-6 shadow-card">
+                <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                   <p className="text-sm text-foreground-secondary">Meals</p>
                   <p className="mt-1 text-3xl font-black text-foreground">
                     {plan.meals.length}
@@ -493,7 +493,7 @@ function DietPlanDetailContent() {
               )}
               {plan.delivery_type === DietPlanDeliveryType.DOCUMENT &&
                 plan.document_file_name && (
-                  <div className="rounded-2xl bg-white p-6 shadow-card">
+                  <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                     <p className="text-sm text-foreground-secondary">
                       Document
                     </p>
@@ -507,7 +507,7 @@ function DietPlanDetailContent() {
                     )}
                   </div>
                 )}
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Version</p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {plan.version}
@@ -517,7 +517,7 @@ function DietPlanDetailContent() {
 
             {/* Document Download Section */}
             {plan.delivery_type === DietPlanDeliveryType.DOCUMENT && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-lg font-bold text-foreground mb-4">
                   Document Access
                 </h2>
@@ -571,7 +571,7 @@ function DietPlanDetailContent() {
 
             {/* Dietitian Notes */}
             {plan.dietitian_notes && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-lg font-bold text-foreground mb-3">
                   Dietitian Notes
                 </h2>
@@ -584,7 +584,7 @@ function DietPlanDetailContent() {
             {/* Meals List (platform plans only) */}
             {plan.delivery_type === DietPlanDeliveryType.PLATFORM &&
               plan.meals.length > 0 && (
-                <div className="rounded-2xl bg-white p-6 shadow-card">
+                <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                   <h2 className="text-lg font-bold text-foreground mb-4">
                     Meals
                   </h2>

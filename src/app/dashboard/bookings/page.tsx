@@ -218,7 +218,7 @@ export default function BookingsPage() {
               return (
                 <div
                   key={booking.id}
-                  className="bg-background p-4 sm:p-6 shadow-card transition-all duration-300 hover:shadow-xl"
+                  className="bg-background p-4 sm:p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
                 >
                   <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
                     <div className="flex-1">

@@ -311,7 +311,7 @@ function CreateWorkoutPlanContent() {
         {loadingProfiles ? (
           <DashboardLoading />
         ) : profiles.length === 0 ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
             <EmptyState
               title="No Clients"
               description="Add a client first before creating a workout plan."
@@ -322,7 +322,7 @@ function CreateWorkoutPlanContent() {
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Client Selection */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-lg font-bold text-foreground mb-4">Client</h2>
               <select
                 value={selectedProfileId}
@@ -338,7 +338,7 @@ function CreateWorkoutPlanContent() {
             </div>
 
             {/* Plan Details */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-lg font-bold text-foreground mb-4">
                 Plan Details
               </h2>
@@ -416,7 +416,7 @@ function CreateWorkoutPlanContent() {
             </div>
 
             {/* Exercises */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-foreground">Exercises</h2>
                 <button

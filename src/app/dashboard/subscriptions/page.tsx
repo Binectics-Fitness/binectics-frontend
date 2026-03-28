@@ -24,13 +24,13 @@ function statusColor(status: MembershipSubscriptionStatus) {
     case MembershipSubscriptionStatus.ACTIVE:
       return "bg-primary-500/10 text-primary-700";
     case MembershipSubscriptionStatus.EXPIRED:
-      return "bg-gray-100 text-gray-600";
+      return "bg-neutral-100 text-neutral-600";
     case MembershipSubscriptionStatus.CANCELLED:
       return "bg-red-50 text-red-600";
     case MembershipSubscriptionStatus.PENDING_PAYMENT:
       return "bg-accent-yellow-500/20 text-foreground";
     default:
-      return "bg-gray-100 text-gray-600";
+      return "bg-neutral-100 text-neutral-600";
   }
 }
 
@@ -137,19 +137,19 @@ export default function SubscriptionsPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-3">
-            <div className="bg-white p-4 shadow-card">
+            <div className="bg-white p-4 shadow-[var(--shadow-card)]">
               <p className="text-sm text-foreground/60 mb-1">Total</p>
               <p className="text-2xl font-black text-foreground">
                 {subscriptions.length}
               </p>
             </div>
-            <div className="bg-white p-4 shadow-card">
+            <div className="bg-white p-4 shadow-[var(--shadow-card)]">
               <p className="text-sm text-foreground/60 mb-1">Active</p>
               <p className="text-2xl font-black text-primary-700">
                 {activeCount}
               </p>
             </div>
-            <div className="col-span-2 bg-white p-4 shadow-card sm:col-span-1">
+            <div className="col-span-2 bg-white p-4 shadow-[var(--shadow-card)] sm:col-span-1">
               <p className="text-sm text-foreground/60 mb-1">Total Invested</p>
               <p className="text-2xl font-black text-foreground">
                 {subscriptions
@@ -181,12 +181,12 @@ export default function SubscriptionsPage() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-28 bg-white animate-pulse shadow-card"
+                  className="h-28 bg-white animate-pulse shadow-[var(--shadow-card)]"
                 />
               ))}
             </div>
           ) : subscriptions.length === 0 ? (
-            <div className="bg-white p-12 shadow-card text-center">
+            <div className="bg-white p-12 shadow-[var(--shadow-card)] text-center">
               <p className="text-4xl mb-4">🏋️</p>
               <h2 className="text-xl font-bold text-foreground mb-2">
                 No subscriptions yet
@@ -207,7 +207,7 @@ export default function SubscriptionsPage() {
                 const planDetails = getPlanDetails(sub);
                 const listingLabel = getListingLabel(sub);
                 return (
-                  <div key={sub._id} className="bg-white p-6 shadow-card">
+                  <div key={sub._id} className="bg-white p-6 shadow-[var(--shadow-card)]">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -273,7 +273,7 @@ export default function SubscriptionsPage() {
                                 .map((f, idx) => (
                                   <span
                                     key={idx}
-                                    className="text-xs bg-gray-100 text-foreground/70 px-2 py-0.5"
+                                    className="text-xs bg-neutral-100 text-foreground/70 px-2 py-0.5"
                                   >
                                     {f}
                                   </span>
@@ -304,7 +304,7 @@ export default function SubscriptionsPage() {
                                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                                   sub.auto_renew
                                     ? "bg-primary-500"
-                                    : "bg-gray-300"
+                                    : "bg-neutral-300"
                                 }`}
                               >
                                 <span

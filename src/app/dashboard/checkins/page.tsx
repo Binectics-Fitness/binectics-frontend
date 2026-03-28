@@ -118,7 +118,7 @@ export default function MemberCheckInsPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-4">
-            <div className="bg-white p-4 shadow-card rounded-xl">
+            <div className="bg-white p-4 shadow-[var(--shadow-card)] rounded-xl">
               <p className="text-sm text-foreground/60 mb-1">Today</p>
               <div className="flex items-center gap-2">
                 <span
@@ -133,7 +133,7 @@ export default function MemberCheckInsPage() {
                 </p>
               </div>
             </div>
-            <div className="bg-white p-4 shadow-card rounded-xl">
+            <div className="bg-white p-4 shadow-[var(--shadow-card)] rounded-xl">
               <p className="text-sm text-foreground/60 mb-1">Streak</p>
               <p className="text-2xl font-black text-foreground">
                 {stats?.current_streak_days ?? 0}
@@ -143,13 +143,13 @@ export default function MemberCheckInsPage() {
                 </span>
               </p>
             </div>
-            <div className="bg-white p-4 shadow-card rounded-xl">
+            <div className="bg-white p-4 shadow-[var(--shadow-card)] rounded-xl">
               <p className="text-sm text-foreground/60 mb-1">Total</p>
               <p className="text-2xl font-black text-foreground">
                 {stats?.total_check_ins ?? 0}
               </p>
             </div>
-            <div className="bg-white p-4 shadow-card rounded-xl">
+            <div className="bg-white p-4 shadow-[var(--shadow-card)] rounded-xl">
               <p className="text-sm text-foreground/60 mb-1">Last Check-in</p>
               <p className="text-sm font-semibold text-foreground">
                 {stats?.last_check_in_at
@@ -178,7 +178,7 @@ export default function MemberCheckInsPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedPeriod === period
                     ? "bg-accent-blue-500 text-white"
-                    : "bg-gray-100 text-foreground hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground hover:bg-neutral-200"
                 }`}
               >
                 {period === "all"
@@ -189,7 +189,7 @@ export default function MemberCheckInsPage() {
           </div>
 
           {/* Check-in History */}
-          <div className="bg-white rounded-xl shadow-card p-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
             <h2 className="text-lg font-bold text-foreground mb-4">
               Check-in History
             </h2>
@@ -205,7 +205,7 @@ export default function MemberCheckInsPage() {
               </div>
             ) : checkIns.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
                     className="w-8 h-8 text-foreground/30"
                     fill="none"
@@ -232,7 +232,7 @@ export default function MemberCheckInsPage() {
                 {checkIns.map((checkIn) => (
                   <div
                     key={checkIn._id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white flex-shrink-0">

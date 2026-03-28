@@ -144,7 +144,7 @@ export default function TrainerAnalyticsPage() {
         </div>
 
         {!hasData ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
             <EmptyState
               title="No Data Yet"
               description="Start working with clients to see your analytics here."
@@ -156,7 +156,7 @@ export default function TrainerAnalyticsPage() {
           <>
             {/* Key Metrics */}
             <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Total Clients
                 </p>
@@ -168,7 +168,7 @@ export default function TrainerAnalyticsPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Total Sessions
                 </p>
@@ -180,7 +180,7 @@ export default function TrainerAnalyticsPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Avg Rating</p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {reviewAgg ? reviewAgg.averageRating.toFixed(1) : "—"}
@@ -190,7 +190,7 @@ export default function TrainerAnalyticsPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Completion Rate
                 </p>
@@ -206,7 +206,7 @@ export default function TrainerAnalyticsPage() {
             {/* Performance Breakdown */}
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Session Breakdown */}
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="mb-4 text-lg font-bold text-foreground">
                   Session Breakdown
                 </h2>
@@ -262,7 +262,7 @@ export default function TrainerAnalyticsPage() {
               </div>
 
               {/* Revenue & Subscriptions */}
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="mb-4 text-lg font-bold text-foreground">
                   Revenue Overview
                 </h2>

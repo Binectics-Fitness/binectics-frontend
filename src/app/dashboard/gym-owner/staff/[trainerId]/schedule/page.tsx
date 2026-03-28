@@ -35,7 +35,7 @@ const DAY_OPTIONS = [
 const STATUS_STYLES: Record<MemberStatus, string> = {
   [MemberStatus.ACTIVE]: "bg-primary-100 text-primary-700",
   [MemberStatus.PENDING]: "bg-yellow-100 text-yellow-700",
-  [MemberStatus.INACTIVE]: "bg-gray-100 text-gray-700",
+  [MemberStatus.INACTIVE]: "bg-neutral-100 text-neutral-700",
 };
 
 function getMemberUser(member: OrganizationMember) {
@@ -190,7 +190,7 @@ export default function TrainerSchedulePage() {
       <div className="flex min-h-screen bg-neutral-50">
         <GymOwnerSidebar />
         <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-          <div className="mx-auto max-w-4xl rounded-xl bg-white p-8 shadow-card">
+          <div className="mx-auto max-w-4xl rounded-xl bg-white p-8 shadow-[var(--shadow-card)]">
             <button
               onClick={() => router.push("/dashboard/gym-owner/staff")}
               className="mb-4 inline-flex items-center gap-2 font-medium text-accent-blue-500 hover:text-accent-blue-700"
@@ -249,7 +249,7 @@ export default function TrainerSchedulePage() {
             Back to Staff Member
           </button>
 
-          <div className="rounded-2xl bg-white p-6 shadow-card sm:p-8">
+          <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ export default function TrainerSchedulePage() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Active Availability Rules
               </p>
@@ -303,7 +303,7 @@ export default function TrainerSchedulePage() {
                 {activeRulesCount}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Exceptions Configured
               </p>
@@ -311,7 +311,7 @@ export default function TrainerSchedulePage() {
                 {exceptions.length}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Unavailable Days
               </p>
@@ -319,7 +319,7 @@ export default function TrainerSchedulePage() {
                 {unavailableDays}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Selected Day Slots
               </p>
@@ -329,7 +329,7 @@ export default function TrainerSchedulePage() {
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow-card">
+          <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
             <div className="flex flex-wrap gap-2">
               {DAY_OPTIONS.map((day) => (
                 <button
@@ -338,7 +338,7 @@ export default function TrainerSchedulePage() {
                   className={`rounded-lg px-4 py-2 text-sm font-medium ${
                     selectedDay === day.value
                       ? "bg-accent-blue-500 text-white"
-                      : "bg-gray-100 text-foreground hover:bg-gray-200"
+                      : "bg-neutral-100 text-foreground hover:bg-neutral-200"
                   }`}
                 >
                   {day.label}
@@ -348,7 +348,7 @@ export default function TrainerSchedulePage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-lg font-bold text-foreground">
                 {DAY_OPTIONS.find((day) => day.value === selectedDay)?.label}{" "}
                 availability
@@ -358,7 +358,7 @@ export default function TrainerSchedulePage() {
               </p>
 
               {selectedDayRules.length === 0 ? (
-                <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-foreground/60">
+                <div className="mt-6 rounded-lg bg-neutral-50 p-4 text-sm text-foreground/60">
                   No active availability windows are configured for this day.
                 </div>
               ) : (
@@ -366,7 +366,7 @@ export default function TrainerSchedulePage() {
                   {selectedDayRules.map((rule) => (
                     <div
                       key={rule.id}
-                      className="rounded-lg border border-gray-200 px-4 py-3"
+                      className="rounded-lg border border-neutral-200 px-4 py-3"
                     >
                       <p className="font-semibold text-foreground">
                         {rule.startTime} - {rule.endTime}
@@ -381,7 +381,7 @@ export default function TrainerSchedulePage() {
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-xl bg-white p-6 shadow-card">
+              <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-lg font-bold text-foreground">
                   Upcoming Exceptions
                 </h2>
@@ -394,7 +394,7 @@ export default function TrainerSchedulePage() {
                     upcomingExceptions.map((exception) => (
                       <div
                         key={exception.id}
-                        className="rounded-lg border border-gray-200 p-4"
+                        className="rounded-lg border border-neutral-200 p-4"
                       >
                         <p className="font-semibold text-foreground">
                           {formatLocal(exception.date, "EEE, MMM d, yyyy")}
@@ -411,7 +411,7 @@ export default function TrainerSchedulePage() {
                 </div>
               </div>
 
-              <div className="rounded-xl bg-white p-6 shadow-card">
+              <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-lg font-bold text-foreground">Notes</h2>
                 <p className="mt-3 text-sm leading-6 text-foreground/70">
                   Trainer-specific schedule controls are not yet exposed as a

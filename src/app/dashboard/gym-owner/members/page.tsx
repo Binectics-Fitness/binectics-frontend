@@ -60,13 +60,13 @@ function statusBadge(status: MembershipSubscriptionStatus) {
     case MembershipSubscriptionStatus.ACTIVE:
       return "bg-primary-500/10 text-primary-700";
     case MembershipSubscriptionStatus.EXPIRED:
-      return "bg-gray-100 text-gray-600";
+      return "bg-neutral-100 text-neutral-600";
     case MembershipSubscriptionStatus.CANCELLED:
       return "bg-red-100 text-red-700";
     case MembershipSubscriptionStatus.PENDING_PAYMENT:
       return "bg-accent-yellow-500/20 text-foreground";
     default:
-      return "bg-gray-100 text-gray-600";
+      return "bg-neutral-100 text-neutral-600";
   }
 }
 
@@ -249,7 +249,7 @@ export default function GymOwnerMembersPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-8 md:grid-cols-4">
-            <div className="bg-white shadow-card p-6">
+            <div className="bg-white shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Total Subscriptions
               </p>
@@ -257,13 +257,13 @@ export default function GymOwnerMembersPage() {
                 {stats.total}
               </p>
             </div>
-            <div className="bg-white shadow-card p-6">
+            <div className="bg-white shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Active</p>
               <p className="text-3xl font-black text-primary-700 mt-2">
                 {stats.active}
               </p>
             </div>
-            <div className="bg-white shadow-card p-6">
+            <div className="bg-white shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Expired / Cancelled
               </p>
@@ -271,7 +271,7 @@ export default function GymOwnerMembersPage() {
                 {stats.expired}
               </p>
             </div>
-            <div className="bg-white shadow-card p-6">
+            <div className="bg-white shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 New This Month
               </p>
@@ -287,14 +287,14 @@ export default function GymOwnerMembersPage() {
             </div>
           )}
 
-          <div className="bg-white shadow-card p-4 mb-6">
+          <div className="bg-white shadow-[var(--shadow-card)] p-4 mb-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <input
                 type="text"
                 placeholder="Search by name or email…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-2.5 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                className="flex-1 px-4 py-2.5 border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
               />
               <select
                 value={statusFilter}
@@ -303,7 +303,7 @@ export default function GymOwnerMembersPage() {
                     e.target.value as MembershipSubscriptionStatus | "all",
                   )
                 }
-                className="px-4 py-2.5 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue-500 bg-white"
+                className="px-4 py-2.5 border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue-500 bg-white"
               >
                 <option value="all">All Statuses</option>
                 <option value={MembershipSubscriptionStatus.ACTIVE}>
@@ -322,7 +322,7 @@ export default function GymOwnerMembersPage() {
               <select
                 value={planFilter}
                 onChange={(e) => setPlanFilter(e.target.value)}
-                className="px-4 py-2.5 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue-500 bg-white"
+                className="px-4 py-2.5 border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue-500 bg-white"
               >
                 <option value="all">All Plans</option>
                 {uniquePlanNames.map((name) => (
@@ -334,7 +334,7 @@ export default function GymOwnerMembersPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow-card overflow-hidden">
+          <div className="bg-white shadow-[var(--shadow-card)] overflow-hidden">
             {isLoading ? (
               <div className="p-8 space-y-4">
                 {[1, 2, 3, 4].map((i) => (
@@ -361,7 +361,7 @@ export default function GymOwnerMembersPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-neutral-50 border-b border-neutral-200">
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-bold text-foreground">
                         Member
@@ -387,7 +387,7 @@ export default function GymOwnerMembersPage() {
                     {filtered.map((sub) => {
                       const planType = getPlanType(sub);
                       return (
-                        <tr key={sub._id} className="hover:bg-gray-50">
+                        <tr key={sub._id} className="hover:bg-neutral-50">
                           <td className="px-6 py-4">
                             <p className="font-semibold text-foreground">
                               {getMemberName(sub)}
@@ -437,7 +437,7 @@ export default function GymOwnerMembersPage() {
                     })}
                   </tbody>
                 </table>
-                <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 text-sm text-foreground/60">
+                <div className="px-6 py-3 border-t border-neutral-100 bg-neutral-50 text-sm text-foreground/60">
                   Showing {filtered.length} of {subscriptions.length}{" "}
                   {subscriptions.length === 1
                     ? "subscription"
@@ -486,7 +486,7 @@ export default function GymOwnerMembersPage() {
                     value={enrollEmail}
                     onChange={(e) => setEnrollEmail(e.target.value)}
                     placeholder="member@example.com"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
                   />
                   <p className="text-xs text-foreground/50 mt-1">
                     The member must have a Binectics account
@@ -500,7 +500,7 @@ export default function GymOwnerMembersPage() {
                   <select
                     value={enrollPlanId}
                     onChange={(e) => setEnrollPlanId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm bg-white"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm bg-white"
                   >
                     <option value="">Select a plan…</option>
                     {plans.map((plan) => (
@@ -564,7 +564,7 @@ export default function GymOwnerMembersPage() {
                     onChange={(e) => setEnrollAmountPaid(e.target.value)}
                     placeholder="Leave blank for plan price"
                     min={0}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
                   />
                 </div>
 
@@ -580,7 +580,7 @@ export default function GymOwnerMembersPage() {
                     value={enrollPaymentRef}
                     onChange={(e) => setEnrollPaymentRef(e.target.value)}
                     placeholder="e.g. receipt #, cash, bank transfer"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
                   />
                 </div>
               </div>
@@ -588,7 +588,7 @@ export default function GymOwnerMembersPage() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowEnrollModal(false)}
-                  className="flex-1 h-12 border border-gray-200 text-foreground font-semibold rounded-lg hover:bg-gray-50"
+                  className="flex-1 h-12 border border-neutral-200 text-foreground font-semibold rounded-lg hover:bg-neutral-50"
                 >
                   Cancel
                 </button>

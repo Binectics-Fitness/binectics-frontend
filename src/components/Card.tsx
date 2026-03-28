@@ -1,9 +1,10 @@
 import React from 'react';
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'elevated' | 'bordered';
+  variant?: 'default' | 'elevated' | 'bordered' | 'glass';
   padding?: 'none' | 'sm' | 'md' | 'lg';
   interactive?: boolean;
+  accent?: 'green' | 'blue' | 'yellow' | 'purple' | 'none';
 }
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -13,6 +14,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       variant = 'default',
       padding = 'md',
       interactive = false,
+      accent = 'none',
       className = '',
       ...props
     },
@@ -20,8 +22,9 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ) => {
     const variants = {
       default: 'bg-background-secondary',
-      elevated: 'bg-background shadow-card',
-      bordered: 'bg-background border-2 border-neutral-200',
+      elevated: 'bg-white shadow-[var(--shadow-card)]',
+      bordered: 'bg-white border border-neutral-200',
+      glass: 'bg-white/80 backdrop-blur-sm border border-neutral-200/60 shadow-[var(--shadow-card)]',
     };
 
     const paddings = {
@@ -31,14 +34,22 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       lg: 'p-8',
     };
 
+    const accentMap = {
+      none: '',
+      green: 'card-accent-green',
+      blue: 'card-accent-blue',
+      yellow: 'card-accent-yellow',
+      purple: 'card-accent-purple',
+    };
+
     const interactiveStyles = interactive
-      ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200'
-      : '';
+      ? 'cursor-pointer hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300'
+      : 'transition-shadow duration-300';
 
     return (
       <div
         ref={ref}
-        className={`rounded-xl ${variants[variant]} ${paddings[padding]} ${interactiveStyles} ${className}`}
+        className={`rounded-xl ${variants[variant]} ${paddings[padding]} ${accentMap[accent]} ${interactiveStyles} ${className}`}
         {...props}
       >
         {children}

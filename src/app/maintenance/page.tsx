@@ -18,7 +18,7 @@ export default function MaintenancePage() {
           We'll be back online shortly.
         </p>
 
-        <div className="rounded-2xl bg-background p-8 mb-8 shadow-card">
+        <div className="rounded-2xl bg-background p-8 mb-8 shadow-[var(--shadow-card)]">
           <h2 className="font-bold text-lg text-foreground mb-4">Estimated Downtime</h2>
           <div className="flex items-center justify-center gap-2 text-foreground-secondary">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

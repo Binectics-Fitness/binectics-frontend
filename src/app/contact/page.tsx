@@ -130,7 +130,7 @@ export default function ContactPage() {
               <a
                 key={index}
                 href={method.href}
-                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 text-center"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 text-center"
               >
                 <div
                   className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-${method.color}-500 text-white`}
@@ -205,7 +205,7 @@ export default function ContactPage() {
             ].map((office, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card text-center"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)] text-center"
               >
                 <div className="mb-4 text-4xl sm:text-5xl">{office.image}</div>
                 <h3 className="font-display text-xl font-black text-foreground mb-2">

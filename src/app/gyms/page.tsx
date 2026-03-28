@@ -258,7 +258,7 @@ export default function GymsPage() {
                 return (
                   <div
                     key={listing._id}
-                    className="flex h-full flex-col overflow-hidden rounded-lg border-2 border-neutral-300 bg-background transition-all hover:border-primary-500 hover:shadow-lg"
+                    className="flex h-full flex-col overflow-hidden rounded-lg border-2 border-neutral-300 bg-background transition-all hover:border-primary-500 hover:shadow-[var(--shadow-card-hover)]"
                   >
                     {/* Image */}
                     <div className="relative h-48 bg-neutral-100 flex items-center justify-center text-6xl">

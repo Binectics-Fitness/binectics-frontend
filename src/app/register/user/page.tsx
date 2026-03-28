@@ -151,7 +151,7 @@ export default function UserRegisterPage() {
               </div>
             )}
 
-            <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
+            <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)]">
               <div className="space-y-5">
                 {/* Name Fields */}
                 <div className="grid gap-4 sm:grid-cols-2">

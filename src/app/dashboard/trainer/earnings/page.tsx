@@ -79,7 +79,7 @@ export default function TrainerEarningsPage() {
         </div>
 
         {!currentOrg ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)] text-center">
             <EmptyState
               title="No Organization"
               description="Create or join an organization to start tracking earnings from membership plans."
@@ -93,7 +93,7 @@ export default function TrainerEarningsPage() {
           <>
             {/* Stats Cards */}
             <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
                     <svg
@@ -121,7 +121,7 @@ export default function TrainerEarningsPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-blue-100">
                     <svg
@@ -149,7 +149,7 @@ export default function TrainerEarningsPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-yellow-100">
                     <svg
@@ -179,7 +179,7 @@ export default function TrainerEarningsPage() {
             </div>
 
             {/* Recent Transactions */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="mb-4 text-lg font-bold text-foreground">
                 Recent Subscriptions
               </h2>

@@ -76,8 +76,9 @@ export default function PricingSection() {
   };
 
   return (
-    <section id="pricing" className="bg-neutral-100 py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="pricing" className="relative overflow-hidden py-20 sm:py-28">
+      <div className="absolute inset-0 gradient-section-blue" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center animate-fade-in">
           <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
             Simple, transparent pricing
@@ -99,10 +100,10 @@ export default function PricingSection() {
             return (
               <div
                 key={index}
-                className={`relative rounded-3xl bg-background p-8 shadow-card transition-shadow duration-300 hover:shadow-xl ${
+                className={`relative rounded-3xl bg-white p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] ${
                   plan.popular
                     ? 'border-2 ' + borderClasses[plan.color as keyof typeof borderClasses]
-                    : 'border border-neutral-300'
+                    : 'border border-neutral-200'
                 }`}
               >
                 {plan.popular && (
@@ -142,7 +143,7 @@ export default function PricingSection() {
                     href="/register"
                     className={`mt-6 inline-flex h-12 w-full items-center justify-center rounded-lg ${
                       colorClasses[plan.color as keyof typeof colorClasses]
-                    } text-base font-semibold transition-all duration-200 hover:shadow-lg`}
+                    } text-base font-semibold transition-all duration-200 hover:shadow-[var(--shadow-card-hover)]`}
                   >
                     Get Started
                   </Link>

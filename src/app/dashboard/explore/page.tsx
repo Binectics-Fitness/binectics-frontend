@@ -155,7 +155,7 @@ export default function ExplorePage() {
               <Link
                 key={index}
                 href={`/dashboard/${item.type}s/${index}`}
-                className="group bg-background p-4 sm:p-6 shadow-card transition-all duration-300 hover:shadow-xl h-full flex flex-col"
+                className="group bg-background p-4 sm:p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] h-full flex flex-col"
               >
                 {/* Type Badge */}
                 <div className="mb-4">

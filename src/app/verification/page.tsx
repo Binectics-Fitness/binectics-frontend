@@ -72,7 +72,7 @@ function VerificationForm() {
   return (
     <div className="min-h-screen bg-background-secondary py-12 sm:py-16">
       <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
-        <div className="bg-background-primary rounded-xl shadow-card p-6 sm:p-8">
+        <div className="bg-background-primary rounded-xl shadow-[var(--shadow-card)] p-6 sm:p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-foreground-primary">
               Verify your account

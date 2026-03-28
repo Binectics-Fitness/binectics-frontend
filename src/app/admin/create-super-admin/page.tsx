@@ -140,7 +140,7 @@ export default function CreateSuperAdminPage() {
         </p>
 
         {/* Account Details */}
-        <div className="bg-gray-50 rounded-xl p-6 mb-8">
+        <div className="bg-neutral-50 rounded-xl p-6 mb-8">
           <h2 className="text-lg font-bold text-foreground mb-4">
             Account Details (All use same password)
           </h2>
@@ -177,7 +177,7 @@ export default function CreateSuperAdminPage() {
                 {getEmailForRole(AccountType.FITNESS_MEMBER)}
               </span>
             </div>
-            <div className="flex justify-between pt-3 border-t border-gray-200">
+            <div className="flex justify-between pt-3 border-t border-neutral-200">
               <span className="text-foreground/60">Name:</span>
               <span className="font-semibold text-foreground">
                 {formData.firstName} {formData.lastName}
@@ -202,31 +202,31 @@ export default function CreateSuperAdminPage() {
               type="text"
               placeholder="First Name"
               {...register("firstName")}
-              className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="text"
               placeholder="Last Name"
               {...register("lastName")}
-              className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="email"
               placeholder="Email"
               {...register("email")}
-              className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
+              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
             <input
               type="password"
               placeholder="Password"
               {...register("password")}
-              className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
+              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
             <input
               type="text"
               placeholder="Country"
               {...register("country")}
-              className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
+              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
           </div>
         </div>

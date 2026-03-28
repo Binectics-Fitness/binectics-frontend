@@ -134,6 +134,18 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.25rem;
   --radius-3xl: 1.5rem;
+
+  /* Enhanced shadow scale */
+  --shadow-card: 0 2px 8px -2px rgb(0 0 0 / 0.06), 0 4px 16px -4px rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 8px 24px -4px rgb(0 0 0 / 0.1), 0 4px 12px -2px rgb(0 0 0 / 0.06);
+  --shadow-elevated: 0 12px 32px -8px rgb(0 0 0 / 0.12), 0 4px 8px rgb(0 0 0 / 0.04);
+
+  /* Transition presets */
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
 }
 
 * {
@@ -265,5 +277,164 @@ button {
   to {
     opacity: 1;
     transform: translate(-50%, 0);
+  }
+}
+
+/* ─── Staggered entrance animations ──────────────────────────── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger delay utility classes (for card grids, list items) */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+
+/* ─── Gradient presets ───────────────────────────────────────── */
+
+/* Hero/CTA section gradients */
+.gradient-hero {
+  background: linear-gradient(135deg, #f7f4ef 0%, #e6fff5 50%, #f7f4ef 100%);
+}
+
+.gradient-hero-green {
+  background: linear-gradient(135deg, #00d991 0%, #00b877 100%);
+}
+
+.gradient-hero-blue {
+  background: linear-gradient(135deg, #0267f2 0%, #0145ba 100%);
+}
+
+.gradient-hero-purple {
+  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+}
+
+.gradient-hero-yellow {
+  background: linear-gradient(135deg, #fdb90e 0%, #e3a70d 100%);
+}
+
+/* Subtle tinted section backgrounds */
+.gradient-section-green {
+  background: linear-gradient(180deg, rgba(0, 217, 145, 0.04) 0%, transparent 100%);
+}
+
+.gradient-section-blue {
+  background: linear-gradient(180deg, rgba(2, 103, 242, 0.04) 0%, transparent 100%);
+}
+
+.gradient-section-purple {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.04) 0%, transparent 100%);
+}
+
+.gradient-section-warm {
+  background: linear-gradient(180deg, #f7f4ef 0%, #ffffff 100%);
+}
+
+/* Card accent gradients - top border glow effect */
+.card-accent-green {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, #00d991, #00b877) 1;
+}
+
+.card-accent-blue {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, #0267f2, #0145ba) 1;
+}
+
+.card-accent-yellow {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, #fdb90e, #e3a70d) 1;
+}
+
+.card-accent-purple {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, #a855f7, #7e22ce) 1;
+}
+
+/* Stat card icon wrapper gradients */
+.icon-glow-green {
+  background: linear-gradient(135deg, #e6fff5, #b3ffdf);
+  color: #008a5a;
+}
+
+.icon-glow-blue {
+  background: linear-gradient(135deg, #e6f2ff, #cce5ff);
+  color: #0145ba;
+}
+
+.icon-glow-yellow {
+  background: linear-gradient(135deg, #fff9e6, #fff1cc);
+  color: #c9950b;
+}
+
+.icon-glow-purple {
+  background: linear-gradient(135deg, #f3e6ff, #e0b3ff);
+  color: #7e22ce;
+}
+
+/* ─── Enhanced shadows ───────────────────────────────────────── */
+.shadow-card-hover {
+  box-shadow:
+    0 4px 12px -2px rgba(0, 0, 0, 0.08),
+    0 8px 24px -4px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-glow-green {
+  box-shadow: 0 0 20px -4px rgba(0, 217, 145, 0.25);
+}
+
+.shadow-glow-blue {
+  box-shadow: 0 0 20px -4px rgba(2, 103, 242, 0.2);
+}
+
+/* ─── Section dividers ───────────────────────────────────────── */
+.section-divider {
+  position: relative;
+}
+
+.section-divider::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #00d991, #0267f2);
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-slide-in-left,
+  .animate-slide-in-right,
+  .animate-scale-in,
+  .animate-slide-down {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .stagger-1, .stagger-2, .stagger-3, .stagger-4,
+  .stagger-5, .stagger-6, .stagger-7, .stagger-8 {
+    animation-delay: 0ms !important;
   }
 }

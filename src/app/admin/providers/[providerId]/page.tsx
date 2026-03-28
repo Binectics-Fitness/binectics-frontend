@@ -166,7 +166,7 @@ export default function AdminProviderDetailPage() {
       case "DIETITIAN":
         return "bg-accent-purple-100 text-accent-purple-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-neutral-100 text-neutral-700";
     }
   };
 
@@ -176,7 +176,7 @@ export default function AdminProviderDetailPage() {
 
       <div className="flex-1 md:ml-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-white border-b border-neutral-200">
           <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <button
               onClick={() => router.push("/admin/providers")}
@@ -217,7 +217,7 @@ export default function AdminProviderDetailPage() {
                 <p className="text-foreground/60">{provider.email}</p>
               </div>
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <button className="w-full px-6 py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors sm:w-auto">
+                <button className="w-full px-6 py-3 border-2 border-neutral-200 text-foreground font-semibold hover:border-red-500 transition-colors sm:w-auto">
                   Send Email
                 </button>
                 <button
@@ -236,7 +236,7 @@ export default function AdminProviderDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <div className="lg:col-span-2 space-y-6">
               {/* Basic Info */}
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   Provider Information
                 </h2>
@@ -312,7 +312,7 @@ export default function AdminProviderDetailPage() {
                     {provider.facilities.map((facility, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-gray-100 text-foreground text-sm"
+                        className="px-3 py-1 bg-neutral-100 text-foreground text-sm"
                       >
                         {facility}
                       </span>
@@ -322,7 +322,7 @@ export default function AdminProviderDetailPage() {
               </div>
 
               {/* Plans */}
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   Plans & Pricing
                 </h2>
@@ -330,7 +330,7 @@ export default function AdminProviderDetailPage() {
                   {plans.map((plan) => (
                     <div
                       key={plan.id}
-                      className="p-4 border-2 border-gray-200 hover:border-red-500 transition-colors"
+                      className="p-4 border-2 border-neutral-200 hover:border-red-500 transition-colors"
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -356,7 +356,7 @@ export default function AdminProviderDetailPage() {
               </div>
 
               {/* Recent Members */}
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   Recent Members
                 </h2>
@@ -364,7 +364,7 @@ export default function AdminProviderDetailPage() {
                   {recentMembers.map((member, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between pb-3 border-b border-gray-100 last:border-0"
+                      className="flex items-center justify-between pb-3 border-b border-neutral-100 last:border-0"
                     >
                       <div>
                         <p className="font-semibold text-foreground">
@@ -397,7 +397,7 @@ export default function AdminProviderDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Revenue Stats */}
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Revenue Stats
                 </h3>
@@ -414,7 +414,7 @@ export default function AdminProviderDetailPage() {
                       {revenueData.lastMonth}
                     </p>
                   </div>
-                  <div className="pt-4 border-t border-gray-200">
+                  <div className="pt-4 border-t border-neutral-200">
                     <p className="text-sm text-foreground/60">Total Revenue</p>
                     <p className="text-2xl font-black text-foreground">
                       {revenueData.total}
@@ -432,7 +432,7 @@ export default function AdminProviderDetailPage() {
               </div>
 
               {/* Quick Stats */}
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Quick Stats
                 </h3>
@@ -487,7 +487,7 @@ export default function AdminProviderDetailPage() {
           </div>
 
           {/* Reviews */}
-          <div className="bg-white p-6 shadow-card">
+          <div className="bg-white p-6 shadow-[var(--shadow-card)]">
             <h2 className="text-xl font-bold text-foreground mb-6">
               Recent Reviews
             </h2>
@@ -495,7 +495,7 @@ export default function AdminProviderDetailPage() {
               {reviews.map((review, index) => (
                 <div
                   key={index}
-                  className="p-4 border-b border-gray-100 last:border-0"
+                  className="p-4 border-b border-neutral-100 last:border-0"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-semibold text-foreground">

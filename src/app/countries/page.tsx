@@ -110,7 +110,7 @@ export default function CountriesPage() {
                     <Link
                       key={countryIndex}
                       href={`/countries/${country.code}`}
-                      className="group rounded-2xl bg-neutral-100 p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                      className="group rounded-2xl bg-neutral-100 p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
                     >
                       <div className="flex items-start gap-4">
                         <div className="text-5xl">{country.flag}</div>

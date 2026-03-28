@@ -121,7 +121,7 @@ export default function DietitianProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Back Button */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <button
             onClick={() => router.back()}
@@ -162,7 +162,7 @@ export default function DietitianProfilePage() {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                <div className="bg-gray-50 p-3 sm:p-4 text-center rounded-lg">
+                <div className="bg-neutral-50 p-3 sm:p-4 text-center rounded-xl">
                   <p className="text-lg sm:text-2xl font-black text-foreground">
                     {listing?.average_rating?.toFixed(1) ?? "—"}
                   </p>
@@ -170,7 +170,7 @@ export default function DietitianProfilePage() {
                     Rating
                   </p>
                 </div>
-                <div className="bg-gray-50 p-3 sm:p-4 text-center rounded-lg">
+                <div className="bg-neutral-50 p-3 sm:p-4 text-center rounded-xl">
                   <p className="text-lg sm:text-2xl font-black text-foreground">
                     {listing?.review_count ?? 0}
                   </p>
@@ -178,7 +178,7 @@ export default function DietitianProfilePage() {
                     Reviews
                   </p>
                 </div>
-                <div className="bg-gray-50 p-3 sm:p-4 text-center rounded-lg">
+                <div className="bg-neutral-50 p-3 sm:p-4 text-center rounded-xl">
                   <p className="text-lg sm:text-2xl font-black text-foreground">
                     {listing?.active_client_count ?? 0}
                   </p>
@@ -237,7 +237,7 @@ export default function DietitianProfilePage() {
               </p>
 
               {/* About */}
-              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 border border-gray-200 text-sm">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-neutral-50 border border-neutral-200 rounded-xl text-sm">
                 <p className="text-xs sm:text-sm font-semibold text-foreground mb-1">
                   Accepting Clients
                 </p>
@@ -304,7 +304,7 @@ export default function DietitianProfilePage() {
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Certifications */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Certifications
               </h2>
@@ -317,7 +317,7 @@ export default function DietitianProfilePage() {
                   {(listing?.certifications ?? []).map((cert, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-3 p-3 bg-gray-50"
+                      className="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg"
                     >
                       <svg
                         className="w-5 h-5 text-accent-purple-500 mt-0.5"
@@ -338,7 +338,7 @@ export default function DietitianProfilePage() {
             </div>
 
             {/* About / Approach */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-6">About</h2>
               <p className="text-foreground/80 leading-relaxed">
                 {listing?.bio ??
@@ -348,12 +348,12 @@ export default function DietitianProfilePage() {
             </div>
 
             {/* Accepting Clients status */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-4">
                 Availability
               </h2>
               <div
-                className={`p-4 border-2 ${listing?.accepting_clients ? "border-primary-500 bg-primary-500/10" : "border-gray-200 bg-gray-50"}`}
+                className={`p-4 border rounded-xl ${listing?.accepting_clients ? "border-primary-500 bg-primary-500/10" : "border-neutral-200 bg-neutral-50"}`}
               >
                 <p className="font-semibold text-foreground">
                   {listing?.accepting_clients
@@ -379,7 +379,7 @@ export default function DietitianProfilePage() {
 
           {/* Right Column - Programs */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 shadow-card lg:sticky lg:top-4">
+            <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)] lg:sticky lg:top-4">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Nutrition Programs
               </h2>
@@ -411,10 +411,10 @@ export default function DietitianProfilePage() {
                   {plans.map((plan) => (
                     <div
                       key={plan._id}
-                      className={`p-4 border-2 cursor-pointer transition-all ${
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
                         selectedPlan === plan._id
                           ? "border-accent-purple-500 bg-accent-purple-500/5"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-neutral-200 hover:border-neutral-300"
                       }`}
                       onClick={() => setSelectedPlan(plan._id)}
                     >

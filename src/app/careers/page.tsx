@@ -223,7 +223,7 @@ export default function CareersPage() {
             {values.map((value, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-6 shadow-card"
+                className="rounded-2xl bg-background p-6 shadow-[var(--shadow-card)]"
               >
                 <h3 className="font-display text-xl font-bold text-foreground mb-3">
                   {value.title}
@@ -284,7 +284,7 @@ export default function CareersPage() {
               <a
                 key={index}
                 href={`mailto:careers@binectics.com?subject=Application for ${position.title}`}
-                className="group block rounded-2xl bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="group block rounded-2xl bg-background p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex-1">

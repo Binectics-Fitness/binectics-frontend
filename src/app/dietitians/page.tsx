@@ -289,7 +289,7 @@ export default function DietitiansPage() {
                 return (
                   <div
                     key={listing._id}
-                    className="flex h-full flex-col bg-white shadow-card transition-shadow hover:shadow-lg"
+                    className="flex h-full flex-col bg-white shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="flex flex-1 flex-col p-4 pb-4 sm:p-6">
                       <div className="mb-4 flex items-start justify-between gap-3">
@@ -386,7 +386,7 @@ export default function DietitiansPage() {
                         )}
                     </div>
 
-                    <div className="mt-auto flex flex-col gap-3 border-t border-gray-200 bg-gray-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div className="mt-auto flex flex-col gap-3 border-t border-neutral-200 bg-neutral-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                       <div>
                         {listing.price_from ? (
                           <>

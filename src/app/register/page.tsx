@@ -125,22 +125,22 @@ export default function RegisterPage() {
 
   const colorClasses = {
     blue: {
-      bg: "bg-accent-blue-100",
-      icon: "text-accent-blue-600",
+      bg: "icon-glow-blue",
+      icon: "",
       button: "bg-accent-blue-500 hover:bg-accent-blue-600 text-white",
-      border: "border-accent-blue-200 hover:border-accent-blue-500",
+      border: "border-neutral-200 hover:border-accent-blue-500",
     },
     yellow: {
-      bg: "bg-accent-yellow-100",
-      icon: "text-accent-yellow-600",
+      bg: "icon-glow-yellow",
+      icon: "",
       button: "bg-accent-yellow-500 hover:bg-accent-yellow-600 text-foreground",
-      border: "border-accent-yellow-200 hover:border-accent-yellow-500",
+      border: "border-neutral-200 hover:border-accent-yellow-500",
     },
     purple: {
-      bg: "bg-accent-purple-100",
-      icon: "text-accent-purple-600",
+      bg: "icon-glow-purple",
+      icon: "",
       button: "bg-accent-purple-500 hover:bg-accent-purple-600 text-white",
-      border: "border-accent-purple-200 hover:border-accent-purple-500",
+      border: "border-neutral-200 hover:border-accent-purple-500",
     },
   };
 
@@ -151,6 +151,11 @@ export default function RegisterPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl icon-glow-green">
+              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+              </svg>
+            </div>
             <h1 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
               Join Binectics
             </h1>
@@ -168,11 +173,11 @@ export default function RegisterPage() {
               return (
                 <div
                   key={role.id}
-                  className={`group relative flex flex-col overflow-hidden rounded-2xl border-2 ${colors.border} bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                  className={`group relative flex flex-col overflow-hidden rounded-2xl border ${colors.border} bg-white p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
                 >
                   {/* Icon */}
                   <div
-                    className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl ${colors.bg} ${colors.icon}`}
+                    className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 ${colors.bg} ${colors.icon}`}
                   >
                     {role.icon}
                   </div>
@@ -223,7 +228,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Trust Indicators */}
-          <div className="mt-16 rounded-2xl bg-neutral-100 px-6 py-8 sm:px-8">
+          <div className="mt-16 rounded-2xl bg-white px-6 py-8 sm:px-8 shadow-[var(--shadow-card)]">
             <div className="grid gap-6 sm:grid-cols-3 text-center">
               <div>
                 <div className="font-display text-3xl font-bold text-foreground">

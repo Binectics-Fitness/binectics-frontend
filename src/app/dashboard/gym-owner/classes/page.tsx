@@ -197,7 +197,7 @@ export default function GymOwnerClassesPage() {
           </div>
 
           <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Total Classes
               </p>
@@ -205,7 +205,7 @@ export default function GymOwnerClassesPage() {
                 {classes.length}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Total Enrollments
               </p>
@@ -213,7 +213,7 @@ export default function GymOwnerClassesPage() {
                 {classes.reduce((sum, c) => sum + c.enrolled, 0)}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Average Attendance
               </p>
@@ -227,7 +227,7 @@ export default function GymOwnerClassesPage() {
                 %
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Active Instructors
               </p>
@@ -244,7 +244,7 @@ export default function GymOwnerClassesPage() {
               return (
                 <div
                   key={classItem.id}
-                  className="rounded-xl border border-gray-100 bg-white p-4 shadow-card"
+                  className="rounded-xl border border-neutral-100 bg-white p-4 shadow-[var(--shadow-card)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -277,7 +277,7 @@ export default function GymOwnerClassesPage() {
                     </p>
                   </div>
 
-                  <div className="mt-2 h-2 rounded-full bg-gray-200">
+                  <div className="mt-2 h-2 rounded-full bg-neutral-200">
                     <div
                       className={`h-full rounded-full ${
                         utilizationPercent >= 90
@@ -308,10 +308,10 @@ export default function GymOwnerClassesPage() {
             })}
           </div>
 
-          <div className="hidden md:block bg-white rounded-xl shadow-card overflow-hidden">
+          <div className="hidden md:block bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-bold text-foreground">
                       Class Name
@@ -344,7 +344,7 @@ export default function GymOwnerClassesPage() {
                     const utilizationPercent =
                       (classItem.enrolled / classItem.capacity) * 100;
                     return (
-                      <tr key={classItem.id} className="hover:bg-gray-50">
+                      <tr key={classItem.id} className="hover:bg-neutral-50">
                         <td className="px-6 py-4">
                           <p className="font-semibold text-foreground">
                             {classItem.name}
@@ -367,7 +367,7 @@ export default function GymOwnerClassesPage() {
                             <p className="font-semibold text-foreground">
                               {classItem.enrolled}/{classItem.capacity}
                             </p>
-                            <div className="w-24 h-2 bg-gray-200 rounded-full mt-1">
+                            <div className="w-24 h-2 bg-neutral-200 rounded-full mt-1">
                               <div
                                 className={`h-full rounded-full ${
                                   utilizationPercent >= 90
@@ -431,7 +431,7 @@ export default function GymOwnerClassesPage() {
                           value={formData.name}
                           onChange={handleInputChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                          className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           placeholder="e.g., Morning Yoga Flow"
                         />
                       </div>
@@ -444,7 +444,7 @@ export default function GymOwnerClassesPage() {
                           value={formData.description}
                           onChange={handleInputChange}
                           rows={3}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                          className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           placeholder="Describe the class..."
                         />
                       </div>
@@ -458,7 +458,7 @@ export default function GymOwnerClassesPage() {
                             value={formData.category}
                             onChange={handleInputChange}
                             required
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           >
                             {categories.map((cat) => (
                               <option key={cat} value={cat}>
@@ -477,7 +477,7 @@ export default function GymOwnerClassesPage() {
                             value={formData.instructor}
                             onChange={handleInputChange}
                             required
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                             placeholder="Instructor name"
                           />
                         </div>
@@ -500,7 +500,7 @@ export default function GymOwnerClassesPage() {
                               key={day}
                               type="button"
                               onClick={() => handleDayToggle(day)}
-                              className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm ${formData.schedule.days.includes(day) ? "bg-accent-blue-500 text-foreground" : "bg-gray-100 text-foreground/60 hover:bg-gray-200"}`}
+                              className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm ${formData.schedule.days.includes(day) ? "bg-accent-blue-500 text-foreground" : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"}`}
                             >
                               {day.substring(0, 3)}
                             </button>
@@ -519,7 +519,7 @@ export default function GymOwnerClassesPage() {
                               handleScheduleChange("startTime", e.target.value)
                             }
                             required
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           />
                         </div>
                         <div>
@@ -533,7 +533,7 @@ export default function GymOwnerClassesPage() {
                               handleScheduleChange("endTime", e.target.value)
                             }
                             required
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           />
                         </div>
                         <div>
@@ -545,7 +545,7 @@ export default function GymOwnerClassesPage() {
                             name="duration"
                             value={formData.duration}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                             placeholder="60"
                           />
                         </div>
@@ -560,7 +560,7 @@ export default function GymOwnerClassesPage() {
                             name="startDate"
                             value={formData.startDate}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           />
                         </div>
                         <div>
@@ -572,7 +572,7 @@ export default function GymOwnerClassesPage() {
                             name="endDate"
                             value={formData.endDate}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           />
                         </div>
                       </div>
@@ -596,7 +596,7 @@ export default function GymOwnerClassesPage() {
                           onChange={handleInputChange}
                           required
                           min="1"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                          className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           placeholder="20"
                         />
                       </div>
@@ -611,7 +611,7 @@ export default function GymOwnerClassesPage() {
                           onChange={handleInputChange}
                           min="0"
                           step="0.01"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                          className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                           placeholder="0.00"
                         />
                       </div>
@@ -622,7 +622,7 @@ export default function GymOwnerClassesPage() {
                     <button
                       type="button"
                       onClick={() => setShowCreateModal(false)}
-                      className="flex-1 px-6 py-3 bg-gray-200 text-foreground font-semibold rounded-lg hover:bg-gray-300"
+                      className="flex-1 px-6 py-3 bg-neutral-200 text-foreground font-semibold rounded-lg hover:bg-neutral-300"
                     >
                       Cancel
                     </button>

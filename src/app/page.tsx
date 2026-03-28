@@ -40,7 +40,11 @@ export default function Home() {
     <div className="min-h-screen bg-neutral-100">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-background-secondary py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Subtle gradient background */}
+        <div className="pointer-events-none absolute inset-0 gradient-hero opacity-60" />
+        <div className="pointer-events-none absolute -right-64 -top-64 h-[500px] w-[500px] rounded-full bg-primary-500/[0.03] blur-3xl" />
+        <div className="pointer-events-none absolute -left-32 bottom-0 h-[400px] w-[400px] rounded-full bg-accent-blue-500/[0.03] blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-500/10 px-4 py-2">
@@ -87,10 +91,10 @@ export default function Home() {
                 {/* Visual element - illustrated icons */}
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 space-y-6">
                   <div
-                    className="flex items-center gap-4 rounded-2xl bg-white p-6 shadow-lg animate-fade-in"
+                    className="flex items-center gap-4 rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 hover:-translate-y-0.5 animate-fade-in"
                     style={{ animationDelay: "0.2s" }}
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-blue-100">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl icon-glow-blue">
                       <svg
                         className="h-6 w-6 text-accent-blue-600"
                         fill="none"
@@ -115,10 +119,10 @@ export default function Home() {
                     </div>
                   </div>
                   <div
-                    className="flex items-center gap-4 rounded-2xl bg-white p-6 shadow-lg animate-fade-in"
+                    className="flex items-center gap-4 rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 hover:-translate-y-0.5 animate-fade-in"
                     style={{ animationDelay: "0.4s" }}
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-yellow-100">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl icon-glow-yellow">
                       <svg
                         className="h-6 w-6 text-accent-yellow-600"
                         fill="none"
@@ -143,10 +147,10 @@ export default function Home() {
                     </div>
                   </div>
                   <div
-                    className="flex items-center gap-4 rounded-2xl bg-white p-6 shadow-lg animate-fade-in"
+                    className="flex items-center gap-4 rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 hover:-translate-y-0.5 animate-fade-in"
                     style={{ animationDelay: "0.6s" }}
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-orange-100">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl icon-glow-purple">
                       <svg
                         className="h-6 w-6 text-accent-orange-600"
                         fill="none"
@@ -176,9 +180,9 @@ export default function Home() {
           </div>
 
           {/* Stats */}
-          <div className="mt-20 grid gap-8 sm:grid-cols-3">
+          <div className="mt-20 grid gap-6 sm:grid-cols-3">
             <div
-              className="text-center animate-fade-in"
+              className="group text-center rounded-2xl bg-white/70 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 animate-fade-in"
               style={{ animationDelay: "0.1s" }}
             >
               <div className="mb-2 flex items-center justify-center">
@@ -198,7 +202,7 @@ export default function Home() {
               </div>
             </div>
             <div
-              className="text-center animate-fade-in"
+              className="group text-center rounded-2xl bg-white/70 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 animate-fade-in"
               style={{ animationDelay: "0.2s" }}
             >
               <div className="mb-2 flex items-center justify-center">
@@ -218,7 +222,7 @@ export default function Home() {
               </div>
             </div>
             <div
-              className="text-center animate-fade-in"
+              className="group text-center rounded-2xl bg-white/70 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 animate-fade-in"
               style={{ animationDelay: "0.3s" }}
             >
               <div className="mb-2 flex items-center justify-center">
@@ -244,7 +248,7 @@ export default function Home() {
       {/* How It Works Section */}
       <section
         id="how-it-works"
-        className="bg-background-secondary py-20 sm:py-28"
+        className="relative bg-background-secondary py-20 sm:py-28 gradient-section-green"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
@@ -326,9 +330,9 @@ export default function Home() {
               },
             ].map((item, index) => {
               const colorClasses = {
-                blue: "bg-accent-blue-100 text-accent-blue-600",
-                yellow: "bg-accent-yellow-100 text-accent-yellow-600",
-                purple: "bg-accent-purple-100 text-accent-purple-600",
+                blue: "icon-glow-blue",
+                yellow: "icon-glow-yellow",
+                purple: "icon-glow-purple",
               };
 
               return (
@@ -336,16 +340,16 @@ export default function Home() {
                   {/* Connector Line - Hidden on mobile, shown on desktop */}
                   {index < 2 && (
                     <div
-                      className="absolute left-1/2 top-16 hidden h-0.5 w-full bg-neutral-300 lg:block"
+                      className="absolute left-1/2 top-16 hidden h-0.5 w-full bg-gradient-to-r from-neutral-300 to-neutral-200 lg:block"
                       style={{ zIndex: 0 }}
                     ></div>
                   )}
 
-                  <div className="relative z-10 text-center">
+                  <div className="relative z-10 text-center group">
                     {/* Step Number */}
                     <div className="mb-6 flex justify-center">
                       <div
-                        className={`flex h-20 w-20 items-center justify-center rounded-2xl ${colorClasses[item.color as keyof typeof colorClasses]} transition-shadow duration-300 hover:shadow-lg`}
+                        className={`flex h-20 w-20 items-center justify-center rounded-2xl ${colorClasses[item.color as keyof typeof colorClasses]} transition-all duration-300 group-hover:scale-105 group-hover:shadow-[var(--shadow-card-hover)]`}
                       >
                         {item.icon}
                       </div>
@@ -484,17 +488,17 @@ export default function Home() {
               },
             ].map((useCase, index) => {
               const colorClasses = {
-                blue: "bg-accent-blue-100 text-accent-blue-600",
-                yellow: "bg-accent-yellow-100 text-accent-yellow-600",
-                orange: "bg-accent-orange-100 text-accent-orange-600",
-                purple: "bg-accent-purple-100 text-accent-purple-600",
+                blue: "icon-glow-blue",
+                yellow: "icon-glow-yellow",
+                orange: "icon-glow-purple",
+                purple: "icon-glow-purple",
               };
 
               return (
                 <div key={index} className="group relative">
-                  <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-background p-6 sm:p-8 shadow-card transition-shadow duration-300 hover:shadow-xl">
+                  <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1">
                     <div
-                      className={`mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl ${colorClasses[useCase.color as keyof typeof colorClasses]}`}
+                      className={`mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl transition-transform duration-300 group-hover:scale-105 ${colorClasses[useCase.color as keyof typeof colorClasses]}`}
                     >
                       {useCase.icon}
                     </div>
@@ -513,7 +517,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="bg-background-secondary py-20 sm:py-28">
+      <section id="features" className="relative bg-background-secondary py-20 sm:py-28 gradient-section-blue">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
             <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl">
@@ -753,7 +757,7 @@ export default function Home() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group rounded-2xl bg-background p-8 shadow-card transition-shadow duration-300 hover:shadow-xl"
+                className="group rounded-2xl bg-background p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5"
               >
                 <div
                   className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-${feature.color}-100 text-accent-${feature.color}-600`}
@@ -773,7 +777,7 @@ export default function Home() {
       </section>
 
       {/* Platform Features - PRD Capabilities */}
-      <section className="bg-background-secondary py-20 sm:py-28">
+      <section className="relative bg-background-secondary py-20 sm:py-28 gradient-section-warm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
             <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
@@ -920,26 +924,19 @@ export default function Home() {
               },
             ].map((feature, index) => {
               const colorClasses = {
-                blue: "bg-accent-blue-100",
-                green: "bg-primary-100",
-                yellow: "bg-accent-yellow-100",
-                purple: "bg-accent-purple-100",
-              };
-
-              const iconColorClasses = {
-                blue: "text-accent-blue-600",
-                green: "text-primary-600",
-                yellow: "text-accent-yellow-600",
-                purple: "text-accent-purple-600",
+                blue: "icon-glow-blue",
+                green: "icon-glow-green",
+                yellow: "icon-glow-yellow",
+                purple: "icon-glow-purple",
               };
 
               return (
                 <div
                   key={index}
-                  className="group rounded-xl sm:rounded-2xl bg-background p-5 sm:p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                  className="group rounded-xl sm:rounded-2xl bg-white p-5 sm:p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
                 >
                   <div
-                    className={`mb-3 sm:mb-4 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl ${colorClasses[feature.color as keyof typeof colorClasses]} ${iconColorClasses[feature.color as keyof typeof iconColorClasses]}`}
+                    className={`mb-3 sm:mb-4 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl transition-transform duration-300 group-hover:scale-110 ${colorClasses[feature.color as keyof typeof colorClasses]}`}
                   >
                     {feature.icon}
                   </div>
@@ -957,7 +954,7 @@ export default function Home() {
       </section>
 
       {/* Global Reach Section */}
-      <section className="bg-background-secondary py-20 sm:py-28">
+      <section className="relative bg-background-secondary py-20 sm:py-28 gradient-section-green">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
             <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
@@ -982,7 +979,7 @@ export default function Home() {
             ].map((location, index) => (
               <div
                 key={index}
-                className="group rounded-xl sm:rounded-2xl bg-background p-4 sm:p-6 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="group rounded-xl sm:rounded-2xl bg-background p-4 sm:p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
               >
                 <div className="mb-3 sm:mb-4 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-primary-100">
                   <svg
@@ -1162,7 +1159,7 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="bg-background-secondary py-20 sm:py-28">
+      <section className="relative bg-background-secondary py-20 sm:py-28 gradient-section-purple">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
             <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
@@ -1233,7 +1230,7 @@ export default function Home() {
             ].map((testimonial, index) => (
               <div
                 key={index}
-                className="group relative rounded-2xl sm:rounded-3xl bg-background p-5 sm:p-8 shadow-card transition-shadow duration-300 hover:shadow-xl"
+                className="group relative rounded-2xl sm:rounded-3xl bg-background p-5 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5"
               >
                 <div className="flex items-start gap-3 sm:gap-4">
                   <div
@@ -1417,7 +1414,7 @@ export default function Home() {
             ].map((item, index) => (
               <div
                 key={index}
-                className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-background p-6 sm:p-8 shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
               >
                 <div className="absolute right-3 top-3 sm:right-4 sm:top-4 text-4xl sm:text-6xl font-black text-neutral-200 opacity-50">
                   {item.step}
@@ -1548,7 +1545,11 @@ export default function Home() {
       {/* CTA Section */}
       <section className="bg-background-secondary py-16 sm:py-20 lg:py-28">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="rounded-2xl sm:rounded-3xl bg-primary-500 px-6 py-12 sm:px-12 sm:py-16 lg:py-20">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl gradient-hero-green px-6 py-12 sm:px-12 sm:py-16 lg:py-20">
+            {/* Decorative circles */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-white/[0.07]" />
+            <div className="relative">
             <h2 className="font-display text-2xl font-black leading-tight text-foreground sm:text-3xl lg:text-4xl xl:text-5xl">
               Join 10,000+ members worldwide
             </h2>
@@ -1591,6 +1592,7 @@ export default function Home() {
                   Google Play
                 </a>
               </div>
+            </div>
             </div>
           </div>
         </div>

@@ -76,7 +76,7 @@ export default function InviteContent() {
   if (status === "accepted") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background-secondary">
-        <div className="mx-auto max-w-md rounded-2xl bg-white p-8 text-center shadow-card">
+        <div className="mx-auto max-w-md rounded-2xl bg-white p-8 text-center shadow-[var(--shadow-card)]">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
             <svg
               className="h-8 w-8 text-green-600"
@@ -119,7 +119,7 @@ export default function InviteContent() {
 
     return (
       <div className="flex min-h-screen items-center justify-center bg-background-secondary">
-        <div className="mx-auto max-w-md rounded-2xl bg-white p-8 text-center shadow-card">
+        <div className="mx-auto max-w-md rounded-2xl bg-white p-8 text-center shadow-[var(--shadow-card)]">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-blue-100">
             <svg
               className="h-8 w-8 text-accent-blue-600"
@@ -165,7 +165,7 @@ export default function InviteContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background-secondary">
-      <div className="mx-auto max-w-md rounded-2xl bg-white p-8 text-center shadow-card">
+      <div className="mx-auto max-w-md rounded-2xl bg-white p-8 text-center shadow-[var(--shadow-card)]">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
           <svg
             className="h-8 w-8 text-red-600"

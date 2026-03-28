@@ -118,7 +118,7 @@ export default function MemberBillingPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-card p-4 sm:p-6">
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-[var(--shadow-card)] p-4 sm:p-6">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Total Revenue
               </p>
@@ -129,7 +129,7 @@ export default function MemberBillingPage() {
                 Lifetime value
               </p>
             </div>
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-card p-4 sm:p-6">
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-[var(--shadow-card)] p-4 sm:p-6">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Avg Monthly Spend
               </p>
@@ -140,7 +140,7 @@ export default function MemberBillingPage() {
                 Last 5 months
               </p>
             </div>
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-card p-4 sm:p-6">
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-[var(--shadow-card)] p-4 sm:p-6">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Next Billing
               </p>
@@ -151,7 +151,7 @@ export default function MemberBillingPage() {
                 $49 scheduled
               </p>
             </div>
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-card p-4 sm:p-6">
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-[var(--shadow-card)] p-4 sm:p-6">
               <p className="text-xs sm:text-sm font-medium text-foreground/60">
                 Payment Method
               </p>
@@ -167,7 +167,7 @@ export default function MemberBillingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Payment History */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg sm:rounded-xl shadow-card p-4 sm:p-6 mb-6">
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-[var(--shadow-card)] p-4 sm:p-6 mb-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                   <h3 className="text-lg sm:text-xl font-bold text-foreground">
                     Payment History
@@ -180,7 +180,7 @@ export default function MemberBillingPage() {
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="border-b border-gray-200">
+                    <thead className="border-b border-neutral-200">
                       <tr>
                         <th className="text-left py-2 px-2 text-xs font-semibold text-foreground/60">
                           Date
@@ -206,7 +206,7 @@ export default function MemberBillingPage() {
                       {paymentHistory.map((payment) => (
                         <tr
                           key={payment.id}
-                          className="border-b border-gray-100 last:border-0"
+                          className="border-b border-neutral-100 last:border-0"
                         >
                           <td className="py-3 px-2 text-foreground/60 text-xs sm:text-sm">
                             {payment.date}
@@ -241,7 +241,7 @@ export default function MemberBillingPage() {
                   {paymentHistory.map((payment) => (
                     <div
                       key={payment.id}
-                      className="bg-gray-50 p-3 rounded-lg border border-gray-100 text-sm"
+                      className="bg-neutral-50 p-3 rounded-lg border border-neutral-100 text-sm"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
@@ -276,7 +276,7 @@ export default function MemberBillingPage() {
               </div>
 
               {/* Upcoming Charges */}
-              <div className="bg-white rounded-lg sm:rounded-xl shadow-card p-4 sm:p-6">
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-[var(--shadow-card)] p-4 sm:p-6">
                 <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
                   Upcoming Charges
                 </h3>
@@ -284,7 +284,7 @@ export default function MemberBillingPage() {
                   {upcomingCharges.map((charge) => (
                     <div
                       key={charge.id}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-neutral-50 rounded-lg gap-3"
                     >
                       <div>
                         <p className="font-semibold text-foreground text-sm">
@@ -308,7 +308,7 @@ export default function MemberBillingPage() {
             {/* Sidebar */}
             <div className="lg:col-span-1">
               {/* Current Plan */}
-              <div className="bg-white rounded-lg sm:rounded-xl shadow-card p-4 sm:p-6 mb-6">
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-[var(--shadow-card)] p-4 sm:p-6 mb-6">
                 <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
                   Current Plan
                 </h3>
@@ -344,7 +344,7 @@ export default function MemberBillingPage() {
               </div>
 
               {/* Billing Actions */}
-              <div className="bg-white rounded-lg sm:rounded-xl shadow-card p-4 sm:p-6">
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-[var(--shadow-card)] p-4 sm:p-6">
                 <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
                   Billing Actions
                 </h3>

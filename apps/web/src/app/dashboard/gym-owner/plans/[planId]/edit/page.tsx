@@ -75,7 +75,7 @@ export default function EditPlanPage() {
 
           <h1 className="text-3xl font-black text-foreground mb-8">Edit Plan</h1>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-card p-8">
+          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-[var(--shadow-card)] p-8">
             {/* Basic Information */}
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4">Basic Information</h2>
@@ -88,7 +88,7 @@ export default function EditPlanPage() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="e.g., Basic Monthly"
                     required
                   />
@@ -101,7 +101,7 @@ export default function EditPlanPage() {
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     required
                   >
                     <option value="SUBSCRIPTION">Subscription</option>
@@ -117,7 +117,7 @@ export default function EditPlanPage() {
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="49"
                     min="0"
                     step="0.01"
@@ -133,7 +133,7 @@ export default function EditPlanPage() {
                     type="number"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="30"
                     min="1"
                     required
@@ -147,7 +147,7 @@ export default function EditPlanPage() {
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="Describe what this plan includes..."
                     rows={4}
                   />
@@ -170,7 +170,7 @@ export default function EditPlanPage() {
                       addFeature();
                     }
                   }}
-                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
+                  className="flex-1 px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                   placeholder="Add a feature (e.g., Unlimited gym access)"
                 />
                 <button
@@ -186,7 +186,7 @@ export default function EditPlanPage() {
                 {formData.features.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg"
+                    className="flex items-center justify-between bg-neutral-50 px-4 py-3 rounded-lg"
                   >
                     <div className="flex items-center gap-2">
                       <svg
@@ -232,7 +232,7 @@ export default function EditPlanPage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-6 py-3 border-2 border-gray-300 text-foreground font-semibold rounded-lg hover:bg-gray-50"
+                className="px-6 py-3 border-2 border-neutral-300 text-foreground font-semibold rounded-lg hover:bg-neutral-50"
               >
                 Cancel
               </button>

@@ -10,19 +10,19 @@ export default function GymOwnerAnalyticsPage() {
             Analytics
           </h1>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Member Growth
               </p>
               <p className="text-3xl font-black text-foreground mt-2">+12.5%</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Retention Rate
               </p>
               <p className="text-3xl font-black text-foreground mt-2">87%</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Avg Visits/Week
               </p>

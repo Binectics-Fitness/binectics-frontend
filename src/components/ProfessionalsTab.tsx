@@ -145,7 +145,7 @@ export default function ProfessionalsTab() {
 
         {/* Tab Navigation */}
         <div className="mt-12 flex justify-center overflow-x-auto px-4 sm:px-0">
-          <div className="inline-flex rounded-lg bg-background p-1 shadow-card min-w-fit">
+          <div className="inline-flex rounded-lg bg-background p-1 shadow-[var(--shadow-card)] min-w-fit">
             <button
               onClick={() => setActiveTab('gym')}
               className={`rounded-lg px-4 sm:px-6 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${

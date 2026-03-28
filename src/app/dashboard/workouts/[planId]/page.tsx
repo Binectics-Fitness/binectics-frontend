@@ -98,13 +98,13 @@ export default function UserWorkoutPlanDetailPage() {
         {loadingPlan ? (
           <DashboardLoading />
         ) : !plan ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)] text-center">
             <p className="text-foreground-secondary">Workout plan not found.</p>
           </div>
         ) : (
           <div className="space-y-6">
             {/* Header */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">
@@ -175,7 +175,7 @@ export default function UserWorkoutPlanDetailPage() {
 
             {/* Trainer Notes */}
             {plan.trainer_notes && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-lg font-bold text-foreground mb-2">
                   Trainer Notes
                 </h2>
@@ -186,7 +186,7 @@ export default function UserWorkoutPlanDetailPage() {
             )}
 
             {/* Exercises */}
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-lg font-bold text-foreground mb-4">
                 Exercises
               </h2>

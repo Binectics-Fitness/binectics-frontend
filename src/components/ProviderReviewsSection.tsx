@@ -201,7 +201,7 @@ export default function ProviderReviewsSection({
   };
 
   return (
-    <div className="bg-white p-6 shadow-card">
+    <div className="bg-white p-6 shadow-[var(--shadow-card)]">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-foreground">{title}</h2>
 
@@ -294,7 +294,7 @@ export default function ProviderReviewsSection({
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="border-b border-gray-100 pb-5 last:border-0 last:pb-0"
+              className="border-b border-neutral-100 pb-5 last:border-0 last:pb-0"
             >
               <div className="mb-2 flex items-center justify-between gap-4">
                 <div>

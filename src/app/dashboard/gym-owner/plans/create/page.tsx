@@ -149,7 +149,7 @@ export default function CreatePlanPage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">
                 Basic Information
               </h3>
@@ -161,7 +161,7 @@ export default function CreatePlanPage() {
                   <input
                     type="text"
                     {...register("name")}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                     placeholder="Monthly Unlimited"
                   />
                   {errors.name && (
@@ -177,7 +177,7 @@ export default function CreatePlanPage() {
                   </label>
                   <select
                     {...register("plan_type")}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   >
                     <option value={MembershipPlanType.SUBSCRIPTION}>
                       Subscription
@@ -197,7 +197,7 @@ export default function CreatePlanPage() {
                     min={1}
                     max={3650}
                     {...register("duration_days")}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
                   {errors.duration_days && (
                     <p className="mt-1 text-sm text-red-500">
@@ -216,7 +216,7 @@ export default function CreatePlanPage() {
                     max={999999.99}
                     step="0.01"
                     {...register("price")}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                     placeholder="49"
                   />
                   {errors.price && (
@@ -232,7 +232,7 @@ export default function CreatePlanPage() {
                   </label>
                   <select
                     {...register("currency")}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   >
                     {currencies.length === 0 ? (
                       <option value="USD">USD — US Dollar</option>
@@ -253,14 +253,14 @@ export default function CreatePlanPage() {
                   <textarea
                     rows={4}
                     {...register("description")}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                     placeholder="Describe what this plan includes"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">
                 Plan Features
               </h3>
@@ -269,7 +269,7 @@ export default function CreatePlanPage() {
                   type="text"
                   value={newFeature}
                   onChange={(event) => setNewFeature(event.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                  className="flex-1 px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   placeholder="Add a feature (e.g. Unlimited gym access)"
                 />
                 <button
@@ -290,7 +290,7 @@ export default function CreatePlanPage() {
                   {formData.features.map((feature, index) => (
                     <div
                       key={`${feature}-${index}`}
-                      className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
+                      className="flex items-center justify-between rounded-lg bg-neutral-50 p-3"
                     >
                       <span className="text-foreground">{feature}</span>
                       <button
@@ -313,7 +313,7 @@ export default function CreatePlanPage() {
                 onChange={(event) =>
                   setValue("is_public", event.target.checked)
                 }
-                className="h-4 w-4 rounded border-gray-300 text-accent-blue-500 focus:ring-accent-blue-500"
+                className="h-4 w-4 rounded border-neutral-300 text-accent-blue-500 focus:ring-accent-blue-500"
               />
               Show this plan publicly in marketplace listing
             </label>
@@ -322,7 +322,7 @@ export default function CreatePlanPage() {
               <button
                 type="button"
                 onClick={() => router.push("/dashboard/gym-owner/plans")}
-                className="flex-1 px-6 py-3 bg-gray-200 text-foreground font-semibold rounded-lg hover:bg-gray-300"
+                className="flex-1 px-6 py-3 bg-neutral-200 text-foreground font-semibold rounded-lg hover:bg-neutral-300"
               >
                 Cancel
               </button>

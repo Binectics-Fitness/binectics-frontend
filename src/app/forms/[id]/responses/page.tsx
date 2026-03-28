@@ -115,7 +115,7 @@ export default function FormResponsesPage() {
 
         {/* Empty State */}
         {responses.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-card p-12 text-center">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-12 text-center">
             <div className="text-6xl mb-4">📝</div>
             <h2 className="font-display text-2xl font-bold text-foreground mb-2">
               No Responses Yet
@@ -134,7 +134,7 @@ export default function FormResponsesPage() {
               {responses.map((response, index) => (
                 <div
                   key={response._id}
-                  className="bg-white rounded-xl shadow-card p-4"
+                  className="bg-white rounded-xl shadow-[var(--shadow-card)] p-4"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-foreground">
@@ -163,7 +163,7 @@ export default function FormResponsesPage() {
             </div>
 
             {/* Desktop Table */}
-            <div className="hidden md:block bg-white rounded-xl shadow-card overflow-hidden">
+            <div className="hidden md:block bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-neutral-50 border-b border-neutral-200">
@@ -221,7 +221,7 @@ export default function FormResponsesPage() {
 
             {/* Summary Cards */}
             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <div className="text-sm font-semibold text-foreground-secondary mb-2">
                   Total Responses
                 </div>
@@ -229,7 +229,7 @@ export default function FormResponsesPage() {
                   {responses.length}
                 </div>
               </div>
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <div className="text-sm font-semibold text-foreground-secondary mb-2">
                   Avg. Completion Time
                 </div>
@@ -246,7 +246,7 @@ export default function FormResponsesPage() {
                     : "-"}
                 </div>
               </div>
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <div className="text-sm font-semibold text-foreground-secondary mb-2">
                   Latest Response
                 </div>

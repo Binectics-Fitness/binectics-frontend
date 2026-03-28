@@ -131,7 +131,7 @@ export default function AdminUserDetailPage() {
       case "EXPIRED":
         return "bg-red-100 text-red-700";
       case "CANCELLED":
-        return "bg-gray-100 text-gray-700";
+        return "bg-neutral-100 text-neutral-700";
       default:
         return "bg-accent-yellow-100 text-accent-yellow-700";
     }
@@ -143,7 +143,7 @@ export default function AdminUserDetailPage() {
 
       <div className="flex-1 md:ml-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-white border-b border-neutral-200">
           <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <button
               onClick={() => router.push("/admin/users")}
@@ -174,7 +174,7 @@ export default function AdminUserDetailPage() {
               <div className="flex gap-3">
                 <button
                   onClick={handleSendEmail}
-                  className="px-4 py-2 sm:px-6 sm:py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base"
+                  className="px-4 py-2 sm:px-6 sm:py-3 border-2 border-neutral-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base"
                 >
                   Send Email
                 </button>
@@ -193,7 +193,7 @@ export default function AdminUserDetailPage() {
           {/* User Info */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <div className="lg:col-span-2">
-              <div className="bg-white p-6 shadow-card mb-6">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)] mb-6">
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   User Information
                 </h2>
@@ -216,7 +216,7 @@ export default function AdminUserDetailPage() {
                     <p className="text-sm font-medium text-foreground/60 mb-1">
                       Role
                     </p>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-semibold">
+                    <span className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm font-semibold">
                       {user.role}
                     </span>
                   </div>
@@ -264,7 +264,7 @@ export default function AdminUserDetailPage() {
               </div>
 
               {/* Subscriptions */}
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   Active Subscriptions
                 </h2>
@@ -272,7 +272,7 @@ export default function AdminUserDetailPage() {
                   {subscriptions.map((sub) => (
                     <div
                       key={sub.id}
-                      className="p-4 border-2 border-gray-200 hover:border-red-500 transition-colors"
+                      className="p-4 border-2 border-neutral-200 hover:border-red-500 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -318,7 +318,7 @@ export default function AdminUserDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Verification Status */}
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Verification Status
                 </h3>
@@ -347,7 +347,7 @@ export default function AdminUserDetailPage() {
               </div>
 
               {/* Quick Stats */}
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Quick Stats
                 </h3>
@@ -391,7 +391,7 @@ export default function AdminUserDetailPage() {
           </div>
 
           {/* Activity Log */}
-          <div className="bg-white p-6 shadow-card">
+          <div className="bg-white p-6 shadow-[var(--shadow-card)]">
             <h2 className="text-xl font-bold text-foreground mb-6">
               Recent Activity
             </h2>
@@ -399,9 +399,9 @@ export default function AdminUserDetailPage() {
               {activityLog.map((activity, index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-4 pb-3 border-b border-gray-100 last:border-0"
+                  className="flex items-start gap-4 pb-3 border-b border-neutral-100 last:border-0"
                 >
-                  <div className="p-2 bg-gray-100">
+                  <div className="p-2 bg-neutral-100">
                     <svg
                       className="w-4 h-4 text-foreground/60"
                       fill="none"

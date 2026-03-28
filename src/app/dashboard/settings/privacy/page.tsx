@@ -76,7 +76,7 @@ export default function PrivacySettingsPage() {
         </div>
       )}
 
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -125,7 +125,7 @@ export default function PrivacySettingsPage() {
             ].map((option) => (
               <label
                 key={option.value}
-                className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-500 transition-colors"
+                className="flex items-center gap-3 p-3 border-2 border-neutral-200 rounded-lg cursor-pointer hover:border-primary-500 transition-colors"
               >
                 <input
                   type="radio"
@@ -144,7 +144,7 @@ export default function PrivacySettingsPage() {
             ))}
           </div>
         </div>
-        <div className="space-y-4 pt-4 border-t border-gray-200">
+        <div className="space-y-4 pt-4 border-t border-neutral-200">
           <PrivacyToggle
             label="Show Email Address"
             description="Display your email on your public profile"
@@ -172,7 +172,7 @@ export default function PrivacySettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -213,7 +213,7 @@ export default function PrivacySettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -254,7 +254,7 @@ export default function PrivacySettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -289,7 +289,7 @@ export default function PrivacySettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
             className="w-6 h-6 text-foreground"
@@ -309,7 +309,7 @@ export default function PrivacySettingsPage() {
           </h3>
         </div>
         <div className="space-y-4">
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
             <p className="font-semibold text-foreground mb-2">
               Download Your Data
             </p>
@@ -351,14 +351,14 @@ function PrivacyToggle({
   onChange: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-gray-100 py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-3 border-b border-neutral-100 py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex-1 pr-2">
         <p className="font-semibold text-foreground">{label}</p>
         <p className="text-sm text-foreground/60 mt-1">{description}</p>
       </div>
       <button
         onClick={onChange}
-        className={`relative inline-flex h-6 w-11 shrink-0 self-start cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:self-auto ${checked ? "bg-primary-500" : "bg-gray-200"}`}
+        className={`relative inline-flex h-6 w-11 shrink-0 self-start cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:self-auto ${checked ? "bg-primary-500" : "bg-neutral-200"}`}
       >
         <span
           className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${checked ? "translate-x-5" : "translate-x-0"}`}

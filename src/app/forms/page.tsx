@@ -123,7 +123,7 @@ function FormsListContent() {
 
         {/* Forms List */}
         {forms.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-card p-12 text-center">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-12 text-center">
             <svg
               className="w-16 h-16 mx-auto text-foreground-tertiary mb-4"
               fill="none"
@@ -155,7 +155,7 @@ function FormsListContent() {
                 <div
                   key={form._id}
                   id={`form-${form._id}`}
-                  className={`bg-white rounded-xl shadow-card p-6 hover:shadow-lg transition-all ${
+                  className={`bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-all ${
                     isHighlighted
                       ? "ring-4 ring-primary-500 ring-opacity-50 shadow-2xl"
                       : ""
@@ -176,7 +176,7 @@ function FormsListContent() {
                         className={`shrink-0 ml-2 px-2 py-1 text-xs font-semibold rounded ${
                           form.is_published
                             ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-700"
+                            : "bg-neutral-100 text-neutral-700"
                         }`}
                       >
                         {form.is_published ? "Published" : "Draft"}

@@ -89,13 +89,13 @@ export default function SearchableSelect({
           setOpen((o) => !o);
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
-        className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="flex w-full items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
       >
-        <span className={value ? "text-foreground" : "text-gray-400"}>
+        <span className={value ? "text-foreground" : "text-neutral-400"}>
           {loading ? "Loading…" : selectedLabel || placeholder}
         </span>
         <svg
-          className={`h-4 w-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 text-neutral-400 transition-transform ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -110,8 +110,8 @@ export default function SearchableSelect({
       </button>
 
       {open && (
-        <div className="absolute z-30 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
-          <div className="border-b border-gray-100 p-2">
+        <div className="absolute z-30 mt-1 w-full rounded-lg border border-neutral-200 bg-white shadow-lg">
+          <div className="border-b border-neutral-100 p-2">
             <input
               ref={inputRef}
               type="text"
@@ -122,12 +122,12 @@ export default function SearchableSelect({
               }}
               onKeyDown={handleKeyDown}
               placeholder="Search…"
-              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
           <ul ref={listRef} className="max-h-60 overflow-auto py-1">
             {filtered.length === 0 && (
-              <li className="px-3 py-2 text-sm text-gray-400">
+              <li className="px-3 py-2 text-sm text-neutral-400">
                 No results found
               </li>
             )}
@@ -139,8 +139,8 @@ export default function SearchableSelect({
                   o.value === value
                     ? "bg-primary-50 font-medium text-primary-700"
                     : i === highlightIndex
-                      ? "bg-gray-50 text-foreground"
-                      : "text-foreground hover:bg-gray-50"
+                      ? "bg-neutral-50 text-foreground"
+                      : "text-foreground hover:bg-neutral-50"
                 }`}
               >
                 {o.label}

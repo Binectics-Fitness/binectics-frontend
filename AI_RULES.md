@@ -169,3 +169,131 @@ Component updates may be needed as API integration progresses.
 - Do not add extra API calls, lookup maps, or local state hacks on the frontend to compensate for incomplete backend responses
 - If a Mongoose query should `.populate()` a ref field, add the populate call in the backend service — do not fetch related data separately on the frontend
 - If an endpoint is missing, create it in the backend — do not cobble together multiple calls client-side as a substitute
+
+## Design System & Visual Standards
+
+**ABSOLUTE RULE: FOLLOW THE ESTABLISHED DESIGN SYSTEM FOR ALL UI WORK**
+
+### Shadow System (CSS Variables)
+
+Use CSS variable shadows instead of Tailwind utility shadows for cards and elevated surfaces:
+
+```tsx
+// ✅ Correct
+className="shadow-[var(--shadow-card)]"
+className="hover:shadow-[var(--shadow-card-hover)]"
+className="shadow-[var(--shadow-elevated)]"
+
+// ❌ Wrong
+className="shadow-card"
+className="hover:shadow-xl"
+className="shadow-lg"
+```
+
+Available shadow variables:
+- `--shadow-card` — Default card elevation
+- `--shadow-card-hover` — Hover state for interactive cards
+- `--shadow-elevated` — Modals, popovers, elevated surfaces
+
+### Icon Glow Backgrounds
+
+Use `icon-glow-*` utility classes for icon containers instead of flat bg colors:
+
+```tsx
+// ✅ Correct
+<div className="icon-glow-blue h-12 w-12 rounded-xl" />
+<div className="icon-glow-green h-14 w-14 rounded-xl" />
+
+// ❌ Wrong
+<div className="bg-accent-blue-100 h-12 w-12 rounded-xl" />
+<div className="bg-primary-100 h-14 w-14 rounded-xl" />
+```
+
+Available glows: `icon-glow-green`, `icon-glow-blue`, `icon-glow-yellow`, `icon-glow-purple`
+
+### Section Background Gradients
+
+Use gradient section tints for visual rhythm between page sections:
+
+```tsx
+// ✅ Correct
+<section className="relative overflow-hidden">
+  <div className="absolute inset-0 gradient-section-green" />
+  <div className="relative">...</div>
+</section>
+
+// ❌ Wrong
+<section className="bg-neutral-100">...</section>
+```
+
+Available gradients: `gradient-section-green`, `gradient-section-blue`, `gradient-section-purple`, `gradient-section-warm`
+
+### Card Accent Borders
+
+Use `card-accent-*` for top-border accent lines on cards:
+
+```tsx
+className="card-accent-blue rounded-xl bg-white"
+```
+
+Available: `card-accent-green`, `card-accent-blue`, `card-accent-yellow`, `card-accent-purple`
+
+### Role-Based Visual Identity
+
+Each role has a designated accent color. Apply consistently across dashboards, badges, and role-specific UI:
+
+| Role | Primary Accent | Icon Glow | Card Accent | Gradient Bar |
+|------|---------------|-----------|-------------|-------------|
+| Gym Owner | Blue (`accent-blue-*`) | `icon-glow-blue` | `card-accent-blue` | `from-accent-blue-500 to-accent-blue-600` |
+| Trainer | Yellow (`accent-yellow-*`) | `icon-glow-yellow` | `card-accent-yellow` | `from-accent-yellow-500 to-accent-yellow-600` |
+| Dietitian | Purple (`accent-purple-*`) | `icon-glow-purple` | `card-accent-purple` | `from-accent-purple-500 to-accent-purple-600` |
+| General/Marketplace | Green (`primary-*`) | `icon-glow-green` | `card-accent-green` | `from-primary-500 to-primary-600` |
+
+### Dashboard Header Pattern
+
+All dashboard pages must include a gradient accent bar next to the page title:
+
+```tsx
+<div className="flex items-center gap-3">
+  <div className="h-8 w-1 rounded-full bg-gradient-to-b from-accent-blue-500 to-accent-blue-600" />
+  <div>
+    <h1 className="font-display text-3xl font-black text-foreground">Title</h1>
+    <p className="text-foreground-secondary">Subtitle</p>
+  </div>
+</div>
+```
+
+### Card Styling Standards
+
+- Background: `bg-white` (not `bg-background`)
+- Border radius: `rounded-xl` for cards inside pages, `rounded-2xl` for standalone cards
+- Shadow: `shadow-[var(--shadow-card)]`
+- Hover: `hover:shadow-[var(--shadow-card-hover)]` with optional `hover:-translate-y-0.5`
+- Transition: `transition-all duration-300`
+
+### Animation & Motion
+
+- Entrance animations: `animate-fade-in-up` with stagger classes (`stagger-1` through `stagger-8`)
+- Icon hover: `group-hover:scale-105` on icon containers (using `group` on parent)
+- Always support `prefers-reduced-motion` — all animations are disabled via `@media (prefers-reduced-motion: reduce)` in globals.css
+- No button animations beyond color changes on hover/active states
+
+### Shared Components
+
+Use existing shared components before creating new ones:
+
+- `SectionWrapper` — Scroll-triggered entrance animation + gradient tint backgrounds
+- `StatCard` — Accent-colored stat cards for dashboards
+- `PageHeader` — Consistent page header with accent line and breadcrumb
+- `EmptyState` — Icon + accent color + CTA (supports compact mode)
+- `Card` — Supports `glass` variant and `accent` prop
+- `Modal` — Supports `size` prop and entrance/exit animation
+
+### Transition Timing
+
+Use the project's easing variable for smooth animations:
+
+```tsx
+className="transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+// or via CSS: var(--ease-out-expo)
+```

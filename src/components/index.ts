@@ -56,3 +56,8 @@ export { InactivityNotification } from "./InactivityNotification";
 // Utility UI Components
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
+
+// Enhanced UI Components
+export { SectionWrapper } from "./SectionWrapper";
+export { StatCard } from "./StatCard";
+export { PageHeader } from "./PageHeader";

@@ -114,7 +114,7 @@ export default function TrainerReviewsPage() {
         {/* Aggregate Stats */}
         {aggregate && aggregate.totalReviews > 0 && (
           <div className="mb-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <p className="text-4xl font-black text-foreground">
@@ -129,7 +129,7 @@ export default function TrainerReviewsPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h3 className="mb-3 text-sm font-semibold text-foreground-secondary">
                 Rating Breakdown
               </h3>
@@ -192,7 +192,7 @@ export default function TrainerReviewsPage() {
           {loadingData ? (
             <DashboardLoading />
           ) : reviews.length === 0 ? (
-            <div className="rounded-2xl bg-white p-8 shadow-card">
+            <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
               <EmptyState
                 title="No Reviews Yet"
                 description="When clients leave reviews, they will appear here."
@@ -202,7 +202,7 @@ export default function TrainerReviewsPage() {
             reviews.map((review) => (
               <div
                 key={review.id}
-                className="rounded-2xl bg-white p-6 shadow-card"
+                className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]"
               >
                 <div className="flex items-start justify-between">
                   <div>

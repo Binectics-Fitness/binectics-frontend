@@ -55,7 +55,7 @@ export default function AccountSettingsPage() {
   return (
     <div className="space-y-6">
       {/* Change Password */}
-      <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <h3 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
           Change Password
         </h3>
@@ -70,7 +70,7 @@ export default function AccountSettingsPage() {
             <input
               type="password"
               {...register("current")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.current && (
               <p className="mt-1 text-sm text-red-500">
@@ -85,7 +85,7 @@ export default function AccountSettingsPage() {
             <input
               type="password"
               {...register("new")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.new && (
               <p className="mt-1 text-sm text-red-500">{errors.new.message}</p>
@@ -98,7 +98,7 @@ export default function AccountSettingsPage() {
             <input
               type="password"
               {...register("confirm")}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {errors.confirm && (
               <p className="mt-1 text-sm text-red-500">
@@ -117,7 +117,7 @@ export default function AccountSettingsPage() {
       </div>
 
       {/* Danger Zone */}
-      <div className="rounded-xl border-2 border-red-200 bg-white p-4 shadow-card sm:p-6">
+      <div className="rounded-xl border-2 border-red-200 bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <h3 className="mb-4 text-lg font-bold text-red-600 sm:text-xl">
           Danger Zone
         </h3>

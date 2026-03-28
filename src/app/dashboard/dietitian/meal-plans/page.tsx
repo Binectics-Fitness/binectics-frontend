@@ -208,7 +208,7 @@ export default function DietitianMealPlansPage() {
         {loading ? (
           <DashboardLoading />
         ) : profiles.length === 0 ? (
-          <div className="rounded-2xl bg-white p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
             <EmptyState
               title="No Clients Yet"
               description="Add a client from the Clients page to start creating meal plans."
@@ -220,13 +220,13 @@ export default function DietitianMealPlansPage() {
           <>
             {/* Stats */}
             <div className="mb-8 grid gap-4 sm:grid-cols-4">
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">Total Plans</p>
                 <p className="mt-1 text-3xl font-black text-foreground">
                   {dietPlans.length}
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Active Plans
                 </p>
@@ -234,7 +234,7 @@ export default function DietitianMealPlansPage() {
                   {activePlans.length}
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Platform Plans
                 </p>
@@ -242,7 +242,7 @@ export default function DietitianMealPlansPage() {
                   {platformPlans.length}
                 </p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm text-foreground-secondary">
                   Document Plans
                 </p>
@@ -254,7 +254,7 @@ export default function DietitianMealPlansPage() {
 
             {/* Plans List */}
             {dietPlans.length === 0 ? (
-              <div className="rounded-2xl bg-white p-8 shadow-card">
+              <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
                 <EmptyState
                   title="No Meal Plans"
                   description="Create a meal plan to get started."
@@ -267,7 +267,7 @@ export default function DietitianMealPlansPage() {
                 {[...activePlans, ...inactivePlans].map((plan) => (
                   <div
                     key={plan._id}
-                    className="rounded-2xl bg-white p-6 shadow-card"
+                    className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                       <div className="flex-1 min-w-0">

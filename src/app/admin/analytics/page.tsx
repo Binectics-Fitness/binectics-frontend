@@ -46,7 +46,7 @@ export default function AdminAnalyticsPage() {
 
       <div className="flex-1 md:ml-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-white border-b border-neutral-200">
           <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <h1 className="text-3xl font-black text-foreground">
               Platform Analytics
@@ -60,7 +60,7 @@ export default function AdminAnalyticsPage() {
         <div className="p-4 sm:p-6 md:p-8">
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Total Revenue (MTD)
               </p>
@@ -71,7 +71,7 @@ export default function AdminAnalyticsPage() {
                 ↑ 23.8% from last month
               </p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Active Subscriptions
               </p>
@@ -80,7 +80,7 @@ export default function AdminAnalyticsPage() {
                 ↑ 12.4% from last month
               </p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Avg. Subscription Value
               </p>
@@ -89,7 +89,7 @@ export default function AdminAnalyticsPage() {
                 ↑ 5.2% from last month
               </p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Churn Rate
               </p>
@@ -102,7 +102,7 @@ export default function AdminAnalyticsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* User Growth Chart */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-xl font-bold text-foreground mb-6">
                 User Growth (Last 6 Months)
               </h2>
@@ -129,7 +129,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* Revenue Chart */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-xl font-bold text-foreground mb-6">
                 Revenue Trend (Last 6 Months)
               </h2>
@@ -158,7 +158,7 @@ export default function AdminAnalyticsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Top Countries */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-xl font-bold text-foreground mb-6">
                 Top Countries by Users
               </h2>
@@ -174,7 +174,7 @@ export default function AdminAnalyticsPage() {
                         {country.percentage}%)
                       </p>
                     </div>
-                    <div className="w-full bg-gray-200 h-2">
+                    <div className="w-full bg-neutral-200 h-2">
                       <div
                         className="bg-red-500 h-2"
                         style={{ width: `${country.percentage}%` }}
@@ -186,7 +186,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* Category Distribution */}
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-xl font-bold text-foreground mb-6">
                 Active Subscriptions by Category
               </h2>
@@ -217,7 +217,7 @@ export default function AdminAnalyticsPage() {
 
           {/* Additional Stats */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-3 bg-primary-100">
                   <svg
@@ -243,7 +243,7 @@ export default function AdminAnalyticsPage() {
               </div>
             </div>
 
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-3 bg-accent-yellow-100">
                   <svg
@@ -269,7 +269,7 @@ export default function AdminAnalyticsPage() {
               </div>
             </div>
 
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-3 bg-accent-purple-100">
                   <svg

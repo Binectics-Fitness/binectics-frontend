@@ -138,7 +138,7 @@ export default function DietitianRegisterPage() {
                 </div>
               </div>
             )}
-            <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
+            <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)]">
               <div className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Input
@@ -206,7 +206,7 @@ export default function DietitianRegisterPage() {
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-accent-purple-500 focus:ring-accent-purple-500"
+                  className="mt-1 h-4 w-4 rounded border-neutral-300 text-accent-purple-500 focus:ring-accent-purple-500"
                   {...registerField("acceptTos")}
                 />
                 <span className="text-sm text-foreground-secondary">

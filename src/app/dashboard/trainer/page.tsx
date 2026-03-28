@@ -64,7 +64,7 @@ export default function TrainerDashboard() {
           />
         </svg>
       ),
-      color: "bg-accent-blue-100",
+      color: "icon-glow-blue",
     },
     {
       label: "Active Clients",
@@ -85,7 +85,7 @@ export default function TrainerDashboard() {
           />
         </svg>
       ),
-      color: "bg-primary-100",
+      color: "icon-glow-green",
     },
     {
       label: "This Week Earnings",
@@ -106,7 +106,7 @@ export default function TrainerDashboard() {
           />
         </svg>
       ),
-      color: "bg-accent-yellow-100",
+      color: "icon-glow-yellow",
     },
     {
       label: "Avg. Rating",
@@ -127,7 +127,7 @@ export default function TrainerDashboard() {
           />
         </svg>
       ),
-      color: "bg-accent-purple-100",
+      color: "icon-glow-purple",
     },
   ];
 
@@ -316,15 +316,18 @@ export default function TrainerDashboard() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="font-display text-3xl font-black text-foreground mb-2">
-                Welcome back, {displayName}!
-              </h1>
-              <p className="text-foreground-secondary">
-                {dashboardStats
-                  ? `${dashboardStats.active_clients} active clients • ${dashboardStats.pending_requests} pending requests`
-                  : "Loading stats..."}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-1 rounded-full bg-gradient-to-b from-accent-yellow-500 to-accent-yellow-600" />
+              <div>
+                <h1 className="font-display text-3xl font-black text-foreground mb-2">
+                  Welcome back, {displayName}!
+                </h1>
+                <p className="text-foreground-secondary">
+                  {dashboardStats
+                    ? `${dashboardStats.active_clients} active clients • ${dashboardStats.pending_requests} pending requests`
+                    : "Loading stats..."}
+                </p>
+              </div>
             </div>
             <Link
               href="/dashboard/trainer/settings"
@@ -340,10 +343,10 @@ export default function TrainerDashboard() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-background p-6 shadow-card transition-all duration-300 hover:shadow-xl"
+              className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
             >
               <div
-                className={`mb-4 inline-flex h-12 w-12 items-center justify-center  ${stat.color} text-2xl`}
+                className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 ${stat.color} text-2xl`}
               >
                 {stat.icon}
               </div>
@@ -368,7 +371,7 @@ export default function TrainerDashboard() {
               <Link
                 key={index}
                 href={action.href}
-                className={`group  ${action.color} p-6 text-center shadow-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                className={`group rounded-xl ${action.color} p-6 text-center shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
               >
                 <div className="text-4xl mb-3">{action.icon}</div>
                 <p className="font-semibold text-white">{action.label}</p>
@@ -391,7 +394,7 @@ export default function TrainerDashboard() {
                 View All
               </Link>
             </div>
-            <div className="bg-background p-6 shadow-card">
+            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
               <ul className="space-y-4">
                 {todaySessions.map((session, index) => (
                   <li
@@ -442,7 +445,7 @@ export default function TrainerDashboard() {
                 View All
               </Link>
             </div>
-            <div className="bg-background p-6 shadow-card">
+            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
               {clientProfiles.length === 0 ? (
                 <EmptyState message="No clients yet. Add your first client to get started." />
               ) : (

@@ -101,7 +101,7 @@ export default function CookiesPage() {
       {/* What Are Cookies */}
       <section className="bg-neutral-100 py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-2xl bg-background p-8 sm:p-10 shadow-card">
+          <div className="rounded-2xl bg-background p-8 sm:p-10 shadow-[var(--shadow-card)]">
             <h2 className="font-display text-2xl font-black text-foreground mb-6 sm:text-3xl">
               What Are Cookies?
             </h2>
@@ -134,7 +134,7 @@ export default function CookiesPage() {
             {cookieTypes.map((type, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-neutral-100 p-8 shadow-card"
+                className="rounded-2xl bg-neutral-100 p-8 shadow-[var(--shadow-card)]"
               >
                 <div className="flex items-start justify-between mb-4">
                   <h3 className="font-display text-xl font-black text-foreground">
@@ -193,7 +193,7 @@ export default function CookiesPage() {
             {thirdPartyServices.map((service, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-background p-6 sm:p-8 shadow-card"
+                className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)]"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
                   <h3 className="font-bold text-lg text-foreground">
@@ -226,7 +226,7 @@ export default function CookiesPage() {
       {/* Cookie Controls */}
       <section className="bg-background py-20 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-2xl bg-neutral-100 p-8 sm:p-10 shadow-card">
+          <div className="rounded-2xl bg-neutral-100 p-8 sm:p-10 shadow-[var(--shadow-card)]">
             <h2 className="font-display text-2xl font-black text-foreground mb-6 sm:text-3xl">
               How to Control Cookies
             </h2>
@@ -323,7 +323,7 @@ export default function CookiesPage() {
       {/* Updates to Policy */}
       <section className="bg-neutral-100 py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-2xl bg-background p-8 shadow-card">
+          <div className="rounded-2xl bg-background p-8 shadow-[var(--shadow-card)]">
             <h2 className="font-display text-2xl font-black text-foreground mb-4">
               Updates to This Policy
             </h2>

@@ -121,7 +121,7 @@ export default function MemberDetailPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Total Visits
               </p>
@@ -129,7 +129,7 @@ export default function MemberDetailPage() {
                 {member.totalVisits}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Current Streak
               </p>
@@ -137,7 +137,7 @@ export default function MemberDetailPage() {
                 {member.streak} days
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Member Since
               </p>
@@ -145,7 +145,7 @@ export default function MemberDetailPage() {
                 {member.joinDate}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Status</p>
               <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 mt-2">
                 {member.status}
@@ -157,7 +157,7 @@ export default function MemberDetailPage() {
             {/* Member Info */}
             <div className="lg:col-span-2 space-y-6">
               {/* Contact Information */}
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Contact Information
                 </h3>
@@ -190,7 +190,7 @@ export default function MemberDetailPage() {
               </div>
 
               {/* Recent Check-ins */}
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-bold text-foreground">
                     Recent Check-ins
@@ -206,7 +206,7 @@ export default function MemberDetailPage() {
                   {recentCheckIns.map((checkIn, idx) => (
                     <div
                       key={idx}
-                      className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                      className="flex justify-between items-center p-3 bg-neutral-50 rounded-lg"
                     >
                       <div>
                         <p className="font-semibold text-foreground">
@@ -228,7 +228,7 @@ export default function MemberDetailPage() {
               </div>
 
               {/* Payment History */}
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-bold text-foreground">
                     Payment History
@@ -242,7 +242,7 @@ export default function MemberDetailPage() {
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="border-b border-gray-200">
+                    <thead className="border-b border-neutral-200">
                       <tr>
                         <th className="text-left py-2 text-sm font-semibold text-foreground/60">
                           Date
@@ -262,7 +262,7 @@ export default function MemberDetailPage() {
                       {paymentHistory.map((payment) => (
                         <tr
                           key={payment.id}
-                          className="border-b border-gray-100 last:border-0"
+                          className="border-b border-neutral-100 last:border-0"
                         >
                           <td className="py-3 text-foreground">
                             {payment.date}
@@ -289,7 +289,7 @@ export default function MemberDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Current Plan */}
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Current Plan
                 </h3>
@@ -307,18 +307,18 @@ export default function MemberDetailPage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Quick Actions
                 </h3>
                 <div className="space-y-2">
-                  <button className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg font-medium text-foreground">
+                  <button className="w-full px-4 py-3 text-left bg-neutral-50 hover:bg-neutral-100 rounded-lg font-medium text-foreground">
                     Freeze Membership
                   </button>
-                  <button className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg font-medium text-foreground">
+                  <button className="w-full px-4 py-3 text-left bg-neutral-50 hover:bg-neutral-100 rounded-lg font-medium text-foreground">
                     Send Invoice
                   </button>
-                  <button className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg font-medium text-foreground">
+                  <button className="w-full px-4 py-3 text-left bg-neutral-50 hover:bg-neutral-100 rounded-lg font-medium text-foreground">
                     Add Note
                   </button>
                   <button
@@ -331,12 +331,12 @@ export default function MemberDetailPage() {
               </div>
 
               {/* Member Notes */}
-              <div className="bg-white rounded-xl shadow-card p-6">
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   Notes
                 </h3>
                 <div className="space-y-3">
-                  <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="p-3 bg-neutral-50 rounded-lg">
                     <p className="text-sm text-foreground/70">
                       Prefers morning classes
                     </p>
@@ -345,7 +345,7 @@ export default function MemberDetailPage() {
                     </p>
                   </div>
                 </div>
-                <button className="w-full mt-3 px-4 py-2 border-2 border-gray-300 text-foreground font-medium rounded-lg hover:bg-gray-50">
+                <button className="w-full mt-3 px-4 py-2 border-2 border-neutral-300 text-foreground font-medium rounded-lg hover:bg-neutral-50">
                   Add Note
                 </button>
               </div>

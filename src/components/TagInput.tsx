@@ -79,7 +79,7 @@ export default function TagInput({
   return (
     <div ref={wrapperRef} className="relative">
       <div
-        className="flex flex-wrap items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 focus-within:ring-2 focus-within:ring-primary-500"
+        className="flex flex-wrap items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-2 focus-within:ring-2 focus-within:ring-primary-500"
         onClick={() => inputRef.current?.focus()}
       >
         {value.map((tag) => (
@@ -110,12 +110,12 @@ export default function TagInput({
           onFocus={() => inputValue.trim() && setShowSuggestions(true)}
           onKeyDown={handleKeyDown}
           placeholder={value.length === 0 ? placeholder : "Type to add more…"}
-          className="min-w-[120px] flex-1 border-none bg-transparent py-1 text-sm outline-none placeholder:text-gray-400"
+          className="min-w-[120px] flex-1 border-none bg-transparent py-1 text-sm outline-none placeholder:text-neutral-400"
         />
       </div>
 
       {showSuggestions && filtered.length > 0 && (
-        <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
           {filtered.map((s, i) => (
             <li
               key={s}
@@ -123,7 +123,7 @@ export default function TagInput({
               className={`cursor-pointer px-3 py-2 text-sm ${
                 i === highlightIndex
                   ? "bg-primary-50 text-primary-700"
-                  : "text-foreground hover:bg-gray-50"
+                  : "text-foreground hover:bg-neutral-50"
               }`}
             >
               {s}

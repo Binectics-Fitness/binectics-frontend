@@ -81,7 +81,7 @@ function SortableQuestionItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white rounded-xl shadow-card p-6"
+      className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6"
     >
       <div className="flex items-start justify-between gap-4">
         {/* Drag Handle */}
@@ -496,7 +496,7 @@ export default function FormBuilderPage() {
               className={`px-3 py-1 text-sm font-semibold rounded ${
                 form.is_published
                   ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-700"
+                  : "bg-neutral-100 text-neutral-700"
               }`}
             >
               {form.is_published ? "Published" : "Draft"}
@@ -586,7 +586,7 @@ export default function FormBuilderPage() {
         </button>
 
         {/* Form Settings Panel */}
-        <div className="mt-6 bg-white rounded-xl shadow-card overflow-hidden">
+        <div className="mt-6 bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
           <button
             type="button"
             onClick={() => setShowFormSettings(!showFormSettings)}
@@ -675,7 +675,7 @@ export default function FormBuilderPage() {
                         })
                       }
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
                   </label>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
@@ -699,7 +699,7 @@ export default function FormBuilderPage() {
                         })
                       }
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
                   </label>
                 </div>
               </div>
@@ -1085,7 +1085,7 @@ export default function FormBuilderPage() {
                         })
                       }
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
                   </label>
                 </div>
               </div>

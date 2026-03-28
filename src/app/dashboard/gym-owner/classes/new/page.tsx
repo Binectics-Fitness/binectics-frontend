@@ -104,7 +104,7 @@ export default function AddNewClassPage() {
           <div className="flex items-center gap-3 mb-4">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
             >
               <svg
                 className="w-5 h-5 text-foreground"
@@ -131,7 +131,7 @@ export default function AddNewClassPage() {
 
         <form onSubmit={handleSubmit} className="max-w-4xl">
           {/* Basic Information */}
-          <div className="bg-white rounded-xl shadow-card p-6 mb-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-6">
             <h2 className="text-xl font-bold text-foreground mb-6">
               Basic Information
             </h2>
@@ -146,7 +146,7 @@ export default function AddNewClassPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                  className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   placeholder="e.g., Morning Yoga Flow"
                 />
               </div>
@@ -160,7 +160,7 @@ export default function AddNewClassPage() {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                  className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   placeholder="Describe the class, what members can expect, skill level required, etc."
                 />
               </div>
@@ -175,7 +175,7 @@ export default function AddNewClassPage() {
                     value={formData.category}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   >
                     {categories.map((cat) => (
                       <option key={cat} value={cat}>
@@ -195,7 +195,7 @@ export default function AddNewClassPage() {
                     value={formData.instructor}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                     placeholder="Instructor name"
                   />
                 </div>
@@ -204,7 +204,7 @@ export default function AddNewClassPage() {
           </div>
 
           {/* Schedule */}
-          <div className="bg-white rounded-xl shadow-card p-6 mb-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-6">
             <h2 className="text-xl font-bold text-foreground mb-6">Schedule</h2>
 
             <div className="space-y-6">
@@ -221,7 +221,7 @@ export default function AddNewClassPage() {
                       className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                         formData.schedule.days.includes(day)
                           ? "bg-accent-blue-500 text-foreground"
-                          : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                          : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                       }`}
                     >
                       {day.substring(0, 3)}
@@ -242,7 +242,7 @@ export default function AddNewClassPage() {
                       handleScheduleChange("startTime", e.target.value)
                     }
                     required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
                 </div>
 
@@ -257,7 +257,7 @@ export default function AddNewClassPage() {
                       handleScheduleChange("endTime", e.target.value)
                     }
                     required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
                 </div>
 
@@ -270,7 +270,7 @@ export default function AddNewClassPage() {
                     name="duration"
                     value={formData.duration}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                     placeholder="60"
                   />
                 </div>
@@ -286,7 +286,7 @@ export default function AddNewClassPage() {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
                 </div>
 
@@ -299,7 +299,7 @@ export default function AddNewClassPage() {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   />
                   <p className="text-xs text-foreground/60 mt-1">
                     Leave blank for ongoing classes
@@ -310,7 +310,7 @@ export default function AddNewClassPage() {
           </div>
 
           {/* Capacity & Pricing */}
-          <div className="bg-white rounded-xl shadow-card p-6 mb-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-6">
             <h2 className="text-xl font-bold text-foreground mb-6">
               Capacity & Pricing
             </h2>
@@ -326,7 +326,7 @@ export default function AddNewClassPage() {
                   onChange={handleInputChange}
                   required
                   min="1"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                  className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   placeholder="20"
                 />
                 <p className="text-xs text-foreground/60 mt-1">
@@ -345,7 +345,7 @@ export default function AddNewClassPage() {
                   onChange={handleInputChange}
                   min="0"
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
+                  className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
                   placeholder="0.00"
                 />
                 <p className="text-xs text-foreground/60 mt-1">
@@ -360,7 +360,7 @@ export default function AddNewClassPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-3 bg-gray-200 text-foreground font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              className="px-6 py-3 bg-neutral-200 text-foreground font-semibold rounded-lg hover:bg-neutral-300 transition-colors"
             >
               Cancel
             </button>

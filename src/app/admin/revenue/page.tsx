@@ -127,7 +127,7 @@ export default function AdminRevenuePage() {
       case "Failed":
         return "bg-red-100 text-red-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-neutral-100 text-neutral-700";
     }
   };
 
@@ -149,7 +149,7 @@ export default function AdminRevenuePage() {
 
       <div className="flex-1 md:ml-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-white border-b border-neutral-200">
           <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <h1 className="text-3xl font-black text-foreground">
               Revenue & Payouts
@@ -163,7 +163,7 @@ export default function AdminRevenuePage() {
         <div className="p-4 sm:p-6 md:p-8">
           {/* Revenue Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Total Revenue (MTD)
               </p>
@@ -174,7 +174,7 @@ export default function AdminRevenuePage() {
                 ↑ 23.8% from last month
               </p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Platform Fees Collected
               </p>
@@ -183,7 +183,7 @@ export default function AdminRevenuePage() {
               </p>
               <p className="text-sm text-foreground/60 mt-2">10% commission</p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Pending Payouts
               </p>
@@ -194,7 +194,7 @@ export default function AdminRevenuePage() {
                 Due in next 7 days
               </p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Failed Transactions
               </p>
@@ -204,14 +204,14 @@ export default function AdminRevenuePage() {
           </div>
 
           {/* Time Filter */}
-          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
+          <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)] mb-6">
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 onClick={() => setTimeFilter("today")}
                 className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   timeFilter === "today"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 Today
@@ -221,7 +221,7 @@ export default function AdminRevenuePage() {
                 className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   timeFilter === "week"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 This Week
@@ -231,7 +231,7 @@ export default function AdminRevenuePage() {
                 className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   timeFilter === "month"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 This Month
@@ -241,7 +241,7 @@ export default function AdminRevenuePage() {
                 className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   timeFilter === "year"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 This Year
@@ -252,8 +252,8 @@ export default function AdminRevenuePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             {/* Recent Transactions */}
             <div className="lg:col-span-2">
-              <div className="bg-white shadow-card overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <div className="bg-white shadow-[var(--shadow-card)] overflow-hidden">
+                <div className="px-4 sm:px-6 py-4 border-b border-neutral-200">
                   <h2 className="text-xl font-bold text-foreground">
                     Recent Transactions
                   </h2>
@@ -303,7 +303,7 @@ export default function AdminRevenuePage() {
                 {/* Desktop table */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-neutral-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-bold text-foreground uppercase">
                           Date & Time
@@ -324,7 +324,7 @@ export default function AdminRevenuePage() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {transactions.map((txn) => (
-                        <tr key={txn.id} className="hover:bg-gray-50">
+                        <tr key={txn.id} className="hover:bg-neutral-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <p className="text-sm font-semibold text-foreground">
                               {txn.date}
@@ -368,7 +368,7 @@ export default function AdminRevenuePage() {
 
             {/* Payout Queue */}
             <div className="lg:col-span-1">
-              <div className="bg-white p-6 shadow-card">
+              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   Payout Queue
                 </h2>
@@ -376,7 +376,7 @@ export default function AdminRevenuePage() {
                   {payoutQueue.map((payout, index) => (
                     <div
                       key={index}
-                      className="p-4 border-2 border-gray-200 hover:border-red-500 transition-colors"
+                      className="p-4 border-2 border-neutral-200 hover:border-red-500 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
@@ -419,7 +419,7 @@ export default function AdminRevenuePage() {
 
           {/* Payment Methods Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-foreground/60">
                   Stripe Transactions
@@ -444,7 +444,7 @@ export default function AdminRevenuePage() {
               <p className="text-sm text-foreground/60 mt-1">80.3% of total</p>
             </div>
 
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-foreground/60">
                   PayPal Transactions
@@ -469,7 +469,7 @@ export default function AdminRevenuePage() {
               <p className="text-sm text-foreground/60 mt-1">19.7% of total</p>
             </div>
 
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-foreground/60">
                   Avg. Transaction Value

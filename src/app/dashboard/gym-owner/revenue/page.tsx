@@ -104,7 +104,7 @@ export default function GymOwnerRevenuePage() {
 
           {/* Revenue Breakdown */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Total Revenue (This Month)
               </p>
@@ -115,7 +115,7 @@ export default function GymOwnerRevenuePage() {
                 All sources combined
               </p>
             </div>
-            <div className="bg-primary-50 border-2 border-primary-200 rounded-xl shadow-card p-6">
+            <div className="bg-primary-50 border-2 border-primary-200 rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Your Gym Earnings
               </p>
@@ -129,7 +129,7 @@ export default function GymOwnerRevenuePage() {
                 </p>
               </div>
             </div>
-            <div className="bg-accent-blue-50 border-2 border-accent-blue-200 rounded-xl shadow-card p-6">
+            <div className="bg-accent-blue-50 border-2 border-accent-blue-200 rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Trainer Earnings
               </p>
@@ -144,7 +144,7 @@ export default function GymOwnerRevenuePage() {
 
           {/* Revenue Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Today</p>
               <p className="text-3xl font-black text-foreground mt-2">
                 ${revenueData.today.toLocaleString()}
@@ -153,7 +153,7 @@ export default function GymOwnerRevenuePage() {
                 +8% from yesterday
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 This Week
               </p>
@@ -161,7 +161,7 @@ export default function GymOwnerRevenuePage() {
                 ${revenueData.week.toLocaleString()}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 This Month
               </p>
@@ -169,7 +169,7 @@ export default function GymOwnerRevenuePage() {
                 ${revenueData.month.toLocaleString()}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 This Year
               </p>
@@ -180,7 +180,7 @@ export default function GymOwnerRevenuePage() {
           </div>
 
           {/* Revenue Chart */}
-          <div className="bg-white rounded-xl shadow-card p-6 mb-8">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-foreground">
                 Revenue Trends
@@ -193,7 +193,7 @@ export default function GymOwnerRevenuePage() {
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       selectedPeriod === period
                         ? "bg-accent-blue-500 text-white"
-                        : "bg-gray-100 text-foreground hover:bg-gray-200"
+                        : "bg-neutral-100 text-foreground hover:bg-neutral-200"
                     }`}
                   >
                     {period.charAt(0).toUpperCase() + period.slice(1)}
@@ -201,7 +201,7 @@ export default function GymOwnerRevenuePage() {
                 ))}
               </div>
             </div>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <div className="h-64 flex items-center justify-center bg-neutral-50 rounded-lg">
               <p className="text-foreground/60">
                 Revenue chart visualization coming soon...
               </p>
@@ -209,8 +209,8 @@ export default function GymOwnerRevenuePage() {
           </div>
 
           {/* Recent Transactions */}
-          <div className="bg-white rounded-xl shadow-card overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-200">
               <h3 className="text-lg font-bold text-foreground">
                 Recent Transactions
               </h3>
@@ -276,7 +276,7 @@ export default function GymOwnerRevenuePage() {
             {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-neutral-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
                       Member
@@ -303,7 +303,7 @@ export default function GymOwnerRevenuePage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {transactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-gray-50">
+                    <tr key={tx.id} className="hover:bg-neutral-50">
                       <td className="px-6 py-4">
                         <div>
                           <p className="font-medium text-foreground">

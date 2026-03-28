@@ -111,27 +111,27 @@ export default function ClassAttendancePage() {
 
           {/* Stats */}
           <div className="grid grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Total Sessions</p>
               <p className="text-3xl font-black text-foreground mt-2">{totalSessions}</p>
               <p className="text-sm text-foreground/60 mt-1">Last 30 days</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Avg Attendance</p>
               <p className="text-3xl font-black text-foreground mt-2">{avgAttendance}</p>
               <p className="text-sm text-foreground/60 mt-1">per session</p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Attendance Rate</p>
               <p className="text-3xl font-black text-foreground mt-2">{avgAttendanceRate}%</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+              <div className="w-full bg-neutral-200 rounded-full h-2 mt-3">
                 <div
                   className="h-2 rounded-full bg-primary-500"
                   style={{ width: `${avgAttendanceRate}%` }}
                 />
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Total No-Shows</p>
               <p className="text-3xl font-black text-foreground mt-2">{totalNoShows}</p>
               <p className="text-sm text-foreground/60 mt-1">Last 30 days</p>
@@ -139,7 +139,7 @@ export default function ClassAttendancePage() {
           </div>
 
           {/* Session History */}
-          <div className="bg-white rounded-xl shadow-card p-6">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-foreground">Session History</h3>
               <button className="text-accent-blue-500 hover:text-accent-blue-700 text-sm font-medium">
@@ -153,10 +153,10 @@ export default function ClassAttendancePage() {
                 const isExpanded = expandedSession === session.id;
 
                 return (
-                  <div key={session.id} className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                  <div key={session.id} className="border-2 border-neutral-200 rounded-lg overflow-hidden">
                     {/* Session Header */}
                     <div
-                      className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
                       onClick={() => setExpandedSession(isExpanded ? null : session.id)}
                     >
                       <div className="flex items-center justify-between">
@@ -210,11 +210,11 @@ export default function ClassAttendancePage() {
 
                     {/* Expanded Attendee List */}
                     {isExpanded && session.attendees.length > 0 && (
-                      <div className="border-t-2 border-gray-200 p-4 bg-gray-50">
+                      <div className="border-t-2 border-neutral-200 p-4 bg-neutral-50">
                         <h4 className="font-semibold text-foreground mb-3">Attendees</h4>
                         <div className="overflow-x-auto">
                           <table className="w-full">
-                            <thead className="border-b border-gray-200">
+                            <thead className="border-b border-neutral-200">
                               <tr>
                                 <th className="text-left py-2 text-sm font-semibold text-foreground/60">
                                   Member
@@ -229,7 +229,7 @@ export default function ClassAttendancePage() {
                             </thead>
                             <tbody>
                               {session.attendees.map((attendee) => (
-                                <tr key={attendee.id} className="border-b border-gray-100 last:border-0">
+                                <tr key={attendee.id} className="border-b border-neutral-100 last:border-0">
                                   <td className="py-2 font-medium text-foreground">{attendee.name}</td>
                                   <td className="py-2">
                                     <span

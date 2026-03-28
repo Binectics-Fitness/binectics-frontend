@@ -116,7 +116,7 @@ export default function AdminVerificationPage() {
       case UserRole.DIETITIAN:
         return "bg-accent-purple-100 text-accent-purple-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-neutral-100 text-neutral-700";
     }
   };
 
@@ -137,7 +137,7 @@ export default function AdminVerificationPage() {
 
       <div className="flex-1 md:ml-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-white border-b border-neutral-200">
           <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <h1 className="text-3xl font-black text-foreground">
               Verification Queue
@@ -151,23 +151,23 @@ export default function AdminVerificationPage() {
         <div className="p-4 sm:p-6 md:p-8">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">Pending</p>
               <p className="text-3xl font-black text-accent-yellow-500 mt-2">
                 23
               </p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Approved This Week
               </p>
               <p className="text-3xl font-black text-primary-500 mt-2">47</p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">Rejected</p>
               <p className="text-3xl font-black text-red-500 mt-2">12</p>
             </div>
-            <div className="bg-white p-6 shadow-card">
+            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Avg Review Time
               </p>
@@ -176,14 +176,14 @@ export default function AdminVerificationPage() {
           </div>
 
           {/* Filters */}
-          <div className="bg-white p-4 sm:p-6 shadow-card mb-6">
+          <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)] mb-6">
             <div className="flex flex-wrap gap-2 sm:gap-4">
               <button
                 onClick={() => setStatusFilter("pending")}
                 className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "pending"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 Pending (
@@ -199,7 +199,7 @@ export default function AdminVerificationPage() {
                 className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "approved"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 Approved
@@ -209,7 +209,7 @@ export default function AdminVerificationPage() {
                 className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
                   statusFilter === "rejected"
                     ? "bg-red-500 text-foreground"
-                    : "bg-gray-100 text-foreground/60 hover:bg-gray-200"
+                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
                 }`}
               >
                 Rejected
@@ -222,7 +222,7 @@ export default function AdminVerificationPage() {
             {verifications.map((verification) => (
               <div
                 key={verification.id}
-                className="bg-white p-4 sm:p-6 shadow-card"
+                className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -265,7 +265,7 @@ export default function AdminVerificationPage() {
                     {verification.documents.map((doc, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-gray-100 text-foreground text-sm"
+                        className="px-3 py-1 bg-neutral-100 text-foreground text-sm"
                       >
                         📄 {doc}
                       </span>
@@ -288,7 +288,7 @@ export default function AdminVerificationPage() {
 
                 {/* Actions */}
                 {verification.status === VerificationRequestStatus.PENDING && (
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-neutral-200">
                     <button
                       onClick={() =>
                         handleApprove(verification.id, verification.applicant)
@@ -305,7 +305,7 @@ export default function AdminVerificationPage() {
                     >
                       ✗ Reject Application
                     </button>
-                    <button className="px-4 py-2 sm:px-6 sm:py-3 border-2 border-gray-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base">
+                    <button className="px-4 py-2 sm:px-6 sm:py-3 border-2 border-neutral-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base">
                       View Documents
                     </button>
                   </div>

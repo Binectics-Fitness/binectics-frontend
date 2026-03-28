@@ -19,7 +19,7 @@ import { formatLocal } from "@/utils/format";
 const STATUS_STYLES: Record<MemberStatus, string> = {
   [MemberStatus.ACTIVE]: "bg-primary-100 text-primary-700",
   [MemberStatus.PENDING]: "bg-yellow-100 text-yellow-700",
-  [MemberStatus.INACTIVE]: "bg-gray-100 text-gray-700",
+  [MemberStatus.INACTIVE]: "bg-neutral-100 text-neutral-700",
 };
 
 function getMemberUser(member: OrganizationMember) {
@@ -137,7 +137,7 @@ export default function TrainerRevenuePage() {
       <div className="flex min-h-screen bg-neutral-50">
         <GymOwnerSidebar />
         <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-          <div className="mx-auto max-w-4xl rounded-xl bg-white p-8 shadow-card">
+          <div className="mx-auto max-w-4xl rounded-xl bg-white p-8 shadow-[var(--shadow-card)]">
             <button
               onClick={() => router.push("/dashboard/gym-owner/staff")}
               className="mb-4 inline-flex items-center gap-2 font-medium text-accent-blue-500 hover:text-accent-blue-700"
@@ -200,7 +200,7 @@ export default function TrainerRevenuePage() {
             Back to Staff Member
           </button>
 
-          <div className="rounded-2xl bg-white p-6 shadow-card sm:p-8">
+          <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] sm:p-8">
             <h1 className="text-3xl font-black text-foreground">
               Revenue Operations
             </h1>
@@ -224,7 +224,7 @@ export default function TrainerRevenuePage() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Revenue Today
               </p>
@@ -232,7 +232,7 @@ export default function TrainerRevenuePage() {
                 ${orgStats ? orgStats.revenue_today.toLocaleString() : "—"}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Revenue This Week
               </p>
@@ -240,7 +240,7 @@ export default function TrainerRevenuePage() {
                 ${orgStats ? orgStats.revenue_week.toLocaleString() : "—"}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Revenue This Month
               </p>
@@ -248,7 +248,7 @@ export default function TrainerRevenuePage() {
                 ${orgStats ? orgStats.revenue_month.toLocaleString() : "—"}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Active Members
               </p>
@@ -259,7 +259,7 @@ export default function TrainerRevenuePage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-lg font-bold text-foreground">
                 Scope of this view
               </h2>
@@ -271,7 +271,7 @@ export default function TrainerRevenuePage() {
               </p>
             </div>
 
-            <div className="rounded-xl bg-white p-6 shadow-card">
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-lg font-bold text-foreground">
                 Next actions
               </h2>
@@ -286,7 +286,7 @@ export default function TrainerRevenuePage() {
                   onClick={() =>
                     router.push(`/dashboard/gym-owner/staff/${trainerId}`)
                   }
-                  className="rounded-lg border-2 border-gray-300 px-4 py-2 text-sm font-semibold text-foreground hover:bg-gray-50"
+                  className="rounded-lg border-2 border-neutral-300 px-4 py-2 text-sm font-semibold text-foreground hover:bg-neutral-50"
                 >
                   Back to Staff Profile
                 </button>

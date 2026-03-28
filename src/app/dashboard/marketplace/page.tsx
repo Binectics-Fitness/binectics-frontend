@@ -257,7 +257,7 @@ export default function MyMarketplaceListingPage() {
 
         {/* No Listing — Create Form */}
         {!hasListing && (
-          <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
             <h2 className="text-xl font-bold text-foreground mb-2">
               Create Your Marketplace Listing
             </h2>
@@ -283,7 +283,7 @@ export default function MyMarketplaceListingPage() {
         {hasListing && listing && !isEditing && (
           <div className="space-y-6">
             {/* Status Bar */}
-            <div className="rounded-2xl bg-white p-5 shadow-card flex items-center justify-between">
+            <div className="rounded-2xl bg-white p-5 shadow-[var(--shadow-card)] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span
                   className={`inline-flex h-3 w-3 rounded-full ${listing.is_published ? "bg-green-500" : "bg-neutral-400"}`}
@@ -318,7 +318,7 @@ export default function MyMarketplaceListingPage() {
             </div>
 
             {/* Listing Preview */}
-            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-black text-foreground mb-1">
                 {listing.headline}
               </h2>
@@ -404,7 +404,7 @@ export default function MyMarketplaceListingPage() {
 
         {/* Editing */}
         {hasListing && isEditing && (
-          <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
             <h2 className="text-xl font-bold text-foreground mb-6">
               Edit Listing
             </h2>

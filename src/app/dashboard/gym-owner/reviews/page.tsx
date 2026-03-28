@@ -10,7 +10,7 @@ export default function ReviewsPage() {
       <GymOwnerSidebar />
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <h1 className="text-3xl font-black text-foreground mb-8">Reviews</h1>
-        <div className="bg-white rounded-xl shadow-card p-6">
+        <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
           {reviews.map(r => (
             <div key={r.id} className="p-4 border-b last:border-0">
               <p className="font-semibold">{r.author}</p>

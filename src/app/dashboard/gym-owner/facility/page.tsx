@@ -87,7 +87,7 @@ export default function GymOwnerFacilityPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Total Facilities
               </p>
@@ -95,7 +95,7 @@ export default function GymOwnerFacilityPage() {
                 {facilities.length}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Available
               </p>
@@ -103,7 +103,7 @@ export default function GymOwnerFacilityPage() {
                 {facilities.filter((f) => f.status === "Available").length}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Under Maintenance
               </p>
@@ -111,7 +111,7 @@ export default function GymOwnerFacilityPage() {
                 {facilities.filter((f) => f.status === "Maintenance").length}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-card p-6">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 Active Amenities
               </p>
@@ -122,7 +122,7 @@ export default function GymOwnerFacilityPage() {
           </div>
 
           {/* Amenities Checklist */}
-          <div className="bg-white rounded-xl shadow-card p-6 mb-8">
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-8">
             <h3 className="text-lg font-bold text-foreground mb-4">
               Amenities
             </h3>
@@ -130,13 +130,13 @@ export default function GymOwnerFacilityPage() {
               {amenities.map((amenity) => (
                 <div
                   key={amenity.name}
-                  className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg"
+                  className="flex items-center gap-3 p-3 border-2 border-neutral-200 rounded-lg"
                 >
                   <input
                     type="checkbox"
                     checked={amenity.enabled}
                     readOnly
-                    className="w-5 h-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                    className="w-5 h-5 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
                   />
                   <span className="font-medium text-foreground">
                     {amenity.name}
@@ -151,7 +151,7 @@ export default function GymOwnerFacilityPage() {
             {facilities.map((facility) => (
               <div
                 key={facility.id}
-                className="rounded-xl border border-gray-100 bg-white p-4 shadow-card"
+                className="rounded-xl border border-neutral-100 bg-white p-4 shadow-[var(--shadow-card)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -174,7 +174,7 @@ export default function GymOwnerFacilityPage() {
                 </div>
 
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700">
                     {facility.category}
                   </span>
                   <button className="text-accent-blue-500 hover:text-accent-blue-700 text-sm font-medium">
@@ -185,13 +185,13 @@ export default function GymOwnerFacilityPage() {
             ))}
           </div>
 
-          <div className="hidden md:block bg-white rounded-xl shadow-card overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="hidden md:block bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-200">
               <h3 className="text-lg font-bold text-foreground">Facilities</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-neutral-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
                       Facility
@@ -212,12 +212,12 @@ export default function GymOwnerFacilityPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {facilities.map((facility) => (
-                    <tr key={facility.id} className="hover:bg-gray-50">
+                    <tr key={facility.id} className="hover:bg-neutral-50">
                       <td className="px-6 py-4 font-semibold text-foreground">
                         {facility.name}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700">
                           {facility.category}
                         </span>
                       </td>

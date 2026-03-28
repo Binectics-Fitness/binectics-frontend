@@ -187,7 +187,7 @@ export default function AdminProvidersPage() {
       <AdminSidebar />
 
       <div className="flex-1 md:ml-64">
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-white border-b border-neutral-200">
           <div className="px-6 py-6">
             <h1 className="text-3xl font-black text-foreground">
               Gym Moderation
@@ -199,7 +199,7 @@ export default function AdminProvidersPage() {
         </header>
 
         <div className="p-6">
-          <div className="bg-white p-4 shadow-card mb-6">
+          <div className="bg-white p-4 shadow-[var(--shadow-card)] mb-6">
             <label className="block text-sm font-medium text-foreground/70 mb-2">
               Search gyms
             </label>
@@ -208,11 +208,11 @@ export default function AdminProvidersPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by headline, gym name, owner, or city..."
-              className="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
-          <div className="bg-white shadow-card overflow-hidden">
+          <div className="bg-white shadow-[var(--shadow-card)] overflow-hidden">
             {isLoading ? (
               <div className="p-6 sm:p-8 text-center text-foreground/60">
                 Loading gym listings...
@@ -353,7 +353,7 @@ export default function AdminProvidersPage() {
                 {/* Desktop Table */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-neutral-50">
                       <tr>
                         <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
                           Gym
@@ -384,7 +384,7 @@ export default function AdminProvidersPage() {
                             : null;
 
                         return (
-                          <tr key={listing._id} className="hover:bg-gray-50">
+                          <tr key={listing._id} className="hover:bg-neutral-50">
                             <td className="px-6 py-4">
                               <p className="font-semibold text-foreground">
                                 {organization?.name || listing.headline}
@@ -516,7 +516,7 @@ export default function AdminProvidersPage() {
           </div>
 
           {selectedListing && (
-            <div className="mt-6 rounded-2xl bg-white p-6 shadow-card">
+            <div className="mt-6 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-foreground">

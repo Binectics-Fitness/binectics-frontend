@@ -357,7 +357,7 @@ function ConsultationBookingPageContent() {
           </div>
         )}
 
-        <section className="mb-6 sm:mb-8 rounded-2xl bg-white p-4 sm:p-6 shadow-card">
+        <section className="mb-6 sm:mb-8 rounded-2xl bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
           <h2 className="mb-4 text-xl font-bold text-foreground">
             Booking Details
           </h2>
@@ -434,7 +434,7 @@ function ConsultationBookingPageContent() {
           </div>
         </section>
 
-        <section className="mb-6 sm:mb-8 rounded-2xl bg-white p-4 sm:p-6 shadow-card">
+        <section className="mb-6 sm:mb-8 rounded-2xl bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
           <h2 className="mb-4 text-xl font-bold text-foreground">
             Choose a Date and Time
           </h2>
@@ -532,7 +532,7 @@ function ConsultationBookingPageContent() {
           )}
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-card">
+        <section className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
           <h2 className="mb-4 text-xl font-bold text-foreground">
             Confirm Booking
           </h2>

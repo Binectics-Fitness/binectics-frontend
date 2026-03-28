@@ -159,7 +159,7 @@ export default function PartnersPage() {
           </div>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {benefits.map((benefit, index) => (
-              <div key={index} className="rounded-2xl bg-neutral-100 p-6 shadow-card">
+              <div key={index} className="rounded-2xl bg-neutral-100 p-6 shadow-[var(--shadow-card)]">
                 <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-${benefit.color}-100 text-${benefit.color}-600`}>
                   {benefit.icon}
                 </div>
@@ -185,7 +185,7 @@ export default function PartnersPage() {
           </div>
           <div className="grid gap-8 lg:grid-cols-3">
             {partnerTypes.map((type, index) => (
-              <div key={index} className="rounded-2xl bg-background p-6 sm:p-8 shadow-card">
+              <div key={index} className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)]">
                 <h3 className="font-display text-2xl font-bold text-foreground mb-3">
                   {type.title}
                 </h3>
@@ -224,7 +224,7 @@ export default function PartnersPage() {
           </div>
           <div className="grid gap-8 lg:grid-cols-3">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="rounded-2xl bg-neutral-100 p-6 sm:p-8 shadow-card">
+              <div key={index} className="rounded-2xl bg-neutral-100 p-6 sm:p-8 shadow-[var(--shadow-card)]">
                 <blockquote className="text-foreground-secondary leading-relaxed mb-6">
                   "{testimonial.quote}"
                 </blockquote>

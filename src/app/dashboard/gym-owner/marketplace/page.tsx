@@ -650,7 +650,7 @@ export default function OrgMarketplaceListingPage() {
     return (
       <div className="flex-1 overflow-y-auto bg-background-secondary">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
-          <div className="rounded-2xl bg-white p-12 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
             <h3 className="text-xl font-bold text-foreground mb-2">
               No Organization Selected
             </h3>
@@ -668,7 +668,7 @@ export default function OrgMarketplaceListingPage() {
     return (
       <div className="flex-1 overflow-y-auto bg-background-secondary">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
-          <div className="rounded-2xl bg-white p-12 shadow-card text-center">
+          <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
             <h3 className="text-xl font-bold text-foreground mb-2">
               Unable to Load Listing
             </h3>
@@ -737,7 +737,7 @@ export default function OrgMarketplaceListingPage() {
 
         {/* No Listing */}
         {!hasListing && (
-          <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
             <h2 className="text-xl font-bold text-foreground mb-2">
               Create Your Gym&apos;s Marketplace Listing
             </h2>
@@ -779,7 +779,7 @@ export default function OrgMarketplaceListingPage() {
         {hasListing && listing && !isEditing && (
           <div className="space-y-6">
             {/* Status */}
-            <div className="rounded-2xl bg-white p-5 shadow-card flex items-center justify-between">
+            <div className="rounded-2xl bg-white p-5 shadow-[var(--shadow-card)] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span
                   className={`inline-flex h-3 w-3 rounded-full ${listing.is_published ? "bg-green-500" : "bg-neutral-400"}`}
@@ -819,7 +819,7 @@ export default function OrgMarketplaceListingPage() {
               </div>
             )}
 
-            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-foreground">Images</h2>
                 <div className="flex items-center gap-2">
@@ -983,7 +983,7 @@ export default function OrgMarketplaceListingPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-foreground">
@@ -1054,7 +1054,7 @@ export default function OrgMarketplaceListingPage() {
             </div>
 
             {/* Preview */}
-            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-black text-foreground mb-1">
                 {listing.headline}
               </h2>
@@ -1140,7 +1140,7 @@ export default function OrgMarketplaceListingPage() {
 
         {/* Editing */}
         {hasListing && isEditing && (
-          <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-card">
+          <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
             <h2 className="text-xl font-bold text-foreground mb-6">
               Edit Listing
             </h2>
