@@ -215,20 +215,7 @@ export default function DietitianClientsPage() {
     }
   }
 
-  // ─── guards ───────────────────────────────────────────────────
-
-  if (isLoading || orgLoading) return <DashboardLoading />;
-  if (!isAuthorized || !user) return null;
-
-  // ─── selected client detail view ──────────────────────────────
-
-  const selectedProfile = profiles.find((p) => p._id === selectedProfileId);
-  const selectedSummary = selectedProfileId
-    ? summaries[selectedProfileId]
-    : null;
-  const selectedJournals = selectedProfileId
-    ? (journalEntries[selectedProfileId] ?? [])
-    : [];
+  // ─── load journals (must stay above guard returns) ────────────
 
   const loadJournals = useCallback(async (profileId: string) => {
     try {
@@ -246,6 +233,21 @@ export default function DietitianClientsPage() {
     if (!selectedProfileId) return;
     loadJournals(selectedProfileId);
   }, [selectedProfileId, loadJournals]);
+
+  // ─── guards ───────────────────────────────────────────────────
+
+  if (isLoading || orgLoading) return <DashboardLoading />;
+  if (!isAuthorized || !user) return null;
+
+  // ─── selected client detail view ──────────────────────────────
+
+  const selectedProfile = profiles.find((p) => p._id === selectedProfileId);
+  const selectedSummary = selectedProfileId
+    ? summaries[selectedProfileId]
+    : null;
+  const selectedJournals = selectedProfileId
+    ? (journalEntries[selectedProfileId] ?? [])
+    : [];
 
   async function handleCreateJournal(data: CreateJournalFormData) {
     if (!selectedProfileId) return;
