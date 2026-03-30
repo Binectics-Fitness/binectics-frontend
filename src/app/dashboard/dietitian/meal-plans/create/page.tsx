@@ -110,7 +110,7 @@ function MealRowEditor({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="block text-sm font-medium text-foreground-secondary mb-1">
-            Meal Type *
+            Meal Type <span className="text-red-500">*</span>
           </label>
           <select
             {...register(`meals.${index}.meal_type`)}
@@ -132,7 +132,7 @@ function MealRowEditor({
 
         <div>
           <label className="block text-sm font-medium text-foreground-secondary mb-1">
-            Title *
+            Title <span className="text-red-500">*</span>
           </label>
           <input
             {...register(`meals.${index}.title`)}
@@ -489,7 +489,7 @@ function CreateDietPlanContent() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground-secondary mb-1">
-                  Title *
+                  Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   {...register("title")}

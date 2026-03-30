@@ -465,7 +465,7 @@ function ListingForm({
       {isCreate && (
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
-            Professional Type *
+            Professional Type <span className="text-red-500">*</span>
           </label>
           <select
             {...register("accountType")}

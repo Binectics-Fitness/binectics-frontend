@@ -87,7 +87,7 @@ export default function EditClassPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="col-span-2">
                   <label className="block text-sm font-semibold text-foreground mb-2">
-                    Class Name *
+                    Class Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -101,7 +101,7 @@ export default function EditClassPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
-                    Instructor *
+                    Instructor <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -132,7 +132,7 @@ export default function EditClassPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
-                    Capacity *
+                    Capacity <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -208,7 +208,7 @@ export default function EditClassPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="col-span-2">
                   <label className="block text-sm font-semibold text-foreground mb-2">
-                    Days of Week *
+                    Days of Week <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-4 gap-3">
                     {daysOfWeek.map((day) => (

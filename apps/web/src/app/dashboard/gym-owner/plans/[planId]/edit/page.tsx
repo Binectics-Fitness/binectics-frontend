@@ -82,7 +82,7 @@ export default function EditPlanPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
-                    Plan Name *
+                    Plan Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -96,7 +96,7 @@ export default function EditPlanPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
-                    Plan Type *
+                    Plan Type <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.type}

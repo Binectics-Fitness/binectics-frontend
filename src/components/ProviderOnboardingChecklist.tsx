@@ -493,7 +493,7 @@ export default function ProviderOnboardingChecklist({
                       <label className="text-xs font-medium text-foreground mb-1 block">
                         {config.orgLabel.charAt(0).toUpperCase() +
                           config.orgLabel.slice(1)}{" "}
-                        Name *
+                        Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"

@@ -1077,7 +1077,7 @@ export default function ProgressPage() {
           <form onSubmit={handleLogMeal} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-foreground">
-                Meal Type *
+                Meal Type <span className="text-red-500">*</span>
               </span>
               <select
                 name="meal_type"
@@ -1093,7 +1093,7 @@ export default function ProgressPage() {
             </label>
             <label className="block">
               <span className="text-sm font-medium text-foreground">
-                Description *
+                Description <span className="text-red-500">*</span>
               </span>
               <textarea
                 name="description"
@@ -1172,7 +1172,7 @@ export default function ProgressPage() {
           <form onSubmit={handleLogActivity} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-foreground">
-                Activity Type *
+                Activity Type <span className="text-red-500">*</span>
               </span>
               <select
                 name="activity_type"
@@ -1188,7 +1188,7 @@ export default function ProgressPage() {
             </label>
             <label className="block">
               <span className="text-sm font-medium text-foreground">
-                Title *
+                Title <span className="text-red-500">*</span>
               </span>
               <input
                 name="title"

@@ -179,7 +179,7 @@ export default function TrainerEditPlanPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-foreground/70 mb-2">
-                    Plan Name *
+                    Plan Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -194,7 +194,7 @@ export default function TrainerEditPlanPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">
-                    Plan Type *
+                    Plan Type <span className="text-red-500">*</span>
                   </label>
                   <select
                     {...register("plan_type")}
@@ -225,7 +225,7 @@ export default function TrainerEditPlanPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">
-                    Price *
+                    Price <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"

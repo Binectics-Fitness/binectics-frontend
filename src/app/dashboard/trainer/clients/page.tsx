@@ -830,7 +830,7 @@ export default function TrainerClientsPage() {
             </p>
             <label className="block">
               <span className="text-sm font-medium text-foreground">
-                Email Address *
+                Email Address <span className="text-red-500">*</span>
               </span>
               <input
                 {...registerAddClient("email")}

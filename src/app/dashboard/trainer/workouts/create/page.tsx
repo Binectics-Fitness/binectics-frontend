@@ -68,7 +68,7 @@ function ExerciseRowEditor({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-foreground-secondary mb-1">
-            Name *
+            Name <span className="text-red-500">*</span>
           </label>
           <input
             {...register(`exercises.${index}.name`)}
@@ -345,7 +345,7 @@ function CreateWorkoutPlanContent() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground-secondary mb-1">
-                    Title *
+                    Title <span className="text-red-500">*</span>
                   </label>
                   <input
                     {...register("title")}
