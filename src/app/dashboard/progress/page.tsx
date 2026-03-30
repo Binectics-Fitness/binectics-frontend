@@ -20,6 +20,7 @@ import type {
   CreateMealFeedbackRequest,
   CreateActivityReportRequest,
   ClientRequestItem,
+  ClientInvitation,
 } from "@/lib/api/progress";
 
 // ─── Helpers ───────────────────────────────────────────────────────
@@ -208,12 +209,22 @@ export default function ProgressPage() {
   );
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
+  // pending invitations (from invite flow)
+  const [pendingInvitations, setPendingInvitations] = useState<
+    ClientInvitation[]
+  >([]);
+  const [acceptingInvite, setAcceptingInvite] = useState<string | null>(null);
+
   // ─── load profiles ─────────────────────────────────────────────
 
   const loadPendingRequests = useCallback(async () => {
     try {
-      const res = await progressService.getMyPendingClientRequests();
-      if (res.success && res.data) setPendingRequests(res.data);
+      const [reqRes, invRes] = await Promise.all([
+        progressService.getMyPendingClientRequests(),
+        progressService.getMyPendingInvitations(),
+      ]);
+      if (reqRes.success && reqRes.data) setPendingRequests(reqRes.data);
+      if (invRes.success && invRes.data) setPendingInvitations(invRes.data);
     } catch {
       // non-critical
     }
@@ -378,6 +389,30 @@ export default function ProgressPage() {
       setError("Failed to respond to request.");
     } finally {
       setRespondingTo(null);
+    }
+  }
+
+  // ─── handle invitation accept ─────────────────────────────────
+
+  async function handleAcceptInvitation(invitationId: string) {
+    setAcceptingInvite(invitationId);
+    try {
+      const res = await progressService.acceptInvitationById(invitationId);
+      if (res.success) {
+        loadPendingRequests();
+        // Re-load profiles since a new one was just created
+        const profileRes = await progressService.getMyOwnProfiles();
+        if (profileRes.success && profileRes.data) {
+          setProfiles(profileRes.data);
+          if (!selectedProfileId && profileRes.data.length > 0) {
+            setSelectedProfileId(profileRes.data[0]._id);
+          }
+        }
+      }
+    } catch {
+      setError("Failed to accept invitation.");
+    } finally {
+      setAcceptingInvite(null);
     }
   }
 
@@ -565,6 +600,48 @@ export default function ProgressPage() {
                       <button
                         onClick={() => handleRespondToRequest(req._id, true)}
                         disabled={respondingTo === req._id}
+                        className="rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:opacity-50 flex-1 sm:flex-none"
+                      >
+                        Accept
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Pending Invitations ─────────────────────────── */}
+        {pendingInvitations.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-4 text-lg font-bold text-foreground">
+              Pending Invitations
+            </h2>
+            <div className="space-y-3">
+              {pendingInvitations.map((inv) => {
+                const proInfo =
+                  typeof inv.invited_by === "object" ? inv.invited_by : null;
+                return (
+                  <div
+                    key={inv._id}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-xl bg-white px-4 sm:px-5 py-4 shadow-sm gap-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {proInfo
+                          ? `${proInfo.first_name} ${proInfo.last_name}`
+                          : "A fitness professional"}
+                      </p>
+                      <p className="text-sm text-foreground-tertiary">
+                        Invited you to join as a client
+                        {proInfo?.email ? ` · ${proInfo.email}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <button
+                        onClick={() => handleAcceptInvitation(inv._id)}
+                        disabled={acceptingInvite === inv._id}
                         className="rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:opacity-50 flex-1 sm:flex-none"
                       >
                         Accept

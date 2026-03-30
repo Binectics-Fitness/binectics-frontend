@@ -35,7 +35,16 @@ export function middleware(request: NextRequest) {
 
   // Redirect to dashboard if accessing auth routes with valid token
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const roleMapping: Record<string, string> = {
+      USER: "/dashboard",
+      GYM_OWNER: "/dashboard/gym-owner",
+      TRAINER: "/dashboard/trainer",
+      DIETITIAN: "/dashboard/dietitian",
+      ADMIN: "/admin/dashboard",
+    };
+    const role = request.cookies.get("user_role")?.value ?? "";
+    const dashboardPath = roleMapping[role] || "/dashboard";
+    return NextResponse.redirect(new URL(dashboardPath, request.url));
   }
 
   return NextResponse.next();

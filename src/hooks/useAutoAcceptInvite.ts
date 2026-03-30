@@ -18,10 +18,20 @@ export function useAutoAcceptInvite() {
     if (!token) return;
 
     attempted.current = true;
-    sessionStorage.removeItem("binectics_invite_token");
 
-    progressService.acceptClientInvitation({ token }).catch(() => {
-      // Silent failure — token may have expired or already been used
-    });
+    progressService
+      .acceptClientInvitation({ token })
+      .then((res) => {
+        if (res.success) {
+          // Only remove token after confirmed acceptance
+          sessionStorage.removeItem("binectics_invite_token");
+        }
+        // If not successful, keep token for potential retry on next page load
+      })
+      .catch(() => {
+        // Keep token in sessionStorage so it can be retried on next navigation
+        // Reset attempted flag so next mount can retry
+        attempted.current = false;
+      });
   }, []);
 }

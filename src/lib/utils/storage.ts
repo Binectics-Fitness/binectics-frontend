@@ -100,11 +100,21 @@ export const userStorage = {
   set(user: User): void {
     if (!isBrowser()) return;
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+
+    // Set user_role cookie so middleware can redirect to the correct dashboard
+    if (user.role) {
+      const maxAge = 60 * 60; // 1 hour (matches access token)
+      document.cookie = `user_role=${user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    }
   },
 
   remove(): void {
     if (!isBrowser()) return;
     localStorage.removeItem(STORAGE_KEYS.USER);
+
+    // Also remove user_role cookie
+    document.cookie =
+      "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   },
 };
 

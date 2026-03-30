@@ -196,6 +196,17 @@ export interface ClientInvitation {
   email: string;
   status: string;
   expires_at: string;
+  invited_by?:
+    | string
+    | {
+        _id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        profile_picture?: string;
+      };
+  first_name?: string;
+  email_sent?: boolean;
 }
 
 // ==================== WORKOUT PLAN TYPES ====================
@@ -825,6 +836,18 @@ export const progressService = {
   ): Promise<ApiResponse<void>> {
     return await apiClient.delete<void>(
       `/progress/invitations/${invitationId}`,
+    );
+  },
+
+  async getMyPendingInvitations(): Promise<ApiResponse<ClientInvitation[]>> {
+    return await apiClient.get<ClientInvitation[]>("/progress/my-invitations");
+  },
+
+  async acceptInvitationById(
+    invitationId: string,
+  ): Promise<ApiResponse<ClientProfile>> {
+    return await apiClient.post<ClientProfile>(
+      `/progress/invitations/${invitationId}/accept`,
     );
   },
 

@@ -207,6 +207,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     errors?: Record<string, string[]>;
   }> => {
     try {
+      // Clear any previous session so the middleware doesn't
+      // redirect the user back to a stale dashboard after OTP verification
+      await authService.logout();
+      setUser(null);
+
       const response = await authService.register(data);
 
       if (response.success && response.data) {
