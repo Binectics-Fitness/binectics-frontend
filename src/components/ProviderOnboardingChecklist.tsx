@@ -5,8 +5,11 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { teamsService, type CreateOrganizationRequest } from "@/lib/api/teams";
-import { marketplaceService } from "@/lib/api/marketplace";
-import { UserRole, AccountType, type MarketplaceListing } from "@/lib/types";
+import {
+  onboardingService,
+  type OnboardingStatus,
+} from "@/lib/api/onboarding";
+import { UserRole, AccountType } from "@/lib/types";
 
 // ─── Types ───
 
@@ -112,9 +115,9 @@ export default function ProviderOnboardingChecklist({
   const { user } = useAuth();
   const { currentOrg, refreshOrganizations } = useOrganization();
 
-  // Step status
-  const [listing, setListing] = useState<MarketplaceListing | null>(null);
-  const [teamMemberCount, setTeamMemberCount] = useState(0);
+  // Step status from API
+  const [onboardingStatus, setOnboardingStatus] =
+    useState<OnboardingStatus | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [statusError, setStatusError] = useState("");
 
@@ -142,37 +145,18 @@ export default function ProviderOnboardingChecklist({
     setStatusError("");
 
     try {
-      // Check marketplace listing
-      if (currentOrg?._id) {
-        try {
-          const listingRes = await marketplaceService.getOrgListing(
-            currentOrg._id,
-          );
-          if (listingRes.success && listingRes.data) {
-            setListing(listingRes.data);
-          }
-        } catch {
-          // 404 is expected when no listing exists — ignore
-        }
-      }
-
-      // Check team members
-      if (currentOrg?._id) {
-        try {
-          const membersRes = await teamsService.getMembers(currentOrg._id);
-          if (membersRes.success && membersRes.data) {
-            setTeamMemberCount(membersRes.data.length);
-          }
-        } catch {
-          // Non-critical — team count defaults to 0
-        }
+      const res = await onboardingService.getStatus();
+      if (res.success && res.data) {
+        setOnboardingStatus(res.data);
+      } else {
+        setStatusError("Failed to load onboarding status. Please refresh.");
       }
     } catch {
       setStatusError("Failed to load onboarding status. Please refresh.");
     } finally {
       setIsCheckingStatus(false);
     }
-  }, [user, config, currentOrg?._id]);
+  }, [user, config]);
 
   useEffect(() => {
     checkStatus();
@@ -209,10 +193,14 @@ export default function ProviderOnboardingChecklist({
 
   if (!user || !config || !colors || isDismissed) return null;
 
+  // Derive step completion from API response
+  const stepMap = new Map(
+    (onboardingStatus?.steps ?? []).map((s) => [s.id, s.is_complete]),
+  );
   const hasOrg = !!currentOrg;
-  const hasListing = !!listing;
-  const isPublished = !!listing?.is_published;
-  const hasTeam = teamMemberCount > 1; // >1 because owner is always member
+  const hasListing = stepMap.get("listing_created") ?? false;
+  const isPublished = stepMap.get("listing_published") ?? false;
+  const hasTeam = stepMap.get("team_invited") ?? false;
 
   const steps: OnboardingStep[] = [
     {
