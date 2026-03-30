@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import DocumentPreviewModal from "@/components/DocumentPreviewModal";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import {
@@ -39,6 +40,13 @@ export default function UserDietPlanDetailPage() {
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Document preview state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewViewUrl, setPreviewViewUrl] = useState("");
+  const [previewDownloadUrl, setPreviewDownloadUrl] = useState("");
+  const [previewFileName, setPreviewFileName] = useState("");
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   const loadPlan = useCallback(async () => {
     if (!planId) return;
@@ -78,6 +86,26 @@ export default function UserDietPlanDetailPage() {
       setError("Failed to access document. The link may have expired.");
     }
     setDownloadLoading(false);
+  };
+
+  const handlePreviewDocument = async () => {
+    if (!planId) return;
+    setLoadingPreview(true);
+    setError("");
+    try {
+      const res = await progressService.getMyDietPlanDocumentAccess(planId);
+      if (res.success && res.data?.view_url) {
+        setPreviewViewUrl(res.data.view_url);
+        setPreviewDownloadUrl(res.data.download_url || "");
+        setPreviewFileName(plan?.document_file_name || "Diet Plan Document");
+        setPreviewOpen(true);
+      } else {
+        setError(res.message || "Failed to load document preview");
+      }
+    } catch {
+      setError("Failed to load document preview. Please try again.");
+    }
+    setLoadingPreview(false);
   };
 
   if (isLoading) return <DashboardLoading />;
@@ -198,51 +226,112 @@ export default function UserDietPlanDetailPage() {
               </div>
             </div>
 
-            {/* Document Download */}
+            {/* Document Access */}
             {isDocument && (
               <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-lg font-bold text-foreground mb-3">
-                  Download Document
+                  Document Access
                 </h2>
                 <div className="flex items-center gap-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-blue-100">
-                    <svg
-                      className="h-5 w-5 text-accent-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {plan.document_file_name || "Diet Plan Document"}
-                    </p>
-                    {plan.document_file_size && (
-                      <p className="text-xs text-foreground-secondary">
-                        {(plan.document_file_size / 1024).toFixed(1)} KB
-                      </p>
-                    )}
-                    <p className="text-xs text-neutral-400 mt-0.5">
-                      Secure download — link expires after 15 minutes
-                    </p>
-                  </div>
                   <button
-                    onClick={handleDownloadDocument}
-                    disabled={downloadLoading}
-                    className="inline-flex h-9 items-center rounded-lg bg-accent-blue-500 px-4 text-sm font-medium text-white hover:bg-accent-blue-600 disabled:opacity-50"
+                    onClick={handlePreviewDocument}
+                    disabled={loadingPreview}
+                    className="flex items-center gap-4 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity disabled:opacity-50 cursor-pointer"
                   >
-                    {downloadLoading ? "Loading…" : "Download"}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-blue-100">
+                      <svg
+                        className="h-5 w-5 text-accent-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {plan.document_file_name || "Diet Plan Document"}
+                      </p>
+                      {plan.document_file_size && (
+                        <p className="text-xs text-foreground-secondary">
+                          {(plan.document_file_size / 1024).toFixed(1)} KB
+                        </p>
+                      )}
+                      <p className="text-xs text-accent-blue-500 mt-0.5 font-medium">
+                        {loadingPreview ? "Loading…" : "Click to preview"}
+                      </p>
+                    </div>
                   </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={handlePreviewDocument}
+                      disabled={loadingPreview}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-accent-blue-200 bg-white px-3 text-sm font-medium text-accent-blue-600 hover:bg-accent-blue-50 disabled:opacity-50"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                      <span className="hidden sm:inline">
+                        {loadingPreview ? "Loading…" : "Preview"}
+                      </span>
+                    </button>
+                    <button
+                      onClick={handleDownloadDocument}
+                      disabled={downloadLoading}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent-blue-500 px-4 text-sm font-medium text-white hover:bg-accent-blue-600 disabled:opacity-50"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                      <span className="hidden sm:inline">
+                        {downloadLoading ? "Loading…" : "Download"}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
+
+            {/* Document Preview Modal */}
+            <DocumentPreviewModal
+              open={previewOpen}
+              onClose={() => setPreviewOpen(false)}
+              viewUrl={previewViewUrl}
+              fileName={previewFileName}
+              downloadUrl={previewDownloadUrl}
+              mimeType={plan.document_mime_type}
+            />
 
             {/* Dietitian Notes */}
             {plan.dietitian_notes && (

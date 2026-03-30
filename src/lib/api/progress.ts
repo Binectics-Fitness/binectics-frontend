@@ -465,6 +465,7 @@ export interface DietPlan {
 
 export interface DietPlanDocumentAccess {
   download_url: string;
+  view_url: string;
   format: string;
   expires_in_seconds: number;
 }
