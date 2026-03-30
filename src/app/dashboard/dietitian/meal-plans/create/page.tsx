@@ -164,7 +164,7 @@ function MealRowEditor({
           </label>
           <input
             type="number"
-            {...register(`meals.${index}.calories`)}
+            {...register(`meals.${index}.calories`, { valueAsNumber: true })}
             placeholder="e.g. 380"
             className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-foreground focus:border-accent-purple-500 focus:outline-none focus:ring-1 focus:ring-accent-purple-500"
           />
@@ -182,7 +182,7 @@ function MealRowEditor({
         </div>
       </div>
 
-      <input type="hidden" {...register(`meals.${index}.order`)} />
+      <input type="hidden" {...register(`meals.${index}.order`, { valueAsNumber: true })} />
     </div>
   );
 }

@@ -79,7 +79,7 @@ function ExerciseRowEditor({
           </label>
           <input
             type="number"
-            {...register(`exercises.${index}.sets`)}
+            {...register(`exercises.${index}.sets`, { valueAsNumber: true })}
             placeholder="e.g. 4"
             className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-foreground focus:border-accent-yellow-500 focus:outline-none focus:ring-1 focus:ring-accent-yellow-500"
           />
@@ -91,7 +91,7 @@ function ExerciseRowEditor({
           </label>
           <input
             type="number"
-            {...register(`exercises.${index}.reps`)}
+            {...register(`exercises.${index}.reps`, { valueAsNumber: true })}
             placeholder="e.g. 10"
             className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-foreground focus:border-accent-yellow-500 focus:outline-none focus:ring-1 focus:ring-accent-yellow-500"
           />
@@ -103,7 +103,7 @@ function ExerciseRowEditor({
           </label>
           <input
             type="number"
-            {...register(`exercises.${index}.duration_minutes`)}
+            {...register(`exercises.${index}.duration_minutes`, { valueAsNumber: true })}
             placeholder="e.g. 5"
             className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-foreground focus:border-accent-yellow-500 focus:outline-none focus:ring-1 focus:ring-accent-yellow-500"
           />
@@ -115,7 +115,7 @@ function ExerciseRowEditor({
           </label>
           <input
             type="number"
-            {...register(`exercises.${index}.rest_seconds`)}
+            {...register(`exercises.${index}.rest_seconds`, { valueAsNumber: true })}
             placeholder="e.g. 90"
             className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-foreground focus:border-accent-yellow-500 focus:outline-none focus:ring-1 focus:ring-accent-yellow-500"
           />
@@ -133,7 +133,7 @@ function ExerciseRowEditor({
         </div>
       </div>
 
-      <input type="hidden" {...register(`exercises.${index}.order`)} />
+      <input type="hidden" {...register(`exercises.${index}.order`, { valueAsNumber: true })} />
     </div>
   );
 }

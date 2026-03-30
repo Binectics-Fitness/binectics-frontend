@@ -1,6 +1,22 @@
 import { z } from "zod";
 import { emailSchema } from "./shared";
 
+// ─── Helpers ────────────────────────────────────────────────────
+
+/**
+ * Schema for optional numeric form inputs.
+ *
+ * HTML `<input type="number">` with react-hook-form's `valueAsNumber: true`
+ * yields NaN when the field is empty. Zod's `z.number()` rejects NaN, so
+ * this helper accepts it gracefully. The NaN is cleaned to `undefined` in
+ * the form's onSubmit handler via `value || undefined`.
+ *
+ * Usage: `calories: numericInput(0, 10000),`
+ */
+function numericInput(min: number, max: number) {
+  return z.union([z.number().min(min).max(max), z.nan()]).optional();
+}
+
 // ─── Add Client ─────────────────────────────────────────────────
 
 export const addClientSchema = z.object({
@@ -32,10 +48,10 @@ export type CreateJournalFormData = z.infer<typeof createJournalSchema>;
 export const workoutExerciseSchema = z.object({
   name: z.string().min(1, "Exercise name is required").max(200).trim(),
   description: z.string().max(1000).optional(),
-  sets: z.number().min(1).max(100).optional(),
-  reps: z.number().min(1).max(1000).optional(),
-  duration_minutes: z.number().min(1).max(600).optional(),
-  rest_seconds: z.number().min(0).max(600).optional(),
+  sets: numericInput(1, 100),
+  reps: numericInput(1, 1000),
+  duration_minutes: numericInput(1, 600),
+  rest_seconds: numericInput(0, 600),
   order: z.number().min(1).max(100),
   notes: z.string().max(500).optional(),
 });
@@ -62,12 +78,9 @@ export const dietMealSchema = z.object({
   title: z.string().min(1, "Meal title is required").max(200).trim(),
   description: z.string().max(2000).optional(),
   foods: z.array(z.string()).optional(),
-  calories: z.preprocess(
-    (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
-    z.number().min(0).max(10000).optional(),
-  ),
+  calories: numericInput(0, 10000),
   notes: z.string().max(500).optional(),
-  order: z.coerce.number().min(1).max(100),
+  order: z.number().min(1).max(100),
 });
 
 export type DietMealFormData = z.infer<typeof dietMealSchema>;
