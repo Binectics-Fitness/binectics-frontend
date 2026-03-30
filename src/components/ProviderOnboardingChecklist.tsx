@@ -5,10 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { teamsService, type CreateOrganizationRequest } from "@/lib/api/teams";
-import {
-  onboardingService,
-  type OnboardingStatus,
-} from "@/lib/api/onboarding";
+import { onboardingService, type OnboardingStatus } from "@/lib/api/onboarding";
 import { UserRole, AccountType } from "@/lib/types";
 
 // ─── Types ───
