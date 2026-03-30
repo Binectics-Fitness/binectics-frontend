@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { utilityService } from "@/lib/api/utility";
+import type { CountryItem } from "@/lib/api/utility";
 import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +20,13 @@ import type {
   FieldErrors,
   UseFormSetValue,
 } from "react-hook-form";
+import TagInput from "@/components/TagInput";
+import {
+  TRAINER_SPECIALIZATIONS,
+  DIETITIAN_SPECIALIZATIONS,
+  FITNESS_CERTIFICATIONS,
+  COMMON_LANGUAGES,
+} from "@/lib/constants";
 
 const ACCOUNT_TYPE_OPTIONS: {
   value: MarketplaceAccountType;
@@ -35,6 +44,7 @@ export default function MyMarketplaceListingPage() {
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasListing, setHasListing] = useState(false);
+  const [countries, setCountries] = useState<CountryItem[]>([]);
 
   // Form state
   const [isEditing, setIsEditing] = useState(false);
@@ -95,11 +105,17 @@ export default function MyMarketplaceListingPage() {
     }
 
     async function loadListing() {
-      const res = await marketplaceService.getMyListing();
-      if (res.success && res.data) {
-        setListing(res.data);
+      const [listingRes, countriesRes] = await Promise.all([
+        marketplaceService.getMyListing(),
+        utilityService.getCountries(),
+      ]);
+      if (countriesRes.success && countriesRes.data) {
+        setCountries(countriesRes.data);
+      }
+      if (listingRes.success && listingRes.data) {
+        setListing(listingRes.data);
         setHasListing(true);
-        populateForm(res.data);
+        populateForm(listingRes.data);
       } else {
         setHasListing(false);
       }
@@ -200,6 +216,12 @@ export default function MyMarketplaceListingPage() {
   return (
     <div className="flex-1 overflow-y-auto bg-background-secondary">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center text-sm text-accent-blue-500 hover:underline mb-4"
+        >
+          ← Back to Dashboard
+        </Link>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -275,6 +297,7 @@ export default function MyMarketplaceListingPage() {
               isSaving={isSaving}
               formError={formError}
               onCancel={undefined}
+              countries={countries}
             />
           </div>
         )}
@@ -421,6 +444,7 @@ export default function MyMarketplaceListingPage() {
                 setIsEditing(false);
                 if (listing) populateForm(listing);
               }}
+              countries={countries}
             />
           </div>
         )}
@@ -441,6 +465,7 @@ interface ListingFormProps {
   isSaving: boolean;
   formError: string;
   onCancel: (() => void) | undefined;
+  countries: CountryItem[];
 }
 
 function ListingForm({
@@ -453,7 +478,20 @@ function ListingForm({
   isSaving,
   formError,
   onCancel,
+  countries,
 }: ListingFormProps) {
+  const splitCommaLocal = (s: string) =>
+    s.split(",").map((x) => x.trim()).filter(Boolean);
+
+  const specialtySuggestions =
+    formData.accountType === "dietitian"
+      ? [...DIETITIAN_SPECIALIZATIONS]
+      : [...TRAINER_SPECIALIZATIONS];
+
+  const specialtiesTags = formData.specialties ? splitCommaLocal(formData.specialties) : [];
+  const certificationsTags = formData.certifications ? splitCommaLocal(formData.certifications) : [];
+  const languagesTags = formData.languages ? splitCommaLocal(formData.languages) : [];
+
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       {formError && (
@@ -517,29 +555,23 @@ function ListingForm({
           <label className="text-sm font-medium text-foreground mb-1.5 block">
             Specialties
           </label>
-          <input
-            type="text"
-            {...register("specialties")}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-            placeholder="Weight Loss, HIIT, Yoga"
+          <TagInput
+            value={specialtiesTags}
+            onChange={(tags) => setValue("specialties", tags.join(", "), { shouldValidate: true })}
+            suggestions={specialtySuggestions}
+            placeholder="Type or select specialties…"
           />
-          <p className="text-xs text-foreground-secondary mt-1">
-            Comma-separated
-          </p>
         </div>
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
             Certifications
           </label>
-          <input
-            type="text"
-            {...register("certifications")}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-            placeholder="ACE, NASM, ISSA"
+          <TagInput
+            value={certificationsTags}
+            onChange={(tags) => setValue("certifications", tags.join(", "), { shouldValidate: true })}
+            suggestions={[...FITNESS_CERTIFICATIONS]}
+            placeholder="Type or select certifications…"
           />
-          <p className="text-xs text-foreground-secondary mt-1">
-            Comma-separated
-          </p>
         </div>
       </div>
 
@@ -547,11 +579,11 @@ function ListingForm({
         <label className="text-sm font-medium text-foreground mb-1.5 block">
           Languages
         </label>
-        <input
-          type="text"
-          {...register("languages")}
-          className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-          placeholder="English, Spanish"
+        <TagInput
+          value={languagesTags}
+          onChange={(tags) => setValue("languages", tags.join(", "), { shouldValidate: true })}
+          suggestions={[...COMMON_LANGUAGES]}
+          placeholder="Type or select languages…"
         />
       </div>
 
@@ -569,15 +601,19 @@ function ListingForm({
         </div>
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
-            Country Code
+            Country
           </label>
-          <input
-            type="text"
+          <select
             {...register("countryCode")}
-            maxLength={10}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-            placeholder="GB"
-          />
+            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
+          >
+            <option value="">Select country</option>
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

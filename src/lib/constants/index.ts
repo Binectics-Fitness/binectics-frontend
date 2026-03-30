@@ -116,3 +116,44 @@ export const DIETITIAN_SPECIALIZATIONS = [
   "Gut Health",
   "Hormone Balance",
 ] as const;
+
+// Common Fitness Certifications
+export const FITNESS_CERTIFICATIONS = [
+  "ACE",
+  "NASM",
+  "ISSA",
+  "NSCA-CPT",
+  "ACSM",
+  "NCSF",
+  "AFAA",
+  "NESTA",
+  "CrossFit Level 1",
+  "CrossFit Level 2",
+  "ISSA Nutritionist",
+  "Precision Nutrition",
+  "NASM-CES",
+  "NASM-PES",
+  "RD (Registered Dietitian)",
+  "CNS (Certified Nutrition Specialist)",
+  "CPR/AED",
+  "First Aid",
+] as const;
+
+// Common Languages
+export const COMMON_LANGUAGES = [
+  "English",
+  "Spanish",
+  "French",
+  "Portuguese",
+  "German",
+  "Italian",
+  "Mandarin",
+  "Japanese",
+  "Korean",
+  "Arabic",
+  "Hindi",
+  "Dutch",
+  "Russian",
+  "Turkish",
+  "Swahili",
+] as const;
