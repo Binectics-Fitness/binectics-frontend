@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
+import SearchableSelect from "@/components/SearchableSelect";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   MembershipSubscription,
@@ -319,18 +320,15 @@ export default function GymOwnerMembersPage() {
                   Pending Payment
                 </option>
               </select>
-              <select
+              <SearchableSelect
                 value={planFilter}
-                onChange={(e) => setPlanFilter(e.target.value)}
-                className="px-4 py-2.5 border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue-500 bg-white"
-              >
-                <option value="all">All Plans</option>
-                {uniquePlanNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setPlanFilter(val)}
+                options={[
+                  { label: "All Plans", value: "all" },
+                  ...uniquePlanNames.map((name) => ({ label: name, value: name })),
+                ]}
+                placeholder="All Plans"
+              />
             </div>
           </div>
 

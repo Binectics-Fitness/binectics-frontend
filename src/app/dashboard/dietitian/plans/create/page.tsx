@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
+import SearchableSelect from "@/components/SearchableSelect";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -225,20 +226,16 @@ export default function DietitianCreatePlanPage() {
                   <label className="block text-sm font-medium text-foreground/70 mb-2">
                     Currency <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    {...register("currency")}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
-                  >
-                    {currencies.length === 0 ? (
-                      <option value="USD">USD — US Dollar</option>
-                    ) : (
-                      currencies.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.code} — {c.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
+                  <SearchableSelect
+                    value={formData.currency}
+                    onChange={(val) => setValue("currency", val, { shouldValidate: true })}
+                    options={
+                      currencies.length === 0
+                        ? [{ label: "USD — US Dollar", value: "USD" }]
+                        : currencies.map((c) => ({ label: `${c.code} — ${c.name}`, value: c.code }))
+                    }
+                    placeholder="Select currency"
+                  />
                 </div>
 
                 <div className="md:col-span-2">

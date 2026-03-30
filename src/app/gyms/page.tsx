@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import LocationFilter from "@/components/LocationFilter";
+import SearchableSelect from "@/components/SearchableSelect";
 import { CardSkeleton } from "@/components/CardSkeleton";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
@@ -162,20 +163,18 @@ export default function GymsPage() {
               <label className="block text-sm font-semibold text-foreground mb-2">
                 Country
               </label>
-              <select
+              <SearchableSelect
                 value={selectedCountry}
-                onChange={(e) => {
-                  setSelectedCountry(e.target.value);
+                onChange={(val) => {
+                  setSelectedCountry(val);
                   setPage(1);
                 }}
-                className="w-full rounded-lg border-2 border-neutral-300 bg-background px-4 py-2 text-foreground focus:border-primary-500 focus:outline-none"
-              >
-                {countries.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.flag} {country.name}
-                  </option>
-                ))}
-              </select>
+                options={countries.map((country) => ({
+                  label: `${country.flag} ${country.name}`,
+                  value: country.code,
+                }))}
+                placeholder="Select country"
+              />
             </div>
 
             {/* Location Filter */}

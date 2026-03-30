@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import DashboardLoading from "@/components/DashboardLoading";
+import SearchableSelect from "@/components/SearchableSelect";
 import TimezoneHelpBadge from "@/components/TimezoneHelpBadge";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import {
@@ -777,22 +778,17 @@ export default function ConsultationAvailabilityManager({
                   className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 />
 
-                <select
+                <SearchableSelect
                   value={newRule.timezone}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setNewRule((prev) => ({
                       ...prev,
-                      timezone: e.target.value,
+                      timezone: val,
                     }))
                   }
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                >
-                  {timezoneOptions.map((timezone) => (
-                    <option key={timezone} value={timezone}>
-                      {timezone}
-                    </option>
-                  ))}
-                </select>
+                  options={timezoneOptions.map((tz) => ({ label: tz, value: tz }))}
+                  placeholder="Select timezone"
+                />
 
                 <button
                   onClick={addRule}

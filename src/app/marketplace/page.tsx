@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import LocationFilter from "@/components/LocationFilter";
+import SearchableSelect from "@/components/SearchableSelect";
 import { CardSkeleton } from "@/components/CardSkeleton";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type {
@@ -420,21 +421,18 @@ export default function MarketplacePage() {
                 <label className="text-sm font-medium text-foreground mb-2 block">
                   Specialty
                 </label>
-                <select
+                <SearchableSelect
                   value={selectedSpecialty}
-                  onChange={(e) => {
-                    setSelectedSpecialty(e.target.value);
+                  onChange={(val) => {
+                    setSelectedSpecialty(val);
                     setPage(1);
                   }}
-                  className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
-                >
-                  <option value="">All Specialties</option>
-                  {SPECIALTY_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { label: "All Specialties", value: "" },
+                    ...SPECIALTY_OPTIONS.map((s) => ({ label: s, value: s })),
+                  ]}
+                  placeholder="All Specialties"
+                />
               </div>
 
               {/* Location Filter */}
