@@ -233,11 +233,16 @@ export default function CreatePlanPage() {
                   </label>
                   <SearchableSelect
                     value={formData.currency}
-                    onChange={(val) => setValue("currency", val, { shouldValidate: true })}
+                    onChange={(val) =>
+                      setValue("currency", val, { shouldValidate: true })
+                    }
                     options={
                       currencies.length === 0
                         ? [{ label: "USD — US Dollar", value: "USD" }]
-                        : currencies.map((c) => ({ label: `${c.code} — ${c.name}`, value: c.code }))
+                        : currencies.map((c) => ({
+                            label: `${c.code} — ${c.name}`,
+                            value: c.code,
+                          }))
                     }
                     placeholder="Select currency"
                   />

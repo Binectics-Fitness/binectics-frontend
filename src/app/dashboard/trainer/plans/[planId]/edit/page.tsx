@@ -246,11 +246,21 @@ export default function TrainerEditPlanPage() {
                   </label>
                   <SearchableSelect
                     value={formData.currency}
-                    onChange={(val) => setValue("currency", val, { shouldValidate: true })}
+                    onChange={(val) =>
+                      setValue("currency", val, { shouldValidate: true })
+                    }
                     options={
                       currencies.length === 0
-                        ? [{ label: formData.currency, value: formData.currency }]
-                        : currencies.map((c) => ({ label: `${c.code} — ${c.name}`, value: c.code }))
+                        ? [
+                            {
+                              label: formData.currency,
+                              value: formData.currency,
+                            },
+                          ]
+                        : currencies.map((c) => ({
+                            label: `${c.code} — ${c.name}`,
+                            value: c.code,
+                          }))
                     }
                     placeholder="Select currency"
                   />

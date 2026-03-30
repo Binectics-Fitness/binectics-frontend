@@ -325,7 +325,10 @@ export default function GymOwnerMembersPage() {
                 onChange={(val) => setPlanFilter(val)}
                 options={[
                   { label: "All Plans", value: "all" },
-                  ...uniquePlanNames.map((name) => ({ label: name, value: name })),
+                  ...uniquePlanNames.map((name) => ({
+                    label: name,
+                    value: name,
+                  })),
                 ]}
                 placeholder="All Plans"
               />

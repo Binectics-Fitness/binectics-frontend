@@ -786,7 +786,10 @@ export default function ConsultationAvailabilityManager({
                       timezone: val,
                     }))
                   }
-                  options={timezoneOptions.map((tz) => ({ label: tz, value: tz }))}
+                  options={timezoneOptions.map((tz) => ({
+                    label: tz,
+                    value: tz,
+                  }))}
                   placeholder="Select timezone"
                 />
 

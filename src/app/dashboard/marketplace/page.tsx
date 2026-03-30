@@ -612,7 +612,9 @@ function ListingForm({
           </label>
           <SearchableSelect
             value={formData.countryCode ?? ""}
-            onChange={(val) => setValue("countryCode", val, { shouldValidate: true })}
+            onChange={(val) =>
+              setValue("countryCode", val, { shouldValidate: true })
+            }
             options={countries.map((c) => ({ label: c.name, value: c.code }))}
             placeholder="Select country"
             loading={countries.length === 0}
@@ -638,7 +640,9 @@ function ListingForm({
           </label>
           <SearchableSelect
             value={formData.currency}
-            onChange={(val) => setValue("currency", val, { shouldValidate: true })}
+            onChange={(val) =>
+              setValue("currency", val, { shouldValidate: true })
+            }
             options={[
               { label: "USD – US Dollar", value: "USD" },
               { label: "EUR – Euro", value: "EUR" },
