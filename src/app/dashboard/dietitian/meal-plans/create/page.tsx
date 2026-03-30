@@ -12,8 +12,48 @@ import type { ClientProfile, CreateDietMealRequest } from "@/lib/api/progress";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { dietPlanSchema, type DietPlanFormData } from "@/lib/schemas/progress";
+import { tokenStorage } from "@/lib/utils/storage";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1";
 
 // ─── Helpers ───────────────────────────────────────────────────────
+
+/** Upload FormData with real progress tracking via XMLHttpRequest. */
+function uploadWithProgress(
+  endpoint: string,
+  formData: FormData,
+  onProgress: (percent: number) => void,
+): Promise<{ success: boolean; message?: string }> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE_URL}${endpoint}`);
+
+    const token = tokenStorage.get();
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({ success: true });
+      } else {
+        resolve({ success: false, message: `Upload failed (${xhr.status})` });
+      }
+    });
+
+    xhr.addEventListener("error", () =>
+      resolve({ success: false, message: "Network error during upload" }),
+    );
+
+    xhr.send(formData);
+  });
+}
 
 function clientName(profile: ClientProfile): string {
   if (typeof profile.client_id === "object") {
@@ -163,6 +203,8 @@ function CreateDietPlanContent() {
 
   // Document upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const orgId = currentOrg?._id;
@@ -240,19 +282,23 @@ function CreateDietPlanContent() {
     }
     setSubmitting(true);
     setError("");
+    setUploadProgress(0);
+    setIsUploading(data.delivery_type === DietPlanDeliveryType.DOCUMENT);
 
     try {
       if (data.delivery_type === DietPlanDeliveryType.DOCUMENT) {
         if (!selectedFile) {
           setError("Please select a document to upload");
           setSubmitting(false);
+          setIsUploading(false);
           return;
         }
       }
 
       const failedClients: string[] = [];
 
-      for (const profileId of selectedProfileIds) {
+      for (let i = 0; i < selectedProfileIds.length; i++) {
+        const profileId = selectedProfileIds[i];
         try {
           if (data.delivery_type === DietPlanDeliveryType.DOCUMENT) {
             const formData = new FormData();
@@ -264,16 +310,22 @@ function CreateDietPlanContent() {
               formData.append("dietitian_notes", data.dietitian_notes);
             formData.append("file", selectedFile!);
 
-            const res = orgId
-              ? await progressService.createDietPlanWithDocumentInOrg(
-                  orgId,
-                  profileId,
-                  formData,
-                )
-              : await progressService.createDietPlanWithDocument(
-                  profileId,
-                  formData,
+            const endpoint = orgId
+              ? `/progress/organizations/${orgId}/clients/${profileId}/diet-plans`
+              : `/progress/clients/${profileId}/diet-plans`;
+
+            const res = await uploadWithProgress(
+              endpoint,
+              formData,
+              (percent) => {
+                // Scale progress across multiple clients
+                const clientBase = (i / selectedProfileIds.length) * 100;
+                const clientShare = 100 / selectedProfileIds.length;
+                setUploadProgress(
+                  Math.round(clientBase + (percent * clientShare) / 100),
                 );
+              },
+            );
 
             if (!res.success) {
               failedClients.push(profileId);
@@ -329,6 +381,7 @@ function CreateDietPlanContent() {
       setError("Failed to create diet plan");
     }
     setSubmitting(false);
+    setIsUploading(false);
   };
 
   if (isLoading || orgLoading) return <DashboardLoading />;
@@ -483,8 +536,12 @@ function CreateDietPlanContent() {
                 Document Upload
               </h2>
               <div
-                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-300 p-8 hover:border-accent-purple-400 transition-colors cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
+                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors ${
+                  isUploading
+                    ? "border-accent-purple-300 bg-accent-purple-50 cursor-not-allowed"
+                    : "border-neutral-300 hover:border-accent-purple-400 cursor-pointer"
+                }`}
+                onClick={() => !isUploading && fileInputRef.current?.click()}
               >
                 <input
                   ref={fileInputRef}
@@ -527,6 +584,26 @@ function CreateDietPlanContent() {
                   </div>
                 )}
               </div>
+
+              {/* Upload progress bar */}
+              {isUploading && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-medium text-foreground-secondary">
+                      Uploading document…
+                    </span>
+                    <span className="text-sm font-semibold text-accent-purple-600">
+                      {uploadProgress}%
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full rounded-full bg-neutral-200 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-accent-purple-500 transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -663,7 +740,11 @@ function CreateDietPlanContent() {
               disabled={submitting}
               className="inline-flex h-11 items-center justify-center rounded-lg bg-accent-purple-500 px-6 text-sm font-semibold text-white hover:bg-accent-purple-600 disabled:opacity-50"
             >
-              {submitting ? "Creating…" : "Create Meal Plan"}
+              {submitting
+                ? isUploading
+                  ? `Uploading… ${uploadProgress}%`
+                  : "Creating…"
+                : "Create Meal Plan"}
             </button>
             <button
               type="button"
