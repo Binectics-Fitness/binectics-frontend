@@ -182,7 +182,10 @@ function MealRowEditor({
         </div>
       </div>
 
-      <input type="hidden" {...register(`meals.${index}.order`, { valueAsNumber: true })} />
+      <input
+        type="hidden"
+        {...register(`meals.${index}.order`, { valueAsNumber: true })}
+      />
     </div>
   );
 }
@@ -284,10 +287,6 @@ function CreateDietPlanContent() {
   };
 
   const onSubmit = async (data: DietPlanFormData) => {
-    if (selectedProfileIds.length === 0) {
-      setError("Please select at least one client");
-      return;
-    }
     setSubmitting(true);
     setError("");
     setUploadProgress(0);
@@ -302,6 +301,74 @@ function CreateDietPlanContent() {
           return;
         }
       }
+
+      // ── Standalone (no clients selected) ──────────────────────────
+      if (selectedProfileIds.length === 0) {
+        if (data.delivery_type === DietPlanDeliveryType.DOCUMENT) {
+          const formData = new FormData();
+          formData.append("title", data.title.trim());
+          formData.append("delivery_type", DietPlanDeliveryType.DOCUMENT);
+          if (data.description)
+            formData.append("description", data.description);
+          if (data.dietitian_notes)
+            formData.append("dietitian_notes", data.dietitian_notes);
+          formData.append("file", selectedFile!);
+
+          const endpoint = orgId
+            ? `/progress/organizations/${orgId}/diet-plans`
+            : `/progress/diet-plans`;
+
+          const res = await uploadWithProgress(endpoint, formData, (percent) =>
+            setUploadProgress(percent),
+          );
+
+          if (!res.success) {
+            setError(res.message || "Failed to upload diet plan");
+            setSubmitting(false);
+            setIsUploading(false);
+            return;
+          }
+        } else {
+          const meals: CreateDietMealRequest[] = (data.meals || [])
+            .filter((m) => m.title.trim() && m.meal_type)
+            .map((m, idx) => ({
+              meal_type: m.meal_type as MealSlot,
+              title: m.title.trim(),
+              description: m.description || undefined,
+              foods: undefined,
+              calories: m.calories || undefined,
+              notes: m.notes || undefined,
+              order: idx + 1,
+            }));
+
+          const payload = {
+            title: data.title.trim(),
+            description: data.description || undefined,
+            delivery_type: DietPlanDeliveryType.PLATFORM,
+            meals: meals.length > 0 ? meals : undefined,
+            dietitian_notes: data.dietitian_notes || undefined,
+          };
+
+          const res = orgId
+            ? await progressService.createStandaloneDietPlanInOrg(
+                orgId,
+                payload,
+              )
+            : await progressService.createStandaloneDietPlan(payload);
+
+          if (!res.success) {
+            setError("Failed to create diet plan");
+            setSubmitting(false);
+            setIsUploading(false);
+            return;
+          }
+        }
+
+        router.push("/dashboard/dietitian/meal-plans");
+        return;
+      }
+
+      // ── Assigned to client(s) ─────────────────────────────────────
 
       const failedClients: string[] = [];
 
@@ -669,9 +736,13 @@ function CreateDietPlanContent() {
               <div>
                 <h2 className="text-lg font-bold text-foreground">
                   Assign to Client(s)
+                  <span className="ml-2 text-xs font-normal text-foreground-secondary">
+                    Optional
+                  </span>
                 </h2>
                 <p className="text-xs text-foreground-secondary mt-0.5">
-                  Select one or more clients to receive this meal plan
+                  Leave unselected to create a standalone plan you can assign
+                  later
                 </p>
               </div>
               {selectedProfileIds.length > 0 && (

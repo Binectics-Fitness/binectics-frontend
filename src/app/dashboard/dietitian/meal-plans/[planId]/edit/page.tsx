@@ -141,7 +141,10 @@ function MealRowEditor({
         </div>
       </div>
 
-      <input type="hidden" {...register(`meals.${index}.order`, { valueAsNumber: true })} />
+      <input
+        type="hidden"
+        {...register(`meals.${index}.order`, { valueAsNumber: true })}
+      />
     </div>
   );
 }
@@ -186,15 +189,17 @@ function EditDietPlanContent() {
   });
 
   const loadPlan = useCallback(async () => {
-    if (!profileId || !planId) {
-      setError("Missing profile or plan ID");
+    if (!planId) {
+      setError("Missing plan ID");
       setLoadingPlan(false);
       return;
     }
     setError("");
     setLoadingPlan(true);
     try {
-      const res = await progressService.getDietPlanById(profileId, planId);
+      const res = profileId
+        ? await progressService.getDietPlanById(profileId, planId)
+        : await progressService.getStandaloneDietPlanById(planId);
       if (res.success && res.data) {
         setPlan(res.data);
         const p = res.data;
@@ -231,7 +236,7 @@ function EditDietPlanContent() {
   }, [isAuthorized, orgLoading, loadPlan]);
 
   const onSubmit = async (data: DietPlanFormData) => {
-    if (!profileId || !planId) return;
+    if (!planId) return;
     setSubmitting(true);
     setError("");
 
@@ -259,18 +264,20 @@ function EditDietPlanContent() {
         dietitian_notes: data.dietitian_notes || undefined,
       };
 
-      const res = orgId
-        ? await progressService.updateDietPlanInOrg(
-            orgId,
-            profileId,
-            planId,
-            payload,
-          )
-        : await progressService.updateDietPlan(profileId, planId, payload);
+      const res = profileId
+        ? orgId
+          ? await progressService.updateDietPlanInOrg(
+              orgId,
+              profileId,
+              planId,
+              payload,
+            )
+          : await progressService.updateDietPlan(profileId, planId, payload)
+        : await progressService.updateStandaloneDietPlan(planId, payload);
 
       if (res.success) {
         router.push(
-          `/dashboard/dietitian/meal-plans/${planId}?profileId=${profileId}`,
+          `/dashboard/dietitian/meal-plans/${planId}${profileId ? `?profileId=${profileId}` : ""}`,
         );
       } else {
         setError(res.message || "Failed to update diet plan");
@@ -309,15 +316,20 @@ function EditDietPlanContent() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = orgId
-        ? await progressService.replaceDietPlanDocumentInOrg(
-            orgId,
-            profileId,
-            planId,
-            formData,
-          )
-        : await progressService.replaceDietPlanDocument(
-            profileId,
+      const res = profileId
+        ? orgId
+          ? await progressService.replaceDietPlanDocumentInOrg(
+              orgId,
+              profileId,
+              planId,
+              formData,
+            )
+          : await progressService.replaceDietPlanDocument(
+              profileId,
+              planId,
+              formData,
+            )
+        : await progressService.replaceStandaloneDietPlanDocument(
             planId,
             formData,
           );

@@ -438,15 +438,16 @@ export interface DietPlan {
         first_name: string;
         last_name: string;
       };
-  client_profile_id: string;
-  client_id:
+  client_profile_id?: string | null;
+  client_id?:
     | string
     | {
         _id: string;
         first_name: string;
         last_name: string;
         email: string;
-      };
+      }
+    | null;
   title: string;
   description?: string;
   delivery_type: DietPlanDeliveryType;
@@ -1070,7 +1071,110 @@ export const progressService = {
     );
   },
 
-  // ==================== DIET PLANS — Organization ====================
+  // ==================== DIET PLANS — Standalone (no client) ====================
+
+  async createStandaloneDietPlan(
+    data: CreateDietPlanRequest,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.post<DietPlan>(`/progress/diet-plans`, data);
+  },
+
+  async createStandaloneDietPlanWithDocument(
+    formData: FormData,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.postFormData<DietPlan>(
+      `/progress/diet-plans`,
+      formData,
+    );
+  },
+
+  async getProviderDietPlans(limit?: number): Promise<ApiResponse<DietPlan[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<DietPlan[]>(
+      `/progress/provider/diet-plans${params}`,
+    );
+  },
+
+  async archiveStandaloneDietPlan(planId: string): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(`/progress/diet-plans/${planId}`);
+  },
+
+  async getStandaloneDietPlanById(
+    planId: string,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.get<DietPlan>(`/progress/diet-plans/${planId}`);
+  },
+
+  async getStandaloneDietPlanDocumentAccess(
+    planId: string,
+  ): Promise<ApiResponse<DietPlanDocumentAccess>> {
+    return await apiClient.get<DietPlanDocumentAccess>(
+      `/progress/diet-plans/${planId}/document-access`,
+    );
+  },
+
+  async updateStandaloneDietPlan(
+    planId: string,
+    data: UpdateDietPlanRequest,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.patch<DietPlan>(
+      `/progress/diet-plans/${planId}`,
+      data,
+    );
+  },
+
+  async replaceStandaloneDietPlanDocument(
+    planId: string,
+    formData: FormData,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.patchFormData<DietPlan>(
+      `/progress/diet-plans/${planId}/document`,
+      formData,
+    );
+  },
+
+  // ==================== DIET PLANS — Standalone, Organization ====================
+
+  async createStandaloneDietPlanInOrg(
+    organizationId: string,
+    data: CreateDietPlanRequest,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.post<DietPlan>(
+      `/progress/organizations/${organizationId}/diet-plans`,
+      data,
+    );
+  },
+
+  async createStandaloneDietPlanWithDocumentInOrg(
+    organizationId: string,
+    formData: FormData,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.postFormData<DietPlan>(
+      `/progress/organizations/${organizationId}/diet-plans`,
+      formData,
+    );
+  },
+
+  async getProviderDietPlansInOrg(
+    organizationId: string,
+    limit?: number,
+  ): Promise<ApiResponse<DietPlan[]>> {
+    const params = limit ? `?limit=${limit}` : "";
+    return await apiClient.get<DietPlan[]>(
+      `/progress/organizations/${organizationId}/provider/diet-plans${params}`,
+    );
+  },
+
+  async archiveStandaloneDietPlanInOrg(
+    organizationId: string,
+    planId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/progress/organizations/${organizationId}/diet-plans/${planId}`,
+    );
+  },
+
+  // ==================== DIET PLANS — Organization (client-assigned) ====================
 
   async createDietPlanInOrg(
     organizationId: string,

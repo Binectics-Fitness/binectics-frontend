@@ -31,10 +31,10 @@ function formatDate(iso: string) {
 }
 
 function clientFullName(plan: DietPlan): string {
-  if (typeof plan.client_id === "object") {
+  if (plan.client_id && typeof plan.client_id === "object") {
     return `${plan.client_id.first_name} ${plan.client_id.last_name}`;
   }
-  return "Client";
+  return "Unassigned";
 }
 
 function profileName(profile: ClientProfile): string {
@@ -105,33 +105,44 @@ function DietPlanDetailContent() {
   const orgId = currentOrg?._id;
 
   const loadPlan = useCallback(async () => {
-    if (!profileId || !planId) {
-      setError("Missing profile or plan ID");
+    if (!planId) {
+      setError("Missing plan ID");
       setLoadingPlan(false);
       return;
     }
     setError("");
     setLoadingPlan(true);
     try {
-      const res = orgId
-        ? await progressService.getDietPlansInOrg(orgId, profileId)
-        : await progressService.getDietPlans(profileId);
-      if (res.success && res.data) {
-        const found = res.data.find((p) => p._id === planId);
-        if (found) {
-          setPlan(found);
-        } else {
-          const single = orgId
-            ? null
-            : await progressService.getDietPlanById(profileId, planId);
-          if (single?.success && single.data) {
-            setPlan(single.data);
+      if (profileId) {
+        // Client-assigned plan — fetch via profile endpoint
+        const res = orgId
+          ? await progressService.getDietPlansInOrg(orgId, profileId)
+          : await progressService.getDietPlans(profileId);
+        if (res.success && res.data) {
+          const found = res.data.find((p) => p._id === planId);
+          if (found) {
+            setPlan(found);
           } else {
-            setError("Diet plan not found");
+            const single = orgId
+              ? null
+              : await progressService.getDietPlanById(profileId, planId);
+            if (single?.success && single.data) {
+              setPlan(single.data);
+            } else {
+              setError("Diet plan not found");
+            }
           }
+        } else {
+          setError(res.message || "Failed to load diet plan");
         }
       } else {
-        setError(res.message || "Failed to load diet plan");
+        // Standalone plan — fetch by plan ID directly
+        const res = await progressService.getStandaloneDietPlanById(planId);
+        if (res.success && res.data) {
+          setPlan(res.data);
+        } else {
+          setError(res.message || "Diet plan not found");
+        }
       }
     } catch {
       setError("Failed to load diet plan");
@@ -148,13 +159,15 @@ function DietPlanDetailContent() {
     if (!plan) return;
     setDownloadingDoc(true);
     try {
-      const res = orgId
-        ? await progressService.getDietPlanDocumentAccessInOrg(
-            orgId,
-            profileId,
-            plan._id,
-          )
-        : await progressService.getDietPlanDocumentAccess(profileId, plan._id);
+      const res = profileId
+        ? orgId
+          ? await progressService.getDietPlanDocumentAccessInOrg(
+              orgId,
+              profileId,
+              plan._id,
+            )
+          : await progressService.getDietPlanDocumentAccess(profileId, plan._id)
+        : await progressService.getStandaloneDietPlanDocumentAccess(plan._id);
       if (res.success && res.data?.download_url) {
         window.open(res.data.download_url, "_blank", "noopener,noreferrer");
       } else {
@@ -272,13 +285,20 @@ function DietPlanDetailContent() {
       confirmLabel: "Archive",
       onConfirm: async () => {
         try {
-          const res = orgId
-            ? await progressService.archiveDietPlanInOrg(
-                orgId,
-                profileId,
-                plan._id,
-              )
-            : await progressService.archiveDietPlan(profileId, plan._id);
+          const res = profileId
+            ? orgId
+              ? await progressService.archiveDietPlanInOrg(
+                  orgId,
+                  profileId,
+                  plan._id,
+                )
+              : await progressService.archiveDietPlan(profileId, plan._id)
+            : orgId
+              ? await progressService.archiveStandaloneDietPlanInOrg(
+                  orgId,
+                  plan._id,
+                )
+              : await progressService.archiveStandaloneDietPlan(plan._id);
           if (res.success) {
             router.push("/dashboard/dietitian/meal-plans");
           } else {
