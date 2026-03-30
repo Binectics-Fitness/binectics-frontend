@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import GymOwnerSidebar from '@/components/GymOwnerSidebar';
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 
 export default function EditPlanPage() {
   const params = useParams();
@@ -12,12 +12,17 @@ export default function EditPlanPage() {
   // Mock existing plan data
   const existingPlan = {
     id: planId,
-    name: 'Basic Monthly',
-    type: 'SUBSCRIPTION',
+    name: "Basic Monthly",
+    type: "SUBSCRIPTION",
     price: 49,
     duration: 30,
-    description: 'Perfect for getting started with your fitness journey',
-    features: ['Unlimited gym access', '24/7 facility access', 'Free WiFi', 'Locker access'],
+    description: "Perfect for getting started with your fitness journey",
+    features: [
+      "Unlimited gym access",
+      "24/7 facility access",
+      "Free WiFi",
+      "Locker access",
+    ],
   };
 
   const [formData, setFormData] = useState({
@@ -29,7 +34,7 @@ export default function EditPlanPage() {
     features: existingPlan.features,
   });
 
-  const [newFeature, setNewFeature] = useState('');
+  const [newFeature, setNewFeature] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +52,7 @@ export default function EditPlanPage() {
         ...formData,
         features: [...formData.features, newFeature.trim()],
       });
-      setNewFeature('');
+      setNewFeature("");
     }
   };
 
@@ -67,18 +72,35 @@ export default function EditPlanPage() {
             onClick={() => router.back()}
             className="text-accent-blue-500 hover:text-accent-blue-700 font-medium mb-4 flex items-center gap-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back to Plan
           </button>
 
-          <h1 className="text-3xl font-black text-foreground mb-8">Edit Plan</h1>
+          <h1 className="text-3xl font-black text-foreground mb-8">
+            Edit Plan
+          </h1>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-[var(--shadow-card)] p-8">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white rounded-xl shadow-[var(--shadow-card)] p-8"
+          >
             {/* Basic Information */}
             <div className="mb-8">
-              <h2 className="text-xl font-bold text-foreground mb-4">Basic Information</h2>
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Basic Information
+              </h2>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
@@ -87,7 +109,9 @@ export default function EditPlanPage() {
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="e.g., Basic Monthly"
                     required
@@ -100,7 +124,9 @@ export default function EditPlanPage() {
                   </label>
                   <select
                     value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, type: e.target.value })
+                    }
                     className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     required
                   >
@@ -116,7 +142,9 @@ export default function EditPlanPage() {
                   <input
                     type="number"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                     className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="49"
                     min="0"
@@ -132,7 +160,9 @@ export default function EditPlanPage() {
                   <input
                     type="number"
                     value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, duration: e.target.value })
+                    }
                     className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="30"
                     min="1"
@@ -146,7 +176,9 @@ export default function EditPlanPage() {
                   </label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:border-accent-blue-500 focus:outline-none"
                     placeholder="Describe what this plan includes..."
                     rows={4}
@@ -157,7 +189,9 @@ export default function EditPlanPage() {
 
             {/* Plan Features */}
             <div className="mb-8">
-              <h2 className="text-xl font-bold text-foreground mb-4">Plan Features</h2>
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Plan Features
+              </h2>
 
               <div className="flex gap-3 mb-4">
                 <input
@@ -165,7 +199,7 @@ export default function EditPlanPage() {
                   value={newFeature}
                   onChange={(e) => setNewFeature(e.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       e.preventDefault();
                       addFeature();
                     }
@@ -207,7 +241,12 @@ export default function EditPlanPage() {
                       onClick={() => removeFeature(index)}
                       className="text-red-500 hover:text-red-700"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -222,7 +261,8 @@ export default function EditPlanPage() {
 
               {formData.features.length === 0 && (
                 <p className="text-foreground/60 text-center py-8">
-                  No features added yet. Add features to describe what this plan includes.
+                  No features added yet. Add features to describe what this plan
+                  includes.
                 </p>
               )}
             </div>

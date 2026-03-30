@@ -1031,7 +1031,7 @@ export default function ProgressPage() {
           <form onSubmit={handleLogWeight} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium text-foreground">
-                Weight (kg) *
+                Weight (kg) <span className="text-red-500">*</span>
               </span>
               <input
                 name="weight_kg"
@@ -1201,7 +1201,7 @@ export default function ProgressPage() {
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
                 <span className="text-sm font-medium text-foreground">
-                  Duration (min) *
+                  Duration (min) <span className="text-red-500">*</span>
                 </span>
                 <input
                   name="duration_minutes"

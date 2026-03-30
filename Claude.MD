@@ -9,6 +9,16 @@
 - Avoid inline string unions and raw string comparisons when an enum exists
 - When adding a new API field with constrained values, create or extend a shared enum first
 
+## Searchable Dropdown Rule
+
+**All `<select>` dropdowns must be replaced with the `SearchableSelect` component (`@/components/SearchableSelect`).**
+
+- Never use native `<select>` elements — they are not searchable and provide poor UX for long lists
+- Use `SearchableSelect` for all dropdown fields (country, currency, role selectors, etc.)
+- `SearchableSelect` accepts `{ label: string; value: string }[]` options, a `value`, and an `onChange` callback
+- For fields managed by `react-hook-form`, use `setValue()` inside `onChange` instead of `{...register()}`
+- Country should always appear before City in form field ordering
+
 ## 🚫 ABSOLUTE RULE: FRONTEND-ONLY PROJECT - NO EXCEPTIONS
 
 **STOP: THIS IS A FRONTEND-ONLY PROJECT. BACKEND CODE WILL BE REJECTED.**

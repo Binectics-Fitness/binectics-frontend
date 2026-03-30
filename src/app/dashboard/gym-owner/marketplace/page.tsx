@@ -8,8 +8,10 @@ import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import TagInput from "@/components/TagInput";
+import SearchableSelect from "@/components/SearchableSelect";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { utilityService, type PlatformConfig } from "@/lib/api/utility";
+import type { CountryItem } from "@/lib/api/utility";
 import type {
   MarketplaceListing,
   MarketplaceListingDocument,
@@ -119,6 +121,7 @@ export default function OrgMarketplaceListingPage() {
   const [platformConfig, setPlatformConfig] = useState<PlatformConfig | null>(
     null,
   );
+  const [countries, setCountries] = useState<CountryItem[]>([]);
 
   const orgId = currentOrg?._id;
   const galleryPhotos =
@@ -217,6 +220,11 @@ export default function OrgMarketplaceListingPage() {
     utilityService.getPlatformConfig().then((res) => {
       if (res.success && res.data) {
         setPlatformConfig(res.data);
+      }
+    });
+    utilityService.getCountries().then((res) => {
+      if (res.success && res.data) {
+        setCountries(res.data);
       }
     });
   }, []);
@@ -761,6 +769,7 @@ export default function OrgMarketplaceListingPage() {
                 setValue={setValue}
                 platformConfig={platformConfig}
                 activeCurrencies={activeCurrencies}
+                countries={countries}
               />
               <div className="flex gap-3 pt-2">
                 <button
@@ -1160,6 +1169,7 @@ export default function OrgMarketplaceListingPage() {
                 setValue={setValue}
                 platformConfig={platformConfig}
                 activeCurrencies={activeCurrencies}
+                countries={countries}
               />
               <div className="flex gap-3 pt-2">
                 <button
@@ -1221,6 +1231,7 @@ function FormFields({
   setValue,
   platformConfig,
   activeCurrencies,
+  countries,
 }: {
   register: UseFormRegister<OrgMarketplaceListingFormData>;
   errors: FieldErrors<OrgMarketplaceListingFormData>;
@@ -1233,12 +1244,13 @@ function FormFields({
     symbol: string;
     is_active: boolean;
   }[];
+  countries: CountryItem[];
 }) {
   return (
     <>
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
-          Headline *
+          Headline <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -1254,7 +1266,7 @@ function FormFields({
 
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
-          Bio *
+          Bio <span className="text-red-500">*</span>
         </label>
         <textarea
           {...register("bio")}
@@ -1311,6 +1323,18 @@ function FormFields({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
+            Country
+          </label>
+          <SearchableSelect
+            value={formData.countryCode ?? ""}
+            onChange={(val) => setValue("countryCode", val, { shouldValidate: true })}
+            options={countries.map((c) => ({ label: c.name, value: c.code }))}
+            placeholder="Select country"
+            loading={countries.length === 0}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-1.5 block">
             City
           </label>
           <input
@@ -1324,18 +1348,6 @@ function FormFields({
             you can create separate listings for each location.
           </p>
         </div>
-        <div>
-          <label className="text-sm font-medium text-foreground mb-1.5 block">
-            Country Code
-          </label>
-          <input
-            type="text"
-            {...register("countryCode")}
-            maxLength={10}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-            placeholder="GB"
-          />
-        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1343,20 +1355,19 @@ function FormFields({
           <label className="text-sm font-medium text-foreground mb-1.5 block">
             Currency
           </label>
-          <select
-            {...register("currency")}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
-          >
-            {activeCurrencies.length > 0 ? (
-              activeCurrencies.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code} – {c.name} ({c.symbol})
-                </option>
-              ))
-            ) : (
-              <option value="USD">USD – US Dollar ($)</option>
-            )}
-          </select>
+          <SearchableSelect
+            value={formData.currency}
+            onChange={(val) => setValue("currency", val, { shouldValidate: true })}
+            options={
+              activeCurrencies.length > 0
+                ? activeCurrencies.map((c) => ({
+                    label: `${c.code} – ${c.name} (${c.symbol})`,
+                    value: c.code,
+                  }))
+                : [{ label: "USD – US Dollar ($)", value: "USD" }]
+            }
+            placeholder="Select currency"
+          />
         </div>
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">

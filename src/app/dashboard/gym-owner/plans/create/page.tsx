@@ -190,7 +190,7 @@ export default function CreatePlanPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">
-                    Duration (days) *
+                    Duration (days) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -228,7 +228,7 @@ export default function CreatePlanPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">
-                    Currency *
+                    Currency <span className="text-red-500">*</span>
                   </label>
                   <select
                     {...register("currency")}

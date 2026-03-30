@@ -21,6 +21,7 @@ import type {
   UseFormSetValue,
 } from "react-hook-form";
 import TagInput from "@/components/TagInput";
+import SearchableSelect from "@/components/SearchableSelect";
 import {
   TRAINER_SPECIALIZATIONS,
   DIETITIAN_SPECIALIZATIONS,
@@ -481,16 +482,25 @@ function ListingForm({
   countries,
 }: ListingFormProps) {
   const splitCommaLocal = (s: string) =>
-    s.split(",").map((x) => x.trim()).filter(Boolean);
+    s
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
 
   const specialtySuggestions =
     formData.accountType === "dietitian"
       ? [...DIETITIAN_SPECIALIZATIONS]
       : [...TRAINER_SPECIALIZATIONS];
 
-  const specialtiesTags = formData.specialties ? splitCommaLocal(formData.specialties) : [];
-  const certificationsTags = formData.certifications ? splitCommaLocal(formData.certifications) : [];
-  const languagesTags = formData.languages ? splitCommaLocal(formData.languages) : [];
+  const specialtiesTags = formData.specialties
+    ? splitCommaLocal(formData.specialties)
+    : [];
+  const certificationsTags = formData.certifications
+    ? splitCommaLocal(formData.certifications)
+    : [];
+  const languagesTags = formData.languages
+    ? splitCommaLocal(formData.languages)
+    : [];
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -520,7 +530,7 @@ function ListingForm({
 
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
-          Headline *
+          Headline <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -536,7 +546,7 @@ function ListingForm({
 
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
-          Bio *
+          Bio <span className="text-red-500">*</span>
         </label>
         <textarea
           {...register("bio")}
@@ -557,7 +567,9 @@ function ListingForm({
           </label>
           <TagInput
             value={specialtiesTags}
-            onChange={(tags) => setValue("specialties", tags.join(", "), { shouldValidate: true })}
+            onChange={(tags) =>
+              setValue("specialties", tags.join(", "), { shouldValidate: true })
+            }
             suggestions={specialtySuggestions}
             placeholder="Type or select specialties…"
           />
@@ -568,7 +580,11 @@ function ListingForm({
           </label>
           <TagInput
             value={certificationsTags}
-            onChange={(tags) => setValue("certifications", tags.join(", "), { shouldValidate: true })}
+            onChange={(tags) =>
+              setValue("certifications", tags.join(", "), {
+                shouldValidate: true,
+              })
+            }
             suggestions={[...FITNESS_CERTIFICATIONS]}
             placeholder="Type or select certifications…"
           />
@@ -581,13 +597,27 @@ function ListingForm({
         </label>
         <TagInput
           value={languagesTags}
-          onChange={(tags) => setValue("languages", tags.join(", "), { shouldValidate: true })}
+          onChange={(tags) =>
+            setValue("languages", tags.join(", "), { shouldValidate: true })
+          }
           suggestions={[...COMMON_LANGUAGES]}
           placeholder="Type or select languages…"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium text-foreground mb-1.5 block">
+            Country
+          </label>
+          <SearchableSelect
+            value={formData.countryCode ?? ""}
+            onChange={(val) => setValue("countryCode", val, { shouldValidate: true })}
+            options={countries.map((c) => ({ label: c.name, value: c.code }))}
+            placeholder="Select country"
+            loading={countries.length === 0}
+          />
+        </div>
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
             City
@@ -599,22 +629,6 @@ function ListingForm({
             placeholder="London"
           />
         </div>
-        <div>
-          <label className="text-sm font-medium text-foreground mb-1.5 block">
-            Country
-          </label>
-          <select
-            {...register("countryCode")}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
-          >
-            <option value="">Select country</option>
-            {countries.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -622,17 +636,19 @@ function ListingForm({
           <label className="text-sm font-medium text-foreground mb-1.5 block">
             Currency
           </label>
-          <select
-            {...register("currency")}
-            className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
-          >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="NGN">NGN</option>
-            <option value="CAD">CAD</option>
-            <option value="AUD">AUD</option>
-          </select>
+          <SearchableSelect
+            value={formData.currency}
+            onChange={(val) => setValue("currency", val, { shouldValidate: true })}
+            options={[
+              { label: "USD – US Dollar", value: "USD" },
+              { label: "EUR – Euro", value: "EUR" },
+              { label: "GBP – British Pound", value: "GBP" },
+              { label: "NGN – Nigerian Naira", value: "NGN" },
+              { label: "CAD – Canadian Dollar", value: "CAD" },
+              { label: "AUD – Australian Dollar", value: "AUD" },
+            ]}
+            placeholder="Select currency"
+          />
         </div>
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">
