@@ -214,6 +214,7 @@ function CreateDietPlanContent() {
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<DietPlanFormData>({
     resolver: zodResolver(dietPlanSchema),
@@ -232,6 +233,13 @@ function CreateDietPlanContent() {
   });
 
   const deliveryType = watch("delivery_type");
+
+  // Clear meals when switching to DOCUMENT so hidden entries don't block validation
+  useEffect(() => {
+    if (deliveryType === DietPlanDeliveryType.DOCUMENT) {
+      setValue("meals", []);
+    }
+  }, [deliveryType, setValue]);
 
   const loadProfiles = useCallback(async () => {
     setLoadingProfiles(true);

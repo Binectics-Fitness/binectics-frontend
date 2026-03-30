@@ -74,7 +74,7 @@ export type DietMealFormData = z.infer<typeof dietMealSchema>;
 
 // ─── Create/Edit Diet Plan (platform) ───────────────────────────
 
-const dietPlanBaseSchema = z.object({
+export const dietPlanSchema = z.object({
   title: z.string().min(1, "Title is required").max(200).trim(),
   description: z.string().max(5000).optional(),
   delivery_type: z.string().min(1, "Delivery type is required"),
@@ -82,17 +82,4 @@ const dietPlanBaseSchema = z.object({
   dietitian_notes: z.string().max(3000).optional(),
 });
 
-/**
- * When delivery_type is "document" we strip the meals array before validation
- * so hidden/stale meal entries don't block form submission.
- */
-export const dietPlanSchema = z.preprocess((raw) => {
-  const obj = raw as Record<string, unknown>;
-  if (obj?.delivery_type === "document") {
-    const { meals: _meals, ...rest } = obj;
-    return rest;
-  }
-  return raw;
-}, dietPlanBaseSchema);
-
-export type DietPlanFormData = z.infer<typeof dietPlanBaseSchema>;
+export type DietPlanFormData = z.infer<typeof dietPlanSchema>;
