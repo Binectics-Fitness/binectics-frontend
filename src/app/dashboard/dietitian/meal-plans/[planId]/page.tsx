@@ -208,9 +208,7 @@ function DietPlanDetailContent() {
         if (viewUrl) {
           setPreviewViewUrl(viewUrl);
           setPreviewDownloadUrl(res.data.download_url || "");
-          setPreviewFileName(
-            plan.document_file_name || "Uploaded document",
-          );
+          setPreviewFileName(plan.document_file_name || "Uploaded document");
           setPreviewOpen(true);
         } else {
           setError("No document URL available");

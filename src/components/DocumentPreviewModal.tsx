@@ -36,6 +36,42 @@ export default function DocumentPreviewModal({
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [blobError, setBlobError] = useState(false);
+
+  // Fetch document as blob to bypass Content-Disposition: attachment headers
+  useEffect(() => {
+    if (!open || !viewUrl) return;
+    let revoked = false;
+    setBlobUrl(null);
+    setBlobError(false);
+
+    fetch(viewUrl)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch document");
+        return res.blob();
+      })
+      .then((blob) => {
+        if (revoked) return;
+        const url = URL.createObjectURL(blob);
+        setBlobUrl(url);
+      })
+      .catch(() => {
+        if (!revoked) setBlobError(true);
+      });
+
+    return () => {
+      revoked = true;
+    };
+  }, [open, viewUrl]);
+
+  // Revoke blob URL on close
+  useEffect(() => {
+    if (!open && blobUrl) {
+      URL.revokeObjectURL(blobUrl);
+      setBlobUrl(null);
+    }
+  }, [open, blobUrl]);
 
   useEffect(() => {
     if (open) {
@@ -160,7 +196,7 @@ export default function DocumentPreviewModal({
         <div className="flex-1 relative">
           {canPreview ? (
             <>
-              {iframeLoading && (
+              {(iframeLoading || !blobUrl) && !blobError && (
                 <div className="absolute inset-0 flex items-center justify-center bg-neutral-100">
                   <div className="flex flex-col items-center gap-3">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue-200 border-t-accent-blue-500" />
@@ -170,12 +206,32 @@ export default function DocumentPreviewModal({
                   </div>
                 </div>
               )}
-              <iframe
-                src={viewUrl}
-                className="h-full w-full border-0"
-                title={`Preview: ${fileName}`}
-                onLoad={() => setIframeLoading(false)}
-              />
+              {blobError ? (
+                <div className="flex h-full items-center justify-center bg-neutral-50">
+                  <div className="text-center px-6 max-w-md">
+                    <p className="text-sm text-foreground-secondary mb-4">
+                      Unable to load preview.
+                    </p>
+                    {(downloadUrl || viewUrl) && (
+                      <a
+                        href={downloadUrl || viewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent-blue-500 px-5 text-sm font-semibold text-white hover:bg-accent-blue-600"
+                      >
+                        Download instead
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ) : blobUrl ? (
+                <iframe
+                  src={blobUrl}
+                  className="h-full w-full border-0"
+                  title={`Preview: ${fileName}`}
+                  onLoad={() => setIframeLoading(false)}
+                />
+              ) : null}
             </>
           ) : (
             <div className="flex h-full items-center justify-center bg-neutral-50">
