@@ -203,13 +203,18 @@ function DietPlanDetailContent() {
             )
           : await progressService.getDietPlanDocumentAccess(profileId, plan._id)
         : await progressService.getStandaloneDietPlanDocumentAccess(plan._id);
-      if (res.success && res.data?.view_url) {
-        setPreviewViewUrl(res.data.view_url);
-        setPreviewDownloadUrl(res.data.download_url || "");
-        setPreviewFileName(
-          plan.document_file_name || "Uploaded document",
-        );
-        setPreviewOpen(true);
+      if (res.success && res.data) {
+        const viewUrl = res.data.view_url || res.data.download_url;
+        if (viewUrl) {
+          setPreviewViewUrl(viewUrl);
+          setPreviewDownloadUrl(res.data.download_url || "");
+          setPreviewFileName(
+            plan.document_file_name || "Uploaded document",
+          );
+          setPreviewOpen(true);
+        } else {
+          setError("No document URL available");
+        }
       } else {
         setError(res.message || "Failed to get document preview");
       }

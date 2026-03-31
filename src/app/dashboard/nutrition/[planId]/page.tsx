@@ -94,11 +94,16 @@ export default function UserDietPlanDetailPage() {
     setError("");
     try {
       const res = await progressService.getMyDietPlanDocumentAccess(planId);
-      if (res.success && res.data?.view_url) {
-        setPreviewViewUrl(res.data.view_url);
-        setPreviewDownloadUrl(res.data.download_url || "");
-        setPreviewFileName(plan?.document_file_name || "Diet Plan Document");
-        setPreviewOpen(true);
+      if (res.success && res.data) {
+        const viewUrl = res.data.view_url || res.data.download_url;
+        if (viewUrl) {
+          setPreviewViewUrl(viewUrl);
+          setPreviewDownloadUrl(res.data.download_url || "");
+          setPreviewFileName(plan?.document_file_name || "Diet Plan Document");
+          setPreviewOpen(true);
+        } else {
+          setError("No document URL available");
+        }
       } else {
         setError(res.message || "Failed to load document preview");
       }
