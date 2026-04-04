@@ -188,17 +188,17 @@ export default function AdminProvidersPage() {
 
       <div className="flex-1 md:ml-64">
         <header className="bg-white border-b border-neutral-200">
-          <div className="px-6 py-6">
-            <h1 className="text-3xl font-black text-foreground">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground">
               Gym Moderation
             </h1>
-            <p className="mt-1 text-foreground/60">
+            <p className="mt-1 text-sm sm:text-base text-foreground/60">
               Manage suspension and verification badges for marketplace gyms.
             </p>
           </div>
         </header>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6 md:p-8">
           <div className="bg-white p-4 shadow-[var(--shadow-card)] mb-6">
             <label className="block text-sm font-medium text-foreground/70 mb-2">
               Search gyms
@@ -214,11 +214,11 @@ export default function AdminProvidersPage() {
 
           <div className="bg-white shadow-[var(--shadow-card)] overflow-hidden">
             {isLoading ? (
-              <div className="p-6 sm:p-8 text-center text-foreground/60">
+              <div className="p-4 sm:p-6 md:p-8 text-center text-foreground/60">
                 Loading gym listings...
               </div>
             ) : filteredGyms.length === 0 ? (
-              <div className="p-6 sm:p-8 text-center text-foreground/60">
+              <div className="p-4 sm:p-6 md:p-8 text-center text-foreground/60">
                 No gyms found.
               </div>
             ) : (
@@ -516,7 +516,7 @@ export default function AdminProvidersPage() {
           </div>
 
           {selectedListing && (
-            <div className="mt-6 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
+            <div className="mt-6 rounded-2xl bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-foreground">

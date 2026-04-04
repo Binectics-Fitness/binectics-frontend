@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
+import SearchableSelect from "@/components/SearchableSelect";
 import { UserRole } from "@/lib/types";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { showAlert } from "@/lib/ui/dialogs";
@@ -190,19 +191,18 @@ export default function AdminUsersPage() {
                 <label className="block text-sm font-medium text-foreground/70 mb-2">
                   Filter by Role
                 </label>
-                <select
+                <SearchableSelect
                   value={roleFilter}
-                  onChange={(e) =>
-                    setRoleFilter(e.target.value as "all" | UserRole)
-                  }
-                  className="w-full px-4 py-3 border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  <option value="all">All Roles</option>
-                  <option value={UserRole.USER}>Users</option>
-                  <option value={UserRole.GYM_OWNER}>Gym Owners</option>
-                  <option value={UserRole.TRAINER}>Trainers</option>
-                  <option value={UserRole.DIETITIAN}>Dietitians</option>
-                </select>
+                  onChange={(val) => setRoleFilter(val as "all" | UserRole)}
+                  placeholder="All Roles"
+                  options={[
+                    { label: "All Roles", value: "all" },
+                    { label: "Users", value: UserRole.USER },
+                    { label: "Gym Owners", value: UserRole.GYM_OWNER },
+                    { label: "Trainers", value: UserRole.TRAINER },
+                    { label: "Dietitians", value: UserRole.DIETITIAN },
+                  ]}
+                />
               </div>
             </div>
           </div>

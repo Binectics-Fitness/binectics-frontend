@@ -163,7 +163,7 @@ export default function AdminRevenuePage() {
         <div className="p-4 sm:p-6 md:p-8">
           {/* Revenue Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Total Revenue (MTD)
               </p>
@@ -174,7 +174,7 @@ export default function AdminRevenuePage() {
                 ↑ 23.8% from last month
               </p>
             </div>
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Platform Fees Collected
               </p>
@@ -183,7 +183,7 @@ export default function AdminRevenuePage() {
               </p>
               <p className="text-sm text-foreground/60 mt-2">10% commission</p>
             </div>
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Pending Payouts
               </p>
@@ -194,7 +194,7 @@ export default function AdminRevenuePage() {
                 Due in next 7 days
               </p>
             </div>
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-medium text-foreground/60">
                 Failed Transactions
               </p>
@@ -368,7 +368,7 @@ export default function AdminRevenuePage() {
 
             {/* Payout Queue */}
             <div className="lg:col-span-1">
-              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+              <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-xl font-bold text-foreground mb-6">
                   Payout Queue
                 </h2>
@@ -418,8 +418,8 @@ export default function AdminRevenuePage() {
           </div>
 
           {/* Payment Methods Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-foreground/60">
                   Stripe Transactions
@@ -444,7 +444,7 @@ export default function AdminRevenuePage() {
               <p className="text-sm text-foreground/60 mt-1">80.3% of total</p>
             </div>
 
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-foreground/60">
                   PayPal Transactions
@@ -469,7 +469,7 @@ export default function AdminRevenuePage() {
               <p className="text-sm text-foreground/60 mt-1">19.7% of total</p>
             </div>
 
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-foreground/60">
                   Avg. Transaction Value
