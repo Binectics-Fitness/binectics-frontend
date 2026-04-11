@@ -86,27 +86,24 @@ export default function NotificationsPage() {
     }
   }, [authLoading, user, router]);
 
-  const fetchNotifications = useCallback(
-    async (p: number, tab: FilterTab) => {
-      setIsLoading(true);
-      try {
-        const res = await notificationsService.getNotifications({
-          page: p,
-          limit: 20,
-          ...(tab === "unread" ? { is_read: false } : {}),
-        });
-        if (res.success && res.data) {
-          setNotifications(res.data.notifications);
-          setPagination(res.data.pagination);
-        }
-      } catch {
-        // fail silently
-      } finally {
-        setIsLoading(false);
+  const fetchNotifications = useCallback(async (p: number, tab: FilterTab) => {
+    setIsLoading(true);
+    try {
+      const res = await notificationsService.getNotifications({
+        page: p,
+        limit: 20,
+        ...(tab === "unread" ? { is_read: false } : {}),
+      });
+      if (res.success && res.data) {
+        setNotifications(res.data.notifications);
+        setPagination(res.data.pagination);
       }
-    },
-    [],
-  );
+    } catch {
+      // fail silently
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (authLoading || !isAuthorized) return;
@@ -118,7 +115,11 @@ export default function NotificationsPage() {
       const res = await notificationsService.markAllAsRead();
       if (res.success) {
         setNotifications((prev) =>
-          prev.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() })),
+          prev.map((n) => ({
+            ...n,
+            isRead: true,
+            readAt: new Date().toISOString(),
+          })),
         );
       }
     } catch {

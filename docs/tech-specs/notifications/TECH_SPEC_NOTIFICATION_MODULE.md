@@ -317,38 +317,38 @@ const handleClick = async (notification: Notification) => {
 
 The backend generates these `actionUrl` values. The web client uses them as-is:
 
-| NotificationType               | `actionUrl` Pattern                                         |
-| ------------------------------ | ----------------------------------------------------------- |
-| `BOOKING_CREATED`              | `/dashboard/consultations?bookingId={bookingId}`            |
-| `BOOKING_CONFIRMED`            | `/dashboard/consultations?bookingId={bookingId}`            |
-| `BOOKING_CANCELLED`            | `/dashboard/consultations?bookingId={bookingId}`            |
-| `BOOKING_RESCHEDULED`          | `/dashboard/consultations?bookingId={bookingId}`            |
-| `BOOKING_COMPLETED`            | `/dashboard/consultations?bookingId={bookingId}`            |
-| `BOOKING_REMINDER`             | `/dashboard/consultations?bookingId={bookingId}`            |
-| `CLIENT_INVITATION`            | `/dashboard/professionals?invitationId={invitationId}`      |
-| `CLIENT_REQUEST`               | `/dashboard/clients?requestId={requestId}`                  |
-| `CLIENT_ACCEPTED`              | `/dashboard/clients?clientId={clientId}`                    |
-| `CLIENT_DEPARTED`              | `/dashboard/clients?clientId={clientId}`                    |
-| `MARKETPLACE_REQUEST_RECEIVED` | `/dashboard/marketplace/requests?requestId={requestId}`     |
-| `MARKETPLACE_REQUEST_ACCEPTED` | `/dashboard/marketplace?requestId={requestId}`              |
-| `MARKETPLACE_REQUEST_REJECTED` | `/dashboard/marketplace?requestId={requestId}`              |
-| `MARKETPLACE_TRANSFER_REQUEST` | `/dashboard/marketplace/requests?requestId={requestId}`     |
-| `REVIEW_RECEIVED`              | `/dashboard/reviews?reviewId={reviewId}`                    |
-| `REVIEW_RESPONSE`              | `/dashboard/reviews?reviewId={reviewId}`                    |
-| `DIET_PLAN_ASSIGNED`           | `/dashboard/nutrition/{planId}`                             |
-| `WORKOUT_PLAN_ASSIGNED`        | `/dashboard/workout/{planId}`                               |
-| `JOURNAL_ENTRY_ADDED`          | `/dashboard/progress?journalId={journalId}`                 |
-| `TEAM_INVITATION`              | `/dashboard/teams?teamId={teamId}`                          |
-| `TEAM_MEMBER_JOINED`           | `/dashboard/teams/{teamId}`                                 |
-| `TEAM_MEMBER_REMOVED`          | `/dashboard/teams`                                          |
-| `SUBSCRIPTION_CREATED`         | `/dashboard/subscriptions?id={subscriptionId}`              |
-| `SUBSCRIPTION_EXPIRING`        | `/dashboard/subscriptions?id={subscriptionId}`              |
-| `SUBSCRIPTION_EXPIRED`         | `/dashboard/subscriptions?id={subscriptionId}`              |
-| `PAYMENT_RECEIVED`             | `/dashboard/billing?paymentId={paymentId}`                  |
-| `VERIFICATION_APPROVED`        | `/dashboard/settings`                                       |
-| `VERIFICATION_REJECTED`        | `/dashboard/verification`                                   |
-| `SYSTEM_ANNOUNCEMENT`          | `/dashboard/notifications`                                  |
-| `ACCOUNT_SUSPENDED`            | `/dashboard/settings`                                       |
+| NotificationType               | `actionUrl` Pattern                                     |
+| ------------------------------ | ------------------------------------------------------- |
+| `BOOKING_CREATED`              | `/dashboard/consultations?bookingId={bookingId}`        |
+| `BOOKING_CONFIRMED`            | `/dashboard/consultations?bookingId={bookingId}`        |
+| `BOOKING_CANCELLED`            | `/dashboard/consultations?bookingId={bookingId}`        |
+| `BOOKING_RESCHEDULED`          | `/dashboard/consultations?bookingId={bookingId}`        |
+| `BOOKING_COMPLETED`            | `/dashboard/consultations?bookingId={bookingId}`        |
+| `BOOKING_REMINDER`             | `/dashboard/consultations?bookingId={bookingId}`        |
+| `CLIENT_INVITATION`            | `/dashboard/professionals?invitationId={invitationId}`  |
+| `CLIENT_REQUEST`               | `/dashboard/clients?requestId={requestId}`              |
+| `CLIENT_ACCEPTED`              | `/dashboard/clients?clientId={clientId}`                |
+| `CLIENT_DEPARTED`              | `/dashboard/clients?clientId={clientId}`                |
+| `MARKETPLACE_REQUEST_RECEIVED` | `/dashboard/marketplace/requests?requestId={requestId}` |
+| `MARKETPLACE_REQUEST_ACCEPTED` | `/dashboard/marketplace?requestId={requestId}`          |
+| `MARKETPLACE_REQUEST_REJECTED` | `/dashboard/marketplace?requestId={requestId}`          |
+| `MARKETPLACE_TRANSFER_REQUEST` | `/dashboard/marketplace/requests?requestId={requestId}` |
+| `REVIEW_RECEIVED`              | `/dashboard/reviews?reviewId={reviewId}`                |
+| `REVIEW_RESPONSE`              | `/dashboard/reviews?reviewId={reviewId}`                |
+| `DIET_PLAN_ASSIGNED`           | `/dashboard/nutrition/{planId}`                         |
+| `WORKOUT_PLAN_ASSIGNED`        | `/dashboard/workout/{planId}`                           |
+| `JOURNAL_ENTRY_ADDED`          | `/dashboard/progress?journalId={journalId}`             |
+| `TEAM_INVITATION`              | `/dashboard/teams?teamId={teamId}`                      |
+| `TEAM_MEMBER_JOINED`           | `/dashboard/teams/{teamId}`                             |
+| `TEAM_MEMBER_REMOVED`          | `/dashboard/teams`                                      |
+| `SUBSCRIPTION_CREATED`         | `/dashboard/subscriptions?id={subscriptionId}`          |
+| `SUBSCRIPTION_EXPIRING`        | `/dashboard/subscriptions?id={subscriptionId}`          |
+| `SUBSCRIPTION_EXPIRED`         | `/dashboard/subscriptions?id={subscriptionId}`          |
+| `PAYMENT_RECEIVED`             | `/dashboard/billing?paymentId={paymentId}`              |
+| `VERIFICATION_APPROVED`        | `/dashboard/settings`                                   |
+| `VERIFICATION_REJECTED`        | `/dashboard/verification`                               |
+| `SYSTEM_ANNOUNCEMENT`          | `/dashboard/notifications`                              |
+| `ACCOUNT_SUSPENDED`            | `/dashboard/settings`                                   |
 
 ### 9.3 Email Links
 
@@ -383,7 +383,13 @@ The mobile app must configure deep linking in `app.json`:
         {
           "action": "VIEW",
           "autoVerify": true,
-          "data": [{ "scheme": "https", "host": "binectics.netlify.app", "pathPrefix": "/dashboard" }],
+          "data": [
+            {
+              "scheme": "https",
+              "host": "binectics.netlify.app",
+              "pathPrefix": "/dashboard"
+            }
+          ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
@@ -393,6 +399,7 @@ The mobile app must configure deep linking in `app.json`:
 ```
 
 The web domain must serve:
+
 - `/.well-known/apple-app-site-association` (iOS)
 - `/.well-known/assetlinks.json` (Android)
 

@@ -119,9 +119,7 @@ export const notificationsService = {
   },
 
   getPreferences(): Promise<ApiResponse<NotificationPreferences>> {
-    return apiClient.get<NotificationPreferences>(
-      "/notifications/preferences",
-    );
+    return apiClient.get<NotificationPreferences>("/notifications/preferences");
   },
 
   updatePreferences(

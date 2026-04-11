@@ -30,7 +30,7 @@ export default function AdminAnnouncementsPage() {
     try {
       const res = await apiClient.post<{ recipientCount: number }>(
         "/admin/announcements/broadcast",
-        { title: title.trim(), message: message.trim() }
+        { title: title.trim(), message: message.trim() },
       );
       const count = res.data?.recipientCount ?? 0;
       setResult({
