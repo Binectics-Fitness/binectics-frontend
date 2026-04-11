@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
@@ -9,6 +10,8 @@ import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
+import { queryKeys } from "@/lib/queries/keys";
 import { UserRole, MembershipPlanType } from "@/lib/types";
 import type { MarketplaceMembershipPlan } from "@/lib/types";
 
@@ -16,32 +19,20 @@ export default function TrainerPlansPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
+  const queryClient = useQueryClient();
 
-  const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const orgId = currentOrg?._id;
+  const { data: plans = [], isLoading: loadingData } = useOrgMembershipPlans(
+    orgId,
+    !!user && !isLoading && !orgLoading,
+  );
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const orgId = currentOrg?._id;
-
-  const refreshPlans = useCallback(async () => {
-    if (!orgId) {
-      setPlans([]);
-      setLoadingData(false);
-      return;
-    }
-    setError("");
-    setLoadingData(true);
-    const res = await marketplaceService.getOrgMembershipPlans(orgId);
-    if (res.success && res.data) setPlans(res.data);
-    else setError(res.message || "Failed to load plans");
-    setLoadingData(false);
-  }, [orgId]);
-
-  useEffect(() => {
-    if (isLoading || orgLoading || !user) return;
-    void refreshPlans();
-  }, [isLoading, orgLoading, user, refreshPlans]);
+  const invalidatePlans = () =>
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.marketplace.orgMembershipPlans(orgId ?? ""),
+    });
 
   const handleToggle = async (plan: MarketplaceMembershipPlan) => {
     if (!orgId) return;
@@ -50,7 +41,7 @@ export default function TrainerPlansPage() {
     const res = plan.is_active
       ? await marketplaceService.deactivateOrgMembershipPlan(orgId, plan._id)
       : await marketplaceService.activateOrgMembershipPlan(orgId, plan._id);
-    if (res.success) await refreshPlans();
+    if (res.success) await invalidatePlans();
     else setError(res.message || "Failed to update plan");
     setMutatingId(null);
   };
@@ -67,7 +58,7 @@ export default function TrainerPlansPage() {
           orgId,
           plan._id,
         );
-        if (res.success) await refreshPlans();
+        if (res.success) await invalidatePlans();
         else setError(res.message || "Failed to delete plan");
         setMutatingId(null);
       },

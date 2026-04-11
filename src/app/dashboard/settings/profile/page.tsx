@@ -5,8 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
-import { utilityService } from "@/lib/api/utility";
-import type { CountryItem } from "@/lib/api/utility";
+import { useCountries } from "@/lib/queries/utility";
 import { UserRole } from "@/lib/types";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -78,8 +77,7 @@ export default function ProfileSettingsPage() {
   );
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [countries, setCountries] = useState<CountryItem[]>([]);
-  const [countriesLoading, setCountriesLoading] = useState(true);
+  const { data: countries = [], isLoading: countriesLoading } = useCountries();
   const profileImagePreviewRef = useRef<string | null>(null);
 
   const displayedProfileImage = profileImagePreview ?? user?.profile_picture;
@@ -90,24 +88,6 @@ export default function ProfileSettingsPage() {
       profileImagePreviewRef.current = null;
     }
   };
-
-  useEffect(() => {
-    let mounted = true;
-    async function loadCountries() {
-      try {
-        const res = await utilityService.getCountries();
-        if (mounted && res.success && res.data) setCountries(res.data);
-      } catch {
-        // non-critical
-      } finally {
-        if (mounted) setCountriesLoading(false);
-      }
-    }
-    loadCountries();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     return () => {

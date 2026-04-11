@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { useMyListingRequests } from "@/lib/queries/marketplace";
+import { queryKeys } from "@/lib/queries/keys";
 import type { MarketplaceRequest, MarketplaceRequestStatus } from "@/lib/types";
 import { formatLocal } from "@/utils/format";
 
@@ -26,29 +29,19 @@ const STATUS_LABELS: Record<MarketplaceRequestStatus, string> = {
 export default function MarketplaceRequestsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const [requests, setRequests] = useState<MarketplaceRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: requests = [], isLoading } = useMyListingRequests(
+    !authLoading && !!user,
+  );
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [responseNote, setResponseNote] = useState("");
   const [actionError, setActionError] = useState("");
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    async function load() {
-      const res = await marketplaceService.getMyListingRequests();
-      if (res.success && res.data) {
-        setRequests(res.data);
-      }
-      setIsLoading(false);
-    }
-    load();
-  }, [authLoading, user, router]);
+  const invalidateRequests = () =>
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.marketplace.myListingRequests(),
+    });
 
   const handleAccept = async (requestId: string) => {
     setActionError("");
@@ -57,9 +50,7 @@ export default function MarketplaceRequestsPage() {
       responseNote || undefined,
     );
     if (res.success && res.data) {
-      setRequests((prev) =>
-        prev.map((r) => (r._id === requestId ? res.data! : r)),
-      );
+      await invalidateRequests();
       setRespondingId(null);
       setResponseNote("");
     } else {
@@ -74,11 +65,7 @@ export default function MarketplaceRequestsPage() {
       responseNote || undefined,
     );
     if (res.success) {
-      setRequests((prev) =>
-        prev.map((r) =>
-          r._id === requestId ? { ...r, status: "rejected" as const } : r,
-        ),
-      );
+      await invalidateRequests();
       setRespondingId(null);
       setResponseNote("");
     } else {

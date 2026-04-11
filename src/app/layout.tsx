@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import QueryProvider from "@/components/QueryProvider";
 import CookieConsent from "@/components/CookieConsent";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -55,12 +56,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased" suppressHydrationWarning>
-        <AuthProvider>
-          <OrganizationProvider>
-            <ConditionalLayout>{children}</ConditionalLayout>
-            <CookieConsent />
-          </OrganizationProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <OrganizationProvider>
+              <ConditionalLayout>{children}</ConditionalLayout>
+              <CookieConsent />
+            </OrganizationProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

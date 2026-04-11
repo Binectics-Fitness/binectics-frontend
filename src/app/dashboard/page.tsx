@@ -7,96 +7,37 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { checkinsService } from "@/lib/api/checkins";
-import { teamsService } from "@/lib/api/teams";
-import { progressService } from "@/lib/api/progress";
-import { type MyCheckInDashboardStats, UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/types";
+import { useMyCheckInStats } from "@/lib/queries/checkins";
+import { useMyOrganizations } from "@/lib/queries/teams";
+import { useMyJournalEntries } from "@/lib/queries/progress";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.USER);
   const [resolvingPerspective, setResolvingPerspective] = useState(true);
-  const [checkInStatus, setCheckInStatus] =
-    useState<MyCheckInDashboardStats | null>(null);
-  const [journalCount, setJournalCount] = useState<number | null>(null);
-  const [hasMoreJournals, setHasMoreJournals] = useState(false);
+
+  const readyToFetch = !isLoading && isAuthorized && !!user;
+  const { data: myOrgs } = useMyOrganizations(readyToFetch);
+  const { data: checkInStatus } = useMyCheckInStats(readyToFetch);
+  const { data: journalData } = useMyJournalEntries(20, readyToFetch);
+  const journalCount = journalData?.entries.length ?? null;
+  const hasMoreJournals = journalData?.next_cursor !== null;
 
   useEffect(() => {
-    let mounted = true;
+    if (isLoading || !isAuthorized || !user) return;
 
-    async function resolvePerspective() {
-      if (isLoading || !isAuthorized || !user) return;
+    // Wait for org query to resolve
+    if (myOrgs === undefined) return;
 
-      try {
-        const res = await teamsService.getMyOrganizations();
-        if (!mounted) return;
-
-        if (res.success && res.data) {
-          // Only org owners see the gym-owner dashboard
-          // Not all members with manage_organization permission
-          const isOwnerOfAnyOrg = res.data.some((org) => org.is_owner);
-          if (isOwnerOfAnyOrg) {
-            router.replace("/dashboard/gym-owner");
-            return;
-          }
-        }
-      } finally {
-        if (mounted) setResolvingPerspective(false);
-      }
+    const isOwnerOfAnyOrg = myOrgs.some((org) => org.is_owner);
+    if (isOwnerOfAnyOrg) {
+      router.replace("/dashboard/gym-owner");
+      return;
     }
-
-    resolvePerspective();
-
-    return () => {
-      mounted = false;
-    };
-  }, [isLoading, isAuthorized, user, router]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadMyCheckInStatus() {
-      if (isLoading || !isAuthorized || !user) return;
-      try {
-        const res = await checkinsService.getMyDashboardStats();
-        if (!mounted) return;
-        if (res.success && res.data) {
-          setCheckInStatus(res.data);
-        }
-      } catch {
-        if (mounted) setCheckInStatus(null);
-      }
-    }
-
-    loadMyCheckInStatus();
-    return () => {
-      mounted = false;
-    };
-  }, [isLoading, isAuthorized, user]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadJournalCount() {
-      if (isLoading || !isAuthorized || !user) return;
-      try {
-        const res = await progressService.getMyJournalEntries(20);
-        if (!mounted) return;
-        if (res.success && res.data) {
-          setJournalCount(res.data.entries.length);
-          setHasMoreJournals(res.data.next_cursor !== null);
-        }
-      } catch {
-        // non-critical — badge stays hidden
-      }
-    }
-
-    loadJournalCount();
-    return () => {
-      mounted = false;
-    };
-  }, [isLoading, isAuthorized, user]);
+    setResolvingPerspective(false);
+  }, [isLoading, isAuthorized, user, myOrgs, router]);
 
   if (isLoading || resolvingPerspective) return <DashboardLoading />;
   if (!isAuthorized) return null;

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import { marketplaceService } from "@/lib/api/marketplace";
-import { utilityService } from "@/lib/api/utility";
-import type { CountryItem } from "@/lib/api/utility";
+import { useMyListing } from "@/lib/queries/marketplace";
+import { useCountries } from "@/lib/queries/utility";
+import { queryKeys } from "@/lib/queries/keys";
 import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,11 +43,14 @@ const ACCOUNT_TYPE_OPTIONS: {
 export default function MyMarketplaceListingPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const [listing, setListing] = useState<MarketplaceListing | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasListing, setHasListing] = useState(false);
-  const [countries, setCountries] = useState<CountryItem[]>([]);
+  const { data: listing = null, isLoading: listingLoading } = useMyListing(
+    !authLoading && !!user,
+  );
+  const { data: countries = [] } = useCountries(!authLoading && !!user);
+  const isLoading = listingLoading;
+  const hasListing = !!listing;
 
   // Form state
   const [isEditing, setIsEditing] = useState(false);
@@ -98,32 +103,20 @@ export default function MyMarketplaceListingPage() {
     });
   };
 
+  const [formPopulated, setFormPopulated] = useState(false);
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      router.push("/login");
-      return;
+    if (listing && !formPopulated) {
+      populateForm(listing);
+      setFormPopulated(true);
     }
+  }, [listing, formPopulated]);
 
-    async function loadListing() {
-      const [listingRes, countriesRes] = await Promise.all([
-        marketplaceService.getMyListing(),
-        utilityService.getCountries(),
-      ]);
-      if (countriesRes.success && countriesRes.data) {
-        setCountries(countriesRes.data);
-      }
-      if (listingRes.success && listingRes.data) {
-        setListing(listingRes.data);
-        setHasListing(true);
-        populateForm(listingRes.data);
-      } else {
-        setHasListing(false);
-      }
-      setIsLoading(false);
-    }
-    loadListing();
-  }, [authLoading, user, router]);
+  const updateListingCache = (updated: MarketplaceListing) => {
+    queryClient.setQueryData(
+      queryKeys.marketplace.myListing(),
+      updated,
+    );
+  };
 
   const splitComma = (s: string) =>
     s
@@ -152,8 +145,7 @@ export default function MyMarketplaceListingPage() {
     });
 
     if (res.success && res.data) {
-      setListing(res.data);
-      setHasListing(true);
+      updateListingCache(res.data);
       populateForm(res.data);
       setIsEditing(false);
       setSuccessMessage("Listing created! You can now publish it.");
@@ -182,7 +174,7 @@ export default function MyMarketplaceListingPage() {
     });
 
     if (res.success && res.data) {
-      setListing(res.data);
+      updateListingCache(res.data);
       populateForm(res.data);
       setIsEditing(false);
       setSuccessMessage("Listing updated successfully.");
@@ -202,7 +194,7 @@ export default function MyMarketplaceListingPage() {
       : await marketplaceService.publishMyListing();
 
     if (res.success && res.data) {
-      setListing(res.data);
+      updateListingCache(res.data);
       setSuccessMessage(
         res.data.is_published
           ? "Listing published! It's now visible in the marketplace."

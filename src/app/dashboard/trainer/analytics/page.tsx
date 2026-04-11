@@ -1,90 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useDashboardStats, useClientProfiles } from "@/lib/queries/progress";
+import { useProviderBookings } from "@/lib/queries/consultations";
+import { useTargetAggregate } from "@/lib/queries/reviews";
+import { useOrgMembershipSubscriptions } from "@/lib/queries/marketplace";
 import { UserRole, MembershipSubscriptionStatus } from "@/lib/types";
-import type { MembershipSubscription } from "@/lib/types";
 import {
-  progressService,
-  type DashboardStats,
-  type ClientProfile,
-} from "@/lib/api/progress";
-import {
-  consultationsService,
   ConsultationBookingStatus,
-  type ConsultationBooking,
 } from "@/lib/api/consultations";
 import {
-  reviewsService,
   ReviewTargetType,
-  type ReviewAggregate,
 } from "@/lib/api/reviews";
-import { marketplaceService } from "@/lib/api/marketplace";
 
 export default function TrainerAnalyticsPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null,
+
+  const ready = !!user && !orgLoading;
+  const { data: dashboardStats = null, isLoading: loadingStats } =
+    useDashboardStats(ready);
+  const { data: clients = [], isLoading: loadingClients } = useClientProfiles(
+    currentOrg?._id,
+    ready,
   );
-  const [clients, setClients] = useState<ClientProfile[]>([]);
-  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
-  const [reviewAgg, setReviewAgg] = useState<ReviewAggregate | null>(null);
-  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>(
-    [],
-  );
-  const [loadingData, setLoadingData] = useState(true);
-
-  useEffect(() => {
-    if (!user || orgLoading) return;
-
-    const promises: Promise<void>[] = [];
-
-    promises.push(
-      progressService.getDashboardStats().then((res) => {
-        if (res.success && res.data) setDashboardStats(res.data);
-      }),
+  const { data: bookings = [], isLoading: loadingBookings } =
+    useProviderBookings({}, ready);
+  const { data: reviewAgg = null, isLoading: loadingReviews } =
+    useTargetAggregate(ReviewTargetType.TRAINER, user?.id ?? "", ready);
+  const { data: subscriptions = [], isLoading: loadingSubs } =
+    useOrgMembershipSubscriptions(
+      currentOrg?._id,
+      ready && !!currentOrg,
     );
 
-    const clientsPromise = currentOrg
-      ? progressService.getOrgClientProfiles(currentOrg._id)
-      : progressService.getMyClientProfiles();
-    promises.push(
-      clientsPromise.then((res) => {
-        if (res.success && res.data) setClients(res.data);
-      }),
-    );
-
-    promises.push(
-      consultationsService.getProviderBookings({}).then((res) => {
-        if (res.success && res.data) setBookings(res.data);
-      }),
-    );
-
-    promises.push(
-      reviewsService
-        .getTargetAggregate(ReviewTargetType.TRAINER, user.id)
-        .then((res) => {
-          if (res.success && res.data) setReviewAgg(res.data);
-        }),
-    );
-
-    if (currentOrg) {
-      promises.push(
-        marketplaceService
-          .getOrgMembershipSubscriptions(currentOrg._id)
-          .then((res) => {
-            if (res.success && res.data) setSubscriptions(res.data);
-          }),
-      );
-    }
-
-    Promise.all(promises).finally(() => setLoadingData(false));
-  }, [user, currentOrg, orgLoading]);
+  const loadingData =
+    loadingStats ||
+    loadingClients ||
+    loadingBookings ||
+    loadingReviews ||
+    loadingSubs;
 
   if (isLoading || orgLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;

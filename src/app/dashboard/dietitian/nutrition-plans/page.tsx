@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useClientProfiles, useMealFeedbacks } from "@/lib/queries/progress";
 import { UserRole } from "@/lib/types";
 import {
-  progressService,
   type ClientProfile,
   type MealFeedback,
   MealType,
@@ -34,40 +34,16 @@ const ratingColors: Record<string, string> = {
 export default function DietitianNutritionPlansPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const [clients, setClients] = useState<ClientProfile[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [meals, setMeals] = useState<MealFeedback[]>([]);
-  const [loadingClients, setLoadingClients] = useState(true);
-  const [loadingMeals, setLoadingMeals] = useState(false);
 
-  useEffect(() => {
-    if (!user || orgLoading) return;
+  const { data: allClients = [], isLoading: loadingClients } =
+    useClientProfiles(currentOrg?._id, !!user && !orgLoading);
+  const clients = allClients.filter((c) => c.is_active);
 
-    const promise = currentOrg
-      ? progressService.getOrgClientProfiles(currentOrg._id)
-      : progressService.getMyClientProfiles();
-
-    promise
-      .then((res) => {
-        if (res.success && res.data)
-          setClients(res.data.filter((c) => c.is_active));
-      })
-      .finally(() => setLoadingClients(false));
-  }, [user, currentOrg, orgLoading]);
-
-  useEffect(() => {
-    if (!selectedClientId) {
-      setMeals([]);
-      return;
-    }
-    setLoadingMeals(true);
-    progressService
-      .getMealFeedbacks(selectedClientId, 20)
-      .then((res) => {
-        if (res.success && res.data) setMeals(res.data);
-      })
-      .finally(() => setLoadingMeals(false));
-  }, [selectedClientId]);
+  const { data: meals = [], isLoading: loadingMeals } = useMealFeedbacks(
+    selectedClientId ?? "",
+    !!selectedClientId,
+  );
 
   if (isLoading || orgLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;

@@ -1,17 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { checkinsService } from "@/lib/api/checkins";
 import {
   CheckInHistoryPeriod,
   type CheckIn,
-  type MyCheckInDashboardStats,
   UserRole,
 } from "@/lib/types";
+import { useMyCheckInStats, useMyCheckInHistory } from "@/lib/queries/checkins";
 
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString(undefined, {
@@ -49,54 +48,17 @@ function getListingCity(checkIn: CheckIn): string {
 
 export default function MemberCheckInsPage() {
   const { isLoading, isAuthorized } = useRoleGuard(UserRole.USER);
-  const [stats, setStats] = useState<MyCheckInDashboardStats | null>(null);
-  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<
     "all" | "today" | "week" | "month"
   >("month");
 
-  useEffect(() => {
-    if (isLoading || !isAuthorized) return;
-    let mounted = true;
-    async function loadStats() {
-      try {
-        const res = await checkinsService.getMyDashboardStats();
-        if (mounted && res.success && res.data) {
-          setStats(res.data);
-        }
-      } catch {
-        // non-critical
-      }
-    }
-    void loadStats();
-    return () => {
-      mounted = false;
-    };
-  }, [isLoading, isAuthorized]);
-
-  const loadHistory = useCallback(async () => {
-    setHistoryLoading(true);
-    try {
-      const period =
-        selectedPeriod === "all"
-          ? undefined
-          : (selectedPeriod as CheckInHistoryPeriod);
-      const res = await checkinsService.getMyHistory(period);
-      if (res.success && res.data) {
-        setCheckIns(res.data);
-      }
-    } catch {
-      setCheckIns([]);
-    } finally {
-      setHistoryLoading(false);
-    }
-  }, [selectedPeriod]);
-
-  useEffect(() => {
-    if (isLoading || !isAuthorized) return;
-    window.setTimeout(() => void loadHistory(), 0);
-  }, [isLoading, isAuthorized, loadHistory]);
+  const { data: stats } = useMyCheckInStats(!isLoading && isAuthorized);
+  const { data: checkIns, isLoading: historyLoading } = useMyCheckInHistory(
+    selectedPeriod === "all"
+      ? undefined
+      : (selectedPeriod as CheckInHistoryPeriod),
+    !isLoading && isAuthorized,
+  );
 
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
@@ -203,7 +165,7 @@ export default function MemberCheckInsPage() {
                   />
                 ))}
               </div>
-            ) : checkIns.length === 0 ? (
+            ) : (checkIns ?? []).length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
@@ -229,7 +191,7 @@ export default function MemberCheckInsPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {checkIns.map((checkIn) => (
+                {(checkIns ?? []).map((checkIn) => (
                   <div
                     key={checkIn._id}
                     className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg"

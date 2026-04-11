@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/Button";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { useTargetAggregate, useTargetReviews } from "@/lib/queries/reviews";
+import { queryKeys } from "@/lib/queries/keys";
 import { UserRole } from "@/lib/types";
 import {
   reviewsService,
@@ -35,11 +38,8 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function TrainerReviewsPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [aggregate, setAggregate] = useState<ReviewAggregate | null>(null);
-  const [loadingData, setLoadingData] = useState(true);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [sort, setSort] = useState<
     "newest" | "oldest" | "rating_high" | "rating_low"
   >("newest");
@@ -47,34 +47,19 @@ export default function TrainerReviewsPage() {
   const [responseText, setResponseText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-
-    reviewsService
-      .getTargetAggregate(ReviewTargetType.TRAINER, user.id)
-      .then((res) => {
-        if (res.success && res.data) setAggregate(res.data);
-      });
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    setLoadingData(true);
-
-    reviewsService
-      .getTargetReviews(ReviewTargetType.TRAINER, user.id, {
-        page,
-        limit: 10,
-        sort,
-      })
-      .then((res) => {
-        if (res.success && res.data) {
-          setReviews(res.data.reviews);
-          setTotalPages(res.data.pagination.totalPages);
-        }
-      })
-      .finally(() => setLoadingData(false));
-  }, [user, page, sort]);
+  const { data: aggregate } = useTargetAggregate(
+    ReviewTargetType.TRAINER,
+    user?.id ?? "",
+    !!user,
+  );
+  const { data: reviewsData, isLoading: loadingData } = useTargetReviews(
+    ReviewTargetType.TRAINER,
+    user?.id ?? "",
+    { page, limit: 10, sort },
+    !!user,
+  );
+  const reviews = reviewsData?.reviews ?? [];
+  const totalPages = reviewsData?.pagination.totalPages ?? 1;
 
   const handleRespond = async (reviewId: string) => {
     if (!responseText.trim()) return;
@@ -83,10 +68,10 @@ export default function TrainerReviewsPage() {
       message: responseText.trim(),
     };
     const res = await reviewsService.createProviderResponse(reviewId, payload);
-    if (res.success && res.data) {
-      setReviews((prev) =>
-        prev.map((r) => (r.id === reviewId ? res.data! : r)),
-      );
+    if (res.success) {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.reviews.all,
+      });
       setRespondingTo(null);
       setResponseText("");
     }

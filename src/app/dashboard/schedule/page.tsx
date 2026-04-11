@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
 import {
-  consultationsService,
-  ConsultationBooking,
   ConsultationBookingStatus,
 } from "@/lib/api/consultations";
+import { useMyBookings } from "@/lib/queries/consultations";
 
 const statusColors: Record<string, string> = {
   [ConsultationBookingStatus.CONFIRMED]: "bg-green-100 text-green-700",
@@ -26,27 +25,12 @@ export default function Page() {
     isAuthorized,
   } = useRoleGuard(UserRole.USER);
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
-  const [upcoming, setUpcoming] = useState<ConsultationBooking[]>([]);
-  const [past, setPast] = useState<ConsultationBooking[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      try {
-        const [upRes, pastRes] = await Promise.all([
-          consultationsService.getMyBookings("upcoming"),
-          consultationsService.getMyBookings("past"),
-        ]);
-        if (upRes.success && upRes.data) setUpcoming(upRes.data);
-        if (pastRes.success && pastRes.data) setPast(pastRes.data);
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [user]);
+  const { data: upcoming = [], isLoading: upcomingLoading } = useMyBookings(
+    "upcoming",
+    !!user,
+  );
+  const { data: past = [] } = useMyBookings("past", !!user);
+  const loading = upcomingLoading;
 
   if (authLoading || !isAuthorized) return <DashboardLoading />;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DashboardSidebar from "@/components/DashboardSidebar";
@@ -10,7 +10,6 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/lib/types";
 import {
-  teamsService,
   type Organization,
   type CreateOrganizationRequest,
   AccountType,
@@ -19,6 +18,10 @@ import {
   createOrganizationSchema,
   type CreateOrganizationFormData,
 } from "@/lib/schemas/teams";
+import {
+  useMyOrganizations,
+  useCreateOrganization,
+} from "@/lib/queries/teams";
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   [AccountType.GYM_OWNER]: "Gym Owner",
@@ -50,9 +53,12 @@ export default function TeamPage() {
   const { isLoading: authLoading, isAuthenticated: isAuthorized } =
     useRequireAuth();
   const { user } = useAuth();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: organizations = [],
+    isLoading: loading,
+    error: queryError,
+  } = useMyOrganizations(!authLoading && isAuthorized);
+  const error = queryError ? "Failed to load organizations." : null;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const {
     register: registerCreate,
@@ -63,7 +69,7 @@ export default function TeamPage() {
     resolver: zodResolver(createOrganizationSchema),
     defaultValues: { name: "", description: "" },
   });
-  const [creating, setCreating] = useState(false);
+  const createOrgMutation = useCreateOrganization();
   const [createError, setCreateError] = useState<string | null>(null);
 
   const canCreateOrganization =
@@ -72,34 +78,12 @@ export default function TeamPage() {
     user?.role === UserRole.ADMIN ||
     organizations.some((org) => org.is_owner === true);
 
-  useEffect(() => {
-    if (!authLoading && isAuthorized) fetchOrganizations();
-  }, [authLoading, isAuthorized]);
-
-  async function fetchOrganizations() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await teamsService.getMyOrganizations();
-      if (res.success && res.data) {
-        setOrganizations(res.data);
-      } else {
-        setError(res.message ?? "Failed to load organizations.");
-      }
-    } catch {
-      setError("Failed to load organizations.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleCreate(data: CreateOrganizationFormData) {
     if (!canCreateOrganization) {
       setCreateError("Only organization owners can create organizations.");
       return;
     }
 
-    setCreating(true);
     setCreateError(null);
     try {
       const payload: CreateOrganizationRequest = {
@@ -107,17 +91,8 @@ export default function TeamPage() {
         description: data.description,
         account_type: getAccountType(user?.role),
       };
-      const res = await teamsService.createOrganization(payload);
+      const res = await createOrgMutation.mutateAsync(payload);
       if (res.success && res.data) {
-        setOrganizations((prev) => [
-          ...prev,
-          {
-            ...res.data!,
-            is_owner: true,
-            can_manage_organization: true,
-            my_role_code: "owner",
-          },
-        ]);
         setShowCreateModal(false);
         resetCreateForm();
       } else {
@@ -125,8 +100,6 @@ export default function TeamPage() {
       }
     } catch {
       setCreateError("Failed to create organization.");
-    } finally {
-      setCreating(false);
     }
   }
 
@@ -339,10 +312,10 @@ export default function TeamPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={creating}
+                  disabled={createOrgMutation.isPending}
                   className="flex-1 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors disabled:opacity-60"
                 >
-                  {creating ? "Creating..." : "Create"}
+                  {createOrgMutation.isPending ? "Creating..." : "Create"}
                 </button>
               </div>
             </form>

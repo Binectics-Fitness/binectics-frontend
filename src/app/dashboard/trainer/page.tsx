@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import TrainerSidebar from "@/components/TrainerSidebar";
@@ -8,11 +7,8 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
-import {
-  progressService,
-  type DashboardStats,
-  type ClientProfile,
-} from "@/lib/api/progress";
+import { type ClientProfile } from "@/lib/api/progress";
+import { useDashboardStats, useClientProfiles } from "@/lib/queries/progress";
 
 function getClientName(profile: ClientProfile): string {
   if (typeof profile.client_id === "object" && profile.client_id) {
@@ -23,20 +19,9 @@ function getClientName(profile: ClientProfile): string {
 
 export default function TrainerDashboard() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null,
-  );
-  const [clientProfiles, setClientProfiles] = useState<ClientProfile[]>([]);
-
-  useEffect(() => {
-    if (!user) return;
-    progressService.getDashboardStats().then((res) => {
-      if (res.success && res.data) setDashboardStats(res.data);
-    });
-    progressService.getMyClientProfiles().then((res) => {
-      if (res.success && res.data) setClientProfiles(res.data.slice(0, 4));
-    });
-  }, [user]);
+  const { data: dashboardStats } = useDashboardStats(!!user);
+  const { data: allClientProfiles } = useClientProfiles(undefined, !!user);
+  const clientProfiles = allClientProfiles?.slice(0, 4) ?? [];
 
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;

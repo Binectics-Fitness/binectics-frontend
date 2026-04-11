@@ -10,8 +10,8 @@ import ConfirmationModal from "@/components/ConfirmationModal";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
 import { marketplaceService } from "@/lib/api/marketplace";
-import { utilityService, type PlatformConfig } from "@/lib/api/utility";
-import type { CountryItem } from "@/lib/api/utility";
+import { useCountries, usePlatformConfig } from "@/lib/queries/utility";
+import type { PlatformConfig, CountryItem } from "@/lib/api/utility";
 import type {
   MarketplaceListing,
   MarketplaceListingDocument,
@@ -118,10 +118,8 @@ export default function OrgMarketplaceListingPage() {
 
   const formData = watch();
 
-  const [platformConfig, setPlatformConfig] = useState<PlatformConfig | null>(
-    null,
-  );
-  const [countries, setCountries] = useState<CountryItem[]>([]);
+  const { data: countries = [] } = useCountries();
+  const { data: platformConfig = null } = usePlatformConfig();
 
   const orgId = currentOrg?._id;
   const galleryPhotos =
@@ -215,19 +213,6 @@ export default function OrgMarketplaceListingPage() {
     }
     loadListing();
   }, [authLoading, orgLoading, user, orgId, router]);
-
-  useEffect(() => {
-    utilityService.getPlatformConfig().then((res) => {
-      if (res.success && res.data) {
-        setPlatformConfig(res.data);
-      }
-    });
-    utilityService.getCountries().then((res) => {
-      if (res.success && res.data) {
-        setCountries(res.data);
-      }
-    });
-  }, []);
 
   const activeCurrencies =
     platformConfig?.currencies.filter((c) => c.is_active) ?? [];

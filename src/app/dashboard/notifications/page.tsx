@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DietitianSidebar from "@/components/DietitianSidebar";
@@ -10,12 +10,15 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/lib/types";
 import {
-  notificationsService,
   type NotificationItem,
-  type NotificationPagination,
   NotificationType,
 } from "@/lib/api/notifications";
 import { resolveNotificationLink } from "@/utils/resolveNotificationLink";
+import {
+  useNotifications,
+  useMarkAsRead,
+  useMarkAllAsRead,
+} from "@/lib/queries/notifications";
 
 type FilterTab = "all" | "unread";
 
@@ -86,75 +89,30 @@ export default function NotificationsPage() {
           ? GymOwnerSidebar
           : DashboardSidebar;
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [pagination, setPagination] = useState<NotificationPagination | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("all");
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/login");
-    }
-  }, [authLoading, user, router]);
+  const queryParams = {
+    page,
+    limit: 20,
+    ...(filter === "unread" ? { is_read: false } : {}),
+  };
+  const { data: notificationData, isLoading } = useNotifications(
+    queryParams,
+    isAuthorized,
+  );
+  const notifications = notificationData?.notifications ?? [];
+  const pagination = notificationData?.pagination ?? null;
+  const markAsReadMutation = useMarkAsRead();
+  const markAllAsReadMutation = useMarkAllAsRead();
 
-  const fetchNotifications = useCallback(async (p: number, tab: FilterTab) => {
-    setIsLoading(true);
-    try {
-      const res = await notificationsService.getNotifications({
-        page: p,
-        limit: 20,
-        ...(tab === "unread" ? { is_read: false } : {}),
-      });
-      if (res.success && res.data) {
-        setNotifications(res.data.notifications);
-        setPagination(res.data.pagination);
-      }
-    } catch {
-      // fail silently
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (authLoading || !isAuthorized) return;
-    fetchNotifications(page, filter);
-  }, [authLoading, isAuthorized, page, filter, fetchNotifications]);
-
-  const handleMarkAllRead = async () => {
-    try {
-      const res = await notificationsService.markAllAsRead();
-      if (res.success) {
-        setNotifications((prev) =>
-          prev.map((n) => ({
-            ...n,
-            isRead: true,
-            readAt: new Date().toISOString(),
-          })),
-        );
-      }
-    } catch {
-      // fail silently
-    }
+  const handleMarkAllRead = () => {
+    markAllAsReadMutation.mutate();
   };
 
-  const handleNotificationClick = async (notification: NotificationItem) => {
+  const handleNotificationClick = (notification: NotificationItem) => {
     if (!notification.isRead) {
-      try {
-        await notificationsService.markAsRead(notification.id);
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.id === notification.id
-              ? { ...n, isRead: true, readAt: new Date().toISOString() }
-              : n,
-          ),
-        );
-      } catch {
-        // fail silently
-      }
+      markAsReadMutation.mutate(notification.id);
     }
     const link = resolveNotificationLink(notification.actionUrl, user?.role);
     router.push(link);

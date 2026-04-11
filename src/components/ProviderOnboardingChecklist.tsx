@@ -174,16 +174,21 @@ export default function ProviderOnboardingChecklist({
       account_type: config.accountType,
     };
 
-    const res = await teamsService.createOrganization(payload);
-    if (res.success) {
-      setShowOrgForm(false);
-      setOrgName("");
-      setOrgDescription("");
-      await refreshOrganizations();
-    } else {
-      setOrgError(res.message || "Failed to create organization");
+    try {
+      const res = await teamsService.createOrganization(payload);
+      if (res.success) {
+        setShowOrgForm(false);
+        setOrgName("");
+        setOrgDescription("");
+        await refreshOrganizations();
+      } else {
+        setOrgError(res.message || "Failed to create organization");
+      }
+    } catch {
+      setOrgError("Failed to create organization. Please try again.");
+    } finally {
+      setIsCreatingOrg(false);
     }
-    setIsCreatingOrg(false);
   };
 
   // ─── Build steps ───

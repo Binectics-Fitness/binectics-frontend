@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
@@ -9,16 +9,19 @@ import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
 import {
-  consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import {
-  progressService,
-  type DashboardStats,
   type ClientProfile,
   type LatestWeight,
 } from "@/lib/api/progress";
+import {
+  useDashboardStats,
+  useClientProfiles,
+  useLatestWeights,
+} from "@/lib/queries/progress";
+import { useProviderBookings } from "@/lib/queries/consultations";
 
 function getClientName(profile: ClientProfile): string {
   if (typeof profile.client_id === "object" && profile.client_id) {
@@ -49,56 +52,33 @@ function computeProgress(
 
 export default function DietitianDashboard() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null,
-  );
-  const [clientProfiles, setClientProfiles] = useState<ClientProfile[]>([]);
-  const [latestWeights, setLatestWeights] = useState<
-    Record<string, LatestWeight | null>
-  >({});
-  const [todayProviderBookings, setTodayProviderBookings] = useState<
-    ConsultationBooking[]
-  >([]);
 
-  useEffect(() => {
-    if (!user) return;
-
+  const todayRange = useMemo(() => {
     const now = new Date();
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(now);
     endOfDay.setHours(23, 59, 59, 999);
+    return { from: startOfDay.toISOString(), to: endOfDay.toISOString() };
+  }, []);
 
-    progressService.getDashboardStats().then((res) => {
-      if (res.success && res.data) setDashboardStats(res.data);
-    });
-    progressService.getMyClientProfiles().then((res) => {
-      if (res.success && res.data) setClientProfiles(res.data.slice(0, 4));
-    });
-    progressService.getLatestWeights().then((res) => {
-      if (res.success && res.data) setLatestWeights(res.data);
-    });
-
-    consultationsService
-      .getProviderBookings({
-        from: startOfDay.toISOString(),
-        to: endOfDay.toISOString(),
-      })
-      .then((res) => {
-        if (res.success && res.data) {
-          setTodayProviderBookings(res.data);
-        }
-      });
-  }, [user]);
+  const { data: dashboardStats } = useDashboardStats(!!user);
+  const { data: allClientProfiles } = useClientProfiles(undefined, !!user);
+  const clientProfiles = allClientProfiles?.slice(0, 4) ?? [];
+  const { data: latestWeights } = useLatestWeights(!!user);
+  const { data: todayProviderBookings } = useProviderBookings(
+    todayRange,
+    !!user,
+  );
 
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
 
   const displayName = user ? `${user.first_name} ${user.last_name}` : "";
-  const completedTodayCount = todayProviderBookings.filter(
+  const completedTodayCount = (todayProviderBookings ?? []).filter(
     (booking) => booking.status === ConsultationBookingStatus.COMPLETED,
   ).length;
-  const upcomingTodayCount = todayProviderBookings.filter(
+  const upcomingTodayCount = (todayProviderBookings ?? []).filter(
     (booking) =>
       booking.status === ConsultationBookingStatus.CONFIRMED ||
       booking.status === ConsultationBookingStatus.PENDING,
@@ -108,7 +88,7 @@ export default function DietitianDashboard() {
   const stats = [
     {
       label: "Consultations Today",
-      value: todayProviderBookings.length.toString(),
+      value: (todayProviderBookings ?? []).length.toString(),
       subtext: `${completedTodayCount} completed, ${upcomingTodayCount} upcoming`,
       icon: (
         <svg
@@ -193,7 +173,7 @@ export default function DietitianDashboard() {
   ];
 
   // Transform API bookings to display format
-  const todayConsultations = todayProviderBookings.map((booking) => {
+  const todayConsultations = (todayProviderBookings ?? []).map((booking) => {
     const startDate = new Date(booking.startsAt);
     const endDate = new Date(booking.endsAt);
 
@@ -510,7 +490,7 @@ export default function DietitianDashboard() {
                     const goal = profile.goals[0] ?? "—";
                     const start = profile.starting_weight_kg;
                     const target = profile.target_weight_kg;
-                    const progress = computeProgress(profile, latestWeights);
+                    const progress = computeProgress(profile, latestWeights ?? {});
                     return (
                       <li
                         key={profile._id}
@@ -557,7 +537,7 @@ export default function DietitianDashboard() {
                         {start &&
                           target &&
                           start !== target &&
-                          (latestWeights[profile._id] ? (
+                          (latestWeights?.[profile._id] ? (
                             <div>
                               <div className="flex items-center justify-between text-sm mb-1">
                                 <span className="text-foreground-secondary">

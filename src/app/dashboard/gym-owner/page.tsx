@@ -9,13 +9,9 @@ import ProviderOnboardingChecklist from "@/components/ProviderOnboardingChecklis
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { teamsService } from "@/lib/api/teams";
-import { checkinsService } from "@/lib/api/checkins";
-import {
-  type CheckIn,
-  type OrgCheckInDashboardStats,
-  UserRole,
-} from "@/lib/types";
+import { type CheckIn, UserRole } from "@/lib/types";
+import { useMyOrganizations } from "@/lib/queries/teams";
+import { useOrgDashboardStats } from "@/lib/queries/checkins";
 
 function getMemberName(checkIn: CheckIn): string {
   if (
@@ -57,71 +53,37 @@ export default function GymOwnerDashboard() {
   const organizationId = currentOrg?._id;
   const [canViewOwnerDashboard, setCanViewOwnerDashboard] = useState(false);
   const [resolvingPerspective, setResolvingPerspective] = useState(true);
-  const [orgStats, setOrgStats] = useState<OrgCheckInDashboardStats | null>(
-    null,
-  );
+
+  const isNonOwnerRole =
+    !authLoading &&
+    isAuthorized &&
+    !!user &&
+    user.role !== UserRole.GYM_OWNER &&
+    user.role !== UserRole.ADMIN;
+
+  const { data: myOrgs } = useMyOrganizations(isNonOwnerRole);
+  const { data: orgStats } = useOrgDashboardStats(organizationId);
 
   useEffect(() => {
-    let mounted = true;
+    if (authLoading || !isAuthorized || !user) return;
 
-    async function resolvePerspective() {
-      if (authLoading || !isAuthorized || !user) return;
-
-      if (user.role === UserRole.GYM_OWNER || user.role === UserRole.ADMIN) {
-        if (mounted) {
-          setCanViewOwnerDashboard(true);
-          setResolvingPerspective(false);
-        }
-        return;
-      }
-
-      try {
-        const res = await teamsService.getMyOrganizations();
-        if (!mounted) return;
-
-        // Only org owners can view the owner dashboard
-        const hasOwnerPerspective =
-          !!res.success && !!res.data && res.data.some((org) => org.is_owner);
-
-        if (hasOwnerPerspective) {
-          setCanViewOwnerDashboard(true);
-        } else {
-          router.replace("/dashboard");
-          return;
-        }
-      } finally {
-        if (mounted) setResolvingPerspective(false);
-      }
+    if (user.role === UserRole.GYM_OWNER || user.role === UserRole.ADMIN) {
+      setCanViewOwnerDashboard(true);
+      setResolvingPerspective(false);
+      return;
     }
 
-    resolvePerspective();
+    // Wait for org query to resolve
+    if (myOrgs === undefined) return;
 
-    return () => {
-      mounted = false;
-    };
-  }, [authLoading, isAuthorized, user, router]);
-
-  useEffect(() => {
-    if (!organizationId) return;
-    const safeOrganizationId = organizationId;
-    let mounted = true;
-
-    async function loadStats() {
-      try {
-        const res =
-          await checkinsService.getOrgDashboardStats(safeOrganizationId);
-        if (!mounted) return;
-        if (res.success && res.data) setOrgStats(res.data);
-      } catch {
-        // stats load silently
-      }
+    const hasOwnerPerspective = myOrgs.some((org) => org.is_owner);
+    if (hasOwnerPerspective) {
+      setCanViewOwnerDashboard(true);
+    } else {
+      router.replace("/dashboard");
     }
-
-    void loadStats();
-    return () => {
-      mounted = false;
-    };
-  }, [organizationId]);
+    setResolvingPerspective(false);
+  }, [authLoading, isAuthorized, user, myOrgs, router]);
 
   if (authLoading || resolvingPerspective) return <DashboardLoading />;
   if (!isAuthorized || !canViewOwnerDashboard) return null;

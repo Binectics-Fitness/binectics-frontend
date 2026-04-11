@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useOrgMembershipSubscriptions } from "@/lib/queries/marketplace";
 import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
@@ -8,7 +8,6 @@ import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { UserRole, MembershipSubscriptionStatus } from "@/lib/types";
 import type { MembershipSubscription } from "@/lib/types";
-import { marketplaceService } from "@/lib/api/marketplace";
 import { formatLocal } from "@/utils/format";
 
 function getMemberName(sub: MembershipSubscription): string {
@@ -28,25 +27,8 @@ function getPlanName(sub: MembershipSubscription): string {
 export default function DietitianEarningsPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>(
-    [],
-  );
-  const [loadingData, setLoadingData] = useState(true);
-
-  useEffect(() => {
-    if (!user || orgLoading) return;
-    if (!currentOrg) {
-      setLoadingData(false);
-      return;
-    }
-
-    marketplaceService
-      .getOrgMembershipSubscriptions(currentOrg._id)
-      .then((res) => {
-        if (res.success && res.data) setSubscriptions(res.data);
-      })
-      .finally(() => setLoadingData(false));
-  }, [user, currentOrg, orgLoading]);
+  const { data: subscriptions = [], isLoading: loadingData } =
+    useOrgMembershipSubscriptions(currentOrg?._id, !!user && !orgLoading);
 
   if (isLoading || orgLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;

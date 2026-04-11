@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import TimezoneHelpBadge from "@/components/TimezoneHelpBadge";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { useProviderBookings } from "@/lib/queries/consultations";
+import { queryKeys } from "@/lib/queries/keys";
 import {
   consultationsService,
   ConsultationBookingStatus,
@@ -42,52 +45,43 @@ function formatDateTime(iso: string, tz: string): string {
 export default function TrainerSessionsPage() {
   const { user, isLoading: authLoading } = useRoleGuard(UserRole.TRAINER);
   const userTimezone = getClientTimezone();
+  const queryClient = useQueryClient();
 
   const [tab, setTab] = useState<TabKey>("upcoming");
-  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  const loadBookings = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
+  const now = useMemo(() => new Date().toISOString(), []);
+  const bookingParams = useMemo(() => {
+    if (tab === "upcoming") return { from: now };
+    if (tab === "past") return { to: now };
+    return {};
+  }, [tab, now]);
 
-    const now = new Date().toISOString();
-    let params: Parameters<typeof consultationsService.getProviderBookings>[0];
+  const { data: rawBookings = [], isLoading } = useProviderBookings(
+    bookingParams,
+    !authLoading && !!user,
+  );
 
-    if (tab === "upcoming") {
-      params = { from: now };
-    } else if (tab === "past") {
-      params = { to: now };
-    } else {
-      params = {};
-    }
+  const bookings = useMemo(() => {
+    const sorted = [...rawBookings].sort((a, b) => {
+      const dateA = new Date(a.startsAt).getTime();
+      const dateB = new Date(b.startsAt).getTime();
+      return tab === "past" ? dateB - dateA : dateA - dateB;
+    });
+    return sorted;
+  }, [rawBookings, tab]);
 
-    const response = await consultationsService.getProviderBookings(params);
-    if (response.success && response.data) {
-      const sorted = [...response.data].sort((a, b) => {
-        const dateA = new Date(a.startsAt).getTime();
-        const dateB = new Date(b.startsAt).getTime();
-        return tab === "past" ? dateB - dateA : dateA - dateB;
-      });
-      setBookings(sorted);
-    } else {
-      setError(response.message || "Failed to load sessions");
-    }
-    setIsLoading(false);
-  }, [tab]);
-
-  useEffect(() => {
-    if (authLoading || !user) return;
-    void loadBookings();
-  }, [authLoading, user, loadBookings]);
+  const invalidateBookings = () =>
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.consultations.all,
+    });
 
   const handleComplete = async (id: string) => {
     setActionLoadingId(id);
     const response = await consultationsService.completeBooking(id);
     if (response.success) {
-      await loadBookings();
+      await invalidateBookings();
     } else {
       setError(response.message || "Failed to complete session");
     }
@@ -100,7 +94,7 @@ export default function TrainerSessionsPage() {
       reason: "Cancelled by trainer",
     });
     if (response.success) {
-      await loadBookings();
+      await invalidateBookings();
     } else {
       setError(response.message || "Failed to cancel session");
     }

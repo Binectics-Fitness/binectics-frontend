@@ -1,14 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
-import { marketplaceService } from "@/lib/api/marketplace";
 import {
   MembershipSubscription,
   MembershipSubscriptionStatus,
   MembershipPlanType,
 } from "@/lib/types";
+import {
+  useMySubscriptions,
+  useCancelSubscription,
+  useToggleAutoRenew,
+} from "@/lib/queries/marketplace";
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return "—";
@@ -40,59 +43,20 @@ function statusLabel(status: MembershipSubscriptionStatus) {
 
 export default function SubscriptionsPage() {
   const router = useRouter();
-  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>(
-    [],
-  );
-  const [loading, setLoading] = useState(true);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-
-  const loadSubscriptions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await marketplaceService.getMyMembershipSubscriptions();
-      if (response.success && response.data) {
-        setSubscriptions(response.data);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    window.setTimeout(() => void loadSubscriptions(), 0);
-  }, [loadSubscriptions]);
+  const {
+    data: subscriptions = [],
+    isLoading: loading,
+  } = useMySubscriptions();
+  const cancelMutation = useCancelSubscription();
+  const toggleMutation = useToggleAutoRenew();
 
   const handleCancel = async (subscriptionId: string) => {
     if (!confirm("Are you sure you want to cancel this subscription?")) return;
-    setCancellingId(subscriptionId);
-    try {
-      const response =
-        await marketplaceService.cancelMembershipSubscription(subscriptionId);
-      if (response.success) {
-        void loadSubscriptions();
-      }
-    } finally {
-      setCancellingId(null);
-    }
+    cancelMutation.mutate(subscriptionId);
   };
 
   const handleToggleAutoRenew = async (subscriptionId: string) => {
-    setTogglingId(subscriptionId);
-    try {
-      const response = await marketplaceService.toggleAutoRenew(subscriptionId);
-      if (response.success && response.data) {
-        setSubscriptions((prev) =>
-          prev.map((s) =>
-            s._id === subscriptionId
-              ? { ...s, auto_renew: response.data!.auto_renew }
-              : s,
-          ),
-        );
-      }
-    } finally {
-      setTogglingId(null);
-    }
+    toggleMutation.mutate(subscriptionId);
   };
 
   const getPlanName = (sub: MembershipSubscription) => {
@@ -294,7 +258,7 @@ export default function SubscriptionsPage() {
                               onClick={() =>
                                 void handleToggleAutoRenew(sub._id)
                               }
-                              disabled={togglingId === sub._id}
+                              disabled={toggleMutation.isPending}
                               className="flex items-center gap-2 text-sm disabled:opacity-50"
                             >
                               <span className="text-foreground/60 font-medium">
@@ -319,10 +283,10 @@ export default function SubscriptionsPage() {
                           )}
                           <button
                             onClick={() => void handleCancel(sub._id)}
-                            disabled={cancellingId === sub._id}
+                            disabled={cancelMutation.isPending}
                             className="px-4 py-2 border-2 border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
                           >
-                            {cancellingId === sub._id
+                            {cancelMutation.isPending
                               ? "Cancelling..."
                               : "Cancel"}
                           </button>
