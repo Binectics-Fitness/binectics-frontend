@@ -1,6 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import DietitianSidebar from "@/components/DietitianSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
@@ -48,6 +50,15 @@ function formatDate(iso: string) {
 // ─── Page ──────────────────────────────────────────────────────────
 
 export default function DietitianClientsPage() {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <DietitianClientsPageContent />
+    </Suspense>
+  );
+}
+
+function DietitianClientsPageContent() {
+  const searchParams = useSearchParams();
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
   const { currentOrg, isLoading: orgLoading } = useOrganization();
 
@@ -165,6 +176,15 @@ export default function DietitianClientsPage() {
     loadProfiles();
     loadInvitations();
   }, [isAuthorized, orgLoading, loadProfiles, loadInvitations]);
+
+  // Auto-select profile from query param (e.g. from notification link)
+  useEffect(() => {
+    const profileId = searchParams.get("profileId");
+    if (profileId && profiles.length > 0 && !selectedProfileId) {
+      const match = profiles.find((p) => p._id === profileId);
+      if (match) setSelectedProfileId(profileId);
+    }
+  }, [searchParams, profiles, selectedProfileId]);
 
   // ─── form handlers ────────────────────────────────────────────
 

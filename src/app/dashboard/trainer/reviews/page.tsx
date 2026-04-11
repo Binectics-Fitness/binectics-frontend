@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/Button";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
 import {
@@ -249,22 +250,24 @@ export default function TrainerReviewsPage() {
                           rows={3}
                         />
                         <div className="flex gap-2">
-                          <button
+                          <Button
                             onClick={() => handleRespond(review.id)}
                             disabled={submitting || !responseText.trim()}
-                            className="rounded-lg bg-accent-blue-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                            variant="accent-blue"
+                            size="sm"
                           >
                             {submitting ? "Sending..." : "Send Response"}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => {
                               setRespondingTo(null);
                               setResponseText("");
                             }}
-                            className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-foreground-secondary"
+                            variant="outline-neutral"
+                            size="sm"
                           >
                             Cancel
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ) : (

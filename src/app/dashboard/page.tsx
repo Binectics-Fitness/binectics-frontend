@@ -345,8 +345,19 @@ export default function DashboardPage() {
                   : "Ready for your first workout? Check in when you arrive."
               : "Ready for your next workout? Check in when you arrive."}
           </p>
+        </div>
+
+        {/* Onboarding Banner — shown first for new users */}
+        {!userStats.isOnboardingComplete && (
+          <div className="mb-6 sm:mb-8">
+            <OnboardingBanner userRole={user.role} userName={displayName} />
+          </div>
+        )}
+
+        {/* Check-in & Journal */}
+        <div className="mb-6 sm:mb-8">
           {checkInStatus && (
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-xl shadow-[var(--shadow-card)]">
+            <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-xl shadow-[var(--shadow-card)]">
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
                   checkInStatus.has_checked_in_today
@@ -393,13 +404,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-
-        {/* Onboarding Banner */}
-        {!userStats.isOnboardingComplete && (
-          <div className="mb-8">
-            <OnboardingBanner userRole={user.role} userName={displayName} />
-          </div>
-        )}
 
         {/* Search Bar */}
         <div className="mb-6 sm:mb-8">

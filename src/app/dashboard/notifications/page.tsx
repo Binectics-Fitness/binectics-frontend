@@ -156,7 +156,7 @@ export default function NotificationsPage() {
         // fail silently
       }
     }
-    const link = resolveNotificationLink(notification.actionUrl);
+    const link = resolveNotificationLink(notification.actionUrl, user?.role);
     router.push(link);
   };
 

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 import TrainerSidebar from "@/components/TrainerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
+import { Button, LinkButton } from "@/components/Button";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
@@ -217,19 +218,17 @@ function WorkoutPlanDetailContent() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
-                  <Link
+                  <LinkButton
                     href={`/dashboard/trainer/workouts/${plan._id}/edit?profileId=${profileId}`}
-                    className="inline-flex h-10 items-center justify-center rounded-lg bg-accent-yellow-500 px-5 text-sm font-semibold text-foreground hover:bg-accent-yellow-600"
+                    variant="accent-yellow"
+                    size="sm"
                   >
                     Edit Plan
-                  </Link>
+                  </LinkButton>
                   {plan.status !== PlanStatus.ARCHIVED && (
-                    <button
-                      onClick={handleArchive}
-                      className="inline-flex h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-5 text-sm font-medium text-red-600 hover:bg-red-50"
-                    >
+                    <Button onClick={handleArchive} variant="danger" size="sm">
                       Archive
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>

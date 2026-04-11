@@ -183,12 +183,12 @@ export default function OnboardingBanner({
 
   return (
     <div
-      className={`relative rounded-2xl border-2 ${colors.border} ${colors.bg} p-6 shadow-lg`}
+      className={`relative rounded-2xl border-2 ${colors.border} ${colors.bg} p-4 sm:p-6 shadow-lg`}
     >
       {/* Dismiss Button */}
       <button
         onClick={() => setIsDismissed(true)}
-        className="absolute top-4 right-4 text-foreground-tertiary hover:text-foreground-secondary transition-colors"
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 text-foreground-tertiary hover:text-foreground-secondary transition-colors"
         aria-label="Dismiss"
       >
         <svg
@@ -206,20 +206,20 @@ export default function OnboardingBanner({
         </svg>
       </button>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         {/* Icon */}
         <div
-          className={`h-12 w-12 shrink-0 rounded-xl ${colors.icon} flex items-center justify-center`}
+          className={`h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-xl ${colors.icon} flex items-center justify-center`}
         >
           {config.icon}
         </div>
 
         {/* Content */}
-        <div className="flex-1 pr-8">
+        <div className="flex-1 pr-6 sm:pr-8">
           {/* Header */}
-          <div className="mb-3">
+          <div className="mb-2 sm:mb-3">
             <h3
-              className={`font-display text-xl font-black ${colors.text} mb-1`}
+              className={`font-display text-lg sm:text-xl font-black ${colors.text} mb-1`}
             >
               {userName ? `Welcome, ${userName}! ` : ""}
               {config.title}
@@ -230,13 +230,13 @@ export default function OnboardingBanner({
           </div>
 
           {/* Steps */}
-          <div className="mb-4">
+          <div className="mb-3 sm:mb-4">
             <p
               className={`text-xs font-semibold ${colors.text} uppercase tracking-wide mb-2`}
             >
-              What you'll add:
+              What you&#39;ll add:
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 sm:gap-2">
               {config.steps.map((step, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div
@@ -258,13 +258,13 @@ export default function OnboardingBanner({
           <div className="flex gap-3">
             <Link
               href="/dashboard/settings/profile"
-              className={`inline-flex h-10 items-center justify-center rounded-lg ${colors.button} px-6 text-sm font-semibold text-foreground shadow-button transition-colors duration-200`}
+              className={`inline-flex h-10 items-center justify-center rounded-lg ${colors.button} px-5 sm:px-6 text-sm font-semibold text-foreground shadow-button whitespace-nowrap transition-colors duration-200`}
             >
               Complete Setup
             </Link>
             <button
               onClick={() => setIsDismissed(true)}
-              className="inline-flex h-10 items-center justify-center rounded-lg border-2 border-foreground-tertiary bg-transparent px-4 text-sm font-semibold text-foreground-secondary hover:bg-white/50 transition-colors duration-200"
+              className="inline-flex h-10 items-center justify-center rounded-lg border-2 border-foreground-tertiary bg-transparent px-4 text-sm font-semibold text-foreground-secondary hover:bg-white/50 whitespace-nowrap transition-colors duration-200"
             >
               Later
             </button>

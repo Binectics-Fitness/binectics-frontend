@@ -155,7 +155,7 @@ export default function TrainerSessionsPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                 tab === t.key
                   ? "bg-accent-yellow-500 text-foreground"
                   : "text-foreground/60 hover:text-foreground"
