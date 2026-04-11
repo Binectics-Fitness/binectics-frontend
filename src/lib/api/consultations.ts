@@ -115,14 +115,21 @@ export interface CompleteBookingRequest {
 }
 
 export const consultationsService = {
-  getTypes(): Promise<ApiResponse<ConsultationType[]>> {
-    return apiClient.get<ConsultationType[]>("/consultations/types");
+  getTypes(params?: {
+    includeInactive?: boolean;
+  }): Promise<ApiResponse<ConsultationType[]>> {
+    const query = params?.includeInactive ? '?includeInactive=true' : '';
+    return apiClient.get<ConsultationType[]>(`/consultations/types${query}`);
   },
 
   createType(
     payload: CreateConsultationTypeRequest,
   ): Promise<ApiResponse<ConsultationType>> {
     return apiClient.post<ConsultationType>("/consultations/types", payload);
+  },
+
+  deleteType(id: string): Promise<ApiResponse<ConsultationType>> {
+    return apiClient.delete<ConsultationType>(`/consultations/types/${id}`);
   },
 
   getCatalog(params?: {

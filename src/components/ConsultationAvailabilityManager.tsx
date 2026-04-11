@@ -95,6 +95,7 @@ export default function ConsultationAvailabilityManager({
   >([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingType, setIsCreatingType] = useState(false);
+  const [deletingTypeId, setDeletingTypeId] = useState<string | null>(null);
   const [message, setMessage] = useState<{
     text: string;
     type: "success" | "error";
@@ -177,7 +178,7 @@ export default function ConsultationAvailabilityManager({
       }
     });
 
-    consultationsService.getTypes().then((res) => {
+    consultationsService.getTypes({ includeInactive: true }).then((res) => {
       if (res.success && res.data) {
         setConsultationTypes(res.data);
       }
@@ -235,6 +236,30 @@ export default function ConsultationAvailabilityManager({
     }
 
     setIsCreatingType(false);
+  };
+
+  const deleteType = async (id: string) => {
+    setDeletingTypeId(id);
+    setMessage(null);
+
+    const response = await consultationsService.deleteType(id);
+
+    if (response.success && response.data) {
+      setConsultationTypes((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, isActive: false } : t)),
+      );
+      setMessage({
+        text: "Consultation type archived successfully.",
+        type: "success",
+      });
+    } else {
+      setMessage({
+        text: response.message ?? "Failed to archive consultation type.",
+        type: "error",
+      });
+    }
+
+    setDeletingTypeId(null);
   };
 
   const addRule = () => {
@@ -713,15 +738,28 @@ export default function ConsultationAvailabilityManager({
                           {type.description && ` • ${type.description}`}
                         </p>
                       </div>
-                      <span
-                        className={`rounded px-2 py-1 text-xs font-semibold ${
-                          type.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-neutral-100 text-foreground-secondary"
-                        }`}
-                      >
-                        {type.isActive ? "Active" : "Inactive"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded px-2 py-1 text-xs font-semibold ${
+                            type.isActive
+                              ? "bg-green-100 text-green-700"
+                              : "bg-neutral-100 text-foreground-secondary"
+                          }`}
+                        >
+                          {type.isActive ? "Active" : "Archived"}
+                        </span>
+                        {type.isActive && (
+                          <button
+                            onClick={() => deleteType(type.id)}
+                            disabled={deletingTypeId === type.id}
+                            className="rounded px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            {deletingTypeId === type.id
+                              ? "Archiving..."
+                              : "Archive"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))
                 )}
