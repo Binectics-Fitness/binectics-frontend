@@ -28,8 +28,12 @@ export function resolveNotificationLink(
 
   // Consultations
   if (url.startsWith("/dashboard/consultations")) {
-    if (prefix) return url.replace("/dashboard/consultations", `${prefix}/consultations`);
-    return url.replace("/dashboard/consultations", "/dashboard/bookings/consultations");
+    if (prefix)
+      return url.replace("/dashboard/consultations", `${prefix}/consultations`);
+    return url.replace(
+      "/dashboard/consultations",
+      "/dashboard/bookings/consultations",
+    );
   }
 
   // Clients

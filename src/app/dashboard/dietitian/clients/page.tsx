@@ -18,6 +18,7 @@ import type {
   ClientInvitation,
   ClientJournalEntry,
   CreateClientJournalEntryRequest,
+  ClientSummaryStats,
 } from "@/lib/api/progress";
 import { ClientJournalMood } from "@/lib/api/progress";
 import { useForm } from "react-hook-form";
@@ -63,9 +64,11 @@ function DietitianClientsPageContent() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
 
   const [profiles, setProfiles] = useState<ClientProfile[]>([]);
-  const [summaries, setSummaries] = useState<Record<string, ProgressSummary>>(
-    {},
-  );
+  const [summaryStats, setSummaryStats] = useState<
+    Record<string, ClientSummaryStats>
+  >({});
+  const [selectedSummary, setSelectedSummary] =
+    useState<ProgressSummary | null>(null);
   const [invitations, setInvitations] = useState<ClientInvitation[]>([]);
   const [sentRequests, setSentRequests] = useState<ClientRequestItem[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -126,24 +129,16 @@ function DietitianClientsPageContent() {
     setError(null);
     try {
       const res = currentOrg
-        ? await progressService.getOrgClientProfiles(currentOrg._id)
-        : await progressService.getMyClientProfiles();
+        ? await progressService.getOrgClientSummaries(currentOrg._id)
+        : await progressService.getMyClientSummaries();
 
       if (res.success && res.data) {
         setProfiles(res.data);
-        // Load summaries for each client (latest 30 day snapshot)
-        const summaryMap: Record<string, ProgressSummary> = {};
-        await Promise.all(
-          res.data.map(async (p) => {
-            try {
-              const s = await progressService.getProgressSummary(p._id, 30);
-              if (s.success && s.data) summaryMap[p._id] = s.data;
-            } catch {
-              // non-critical
-            }
-          }),
-        );
-        setSummaries(summaryMap);
+        const stats: Record<string, ClientSummaryStats> = {};
+        for (const p of res.data) {
+          if (p.summary) stats[p._id] = p.summary;
+        }
+        setSummaryStats(stats);
       } else {
         setError("Could not load clients.");
       }
@@ -155,20 +150,16 @@ function DietitianClientsPageContent() {
   }, [currentOrg]);
 
   const loadInvitations = useCallback(async () => {
-    try {
-      const res = await progressService.getMyClientInvitations(currentOrg?._id);
-      if (res.success && res.data) setInvitations(res.data);
-    } catch {
-      // non-critical
-    }
-    try {
-      const res = currentOrg
-        ? await progressService.getOrgSentClientRequests(currentOrg._id)
-        : await progressService.getSentClientRequests();
-      if (res.success && res.data) setSentRequests(res.data);
-    } catch {
-      // non-critical
-    }
+    const [invRes, sentRes] = await Promise.allSettled([
+      progressService.getMyClientInvitations(currentOrg?._id),
+      currentOrg
+        ? progressService.getOrgSentClientRequests(currentOrg._id)
+        : progressService.getSentClientRequests(),
+    ]);
+    if (invRes.status === "fulfilled" && invRes.value.success && invRes.value.data)
+      setInvitations(invRes.value.data);
+    if (sentRes.status === "fulfilled" && sentRes.value.success && sentRes.value.data)
+      setSentRequests(sentRes.value.data);
   }, [currentOrg]);
 
   useEffect(() => {
@@ -262,9 +253,29 @@ function DietitianClientsPageContent() {
   // ─── selected client detail view ──────────────────────────────
 
   const selectedProfile = profiles.find((p) => p._id === selectedProfileId);
-  const selectedSummary = selectedProfileId
-    ? summaries[selectedProfileId]
-    : null;
+  // Lazy-load full progress summary when a client is selected
+  useEffect(() => {
+    if (!selectedProfileId) {
+      setSelectedSummary(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await progressService.getProgressSummary(
+          selectedProfileId,
+          30,
+        );
+        if (!cancelled && s.success && s.data) setSelectedSummary(s.data);
+      } catch {
+        // non-critical
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProfileId]);
+
   const selectedJournals = selectedProfileId
     ? (journalEntries[selectedProfileId] ?? [])
     : [];
@@ -694,7 +705,7 @@ function DietitianClientsPageContent() {
             {profiles.length > 0 && (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {profiles.map((p) => {
-                  const s = summaries[p._id];
+                  const s = summaryStats[p._id];
                   return (
                     <button
                       key={p._id}
@@ -741,7 +752,7 @@ function DietitianClientsPageContent() {
                               Weight
                             </p>
                             <p className="text-sm font-semibold text-foreground">
-                              {s.weight.latest_kg ?? "—"}
+                              {s.latest_weight?.weight_kg ?? "—"}
                             </p>
                           </div>
                           <div>
@@ -749,7 +760,7 @@ function DietitianClientsPageContent() {
                               Activities
                             </p>
                             <p className="text-sm font-semibold text-foreground">
-                              {s.activities.total_count}
+                              {s.activity_count}
                             </p>
                           </div>
                           <div>
@@ -757,7 +768,7 @@ function DietitianClientsPageContent() {
                               Meals
                             </p>
                             <p className="text-sm font-semibold text-foreground">
-                              {s.meals.total_count}
+                              {s.meal_count}
                             </p>
                           </div>
                         </div>

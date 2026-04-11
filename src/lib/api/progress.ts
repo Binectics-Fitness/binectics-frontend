@@ -90,6 +90,19 @@ export interface ClientProfile {
   updated_at: string;
 }
 
+export interface ClientSummaryStats {
+  latest_weight: { weight_kg: number; recorded_at: string } | null;
+  journal_count: number;
+  workout_plan_count: number;
+  diet_plan_count: number;
+  activity_count: number;
+  meal_count: number;
+}
+
+export interface ClientProfileWithSummary extends ClientProfile {
+  summary: ClientSummaryStats;
+}
+
 export interface WeightLog {
   _id: string;
   client_profile_id: string;
@@ -618,10 +631,26 @@ export const progressService = {
     );
   },
 
+  async getOrgClientSummaries(
+    organizationId: string,
+  ): Promise<ApiResponse<ClientProfileWithSummary[]>> {
+    return await apiClient.get<ClientProfileWithSummary[]>(
+      `/progress/organizations/${organizationId}/clients/summaries`,
+    );
+  },
+
   // ==================== CLIENT PROFILES (SOLO) ====================
 
   async getMyClientProfiles(): Promise<ApiResponse<ClientProfile[]>> {
     return await apiClient.get<ClientProfile[]>("/progress/clients");
+  },
+
+  async getMyClientSummaries(): Promise<
+    ApiResponse<ClientProfileWithSummary[]>
+  > {
+    return await apiClient.get<ClientProfileWithSummary[]>(
+      "/progress/clients/summaries",
+    );
   },
 
   // ==================== CLIENT PROFILES (SHARED) ====================

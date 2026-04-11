@@ -339,6 +339,16 @@ export const formsService = {
     return await apiClient.get<FormResponse[]>(`/forms/${formId}/responses`);
   },
 
+  /**
+   * Get response counts for all forms owned by the current user (batch).
+   * Returns { [formId]: count }.
+   */
+  async getFormResponseCounts(): Promise<ApiResponse<Record<string, number>>> {
+    return await apiClient.get<Record<string, number>>(
+      "/forms/response-counts",
+    );
+  },
+
   // ==================== ANALYTICS ====================
 
   /**

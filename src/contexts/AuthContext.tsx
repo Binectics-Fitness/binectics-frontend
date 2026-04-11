@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshTimeout) clearTimeout(refreshTimeout);
       if (expiryTimeout) clearTimeout(expiryTimeout);
     };
-  }, [user]);
+  }, [user?.id]);
 
   const handleContinueSession = async () => {
     setShowSessionModal(false);

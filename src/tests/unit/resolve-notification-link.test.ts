@@ -6,9 +6,7 @@ describe("resolveNotificationLink", () => {
   it("returns /dashboard/notifications for empty actionUrl", () => {
     expect(resolveNotificationLink()).toBe("/dashboard/notifications");
     expect(resolveNotificationLink("")).toBe("/dashboard/notifications");
-    expect(resolveNotificationLink(undefined)).toBe(
-      "/dashboard/notifications",
-    );
+    expect(resolveNotificationLink(undefined)).toBe("/dashboard/notifications");
   });
 
   // ── Role-specific consultations ───────────────────────────

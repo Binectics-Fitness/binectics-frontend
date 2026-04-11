@@ -13,10 +13,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { dietPlanSchema, type DietPlanFormData } from "@/lib/schemas/progress";
 import { tokenStorage } from "@/lib/utils/storage";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1";
+import { API_BASE_URL } from "@/lib/api/client";
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
@@ -25,9 +22,20 @@ function uploadWithProgress(
   endpoint: string,
   formData: FormData,
   onProgress: (percent: number) => void,
+  signal?: AbortSignal,
 ): Promise<{ success: boolean; message?: string }> {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
+
+    // Wire up AbortSignal so callers can cancel in-flight uploads
+    if (signal) {
+      if (signal.aborted) {
+        resolve({ success: false, message: "Upload aborted" });
+        return;
+      }
+      signal.addEventListener("abort", () => xhr.abort(), { once: true });
+    }
+
     xhr.open("POST", `${API_BASE_URL}${endpoint}`);
 
     const token = tokenStorage.get();
@@ -49,6 +57,10 @@ function uploadWithProgress(
 
     xhr.addEventListener("error", () =>
       resolve({ success: false, message: "Network error during upload" }),
+    );
+
+    xhr.addEventListener("abort", () =>
+      resolve({ success: false, message: "Upload aborted" }),
     );
 
     xhr.send(formData);
@@ -209,6 +221,14 @@ function CreateDietPlanContent() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAbortRef = useRef<AbortController | null>(null);
+
+  // Abort any in-flight upload when component unmounts
+  useEffect(() => {
+    return () => {
+      uploadAbortRef.current?.abort();
+    };
+  }, []);
 
   const orgId = currentOrg?._id;
 
@@ -287,6 +307,11 @@ function CreateDietPlanContent() {
   };
 
   const onSubmit = async (data: DietPlanFormData) => {
+    // Abort any previous upload and create a fresh controller
+    uploadAbortRef.current?.abort();
+    const abortController = new AbortController();
+    uploadAbortRef.current = abortController;
+
     setSubmitting(true);
     setError("");
     setUploadProgress(0);
@@ -320,6 +345,7 @@ function CreateDietPlanContent() {
 
           const res = await uploadWithProgress(endpoint, formData, (percent) =>
             setUploadProgress(percent),
+            abortController.signal,
           );
 
           if (!res.success) {
@@ -400,6 +426,7 @@ function CreateDietPlanContent() {
                   Math.round(clientBase + (percent * clientShare) / 100),
                 );
               },
+              abortController.signal,
             );
 
             if (!res.success) {

@@ -11,7 +11,7 @@ import {
 } from "@/lib/utils/storage";
 import { isAuthRoute } from "@/lib/constants/routes";
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1";
 

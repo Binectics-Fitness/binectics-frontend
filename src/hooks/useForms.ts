@@ -14,10 +14,6 @@ import {
   type SubmitFormResponseRequest,
 } from "@/lib/api/forms";
 import { decodeObjectEntities } from "@/lib/utils";
-import { pMap } from "@/utils/async";
-
-/** Maximum concurrent getFormResponses requests to avoid API fan-out. */
-const RESPONSE_COUNT_CONCURRENCY = 5;
 
 /**
  * Hook for managing the forms list.
@@ -40,22 +36,11 @@ export function useForms() {
     if (response.success && response.data) {
       setForms(decodeObjectEntities(response.data));
 
-      const counts: Record<string, number> = {};
-      await pMap(
-        response.data,
-        async (form) => {
-          const responsesResponse = await formsService.getFormResponses(
-            form._id,
-          );
-          if (responsesResponse.success && responsesResponse.data) {
-            counts[form._id] = responsesResponse.data.length;
-          } else {
-            counts[form._id] = 0;
-          }
-        },
-        RESPONSE_COUNT_CONCURRENCY,
-      );
-      setResponseCounts(counts);
+      // Batch fetch all response counts in a single API call
+      const countsResponse = await formsService.getFormResponseCounts();
+      if (countsResponse.success && countsResponse.data) {
+        setResponseCounts(countsResponse.data);
+      }
     } else {
       setError(response.message || "Failed to load forms");
     }
