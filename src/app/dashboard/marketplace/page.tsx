@@ -154,6 +154,7 @@ export default function MyMarketplaceListingPage() {
     if (res.success && res.data) {
       setListing(res.data);
       setHasListing(true);
+      populateForm(res.data);
       setIsEditing(false);
       setSuccessMessage("Listing created! You can now publish it.");
     } else {
@@ -182,6 +183,7 @@ export default function MyMarketplaceListingPage() {
 
     if (res.success && res.data) {
       setListing(res.data);
+      populateForm(res.data);
       setIsEditing(false);
       setSuccessMessage("Listing updated successfully.");
     } else {
