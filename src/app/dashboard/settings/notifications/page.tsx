@@ -1,20 +1,26 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   notificationPreferencesSchema,
   type NotificationPreferencesFormData,
 } from "@/lib/schemas/settings";
+import {
+  notificationsService,
+  type NotificationPreferences,
+} from "@/lib/api/notifications";
 
 export default function NotificationsSettingsPage() {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingPrefs, setIsLoadingPrefs] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const { watch, setValue, handleSubmit } =
+  const { watch, setValue, handleSubmit, reset } =
     useForm<NotificationPreferencesFormData>({
       resolver: zodResolver(notificationPreferencesSchema),
       defaultValues: {
@@ -25,16 +31,31 @@ export default function NotificationsSettingsPage() {
         emailReminders: true,
         emailNewsletter: false,
         emailPromotions: false,
-        pushBookings: true,
-        pushPayments: true,
-        pushMessages: true,
-        pushReminders: true,
-        pushPromotions: false,
-        smsBookingReminders: false,
-        smsPaymentAlerts: false,
-        smsUrgentOnly: true,
+        inAppBookings: true,
+        inAppPayments: true,
+        inAppMessages: true,
+        inAppReminders: true,
+        inAppPromotions: false,
       },
     });
+
+  const loadPreferences = useCallback(async () => {
+    try {
+      const res = await notificationsService.getPreferences();
+      if (res.success && res.data) {
+        reset(res.data as NotificationPreferencesFormData);
+      }
+    } catch {
+      // Use defaults on failure
+    } finally {
+      setIsLoadingPrefs(false);
+    }
+  }, [reset]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadPreferences();
+  }, [user, loadPreferences]);
 
   const notifications = watch();
 
@@ -42,16 +63,25 @@ export default function NotificationsSettingsPage() {
     setValue(key, !notifications[key]);
   };
 
-  const onSave = async () => {
+  const onSave = async (data: NotificationPreferencesFormData) => {
     setIsSaving(true);
     setSuccessMessage("");
+    setErrorMessage("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSuccessMessage("Notification preferences saved successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error("Save error:", error);
+      const res = await notificationsService.updatePreferences(
+        data as Partial<NotificationPreferences>,
+      );
+      if (res.success) {
+        setSuccessMessage("Notification preferences saved successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setErrorMessage(res.message || "Failed to save preferences.");
+        setTimeout(() => setErrorMessage(""), 5000);
+      }
+    } catch {
+      setErrorMessage("Something went wrong. Please try again.");
+      setTimeout(() => setErrorMessage(""), 5000);
     } finally {
       setIsSaving(false);
     }
@@ -59,12 +89,32 @@ export default function NotificationsSettingsPage() {
 
   if (!user) return null;
 
+  if (isLoadingPrefs) {
+    return (
+      <div className="space-y-6">
+        {[1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-64 animate-pulse rounded-xl bg-neutral-100"
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Success Message */}
       {successMessage && (
         <div className="rounded-lg border-2 border-primary-500 bg-primary-50 p-4 text-primary-900">
           <p className="font-semibold">{successMessage}</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="rounded-lg border-2 border-red-400 bg-red-50 p-4 text-red-900">
+          <p className="font-semibold">{errorMessage}</p>
         </div>
       )}
 
@@ -134,7 +184,7 @@ export default function NotificationsSettingsPage() {
         </div>
       </div>
 
-      {/* Push Notifications */}
+      {/* In-App Notifications */}
       <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
           <svg
@@ -147,91 +197,50 @@ export default function NotificationsSettingsPage() {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
             />
           </svg>
           <h3 className="text-lg font-bold text-foreground sm:text-xl">
-            Push Notifications
+            In-App Notifications
           </h3>
         </div>
         <div className="space-y-4">
           <NotificationToggle
             label="Booking Updates"
-            description="Get notified about new bookings and changes"
-            checked={notifications.pushBookings}
-            onChange={() => handleToggle("pushBookings")}
+            description="Get notified about new bookings, confirmations, and changes"
+            checked={notifications.inAppBookings}
+            onChange={() => handleToggle("inAppBookings")}
           />
           <NotificationToggle
-            label="Payment Alerts"
-            description="Receive notifications for payment transactions"
-            checked={notifications.pushPayments}
-            onChange={() => handleToggle("pushPayments")}
+            label="Payment & Subscription Alerts"
+            description="Receive notifications for payments and subscription events"
+            checked={notifications.inAppPayments}
+            onChange={() => handleToggle("inAppPayments")}
           />
           <NotificationToggle
-            label="Messages"
-            description="Get notified when you receive new messages"
-            checked={notifications.pushMessages}
-            onChange={() => handleToggle("pushMessages")}
+            label="Messages & Activity"
+            description="Client requests, team invitations, reviews, and plan assignments"
+            checked={notifications.inAppMessages}
+            onChange={() => handleToggle("inAppMessages")}
           />
           <NotificationToggle
             label="Reminders"
-            description="Push notifications for upcoming sessions"
-            checked={notifications.pushReminders}
-            onChange={() => handleToggle("pushReminders")}
+            description="Upcoming session and subscription expiry reminders"
+            checked={notifications.inAppReminders}
+            onChange={() => handleToggle("inAppReminders")}
           />
           <NotificationToggle
             label="Promotional Updates"
-            description="Receive push notifications for special offers"
-            checked={notifications.pushPromotions}
-            onChange={() => handleToggle("pushPromotions")}
-          />
-        </div>
-      </div>
-
-      {/* SMS Notifications */}
-      <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
-        <div className="mb-6 flex items-start gap-3 sm:items-center">
-          <svg
-            className="w-6 h-6 text-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-            />
-          </svg>
-          <h3 className="text-lg font-bold text-foreground sm:text-xl">
-            SMS Notifications
-          </h3>
-        </div>
-        <div className="space-y-4">
-          <NotificationToggle
-            label="Booking Reminders"
-            description="Get SMS reminders 24 hours before your sessions"
-            checked={notifications.smsBookingReminders}
-            onChange={() => handleToggle("smsBookingReminders")}
-          />
-          <NotificationToggle
-            label="Payment Alerts"
-            description="Receive SMS notifications for payment confirmations"
-            checked={notifications.smsPaymentAlerts}
-            onChange={() => handleToggle("smsPaymentAlerts")}
-          />
-          <NotificationToggle
-            label="Urgent Notifications Only"
-            description="Only receive SMS for urgent matters (cancellations, important updates)"
-            checked={notifications.smsUrgentOnly}
-            onChange={() => handleToggle("smsUrgentOnly")}
+            description="Special offers and promotions from providers"
+            checked={notifications.inAppPromotions}
+            onChange={() => handleToggle("inAppPromotions")}
           />
         </div>
         <div className="mt-4 rounded-lg border border-accent-blue-200 bg-accent-blue-50 p-4">
           <p className="text-sm text-foreground/70">
-            <span className="font-semibold">Note:</span> Standard SMS rates may
-            apply depending on your carrier.
+            <span className="font-semibold">Note:</span> System-critical
+            notifications (verification updates, account status) are always
+            delivered and cannot be disabled.
           </p>
         </div>
       </div>

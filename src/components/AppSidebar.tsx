@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import NotificationBell from "@/components/NotificationBell";
 import type { ReactNode } from "react";
 
 export interface NavItem {
@@ -344,6 +345,9 @@ export default function AppSidebar({
         </nav>
 
         <div className="border-t border-neutral-200 px-3 py-4">
+          <div className="mb-1">
+            <NotificationBell />
+          </div>
           {renderBottomNav(false, true)}
         </div>
       </div>
@@ -381,6 +385,9 @@ export default function AppSidebar({
 
         {/* Bottom Navigation */}
         <div className="border-t border-neutral-200 py-4 px-3">
+          <div className="mb-1">
+            <NotificationBell collapsed={isCollapsed} />
+          </div>
           {renderBottomNav(isCollapsed)}
         </div>
 

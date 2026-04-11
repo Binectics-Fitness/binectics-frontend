@@ -206,7 +206,7 @@ export default function UserDietPlanDetailPage() {
             </div>
 
             {/* Quick Info */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="rounded-xl border border-neutral-200 bg-white p-4">
                 <p className="text-xs text-neutral-500">Delivery</p>
                 <p className="text-sm font-bold text-foreground capitalize">
@@ -237,11 +237,11 @@ export default function UserDietPlanDetailPage() {
                 <h2 className="text-lg font-bold text-foreground mb-3">
                   Document Access
                 </h2>
-                <div className="flex items-center gap-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 sm:flex-row sm:items-center sm:gap-4">
                   <button
                     onClick={handlePreviewDocument}
                     disabled={loadingPreview}
-                    className="flex items-center gap-4 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity disabled:opacity-50 cursor-pointer"
+                    className="flex items-center gap-4 min-w-0 text-left hover:opacity-80 transition-opacity disabled:opacity-50 cursor-pointer"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-blue-100">
                       <svg
@@ -272,11 +272,11 @@ export default function UserDietPlanDetailPage() {
                       </p>
                     </div>
                   </button>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 w-full sm:w-auto sm:shrink-0">
                     <button
                       onClick={handlePreviewDocument}
                       disabled={loadingPreview}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-accent-blue-200 bg-white px-3 text-sm font-medium text-accent-blue-600 hover:bg-accent-blue-50 disabled:opacity-50"
+                      className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-accent-blue-200 bg-white px-3 text-sm font-medium text-accent-blue-600 hover:bg-accent-blue-50 disabled:opacity-50 sm:flex-initial"
                     >
                       <svg
                         className="h-4 w-4"
@@ -297,14 +297,12 @@ export default function UserDietPlanDetailPage() {
                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                         />
                       </svg>
-                      <span className="hidden sm:inline">
-                        {loadingPreview ? "Loading…" : "Preview"}
-                      </span>
+                      <span>{loadingPreview ? "Loading…" : "Preview"}</span>
                     </button>
                     <button
                       onClick={handleDownloadDocument}
                       disabled={downloadLoading}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent-blue-500 px-4 text-sm font-medium text-white hover:bg-accent-blue-600 disabled:opacity-50"
+                      className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent-blue-500 px-4 text-sm font-medium text-white hover:bg-accent-blue-600 disabled:opacity-50 sm:flex-initial"
                     >
                       <svg
                         className="h-4 w-4"
@@ -319,9 +317,7 @@ export default function UserDietPlanDetailPage() {
                           d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                         />
                       </svg>
-                      <span className="hidden sm:inline">
-                        {downloadLoading ? "Loading…" : "Download"}
-                      </span>
+                      <span>{downloadLoading ? "Loading…" : "Download"}</span>
                     </button>
                   </div>
                 </div>

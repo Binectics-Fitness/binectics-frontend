@@ -25,14 +25,11 @@ export const notificationPreferencesSchema = z.object({
   emailReminders: z.boolean(),
   emailNewsletter: z.boolean(),
   emailPromotions: z.boolean(),
-  pushBookings: z.boolean(),
-  pushPayments: z.boolean(),
-  pushMessages: z.boolean(),
-  pushReminders: z.boolean(),
-  pushPromotions: z.boolean(),
-  smsBookingReminders: z.boolean(),
-  smsPaymentAlerts: z.boolean(),
-  smsUrgentOnly: z.boolean(),
+  inAppBookings: z.boolean(),
+  inAppPayments: z.boolean(),
+  inAppMessages: z.boolean(),
+  inAppReminders: z.boolean(),
+  inAppPromotions: z.boolean(),
 });
 
 export type NotificationPreferencesFormData = z.infer<

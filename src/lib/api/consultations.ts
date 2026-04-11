@@ -118,7 +118,7 @@ export const consultationsService = {
   getTypes(params?: {
     includeInactive?: boolean;
   }): Promise<ApiResponse<ConsultationType[]>> {
-    const query = params?.includeInactive ? '?includeInactive=true' : '';
+    const query = params?.includeInactive ? "?includeInactive=true" : "";
     return apiClient.get<ConsultationType[]>(`/consultations/types${query}`);
   },
 
