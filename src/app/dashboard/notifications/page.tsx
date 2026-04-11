@@ -3,8 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import DietitianSidebar from "@/components/DietitianSidebar";
+import TrainerSidebar from "@/components/TrainerSidebar";
+import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/lib/types";
 import {
   notificationsService,
   type NotificationItem,
@@ -72,6 +76,16 @@ export default function NotificationsPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const isAuthorized = !authLoading && !!user;
+
+  const Sidebar =
+    user?.role === UserRole.DIETITIAN
+      ? DietitianSidebar
+      : user?.role === UserRole.TRAINER
+        ? TrainerSidebar
+        : user?.role === UserRole.GYM_OWNER
+          ? GymOwnerSidebar
+          : DashboardSidebar;
+
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [pagination, setPagination] = useState<NotificationPagination | null>(
     null,
@@ -154,7 +168,7 @@ export default function NotificationsPage() {
   if (authLoading || !isAuthorized || !user) {
     return (
       <div className="flex min-h-screen">
-        <DashboardSidebar />
+        <Sidebar />
         <main className="flex-1 md:ml-64">
           <DashboardLoading />
         </main>
@@ -166,7 +180,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
-      <DashboardSidebar />
+      <Sidebar />
       <main className="flex-1 pt-20 md:ml-64 md:pt-0">
         <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Header */}
