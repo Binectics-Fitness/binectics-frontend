@@ -655,4 +655,52 @@ export const marketplaceService = {
       data,
     );
   },
+
+  // ==================== PAYMENT CONFIGURATION ====================
+
+  async getPaymentConfigs(
+    organizationId: string,
+  ): Promise<
+    ApiResponse<
+      Array<{ gateway: string; public_key: string; is_active: boolean }>
+    >
+  > {
+    return await apiClient.get(
+      `/marketplace/organizations/${organizationId}/payment-config`,
+    );
+  },
+
+  async upsertPaymentConfig(
+    organizationId: string,
+    data: {
+      gateway: string;
+      public_key: string;
+      secret_key: string;
+      is_active?: boolean;
+    },
+  ): Promise<
+    ApiResponse<{ gateway: string; public_key: string; is_active: boolean }>
+  > {
+    return await apiClient.post(
+      `/marketplace/organizations/${organizationId}/payment-config`,
+      data,
+    );
+  },
+
+  async deletePaymentConfig(
+    organizationId: string,
+    gateway: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete(
+      `/marketplace/organizations/${organizationId}/payment-config/${gateway}`,
+    );
+  },
+
+  async getListingPaymentConfig(
+    listingId: string,
+  ): Promise<ApiResponse<{ paystack_public_key: string | null }>> {
+    return await apiClient.get(
+      `/marketplace/listings/${listingId}/payment-config`,
+    );
+  },
 };

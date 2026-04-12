@@ -18,10 +18,7 @@ import {
   createOrganizationSchema,
   type CreateOrganizationFormData,
 } from "@/lib/schemas/teams";
-import {
-  useMyOrganizations,
-  useCreateOrganization,
-} from "@/lib/queries/teams";
+import { useMyOrganizations, useCreateOrganization } from "@/lib/queries/teams";
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   [AccountType.GYM_OWNER]: "Gym Owner",

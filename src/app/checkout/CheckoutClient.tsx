@@ -123,6 +123,7 @@ function PaystackButton({
   onError,
   isProcessing,
   setIsProcessing,
+  publicKeyOverride,
 }: {
   amount: number;
   currency: string;
@@ -131,12 +132,16 @@ function PaystackButton({
   onError: (msg: string) => void;
   isProcessing: boolean;
   setIsProcessing: (v: boolean) => void;
+  publicKeyOverride?: string | null;
 }) {
   const reference = generateTxRef("PS");
   const config = buildPaystackConfig({ amount, currency, email, reference });
 
+  // Use provider's key if available, otherwise fall back to platform key
+  const effectivePublicKey = publicKeyOverride || config?.publicKey;
+
   const handleClick = () => {
-    if (!config) {
+    if (!effectivePublicKey) {
       onError("Paystack is not configured");
       return;
     }
@@ -158,7 +163,7 @@ function PaystackButton({
   };
 
   function launchPaystack() {
-    if (!config) {
+    if (!effectivePublicKey || !config) {
       setIsProcessing(false);
       onError("Paystack is not configured");
       return;
@@ -169,7 +174,7 @@ function PaystackButton({
       return;
     }
     const handler = window.PaystackPop.setup({
-      key: config.publicKey,
+      key: effectivePublicKey,
       email: config.email,
       amount: config.amount,
       currency: config.currency,
@@ -188,7 +193,7 @@ function PaystackButton({
   return (
     <Button
       onClick={handleClick}
-      disabled={isProcessing || !config}
+      disabled={isProcessing || !effectivePublicKey}
       className="w-full"
     >
       {isProcessing
@@ -306,6 +311,9 @@ function CheckoutContent() {
   const [error, setError] = useState("");
   const [paymentError, setPaymentError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [providerPaystackKey, setProviderPaystackKey] = useState<string | null>(
+    null,
+  );
 
   const gateway = plan
     ? getPaymentGateway(plan.currency)
@@ -317,9 +325,10 @@ function CheckoutContent() {
     setLoading(true);
     setError("");
     try {
-      const [listingRes, plansRes] = await Promise.all([
+      const [listingRes, plansRes, paymentConfigRes] = await Promise.all([
         marketplaceService.getListingById(listingId),
         marketplaceService.getPublicListingPlans(listingId),
+        marketplaceService.getListingPaymentConfig(listingId),
       ]);
 
       if (listingRes.success && listingRes.data) {
@@ -336,6 +345,12 @@ function CheckoutContent() {
         } else {
           setError("Plan not found or no longer available");
         }
+      }
+
+      if (paymentConfigRes.success && paymentConfigRes.data) {
+        setProviderPaystackKey(
+          paymentConfigRes.data.paystack_public_key || null,
+        );
       }
     } catch {
       setError("Failed to load checkout details");
@@ -616,6 +631,7 @@ function CheckoutContent() {
                       onError={handlePaymentError}
                       isProcessing={isProcessing}
                       setIsProcessing={setIsProcessing}
+                      publicKeyOverride={providerPaystackKey}
                     />
                   )}
 

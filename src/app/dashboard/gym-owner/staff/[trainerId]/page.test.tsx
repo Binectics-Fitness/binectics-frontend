@@ -77,7 +77,10 @@ describe("Trainer Detail Page", () => {
       ...baseMember,
       team_role_id: {
         ...(baseMember.team_role_id as teamsService.TeamRole),
-        permissions: ["view_members", "manage_schedule"] as teamsService.TeamPermission[],
+        permissions: [
+          "view_members",
+          "manage_schedule",
+        ] as teamsService.TeamPermission[],
       },
     };
 
@@ -115,7 +118,10 @@ describe("Trainer Detail Page", () => {
       ...baseMember,
       team_role_id: {
         ...(baseMember.team_role_id as teamsService.TeamRole),
-        permissions: ["manage_clients", "view_reports"] as teamsService.TeamPermission[],
+        permissions: [
+          "manage_clients",
+          "view_reports",
+        ] as teamsService.TeamPermission[],
       },
     };
 

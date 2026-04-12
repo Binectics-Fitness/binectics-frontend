@@ -12,10 +12,7 @@ import {
   ConsultationBookingStatus,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
-import {
-  type ClientProfile,
-  type LatestWeight,
-} from "@/lib/api/progress";
+import { type ClientProfile, type LatestWeight } from "@/lib/api/progress";
 import {
   useDashboardStats,
   useClientProfiles,
@@ -490,7 +487,10 @@ export default function DietitianDashboard() {
                     const goal = profile.goals?.[0] ?? "—";
                     const start = profile.starting_weight_kg;
                     const target = profile.target_weight_kg;
-                    const progress = computeProgress(profile, latestWeights ?? {});
+                    const progress = computeProgress(
+                      profile,
+                      latestWeights ?? {},
+                    );
                     return (
                       <li
                         key={profile._id}

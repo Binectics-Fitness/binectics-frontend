@@ -5,9 +5,7 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
-import {
-  ConsultationBookingStatus,
-} from "@/lib/api/consultations";
+import { ConsultationBookingStatus } from "@/lib/api/consultations";
 import { useMyBookings } from "@/lib/queries/consultations";
 
 const statusColors: Record<string, string> = {

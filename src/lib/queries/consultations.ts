@@ -23,10 +23,7 @@ export function useProviderBookings(
   });
 }
 
-export function useMyBookings(
-  filter?: "upcoming" | "past",
-  enabled = true,
-) {
+export function useMyBookings(filter?: "upcoming" | "past", enabled = true) {
   return useQuery<ConsultationBooking[]>({
     queryKey: queryKeys.consultations.myBookings(
       filter ? { filter } : undefined,

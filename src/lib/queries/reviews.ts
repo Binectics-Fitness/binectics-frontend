@@ -15,10 +15,7 @@ export function useTargetAggregate(
   return useQuery<ReviewAggregate | null>({
     queryKey: queryKeys.reviews.targetAggregate(targetType, targetId),
     queryFn: async () => {
-      const res = await reviewsService.getTargetAggregate(
-        targetType,
-        targetId,
-      );
+      const res = await reviewsService.getTargetAggregate(targetType, targetId);
       return res.success && res.data ? res.data : null;
     },
     enabled: enabled && !!targetType && !!targetId,
@@ -28,7 +25,11 @@ export function useTargetAggregate(
 export function useTargetReviews(
   targetType: ReviewTargetType,
   targetId: string,
-  params?: { page?: number; limit?: number; sort?: "newest" | "oldest" | "rating_high" | "rating_low" },
+  params?: {
+    page?: number;
+    limit?: number;
+    sort?: "newest" | "oldest" | "rating_high" | "rating_low";
+  },
   enabled = true,
 ) {
   return useQuery<GetTargetReviewsResponse | null>({

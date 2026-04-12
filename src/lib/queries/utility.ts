@@ -1,6 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "./keys";
-import { utilityService, type CountryItem, type PlatformConfig } from "@/lib/api/utility";
+import {
+  utilityService,
+  type CountryItem,
+  type PlatformConfig,
+} from "@/lib/api/utility";
 
 export function useCountries(enabled = true) {
   return useQuery<CountryItem[]>({

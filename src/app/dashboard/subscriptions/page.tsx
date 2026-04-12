@@ -43,10 +43,7 @@ function statusLabel(status: MembershipSubscriptionStatus) {
 
 export default function SubscriptionsPage() {
   const router = useRouter();
-  const {
-    data: subscriptions = [],
-    isLoading: loading,
-  } = useMySubscriptions();
+  const { data: subscriptions = [], isLoading: loading } = useMySubscriptions();
   const cancelMutation = useCancelSubscription();
   const toggleMutation = useToggleAutoRenew();
 
@@ -171,7 +168,10 @@ export default function SubscriptionsPage() {
                 const planDetails = getPlanDetails(sub);
                 const listingLabel = getListingLabel(sub);
                 return (
-                  <div key={sub._id} className="bg-white p-6 shadow-[var(--shadow-card)]">
+                  <div
+                    key={sub._id}
+                    className="bg-white p-6 shadow-[var(--shadow-card)]"
+                  >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">

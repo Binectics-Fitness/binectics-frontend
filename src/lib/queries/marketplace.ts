@@ -86,10 +86,7 @@ export function useMyListingRequests(enabled = true) {
   });
 }
 
-export function useOrgMembershipSubscriptions(
-  orgId?: string,
-  enabled = true,
-) {
+export function useOrgMembershipSubscriptions(orgId?: string, enabled = true) {
   return useQuery<MembershipSubscription[]>({
     queryKey: queryKeys.marketplace.orgMembershipSubscriptions(orgId ?? ""),
     queryFn: async () => {

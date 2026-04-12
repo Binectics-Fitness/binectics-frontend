@@ -23,24 +23,24 @@ Infrastructure is solid — 89 declared indexes, clean module boundaries, proper
 
 ## Issue Tracker
 
-| #   | Issue                                                                                                    | Priority | Status         | Notes    |
-| --- | -------------------------------------------------------------------------------------------------------- | -------- | -------------- | -------- |
-| 1   | [Trainer clients N+1 amplifier](#1-trainer-clients-n1-amplifier)                                         | P0       | ✅ Done        | PERF     |
-| 2   | [Forms N+1 fan-out](#2-forms-n1-frontend-fan-out)                                                        | P0       | ✅ Done        | PERF     |
-| 3   | [AuthContext cascading effect](#3-authcontext-cascading-effect)                                          | P0       | ✅ Done        | RELIABILITY |
-| 4   | [No client-side request cache](#4-no-client-side-request-cache)                                          | P1       | ✅ Done        | PERF     |
-| 5   | [Response over-fetching](#5-response-over-fetching-no-select)                                            | P1       | ✅ Done        | PERF     |
-| 6   | [Frontend waterfall chains](#6-frontend-waterfall-chains)                                                | P1       | ✅ Done        | PERF     |
-| 7   | [`$nearSphere` + `$text` mutual exclusion](#7-nearsphere--text-mutual-exclusion)                         | P2       | ✅ Done        | PERF     |
-| 8   | [Notification polling](#8-notification-polling-60s-interval)                                             | P2       | ✅ Done        | PERF     |
-| 9   | [Admin listings sequential queries](#9-admin-listings-2-sequential-queries)                              | P2       | ✅ Done        | PERF     |
-| 10  | [Admin endpoints missing RolesGuard](#10-admin-endpoints-missing-rolesguard)                             | P0       | ✅ Done        | SECURITY |
-| 11  | [File uploads missing size/type limits](#11-file-uploads-missing-sizetype-limits)                        | P0       | ✅ Done        | SECURITY |
-| 12  | [Unbounded queries missing `.limit()`](#12-unbounded-queries-missing-limit)                              | P1       | ✅ Done        | RELIABILITY |
-| 13  | [Race condition in subscription cancellation](#13-race-condition-in-subscription-cancellation)           | P1       | ✅ Done        | RELIABILITY |
-| 14  | [Hardcoded API URL in file upload](#14-hardcoded-api-url-in-file-upload)                                 | P1       | ✅ Done        |          |
-| 15  | [XHR upload missing abort/cleanup](#15-xhr-upload-missing-abortcleanup)                                  | P2       | ✅ Done        |          |
-| 16  | [Rate limiting too lenient on sensitive endpoints](#16-rate-limiting-too-lenient-on-sensitive-endpoints) | P2       | ✅ Done        | SECURITY |
+| #   | Issue                                                                                                    | Priority | Status  | Notes       |
+| --- | -------------------------------------------------------------------------------------------------------- | -------- | ------- | ----------- |
+| 1   | [Trainer clients N+1 amplifier](#1-trainer-clients-n1-amplifier)                                         | P0       | ✅ Done | PERF        |
+| 2   | [Forms N+1 fan-out](#2-forms-n1-frontend-fan-out)                                                        | P0       | ✅ Done | PERF        |
+| 3   | [AuthContext cascading effect](#3-authcontext-cascading-effect)                                          | P0       | ✅ Done | RELIABILITY |
+| 4   | [No client-side request cache](#4-no-client-side-request-cache)                                          | P1       | ✅ Done | PERF        |
+| 5   | [Response over-fetching](#5-response-over-fetching-no-select)                                            | P1       | ✅ Done | PERF        |
+| 6   | [Frontend waterfall chains](#6-frontend-waterfall-chains)                                                | P1       | ✅ Done | PERF        |
+| 7   | [`$nearSphere` + `$text` mutual exclusion](#7-nearsphere--text-mutual-exclusion)                         | P2       | ✅ Done | PERF        |
+| 8   | [Notification polling](#8-notification-polling-60s-interval)                                             | P2       | ✅ Done | PERF        |
+| 9   | [Admin listings sequential queries](#9-admin-listings-2-sequential-queries)                              | P2       | ✅ Done | PERF        |
+| 10  | [Admin endpoints missing RolesGuard](#10-admin-endpoints-missing-rolesguard)                             | P0       | ✅ Done | SECURITY    |
+| 11  | [File uploads missing size/type limits](#11-file-uploads-missing-sizetype-limits)                        | P0       | ✅ Done | SECURITY    |
+| 12  | [Unbounded queries missing `.limit()`](#12-unbounded-queries-missing-limit)                              | P1       | ✅ Done | RELIABILITY |
+| 13  | [Race condition in subscription cancellation](#13-race-condition-in-subscription-cancellation)           | P1       | ✅ Done | RELIABILITY |
+| 14  | [Hardcoded API URL in file upload](#14-hardcoded-api-url-in-file-upload)                                 | P1       | ✅ Done |             |
+| 15  | [XHR upload missing abort/cleanup](#15-xhr-upload-missing-abortcleanup)                                  | P2       | ✅ Done |             |
+| 16  | [Rate limiting too lenient on sensitive endpoints](#16-rate-limiting-too-lenient-on-sensitive-endpoints) | P2       | ✅ Done | SECURITY    |
 
 ---
 
@@ -417,10 +417,12 @@ this.listingModel.aggregate([
 **Status:** ✅ Done (2026-04-11)
 
 **Fix applied:** Created `src/common/upload/file-upload.config.ts` with two reusable Multer configs:
+
 - `imageUploadOptions` — JPEG/PNG/WEBP/GIF only, 10 MB max
 - `documentUploadOptions` — images + PDF, 10 MB max
 
 Applied across all 4 controllers (14 upload endpoints total):
+
 - `auth.controller.ts` — profile picture → `imageUploadOptions`
 - `cloudinary-upload.controller.ts` — single + batch image → `imageUploadOptions`
 - `marketplace-org.controller.ts` — profile/gallery images → `imageUploadOptions`, documents → `documentUploadOptions`

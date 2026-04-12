@@ -113,10 +113,7 @@ export default function MyMarketplaceListingPage() {
   }, [listing, formPopulated]);
 
   const updateListingCache = (updated: MarketplaceListing) => {
-    queryClient.setQueryData(
-      queryKeys.marketplace.myListing(),
-      updated,
-    );
+    queryClient.setQueryData(queryKeys.marketplace.myListing(), updated);
   };
 
   const splitComma = (s: string) =>

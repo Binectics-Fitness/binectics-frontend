@@ -48,17 +48,14 @@ export function useForms() {
     setIsLoading(false);
   }, []);
 
-  const deleteForm = useCallback(
-    async (formId: string): Promise<boolean> => {
-      const response = await formsService.deleteForm(formId);
-      if (response.success) {
-        setForms((prev) => prev.filter((f) => f._id !== formId));
-        return true;
-      }
-      return false;
-    },
-    [],
-  );
+  const deleteForm = useCallback(async (formId: string): Promise<boolean> => {
+    const response = await formsService.deleteForm(formId);
+    if (response.success) {
+      setForms((prev) => prev.filter((f) => f._id !== formId));
+      return true;
+    }
+    return false;
+  }, []);
 
   return { forms, responseCounts, isLoading, error, loadForms, deleteForm };
 }

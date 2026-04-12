@@ -288,8 +288,7 @@ describe("Schedule Subpage", () => {
       // Should show 2 active rules and 1 exception in the stats grid
       const statValues = screen.getAllByText(
         (_, el) =>
-          el?.tagName === "P" &&
-          el?.classList.contains("text-3xl") === true,
+          el?.tagName === "P" && el?.classList.contains("text-3xl") === true,
       );
       const texts = statValues.map((el) => el.textContent);
       expect(texts).toContain("2"); // active rules

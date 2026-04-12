@@ -343,8 +343,10 @@ function CreateDietPlanContent() {
             ? `/progress/organizations/${orgId}/diet-plans`
             : `/progress/diet-plans`;
 
-          const res = await uploadWithProgress(endpoint, formData, (percent) =>
-            setUploadProgress(percent),
+          const res = await uploadWithProgress(
+            endpoint,
+            formData,
+            (percent) => setUploadProgress(percent),
             abortController.signal,
           );
 

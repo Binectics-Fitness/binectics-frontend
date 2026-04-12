@@ -156,9 +156,17 @@ function DietitianClientsPageContent() {
         ? progressService.getOrgSentClientRequests(currentOrg._id)
         : progressService.getSentClientRequests(),
     ]);
-    if (invRes.status === "fulfilled" && invRes.value.success && invRes.value.data)
+    if (
+      invRes.status === "fulfilled" &&
+      invRes.value.success &&
+      invRes.value.data
+    )
       setInvitations(invRes.value.data);
-    if (sentRes.status === "fulfilled" && sentRes.value.success && sentRes.value.data)
+    if (
+      sentRes.status === "fulfilled" &&
+      sentRes.value.success &&
+      sentRes.value.data
+    )
       setSentRequests(sentRes.value.data);
   }, [currentOrg]);
 

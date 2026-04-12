@@ -1,7 +1,8 @@
 export const queryKeys = {
   progress: {
     all: ["progress"] as const,
-    dashboardStats: () => [...queryKeys.progress.all, "dashboardStats"] as const,
+    dashboardStats: () =>
+      [...queryKeys.progress.all, "dashboardStats"] as const,
     clientProfiles: (orgId?: string) =>
       [...queryKeys.progress.all, "clientProfiles", orgId ?? "mine"] as const,
     progressSummary: (clientProfileId: string, days?: number) =>
@@ -12,7 +13,8 @@ export const queryKeys = {
     sentRequests: (orgId?: string) =>
       [...queryKeys.progress.all, "sentRequests", orgId ?? "mine"] as const,
     myOwnProfiles: () => [...queryKeys.progress.all, "myOwnProfiles"] as const,
-    myWorkoutPlans: () => [...queryKeys.progress.all, "myWorkoutPlans"] as const,
+    myWorkoutPlans: () =>
+      [...queryKeys.progress.all, "myWorkoutPlans"] as const,
     myDietPlans: () => [...queryKeys.progress.all, "myDietPlans"] as const,
     activityReports: (profileId?: string) =>
       [...queryKeys.progress.all, "activityReports", profileId] as const,
@@ -46,8 +48,7 @@ export const queryKeys = {
       [...queryKeys.teams.all, "detail", orgId] as const,
     members: (orgId: string) =>
       [...queryKeys.teams.all, "members", orgId] as const,
-    roles: (orgId: string) =>
-      [...queryKeys.teams.all, "roles", orgId] as const,
+    roles: (orgId: string) => [...queryKeys.teams.all, "roles", orgId] as const,
     invitations: (orgId: string) =>
       [...queryKeys.teams.all, "invitations", orgId] as const,
   },
@@ -73,8 +74,7 @@ export const queryKeys = {
     all: ["notifications"] as const,
     list: (params?: Record<string, unknown>) =>
       [...queryKeys.notifications.all, "list", params] as const,
-    preferences: () =>
-      [...queryKeys.notifications.all, "preferences"] as const,
+    preferences: () => [...queryKeys.notifications.all, "preferences"] as const,
   },
 
   reviews: {
@@ -86,13 +86,7 @@ export const queryKeys = {
       targetId: string,
       params?: { page?: number; sort?: string },
     ) =>
-      [
-        ...queryKeys.reviews.all,
-        "list",
-        targetType,
-        targetId,
-        params,
-      ] as const,
+      [...queryKeys.reviews.all, "list", targetType, targetId, params] as const,
   },
 
   checkins: {

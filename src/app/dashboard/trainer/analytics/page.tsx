@@ -10,12 +10,8 @@ import { useProviderBookings } from "@/lib/queries/consultations";
 import { useTargetAggregate } from "@/lib/queries/reviews";
 import { useOrgMembershipSubscriptions } from "@/lib/queries/marketplace";
 import { UserRole, MembershipSubscriptionStatus } from "@/lib/types";
-import {
-  ConsultationBookingStatus,
-} from "@/lib/api/consultations";
-import {
-  ReviewTargetType,
-} from "@/lib/api/reviews";
+import { ConsultationBookingStatus } from "@/lib/api/consultations";
+import { ReviewTargetType } from "@/lib/api/reviews";
 
 export default function TrainerAnalyticsPage() {
   const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
@@ -33,10 +29,7 @@ export default function TrainerAnalyticsPage() {
   const { data: reviewAgg = null, isLoading: loadingReviews } =
     useTargetAggregate(ReviewTargetType.TRAINER, user?.id ?? "", ready);
   const { data: subscriptions = [], isLoading: loadingSubs } =
-    useOrgMembershipSubscriptions(
-      currentOrg?._id,
-      ready && !!currentOrg,
-    );
+    useOrgMembershipSubscriptions(currentOrg?._id, ready && !!currentOrg);
 
   const loadingData =
     loadingStats ||

@@ -5,11 +5,7 @@ import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
-import {
-  CheckInHistoryPeriod,
-  type CheckIn,
-  UserRole,
-} from "@/lib/types";
+import { CheckInHistoryPeriod, type CheckIn, UserRole } from "@/lib/types";
 import { useMyCheckInStats, useMyCheckInHistory } from "@/lib/queries/checkins";
 
 function formatTime(dateStr: string): string {
