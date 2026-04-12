@@ -437,7 +437,7 @@ export default function TrainerDashboard() {
                 <ul className="space-y-5">
                   {clientProfiles.map((profile) => {
                     const name = getClientName(profile);
-                    const goal = profile.goals[0] ?? "—";
+                    const goal = profile.goals?.[0] ?? "—";
                     const joined = new Date(
                       profile.created_at,
                     ).toLocaleDateString();

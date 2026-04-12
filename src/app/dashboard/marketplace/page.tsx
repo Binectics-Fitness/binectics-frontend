@@ -9,6 +9,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useMyListing } from "@/lib/queries/marketplace";
 import { useCountries } from "@/lib/queries/utility";
+import type { CountryItem } from "@/lib/api/utility";
 import { queryKeys } from "@/lib/queries/keys";
 import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
 import { useForm } from "react-hook-form";

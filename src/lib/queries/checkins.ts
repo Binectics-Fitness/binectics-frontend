@@ -30,20 +30,6 @@ export function useMyCheckInStats(enabled = true) {
   });
 }
 
-export function useMyCheckIns(
-  params?: { from?: string; to?: string },
-  enabled = true,
-) {
-  return useQuery<CheckIn[]>({
-    queryKey: queryKeys.checkins.myCheckIns(params as Record<string, string>),
-    queryFn: async () => {
-      const res = await checkinsService.getMyCheckIns(params);
-      return res.success && res.data ? res.data : [];
-    },
-    enabled,
-  });
-}
-
 export function useMyCheckInHistory(
   period?: CheckInHistoryPeriod,
   enabled = true,

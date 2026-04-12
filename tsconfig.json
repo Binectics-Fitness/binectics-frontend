@@ -38,6 +38,10 @@
   ],
   "exclude": [
     "node_modules",
-    "api"
+    "api",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }

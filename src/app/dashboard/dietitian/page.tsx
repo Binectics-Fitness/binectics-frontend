@@ -487,7 +487,7 @@ export default function DietitianDashboard() {
                 <ul className="space-y-5">
                   {clientProfiles.map((profile) => {
                     const name = getClientName(profile);
-                    const goal = profile.goals[0] ?? "—";
+                    const goal = profile.goals?.[0] ?? "—";
                     const start = profile.starting_weight_kg;
                     const target = profile.target_weight_kg;
                     const progress = computeProgress(profile, latestWeights ?? {});
