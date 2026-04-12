@@ -4,6 +4,12 @@ import userEvent from "@testing-library/user-event";
 import ScheduleSubpage from "./page";
 import * as teamsService from "@/lib/api/teams";
 import * as consultationsService from "@/lib/api/consultations";
+import type { OrganizationMember } from "@/lib/api/teams";
+import {
+  AvailabilityExceptionType,
+  type AvailabilityRule,
+  type AvailabilityException,
+} from "@/lib/api/consultations";
 
 // Mock the services
 vi.mock("@/lib/api/teams");
@@ -33,27 +39,40 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/GymOwnerSidebar", () => ({ default: () => null }));
 
 describe("Schedule Subpage", () => {
+  const baseMember: OrganizationMember = {
+    _id: "member-1",
+    organization_id: "org-123",
+    status: "active" as OrganizationMember["status"],
+    user_id: {
+      _id: "user-1",
+      first_name: "John",
+      last_name: "Doe",
+      email: "john@example.com",
+    },
+    team_role_id: {
+      _id: "role-1",
+      organization_id: "org-123",
+      name: "Trainer",
+      code: "trainer",
+      permissions: [],
+      is_default: false,
+      created_by: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    invited_by: null,
+    joined_at: new Date().toISOString(),
+    updated_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should load and display availability rules", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
-    const mockRules = [
+    const mockRules: AvailabilityRule[] = [
       {
         id: "rule-1",
         dayOfWeek: 1,
@@ -74,7 +93,7 @@ describe("Schedule Subpage", () => {
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -110,22 +129,7 @@ describe("Schedule Subpage", () => {
   });
 
   it("should filter rules by selected day", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
-    const mockRules = [
+    const mockRules: AvailabilityRule[] = [
       {
         id: "rule-1",
         dayOfWeek: 1,
@@ -146,7 +150,7 @@ describe("Schedule Subpage", () => {
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -189,35 +193,18 @@ describe("Schedule Subpage", () => {
   });
 
   it("should display upcoming exceptions", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
-    const mockRules: any[] = [];
-
-    const mockExceptions = [
+    const mockExceptions: AvailabilityException[] = [
       {
         id: "exc-1",
         date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        type: "UNAVAILABLE",
+        type: AvailabilityExceptionType.UNAVAILABLE,
         reason: "Holiday",
       },
     ];
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -225,7 +212,7 @@ describe("Schedule Subpage", () => {
       consultationsService.consultationsService.getMyAvailability,
     ).mockResolvedValue({
       success: true,
-      data: mockRules,
+      data: [],
       message: "Success",
     });
 
@@ -246,49 +233,36 @@ describe("Schedule Subpage", () => {
   });
 
   it("should display statistics", async () => {
-    const mockMembers = [
+    const mockRules: AvailabilityRule[] = [
       {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
-    const mockRules = [
-      {
-        _id: "rule-1",
+        id: "rule-1",
         dayOfWeek: 1,
         startTime: "09:00",
         endTime: "17:00",
         timezone: "America/New_York",
+        isActive: true,
       },
       {
-        _id: "rule-2",
+        id: "rule-2",
         dayOfWeek: 2,
         startTime: "10:00",
         endTime: "18:00",
         timezone: "America/New_York",
+        isActive: true,
       },
     ];
 
-    const mockExceptions = [
+    const mockExceptions: AvailabilityException[] = [
       {
-        _id: "exc-1",
+        id: "exc-1",
         date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        status: "UNAVAILABLE",
+        type: AvailabilityExceptionType.UNAVAILABLE,
       },
     ];
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -311,32 +285,22 @@ describe("Schedule Subpage", () => {
     render(<ScheduleSubpage />);
 
     await waitFor(() => {
-      // Should show 2 active rules
-      expect(screen.getByText(/2/)).toBeInTheDocument();
-      // Should show 1 exception
-      expect(screen.getByText(/1/)).toBeInTheDocument();
+      // Should show 2 active rules and 1 exception in the stats grid
+      const statValues = screen.getAllByText(
+        (_, el) =>
+          el?.tagName === "P" &&
+          el?.classList.contains("text-3xl") === true,
+      );
+      const texts = statValues.map((el) => el.textContent);
+      expect(texts).toContain("2"); // active rules
+      expect(texts).toContain("1"); // exceptions
     });
   });
 
   it("should have link to consultations manager", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -397,24 +361,9 @@ describe("Schedule Subpage", () => {
   });
 
   it("should display day of week selector", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 

@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Partners',
+  description: 'Partner with Binectics and grow your gym, personal training, or dietitian business across 50+ countries.',
+  alternates: { canonical: '/partners' },
+};
 
 export default function PartnersPage() {
   const benefits = [

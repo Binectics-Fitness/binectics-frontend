@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import RevenueSubpage from "./page";
 import * as teamsService from "@/lib/api/teams";
 import * as checkinsService from "@/lib/api/checkins";
+import type { OrganizationMember } from "@/lib/api/teams";
+import type { OrgCheckInDashboardStats } from "@/lib/types";
 
 // Mock the services
 vi.mock("@/lib/api/teams");
@@ -33,37 +35,55 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/GymOwnerSidebar", () => ({ default: () => null }));
 
 describe("Revenue Subpage", () => {
+  const baseMember: OrganizationMember = {
+    _id: "member-1",
+    organization_id: "org-123",
+    status: "active" as OrganizationMember["status"],
+    user_id: {
+      _id: "user-1",
+      first_name: "John",
+      last_name: "Doe",
+      email: "john@example.com",
+    },
+    team_role_id: {
+      _id: "role-1",
+      organization_id: "org-123",
+      name: "Trainer",
+      code: "trainer",
+      permissions: [],
+      is_default: false,
+      created_by: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    invited_by: null,
+    joined_at: new Date().toISOString(),
+    updated_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const baseOrgStats: OrgCheckInDashboardStats = {
+    today_check_ins: 10,
+    week_check_ins: 50,
+    month_check_ins: 200,
+    active_members: 45,
+    average_rating: 4.5,
+    review_count: 30,
+    revenue_today: 250,
+    revenue_week: 1500,
+    revenue_month: 6000,
+    recent_check_ins: [],
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should load and display organization revenue data", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
-    const mockOrgStats = {
-      revenue_today: 250,
-      revenue_week: 1500,
-      revenue_month: 6000,
-      active_members: 45,
-      total_check_ins: 150,
-    };
-
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -71,7 +91,7 @@ describe("Revenue Subpage", () => {
       checkinsService.checkinsService.getOrgDashboardStats,
     ).mockResolvedValue({
       success: true,
-      data: mockOrgStats,
+      data: baseOrgStats,
       message: "Success",
     });
 
@@ -85,32 +105,22 @@ describe("Revenue Subpage", () => {
   });
 
   it("should display member context (name, role, joined date)", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date(2024, 0, 15).toISOString(),
-      },
-    ];
+    const member: OrganizationMember = {
+      ...baseMember,
+      joined_at: new Date(2024, 0, 15).toISOString(),
+    };
 
-    const mockOrgStats = {
+    const orgStats: OrgCheckInDashboardStats = {
+      ...baseOrgStats,
       revenue_today: 100,
       revenue_week: 800,
       revenue_month: 3500,
       active_members: 30,
-      total_check_ins: 100,
     };
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [member],
       message: "Success",
     });
 
@@ -118,7 +128,7 @@ describe("Revenue Subpage", () => {
       checkinsService.checkinsService.getOrgDashboardStats,
     ).mockResolvedValue({
       success: true,
-      data: mockOrgStats,
+      data: orgStats,
       message: "Success",
     });
 
@@ -131,32 +141,17 @@ describe("Revenue Subpage", () => {
   });
 
   it("should have link to full revenue dashboard", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
-    const mockOrgStats = {
+    const orgStats: OrgCheckInDashboardStats = {
+      ...baseOrgStats,
       revenue_today: 100,
       revenue_week: 800,
       revenue_month: 3500,
       active_members: 30,
-      total_check_ins: 100,
     };
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -164,7 +159,7 @@ describe("Revenue Subpage", () => {
       checkinsService.checkinsService.getOrgDashboardStats,
     ).mockResolvedValue({
       success: true,
-      data: mockOrgStats,
+      data: orgStats,
       message: "Success",
     });
 
@@ -199,32 +194,17 @@ describe("Revenue Subpage", () => {
   });
 
   it("should display scope explanation note", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: { _id: "role-1", name: "Trainer" },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
-    const mockOrgStats = {
+    const orgStats: OrgCheckInDashboardStats = {
+      ...baseOrgStats,
       revenue_today: 100,
       revenue_week: 800,
       revenue_month: 3500,
       active_members: 30,
-      total_check_ins: 100,
     };
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -232,7 +212,7 @@ describe("Revenue Subpage", () => {
       checkinsService.checkinsService.getOrgDashboardStats,
     ).mockResolvedValue({
       success: true,
-      data: mockOrgStats,
+      data: orgStats,
       message: "Success",
     });
 

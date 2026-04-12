@@ -1,92 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
+import DashboardLoading from "@/components/DashboardLoading";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { UserRole } from "@/lib/types";
+import { useMyOrganizations } from "@/lib/queries/teams";
+import { useOrgDashboardStats } from "@/lib/queries/checkins";
+
+function fmt(n: number): string {
+  return n.toLocaleString("en-US", { minimumFractionDigits: 0 });
+}
 
 export default function GymOwnerRevenuePage() {
-  const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const router = useRouter();
+  const { isLoading: authLoading, isAuthenticated: isAuthorized } =
+    useRequireAuth();
+  const { user } = useAuth();
+  const { currentOrg } = useOrganization();
+  const organizationId = currentOrg?._id;
+  const [canView, setCanView] = useState(false);
+  const [resolving, setResolving] = useState(true);
 
-  const revenueData = {
-    today: 2340,
-    week: 15680,
-    month: 67450,
-    year: 789500,
-  };
+  const isNonOwnerRole =
+    !authLoading &&
+    isAuthorized &&
+    !!user &&
+    user.role !== UserRole.GYM_OWNER &&
+    user.role !== UserRole.ADMIN;
 
-  // Separate gym revenue (memberships) from trainer revenue (personal training)
-  const gymRevenue = {
-    month: 52950, // Direct gym memberships and facilities
-    trainerShare: 14500, // Gym's share from trainer sessions (30%)
-  };
+  const { data: myOrgs } = useMyOrganizations(isNonOwnerRole);
+  const { data: orgStats, isLoading: statsLoading } =
+    useOrgDashboardStats(organizationId);
 
-  const trainerRevenue = {
-    month: 33850, // Trainer's share from their sessions (70%)
-  };
+  useEffect(() => {
+    if (authLoading || !isAuthorized || !user) return;
+    if (user.role === UserRole.GYM_OWNER || user.role === UserRole.ADMIN) {
+      setCanView(true);
+      setResolving(false);
+      return;
+    }
+    if (myOrgs === undefined) return;
+    if (myOrgs.some((o) => o.is_owner)) {
+      setCanView(true);
+    } else {
+      router.replace("/dashboard");
+    }
+    setResolving(false);
+  }, [authLoading, isAuthorized, user, myOrgs, router]);
 
-  const totalGymEarnings = gymRevenue.month + gymRevenue.trainerShare;
+  if (authLoading || resolving) return <DashboardLoading />;
+  if (!isAuthorized || !canView) return null;
 
-  const transactions = [
-    {
-      id: 1,
-      member: "John Smith",
-      plan: "Basic Monthly",
-      amount: 49,
-      date: "2024-01-16",
-      status: "completed",
-      type: "Membership",
-    },
-    {
-      id: 2,
-      member: "Jane Doe",
-      trainer: "Sarah Johnson",
-      plan: "PT Session (1hr)",
-      amount: 75,
-      date: "2024-01-16",
-      status: "completed",
-      type: "Training",
-      gymShare: 22.5,
-      trainerShare: 52.5,
-    },
-    {
-      id: 3,
-      member: "Sarah Johnson",
-      plan: "3-Month Package",
-      amount: 129,
-      date: "2024-01-16",
-      status: "completed",
-      type: "Membership",
-    },
-    {
-      id: 4,
-      member: "Mike Davis",
-      plan: "Day Pass",
-      amount: 15,
-      date: "2024-01-15",
-      status: "completed",
-      type: "Membership",
-    },
-    {
-      id: 5,
-      member: "Tom Wilson",
-      trainer: "Mike Chen",
-      plan: "PT Session (1hr)",
-      amount: 75,
-      date: "2024-01-15",
-      status: "completed",
-      type: "Training",
-      gymShare: 22.5,
-      trainerShare: 52.5,
-    },
-    {
-      id: 6,
-      member: "Emily Brown",
-      plan: "Basic Monthly",
-      amount: 49,
-      date: "2024-01-15",
-      status: "pending",
-      type: "Membership",
-    },
-  ];
+  const today = orgStats?.revenue_today ?? 0;
+  const week = orgStats?.revenue_week ?? 0;
+  const month = orgStats?.revenue_month ?? 0;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -95,62 +66,19 @@ export default function GymOwnerRevenuePage() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-black text-foreground">
-              Revenue & Earnings
+              Revenue &amp; Earnings
             </h1>
-            <p className="text-foreground/60 mt-1">
+            <p className="text-sm text-foreground/60 mt-1">
               Track your gym&apos;s financial performance
             </p>
           </div>
 
-          {/* Revenue Breakdown */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">
-                Total Revenue (This Month)
-              </p>
-              <p className="text-3xl font-black text-foreground mt-2">
-                ${revenueData.month.toLocaleString()}
-              </p>
-              <p className="text-sm text-primary-500 mt-2">
-                All sources combined
-              </p>
-            </div>
-            <div className="bg-primary-50 border-2 border-primary-200 rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">
-                Your Gym Earnings
-              </p>
-              <p className="text-3xl font-black text-primary-600 mt-2">
-                ${totalGymEarnings.toLocaleString()}
-              </p>
-              <div className="text-sm text-foreground/60 mt-2 space-y-1">
-                <p>• Memberships: ${gymRevenue.month.toLocaleString()}</p>
-                <p>
-                  • Trainer Share: ${gymRevenue.trainerShare.toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="bg-accent-blue-50 border-2 border-accent-blue-200 rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">
-                Trainer Earnings
-              </p>
-              <p className="text-3xl font-black text-accent-blue-600 mt-2">
-                ${trainerRevenue.month.toLocaleString()}
-              </p>
-              <p className="text-sm text-foreground/60 mt-2">
-                Paid to your trainers
-              </p>
-            </div>
-          </div>
-
           {/* Revenue Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Today</p>
               <p className="text-3xl font-black text-foreground mt-2">
-                ${revenueData.today.toLocaleString()}
-              </p>
-              <p className="text-sm text-primary-500 mt-2">
-                +8% from yesterday
+                {statsLoading ? "—" : `$${fmt(today)}`}
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
@@ -158,217 +86,152 @@ export default function GymOwnerRevenuePage() {
                 This Week
               </p>
               <p className="text-3xl font-black text-foreground mt-2">
-                ${revenueData.week.toLocaleString()}
+                {statsLoading ? "—" : `$${fmt(week)}`}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
+            <div className="bg-primary-50 border-2 border-primary-200 rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
                 This Month
               </p>
+              <p className="text-3xl font-black text-primary-600 mt-2">
+                {statsLoading ? "—" : `$${fmt(month)}`}
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
+              <p className="text-sm font-medium text-foreground/60">
+                Active Members
+              </p>
               <p className="text-3xl font-black text-foreground mt-2">
-                ${revenueData.month.toLocaleString()}
+                {statsLoading ? "—" : fmt(orgStats?.active_members ?? 0)}
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">
-                This Year
+                Avg. Rating
               </p>
               <p className="text-3xl font-black text-foreground mt-2">
-                ${revenueData.year.toLocaleString()}
+                {statsLoading
+                  ? "—"
+                  : (orgStats?.average_rating ?? 0).toFixed(1)}
+              </p>
+              <p className="text-sm text-foreground/60 mt-1">
+                {statsLoading ? "" : `${orgStats?.review_count ?? 0} reviews`}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
+              <p className="text-sm font-medium text-foreground/60">
+                Check-ins This Month
+              </p>
+              <p className="text-3xl font-black text-foreground mt-2">
+                {statsLoading ? "—" : fmt(orgStats?.month_check_ins ?? 0)}
               </p>
             </div>
           </div>
 
-          {/* Revenue Chart */}
+          {/* Revenue Breakdown Visual */}
           <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-foreground">
-                Revenue Trends
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {["week", "month", "year"].map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setSelectedPeriod(period)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedPeriod === period
-                        ? "bg-accent-blue-500 text-white"
-                        : "bg-neutral-100 text-foreground hover:bg-neutral-200"
-                    }`}
-                  >
-                    {period.charAt(0).toUpperCase() + period.slice(1)}
-                  </button>
-                ))}
+            <h3 className="text-lg font-bold text-foreground mb-6">
+              Revenue Breakdown
+            </h3>
+            {statsLoading ? (
+              <div className="h-32 flex items-center justify-center">
+                <p className="text-foreground/60">Loading revenue data…</p>
               </div>
-            </div>
-            <div className="h-64 flex items-center justify-center bg-neutral-50 rounded-lg">
-              <p className="text-foreground/60">
-                Revenue chart visualization coming soon...
-              </p>
-            </div>
-          </div>
-
-          {/* Recent Transactions */}
-          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
-            <div className="px-6 py-4 border-b border-neutral-200">
-              <h3 className="text-lg font-bold text-foreground">
-                Recent Transactions
-              </h3>
-            </div>
-
-            {/* Mobile cards */}
-            <div className="divide-y divide-gray-200 md:hidden">
-              {transactions.map((tx) => (
-                <div key={tx.id} className="p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-foreground">{tx.member}</p>
-                      {tx.trainer && (
-                        <p className="text-sm text-foreground/60">
-                          with {tx.trainer}
-                        </p>
-                      )}
-                      <p className="text-sm text-foreground/60">{tx.plan}</p>
-                    </div>
-                    <span
-                      className={`shrink-0 inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                        tx.status === "completed"
-                          ? "bg-primary-100 text-primary-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {tx.status}
+            ) : month === 0 ? (
+              <div className="h-32 flex items-center justify-center">
+                <p className="text-foreground/60">
+                  No revenue recorded this month yet.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Bar: Today */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-foreground/60">Today</span>
+                    <span className="font-semibold text-foreground">
+                      ${fmt(today)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span
-                      className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                        tx.type === "Membership"
-                          ? "bg-primary-100 text-primary-700"
-                          : "bg-accent-blue-100 text-accent-blue-700"
-                      }`}
-                    >
-                      {tx.type}
-                    </span>
-                    <span className="text-sm font-semibold text-foreground">
-                      Total: ${tx.amount}
-                    </span>
-                    {tx.type === "Membership" ? (
-                      <span className="text-sm font-semibold text-primary-600">
-                        Your share: ${tx.amount}
-                      </span>
-                    ) : (
-                      <span className="text-sm font-semibold text-primary-600">
-                        Your share: ${tx.gymShare}{" "}
-                        <span className="text-foreground/60 font-normal">
-                          (30%)
-                        </span>
-                      </span>
-                    )}
-                    <span className="text-sm text-foreground/60">
-                      {tx.date}
-                    </span>
+                  <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary-500 rounded-full transition-all"
+                      style={{
+                        width: `${Math.min(100, (today / month) * 100)}%`,
+                      }}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Desktop table */}
-            <div className="hidden overflow-x-auto md:block">
-              <table className="w-full">
-                <thead className="bg-neutral-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
-                      Member
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
-                      Plan
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
-                      Your Share
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-foreground">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {transactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-neutral-50">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {tx.member}
-                          </p>
-                          {tx.trainer && (
-                            <p className="text-xs text-foreground/60">
-                              with {tx.trainer}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                            tx.type === "Membership"
-                              ? "bg-primary-100 text-primary-700"
-                              : "bg-accent-blue-100 text-accent-blue-700"
-                          }`}
-                        >
-                          {tx.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-foreground/60">
-                        {tx.plan}
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-foreground">
-                        ${tx.amount}
-                      </td>
-                      <td className="px-6 py-4">
-                        {tx.type === "Membership" ? (
-                          <span className="font-semibold text-primary-600">
-                            ${tx.amount}
-                          </span>
-                        ) : (
-                          <div>
-                            <p className="font-semibold text-primary-600">
-                              ${tx.gymShare}
-                            </p>
-                            <p className="text-xs text-foreground/60">
-                              (30% split)
-                            </p>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-foreground/60">
-                        {tx.date}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                            tx.status === "completed"
-                              ? "bg-primary-100 text-primary-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {tx.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                {/* Bar: This Week */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-foreground/60">This Week</span>
+                    <span className="font-semibold text-foreground">
+                      ${fmt(week)}
+                    </span>
+                  </div>
+                  <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent-blue-500 rounded-full transition-all"
+                      style={{
+                        width: `${Math.min(100, (week / month) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+                {/* Bar: This Month */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-foreground/60">This Month</span>
+                    <span className="font-semibold text-foreground">
+                      ${fmt(month)}
+                    </span>
+                  </div>
+                  <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-accent-purple-500 rounded-full w-full" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Recent Check-ins */}
+          {orgStats?.recent_check_ins &&
+            orgStats.recent_check_ins.length > 0 && (
+              <div className="bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+                <div className="px-6 py-4 border-b border-neutral-200">
+                  <h3 className="text-lg font-bold text-foreground">
+                    Recent Check-ins
+                  </h3>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {orgStats.recent_check_ins.slice(0, 10).map((ci) => {
+                    const memberName =
+                      typeof ci.member_user_id === "object" &&
+                      ci.member_user_id
+                        ? `${ci.member_user_id.first_name} ${ci.member_user_id.last_name}`
+                        : "Member";
+                    return (
+                      <div
+                        key={ci._id}
+                        className="px-6 py-3 flex items-center justify-between"
+                      >
+                        <span className="text-sm font-medium text-foreground">
+                          {memberName}
+                        </span>
+                        <span className="text-sm text-foreground/60">
+                          {new Date(ci.checked_in_at).toLocaleString()}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
         </div>
       </main>
     </div>

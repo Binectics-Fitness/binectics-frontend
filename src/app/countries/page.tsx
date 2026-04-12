@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Countries',
+  description: 'Explore Binectics fitness partners across 50+ countries. Find gyms, trainers, and dietitians worldwide.',
+  alternates: { canonical: '/countries' },
+};
 
 export default function CountriesPage() {
   const regions = [

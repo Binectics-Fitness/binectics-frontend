@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TrainerDetailPage from "./page";
 import * as teamsService from "@/lib/api/teams";
+import type { OrganizationMember } from "@/lib/api/teams";
 
 // Mock the services
 vi.mock("@/lib/api/teams");
@@ -39,34 +40,50 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/GymOwnerSidebar", () => ({ default: () => null }));
 
 describe("Trainer Detail Page", () => {
+  const baseMember: OrganizationMember = {
+    _id: "member-1",
+    organization_id: "org-123",
+    status: "active" as OrganizationMember["status"],
+    user_id: {
+      _id: "user-1",
+      first_name: "John",
+      last_name: "Doe",
+      email: "john@example.com",
+    },
+    team_role_id: {
+      _id: "role-1",
+      organization_id: "org-123",
+      name: "Trainer",
+      code: "TRAINER",
+      permissions: [],
+      is_default: false,
+      created_by: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    invited_by: null,
+    joined_at: new Date().toISOString(),
+    updated_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should load and display member details", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: {
-          _id: "role-1",
-          name: "Trainer",
-          code: "TRAINER",
-          permissions: ["view_members", "manage_schedule"],
-        },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
+    const member: OrganizationMember = {
+      ...baseMember,
+      team_role_id: {
+        ...(baseMember.team_role_id as teamsService.TeamRole),
+        permissions: ["view_members", "manage_schedule"] as teamsService.TeamPermission[],
       },
-    ];
+    };
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [member],
       message: "Success",
     });
 
@@ -79,28 +96,9 @@ describe("Trainer Detail Page", () => {
   });
 
   it("should display member status badge", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: {
-          _id: "role-1",
-          name: "Trainer",
-          permissions: [],
-        },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -113,28 +111,17 @@ describe("Trainer Detail Page", () => {
   });
 
   it("should display role permissions", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: {
-          _id: "role-1",
-          name: "Trainer",
-          permissions: ["manage_clients", "view_reports"],
-        },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
+    const member: OrganizationMember = {
+      ...baseMember,
+      team_role_id: {
+        ...(baseMember.team_role_id as teamsService.TeamRole),
+        permissions: ["manage_clients", "view_reports"] as teamsService.TeamPermission[],
       },
-    ];
+    };
 
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [member],
       message: "Success",
     });
 
@@ -147,33 +134,14 @@ describe("Trainer Detail Page", () => {
   });
 
   it("should toggle member status from active to inactive", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: {
-          _id: "role-1",
-          name: "Trainer",
-          permissions: [],
-        },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
     const updatedMember = {
-      ...mockMembers[0],
+      ...baseMember,
       status: "inactive",
     };
 
@@ -203,28 +171,9 @@ describe("Trainer Detail Page", () => {
   });
 
   it("should remove member with confirmation", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: {
-          _id: "role-1",
-          name: "Trainer",
-          permissions: [],
-        },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 
@@ -267,28 +216,9 @@ describe("Trainer Detail Page", () => {
   });
 
   it("should handle API errors during status update", async () => {
-    const mockMembers = [
-      {
-        _id: "member-1",
-        status: "active",
-        user_id: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@example.com",
-        },
-        team_role_id: {
-          _id: "role-1",
-          name: "Trainer",
-          permissions: [],
-        },
-        created_at: new Date().toISOString(),
-        joined_at: new Date().toISOString(),
-      },
-    ];
-
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
-      data: mockMembers,
+      data: [baseMember],
       message: "Success",
     });
 

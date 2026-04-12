@@ -1,6 +1,36 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Accordion } from "../components/Accordion";
 import ProfessionalsTab from "../components/ProfessionalsTab";
+
+export const metadata: Metadata = {
+  title: "Binectics - Your Global Fitness Ecosystem",
+  description:
+    "Connect with verified gyms, personal trainers, and dietitians in 50+ countries. Subscribe to fitness plans, book consultations, and track your progress.",
+  alternates: { canonical: "/" },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Binectics",
+  url: "https://binectics.com",
+  description:
+    "A global fitness ecosystem connecting gyms, personal trainers, and dietitians in 50+ countries.",
+  sameAs: [],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    email: "support@binectics.com",
+  },
+  offers: {
+    "@type": "AggregateOffer",
+    priceCurrency: "USD",
+    lowPrice: "19",
+    highPrice: "99",
+    offerCount: "3",
+  },
+};
 
 export default function Home() {
   const faqItems = [
@@ -38,6 +68,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-neutral-100">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-background-secondary py-16 sm:py-24">
         {/* Subtle gradient background */}

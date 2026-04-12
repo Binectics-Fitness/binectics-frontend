@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Security',
+  description: 'Learn about the security measures Binectics uses to protect your data, payments, and personal information.',
+  alternates: { canonical: '/security' },
+};
 
 export default function SecurityPage() {
   const securityFeatures = [

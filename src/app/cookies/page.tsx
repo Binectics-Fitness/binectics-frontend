@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import CookieSettings from '@/components/CookieSettings';
+
+export const metadata: Metadata = {
+  title: 'Cookie Policy',
+  description: 'Learn how Binectics uses cookies and how you can manage your cookie preferences.',
+  alternates: { canonical: '/cookies' },
+};
 
 export default function CookiesPage() {
   const cookieTypes = [

@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Press',
+  description: 'Binectics press releases, media resources, and company news. Contact our media team for inquiries.',
+  alternates: { canonical: '/press' },
+};
 
 export default function PressPage() {
   const pressReleases = [
