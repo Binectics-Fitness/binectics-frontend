@@ -5,6 +5,7 @@ import Link from "next/link";
 import LocationFilter from "@/components/LocationFilter";
 import SearchableSelect from "@/components/SearchableSelect";
 import { CardSkeleton } from "@/components/CardSkeleton";
+import { stripHtml } from "@/utils";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type {
   MarketplaceListing,
@@ -158,7 +159,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
 
         {/* Bio */}
         <p className="text-sm text-foreground-secondary mb-4 line-clamp-2">
-          {listing.bio}
+          {stripHtml(listing.bio)}
         </p>
 
         {/* Specialties */}

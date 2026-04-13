@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import PhotoGallery from "@/components/PhotoGallery";
+import RichTextDisplay from "@/components/RichTextDisplay";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import type {
@@ -232,9 +233,10 @@ export default function DietitianProfilePage() {
               </div>
 
               {/* Bio */}
-              <p className="text-sm sm:text-base text-foreground/80 mb-4 sm:mb-6 leading-relaxed">
-                {listing?.bio ?? listing?.headline ?? ""}
-              </p>
+              <RichTextDisplay
+                html={listing?.bio ?? listing?.headline ?? ""}
+                className="text-sm sm:text-base mb-4 sm:mb-6"
+              />
 
               {/* About */}
               <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-neutral-50 border border-neutral-200 rounded-xl text-sm">
@@ -340,11 +342,9 @@ export default function DietitianProfilePage() {
             {/* About / Approach */}
             <div className="bg-white p-6 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-6">About</h2>
-              <p className="text-foreground/80 leading-relaxed">
-                {listing?.bio ??
-                  listing?.headline ??
-                  "No information available"}
-              </p>
+              <RichTextDisplay
+                html={listing?.bio ?? listing?.headline ?? "No information available"}
+              />
             </div>
 
             {/* Accepting Clients status */}

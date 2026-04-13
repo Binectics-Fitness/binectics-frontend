@@ -107,3 +107,12 @@ export function formatCurrency(
     currency,
   }).format(amount);
 }
+
+/**
+ * Strip HTML tags from a string, returning plain text.
+ * Useful for displaying rich-text content in truncated card previews.
+ */
+export function stripHtml(html: string): string {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, "").trim();
+}

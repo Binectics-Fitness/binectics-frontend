@@ -9,6 +9,8 @@ import DashboardLoading from "@/components/DashboardLoading";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
+import RichTextEditor from "@/components/RichTextEditor";
+import RichTextDisplay from "@/components/RichTextDisplay";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useCountries, usePlatformConfig } from "@/lib/queries/utility";
 import type { PlatformConfig, CountryItem } from "@/lib/api/utility";
@@ -1054,9 +1056,7 @@ export default function OrgMarketplaceListingPage() {
               <h2 className="text-2xl font-black text-foreground mb-1">
                 {listing.headline}
               </h2>
-              <p className="text-foreground-secondary mb-4 whitespace-pre-line">
-                {listing.bio}
-              </p>
+              <RichTextDisplay html={listing.bio} className="mb-4" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 {(listing.facilities ?? []).length > 0 && (
@@ -1255,12 +1255,12 @@ function FormFields({
         <label className="text-sm font-medium text-foreground mb-1.5 block">
           Bio <span className="text-red-500">*</span>
         </label>
-        <textarea
-          {...register("bio")}
+        <RichTextEditor
+          value={formData.bio}
+          onChange={(html) => setValue("bio", html, { shouldValidate: true })}
           maxLength={3000}
-          rows={4}
-          className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none resize-none"
           placeholder="Describe your gym, what makes it unique, facilities offered..."
+          error={!!errors.bio}
         />
         {errors.bio && (
           <p className="text-xs text-red-600 mt-1">{errors.bio.message}</p>

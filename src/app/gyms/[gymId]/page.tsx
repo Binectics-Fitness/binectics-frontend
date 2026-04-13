@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import PhotoGallery from "@/components/PhotoGallery";
+import RichTextDisplay from "@/components/RichTextDisplay";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import {
@@ -244,9 +245,10 @@ export default function GymProfilePage() {
               </div>
 
               {/* Description */}
-              <p className="text-foreground/80 mb-6 leading-relaxed">
-                {gymDescription}
-              </p>
+              <RichTextDisplay
+                html={gymDescription}
+                className="mb-6"
+              />
 
               {/* Address */}
               {listing?.bio && (
@@ -254,7 +256,7 @@ export default function GymProfilePage() {
                   <p className="text-sm font-semibold text-foreground mb-1">
                     About
                   </p>
-                  <p className="text-foreground/80">{listing.bio}</p>
+                  <RichTextDisplay html={listing.bio} />
                 </div>
               )}
 

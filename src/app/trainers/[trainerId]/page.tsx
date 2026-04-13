@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import PhotoGallery from "@/components/PhotoGallery";
+import RichTextDisplay from "@/components/RichTextDisplay";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import type {
@@ -228,9 +229,10 @@ export default function TrainerProfilePage() {
               </div>
 
               {/* Bio */}
-              <p className="text-foreground/80 mb-6 leading-relaxed">
-                {listing?.bio ?? listing?.headline ?? ""}
-              </p>
+              <RichTextDisplay
+                html={listing?.bio ?? listing?.headline ?? ""}
+                className="mb-6"
+              />
 
               {/* Availability */}
               <div className="mb-6 p-4 bg-neutral-50 border border-neutral-200 rounded-xl">
@@ -339,9 +341,7 @@ export default function TrainerProfilePage() {
                 <h2 className="text-2xl font-bold text-foreground mb-6">
                   About
                 </h2>
-                <p className="text-foreground/80 leading-relaxed whitespace-pre-line">
-                  {listing.bio}
-                </p>
+                <RichTextDisplay html={listing.bio} />
               </div>
             )}
 

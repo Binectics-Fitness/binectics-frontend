@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import LocationFilter from "@/components/LocationFilter";
 import { CardSkeleton } from "@/components/CardSkeleton";
+import { stripHtml } from "@/utils";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
 
@@ -341,7 +342,7 @@ export default function DietitiansPage() {
 
                       {listing.bio && (
                         <p className="mb-4 text-sm text-foreground-secondary line-clamp-2">
-                          {listing.bio}
+                          {stripHtml(listing.bio)}
                         </p>
                       )}
 

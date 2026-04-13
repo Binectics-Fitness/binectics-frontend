@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import PhotoGallery from "@/components/PhotoGallery";
+import RichTextDisplay from "@/components/RichTextDisplay";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
@@ -417,9 +418,7 @@ export default function ListingDetailPage() {
           {/* Bio */}
           <div className="mb-6">
             <h2 className="text-lg font-bold text-foreground mb-2">About</h2>
-            <p className="text-foreground-secondary leading-relaxed whitespace-pre-line">
-              {listing.bio}
-            </p>
+            <RichTextDisplay html={listing.bio} />
           </div>
 
           {/* Specialties / Facilities */}
