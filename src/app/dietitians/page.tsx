@@ -75,8 +75,8 @@ export default function DietitiansPage() {
         );
         if (res.success && res.data) {
           setListings(res.data.listings);
-          setTotal(res.data.total);
-          setTotalPages(res.data.total_pages);
+          setTotal(res.data.pagination.total);
+          setTotalPages(res.data.pagination.total_pages);
         } else {
           setListings([]);
           setTotal(0);

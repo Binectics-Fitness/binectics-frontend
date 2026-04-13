@@ -41,8 +41,8 @@ export default function ExplorePage() {
 
   const { data, isLoading } = useSearchListings(searchParams);
   const listings = data?.listings ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = data?.total_pages ?? 0;
+  const total = data?.pagination?.total ?? 0;
+  const totalPages = data?.pagination?.total_pages ?? 0;
 
   // Category counts (lightweight queries)
   const { data: allData } = useSearchListings({ limit: 1 });
@@ -51,10 +51,10 @@ export default function ExplorePage() {
   const { data: dietitianData } = useSearchListings({ account_type: "dietitian", limit: 1 });
 
   const categories = [
-    { id: "all" as const, label: "All", count: allData?.total ?? 0 },
-    { id: "gym_owner" as const, label: "Gyms", count: gymData?.total ?? 0 },
-    { id: "personal_trainer" as const, label: "Personal Trainers", count: trainerData?.total ?? 0 },
-    { id: "dietitian" as const, label: "Dietitians", count: dietitianData?.total ?? 0 },
+    { id: "all" as const, label: "All", count: allData?.pagination?.total ?? 0 },
+    { id: "gym_owner" as const, label: "Gyms", count: gymData?.pagination?.total ?? 0 },
+    { id: "personal_trainer" as const, label: "Personal Trainers", count: trainerData?.pagination?.total ?? 0 },
+    { id: "dietitian" as const, label: "Dietitians", count: dietitianData?.pagination?.total ?? 0 },
   ];
 
   const accountTypeLabel = (type: string) => {

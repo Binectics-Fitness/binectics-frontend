@@ -107,7 +107,7 @@ export default function DashboardPage() {
   const collections = [
     {
       title: "Gyms",
-      count: gymCount?.total ?? 0,
+      count: gymCount?.pagination?.total ?? 0,
       href: "/marketplace?account_type=gym_owner",
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,7 +118,7 @@ export default function DashboardPage() {
     },
     {
       title: "Personal Trainers",
-      count: trainerCount?.total ?? 0,
+      count: trainerCount?.pagination?.total ?? 0,
       href: "/marketplace?account_type=personal_trainer",
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,7 +129,7 @@ export default function DashboardPage() {
     },
     {
       title: "Dietitians",
-      count: dietitianCount?.total ?? 0,
+      count: dietitianCount?.pagination?.total ?? 0,
       href: "/marketplace?account_type=dietitian",
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,7 +140,7 @@ export default function DashboardPage() {
     },
     {
       title: "All Listings",
-      count: (gymCount?.total ?? 0) + (trainerCount?.total ?? 0) + (dietitianCount?.total ?? 0),
+      count: (gymCount?.pagination?.total ?? 0) + (trainerCount?.pagination?.total ?? 0) + (dietitianCount?.pagination?.total ?? 0),
       href: "/marketplace",
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">

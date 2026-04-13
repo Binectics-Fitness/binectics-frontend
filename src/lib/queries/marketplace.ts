@@ -20,7 +20,7 @@ export function useSearchListings(
       const res = await marketplaceService.searchListings(params);
       return res.success && res.data
         ? res.data
-        : { listings: [], total: 0, page: 1, limit: 20, total_pages: 0 };
+        : { listings: [], pagination: { total: 0, page: 1, limit: 20, total_pages: 0 } };
     },
     enabled,
   });

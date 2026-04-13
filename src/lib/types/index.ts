@@ -385,10 +385,12 @@ export interface MarketplaceSearchParams {
 
 export interface MarketplaceSearchResult {
   listings: MarketplaceListing[];
-  total: number;
-  page: number;
-  limit: number;
-  total_pages: number;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
 }
 
 // API Response Types

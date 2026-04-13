@@ -273,8 +273,8 @@ export default function MarketplacePage() {
     const res = await marketplaceService.searchListings(params);
     if (res.success && res.data) {
       setListings(res.data.listings);
-      setTotal(res.data.total);
-      setTotalPages(res.data.total_pages);
+      setTotal(res.data.pagination.total);
+      setTotalPages(res.data.pagination.total_pages);
     }
     setIsLoading(false);
   }, [
