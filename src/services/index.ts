@@ -12,6 +12,9 @@ export type {
   VerifyEmailRequest,
 } from "@/lib/api/auth";
 
+export { adminService } from "@/lib/api/admin";
+export type { AdminUserSuspensionResult } from "@/lib/api/admin";
+
 export { formsService } from "@/lib/api/forms";
 export type * from "@/lib/api/forms";
 

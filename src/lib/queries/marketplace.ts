@@ -6,7 +6,25 @@ import type {
   MarketplaceListing,
   MarketplaceRequest,
   MarketplaceMembershipPlan,
+  MarketplaceSearchParams,
+  MarketplaceSearchResult,
 } from "@/lib/types";
+
+export function useSearchListings(
+  params: MarketplaceSearchParams,
+  enabled = true,
+) {
+  return useQuery<MarketplaceSearchResult>({
+    queryKey: queryKeys.marketplace.search(params as Record<string, unknown>),
+    queryFn: async () => {
+      const res = await marketplaceService.searchListings(params);
+      return res.success && res.data
+        ? res.data
+        : { listings: [], total: 0, page: 1, limit: 20, total_pages: 0 };
+    },
+    enabled,
+  });
+}
 
 export function useMySubscriptions(enabled = true) {
   return useQuery<MembershipSubscription[]>({

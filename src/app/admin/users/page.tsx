@@ -7,6 +7,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { UserRole } from "@/lib/types";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { showAlert } from "@/lib/ui/dialogs";
+import { adminService } from "@/services";
 
 enum AdminUserStatus {
   ACTIVE = "Active",
@@ -117,10 +118,18 @@ export default function AdminUsersPage() {
   const handleSuspendUser = (userId: number, userName: string) => {
     requestConfirmation({
       title: "Suspend user?",
-      description: `${userName} will lose access to the platform until reactivated.`,
+      description: `${userName} will lose access to the platform until reactivated. Active subscriptions will be cancelled and pending bookings will be cancelled.`,
       confirmLabel: "Suspend User",
       onConfirm: async () => {
-        await showAlert("User suspended successfully");
+        const res = await adminService.suspendUser(String(userId));
+        if (res.success) {
+          const c = res.data?.cascaded;
+          await showAlert(
+            `User suspended. ${c?.listingsSuspended ?? 0} listing(s), ${c?.subscriptionsCancelled ?? 0} subscription(s), ${c?.bookingsCancelled ?? 0} booking(s) affected.`,
+          );
+        } else {
+          await showAlert(res.message || "Failed to suspend user");
+        }
       },
     });
   };
@@ -128,11 +137,16 @@ export default function AdminUsersPage() {
   const handleActivateUser = (userId: number, userName: string) => {
     requestConfirmation({
       title: "Activate user?",
-      description: `${userName} will regain access to the platform.`,
+      description: `${userName} will regain access to the platform and their listings will be restored.`,
       confirmLabel: "Activate User",
       confirmVariant: "primary",
       onConfirm: async () => {
-        await showAlert("User activated successfully");
+        const res = await adminService.unsuspendUser(String(userId));
+        if (res.success) {
+          await showAlert("User activated successfully");
+        } else {
+          await showAlert(res.message || "Failed to activate user");
+        }
       },
     });
   };
