@@ -32,8 +32,6 @@ export { default as ConditionalLayout } from "./ConditionalLayout";
 // Feature Components (default exports)
 export { default as CookieConsent } from "./CookieConsent";
 export { default as CookieSettings } from "./CookieSettings";
-export { default as PricingSection } from "./PricingSection";
-export { default as PricingToggle } from "./PricingToggle";
 export { default as ProfessionalsTab } from "./ProfessionalsTab";
 
 // Dashboard Components (default exports)
