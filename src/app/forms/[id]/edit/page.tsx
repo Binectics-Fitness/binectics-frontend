@@ -33,19 +33,41 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import {
+  Type,
+  AlignLeft,
+  CircleDot,
+  CheckSquare,
+  ChevronDown,
+  Hash,
+  Calendar,
+  Mail,
+  Phone,
+  Star,
+  HelpCircle,
+  type LucideIcon,
+} from "lucide-react";
 
 // Question type options
-const QUESTION_TYPES = [
-  { value: QuestionType.TEXT, label: "Short Text", icon: "📝" },
-  { value: QuestionType.TEXTAREA, label: "Long Text", icon: "📄" },
-  { value: QuestionType.MULTIPLE_CHOICE, label: "Multiple Choice", icon: "🔘" },
-  { value: QuestionType.CHECKBOX, label: "Checkboxes", icon: "☑️" },
-  { value: QuestionType.SELECT, label: "Dropdown", icon: "📋" },
-  { value: QuestionType.NUMBER, label: "Number", icon: "🔢" },
-  { value: QuestionType.DATE, label: "Date", icon: "📅" },
-  { value: QuestionType.EMAIL, label: "Email", icon: "📧" },
-  { value: QuestionType.PHONE, label: "Phone", icon: "📞" },
-  { value: QuestionType.RATING, label: "Rating", icon: "⭐" },
+const QUESTION_TYPES: Array<{
+  value: QuestionType;
+  label: string;
+  Icon: LucideIcon;
+}> = [
+  { value: QuestionType.TEXT, label: "Short Text", Icon: Type },
+  { value: QuestionType.TEXTAREA, label: "Long Text", Icon: AlignLeft },
+  {
+    value: QuestionType.MULTIPLE_CHOICE,
+    label: "Multiple Choice",
+    Icon: CircleDot,
+  },
+  { value: QuestionType.CHECKBOX, label: "Checkboxes", Icon: CheckSquare },
+  { value: QuestionType.SELECT, label: "Dropdown", Icon: ChevronDown },
+  { value: QuestionType.NUMBER, label: "Number", Icon: Hash },
+  { value: QuestionType.DATE, label: "Date", Icon: Calendar },
+  { value: QuestionType.EMAIL, label: "Email", Icon: Mail },
+  { value: QuestionType.PHONE, label: "Phone", Icon: Phone },
+  { value: QuestionType.RATING, label: "Rating", Icon: Star },
 ];
 
 // Sortable Question Item Component
@@ -109,10 +131,17 @@ function SortableQuestionItem({
         {/* Question Content */}
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">
-              {QUESTION_TYPES.find((t) => t.value === question.type)?.icon ||
-                "❓"}
-            </span>
+            {(() => {
+              const QType = QUESTION_TYPES.find(
+                (t) => t.value === question.type,
+              );
+              const Icon = QType?.Icon ?? HelpCircle;
+              return (
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-foreground-secondary">
+                  <Icon className="h-5 w-5" />
+                </span>
+              );
+            })()}
             <div>
               <h3 className="font-semibold text-foreground">
                 {index + 1}. {question.label}
@@ -929,7 +958,7 @@ export default function FormBuilderPage() {
                   >
                     {QUESTION_TYPES.map((type) => (
                       <option key={type.value} value={type.value}>
-                        {type.icon} {type.label}
+                        {type.label}
                       </option>
                     ))}
                   </select>

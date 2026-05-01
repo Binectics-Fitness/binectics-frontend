@@ -5,11 +5,24 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
 import DashboardLoading from "@/components/DashboardLoading";
+import {
+  Rocket,
+  CreditCard,
+  Calendar,
+  TrendingUp,
+  Smartphone,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 
-const faqSections = [
+const faqSections: Array<{
+  title: string;
+  Icon: LucideIcon;
+  items: { q: string; a: string }[];
+}> = [
   {
     title: "Getting Started",
-    icon: "🚀",
+    Icon: Rocket,
     items: [
       {
         q: "How do I find a gym or trainer near me?",
@@ -27,7 +40,7 @@ const faqSections = [
   },
   {
     title: "Subscriptions & Payments",
-    icon: "💳",
+    Icon: CreditCard,
     items: [
       {
         q: "How do I view my active subscriptions?",
@@ -45,7 +58,7 @@ const faqSections = [
   },
   {
     title: "Consultations & Bookings",
-    icon: "📅",
+    Icon: Calendar,
     items: [
       {
         q: "How do I book a consultation?",
@@ -63,7 +76,7 @@ const faqSections = [
   },
   {
     title: "Progress Tracking",
-    icon: "📈",
+    Icon: TrendingUp,
     items: [
       {
         q: "How does progress tracking work?",
@@ -81,7 +94,7 @@ const faqSections = [
   },
   {
     title: "QR Check-in",
-    icon: "📱",
+    Icon: Smartphone,
     items: [
       {
         q: "How does QR check-in work?",
@@ -95,7 +108,7 @@ const faqSections = [
   },
   {
     title: "Account & Support",
-    icon: "⚙️",
+    Icon: Settings,
     items: [
       {
         q: "How do I update my profile?",
@@ -153,7 +166,9 @@ export default function Page() {
                   className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-neutral-50 transition-colors"
                 >
                   <span className="flex items-center gap-3">
-                    <span className="text-xl">{section.icon}</span>
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                      <section.Icon className="h-5 w-5" />
+                    </span>
                     <span className="font-semibold text-foreground">
                       {section.title}
                     </span>
