@@ -57,7 +57,100 @@ export function useForms() {
     return false;
   }, []);
 
-  return { forms, responseCounts, isLoading, error, loadForms, deleteForm };
+  const deleteForms = useCallback(
+    async (formIds: string[]): Promise<{ success: number; failed: number }> => {
+      const results = await Promise.all(
+        formIds.map((id) => formsService.deleteForm(id)),
+      );
+      const successfulIds = formIds.filter((_id, i) => results[i].success);
+      if (successfulIds.length > 0) {
+        const ok = new Set(successfulIds);
+        setForms((prev) => prev.filter((f) => !ok.has(f._id)));
+      }
+      return {
+        success: successfulIds.length,
+        failed: formIds.length - successfulIds.length,
+      };
+    },
+    [],
+  );
+
+  const setFormPublished = useCallback(
+    async (formId: string, isPublished: boolean): Promise<boolean> => {
+      const response = isPublished
+        ? await formsService.publishForm(formId)
+        : await formsService.unpublishForm(formId);
+
+      if (response.success && response.data) {
+        const updated = decodeObjectEntities(response.data);
+        setForms((prev) =>
+          prev.map((f) => (f._id === formId ? { ...f, ...updated } : f)),
+        );
+        return true;
+      }
+      return false;
+    },
+    [],
+  );
+
+  const duplicateForm = useCallback(
+    async (formId: string): Promise<Form | null> => {
+      const sourceForm = await formsService.getFormById(formId);
+      if (!sourceForm.success || !sourceForm.data) return null;
+
+      const sourceQuestions = await formsService.getFormQuestions(formId);
+      if (!sourceQuestions.success || !sourceQuestions.data) return null;
+
+      const decodedSource = decodeObjectEntities(sourceForm.data);
+      const created = await formsService.createForm({
+        title: `${decodedSource.title} (Copy)`,
+        description: decodedSource.description,
+        allow_multiple_submissions: decodedSource.allow_multiple_submissions,
+        require_authentication: decodedSource.require_authentication,
+        custom_logo: decodedSource.custom_logo,
+        custom_header_color: decodedSource.custom_header_color,
+        company_name: decodedSource.company_name,
+        company_description: decodedSource.company_description,
+      });
+      if (!created.success || !created.data) return null;
+
+      const newFormId = created.data._id;
+      const orderedQuestions = [...sourceQuestions.data].sort(
+        (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0),
+      );
+      for (const q of orderedQuestions) {
+        await formsService.addQuestion(newFormId, {
+          type: q.type,
+          label: q.label,
+          help_text: q.help_text,
+          is_required: q.is_required,
+          options: q.options,
+          order_index: q.order_index,
+          min_value: q.min_value,
+          max_value: q.max_value,
+          min_length: q.min_length,
+          max_length: q.max_length,
+        });
+      }
+
+      const decoded = decodeObjectEntities(created.data);
+      setForms((prev) => [decoded, ...prev]);
+      return decoded;
+    },
+    [],
+  );
+
+  return {
+    forms,
+    responseCounts,
+    isLoading,
+    error,
+    loadForms,
+    deleteForm,
+    deleteForms,
+    setFormPublished,
+    duplicateForm,
+  };
 }
 
 /**

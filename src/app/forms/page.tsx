@@ -19,8 +19,17 @@ function FormsListContent() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { forms, responseCounts, isLoading, error, loadForms, deleteForm } =
-    useForms();
+  const {
+    forms,
+    responseCounts,
+    isLoading,
+    error,
+    loadForms,
+    deleteForm,
+    deleteForms,
+    setFormPublished,
+    duplicateForm,
+  } = useForms();
   const [highlightedFormId, setHighlightedFormId] = useState<string | null>(
     null,
   );
@@ -28,6 +37,11 @@ function FormsListContent() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [copiedFormId, setCopiedFormId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [pendingFormId, setPendingFormId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    "publish" | "duplicate" | "bulk-delete" | null
+  >(null);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
@@ -109,6 +123,70 @@ function FormsListContent() {
     } catch {
       await showAlert("Failed to copy link to clipboard");
     }
+  };
+
+  const toggleSelected = (formId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(formId)) next.delete(formId);
+      else next.add(formId);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleTogglePublished = async (formId: string, publish: boolean) => {
+    setPendingFormId(formId);
+    setPendingAction("publish");
+    const success = await setFormPublished(formId, publish);
+    setPendingFormId(null);
+    setPendingAction(null);
+    if (!success) {
+      await showAlert(
+        publish ? "Failed to publish form" : "Failed to unpublish form",
+      );
+    }
+  };
+
+  const handleDuplicate = async (formId: string, formTitle: string) => {
+    requestConfirmation({
+      title: "Duplicate form?",
+      description: `Create a copy of \"${formTitle}\" as a draft? You can edit it before publishing.`,
+      confirmLabel: "Duplicate",
+      onConfirm: async () => {
+        setPendingFormId(formId);
+        setPendingAction("duplicate");
+        const created = await duplicateForm(formId);
+        setPendingFormId(null);
+        setPendingAction(null);
+        if (!created) {
+          await showAlert("Failed to duplicate form");
+        }
+      },
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    requestConfirmation({
+      title: `Delete ${ids.length} form${ids.length === 1 ? "" : "s"}?`,
+      description:
+        "This permanently deletes the selected forms and all their responses. This action cannot be undone.",
+      confirmLabel: "Delete forms",
+      onConfirm: async () => {
+        setPendingAction("bulk-delete");
+        const result = await deleteForms(ids);
+        setPendingAction(null);
+        clearSelection();
+        if (result.failed > 0) {
+          await showAlert(
+            `${result.failed} form${result.failed === 1 ? "" : "s"} could not be deleted.`,
+          );
+        }
+      },
+    });
   };
 
   const handleDelete = async (formId: string, formTitle: string) => {
@@ -245,6 +323,32 @@ function FormsListContent() {
           </div>
         )}
 
+        {/* Bulk Action Bar */}
+        {selectedIds.size > 0 && (
+          <div className="sticky top-2 z-20 mb-4 flex flex-col gap-2 rounded-xl border border-primary-200 bg-primary-50 p-3 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold text-foreground">
+              {selectedIds.size} form{selectedIds.size === 1 ? "" : "s"} selected
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline-neutral"
+                size="sm"
+                onClick={clearSelection}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleBulkDelete}
+                isLoading={pendingAction === "bulk-delete"}
+              >
+                Delete selected
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
@@ -302,23 +406,40 @@ function FormsListContent() {
               const isHighlighted = highlightedFormId === form._id;
               const responseCount = responseCounts[form._id] ?? 0;
               const isCopied = copiedFormId === form._id;
+              const isSelected = selectedIds.has(form._id);
+              const isPublishPending =
+                pendingFormId === form._id && pendingAction === "publish";
+              const isDuplicatePending =
+                pendingFormId === form._id && pendingAction === "duplicate";
               return (
                 <div
                   key={form._id}
                   id={`form-${form._id}`}
-                  className={`flex flex-col bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-all ${
+                  className={`relative flex flex-col bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-all ${
                     isHighlighted
                       ? "ring-4 ring-primary-500/50 shadow-2xl"
-                      : ""
+                      : isSelected
+                        ? "ring-2 ring-primary-500"
+                        : ""
                   }`}
                 >
+                  {/* Bulk-select checkbox */}
+                  <label className="absolute right-4 top-4 z-10 flex h-6 w-6 cursor-pointer items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelected(form._id)}
+                      aria-label={`Select ${form.title}`}
+                      className="h-5 w-5 cursor-pointer rounded border-neutral-300 text-primary-500 focus:ring-2 focus:ring-primary-500/30"
+                    />
+                  </label>
                   {isHighlighted && (
                     <div className="bg-primary-500 text-foreground px-3 py-1 rounded text-sm font-semibold mb-4 inline-block self-start">
                       ✨ Just Published!
                     </div>
                   )}
                   {/* Form Header */}
-                  <div className="mb-4">
+                  <div className="mb-4 pr-8">
                     <div className="flex items-start justify-between mb-2 gap-2">
                       <h3 className="font-display text-lg font-bold text-foreground line-clamp-2">
                         {form.title}
@@ -452,6 +573,99 @@ function FormsListContent() {
                           </Link>
                         </>
                       )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleTogglePublished(form._id, !form.is_published)
+                        }
+                        disabled={isPublishPending}
+                        title={
+                          form.is_published ? "Unpublish form" : "Publish form"
+                        }
+                        aria-label={
+                          form.is_published ? "Unpublish form" : "Publish form"
+                        }
+                        className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-neutral-100 disabled:opacity-50 ${
+                          form.is_published
+                            ? "text-amber-600"
+                            : "text-primary-600"
+                        }`}
+                      >
+                        {form.is_published ? (
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88L3 3m6.88 6.88L21 21"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDuplicate(form._id, form.title)}
+                        disabled={isDuplicatePending}
+                        title="Duplicate form"
+                        aria-label="Duplicate form"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary transition-colors hover:bg-neutral-100 disabled:opacity-50"
+                      >
+                        {isDuplicatePending ? (
+                          <svg
+                            className="h-5 w-5 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="9"
+                              strokeWidth={2}
+                              strokeDasharray="40 20"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                        )}
+                      </button>
                     </div>
                     <button
                       type="button"
