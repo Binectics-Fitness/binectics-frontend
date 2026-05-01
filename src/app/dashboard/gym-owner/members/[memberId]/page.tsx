@@ -195,12 +195,6 @@ export default function MemberDetailPage() {
                   <h3 className="text-lg font-bold text-foreground">
                     Recent Check-ins
                   </h3>
-                  <Link
-                    href={`/dashboard/gym-owner/members/${memberId}/activity`}
-                    className="text-sm text-accent-blue-500 hover:text-accent-blue-700 font-medium"
-                  >
-                    View All →
-                  </Link>
                 </div>
                 <div className="space-y-3">
                   {recentCheckIns.map((checkIn, idx) => (
