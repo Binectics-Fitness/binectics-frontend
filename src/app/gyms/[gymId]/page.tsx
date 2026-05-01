@@ -8,6 +8,7 @@ import RichTextDisplay from "@/components/RichTextDisplay";
 import ContactProvider from "@/components/ContactProvider";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
+import { Dumbbell, Star } from "lucide-react";
 import {
   MarketplaceVerificationBadge,
   MarketplaceListing,
@@ -169,7 +170,7 @@ export default function GymProfilePage() {
                 photos={listing?.photos ?? []}
                 profileImage={listing?.profile_image}
                 alt={displayName}
-                fallbackEmoji="🏋️"
+                FallbackIcon={Dumbbell}
                 accentBg="bg-accent-blue-100"
               />
             </div>
@@ -235,7 +236,7 @@ export default function GymProfilePage() {
               {/* Rating */}
               <div className="mb-6 flex flex-wrap items-center gap-3 sm:gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">⭐</span>
+                  <Star className="h-6 w-6 fill-amber-400 text-amber-400" />
                   <span className="text-2xl font-black text-foreground">
                     {listing?.average_rating?.toFixed(1) ?? "—"}
                   </span>

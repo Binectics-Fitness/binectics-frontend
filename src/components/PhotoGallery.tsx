@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ImageIcon, type LucideIcon } from "lucide-react";
 
 interface PhotoGalleryProps {
   photos: string[];
   profileImage?: string;
   alt?: string;
-  fallbackEmoji?: string;
+  FallbackIcon?: LucideIcon;
   accentBg?: string;
 }
 
@@ -15,7 +16,7 @@ export default function PhotoGallery({
   photos,
   profileImage,
   alt = "Photo",
-  fallbackEmoji = "📸",
+  FallbackIcon = ImageIcon,
   accentBg = "bg-neutral-200",
 }: PhotoGalleryProps) {
   const allPhotos = [
@@ -32,7 +33,7 @@ export default function PhotoGallery({
         <div
           className={`flex h-72 items-center justify-center sm:h-96 ${accentBg}`}
         >
-          <span className="text-6xl sm:text-8xl">{fallbackEmoji}</span>
+          <FallbackIcon className="h-20 w-20 text-foreground/30 sm:h-24 sm:w-24" />
         </div>
       </div>
     );

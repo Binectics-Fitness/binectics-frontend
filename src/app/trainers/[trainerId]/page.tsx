@@ -13,6 +13,7 @@ import type {
   MarketplaceMembershipPlan,
 } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { Dumbbell } from "lucide-react";
 
 export default function TrainerProfilePage() {
   const params = useParams();
@@ -160,7 +161,7 @@ export default function TrainerProfilePage() {
                 photos={listing?.photos ?? []}
                 profileImage={listing?.profile_image}
                 alt={displayName}
-                fallbackEmoji="💪"
+                FallbackIcon={Dumbbell}
                 accentBg="bg-accent-yellow-100"
               />
 
@@ -292,9 +293,9 @@ export default function TrainerProfilePage() {
               </div>
 
               <ContactProvider
-                phone={listing.contact_phone}
-                email={listing.contact_email}
-                providerName={listing.headline}
+                phone={listing?.contact_phone}
+                email={listing?.contact_email}
+                providerName={listing?.headline}
                 whatsappMessage={`Hi, I found your profile on Binectics and I'm interested in your training services.`}
               />
             </div>

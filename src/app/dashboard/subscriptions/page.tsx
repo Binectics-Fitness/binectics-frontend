@@ -12,6 +12,7 @@ import {
   useCancelSubscription,
   useToggleAutoRenew,
 } from "@/lib/queries/marketplace";
+import { Dumbbell } from "lucide-react";
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return "—";

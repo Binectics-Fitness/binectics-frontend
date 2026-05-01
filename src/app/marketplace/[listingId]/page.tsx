@@ -7,6 +7,7 @@ import PhotoGallery from "@/components/PhotoGallery";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useAuth } from "@/contexts/AuthContext";
+import { MapPin, Users, Dumbbell, ImageIcon } from "lucide-react";
 import type {
   MarketplaceListing,
   MarketplaceMembershipPlan,
@@ -386,16 +387,18 @@ export default function ListingDetailPage() {
                   </div>
                 )}
                 {listing.city && (
-                  <span className="text-sm text-foreground-secondary">
-                    📍 {listing.city}
+                  <span className="inline-flex items-center gap-1 text-sm text-foreground-secondary">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {listing.city}
                     {listing.country_code
                       ? `, ${listing.country_code.toUpperCase()}`
                       : ""}
                   </span>
                 )}
                 {listing.active_client_count > 0 && (
-                  <span className="text-sm text-foreground-secondary">
-                    👥 {listing.active_client_count} active client
+                  <span className="inline-flex items-center gap-1 text-sm text-foreground-secondary">
+                    <Users className="h-3.5 w-3.5" />
+                    {listing.active_client_count} active client
                     {listing.active_client_count !== 1 ? "s" : ""}
                   </span>
                 )}
@@ -410,7 +413,7 @@ export default function ListingDetailPage() {
                 photos={listing.photos}
                 profileImage={listing.profile_image}
                 alt={listing.headline}
-                fallbackEmoji={isGymListing ? "🏋️" : "📸"}
+                FallbackIcon={isGymListing ? Dumbbell : ImageIcon}
               />
             </div>
           )}

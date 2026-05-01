@@ -13,6 +13,7 @@ import type {
   MarketplaceListing,
   MarketplaceMembershipPlan,
 } from "@/lib/types";
+import { Apple } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function DietitianProfilePage() {
@@ -158,7 +159,7 @@ export default function DietitianProfilePage() {
                 photos={listing?.photos ?? []}
                 profileImage={listing?.profile_image}
                 alt={displayName}
-                fallbackEmoji="🥗"
+                FallbackIcon={Apple}
                 accentBg="bg-accent-purple-100"
               />
 
