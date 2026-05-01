@@ -489,6 +489,7 @@ export default function OrgDetailPage() {
                 </button>
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b border-neutral-100 bg-neutral-50">
                   <tr>
@@ -589,6 +590,7 @@ export default function OrgDetailPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         )}
@@ -695,6 +697,7 @@ export default function OrgDetailPage() {
                 No invitations sent yet.
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b border-neutral-100 bg-neutral-50">
                   <tr>
@@ -752,6 +755,7 @@ export default function OrgDetailPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         )}

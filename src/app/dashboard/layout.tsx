@@ -1,23 +1,12 @@
-"use client";
-
+import type { Metadata } from "next";
 import { ReactNode } from "react";
-import { useAutoLogout } from "@/hooks/useAutoLogout";
-import { useAutoAcceptInvite } from "@/hooks/useAutoAcceptInvite";
-import FeedbackPrompt from "@/components/FeedbackPrompt";
+import DashboardClientShell from "@/components/DashboardClientShell";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: { index: false, follow: false },
+};
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  // Enable auto-logout for all dashboard pages (60 minutes of inactivity)
-  useAutoLogout(60);
-
-  // Auto-accept client invite if token was stored during registration flow
-  useAutoAcceptInvite();
-
-  // This layout wraps all dashboard pages
-  // The global Navbar and Footer from root layout will be hidden for dashboard pages
-  return (
-    <div className="dashboard-route">
-      {children}
-      <FeedbackPrompt />
-    </div>
-  );
+  return <DashboardClientShell>{children}</DashboardClientShell>;
 }
