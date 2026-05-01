@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
+  CalendarCheck,
   BookOpen,
   FileText,
   ClipboardList,
@@ -28,6 +29,11 @@ const navItems: NavItem[] = [
     icon: <Calendar className="h-5 w-5" />,
     label: "Consultations",
     href: "/dashboard/dietitian/consultations",
+  },
+  {
+    icon: <CalendarCheck className="h-5 w-5" />,
+    label: "Bookings",
+    href: "/dashboard/dietitian/bookings",
   },
   {
     icon: <BookOpen className="h-5 w-5" />,

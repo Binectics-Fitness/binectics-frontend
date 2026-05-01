@@ -10,6 +10,7 @@ import {
   QrCode,
   CalendarDays,
   Calendar,
+  CalendarCheck,
   Building2,
   DollarSign,
   FileText,
@@ -58,6 +59,11 @@ const navItems: NavItem[] = [
     icon: <Calendar className="h-5 w-5" />,
     label: "Consultations",
     href: "/dashboard/gym-owner/consultations",
+  },
+  {
+    icon: <CalendarCheck className="h-5 w-5" />,
+    label: "Bookings",
+    href: "/dashboard/gym-owner/bookings",
   },
   {
     icon: <Building2 className="h-5 w-5" />,
