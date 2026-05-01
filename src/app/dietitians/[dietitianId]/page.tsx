@@ -6,6 +6,7 @@ import Link from "next/link";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import PhotoGallery from "@/components/PhotoGallery";
 import RichTextDisplay from "@/components/RichTextDisplay";
+import ContactProvider from "@/components/ContactProvider";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import type {
@@ -295,6 +296,13 @@ export default function DietitianProfilePage() {
                       : "Select a Program"}
                 </button>
               </div>
+
+              <ContactProvider
+                phone={listing.contact_phone}
+                email={listing.contact_email}
+                providerName={listing.headline}
+                whatsappMessage={`Hi, I found your profile on Binectics and I'm interested in your nutrition services.`}
+              />
             </div>
           </div>
         </div>

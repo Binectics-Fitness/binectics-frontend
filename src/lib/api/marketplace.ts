@@ -36,6 +36,8 @@ export interface CreateListingRequest {
   city?: string;
   country_code?: string;
   address?: string;
+  contact_phone?: string;
+  contact_email?: string;
   lat?: number;
   lng?: number;
   currency?: string;
@@ -57,6 +59,8 @@ export interface UpdateListingRequest {
   city?: string;
   country_code?: string;
   address?: string;
+  contact_phone?: string;
+  contact_email?: string;
   lat?: number;
   lng?: number;
   currency?: string;

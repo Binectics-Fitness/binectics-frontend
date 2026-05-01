@@ -83,6 +83,8 @@ export default function MyMarketplaceListingPage() {
       currency: "USD",
       priceFrom: "",
       priceLabel: "",
+      contactPhone: "",
+      contactEmail: "",
       acceptingClients: true,
     },
   });
@@ -102,6 +104,8 @@ export default function MyMarketplaceListingPage() {
       currency: l.currency || "USD",
       priceFrom: l.price_from != null ? String(l.price_from) : "",
       priceLabel: l.price_label || "",
+      contactPhone: l.contact_phone || "",
+      contactEmail: l.contact_email || "",
       acceptingClients: l.accepting_clients,
     });
   };
@@ -141,6 +145,8 @@ export default function MyMarketplaceListingPage() {
       currency: data.currency,
       price_from: data.priceFrom ? Number(data.priceFrom) : undefined,
       price_label: data.priceLabel || undefined,
+      contact_phone: data.contactPhone || undefined,
+      contact_email: data.contactEmail || undefined,
       accepting_clients: data.acceptingClients,
     });
 
@@ -170,6 +176,8 @@ export default function MyMarketplaceListingPage() {
       currency: data.currency,
       price_from: data.priceFrom ? Number(data.priceFrom) : undefined,
       price_label: data.priceLabel || undefined,
+      contact_phone: data.contactPhone || undefined,
+      contact_email: data.contactEmail || undefined,
       accepting_clients: data.acceptingClients,
     });
 
@@ -669,6 +677,52 @@ function ListingForm({
             className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
             placeholder="session"
           />
+        </div>
+      </div>
+
+      <div className="rounded-xl border-2 border-neutral-200 bg-neutral-50 p-4 space-y-4">
+        <div>
+          <h4 className="text-sm font-bold text-foreground">
+            Direct Contact (optional)
+          </h4>
+          <p className="text-xs text-foreground/60 mt-1">
+            Shown publicly on your profile so prospective clients can message
+            you on WhatsApp, call, or email you directly.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
+              WhatsApp / Phone (international format)
+            </label>
+            <input
+              type="tel"
+              {...register("contactPhone")}
+              maxLength={20}
+              className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
+              placeholder="+1 415 555 2671"
+            />
+            <p className="text-xs text-foreground/50 mt-1">
+              Include country code. Used for the WhatsApp button.
+            </p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
+              Public Email
+            </label>
+            <input
+              type="email"
+              {...register("contactEmail")}
+              maxLength={254}
+              className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
+              placeholder="hello@example.com"
+            />
+            {errors.contactEmail && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.contactEmail.message}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

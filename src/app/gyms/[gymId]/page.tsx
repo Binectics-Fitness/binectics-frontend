@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ProviderReviewsSection from "@/components/ProviderReviewsSection";
 import PhotoGallery from "@/components/PhotoGallery";
 import RichTextDisplay from "@/components/RichTextDisplay";
+import ContactProvider from "@/components/ContactProvider";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { ReviewTargetType } from "@/lib/api/reviews";
 import {
@@ -492,6 +493,17 @@ export default function GymProfilePage() {
                       : "Sign in to Subscribe"
                     : "Select a Plan"}
               </button>
+
+              {(listing?.contact_phone || listing?.contact_email) && (
+                <div className="mt-4">
+                  <ContactProvider
+                    phone={listing.contact_phone}
+                    email={listing.contact_email}
+                    providerName={listing.headline}
+                    whatsappMessage={`Hi, I'm interested in joining ${listing.headline}.`}
+                  />
+                </div>
+              )}
 
               {/* QR Check-in */}
               <div className="mt-6 pt-6 border-t border-neutral-200">

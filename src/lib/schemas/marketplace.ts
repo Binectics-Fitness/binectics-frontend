@@ -14,6 +14,14 @@ export const marketplaceListingSchema = z.object({
   currency: z.string().min(1, "Currency is required"),
   priceFrom: z.string().optional(),
   priceLabel: z.string().optional(),
+  contactPhone: z.string().optional(),
+  contactEmail: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      "Invalid email",
+    ),
   acceptingClients: z.boolean(),
 });
 
@@ -36,6 +44,14 @@ export const orgMarketplaceListingSchema = z.object({
   currency: z.string().min(1, "Currency is required"),
   priceFrom: z.string().optional(),
   priceLabel: z.string().optional(),
+  contactPhone: z.string().optional(),
+  contactEmail: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      "Invalid email",
+    ),
   acceptingClients: z.boolean(),
 });
 
