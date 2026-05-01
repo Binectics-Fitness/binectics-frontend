@@ -4,7 +4,7 @@ import AppSidebar, { type NavItem, type RoleBadge } from "./AppSidebar";
 import {
   LayoutDashboard,
   Users,
-  Calendar,
+  CalendarRange,
   CalendarCheck,
   CalendarClock,
   Dumbbell,
@@ -27,7 +27,7 @@ const navItems: NavItem[] = [
     href: "/dashboard/trainer/clients",
   },
   {
-    icon: <Calendar className="h-5 w-5" />,
+    icon: <CalendarRange className="h-5 w-5" />,
     label: "Consultations",
     href: "/dashboard/trainer/consultations",
   },

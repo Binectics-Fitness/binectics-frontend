@@ -32,6 +32,8 @@ export interface ConsultationType {
   description?: string;
   providerRole: ConsultationProviderRole;
   defaultDurationMinutes: number;
+  bufferMinutes: number;
+  minAdvanceNoticeMinutes: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -42,6 +44,8 @@ export interface CreateConsultationTypeRequest {
   description?: string;
   providerRole: ConsultationProviderRole;
   defaultDurationMinutes: number;
+  bufferMinutes?: number;
+  minAdvanceNoticeMinutes?: number;
   isActive?: boolean;
 }
 
