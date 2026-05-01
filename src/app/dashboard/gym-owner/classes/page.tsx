@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
+import { EmptyState } from "@/components/EmptyState";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { showAlert } from "@/lib/ui/dialogs";
 
@@ -9,48 +10,17 @@ export default function GymOwnerClassesPage() {
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [classList, setClassList] = useState([
-    {
-      id: 1,
-      name: "Morning Yoga",
-      instructor: "Sarah Johnson",
-      schedule: "Mon, Wed, Fri - 7:00 AM",
-      duration: "60 min",
-      capacity: 20,
-      enrolled: 15,
-      status: "active",
-    },
-    {
-      id: 2,
-      name: "HIIT Bootcamp",
-      instructor: "Mike Davis",
-      schedule: "Tue, Thu - 6:00 PM",
-      duration: "45 min",
-      capacity: 25,
-      enrolled: 22,
-      status: "active",
-    },
-    {
-      id: 3,
-      name: "Spin Class",
-      instructor: "Emily Brown",
-      schedule: "Daily - 5:30 PM",
-      duration: "50 min",
-      capacity: 30,
-      enrolled: 28,
-      status: "active",
-    },
-    {
-      id: 4,
-      name: "Pilates",
-      instructor: "Lisa Martinez",
-      schedule: "Mon, Wed - 10:00 AM",
-      duration: "60 min",
-      capacity: 15,
-      enrolled: 8,
-      status: "active",
-    },
-  ]);
+  type ClassItem = {
+    id: number;
+    name: string;
+    instructor: string;
+    schedule: string;
+    duration: string;
+    capacity: number;
+    enrolled: number;
+    status: string;
+  };
+  const [classList, setClassList] = useState<ClassItem[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -218,12 +188,14 @@ export default function GymOwnerClassesPage() {
                 Average Attendance
               </p>
               <p className="text-3xl font-black text-foreground mt-2">
-                {Math.round(
-                  classes.reduce(
-                    (sum, c) => sum + (c.enrolled / c.capacity) * 100,
-                    0,
-                  ) / classes.length,
-                )}
+                {classes.length === 0
+                  ? 0
+                  : Math.round(
+                      classes.reduce(
+                        (sum, c) => sum + (c.enrolled / c.capacity) * 100,
+                        0,
+                      ) / classes.length,
+                    )}
                 %
               </p>
             </div>
@@ -237,6 +209,18 @@ export default function GymOwnerClassesPage() {
             </div>
           </div>
 
+          {classes.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] mb-6">
+              <EmptyState
+                accent="green"
+                title="No classes yet"
+                description="Create your first class to start scheduling sessions for your members."
+                actionLabel="Create Class"
+                actionHref="/dashboard/gym-owner/classes/new"
+              />
+            </div>
+          ) : (
+            <>
           <div className="md:hidden space-y-3 mb-6">
             {classes.map((classItem) => {
               const utilizationPercent =
@@ -408,6 +392,8 @@ export default function GymOwnerClassesPage() {
               </table>
             </div>
           </div>
+            </>
+          )}
 
           {showCreateModal && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

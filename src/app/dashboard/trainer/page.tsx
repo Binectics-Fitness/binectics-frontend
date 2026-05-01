@@ -28,32 +28,11 @@ export default function TrainerDashboard() {
 
   const displayName = user ? `${user.first_name} ${user.last_name}` : "";
 
-  // Stats cards
+  // Stats cards (only fields backed by real API data)
   const stats = [
     {
-      label: "Sessions Today",
-      value: "4",
-      subtext: "2 completed, 2 upcoming",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-      color: "icon-glow-blue",
-    },
-    {
       label: "Active Clients",
-      value: dashboardStats?.active_clients?.toString() ?? "—",
+      value: dashboardStats?.active_clients?.toString() ?? "0",
       subtext: `${dashboardStats?.total_clients ?? 0} total clients`,
       icon: (
         <svg
@@ -73,9 +52,9 @@ export default function TrainerDashboard() {
       color: "icon-glow-green",
     },
     {
-      label: "This Week Earnings",
-      value: "$1,440",
-      subtext: "18 sessions completed",
+      label: "Pending Requests",
+      value: dashboardStats?.pending_requests?.toString() ?? "0",
+      subtext: "Awaiting your review",
       icon: (
         <svg
           className="h-8 w-8"
@@ -87,16 +66,37 @@ export default function TrainerDashboard() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+      ),
+      color: "icon-glow-blue",
+    },
+    {
+      label: "Pending Invitations",
+      value: dashboardStats?.pending_invitations?.toString() ?? "0",
+      subtext: "Sent to potential clients",
+      icon: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
           />
         </svg>
       ),
       color: "icon-glow-yellow",
     },
     {
-      label: "Avg. Rating",
-      value: "4.9",
-      subtext: "Based on 156 reviews",
+      label: "Total Clients",
+      value: dashboardStats?.total_clients?.toString() ?? "0",
+      subtext: "All-time client roster",
       icon: (
         <svg
           className="h-8 w-8"
@@ -108,7 +108,7 @@ export default function TrainerDashboard() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
           />
         </svg>
       ),
@@ -116,97 +116,15 @@ export default function TrainerDashboard() {
     },
   ];
 
-  // Today's sessions
-  const todaySessions = [
-    {
-      time: "10:00 AM",
-      client: "John Doe",
-      type: "Strength Training",
-      duration: "60 min",
-      status: "upcoming",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      time: "11:30 AM",
-      client: "Sarah Johnson",
-      type: "HIIT",
-      duration: "45 min",
-      status: "upcoming",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      time: "2:00 PM",
-      client: "Mike Wilson",
-      type: "CrossFit",
-      duration: "60 min",
-      status: "completed",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      time: "4:00 PM",
-      client: "Emily Davis",
-      type: "Strength Training",
-      duration: "45 min",
-      status: "completed",
-      avatar: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-  ];
+  // Today's sessions (no integration yet)
+  const todaySessions: Array<{
+    time: string;
+    client: string;
+    type: string;
+    duration: string;
+    status: "upcoming" | "completed";
+    avatar: React.ReactNode;
+  }> = [];
 
   // Quick actions
   const quickActions = [
@@ -227,7 +145,7 @@ export default function TrainerDashboard() {
           />
         </svg>
       ),
-      href: "/dashboard/trainer/workouts/new",
+      href: "/dashboard/trainer/workouts/create",
       color: "bg-primary-500",
     },
     {
@@ -356,10 +274,12 @@ export default function TrainerDashboard() {
               <Link
                 key={index}
                 href={action.href}
-                className={`group rounded-xl ${action.color} p-6 text-center shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
+                className={`group flex flex-col gap-3 rounded-xl ${action.color} p-5 text-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
               >
-                <div className="text-4xl mb-3">{action.icon}</div>
-                <p className="font-semibold text-white">{action.label}</p>
+                <div className="text-white/90">{action.icon}</div>
+                <p className="text-base font-semibold leading-snug">
+                  {action.label}
+                </p>
               </Link>
             ))}
           </div>
@@ -379,41 +299,67 @@ export default function TrainerDashboard() {
                 View All
               </Link>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
-              <ul className="space-y-4">
-                {todaySessions.map((session, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
-                  >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-2xl">
-                      {session.avatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">
-                        {session.client}
-                      </p>
-                      <p className="text-sm text-foreground-secondary">
-                        {session.type} • {session.duration}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-medium text-foreground">
-                        {session.time}
-                      </p>
-                      <span
-                        className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          session.status === "completed"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {session.status === "completed" ? "Done" : "Upcoming"}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)]">
+              {todaySessions.length === 0 ? (
+                <EmptyState
+                  compact
+                  accent="blue"
+                  title="No sessions today"
+                  description="You don't have any sessions scheduled for today. Enjoy the break or open up new availability."
+                  actionLabel="View Schedule"
+                  actionHref="/dashboard/trainer/sessions"
+                  icon={
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V11.25A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+                      />
+                    </svg>
+                  }
+                />
+              ) : (
+                <ul className="space-y-4 p-6">
+                  {todaySessions.map((session, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
+                    >
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-2xl">
+                        {session.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground truncate">
+                          {session.client}
+                        </p>
+                        <p className="text-sm text-foreground-secondary">
+                          {session.type} • {session.duration}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {session.time}
+                        </p>
+                        <span
+                          className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            session.status === "completed"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {session.status === "completed" ? "Done" : "Upcoming"}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 

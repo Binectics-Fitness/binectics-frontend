@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import ProviderOnboardingChecklist from "@/components/ProviderOnboardingChecklist";
+import { EmptyState } from "@/components/EmptyState";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -203,37 +204,14 @@ export default function GymOwnerDashboard() {
 
   const recentCheckins = orgStats?.recent_check_ins ?? [];
 
-  // Upcoming classes
-  const upcomingClasses = [
-    {
-      name: "HIIT Training",
-      time: "10:00 AM",
-      instructor: "Mike Chen",
-      capacity: "12/15",
-      status: "filling",
-    },
-    {
-      name: "Yoga Flow",
-      time: "11:30 AM",
-      instructor: "Sarah Johnson",
-      capacity: "8/12",
-      status: "available",
-    },
-    {
-      name: "Strength Training",
-      time: "2:00 PM",
-      instructor: "John Doe",
-      capacity: "15/15",
-      status: "full",
-    },
-    {
-      name: "CrossFit",
-      time: "4:30 PM",
-      instructor: "Emily Davis",
-      capacity: "10/20",
-      status: "available",
-    },
-  ];
+  // Upcoming classes (no integration yet)
+  const upcomingClasses: Array<{
+    name: string;
+    time: string;
+    instructor: string;
+    capacity: string;
+    status: "available" | "filling" | "full";
+  }> = [];
 
   // Quick actions
   const quickActions = [
@@ -457,40 +435,51 @@ export default function GymOwnerDashboard() {
                 Manage
               </Link>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
-              <ul className="space-y-4">
-                {upcomingClasses.map((classItem, index) => (
-                  <li
-                    key={index}
-                    className="pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {classItem.name}
-                        </p>
-                        <p className="text-sm text-foreground-secondary">
-                          {classItem.instructor}
-                        </p>
+            <div className="bg-white rounded-xl shadow-[var(--shadow-card)]">
+              {upcomingClasses.length === 0 ? (
+                <EmptyState
+                  compact
+                  accent="green"
+                  title="No classes scheduled"
+                  description="Add a class to your gym schedule so members can join."
+                  actionLabel="Add a Class"
+                  actionHref="/dashboard/gym-owner/classes/new"
+                />
+              ) : (
+                <ul className="space-y-4 p-6">
+                  {upcomingClasses.map((classItem, index) => (
+                    <li
+                      key={index}
+                      className="pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {classItem.name}
+                          </p>
+                          <p className="text-sm text-foreground-secondary">
+                            {classItem.instructor}
+                          </p>
+                        </div>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            classItem.status === "full"
+                              ? "bg-red-100 text-red-700"
+                              : classItem.status === "filling"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-green-100 text-green-700"
+                          }`}
+                        >
+                          {classItem.capacity}
+                        </span>
                       </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          classItem.status === "full"
-                            ? "bg-red-100 text-red-700"
-                            : classItem.status === "filling"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {classItem.capacity}
-                      </span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground-tertiary">
-                      {classItem.time}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+                      <p className="text-sm font-medium text-foreground-tertiary">
+                        {classItem.time}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
         </div>

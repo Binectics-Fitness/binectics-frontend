@@ -3,56 +3,36 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { showAlert } from "@/lib/ui/dialogs";
+import { EmptyState } from "@/components/EmptyState";
 
 export default function BillingSettingsPage() {
   const { user } = useAuth();
   const [isAddingCard, setIsAddingCard] = useState(false);
 
-  const paymentMethods = [
-    { id: 1, type: "Visa", last4: "4242", expiry: "12/25", isDefault: true },
-    {
-      id: 2,
-      type: "Mastercard",
-      last4: "8888",
-      expiry: "09/26",
-      isDefault: false,
-    },
-  ];
+  const paymentMethods: Array<{
+    id: number;
+    type: string;
+    last4: string;
+    expiry: string;
+    isDefault: boolean;
+  }> = [];
 
-  const invoices = [
-    {
-      id: 1,
-      date: "2025-01-15",
-      amount: 49,
-      status: "Paid",
-      description: "Premium Membership - January 2025",
-    },
-    {
-      id: 2,
-      date: "2024-12-15",
-      amount: 49,
-      status: "Paid",
-      description: "Premium Membership - December 2024",
-    },
-    {
-      id: 3,
-      date: "2024-11-15",
-      amount: 49,
-      status: "Paid",
-      description: "Premium Membership - November 2024",
-    },
-  ];
+  const invoices: Array<{
+    id: number;
+    date: string;
+    amount: number;
+    status: string;
+    description: string;
+  }> = [];
 
-  const subscriptions = [
-    {
-      id: 1,
-      name: "Binectics Premium",
-      amount: 49,
-      interval: "month",
-      nextBilling: "2025-02-15",
-      status: "Active",
-    },
-  ];
+  const subscriptions: Array<{
+    id: number;
+    name: string;
+    amount: number;
+    interval: string;
+    nextBilling: string;
+    status: string;
+  }> = [];
 
   if (!user) return null;
 
@@ -144,7 +124,15 @@ export default function BillingSettingsPage() {
         )}
 
         <div className="space-y-3">
-          {paymentMethods.map((method) => (
+          {paymentMethods.length === 0 ? (
+            <EmptyState
+              compact
+              accent="blue"
+              title="No payment methods"
+              description="Add a card to manage subscriptions and pay for plans."
+            />
+          ) : (
+            paymentMethods.map((method) => (
             <div
               key={method.id}
               className="flex flex-col gap-4 rounded-lg border-2 border-neutral-200 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -184,7 +172,8 @@ export default function BillingSettingsPage() {
                 </button>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -208,7 +197,15 @@ export default function BillingSettingsPage() {
           </h3>
         </div>
         <div className="space-y-4">
-          {subscriptions.map((sub) => (
+          {subscriptions.length === 0 ? (
+            <EmptyState
+              compact
+              accent="green"
+              title="No active subscriptions"
+              description="You don’t have any active subscriptions yet."
+            />
+          ) : (
+            subscriptions.map((sub) => (
             <div
               key={sub.id}
               className="p-4 border-2 border-neutral-200 rounded-lg"
@@ -245,7 +242,8 @@ export default function BillingSettingsPage() {
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -268,6 +266,15 @@ export default function BillingSettingsPage() {
             Billing History
           </h3>
         </div>
+        {invoices.length === 0 ? (
+          <EmptyState
+            compact
+            accent="yellow"
+            title="No billing history"
+            description="Your invoices will appear here once you make a purchase."
+          />
+        ) : (
+          <>
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full">
             <thead>
@@ -347,6 +354,8 @@ export default function BillingSettingsPage() {
             </div>
           ))}
         </div>
+          </>
+        )}
       </div>
 
       <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">

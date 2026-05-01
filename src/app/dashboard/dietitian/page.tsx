@@ -126,9 +126,9 @@ export default function DietitianDashboard() {
       color: "icon-glow-green",
     },
     {
-      label: "This Week Earnings",
-      value: "$1,760",
-      subtext: "22 consultations completed",
+      label: "Pending Requests",
+      value: dashboardStats?.pending_requests?.toString() ?? "0",
+      subtext: "Awaiting your review",
       icon: (
         <svg
           className="h-8 w-8"
@@ -140,16 +140,16 @@ export default function DietitianDashboard() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
           />
         </svg>
       ),
       color: "icon-glow-yellow",
     },
     {
-      label: "Avg. Rating",
-      value: "4.9",
-      subtext: "Based on 189 reviews",
+      label: "Pending Invitations",
+      value: dashboardStats?.pending_invitations?.toString() ?? "0",
+      subtext: "Sent to potential clients",
       icon: (
         <svg
           className="h-8 w-8"
@@ -161,7 +161,7 @@ export default function DietitianDashboard() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
           />
         </svg>
       ),
@@ -241,30 +241,14 @@ export default function DietitianDashboard() {
     };
   });
 
-  // Recent meal plans
-  const recentMealPlans = [
-    {
-      name: "High Protein Weight Loss",
-      client: "Sarah Johnson",
-      calories: "1,500 kcal",
-      macros: "P: 40% C: 30% F: 30%",
-      duration: "4 weeks",
-    },
-    {
-      name: "Muscle Building Plan",
-      client: "John Doe",
-      calories: "2,800 kcal",
-      macros: "P: 30% C: 45% F: 25%",
-      duration: "8 weeks",
-    },
-    {
-      name: "Balanced Maintenance",
-      client: "Mike Wilson",
-      calories: "2,200 kcal",
-      macros: "P: 25% C: 50% F: 25%",
-      duration: "12 weeks",
-    },
-  ];
+  // Recent meal plans (no integration yet)
+  const recentMealPlans: Array<{
+    name: string;
+    client: string;
+    calories: string;
+    macros: string;
+    duration: string;
+  }> = [];
 
   // Quick actions
   const quickActions = [
@@ -582,7 +566,19 @@ export default function DietitianDashboard() {
             </Link>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {recentMealPlans.map((plan, index) => (
+            {recentMealPlans.length === 0 ? (
+              <div className="sm:col-span-2 lg:col-span-3 bg-white rounded-xl shadow-[var(--shadow-card)]">
+                <EmptyState
+                  compact
+                  accent="purple"
+                  title="No meal plans yet"
+                  description="Create your first meal plan to start guiding your clients."
+                  actionLabel="Create Meal Plan"
+                  actionHref="/dashboard/dietitian/meal-plans"
+                />
+              </div>
+            ) : (
+              recentMealPlans.map((plan, index) => (
               <div
                 key={index}
                 className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
@@ -614,7 +610,8 @@ export default function DietitianDashboard() {
                   </div>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </section>
       </main>
