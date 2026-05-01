@@ -366,9 +366,9 @@ export default function GymOwnerDashboard() {
               <Link
                 key={index}
                 href={action.href}
-                className={`group rounded-xl ${action.color} p-6 text-center shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
+                className={`group rounded-xl ${action.color} p-6 text-center text-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
               >
-                <div className="text-4xl mb-3">{action.icon}</div>
+                <div className="mb-3 flex justify-center">{action.icon}</div>
                 <p className="font-semibold text-white">{action.label}</p>
               </Link>
             ))}

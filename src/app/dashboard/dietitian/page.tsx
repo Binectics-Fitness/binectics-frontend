@@ -265,7 +265,7 @@ export default function DietitianDashboard() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 6v12m0 0a2 2 0 100 4 2 2 0 000-4z"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
           />
         </svg>
       ),
@@ -381,9 +381,9 @@ export default function DietitianDashboard() {
               <Link
                 key={index}
                 href={action.href}
-                className={`group rounded-xl ${action.color} p-6 text-center shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
+                className={`group rounded-xl ${action.color} p-6 text-center text-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
               >
-                <div className="text-4xl mb-3">{action.icon}</div>
+                <div className="mb-3 flex justify-center">{action.icon}</div>
                 <p className="font-semibold text-white">{action.label}</p>
               </Link>
             ))}
