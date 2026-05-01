@@ -18,7 +18,7 @@ import {
   AvailabilityExceptionType,
   type AvailabilityException,
 } from "@/lib/api/consultations";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, CalendarOff } from "lucide-react";
 
 type DayRange = { id: string; startTime: string; endTime: string };
 type DaySchedule = { enabled: boolean; ranges: DayRange[] };
@@ -717,51 +717,101 @@ export default function ConsultationAvailabilityManager({
 
         {/* ===== BLOCKED DATES (EXCEPTIONS) TAB ===== */}
         {activeTab === "exceptions" && (
-          <>
-            <section className="mb-8 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-              <h2 className="mb-2 text-xl font-bold text-foreground">
-                Block a Date
-              </h2>
-              <p className="mb-4 text-sm text-foreground-secondary">
-                Block specific dates when you&apos;re unavailable (sick days,
-                holidays) or set custom hours for a particular date.
-              </p>
+          <section className="rounded-2xl bg-white shadow-[var(--shadow-card)]">
+            <div className="flex items-center justify-between border-b border-neutral-100 p-5">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  Blocked Dates
+                </h2>
+                <p className="mt-0.5 text-xs text-foreground-tertiary">
+                  Sick days, holidays, or any one-off date you can&apos;t take
+                  bookings.
+                </p>
+              </div>
+              {exceptions.length > 0 && (
+                <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-foreground-secondary">
+                  {exceptions.length}
+                </span>
+              )}
+            </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-                <input
-                  type="date"
-                  value={newException.date}
-                  onChange={(e) =>
-                    setNewException((prev) => ({
-                      ...prev,
-                      date: e.target.value,
-                    }))
-                  }
-                  min={new Date().toISOString().slice(0, 10)}
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                />
+            {/* Inline add form */}
+            <div className="border-b border-neutral-100 bg-neutral-50/50 p-5">
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+                <div>
+                  <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={newException.date}
+                    onChange={(e) =>
+                      setNewException((prev) => ({
+                        ...prev,
+                        date: e.target.value,
+                      }))
+                    }
+                    min={new Date().toISOString().slice(0, 10)}
+                    className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                  />
+                </div>
 
-                <select
-                  value={newException.type}
-                  onChange={(e) =>
-                    setNewException((prev) => ({
-                      ...prev,
-                      type: e.target.value as AvailabilityExceptionType,
-                    }))
-                  }
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                <div>
+                  <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                    Type
+                  </label>
+                  <div className="inline-flex rounded-lg border border-neutral-200 bg-white p-0.5">
+                    {(
+                      [
+                        {
+                          value: AvailabilityExceptionType.UNAVAILABLE,
+                          label: "Full day",
+                        },
+                        {
+                          value: AvailabilityExceptionType.CUSTOM_HOURS,
+                          label: "Custom hours",
+                        },
+                      ] as const
+                    ).map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() =>
+                          setNewException((prev) => ({
+                            ...prev,
+                            type: opt.value,
+                          }))
+                        }
+                        className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                          newException.type === opt.value
+                            ? "bg-foreground text-background"
+                            : "text-foreground-secondary hover:bg-neutral-100"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={createException}
+                  disabled={isCreatingException || !newException.date}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                 >
-                  <option value={AvailabilityExceptionType.UNAVAILABLE}>
-                    Full Day Off
-                  </option>
-                  <option value={AvailabilityExceptionType.CUSTOM_HOURS}>
-                    Custom Hours
-                  </option>
-                </select>
+                  <Plus className="h-4 w-4" />
+                  {isCreatingException ? "Adding…" : "Block date"}
+                </button>
+              </div>
 
-                {newException.type ===
-                  AvailabilityExceptionType.CUSTOM_HOURS && (
-                  <>
+              {newException.type ===
+                AvailabilityExceptionType.CUSTOM_HOURS && (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 sm:max-w-md">
+                  <div>
+                    <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                      Start
+                    </label>
                     <input
                       type="time"
                       value={newException.startTime}
@@ -771,8 +821,13 @@ export default function ConsultationAvailabilityManager({
                           startTime: e.target.value,
                         }))
                       }
-                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                      End
+                    </label>
                     <input
                       type="time"
                       value={newException.endTime}
@@ -782,99 +837,112 @@ export default function ConsultationAvailabilityManager({
                           endTime: e.target.value,
                         }))
                       }
-                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
                     />
-                  </>
-                )}
-              </div>
-
-              <input
-                type="text"
-                value={newException.reason}
-                onChange={(e) =>
-                  setNewException((prev) => ({
-                    ...prev,
-                    reason: e.target.value,
-                  }))
-                }
-                placeholder="Optional reason (e.g. Holiday, Doctor's appointment)"
-                className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-              />
-
-              <button
-                onClick={createException}
-                disabled={isCreatingException}
-                className="mt-3 rounded-lg bg-accent-blue-500 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isCreatingException ? "Adding..." : "Add Exception"}
-              </button>
-            </section>
-
-            <section className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-foreground">
-                  Current Exceptions
-                </h2>
-                <span className="text-sm text-foreground-secondary">
-                  {exceptions.length} exception{exceptions.length !== 1 && "s"}
-                </span>
-              </div>
-
-              {loadingExceptions ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-r-transparent" />
-                </div>
-              ) : exceptions.length === 0 ? (
-                <p className="text-sm text-foreground-secondary">
-                  No blocked dates or exceptions configured.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {exceptions.map((exc) => (
-                    <div
-                      key={exc.id}
-                      className="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-3"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-semibold text-foreground">
-                            {exc.date}
-                          </p>
-                          <span
-                            className={`rounded px-2 py-0.5 text-xs font-semibold ${
-                              exc.type === AvailabilityExceptionType.UNAVAILABLE
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {exc.type === AvailabilityExceptionType.UNAVAILABLE
-                              ? "Day Off"
-                              : "Custom Hours"}
-                          </span>
-                        </div>
-                        <p className="text-xs text-foreground-secondary">
-                          {exc.type ===
-                            AvailabilityExceptionType.CUSTOM_HOURS &&
-                          exc.startTime &&
-                          exc.endTime
-                            ? `${exc.startTime} – ${exc.endTime}`
-                            : "Unavailable all day"}
-                          {exc.reason && ` • ${exc.reason}`}
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() => deleteException(exc.id)}
-                        className="rounded-lg bg-red-50 px-3 py-1 text-xs font-semibold text-red-600"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
+                  </div>
                 </div>
               )}
-            </section>
-          </>
+
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                  Reason{" "}
+                  <span className="font-normal text-foreground-tertiary">
+                    (optional, private)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={newException.reason}
+                  onChange={(e) =>
+                    setNewException((prev) => ({
+                      ...prev,
+                      reason: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. Holiday, Doctor's appointment"
+                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="p-5">
+              {loadingExceptions ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary-500 border-r-transparent" />
+                </div>
+              ) : exceptions.length === 0 ? (
+                <div className="py-8 text-center">
+                  <CalendarOff
+                    className="mx-auto h-10 w-10 text-foreground-tertiary mb-3"
+                    aria-hidden="true"
+                  />
+                  <p className="text-sm font-semibold text-foreground">
+                    No blocked dates
+                  </p>
+                  <p className="mt-1 text-xs text-foreground-tertiary">
+                    Add a date above to block it from your booking calendar.
+                  </p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-neutral-100">
+                  {[...exceptions]
+                    .sort((a, b) => a.date.localeCompare(b.date))
+                    .map((exc) => {
+                      const dateObj = new Date(`${exc.date}T00:00:00`);
+                      const formattedDate = dateObj.toLocaleDateString(
+                        undefined,
+                        {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        },
+                      );
+                      const isFullDay =
+                        exc.type === AvailabilityExceptionType.UNAVAILABLE;
+                      return (
+                        <li
+                          key={exc.id}
+                          className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-sm font-semibold text-foreground">
+                                {formattedDate}
+                              </p>
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                  isFullDay
+                                    ? "bg-red-50 text-red-700"
+                                    : "bg-yellow-50 text-yellow-700"
+                                }`}
+                              >
+                                {isFullDay ? "Day off" : "Custom hours"}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 text-xs text-foreground-tertiary">
+                              {!isFullDay && exc.startTime && exc.endTime
+                                ? `${exc.startTime} – ${exc.endTime}`
+                                : "Unavailable all day"}
+                              {exc.reason && ` • ${exc.reason}`}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => deleteException(exc.id)}
+                            aria-label="Remove blocked date"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-foreground-tertiary hover:bg-red-50 hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                </ul>
+              )}
+            </div>
+          </section>
         )}
       </main>
     </div>
