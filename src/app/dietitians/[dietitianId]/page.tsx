@@ -298,9 +298,9 @@ export default function DietitianProfilePage() {
               </div>
 
               <ContactProvider
-                phone={listing.contact_phone}
-                email={listing.contact_email}
-                providerName={listing.headline}
+                phone={listing?.contact_phone}
+                email={listing?.contact_email}
+                providerName={listing?.headline}
                 whatsappMessage={`Hi, I found your profile on Binectics and I'm interested in your nutrition services.`}
               />
             </div>
