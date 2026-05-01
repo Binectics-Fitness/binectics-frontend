@@ -6,6 +6,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import SearchableSelect from "@/components/SearchableSelect";
+import { Users } from "lucide-react";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   MembershipSubscription,
@@ -347,7 +348,9 @@ export default function GymOwnerMembersPage() {
               </div>
             ) : filtered.length === 0 ? (
               <div className="p-12 text-center">
-                <p className="text-4xl mb-4">👥</p>
+                <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-foreground-tertiary">
+                  <Users className="h-8 w-8" />
+                </div>
                 <h3 className="text-lg font-bold text-foreground mb-2">
                   {subscriptions.length === 0
                     ? "No members yet"

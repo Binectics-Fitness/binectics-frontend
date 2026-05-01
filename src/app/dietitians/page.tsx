@@ -7,6 +7,7 @@ import { CardSkeleton } from "@/components/CardSkeleton";
 import { stripHtml } from "@/utils";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
+import { Search as SearchIcon, MapPin, Apple } from "lucide-react";
 
 function getDisplayName(listing: MarketplaceListing): string {
   const pro =
@@ -251,7 +252,9 @@ export default function DietitiansPage() {
 
           {!isLoading && !error && listings.length === 0 && (
             <div className="text-center py-16">
-              <div className="text-6xl mb-4">🔍</div>
+              <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-foreground-tertiary">
+                <SearchIcon className="h-8 w-8" />
+              </div>
               <h3 className="font-display text-2xl font-bold text-foreground mb-2">
                 No dietitians found
               </h3>
@@ -302,7 +305,7 @@ export default function DietitiansPage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <span>🥗</span>
+                              <Apple className="h-7 w-7 text-accent-purple-600" />
                             )}
                           </div>
                           <div>
@@ -310,8 +313,9 @@ export default function DietitiansPage() {
                               {displayName}
                             </h3>
                             {location && (
-                              <p className="text-sm text-foreground-secondary">
-                                📍 {location}
+                              <p className="inline-flex items-center gap-1 text-sm text-foreground-secondary">
+                                <MapPin className="h-3.5 w-3.5" />
+                                {location}
                               </p>
                             )}
                           </div>

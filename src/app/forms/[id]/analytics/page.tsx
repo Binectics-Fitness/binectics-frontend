@@ -7,6 +7,7 @@ import { useFormAnalytics } from "@/hooks/useForms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
+import { BarChart3 } from "lucide-react";
 
 export default function FormAnalyticsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -295,7 +296,9 @@ export default function FormAnalyticsPage() {
         {/* No Data State */}
         {analytics.total_responses === 0 && (
           <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-12 text-center">
-            <div className="text-6xl mb-4">📊</div>
+            <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-foreground-tertiary">
+              <BarChart3 className="h-8 w-8" />
+            </div>
             <h2 className="font-display text-2xl font-bold text-foreground mb-2">
               No Analytics Yet
             </h2>

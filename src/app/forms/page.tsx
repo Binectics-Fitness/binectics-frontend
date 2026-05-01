@@ -3,6 +3,22 @@
 import { useMemo, useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Plus,
+  Search as SearchIcon,
+  Pencil,
+  BarChart3,
+  Link2,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  Copy,
+  Trash2,
+  Check,
+  Loader2,
+  Sparkles,
+  MessageSquare,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForms } from "@/hooks/useForms";
 import DashboardLoading from "@/components/DashboardLoading";
@@ -233,21 +249,7 @@ function FormsListContent() {
             </p>
           </div>
           <Link href="/forms/create" className="sm:shrink-0">
-            <Button leftIcon={
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            }>
+            <Button leftIcon={<Plus className="h-5 w-5" />}>
               Create New Form
             </Button>
           </Link>
@@ -258,19 +260,7 @@ function FormsListContent() {
           <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-1 items-stretch gap-2">
               <div className="relative flex-1 max-w-md">
-                <svg
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-tertiary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z"
-                  />
-                </svg>
+                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-tertiary" />
                 <input
                   type="search"
                   value={search}
@@ -359,19 +349,9 @@ function FormsListContent() {
         {/* Forms List */}
         {forms.length === 0 ? (
           <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-12 text-center">
-            <svg
-              className="w-16 h-16 mx-auto text-foreground-tertiary mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
+            <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-foreground-tertiary">
+              <MessageSquare className="h-8 w-8" />
+            </div>
             <h3 className="font-display text-xl font-bold text-foreground mb-2">
               No forms yet
             </h3>
@@ -434,24 +414,37 @@ function FormsListContent() {
                     />
                   </label>
                   {isHighlighted && (
-                    <div className="bg-primary-500 text-foreground px-3 py-1 rounded text-sm font-semibold mb-4 inline-block self-start">
-                      ✨ Just Published!
+                    <div className="bg-primary-500 text-foreground px-3 py-1 rounded text-sm font-semibold mb-4 inline-flex items-center gap-1.5 self-start">
+                      <Sparkles className="h-4 w-4" />
+                      Just Published!
                     </div>
                   )}
                   {/* Form Header */}
-                  <div className="mb-4 pr-8">
-                    <div className="flex items-start justify-between mb-2 gap-2">
-                      <h3 className="font-display text-lg font-bold text-foreground line-clamp-2">
-                        {form.title}
-                      </h3>
+                  <div className="mb-3 pr-8">
+                    <h3 className="font-display text-lg font-bold text-foreground line-clamp-2 mb-2">
+                      {form.title}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span
-                        className={`shrink-0 px-2 py-1 text-sm font-semibold rounded ${
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-sm font-semibold rounded-full ${
                           form.is_published
                             ? "bg-green-100 text-green-700"
                             : "bg-neutral-100 text-neutral-700"
                         }`}
                       >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            form.is_published
+                              ? "bg-green-500"
+                              : "bg-neutral-400"
+                          }`}
+                        />
                         {form.is_published ? "Published" : "Draft"}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-sm font-semibold rounded-full bg-accent-blue-50 text-accent-blue-700">
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        {responseCount} response
+                        {responseCount === 1 ? "" : "s"}
                       </span>
                     </div>
                     <p className="text-sm text-foreground-secondary line-clamp-2 min-h-[2.5rem]">
@@ -459,57 +452,42 @@ function FormsListContent() {
                     </p>
                   </div>
 
-                  {/* Form Stats */}
-                  <div className="grid grid-cols-2 gap-3 mb-4 py-3 border-t border-b border-neutral-100">
-                    <div>
-                      <p className="text-sm text-foreground-tertiary">
-                        Responses
-                      </p>
-                      <p className="text-sm font-semibold text-foreground">
-                        {responseCount}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-foreground-tertiary">
-                        Created
-                      </p>
-                      <p className="text-sm font-semibold text-foreground">
-                        {form.created_at ? formatDate(form.created_at) : "—"}
-                      </p>
-                    </div>
-                  </div>
+                  {/* Subtle metadata */}
+                  <p className="mb-4 text-sm text-foreground-tertiary">
+                    Created {form.created_at ? formatDate(form.created_at) : "—"}
+                  </p>
 
                   {/* Spacer to push actions to bottom for equal-height cards */}
                   <div className="flex-1" />
 
                   {/* Primary action */}
                   <Link
-                    href={`/forms/${form._id}/responses`}
-                    className="mb-2 inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-primary-600"
+                    href={`/forms/${form._id}/edit`}
+                    className="mb-3 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-primary-600"
                   >
-                    View {responseCount} Response
-                    {responseCount === 1 ? "" : "s"}
+                    <Pencil className="h-4 w-4" />
+                    Edit form
                   </Link>
 
-                  {/* Secondary actions */}
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <Link
-                      href={`/forms/${form._id}/edit`}
-                      className="text-center inline-flex h-10 items-center justify-center rounded-lg bg-neutral-100 px-3 text-sm font-medium text-foreground transition-colors hover:bg-neutral-200"
-                    >
-                      Edit
-                    </Link>
-                    <Link
-                      href={`/forms/${form._id}/analytics`}
-                      className="text-center inline-flex h-10 items-center justify-center rounded-lg bg-accent-blue-100 px-3 text-sm font-medium text-accent-blue-700 transition-colors hover:bg-accent-blue-200"
-                    >
-                      Analytics
-                    </Link>
-                  </div>
-
-                  {/* Tertiary icon row */}
+                  {/* Icon action row */}
                   <div className="flex items-center justify-between border-t border-neutral-100 pt-3">
                     <div className="flex items-center gap-1">
+                      <Link
+                        href={`/forms/${form._id}/responses`}
+                        title={`View ${responseCount} response${responseCount === 1 ? "" : "s"}`}
+                        aria-label="View responses"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary transition-colors hover:bg-neutral-100"
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                      </Link>
+                      <Link
+                        href={`/forms/${form._id}/analytics`}
+                        title="View analytics"
+                        aria-label="View analytics"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary transition-colors hover:bg-neutral-100"
+                      >
+                        <BarChart3 className="h-5 w-5" />
+                      </Link>
                       {form.is_published && (
                         <>
                           <button
@@ -520,33 +498,9 @@ function FormsListContent() {
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary transition-colors hover:bg-neutral-100"
                           >
                             {isCopied ? (
-                              <svg
-                                className="h-5 w-5 text-primary-600"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
+                              <Check className="h-5 w-5 text-primary-600" />
                             ) : (
-                              <svg
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M13.828 10.172a4 4 0 015.656 5.656l-3 3a4 4 0 01-5.656-5.656m-3 3a4 4 0 010-5.656l3-3a4 4 0 015.656 0"
-                                />
-                              </svg>
+                              <Link2 className="h-5 w-5" />
                             )}
                           </button>
                           <Link
@@ -557,19 +511,7 @@ function FormsListContent() {
                             aria-label="Open form in new tab"
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary transition-colors hover:bg-neutral-100"
                           >
-                            <svg
-                              className="h-5 w-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M14 3h7v7m0-7L10 14m-4-4v11h11"
-                              />
-                            </svg>
+                            <ExternalLink className="h-5 w-5" />
                           </Link>
                         </>
                       )}
@@ -591,40 +533,12 @@ function FormsListContent() {
                             : "text-primary-600"
                         }`}
                       >
-                        {form.is_published ? (
-                          <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88L3 3m6.88 6.88L21 21"
-                            />
-                          </svg>
+                        {isPublishPending ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : form.is_published ? (
+                          <EyeOff className="h-5 w-5" />
                         ) : (
-                          <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
+                          <Eye className="h-5 w-5" />
                         )}
                       </button>
                       <button
@@ -636,34 +550,9 @@ function FormsListContent() {
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary transition-colors hover:bg-neutral-100 disabled:opacity-50"
                       >
                         {isDuplicatePending ? (
-                          <svg
-                            className="h-5 w-5 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <circle
-                              cx="12"
-                              cy="12"
-                              r="9"
-                              strokeWidth={2}
-                              strokeDasharray="40 20"
-                            />
-                          </svg>
+                          <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
-                          <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            />
-                          </svg>
+                          <Copy className="h-5 w-5" />
                         )}
                       </button>
                     </div>
@@ -674,19 +563,7 @@ function FormsListContent() {
                       aria-label="Delete form"
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50"
                     >
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"
-                        />
-                      </svg>
+                      <Trash2 className="h-5 w-5" />
                     </button>
                   </div>
                 </div>

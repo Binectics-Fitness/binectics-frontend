@@ -8,6 +8,7 @@ import type { FormResponse } from "@/lib/api/forms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
+import { FileText } from "lucide-react";
 import { formatDate } from "@/utils/format";
 
 export default function FormResponsesPage() {
@@ -116,7 +117,9 @@ export default function FormResponsesPage() {
         {/* Empty State */}
         {responses.length === 0 ? (
           <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-12 text-center">
-            <div className="text-6xl mb-4">📝</div>
+            <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-foreground-tertiary">
+              <FileText className="h-8 w-8" />
+            </div>
             <h2 className="font-display text-2xl font-bold text-foreground mb-2">
               No Responses Yet
             </h2>

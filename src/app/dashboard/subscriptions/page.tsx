@@ -148,7 +148,9 @@ export default function SubscriptionsPage() {
             </div>
           ) : subscriptions.length === 0 ? (
             <div className="bg-white p-12 shadow-[var(--shadow-card)] text-center">
-              <p className="text-4xl mb-4">🏋️</p>
+              <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-foreground-tertiary">
+                <Dumbbell className="h-8 w-8" />
+              </div>
               <h2 className="text-xl font-bold text-foreground mb-2">
                 No subscriptions yet
               </h2>

@@ -10,6 +10,7 @@ import type {
   MarketplaceAccountType,
   MarketplaceVerificationBadge,
 } from "@/lib/types";
+import { Search as SearchIcon, MapPin, Star, Dumbbell, Apple } from "lucide-react";
 
 type TypeFilter = "all" | MarketplaceAccountType;
 
@@ -328,7 +329,9 @@ export default function SearchPage() {
 
             {!isLoading && !error && listings.length === 0 && (
               <div className="text-center py-16">
-                <p className="text-4xl mb-4">🔍</p>
+                <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-foreground-tertiary">
+                  <SearchIcon className="h-8 w-8" />
+                </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">
                   No results found
                 </h3>
@@ -367,12 +370,14 @@ export default function SearchPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-5xl text-neutral-400">
-                            {listing.account_type === "gym_owner"
-                              ? "🏋️"
-                              : listing.account_type === "personal_trainer"
-                                ? "💪"
-                                : "🥗"}
+                          <div className="w-full h-full flex items-center justify-center text-neutral-400">
+                            {listing.account_type === "gym_owner" ? (
+                              <Dumbbell className="h-14 w-14" />
+                            ) : listing.account_type === "personal_trainer" ? (
+                              <Dumbbell className="h-14 w-14" />
+                            ) : (
+                              <Apple className="h-14 w-14" />
+                            )}
                           </div>
                         )}
                         <div
@@ -405,13 +410,14 @@ export default function SearchPage() {
                           {listing.headline}
                         </p>
                         {location && (
-                          <p className="text-foreground/60 text-xs sm:text-sm mb-3 truncate">
-                            📍 {location}
+                          <p className="inline-flex items-center gap-1 text-foreground/60 text-xs sm:text-sm mb-3 truncate">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {location}
                           </p>
                         )}
                         {listing.review_count > 0 && (
                           <div className="flex items-center gap-2 mb-3">
-                            <span>⭐</span>
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                             <span className="font-semibold text-foreground text-sm">
                               {listing.average_rating.toFixed(1)}
                             </span>

@@ -7,6 +7,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { CardSkeleton } from "@/components/CardSkeleton";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
+import { Search as SearchIcon, MapPin, Dumbbell } from "lucide-react";
 
 function getDisplayName(listing: MarketplaceListing): string {
   const org =
@@ -218,7 +219,9 @@ export default function GymsPage() {
 
           {!isLoading && !error && listings.length === 0 && (
             <div className="text-center py-16">
-              <div className="text-6xl mb-4">🔍</div>
+              <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-foreground-tertiary">
+                <SearchIcon className="h-8 w-8" />
+              </div>
               <h3 className="font-display text-2xl font-bold text-foreground mb-2">
                 No gyms found
               </h3>
@@ -258,7 +261,7 @@ export default function GymsPage() {
                     className="flex h-full flex-col overflow-hidden rounded-lg border-2 border-neutral-300 bg-background transition-all hover:border-primary-500 hover:shadow-[var(--shadow-card-hover)]"
                   >
                     {/* Image */}
-                    <div className="relative h-48 bg-neutral-100 flex items-center justify-center text-6xl">
+                    <div className="relative h-48 bg-neutral-100 flex items-center justify-center">
                       {listing.profile_image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -267,7 +270,7 @@ export default function GymsPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span>🏋️</span>
+                        <Dumbbell className="h-16 w-16 text-neutral-400" />
                       )}
                       {isVerified && (
                         <div className="absolute top-3 right-3 bg-primary-500 text-foreground px-2 py-1 text-xs font-semibold flex items-center gap-1">
@@ -294,8 +297,9 @@ export default function GymsPage() {
                           {displayName}
                         </h3>
                         {location && (
-                          <p className="text-sm text-foreground-secondary">
-                            📍 {location}
+                          <p className="inline-flex items-center gap-1 text-sm text-foreground-secondary">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {location}
                           </p>
                         )}
                       </div>

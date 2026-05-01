@@ -6,6 +6,7 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole, PlanStatus, DifficultyLevel } from "@/lib/types";
+import { Clock, Flame, Dumbbell } from "lucide-react";
 import {
   progressService,
   ClientProfile,
@@ -321,12 +322,21 @@ export default function Page() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm text-neutral-600">
-                      <span>⏱ {act.duration_minutes} min</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {act.duration_minutes} min
+                      </span>
                       {act.calories_burned != null && (
-                        <span>🔥 {act.calories_burned} kcal</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Flame className="h-3.5 w-3.5" />
+                          {act.calories_burned} kcal
+                        </span>
                       )}
                       {act.intensity != null && (
-                        <span>💪 Intensity: {act.intensity}/10</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Dumbbell className="h-3.5 w-3.5" />
+                          Intensity: {act.intensity}/10
+                        </span>
                       )}
                     </div>
                     {act.notes && (
