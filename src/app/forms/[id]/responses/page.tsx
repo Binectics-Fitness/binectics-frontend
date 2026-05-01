@@ -4,11 +4,31 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFormResponses } from "@/hooks/useForms";
-import type { FormResponse } from "@/lib/api/forms";
+import {
+  QuestionType,
+  type FormQuestion,
+  type FormResponse,
+} from "@/lib/api/forms";
 import DashboardLoading from "@/components/DashboardLoading";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Button } from "@/components/Button";
-import { FileText } from "lucide-react";
+import {
+  FileText,
+  X,
+  User,
+  Clock,
+  Calendar,
+  Mail,
+  Phone,
+  Hash,
+  Star,
+  CheckSquare,
+  ListChecks,
+  AlignLeft,
+  Type,
+  ChevronDown,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { formatDate } from "@/utils/format";
 
 export default function FormResponsesPage() {
@@ -34,24 +54,6 @@ export default function FormResponsesPage() {
     }
   }, [user, authLoading, loadResponses, router]);
 
-  const getAnswerValue = (
-    response: FormResponse,
-    questionId: string,
-  ): string => {
-    if (!response.answers) return "-";
-
-    const answer = response.answers.find((a) => a.question_id === questionId);
-    if (!answer || answer.value === null || answer.value === undefined)
-      return "-";
-
-    // Handle array values (checkboxes)
-    if (Array.isArray(answer.value)) {
-      return answer.value.join(", ");
-    }
-
-    return String(answer.value);
-  };
-
   const formatResponseDate = (date: string) => {
     return formatDate(date, {
       year: "numeric",
@@ -68,6 +70,29 @@ export default function FormResponsesPage() {
     const remainingSeconds = seconds % 60;
     return `${minutes}m ${remainingSeconds}s`;
   };
+
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  // Close modal on Escape
+  useEffect(() => {
+    if (!selectedResponse) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedResponse(null);
+    };
+    window.addEventListener("keydown", onKey);
+    // Lock body scroll
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selectedResponse]);
 
   if (authLoading || isLoading) {
     return <DashboardLoading />;
@@ -267,96 +292,381 @@ export default function FormResponsesPage() {
 
         {/* Response Detail Modal */}
         {selectedResponse && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-neutral-200 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground">
-                    Response Details
-                  </h2>
-                  <p className="text-sm text-foreground-secondary mt-1">
-                    Submitted on{" "}
-                    {formatResponseDate(selectedResponse.submitted_at)}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSelectedResponse(null)}
-                  className="p-2 text-foreground-secondary hover:text-foreground"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="p-6">
-                {/* Response Metadata */}
-                <div className="bg-neutral-50 rounded-lg p-4 mb-6">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-semibold text-foreground-secondary">
-                        Submitted By:
-                      </span>
-                      <div className="text-foreground mt-1">
-                        {selectedResponse.submitted_by_id || "Anonymous"}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-foreground-secondary">
-                        Completion Time:
-                      </span>
-                      <div className="text-foreground mt-1">
-                        {selectedResponse.completion_time_seconds
-                          ? formatDuration(
-                              selectedResponse.completion_time_seconds,
-                            )
-                          : "-"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Answers */}
-                <div className="space-y-4">
-                  {questions.map((question, index) => {
-                    const answerValue = getAnswerValue(
-                      selectedResponse,
-                      question._id,
-                    );
-                    return (
-                      <div
-                        key={question._id}
-                        className="border-b border-neutral-200 pb-4 last:border-0"
-                      >
-                        <div className="font-semibold text-foreground mb-2">
-                          {index + 1}. {question.label}
-                        </div>
-                        <div className="text-foreground-secondary pl-6">
-                          {answerValue}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="p-6 border-t border-neutral-200 flex justify-end">
-                <Button onClick={() => setSelectedResponse(null)}>Close</Button>
-              </div>
-            </div>
-          </div>
+          <ResponseDetailModal
+            response={selectedResponse}
+            questions={questions}
+            index={
+              responses.findIndex((r) => r._id === selectedResponse._id) + 1
+            }
+            onClose={() => setSelectedResponse(null)}
+            formatResponseDate={formatResponseDate}
+            formatDuration={formatDuration}
+            getInitials={getInitials}
+          />
         )}
       </div>
     </div>
   );
+}
+
+// ==================== Response Detail Modal ====================
+
+const QUESTION_TYPE_META: Record<
+  QuestionType,
+  { icon: LucideIcon; iconClass: string }
+> = {
+  [QuestionType.TEXT]: {
+    icon: Type,
+    iconClass: "bg-neutral-100 text-foreground-secondary",
+  },
+  [QuestionType.TEXTAREA]: {
+    icon: AlignLeft,
+    iconClass: "bg-neutral-100 text-foreground-secondary",
+  },
+  [QuestionType.MULTIPLE_CHOICE]: {
+    icon: ListChecks,
+    iconClass: "bg-blue-50 text-blue-600",
+  },
+  [QuestionType.CHECKBOX]: {
+    icon: CheckSquare,
+    iconClass: "bg-purple-50 text-purple-600",
+  },
+  [QuestionType.SELECT]: {
+    icon: ChevronDown,
+    iconClass: "bg-blue-50 text-blue-600",
+  },
+  [QuestionType.DATE]: {
+    icon: Calendar,
+    iconClass: "bg-amber-50 text-amber-600",
+  },
+  [QuestionType.NUMBER]: {
+    icon: Hash,
+    iconClass: "bg-neutral-100 text-foreground-secondary",
+  },
+  [QuestionType.EMAIL]: {
+    icon: Mail,
+    iconClass: "bg-blue-50 text-blue-600",
+  },
+  [QuestionType.PHONE]: {
+    icon: Phone,
+    iconClass: "bg-green-50 text-green-600",
+  },
+  [QuestionType.RATING]: {
+    icon: Star,
+    iconClass: "bg-amber-50 text-amber-600",
+  },
+};
+
+function ResponseDetailModal({
+  response,
+  questions,
+  index,
+  onClose,
+  formatResponseDate,
+  formatDuration,
+  getInitials,
+}: {
+  response: FormResponse;
+  questions: FormQuestion[];
+  index: number;
+  onClose: () => void;
+  formatResponseDate: (d: string) => string;
+  formatDuration: (s: number) => string;
+  getInitials: (name: string) => string;
+}) {
+  const submitterName = response.submitted_by || "Anonymous";
+  const isAnonymous = submitterName === "Anonymous";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="response-detail-title"
+    >
+      <div
+        className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-3xl max-h-[95vh] sm:max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-neutral-200">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center rounded-full bg-primary-50 text-primary-700 px-2.5 py-0.5 text-xs font-semibold">
+                Response #{index}
+              </span>
+              {response.is_complete ? (
+                <span className="inline-flex items-center rounded-full bg-green-50 text-green-700 px-2.5 py-0.5 text-xs font-semibold">
+                  Complete
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-xs font-semibold">
+                  Incomplete
+                </span>
+              )}
+            </div>
+            <h2
+              id="response-detail-title"
+              className="font-display text-xl sm:text-2xl font-bold text-foreground"
+            >
+              Response Details
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Submitter card */}
+        <div className="px-5 sm:px-6 pt-5">
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 sm:p-5">
+            <div className="flex items-start gap-4">
+              <div
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                  isAnonymous
+                    ? "bg-neutral-200 text-foreground-secondary"
+                    : "bg-primary-100 text-primary-700"
+                }`}
+                aria-hidden="true"
+              >
+                {isAnonymous ? (
+                  <User className="h-5 w-5" />
+                ) : (
+                  getInitials(submitterName)
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-base font-semibold text-foreground capitalize">
+                  {submitterName}
+                </div>
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-foreground-secondary">
+                  <div className="inline-flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-foreground-tertiary" />
+                    <span>{formatResponseDate(response.submitted_at)}</span>
+                  </div>
+                  <div className="inline-flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-foreground-tertiary" />
+                    <span>
+                      {response.completion_time_seconds
+                        ? `Completed in ${formatDuration(response.completion_time_seconds)}`
+                        : "Time not recorded"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Answers */}
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5">
+          {questions.length === 0 ? (
+            <div className="text-center py-10 text-foreground-secondary text-sm">
+              No questions in this form.
+            </div>
+          ) : (
+            <ol className="space-y-3">
+              {questions.map((question, i) => (
+                <AnswerItem
+                  key={question._id}
+                  index={i + 1}
+                  question={question}
+                  response={response}
+                />
+              ))}
+            </ol>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-neutral-200 p-4 sm:p-5 flex items-center justify-between gap-3 bg-white">
+          <span className="text-xs text-foreground-tertiary">
+            {questions.length} {questions.length === 1 ? "question" : "questions"}
+          </span>
+          <Button onClick={onClose}>Close</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnswerItem({
+  index,
+  question,
+  response,
+}: {
+  index: number;
+  question: FormQuestion;
+  response: FormResponse;
+}) {
+  const meta = QUESTION_TYPE_META[question.type] ?? QUESTION_TYPE_META[QuestionType.TEXT];
+  const Icon = meta.icon;
+  const answer = response.answers?.find((a) => a.question_id === question._id);
+  const rawValue = answer?.value;
+  const isEmpty =
+    rawValue === null ||
+    rawValue === undefined ||
+    rawValue === "" ||
+    (Array.isArray(rawValue) && rawValue.length === 0);
+
+  return (
+    <li className="rounded-xl border border-neutral-200 bg-white p-4 hover:border-neutral-300 transition-colors">
+      <div className="flex items-start gap-3">
+        <div
+          className={`shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg ${meta.iconClass}`}
+          aria-hidden="true"
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-xs font-semibold text-foreground-tertiary">
+              Q{index}
+            </span>
+            <h3 className="text-sm font-semibold text-foreground">
+              {question.label}
+            </h3>
+            {question.is_required && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-red-600">
+                Required
+              </span>
+            )}
+          </div>
+          {question.help_text && (
+            <p className="mt-0.5 text-xs text-foreground-tertiary">
+              {question.help_text}
+            </p>
+          )}
+          <div className="mt-2.5">
+            {isEmpty ? (
+              <span className="text-sm italic text-foreground-tertiary">
+                Not answered
+              </span>
+            ) : (
+              <AnswerValue question={question} value={rawValue!} />
+            )}
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function AnswerValue({
+  question,
+  value,
+}: {
+  question: FormQuestion;
+  value: string | number | boolean | string[];
+}) {
+  // Multi-select / checkbox arrays → chips
+  if (Array.isArray(value)) {
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        {value.map((v, i) => (
+          <span
+            key={`${v}-${i}`}
+            className="inline-flex items-center rounded-full bg-primary-50 text-primary-700 px-2.5 py-1 text-xs font-medium"
+          >
+            {v}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  const stringValue = String(value);
+
+  switch (question.type) {
+    case QuestionType.RATING: {
+      const rating = Number(value);
+      const max = question.max_value ?? 5;
+      if (!Number.isFinite(rating)) {
+        return <span className="text-sm text-foreground">{stringValue}</span>;
+      }
+      return (
+        <div className="inline-flex items-center gap-2">
+          <div className="flex items-center gap-0.5" aria-label={`Rating ${rating} of ${max}`}>
+            {Array.from({ length: max }).map((_, i) => (
+              <Star
+                key={i}
+                className={`h-4 w-4 ${
+                  i < rating
+                    ? "fill-amber-400 text-amber-400"
+                    : "text-neutral-300"
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-semibold text-foreground">
+            {rating}
+            <span className="text-foreground-tertiary font-normal"> / {max}</span>
+          </span>
+        </div>
+      );
+    }
+
+    case QuestionType.EMAIL:
+      return (
+        <a
+          href={`mailto:${stringValue}`}
+          className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline break-all"
+        >
+          {stringValue}
+        </a>
+      );
+
+    case QuestionType.PHONE:
+      return (
+        <a
+          href={`tel:${stringValue}`}
+          className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
+        >
+          {stringValue}
+        </a>
+      );
+
+    case QuestionType.DATE: {
+      const date = new Date(stringValue);
+      const display = isNaN(date.getTime())
+        ? stringValue
+        : formatDate(date.toISOString(), {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+      return <span className="text-sm text-foreground">{display}</span>;
+    }
+
+    case QuestionType.NUMBER:
+      return (
+        <span className="text-sm font-semibold text-foreground tabular-nums">
+          {stringValue}
+        </span>
+      );
+
+    case QuestionType.MULTIPLE_CHOICE:
+    case QuestionType.SELECT:
+      return (
+        <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2.5 py-1 text-xs font-medium">
+          {stringValue}
+        </span>
+      );
+
+    case QuestionType.TEXTAREA:
+      return (
+        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+          {stringValue}
+        </p>
+      );
+
+    default:
+      return <span className="text-sm text-foreground break-words">{stringValue}</span>;
+  }
 }
