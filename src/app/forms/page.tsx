@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,9 @@ import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { showAlert } from "@/lib/ui/dialogs";
 import { formatDate } from "@/utils/format";
 
+type StatusFilter = "all" | "published" | "draft";
+type SortOption = "newest" | "responses";
+
 function FormsListContent() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -21,6 +24,10 @@ function FormsListContent() {
   const [highlightedFormId, setHighlightedFormId] = useState<string | null>(
     null,
   );
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [copiedFormId, setCopiedFormId] = useState<string | null>(null);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
@@ -37,19 +44,72 @@ function FormsListContent() {
   // Check for highlighted form from query params
   useEffect(() => {
     const highlight = searchParams.get("highlight");
-    if (highlight) {
-      setHighlightedFormId(highlight);
-      // Remove highlight after 5 seconds
-      setTimeout(() => setHighlightedFormId(null), 5000);
-      // Scroll to the highlighted form
-      setTimeout(() => {
-        const element = document.getElementById(`form-${highlight}`);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 100);
-    }
+    if (!highlight) return;
+
+    setHighlightedFormId(highlight);
+
+    const clearTimer = setTimeout(() => setHighlightedFormId(null), 5000);
+    const scrollTimer = setTimeout(() => {
+      const element = document.getElementById(`form-${highlight}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(clearTimer);
+      clearTimeout(scrollTimer);
+    };
   }, [searchParams]);
+
+  const visibleForms = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const filtered = forms.filter((form) => {
+      if (statusFilter === "published" && !form.is_published) return false;
+      if (statusFilter === "draft" && form.is_published) return false;
+      if (!query) return true;
+      const haystack = `${form.title} ${form.description ?? ""}`.toLowerCase();
+      return haystack.includes(query);
+    });
+
+    const sorted = [...filtered];
+    if (sortBy === "responses") {
+      sorted.sort(
+        (a, b) =>
+          (responseCounts[b._id] ?? 0) - (responseCounts[a._id] ?? 0),
+      );
+    } else {
+      sorted.sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return tb - ta;
+      });
+    }
+    return sorted;
+  }, [forms, search, statusFilter, sortBy, responseCounts]);
+
+  const counts = useMemo(() => {
+    const published = forms.filter((f) => f.is_published).length;
+    return {
+      all: forms.length,
+      published,
+      draft: forms.length - published,
+    };
+  }, [forms]);
+
+  const handleCopyShareLink = async (formId: string) => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/forms/${formId}/submit`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedFormId(formId);
+      setTimeout(() => {
+        setCopiedFormId((current) => (current === formId ? null : current));
+      }, 2000);
+    } catch {
+      await showAlert("Failed to copy link to clipboard");
+    }
+  };
 
   const handleDelete = async (formId: string, formTitle: string) => {
     requestConfirmation({
@@ -85,7 +145,7 @@ function FormsListContent() {
         />
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
           <div>
             <h1 className="font-display text-3xl font-black text-foreground mb-2">
               My Forms
@@ -94,10 +154,10 @@ function FormsListContent() {
               Create and manage your custom forms
             </p>
           </div>
-          <Link href="/forms/create">
-            <Button>
+          <Link href="/forms/create" className="sm:shrink-0">
+            <Button leftIcon={
               <svg
-                className="w-5 h-5 mr-2"
+                className="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -109,10 +169,81 @@ function FormsListContent() {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
+            }>
               Create New Form
             </Button>
           </Link>
         </div>
+
+        {/* Toolbar: Search + Filter + Sort */}
+        {forms.length > 0 && (
+          <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-1 items-stretch gap-2">
+              <div className="relative flex-1 max-w-md">
+                <svg
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-tertiary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z"
+                  />
+                </svg>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search forms…"
+                  className="w-full rounded-lg border border-neutral-200 bg-white py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-foreground-tertiary focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                />
+              </div>
+              <div className="flex rounded-lg border border-neutral-200 bg-white p-1 text-sm">
+                {(
+                  [
+                    ["all", "All", counts.all],
+                    ["published", "Published", counts.published],
+                    ["draft", "Draft", counts.draft],
+                  ] as const
+                ).map(([value, label, count]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setStatusFilter(value)}
+                    className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
+                      statusFilter === value
+                        ? "bg-primary-500 text-foreground"
+                        : "text-foreground-secondary hover:bg-neutral-100"
+                    }`}
+                  >
+                    {label}
+                    <span className="ml-1.5 text-xs opacity-70">{count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <label
+                htmlFor="forms-sort"
+                className="text-foreground-secondary"
+              >
+                Sort
+              </label>
+              <select
+                id="forms-sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+              >
+                <option value="newest">Newest first</option>
+                <option value="responses">Most responses</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -147,33 +278,53 @@ function FormsListContent() {
               <Button>Create Your First Form</Button>
             </Link>
           </div>
+        ) : visibleForms.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-12 text-center">
+            <h3 className="font-display text-xl font-bold text-foreground mb-2">
+              No forms match your filters
+            </h3>
+            <p className="text-foreground-secondary mb-6">
+              Try a different search term or status filter.
+            </p>
+            <Button
+              variant="outline-neutral"
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("all");
+              }}
+            >
+              Clear filters
+            </Button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {forms.map((form) => {
+            {visibleForms.map((form) => {
               const isHighlighted = highlightedFormId === form._id;
+              const responseCount = responseCounts[form._id] ?? 0;
+              const isCopied = copiedFormId === form._id;
               return (
                 <div
                   key={form._id}
                   id={`form-${form._id}`}
-                  className={`bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-all ${
+                  className={`flex flex-col bg-white rounded-xl shadow-[var(--shadow-card)] p-6 hover:shadow-[var(--shadow-card-hover)] transition-all ${
                     isHighlighted
-                      ? "ring-4 ring-primary-500 ring-opacity-50 shadow-2xl"
+                      ? "ring-4 ring-primary-500/50 shadow-2xl"
                       : ""
                   }`}
                 >
                   {isHighlighted && (
-                    <div className="bg-primary-500 text-white px-3 py-1 rounded text-xs font-semibold mb-4 inline-block">
+                    <div className="bg-primary-500 text-foreground px-3 py-1 rounded text-sm font-semibold mb-4 inline-block self-start">
                       ✨ Just Published!
                     </div>
                   )}
                   {/* Form Header */}
                   <div className="mb-4">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start justify-between mb-2 gap-2">
                       <h3 className="font-display text-lg font-bold text-foreground line-clamp-2">
                         {form.title}
                       </h3>
                       <span
-                        className={`shrink-0 ml-2 px-2 py-1 text-xs font-semibold rounded ${
+                        className={`shrink-0 px-2 py-1 text-sm font-semibold rounded ${
                           form.is_published
                             ? "bg-green-100 text-green-700"
                             : "bg-neutral-100 text-neutral-700"
@@ -182,61 +333,146 @@ function FormsListContent() {
                         {form.is_published ? "Published" : "Draft"}
                       </span>
                     </div>
-                    {form.description && (
-                      <p className="text-sm text-foreground-secondary line-clamp-2">
-                        {form.description}
-                      </p>
-                    )}
+                    <p className="text-sm text-foreground-secondary line-clamp-2 min-h-[2.5rem]">
+                      {form.description || "No description"}
+                    </p>
                   </div>
 
                   {/* Form Stats */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 py-3 border-t border-b border-neutral-100">
+                  <div className="grid grid-cols-2 gap-3 mb-4 py-3 border-t border-b border-neutral-100">
                     <div>
-                      <p className="text-xs text-foreground-tertiary">
+                      <p className="text-sm text-foreground-tertiary">
                         Responses
                       </p>
                       <p className="text-sm font-semibold text-foreground">
-                        {responseCounts[form._id] ?? 0}
+                        {responseCount}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-foreground-tertiary">
+                      <p className="text-sm text-foreground-tertiary">
                         Created
                       </p>
                       <p className="text-sm font-semibold text-foreground">
-                        {formatDate(form.created_at)}
+                        {form.created_at ? formatDate(form.created_at) : "—"}
                       </p>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Spacer to push actions to bottom for equal-height cards */}
+                  <div className="flex-1" />
+
+                  {/* Primary action */}
+                  <Link
+                    href={`/forms/${form._id}/responses`}
+                    className="mb-2 inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-primary-600"
+                  >
+                    View {responseCount} Response
+                    {responseCount === 1 ? "" : "s"}
+                  </Link>
+
+                  {/* Secondary actions */}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
                     <Link
                       href={`/forms/${form._id}/edit`}
-                      className="text-center px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-foreground text-sm font-medium rounded transition-colors"
+                      className="text-center inline-flex h-10 items-center justify-center rounded-lg bg-neutral-100 px-3 text-sm font-medium text-foreground transition-colors hover:bg-neutral-200"
                     >
                       Edit
                     </Link>
                     <Link
-                      href={`/forms/${form._id}/responses`}
-                      className="text-center px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded transition-colors"
-                    >
-                      Responses
-                    </Link>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                    <Link
                       href={`/forms/${form._id}/analytics`}
-                      className="text-center px-3 py-2 bg-accent-blue-100 hover:bg-accent-blue-200 text-accent-blue-700 text-sm font-medium rounded transition-colors"
+                      className="text-center inline-flex h-10 items-center justify-center rounded-lg bg-accent-blue-100 px-3 text-sm font-medium text-accent-blue-700 transition-colors hover:bg-accent-blue-200"
                     >
                       Analytics
                     </Link>
+                  </div>
+
+                  {/* Tertiary icon row */}
+                  <div className="flex items-center justify-between border-t border-neutral-100 pt-3">
+                    <div className="flex items-center gap-1">
+                      {form.is_published && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyShareLink(form._id)}
+                            title={isCopied ? "Copied!" : "Copy share link"}
+                            aria-label="Copy share link"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary transition-colors hover:bg-neutral-100"
+                          >
+                            {isCopied ? (
+                              <svg
+                                className="h-5 w-5 text-primary-600"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13.828 10.172a4 4 0 015.656 5.656l-3 3a4 4 0 01-5.656-5.656m-3 3a4 4 0 010-5.656l3-3a4 4 0 015.656 0"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                          <Link
+                            href={`/forms/${form._id}/submit`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Open form"
+                            aria-label="Open form in new tab"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary transition-colors hover:bg-neutral-100"
+                          >
+                            <svg
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M14 3h7v7m0-7L10 14m-4-4v11h11"
+                              />
+                            </svg>
+                          </Link>
+                        </>
+                      )}
+                    </div>
                     <button
+                      type="button"
                       onClick={() => handleDelete(form._id, form.title)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded transition-colors"
+                      title="Delete form"
+                      aria-label="Delete form"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50"
                     >
-                      Delete
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"
+                        />
+                      </svg>
                     </button>
                   </div>
                 </div>
