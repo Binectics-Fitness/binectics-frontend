@@ -9,7 +9,6 @@ import {
 } from "react";
 import DashboardLoading from "@/components/DashboardLoading";
 import SearchableSelect from "@/components/SearchableSelect";
-import TimezoneHelpBadge from "@/components/TimezoneHelpBadge";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import {
   dualTimezoneLabel,
@@ -23,11 +22,21 @@ import {
   ConsultationProviderRole,
   AvailabilityExceptionType,
   type AvailabilityException,
-  type AvailabilityRule,
   type ConsultationBooking,
   type ConsultationSlot,
   type ConsultationType,
 } from "@/lib/api/consultations";
+import {
+  Plus,
+  Trash2,
+  CalendarDays,
+  RefreshCw,
+  Archive,
+} from "lucide-react";
+
+type DayRange = { id: string; startTime: string; endTime: string };
+type DaySchedule = { enabled: boolean; ranges: DayRange[] };
+type WeekSchedule = Record<number, DaySchedule>;
 
 const weekDays = [
   "Sunday",
@@ -38,6 +47,22 @@ const weekDays = [
   "Friday",
   "Saturday",
 ];
+
+const weekDayShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const makeEmptyWeek = (): WeekSchedule =>
+  Object.fromEntries(
+    weekDays.map((_, i) => [i, { enabled: false, ranges: [] as DayRange[] }]),
+  ) as WeekSchedule;
+
+const defaultRange = (): DayRange => ({
+  id:
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2),
+  startTime: "09:00",
+  endTime: "17:00",
+});
 
 const fallbackTimezones = [
   "UTC",
@@ -89,10 +114,12 @@ export default function ConsultationAvailabilityManager({
   const [activeTab, setActiveTab] = useState<
     "availability" | "exceptions" | "bookings"
   >("availability");
-  const [rules, setRules] = useState<AvailabilityRule[]>([]);
+  const [schedule, setSchedule] = useState<WeekSchedule>(makeEmptyWeek);
+  const [scheduleTimezone, setScheduleTimezone] = useState<string>(userTimezone);
   const [consultationTypes, setConsultationTypes] = useState<
     ConsultationType[]
   >([]);
+  const [showTypeForm, setShowTypeForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingType, setIsCreatingType] = useState(false);
   const [deletingTypeId, setDeletingTypeId] = useState<string | null>(null);
@@ -136,13 +163,6 @@ export default function ConsultationAvailabilityManager({
   const [rescheduleReason, setRescheduleReason] = useState("");
   const [rescheduling, setRescheduling] = useState(false);
 
-  const [newRule, setNewRule] = useState({
-    dayOfWeek: 1,
-    startTime: "09:00",
-    endTime: "17:00",
-    timezone: userTimezone,
-    isActive: true,
-  });
 
   const providerRoleForType: ConsultationProviderRole =
     role === UserRole.DIETITIAN
@@ -158,9 +178,12 @@ export default function ConsultationAvailabilityManager({
     isActive: true,
   });
 
-  const activeRules = useMemo(
-    () => rules.filter((rule) => rule.isActive),
-    [rules],
+  const enabledDayCount = useMemo(
+    () =>
+      Object.values(schedule).filter(
+        (d) => d.enabled && d.ranges.length > 0,
+      ).length,
+    [schedule],
   );
 
   const roleTypes = useMemo(
@@ -174,7 +197,25 @@ export default function ConsultationAvailabilityManager({
   useEffect(() => {
     consultationsService.getMyAvailability().then((res) => {
       if (res.success && res.data) {
-        setRules(res.data);
+        const week = makeEmptyWeek();
+        let detectedTz: string | null = null;
+        for (const rule of res.data) {
+          if (!rule.isActive) continue;
+          if (!detectedTz) detectedTz = rule.timezone;
+          const day = week[rule.dayOfWeek];
+          day.enabled = true;
+          day.ranges.push({
+            id: rule.id,
+            startTime: rule.startTime,
+            endTime: rule.endTime,
+          });
+        }
+        // Sort ranges per day
+        for (const day of Object.values(week)) {
+          day.ranges.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        }
+        setSchedule(week);
+        if (detectedTz) setScheduleTimezone(detectedTz);
       }
     });
 
@@ -262,45 +303,140 @@ export default function ConsultationAvailabilityManager({
     setDeletingTypeId(null);
   };
 
-  const addRule = () => {
-    if (newRule.startTime >= newRule.endTime) {
+  const toggleDay = (day: number) => {
+    setSchedule((prev) => {
+      const cur = prev[day];
+      if (cur.enabled) {
+        return { ...prev, [day]: { enabled: false, ranges: [] } };
+      }
+      return {
+        ...prev,
+        [day]: { enabled: true, ranges: [defaultRange()] },
+      };
+    });
+    setMessage(null);
+  };
+
+  const addRange = (day: number) => {
+    setSchedule((prev) => {
+      const cur = prev[day];
+      const last = cur.ranges[cur.ranges.length - 1];
+      const next: DayRange = last
+        ? { ...defaultRange(), startTime: last.endTime, endTime: "23:00" }
+        : defaultRange();
+      return { ...prev, [day]: { ...cur, ranges: [...cur.ranges, next] } };
+    });
+  };
+
+  const removeRange = (day: number, rangeId: string) => {
+    setSchedule((prev) => {
+      const cur = prev[day];
+      const ranges = cur.ranges.filter((r) => r.id !== rangeId);
+      return {
+        ...prev,
+        [day]: ranges.length === 0
+          ? { enabled: false, ranges: [] }
+          : { ...cur, ranges },
+      };
+    });
+  };
+
+  const updateRange = (
+    day: number,
+    rangeId: string,
+    field: "startTime" | "endTime",
+    value: string,
+  ) => {
+    setSchedule((prev) => {
+      const cur = prev[day];
+      return {
+        ...prev,
+        [day]: {
+          ...cur,
+          ranges: cur.ranges.map((r) =>
+            r.id === rangeId ? { ...r, [field]: value } : r,
+          ),
+        },
+      };
+    });
+  };
+
+  const copyToWeekdays = () => {
+    const monday = schedule[1];
+    if (!monday.enabled || monday.ranges.length === 0) {
       setMessage({
-        text: "Start time must be earlier than end time.",
+        text: "Set Monday's hours first to copy them to the rest of the week.",
         type: "error",
       });
       return;
     }
-
-    const nextRule: AvailabilityRule = {
-      id: crypto.randomUUID(),
-      ...newRule,
-    };
-    setRules((prev) => [...prev, nextRule]);
+    setSchedule((prev) => {
+      const next = { ...prev };
+      for (let d = 2; d <= 5; d++) {
+        next[d] = {
+          enabled: true,
+          ranges: monday.ranges.map((r) => ({ ...r, id: defaultRange().id })),
+        };
+      }
+      return next;
+    });
     setMessage(null);
-  };
-
-  const removeRule = (id: string) => {
-    setRules((prev) => prev.filter((rule) => rule.id !== id));
   };
 
   const saveAvailability = async () => {
+    // Validate
+    const payload: Array<{
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+      timezone: string;
+      isActive: boolean;
+    }> = [];
+    for (let day = 0; day < 7; day++) {
+      const d = schedule[day];
+      if (!d.enabled) continue;
+      for (const r of d.ranges) {
+        if (r.startTime >= r.endTime) {
+          setMessage({
+            text: `${weekDays[day]}: start time must be before end time.`,
+            type: "error",
+          });
+          return;
+        }
+        payload.push({
+          dayOfWeek: day,
+          startTime: r.startTime,
+          endTime: r.endTime,
+          timezone: scheduleTimezone,
+          isActive: true,
+        });
+      }
+    }
+
     setIsSaving(true);
     setMessage(null);
-
-    const payload = rules.map((rule) => ({
-      dayOfWeek: rule.dayOfWeek,
-      startTime: rule.startTime,
-      endTime: rule.endTime,
-      timezone: rule.timezone,
-      isActive: rule.isActive,
-    }));
 
     const response = await consultationsService.setMyAvailability(payload);
 
     if (response.success && response.data) {
-      setRules(response.data);
+      // Re-derive schedule from saved rules
+      const week = makeEmptyWeek();
+      for (const rule of response.data) {
+        if (!rule.isActive) continue;
+        const day = week[rule.dayOfWeek];
+        day.enabled = true;
+        day.ranges.push({
+          id: rule.id,
+          startTime: rule.startTime,
+          endTime: rule.endTime,
+        });
+      }
+      for (const day of Object.values(week)) {
+        day.ranges.sort((a, b) => a.startTime.localeCompare(b.startTime));
+      }
+      setSchedule(week);
       setMessage({
-        text: "Availability updated successfully.",
+        text: "Availability saved.",
         type: "success",
       });
     } else {
@@ -583,23 +719,11 @@ export default function ConsultationAvailabilityManager({
       {sidebar}
 
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
-              Consultations
-            </h1>
-            <p className="mt-2 text-foreground-secondary">{description}</p>
-          </div>
-
-          {activeTab === "availability" && (
-            <button
-              onClick={saveAvailability}
-              disabled={isSaving}
-              className="w-full rounded-lg bg-primary-500 px-5 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-            >
-              {isSaving ? "Saving..." : "Save Availability"}
-            </button>
-          )}
+        <div className="mb-6">
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
+            Consultations
+          </h1>
+          <p className="mt-2 text-foreground-secondary">{description}</p>
         </div>
 
         {/* Tabs */}
@@ -647,246 +771,335 @@ export default function ConsultationAvailabilityManager({
         {/* ===== AVAILABILITY TAB ===== */}
         {activeTab === "availability" && (
           <>
-            <section className="mb-8 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-              <h2 className="mb-4 text-xl font-bold text-foreground">
-                Consultation Types
-              </h2>
-
-              <div className="grid gap-3 md:grid-cols-4">
-                <input
-                  type="text"
-                  value={newType.name}
-                  onChange={(event) =>
-                    setNewType((prev) => ({
-                      ...prev,
-                      name: event.target.value,
-                    }))
-                  }
-                  placeholder="Type name"
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                />
-
-                <input
-                  type="number"
-                  min={5}
-                  max={240}
-                  value={newType.defaultDurationMinutes}
-                  onChange={(event) =>
-                    setNewType((prev) => ({
-                      ...prev,
-                      defaultDurationMinutes: Number(event.target.value || 0),
-                    }))
-                  }
-                  placeholder="Duration (minutes)"
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                />
-
-                <select
-                  value={newType.isActive ? "active" : "inactive"}
-                  onChange={(event) =>
-                    setNewType((prev) => ({
-                      ...prev,
-                      isActive: event.target.value === "active",
-                    }))
-                  }
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-
-                <button
-                  onClick={createType}
-                  disabled={isCreatingType}
-                  className="rounded-lg bg-accent-purple-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isCreatingType ? "Creating..." : "Create Type"}
-                </button>
+            {/* Weekly Schedule */}
+            <section className="mb-8 rounded-2xl bg-white shadow-[var(--shadow-card)]">
+              <div className="flex flex-col gap-4 border-b border-neutral-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">
+                    Weekly Schedule
+                  </h2>
+                  <p className="mt-0.5 text-xs text-foreground-tertiary">
+                    {enabledDayCount === 0
+                      ? "Toggle days to set when you accept bookings"
+                      : `Available on ${enabledDayCount} day${enabledDayCount === 1 ? "" : "s"}`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={copyToWeekdays}
+                    className="hidden sm:inline-flex h-9 items-center rounded-lg border border-neutral-200 px-3 text-xs font-medium text-foreground-secondary hover:bg-neutral-50 transition-colors"
+                  >
+                    Copy Mon to Tue–Fri
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveAvailability}
+                    disabled={isSaving}
+                    className="inline-flex h-9 items-center rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSaving ? "Saving…" : "Save"}
+                  </button>
+                </div>
               </div>
 
-              <textarea
-                value={newType.description}
-                onChange={(event) =>
-                  setNewType((prev) => ({
-                    ...prev,
-                    description: event.target.value,
-                  }))
-                }
-                rows={2}
-                placeholder="Optional description (visible to clients when booking)"
-                className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-              />
-
-              <div className="mt-4 space-y-2">
-                {roleTypes.length === 0 ? (
-                  <p className="text-sm text-foreground-secondary">
-                    No consultation types yet for this role.
-                  </p>
-                ) : (
-                  roleTypes.map((type) => (
+              <div className="divide-y divide-neutral-100">
+                {weekDays.map((dayName, dayIndex) => {
+                  const day = schedule[dayIndex];
+                  return (
                     <div
-                      key={type.id}
-                      className="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-3"
+                      key={dayName}
+                      className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start"
                     >
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {type.name}
-                        </p>
-                        <p className="text-xs text-foreground-secondary">
-                          {type.defaultDurationMinutes} min •{" "}
-                          {type.providerRole}
-                          {type.description && ` • ${type.description}`}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`rounded px-2 py-1 text-xs font-semibold ${
-                            type.isActive
-                              ? "bg-green-100 text-green-700"
-                              : "bg-neutral-100 text-foreground-secondary"
+                      <label className="flex items-center gap-3 sm:w-40 sm:shrink-0">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={day.enabled}
+                          onClick={() => toggleDay(dayIndex)}
+                          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                            day.enabled ? "bg-primary-500" : "bg-neutral-300"
                           }`}
                         >
-                          {type.isActive ? "Active" : "Archived"}
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                              day.enabled ? "translate-x-4" : "translate-x-0.5"
+                            }`}
+                          />
+                        </button>
+                        <span
+                          className={`text-sm font-semibold ${
+                            day.enabled
+                              ? "text-foreground"
+                              : "text-foreground-tertiary"
+                          }`}
+                        >
+                          <span className="sm:hidden">{weekDayShort[dayIndex]}</span>
+                          <span className="hidden sm:inline">{dayName}</span>
                         </span>
-                        {type.isActive && (
-                          <button
-                            onClick={() => deleteType(type.id)}
-                            disabled={deletingTypeId === type.id}
-                            className="rounded px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                          >
-                            {deletingTypeId === type.id
-                              ? "Archiving..."
-                              : "Archive"}
-                          </button>
+                      </label>
+
+                      <div className="flex-1">
+                        {!day.enabled ? (
+                          <span className="text-sm text-foreground-tertiary">
+                            Unavailable
+                          </span>
+                        ) : (
+                          <div className="space-y-2">
+                            {day.ranges.map((range) => (
+                              <div
+                                key={range.id}
+                                className="flex items-center gap-2"
+                              >
+                                <input
+                                  type="time"
+                                  value={range.startTime}
+                                  onChange={(e) =>
+                                    updateRange(
+                                      dayIndex,
+                                      range.id,
+                                      "startTime",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-28 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-sm text-foreground focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                                />
+                                <span className="text-foreground-tertiary text-sm">–</span>
+                                <input
+                                  type="time"
+                                  value={range.endTime}
+                                  onChange={(e) =>
+                                    updateRange(
+                                      dayIndex,
+                                      range.id,
+                                      "endTime",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-28 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-sm text-foreground focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeRange(dayIndex, range.id)}
+                                  aria-label="Remove time range"
+                                  className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-foreground-tertiary hover:bg-red-50 hover:text-red-600 transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => addRange(dayIndex)}
+                              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-accent-blue-600 hover:bg-accent-blue-50 transition-colors"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              Add time range
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
-                  ))
+                  );
+                })}
+              </div>
+
+              <div className="border-t border-neutral-100 p-4 sm:p-5">
+                <label className="block text-xs font-semibold text-foreground-secondary mb-2">
+                  Timezone
+                </label>
+                <div className="max-w-md">
+                  <SearchableSelect
+                    value={scheduleTimezone}
+                    onChange={(val) => setScheduleTimezone(val)}
+                    options={timezoneOptions.map((tz) => ({
+                      label: tz,
+                      value: tz,
+                    }))}
+                    placeholder="Select timezone"
+                  />
+                </div>
+                <p className="mt-2 text-xs text-foreground-tertiary">
+                  Clients see times converted to their own timezone automatically.
+                </p>
+              </div>
+            </section>
+
+            {/* Consultation Types */}
+            <section className="rounded-2xl bg-white shadow-[var(--shadow-card)]">
+              <div className="flex items-center justify-between border-b border-neutral-100 p-5">
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">
+                    Consultation Types
+                  </h2>
+                  <p className="mt-0.5 text-xs text-foreground-tertiary">
+                    What sessions can clients book with you?
+                  </p>
+                </div>
+                {!showTypeForm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowTypeForm(true)}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-foreground px-3 text-sm font-semibold text-background hover:bg-foreground-secondary transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    New Type
+                  </button>
                 )}
               </div>
-            </section>
 
-            <section className="mb-8 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-              <div className="mb-4 flex items-center gap-2">
-                <h2 className="text-xl font-bold text-foreground">
-                  Add Availability Rule
-                </h2>
-                <TimezoneHelpBadge message="Timezone controls how your selected day and time are interpreted. Example: Monday 09:00 in Africa/Lagos is converted automatically for clients in other countries." />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-5">
-                <select
-                  value={newRule.dayOfWeek}
-                  onChange={(e) =>
-                    setNewRule((prev) => ({
-                      ...prev,
-                      dayOfWeek: Number(e.target.value),
-                    }))
-                  }
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                >
-                  {weekDays.map((day, index) => (
-                    <option key={day} value={index}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="time"
-                  value={newRule.startTime}
-                  onChange={(e) =>
-                    setNewRule((prev) => ({
-                      ...prev,
-                      startTime: e.target.value,
-                    }))
-                  }
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                />
-
-                <input
-                  type="time"
-                  value={newRule.endTime}
-                  onChange={(e) =>
-                    setNewRule((prev) => ({
-                      ...prev,
-                      endTime: e.target.value,
-                    }))
-                  }
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                />
-
-                <SearchableSelect
-                  value={newRule.timezone}
-                  onChange={(val) =>
-                    setNewRule((prev) => ({
-                      ...prev,
-                      timezone: val,
-                    }))
-                  }
-                  options={timezoneOptions.map((tz) => ({
-                    label: tz,
-                    value: tz,
-                  }))}
-                  placeholder="Select timezone"
-                />
-
-                <button
-                  onClick={addRule}
-                  className="rounded-lg bg-accent-blue-500 px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Add Rule
-                </button>
-              </div>
-
-              <p className="mt-3 text-xs text-foreground-secondary">
-                Rules are saved in your selected timezone. Client booking times
-                are displayed in each client&apos;s local timezone
-                automatically.
-              </p>
-            </section>
-
-            <section className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-foreground">
-                  Current Rules
-                </h2>
-                <span className="text-sm text-foreground-secondary">
-                  {activeRules.length} active rules
-                </span>
-              </div>
-
-              {rules.length === 0 ? (
-                <p className="text-sm text-foreground-secondary">
-                  No availability rules configured yet.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {rules.map((rule) => (
-                    <div
-                      key={rule.id}
-                      className="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-3"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {weekDays[rule.dayOfWeek]} • {rule.startTime} -{" "}
-                          {rule.endTime}
-                        </p>
-                        <p className="text-xs text-foreground-secondary">
-                          {rule.timezone}
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() => removeRule(rule.id)}
-                        className="rounded-lg bg-red-50 px-3 py-1 text-xs font-semibold text-red-600"
-                      >
-                        Remove
-                      </button>
+              {/* Inline create form */}
+              {showTypeForm && (
+                <div className="border-b border-neutral-100 bg-neutral-50/50 p-5">
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <div>
+                      <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newType.name}
+                        onChange={(event) =>
+                          setNewType((prev) => ({
+                            ...prev,
+                            name: event.target.value,
+                          }))
+                        }
+                        placeholder="e.g. Initial consultation"
+                        className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                      />
                     </div>
-                  ))}
+                    <div>
+                      <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                        Duration (min)
+                      </label>
+                      <input
+                        type="number"
+                        min={5}
+                        max={240}
+                        value={newType.defaultDurationMinutes}
+                        onChange={(event) =>
+                          setNewType((prev) => ({
+                            ...prev,
+                            defaultDurationMinutes: Number(event.target.value || 0),
+                          }))
+                        }
+                        className="w-full sm:w-28 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                      Description{" "}
+                      <span className="font-normal text-foreground-tertiary">
+                        (optional, shown to clients)
+                      </span>
+                    </label>
+                    <textarea
+                      value={newType.description}
+                      onChange={(event) =>
+                        setNewType((prev) => ({
+                          ...prev,
+                          description: event.target.value,
+                        }))
+                      }
+                      rows={2}
+                      placeholder="What will be covered in this session?"
+                      className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                    />
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowTypeForm(false);
+                        setNewType({
+                          name: "",
+                          description: "",
+                          defaultDurationMinutes: 30,
+                          isActive: true,
+                        });
+                      }}
+                      className="inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium text-foreground-secondary hover:bg-neutral-100 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await createType();
+                        if (newType.name.trim()) {
+                          // close on success (createType resets the form on success)
+                          setShowTypeForm(false);
+                        }
+                      }}
+                      disabled={isCreatingType || !newType.name.trim()}
+                      className="inline-flex h-9 items-center rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                    >
+                      {isCreatingType ? "Creating…" : "Create Type"}
+                    </button>
+                  </div>
                 </div>
               )}
+
+              <div className="p-5">
+                {roleTypes.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <p className="text-sm text-foreground-secondary">
+                      No consultation types yet.
+                    </p>
+                    {!showTypeForm && (
+                      <button
+                        type="button"
+                        onClick={() => setShowTypeForm(true)}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-accent-blue-600 hover:bg-accent-blue-50 transition-colors"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add your first type
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-neutral-100">
+                    {roleTypes.map((type) => (
+                      <li
+                        key={type.id}
+                        className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                              {type.name}
+                            </p>
+                            {!type.isActive && (
+                              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground-tertiary">
+                                Archived
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-0.5 text-xs text-foreground-tertiary">
+                            {type.defaultDurationMinutes} min
+                            {type.description && ` • ${type.description}`}
+                          </p>
+                        </div>
+                        {type.isActive && (
+                          <button
+                            type="button"
+                            onClick={() => deleteType(type.id)}
+                            disabled={deletingTypeId === type.id}
+                            aria-label="Archive type"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-foreground-tertiary hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                          >
+                            <Archive className="h-4 w-4" />
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </section>
           </>
         )}
@@ -1075,8 +1288,9 @@ export default function ConsultationAvailabilityManager({
 
               <button
                 onClick={() => void loadBookings()}
-                className="rounded-lg bg-neutral-100 px-4 py-2 text-sm font-medium text-foreground-secondary hover:bg-neutral-200"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-neutral-100 px-3 text-sm font-medium text-foreground-secondary hover:bg-neutral-200 transition-colors"
               >
+                <RefreshCw className="h-4 w-4" />
                 Refresh
               </button>
             </div>
@@ -1088,19 +1302,10 @@ export default function ConsultationAvailabilityManager({
                 </div>
               ) : bookings.length === 0 ? (
                 <div className="py-12 text-center">
-                  <svg
+                  <CalendarDays
                     className="mx-auto h-12 w-12 text-foreground-tertiary mb-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
+                    aria-hidden="true"
+                  />
                   <p className="text-lg font-semibold text-foreground mb-2">
                     No {bookingsFilter === "all" ? "" : bookingsFilter} bookings
                   </p>
