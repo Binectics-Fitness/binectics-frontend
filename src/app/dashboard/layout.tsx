@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { useAutoLogout } from "@/hooks/useAutoLogout";
 import { useAutoAcceptInvite } from "@/hooks/useAutoAcceptInvite";
+import FeedbackPrompt from "@/components/FeedbackPrompt";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Enable auto-logout for all dashboard pages (60 minutes of inactivity)
@@ -13,5 +14,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   // This layout wraps all dashboard pages
   // The global Navbar and Footer from root layout will be hidden for dashboard pages
-  return <div className="dashboard-route">{children}</div>;
+  return (
+    <div className="dashboard-route">
+      {children}
+      <FeedbackPrompt />
+    </div>
+  );
 }

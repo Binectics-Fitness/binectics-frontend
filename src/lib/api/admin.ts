@@ -24,6 +24,43 @@ export interface AdminUserSuspensionResult {
   };
 }
 
+export interface PlatformMetricsOverview {
+  verifiedProviders: {
+    total: number;
+    distinctCountries: number;
+    byCountry: Array<{ country_code: string; count: number }>;
+  };
+  subscriptions: {
+    activeCount: number;
+    totalRevenueUsd: number;
+    averageValueUsd: number;
+    byCurrency: Array<{
+      currency: string;
+      count: number;
+      total: number;
+      average: number;
+    }>;
+  };
+  conversion: {
+    totalUsers: number;
+    payingUsers: number;
+    conversionRate: number;
+  };
+}
+
+export interface FeedbackSummary {
+  responseCount: number;
+  positiveCount: number;
+  positivePercentage: number;
+  averageScore: number;
+  scoreDistribution: Record<string, number>;
+  recentComments: Array<{
+    score: number;
+    comment: string;
+    created_at: string;
+  }>;
+}
+
 // ==================== SERVICE ====================
 
 class AdminService {
@@ -40,6 +77,14 @@ class AdminService {
     userId: string,
   ): Promise<ApiResponse<{ _id: string; is_suspended: boolean }>> {
     return apiClient.patch(`/admin/users/${userId}/unsuspend`);
+  }
+
+  async getPlatformMetrics(): Promise<ApiResponse<PlatformMetricsOverview>> {
+    return apiClient.get<PlatformMetricsOverview>("/admin/metrics/overview");
+  }
+
+  async getFeedbackSummary(): Promise<ApiResponse<FeedbackSummary>> {
+    return apiClient.get<FeedbackSummary>("/admin/feedback/summary");
   }
 }
 
