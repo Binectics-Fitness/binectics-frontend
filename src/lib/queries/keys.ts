@@ -103,4 +103,25 @@ export const queryKeys = {
     countries: () => ["utility", "countries"] as const,
     platformConfig: () => ["utility", "platformConfig"] as const,
   },
+
+  loyalty: {
+    all: ["loyalty"] as const,
+    balance: () => [...queryKeys.loyalty.all, "balance"] as const,
+    history: (limit?: number, skip?: number) =>
+      [...queryKeys.loyalty.all, "history", limit, skip] as const,
+    rewards: (orgId?: string) =>
+      [...queryKeys.loyalty.all, "rewards", orgId ?? "all"] as const,
+    myRedemptions: () =>
+      [...queryKeys.loyalty.all, "myRedemptions"] as const,
+    adminUserBalance: (userId: string) =>
+      [...queryKeys.loyalty.all, "adminUserBalance", userId] as const,
+  },
+
+  assignmentRules: {
+    all: ["assignmentRules"] as const,
+    list: (orgId: string) =>
+      [...queryKeys.assignmentRules.all, "list", orgId] as const,
+    detail: (orgId: string, ruleId: string) =>
+      [...queryKeys.assignmentRules.all, "detail", orgId, ruleId] as const,
+  },
 } as const;

@@ -285,6 +285,8 @@ export interface MarketplaceListing {
   city?: string;
   country_code?: string;
   address?: string;
+  contact_phone?: string;
+  contact_email?: string;
   location?: { type: string; coordinates: [number, number] };
   currency: string;
   price_from?: number;
@@ -543,3 +545,130 @@ export enum RecommendationPlanType {
   DIET_PLAN = "diet_plan",
   GENERAL = "general",
 }
+
+// ==================== Loyalty & Rewards ====================
+
+export enum LoyaltyEventType {
+  SUBSCRIPTION_PURCHASE = "subscription_purchase",
+  GYM_CHECK_IN = "gym_check_in",
+  JOURNAL_LOGGED = "journal_logged",
+  REWARD_REDEMPTION = "reward_redemption",
+  ADMIN_ADJUSTMENT = "admin_adjustment",
+  SIGNUP_BONUS = "signup_bonus",
+}
+
+export enum LoyaltyRedemptionStatus {
+  PENDING = "pending",
+  FULFILLED = "fulfilled",
+  CANCELLED = "cancelled",
+}
+
+export interface LoyaltyPointsTransaction {
+  _id: string;
+  user_id: string;
+  organization_id?: string | null;
+  points: number;
+  balance_after: number;
+  event_type: LoyaltyEventType;
+  reference_type?: string | null;
+  reference_id?: string | null;
+  metadata?: Record<string, unknown>;
+  note?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LoyaltyReward {
+  _id: string;
+  name: string;
+  description?: string;
+  points_cost: number;
+  image_url?: string | null;
+  organization_id?: string | null;
+  max_redemptions?: number | null;
+  redemption_count: number;
+  is_active: boolean;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LoyaltyRedemption {
+  _id: string;
+  user_id: string;
+  reward_id: string | LoyaltyReward;
+  points_spent: number;
+  status: LoyaltyRedemptionStatus;
+  redemption_code?: string;
+  fulfilled_at?: string | null;
+  fulfilled_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LoyaltyBalance {
+  balance: number;
+}
+
+export interface CreateLoyaltyRewardRequest {
+  name: string;
+  description?: string;
+  points_cost: number;
+  image_url?: string;
+  organization_id?: string;
+  max_redemptions?: number;
+  is_active?: boolean;
+}
+
+export type UpdateLoyaltyRewardRequest = Partial<CreateLoyaltyRewardRequest>;
+
+export interface AdjustPointsRequest {
+  points: number;
+  reason: string;
+}
+
+// ==================== Assignment Rules ====================
+
+export enum ClientTier {
+  STANDARD = "STANDARD",
+  VIP = "VIP",
+  PREMIUM = "PREMIUM",
+}
+
+export enum AssignmentStrategy {
+  ROUND_ROBIN = "ROUND_ROBIN",
+  FIRST_AVAILABLE = "FIRST_AVAILABLE",
+  LEAST_LOADED = "LEAST_LOADED",
+}
+
+export interface AssignmentRule {
+  _id: string;
+  organization_id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  priority: number;
+  min_amount?: number | null;
+  plan_ids: string[];
+  client_tiers: ClientTier[];
+  strategy: AssignmentStrategy;
+  staff_user_ids: string[];
+  last_assigned_index: number;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateAssignmentRuleRequest {
+  name: string;
+  description?: string;
+  is_active?: boolean;
+  priority?: number;
+  min_amount?: number;
+  plan_ids?: string[];
+  client_tiers?: ClientTier[];
+  strategy: AssignmentStrategy;
+  staff_user_ids: string[];
+}
+
+export type UpdateAssignmentRuleRequest = Partial<CreateAssignmentRuleRequest>;
