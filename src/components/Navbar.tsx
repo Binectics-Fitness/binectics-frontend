@@ -115,117 +115,104 @@ export default function Navbar() {
           {/* Right cluster */}
           <div className="flex items-center gap-2 sm:gap-3">
             {user ? (
-              <>
-                <Link
-                  href={dashboardHref}
-                  className="hidden lg:inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground-secondary transition-colors hover:bg-neutral-100 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500"
+              <div className="relative hidden lg:block" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((o) => !o)}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label="Open account menu"
+                  className="flex h-10 items-center gap-2 rounded-full border border-neutral-200 bg-white py-1 pl-1 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500"
                 >
-                  <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-                  Dashboard
-                </Link>
+                  <span className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-xs font-bold text-primary-700">
+                    {user.profile_picture ? (
+                      <Image
+                        src={user.profile_picture}
+                        alt=""
+                        fill
+                        sizes="32px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      getInitials(user.first_name, user.last_name)
+                    )}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-foreground-tertiary transition-transform ${
+                      menuOpen ? "rotate-180" : ""
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
 
-                {/* User menu */}
-                <div className="relative hidden lg:block" ref={menuRef}>
-                  <button
-                    type="button"
-                    onClick={() => setMenuOpen((o) => !o)}
-                    aria-haspopup="menu"
-                    aria-expanded={menuOpen}
-                    className="flex h-10 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-2 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500"
+                {menuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-neutral-200 bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
                   >
-                    <span className="relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-xs font-bold text-primary-700">
-                      {user.profile_picture ? (
-                        <Image
-                          src={user.profile_picture}
-                          alt=""
-                          fill
-                          sizes="28px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        getInitials(user.first_name, user.last_name)
-                      )}
-                    </span>
-                    <span className="max-w-[8rem] truncate">
-                      {user.first_name || user.email}
-                    </span>
-                    <ChevronDown
-                      className={`h-4 w-4 text-foreground-tertiary transition-transform ${
-                        menuOpen ? "rotate-180" : ""
-                      }`}
-                      aria-hidden="true"
-                    />
-                  </button>
-
-                  {menuOpen && (
-                    <div
-                      role="menu"
-                      className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-neutral-200 bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
-                    >
-                      <div className="border-b border-neutral-100 px-4 py-3">
-                        <div className="text-sm font-semibold text-foreground truncate">
-                          {fullName}
-                        </div>
-                        <div className="text-xs text-foreground-tertiary truncate">
-                          {user.email}
-                        </div>
+                    <div className="border-b border-neutral-100 px-4 py-3">
+                      <div className="text-sm font-semibold text-foreground truncate">
+                        {fullName}
                       </div>
-                      <div className="py-1">
-                        <Link
-                          href={dashboardHref}
-                          role="menuitem"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
-                        >
-                          <LayoutDashboard
-                            className="h-4 w-4 text-foreground-tertiary"
-                            aria-hidden="true"
-                          />
-                          Dashboard
-                        </Link>
-                        <Link
-                          href={`${dashboardHref}/profile`}
-                          role="menuitem"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
-                        >
-                          <UserIcon
-                            className="h-4 w-4 text-foreground-tertiary"
-                            aria-hidden="true"
-                          />
-                          Profile
-                        </Link>
-                        <Link
-                          href={`${dashboardHref}/settings`}
-                          role="menuitem"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
-                        >
-                          <Settings
-                            className="h-4 w-4 text-foreground-tertiary"
-                            aria-hidden="true"
-                          />
-                          Settings
-                        </Link>
-                      </div>
-                      <div className="border-t border-neutral-100 py-1">
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => {
-                            setMenuOpen(false);
-                            logout();
-                          }}
-                          className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                        >
-                          <LogOut className="h-4 w-4" aria-hidden="true" />
-                          Logout
-                        </button>
+                      <div className="text-xs text-foreground-tertiary truncate">
+                        {user.email}
                       </div>
                     </div>
-                  )}
-                </div>
-              </>
+                    <div className="py-1">
+                      <Link
+                        href={dashboardHref}
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
+                      >
+                        <LayoutDashboard
+                          className="h-4 w-4 text-foreground-tertiary"
+                          aria-hidden="true"
+                        />
+                        Dashboard
+                      </Link>
+                      <Link
+                        href={`${dashboardHref}/profile`}
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
+                      >
+                        <UserIcon
+                          className="h-4 w-4 text-foreground-tertiary"
+                          aria-hidden="true"
+                        />
+                        Profile
+                      </Link>
+                      <Link
+                        href={`${dashboardHref}/settings`}
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
+                      >
+                        <Settings
+                          className="h-4 w-4 text-foreground-tertiary"
+                          aria-hidden="true"
+                        />
+                        Settings
+                      </Link>
+                    </div>
+                    <div className="border-t border-neutral-100 py-1">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          logout();
+                        }}
+                        className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <LogOut className="h-4 w-4" aria-hidden="true" />
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <Link
