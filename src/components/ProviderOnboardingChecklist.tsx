@@ -125,25 +125,25 @@ export default function ProviderOnboardingChecklist({
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [orgError, setOrgError] = useState("");
 
-  // UI — dismissal is persisted per (user, org) once all required steps
-  // are complete, so reloading the page doesn't bring the card back.
-  const dismissKey =
-    user?.id && currentOrg?._id
-      ? `onboarding-dismissed:${user.id}:${currentOrg._id}`
-      : null;
+  // UI — dismissal is persisted server-side on the Organization so it
+  // follows the user across devices/sessions. Local state mirrors the
+  // server flag for instant feedback after the user clicks the X.
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    if (!dismissKey) return;
-    if (typeof window === 'undefined') return;
-    setIsDismissed(window.localStorage.getItem(dismissKey) === '1');
-  }, [dismissKey]);
-
-  const dismiss = () => {
-    if (dismissKey && typeof window !== 'undefined') {
-      window.localStorage.setItem(dismissKey, '1');
+    if (onboardingStatus) {
+      setIsDismissed(onboardingStatus.is_dismissed);
     }
-    setIsDismissed(true);
+  }, [onboardingStatus]);
+
+  const dismiss = async () => {
+    setIsDismissed(true); // optimistic
+    try {
+      await onboardingService.dismiss();
+    } catch {
+      // If the call fails, leave the card dismissed for this session.
+      // It will reappear on next reload, which is the correct behaviour.
+    }
   };
 
   const role = user?.role;
