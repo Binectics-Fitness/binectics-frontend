@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+import GymOwnerSidebar from "@/components/GymOwnerSidebar";
 import DashboardLoading from "@/components/DashboardLoading";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import TagInput from "@/components/TagInput";
@@ -656,46 +658,75 @@ export default function OrgMarketplaceListingPage() {
 
   if (!orgId) {
     return (
-      <div className="flex-1 overflow-y-auto bg-background-secondary">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
-          <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
-            <h3 className="text-xl font-bold text-foreground mb-2">
-              No Organization Selected
-            </h3>
-            <p className="text-foreground-secondary">
-              Select an organization from the sidebar to manage its marketplace
-              listing.
-            </p>
+      <div className="flex min-h-screen bg-background">
+        <GymOwnerSidebar />
+        <main className="md:ml-64 flex-1 overflow-y-auto bg-background-secondary">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
+            <Link
+              href="/dashboard/gym-owner"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-accent-blue-500 hover:text-accent-blue-600 mb-4"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back to dashboard
+            </Link>
+            <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
+              <h3 className="text-xl font-bold text-foreground mb-2">
+                No Organization Selected
+              </h3>
+              <p className="text-foreground-secondary">
+                Select an organization from the sidebar to manage its
+                marketplace listing.
+              </p>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="flex-1 overflow-y-auto bg-background-secondary">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
-          <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
-            <h3 className="text-xl font-bold text-foreground mb-2">
-              Unable to Load Listing
-            </h3>
-            <p className="text-foreground-secondary mb-4">{loadError}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
+      <div className="flex min-h-screen bg-background">
+        <GymOwnerSidebar />
+        <main className="md:ml-64 flex-1 overflow-y-auto bg-background-secondary">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
+            <Link
+              href="/dashboard/gym-owner"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-accent-blue-500 hover:text-accent-blue-600 mb-4"
             >
-              Retry
-            </button>
+              <ChevronLeft className="h-4 w-4" />
+              Back to dashboard
+            </Link>
+            <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
+              <h3 className="text-xl font-bold text-foreground mb-2">
+                Unable to Load Listing
+              </h3>
+              <p className="text-foreground-secondary mb-4">{loadError}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-background-secondary">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
+    <div className="flex min-h-screen bg-background">
+      <GymOwnerSidebar />
+      <main className="md:ml-64 flex-1 overflow-y-auto bg-background-secondary">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
+          <Link
+            href="/dashboard/gym-owner"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-accent-blue-500 hover:text-accent-blue-600 mb-4"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back to dashboard
+          </Link>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -1215,7 +1246,8 @@ export default function OrgMarketplaceListingPage() {
             isDeletingProfileImage || deletingGalleryImageUrl !== null
           }
         />
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
