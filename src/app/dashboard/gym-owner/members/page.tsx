@@ -108,6 +108,9 @@ export default function GymOwnerMembersPage() {
   // ─── Enroll Modal State ─────────────────────────────────────────
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [enrollEmail, setEnrollEmail] = useState("");
+  const [enrollFirstName, setEnrollFirstName] = useState("");
+  const [enrollLastName, setEnrollLastName] = useState("");
+  const [enrollSendInvite, setEnrollSendInvite] = useState(true);
   const [enrollPlanId, setEnrollPlanId] = useState("");
   const [enrollStatus, setEnrollStatus] = useState<
     "active" | "pending_payment"
@@ -212,6 +215,9 @@ export default function GymOwnerMembersPage() {
       email: enrollEmail.trim(),
       plan_id: enrollPlanId,
       status: enrollStatus,
+      ...(enrollFirstName.trim() && { first_name: enrollFirstName.trim() }),
+      ...(enrollLastName.trim() && { last_name: enrollLastName.trim() }),
+      send_invite: enrollSendInvite,
       ...(enrollAmountPaid !== "" && {
         amount_paid: Number(enrollAmountPaid),
       }),
@@ -221,8 +227,18 @@ export default function GymOwnerMembersPage() {
       ...(proofUrl && { payment_proof_url: proofUrl }),
     });
     if (response.success) {
-      setEnrollSuccess("Member enrolled successfully!");
+      const userCreated = response.data?.user_created;
+      setEnrollSuccess(
+        userCreated
+          ? enrollSendInvite
+            ? "Member enrolled. We've emailed them a link to set up their account."
+            : "Member enrolled. A placeholder account was created — share the Forgot Password link with them so they can claim it."
+          : "Member enrolled successfully!",
+      );
       setEnrollEmail("");
+      setEnrollFirstName("");
+      setEnrollLastName("");
+      setEnrollSendInvite(true);
       setEnrollPlanId("");
       setEnrollStatus("active");
       setEnrollAmountPaid("");
@@ -233,7 +249,7 @@ export default function GymOwnerMembersPage() {
       setTimeout(() => {
         setShowEnrollModal(false);
         setEnrollSuccess("");
-      }, 1500);
+      }, 2500);
     } else {
       setEnrollError(response.message ?? "Failed to enroll member");
     }
@@ -526,9 +542,40 @@ export default function GymOwnerMembersPage() {
                     className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
                   />
                   <p className="text-xs text-foreground/50 mt-1">
-                    The member must have a Binectics account
+                    If they don’t have an account yet, we’ll create one and
+                    email them a link to set their password.
                   </p>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={enrollFirstName}
+                      onChange={(e) => setEnrollFirstName(e.target.value)}
+                      placeholder="Jane"
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={enrollLastName}
+                      onChange={(e) => setEnrollLastName(e.target.value)}
+                      placeholder="Doe"
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                    />
+                  </div>
+                </div>
+                <p className="-mt-2 text-xs text-foreground/50">
+                  Required only when no account exists for that email.
+                </p>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
@@ -685,6 +732,21 @@ export default function GymOwnerMembersPage() {
                     </label>
                   )}
                 </div>
+
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={enrollSendInvite}
+                    onChange={(e) => setEnrollSendInvite(e.target.checked)}
+                    className="mt-0.5 accent-primary-500"
+                  />
+                  <span className="text-sm text-foreground">
+                    Send setup email
+                    <span className="block text-xs text-foreground/50">
+                      Only used when we create a new account for this member.
+                    </span>
+                  </span>
+                </label>
               </div>
 
               <div className="flex gap-3 mt-6">

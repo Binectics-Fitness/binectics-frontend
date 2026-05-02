@@ -126,6 +126,14 @@ export interface EnrollMemberRequest {
   amount_paid?: number;
   payment_reference?: string;
   payment_proof_url?: string;
+  first_name?: string;
+  last_name?: string;
+  send_invite?: boolean;
+}
+
+export interface EnrollMemberResponse {
+  subscription: MembershipSubscription;
+  user_created: boolean;
 }
 
 // ==================== SERVICE ====================
@@ -654,8 +662,8 @@ export const marketplaceService = {
   async enrollMember(
     organizationId: string,
     data: EnrollMemberRequest,
-  ): Promise<ApiResponse<MembershipSubscription>> {
-    return await apiClient.post<MembershipSubscription>(
+  ): Promise<ApiResponse<EnrollMemberResponse>> {
+    return await apiClient.post<EnrollMemberResponse>(
       `/marketplace/organizations/${organizationId}/subscriptions/enroll`,
       data,
     );
