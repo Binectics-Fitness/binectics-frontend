@@ -100,6 +100,11 @@ export default function AdminSidebar() {
       href: "/admin/loyalty",
     },
     {
+      icon: <DollarSign className="h-5 w-5" />,
+      label: "Currencies",
+      href: "/admin/currencies",
+    },
+    {
       icon: <FileText className="h-5 w-5" />,
       label: "Forms",
       href: "/forms",

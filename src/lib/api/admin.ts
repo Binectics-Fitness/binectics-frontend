@@ -5,6 +5,7 @@
 
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
+import type { PlatformCurrency } from "./utility";
 
 // ==================== TYPES ====================
 
@@ -85,6 +86,18 @@ class AdminService {
 
   async getFeedbackSummary(): Promise<ApiResponse<FeedbackSummary>> {
     return apiClient.get<FeedbackSummary>("/admin/feedback/summary");
+  }
+
+  async getSupportedCurrencies(): Promise<ApiResponse<PlatformCurrency[]>> {
+    return apiClient.get<PlatformCurrency[]>("/admin/currencies");
+  }
+
+  async updateSupportedCurrencies(
+    currencies: PlatformCurrency[],
+  ): Promise<ApiResponse<PlatformCurrency[]>> {
+    return apiClient.put<PlatformCurrency[]>("/admin/currencies", {
+      currencies,
+    });
   }
 }
 
