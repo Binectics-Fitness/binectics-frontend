@@ -125,6 +125,7 @@ export interface EnrollMemberRequest {
   status?: "active" | "pending_payment";
   amount_paid?: number;
   payment_reference?: string;
+  payment_proof_url?: string;
 }
 
 // ==================== SERVICE ====================

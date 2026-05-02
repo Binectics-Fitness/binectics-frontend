@@ -9,6 +9,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import SearchableSelect from "@/components/SearchableSelect";
 import { Users } from "lucide-react";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { apiClient } from "@/lib/api/client";
 import {
   MembershipSubscription,
   MembershipSubscriptionStatus,
@@ -113,6 +114,9 @@ export default function GymOwnerMembersPage() {
   >("active");
   const [enrollAmountPaid, setEnrollAmountPaid] = useState("");
   const [enrollPaymentRef, setEnrollPaymentRef] = useState("");
+  const [enrollProofFile, setEnrollProofFile] = useState<File | null>(null);
+  const [enrollProofUrl, setEnrollProofUrl] = useState<string>("");
+  const [enrollProofUploading, setEnrollProofUploading] = useState(false);
   const [enrollSubmitting, setEnrollSubmitting] = useState(false);
   const [enrollError, setEnrollError] = useState("");
   const [enrollSuccess, setEnrollSuccess] = useState("");
@@ -180,6 +184,30 @@ export default function GymOwnerMembersPage() {
     setEnrollError("");
     setEnrollSuccess("");
     setEnrollSubmitting(true);
+
+    // Upload payment proof first if a file was selected and not yet uploaded
+    let proofUrl = enrollProofUrl;
+    if (enrollProofFile && !proofUrl) {
+      setEnrollProofUploading(true);
+      const fd = new FormData();
+      fd.append("file", enrollProofFile);
+      fd.append("folder", "payments/proofs");
+      const uploadRes = await apiClient.postFormData<{ url: string }>(
+        "/upload/image",
+        fd,
+      );
+      setEnrollProofUploading(false);
+      if (!uploadRes.success || !uploadRes.data?.url) {
+        setEnrollError(
+          uploadRes.message ?? "Failed to upload payment proof image",
+        );
+        setEnrollSubmitting(false);
+        return;
+      }
+      proofUrl = uploadRes.data.url;
+      setEnrollProofUrl(proofUrl);
+    }
+
     const response = await marketplaceService.enrollMember(organizationId, {
       email: enrollEmail.trim(),
       plan_id: enrollPlanId,
@@ -190,6 +218,7 @@ export default function GymOwnerMembersPage() {
       ...(enrollPaymentRef.trim() && {
         payment_reference: enrollPaymentRef.trim(),
       }),
+      ...(proofUrl && { payment_proof_url: proofUrl }),
     });
     if (response.success) {
       setEnrollSuccess("Member enrolled successfully!");
@@ -198,6 +227,8 @@ export default function GymOwnerMembersPage() {
       setEnrollStatus("active");
       setEnrollAmountPaid("");
       setEnrollPaymentRef("");
+      setEnrollProofFile(null);
+      setEnrollProofUrl("");
       void loadMembers();
       setTimeout(() => {
         setShowEnrollModal(false);
@@ -595,6 +626,65 @@ export default function GymOwnerMembersPage() {
                     className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Payment Proof{" "}
+                    <span className="text-foreground/50 font-normal">
+                      (optional — image of receipt, transfer screenshot, etc.)
+                    </span>
+                  </label>
+                  {enrollProofFile ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-neutral-200 p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={URL.createObjectURL(enrollProofFile)}
+                        alt="Payment proof preview"
+                        className="h-14 w-14 rounded object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {enrollProofFile.name}
+                        </p>
+                        <p className="text-xs text-foreground/50">
+                          {(enrollProofFile.size / 1024).toFixed(0)} KB
+                          {enrollProofUrl ? " • uploaded" : ""}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEnrollProofFile(null);
+                          setEnrollProofUrl("");
+                        }}
+                        className="text-sm font-medium text-red-600 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-neutral-300 px-4 py-4 text-center cursor-pointer hover:border-accent-blue-500 hover:bg-accent-blue-50/30 transition-colors">
+                      <span className="text-sm font-semibold text-accent-blue-500">
+                        Click to upload an image
+                      </span>
+                      <span className="text-xs text-foreground/50">
+                        JPG, PNG, or WEBP — up to 10MB
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            setEnrollProofFile(f);
+                            setEnrollProofUrl("");
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-3 mt-6">
@@ -607,11 +697,18 @@ export default function GymOwnerMembersPage() {
                 <button
                   onClick={handleEnrollMember}
                   disabled={
-                    enrollSubmitting || !enrollEmail.trim() || !enrollPlanId
+                    enrollSubmitting ||
+                    enrollProofUploading ||
+                    !enrollEmail.trim() ||
+                    !enrollPlanId
                   }
                   className="flex-1 h-12 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {enrollSubmitting ? "Enrolling…" : "Enroll Member"}
+                  {enrollProofUploading
+                    ? "Uploading proof…"
+                    : enrollSubmitting
+                      ? "Enrolling…"
+                      : "Enroll Member"}
                 </button>
               </div>
             </div>
