@@ -15,6 +15,7 @@ import {
   MembershipPlanType,
   MarketplaceMembershipPlan,
 } from "@/lib/types";
+import { formatCurrency } from "@/utils/format";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -510,7 +511,7 @@ export default function GymOwnerMembersPage() {
                     <option value="">Select a plan…</option>
                     {plans.map((plan) => (
                       <option key={plan._id} value={plan._id}>
-                        {plan.name} — {plan.currency} {plan.price} /{" "}
+                        {plan.name} — {formatCurrency(plan.price, plan.currency)} /{" "}
                         {plan.duration_days}d
                       </option>
                     ))}

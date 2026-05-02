@@ -10,6 +10,7 @@ import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceMembershipPlan } from "@/lib/types";
 import { MembershipPlanType } from "@/lib/types";
+import { formatCurrency } from "@/utils/format";
 
 export default function GymOwnerPlansPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -156,7 +157,12 @@ export default function GymOwnerPlansPage() {
             </div>
             <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Avg Plan Price</p>
-              <p className="text-3xl font-black text-foreground mt-2">${stats.averagePrice}</p>
+              <p className="text-3xl font-black text-foreground mt-2">
+                {formatCurrency(
+                  stats.averagePrice,
+                  plans[0]?.currency || currentOrg?.currency || "USD",
+                )}
+              </p>
             </div>
           </div>
 
@@ -204,7 +210,7 @@ export default function GymOwnerPlansPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 font-semibold text-foreground">
-                          {plan.currency} {plan.price}
+                          {formatCurrency(plan.price, plan.currency)}
                         </td>
                         <td className="px-6 py-4 text-foreground/70">{plan.duration_days} days</td>
                         <td className="px-6 py-4 text-foreground/70">{plan.active_members}</td>

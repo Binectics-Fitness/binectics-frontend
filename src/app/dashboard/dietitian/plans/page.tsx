@@ -13,6 +13,7 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
 import { queryKeys } from "@/lib/queries/keys";
 import { UserRole, MembershipPlanType } from "@/lib/types";
+import { formatCurrency } from "@/utils/format";
 import type { MarketplaceMembershipPlan } from "@/lib/types";
 
 export default function DietitianPlansPage() {
@@ -222,7 +223,7 @@ export default function DietitianPlansPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 font-semibold text-foreground">
-                            {plan.currency} {plan.price}
+                            {formatCurrency(plan.price, plan.currency)}
                           </td>
                           <td className="px-6 py-4 text-foreground-secondary">
                             {plan.duration_days} days

@@ -11,6 +11,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceMembershipPlan } from "@/lib/types";
 import { UserRole, MembershipPlanType } from "@/lib/types";
+import { formatCurrency } from "@/utils/format";
 
 export default function DietitianPlanDetailPage() {
   const params = useParams();
@@ -172,7 +173,7 @@ export default function DietitianPlanDetailPage() {
             <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Price</p>
               <p className="text-3xl font-black text-foreground mt-2">
-                {plan.currency} {plan.price}
+                {formatCurrency(plan.price, plan.currency)}
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
