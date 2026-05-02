@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
 import QRCode from "qrcode";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { checkinsService } from "@/lib/api/checkins";
@@ -68,20 +68,29 @@ export default function GymOwnerCheckInsPage() {
   const [stats, setStats] = useState({ today: 0, week: 0, month: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [listingId, setListingId] = useState<string | null>(null);
+  const [listingStatus, setListingStatus] = useState<
+    "loading" | "ready" | "missing"
+  >("loading");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Fetch the org's marketplace listing to get the correct listing ID for QR
   useEffect(() => {
     if (!currentOrg) return;
     let mounted = true;
+    setListingStatus("loading");
+    setListingId(null);
     async function fetchListing() {
       try {
         const res = await marketplaceService.getOrgListing(currentOrg!._id);
-        if (mounted && res.success && res.data) {
+        if (!mounted) return;
+        if (res.success && res.data?._id) {
           setListingId(res.data._id);
+          setListingStatus("ready");
+        } else {
+          setListingStatus("missing");
         }
       } catch {
-        // Listing may not exist yet
+        if (mounted) setListingStatus("missing");
       }
     }
     void fetchListing();
@@ -275,54 +284,98 @@ export default function GymOwnerCheckInsPage() {
               <h3 className="text-lg font-bold text-foreground mb-4">
                 Your Gym QR Code
               </h3>
-              <div className="bg-white rounded-lg p-6 flex items-center justify-center mb-4">
-                <canvas ref={canvasRef} />
+              <div className="bg-white rounded-lg p-6 flex items-center justify-center mb-4 min-h-[280px]">
+                {listingStatus === "loading" && (
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-blue-500" />
+                    <p className="text-sm text-foreground/60">
+                      Loading your QR code…
+                    </p>
+                  </div>
+                )}
+                {listingStatus === "missing" && (
+                  <div className="flex flex-col items-center gap-3 text-center px-2">
+                    <div className="h-12 w-12 rounded-full bg-accent-blue-50 flex items-center justify-center">
+                      <svg
+                        className="h-6 w-6 text-accent-blue-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      No marketplace listing yet
+                    </p>
+                    <p className="text-xs text-foreground/60 leading-relaxed">
+                      Your QR code is generated from your marketplace listing.
+                      Create one to start accepting member check-ins.
+                    </p>
+                  </div>
+                )}
+                {listingStatus === "ready" && <canvas ref={canvasRef} />}
               </div>
               <p className="text-sm text-foreground/60 text-center mb-4">
                 Members scan this code to check in to your gym
               </p>
-              <div className="space-y-2">
-                <button
-                  onClick={downloadQRCode}
-                  disabled={!qrDataUrl}
-                  className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              {listingStatus === "missing" ? (
+                <Link
+                  href="/dashboard/gym-owner/marketplace"
+                  className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                  Create Marketplace Listing
+                </Link>
+              ) : (
+                <div className="space-y-2">
+                  <button
+                    onClick={downloadQRCode}
+                    disabled={!qrDataUrl}
+                    className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                    />
-                  </svg>
-                  Download QR Code
-                </button>
-                <button
-                  onClick={() => window.print()}
-                  className="w-full px-4 py-3 border-2 border-accent-blue-500 text-accent-blue-500 font-semibold rounded-lg hover:bg-accent-blue-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    Download QR Code
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    disabled={!qrDataUrl}
+                    className="w-full px-4 py-3 border-2 border-accent-blue-500 text-accent-blue-500 font-semibold rounded-lg hover:bg-accent-blue-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                    />
-                  </svg>
-                  Print QR Code
-                </button>
-              </div>
-              {checkInUrl && (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                      />
+                    </svg>
+                    Print QR Code
+                  </button>
+                </div>
+              )}
+              {checkInUrl && listingStatus === "ready" && (
                 <div className="mt-4 p-3 bg-white rounded-lg">
                   <p className="text-xs font-semibold text-foreground/70 mb-1">
                     Check-in URL:
