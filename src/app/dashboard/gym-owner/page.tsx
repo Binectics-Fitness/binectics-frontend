@@ -13,6 +13,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { type CheckIn, UserRole } from "@/lib/types";
 import { useMyOrganizations } from "@/lib/queries/teams";
 import { useOrgDashboardStats } from "@/lib/queries/checkins";
+import { formatCurrency } from "@/utils/format";
 
 function getMemberName(checkIn: CheckIn): string {
   if (
@@ -132,8 +133,16 @@ export default function GymOwnerDashboard() {
     },
     {
       label: "Revenue Today",
-      value: orgStats ? `$${gymData.revenue.today.toLocaleString()}` : "—",
-      meta: `$${gymData.revenue.thisWeek.toLocaleString()} this week`,
+      value: orgStats
+        ? formatCurrency(
+            gymData.revenue.today,
+            currentOrg?.currency || "USD",
+          )
+        : "—",
+      meta: `${formatCurrency(
+        gymData.revenue.thisWeek,
+        currentOrg?.currency || "USD",
+      )} this week`,
       icon: (
         <svg
           className="h-6 w-6"

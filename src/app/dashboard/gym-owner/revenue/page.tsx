@@ -10,6 +10,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { UserRole } from "@/lib/types";
 import { useMyOrganizations } from "@/lib/queries/teams";
 import { useOrgDashboardStats } from "@/lib/queries/checkins";
+import { formatCurrency } from "@/utils/format";
 
 function fmt(n: number): string {
   return n.toLocaleString("en-US", { minimumFractionDigits: 0 });
@@ -58,6 +59,7 @@ export default function GymOwnerRevenuePage() {
   const today = orgStats?.revenue_today ?? 0;
   const week = orgStats?.revenue_week ?? 0;
   const month = orgStats?.revenue_month ?? 0;
+  const currency = currentOrg?.currency || "USD";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -78,7 +80,7 @@ export default function GymOwnerRevenuePage() {
             <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
               <p className="text-sm font-medium text-foreground/60">Today</p>
               <p className="text-3xl font-black text-foreground mt-2">
-                {statsLoading ? "—" : `$${fmt(today)}`}
+                {statsLoading ? "—" : formatCurrency(today, currency)}
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
@@ -86,7 +88,7 @@ export default function GymOwnerRevenuePage() {
                 This Week
               </p>
               <p className="text-3xl font-black text-foreground mt-2">
-                {statsLoading ? "—" : `$${fmt(week)}`}
+                {statsLoading ? "—" : formatCurrency(week, currency)}
               </p>
             </div>
             <div className="bg-primary-50 border-2 border-primary-200 rounded-xl shadow-[var(--shadow-card)] p-6">
@@ -94,7 +96,7 @@ export default function GymOwnerRevenuePage() {
                 This Month
               </p>
               <p className="text-3xl font-black text-primary-600 mt-2">
-                {statsLoading ? "—" : `$${fmt(month)}`}
+                {statsLoading ? "—" : formatCurrency(month, currency)}
               </p>
             </div>
           </div>
@@ -154,7 +156,7 @@ export default function GymOwnerRevenuePage() {
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-foreground/60">Today</span>
                     <span className="font-semibold text-foreground">
-                      ${fmt(today)}
+                      {formatCurrency(today, currency)}
                     </span>
                   </div>
                   <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
@@ -171,7 +173,7 @@ export default function GymOwnerRevenuePage() {
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-foreground/60">This Week</span>
                     <span className="font-semibold text-foreground">
-                      ${fmt(week)}
+                      {formatCurrency(week, currency)}
                     </span>
                   </div>
                   <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
@@ -188,7 +190,7 @@ export default function GymOwnerRevenuePage() {
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-foreground/60">This Month</span>
                     <span className="font-semibold text-foreground">
-                      ${fmt(month)}
+                      {formatCurrency(month, currency)}
                     </span>
                   </div>
                   <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">

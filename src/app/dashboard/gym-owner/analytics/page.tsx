@@ -10,6 +10,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { UserRole } from "@/lib/types";
 import { useMyOrganizations } from "@/lib/queries/teams";
 import { useOrgDashboardStats } from "@/lib/queries/checkins";
+import { formatCurrency } from "@/utils/format";
 
 function fmt(n: number): string {
   return n.toLocaleString("en-US", { minimumFractionDigits: 0 });
@@ -58,6 +59,7 @@ export default function GymOwnerAnalyticsPage() {
   const todayCI = orgStats?.today_check_ins ?? 0;
   const weekCI = orgStats?.week_check_ins ?? 0;
   const monthCI = orgStats?.month_check_ins ?? 0;
+  const currency = currentOrg?.currency || "USD";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -98,7 +100,7 @@ export default function GymOwnerAnalyticsPage() {
               <p className="text-3xl font-black text-foreground mt-2">
                 {statsLoading
                   ? "—"
-                  : `$${fmt(orgStats?.revenue_month ?? 0)}`}
+                  : formatCurrency(orgStats?.revenue_month ?? 0, currency)}
               </p>
             </div>
           </div>
@@ -188,7 +190,7 @@ export default function GymOwnerAnalyticsPage() {
                 <p className="text-2xl font-black text-foreground mt-1">
                   {statsLoading
                     ? "—"
-                    : `$${fmt(orgStats?.revenue_today ?? 0)}`}
+                    : formatCurrency(orgStats?.revenue_today ?? 0, currency)}
                 </p>
               </div>
               <div className="p-4 bg-neutral-50 rounded-lg">
@@ -198,7 +200,7 @@ export default function GymOwnerAnalyticsPage() {
                 <p className="text-2xl font-black text-foreground mt-1">
                   {statsLoading
                     ? "—"
-                    : `$${fmt(orgStats?.revenue_week ?? 0)}`}
+                    : formatCurrency(orgStats?.revenue_week ?? 0, currency)}
                 </p>
               </div>
               <div className="p-4 bg-primary-50 rounded-lg border border-primary-200">
@@ -208,7 +210,7 @@ export default function GymOwnerAnalyticsPage() {
                 <p className="text-2xl font-black text-primary-600 mt-1">
                   {statsLoading
                     ? "—"
-                    : `$${fmt(orgStats?.revenue_month ?? 0)}`}
+                    : formatCurrency(orgStats?.revenue_month ?? 0, currency)}
                 </p>
               </div>
             </div>
