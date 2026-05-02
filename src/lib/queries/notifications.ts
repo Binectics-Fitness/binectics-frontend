@@ -12,10 +12,15 @@ export function useNotifications(
   return useQuery<PaginatedNotifications | null>({
     queryKey: queryKeys.notifications.list(params),
     queryFn: async () => {
-      const res = await notificationsService.getNotifications(params);
-      return res.success && res.data ? res.data : null;
+      try {
+        const res = await notificationsService.getNotifications(params);
+        return res.success && res.data ? res.data : null;
+      } catch {
+        return null;
+      }
     },
     enabled,
+    retry: false,
   });
 }
 

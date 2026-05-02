@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { showAlert } from "@/lib/ui/dialogs";
+import { toast } from "@/components/Toast";
 import {
   privacySettingsSchema,
   type PrivacySettingsFormData,
@@ -13,7 +14,6 @@ import {
 export default function PrivacySettingsPage() {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   const { watch, setValue, handleSubmit } = useForm<PrivacySettingsFormData>({
     resolver: zodResolver(privacySettingsSchema),
@@ -48,13 +48,12 @@ export default function PrivacySettingsPage() {
 
   const onSave = async () => {
     setIsSaving(true);
-    setSuccessMessage("");
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSuccessMessage("Privacy settings saved successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      toast.success("Privacy settings saved successfully!");
     } catch (error) {
       console.error("Save error:", error);
+      toast.error("Failed to save privacy settings.");
     } finally {
       setIsSaving(false);
     }
@@ -70,11 +69,6 @@ export default function PrivacySettingsPage() {
 
   return (
     <div className="space-y-6">
-      {successMessage && (
-        <div className="rounded-lg border-2 border-primary-500 bg-primary-50 p-4 text-primary-900">
-          <p className="font-semibold">{successMessage}</p>
-        </div>
-      )}
 
       <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-6 flex items-start gap-3 sm:items-center">
@@ -318,7 +312,7 @@ export default function PrivacySettingsPage() {
             </p>
             <button
               onClick={handleDownloadData}
-              className="px-4 py-2 bg-accent-blue-500 text-foreground font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors"
+              className="px-4 py-2 bg-foreground text-background font-semibold rounded-lg hover:opacity-90 transition-opacity"
             >
               Request Data Export
             </button>

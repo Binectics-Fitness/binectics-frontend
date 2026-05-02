@@ -125,10 +125,10 @@ export default function CheckInPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Gym Header */}
-        <div className="bg-accent-blue-500 p-6 text-center">
+        <div className="bg-primary-500 p-6 text-center">
           <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-10 h-10 text-accent-blue-500"
+              className="w-10 h-10 text-primary-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

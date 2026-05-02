@@ -39,7 +39,7 @@ export default function ExplorePage() {
     return params;
   }, [selectedCategory, sortBy, page, debouncedQuery]);
 
-  const { data, isLoading } = useSearchListings(searchParams);
+  const { data, isLoading, isError } = useSearchListings(searchParams);
   const listings = data?.listings ?? [];
   const total = data?.pagination?.total ?? 0;
   const totalPages = data?.pagination?.total_pages ?? 0;
@@ -165,6 +165,16 @@ export default function ExplorePage() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : isError ? (
+            <div className="rounded-xl border border-neutral-200 bg-white p-12 text-center">
+              <svg className="mx-auto mb-4 h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+              <p className="text-sm font-medium text-foreground mb-1">Unable to load listings</p>
+              <p className="text-sm text-foreground-secondary">
+                There was a problem connecting to the server. Please try again.
+              </p>
             </div>
           ) : listings.length === 0 ? (
             <div className="rounded-xl border border-neutral-200 bg-white p-12 text-center">

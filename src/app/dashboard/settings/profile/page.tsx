@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
@@ -10,6 +11,7 @@ import { UserRole } from "@/lib/types";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { toast } from "@/components/Toast";
 import {
   profileSettingsSchema,
   type ProfileSettingsFormData,
@@ -67,6 +69,7 @@ const ALLOWED_IMAGE_UPLOAD_TYPES = new Set([
 
 export default function ProfileSettingsPage() {
   const { user, updateUser } = useAuth();
+  const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
   const [isDeletingProfileImage, setIsDeletingProfileImage] = useState(false);
@@ -75,8 +78,6 @@ export default function ProfileSettingsPage() {
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
     null,
   );
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const { data: countries = [], isLoading: countriesLoading } = useCountries();
   const profileImagePreviewRef = useRef<string | null>(null);
 
@@ -129,7 +130,6 @@ export default function ProfileSettingsPage() {
 
   const onSave = async (data: ProfileSettingsFormData) => {
     setIsSaving(true);
-    setSuccessMessage("");
 
     try {
       const payload: Record<string, unknown> = {
@@ -148,19 +148,14 @@ export default function ProfileSettingsPage() {
 
       if (res.success && res.data) {
         updateUser(res.data);
-        setSuccessMessage("Profile saved successfully!");
-        setErrorMessage("");
-        setTimeout(() => setSuccessMessage(""), 3000);
+        toast.success("Profile saved successfully!");
+        router.push("/dashboard");
       } else {
-        setErrorMessage(res.message || "Failed to save profile");
-        setSuccessMessage("");
-        setTimeout(() => setErrorMessage(""), 3000);
+        toast.error(res.message || "Failed to save profile");
       }
     } catch (error) {
       console.error("Save error:", error);
-      setErrorMessage("An error occurred while saving");
-      setSuccessMessage("");
-      setTimeout(() => setErrorMessage(""), 3000);
+      toast.error("An error occurred while saving");
     } finally {
       setIsSaving(false);
     }
@@ -175,7 +170,7 @@ export default function ProfileSettingsPage() {
     if (!file) return;
 
     if (!ALLOWED_IMAGE_UPLOAD_TYPES.has(file.type)) {
-      setErrorMessage(
+      toast.error(
         "Unsupported image format. Please upload PNG, JPEG, WEBP, or GIF.",
       );
       event.target.value = "";
@@ -183,13 +178,11 @@ export default function ProfileSettingsPage() {
     }
 
     if (file.size > MAX_IMAGE_UPLOAD_SIZE_BYTES) {
-      setErrorMessage("Image is too large. Maximum allowed size is 5MB.");
+      toast.error("Image is too large. Maximum allowed size is 5MB.");
       event.target.value = "";
       return;
     }
 
-    setErrorMessage("");
-    setSuccessMessage("");
     setIsUploadingProfileImage(true);
 
     revokeProfilePreview();
@@ -205,13 +198,13 @@ export default function ProfileSettingsPage() {
           ...user,
           profile_picture: res.data.profile_picture || undefined,
         });
-        setSuccessMessage("Profile image updated successfully.");
+        toast.success("Profile image updated successfully.");
       } else {
-        setErrorMessage(res.message || "Failed to upload profile image");
+        toast.error(res.message || "Failed to upload profile image");
       }
     } catch (error) {
       console.error("Profile image upload error:", error);
-      setErrorMessage("An error occurred while uploading the profile image");
+      toast.error("An error occurred while uploading the profile image");
     } finally {
       revokeProfilePreview();
       setProfileImagePreview(null);
@@ -223,8 +216,6 @@ export default function ProfileSettingsPage() {
   const handleProfileImageDelete = async () => {
     if (!user?.profile_picture) return;
 
-    setErrorMessage("");
-    setSuccessMessage("");
     setIsDeletingProfileImage(true);
 
     try {
@@ -238,13 +229,13 @@ export default function ProfileSettingsPage() {
           profile_picture: undefined,
         });
         setIsDeleteProfileImageModalOpen(false);
-        setSuccessMessage("Profile image removed successfully.");
+        toast.success("Profile image removed successfully.");
       } else {
-        setErrorMessage(res.message || "Failed to remove profile image");
+        toast.error(res.message || "Failed to remove profile image");
       }
     } catch (error) {
       console.error("Profile image delete error:", error);
-      setErrorMessage("An error occurred while removing the profile image");
+      toast.error("An error occurred while removing the profile image");
     } finally {
       setIsDeletingProfileImage(false);
     }
@@ -504,19 +495,6 @@ export default function ProfileSettingsPage() {
 
   return (
     <div>
-      {/* Success Message */}
-      {successMessage && (
-        <div className="mb-6 rounded-lg border-2 border-green-200 bg-green-50 p-4 text-green-800">
-          <p className="font-semibold">{successMessage}</p>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="mb-6 rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-800">
-          <p className="font-semibold">{errorMessage}</p>
-        </div>
-      )}
 
       {/* Basic Information */}
       <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">

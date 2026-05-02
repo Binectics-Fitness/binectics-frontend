@@ -5,6 +5,7 @@ import CookieConsent from "@/components/CookieConsent";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
+import { ToastContainer } from "@/components/Toast";
 
 export const metadata: Metadata = {
   title: {
@@ -61,6 +62,7 @@ export default function RootLayout({
             <OrganizationProvider>
               <ConditionalLayout>{children}</ConditionalLayout>
               <CookieConsent />
+              <ToastContainer />
             </OrganizationProvider>
           </AuthProvider>
         </QueryProvider>
