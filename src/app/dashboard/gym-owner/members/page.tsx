@@ -10,6 +10,8 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { Users } from "lucide-react";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { apiClient } from "@/lib/api/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queries/keys";
 import {
   MembershipSubscription,
   MembershipSubscriptionStatus,
@@ -126,6 +128,7 @@ export default function GymOwnerMembersPage() {
   const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
 
   const organizationId = currentOrg?._id;
+  const queryClient = useQueryClient();
 
   const loadMembers = useCallback(async () => {
     if (!organizationId) {
@@ -246,6 +249,11 @@ export default function GymOwnerMembersPage() {
       setEnrollProofFile(null);
       setEnrollProofUrl("");
       void loadMembers();
+      // Refresh dashboard stats so Revenue & Earnings reflects the new
+      // subscription immediately (would otherwise stay cached for 60s).
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.checkins.orgDashboardStats(organizationId),
+      });
       setTimeout(() => {
         setShowEnrollModal(false);
         setEnrollSuccess("");
