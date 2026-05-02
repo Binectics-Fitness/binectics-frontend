@@ -125,8 +125,26 @@ export default function ProviderOnboardingChecklist({
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [orgError, setOrgError] = useState("");
 
-  // UI
+  // UI — dismissal is persisted per (user, org) once all required steps
+  // are complete, so reloading the page doesn't bring the card back.
+  const dismissKey =
+    user?.id && currentOrg?._id
+      ? `onboarding-dismissed:${user.id}:${currentOrg._id}`
+      : null;
   const [isDismissed, setIsDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!dismissKey) return;
+    if (typeof window === 'undefined') return;
+    setIsDismissed(window.localStorage.getItem(dismissKey) === '1');
+  }, [dismissKey]);
+
+  const dismiss = () => {
+    if (dismissKey && typeof window !== 'undefined') {
+      window.localStorage.setItem(dismissKey, '1');
+    }
+    setIsDismissed(true);
+  };
 
   const role = user?.role;
   const config = role ? ROLE_CONFIG[role] : null;
@@ -305,7 +323,7 @@ export default function ProviderOnboardingChecklist({
       {/* Dismiss if all required done */}
       {allRequiredDone && (
         <button
-          onClick={() => setIsDismissed(true)}
+          onClick={dismiss}
           className="absolute top-4 right-4 text-foreground-tertiary hover:text-foreground-secondary transition-colors"
           aria-label="Dismiss"
         >
