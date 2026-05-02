@@ -96,16 +96,28 @@ export function signedChange(value: number | undefined | null): string {
 }
 
 /**
- * Format a number as currency string
+ * Format a number as currency string.
+ *
+ * Uses `currencyDisplay: "narrowSymbol"` so currencies render with their
+ * native short symbol (e.g. NGN -> ₦, GBP -> £, INR -> ₹) instead of the
+ * ISO code. Falls back to the standard symbol when no narrow form exists.
  */
 export function formatCurrency(
   amount: number,
   currency: string = "USD",
 ): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+    }).format(amount);
+  } catch {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(amount);
+  }
 }
 
 /**
