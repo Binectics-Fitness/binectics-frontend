@@ -57,6 +57,12 @@ export default function CreatePlanPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (currentOrg?.currency) {
+      setValue("currency", currentOrg.currency);
+    }
+  }, [currentOrg, setValue]);
+
   const addFeature = () => {
     const trimmed = newFeature.trim();
     if (!trimmed) return;

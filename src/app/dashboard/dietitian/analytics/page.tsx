@@ -218,7 +218,7 @@ export default function DietitianAnalyticsPage() {
                         Total Revenue
                       </span>
                       <span className="text-lg font-bold text-foreground">
-                        {subscriptions[0]?.currency || "USD"}{" "}
+                        {subscriptions[0]?.currency || currentOrg?.currency || "USD"}{" "}
                         {totalRevenue.toLocaleString()}
                       </span>
                     </div>

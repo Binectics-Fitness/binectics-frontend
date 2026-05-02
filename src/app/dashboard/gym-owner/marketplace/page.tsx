@@ -111,7 +111,7 @@ export default function OrgMarketplaceListingPage() {
       languages: [],
       city: "",
       countryCode: "",
-      currency: "USD",
+      currency: currentOrg?.currency || "USD",
       priceFrom: "",
       priceLabel: "",
       contactPhone: "",
@@ -162,7 +162,7 @@ export default function OrgMarketplaceListingPage() {
       languages: l.languages ?? [],
       city: l.city || "",
       countryCode: l.country_code || "",
-      currency: l.currency || "USD",
+      currency: l.currency || currentOrg?.currency || "USD",
       priceFrom: l.price_from != null ? String(l.price_from) : "",
       priceLabel: l.price_label || "",
       contactPhone: l.contact_phone || "",
@@ -208,6 +208,9 @@ export default function OrgMarketplaceListingPage() {
           }
           if (currentOrg?.name) {
             setValue("headline", currentOrg.name);
+          }
+          if (currentOrg?.currency) {
+            setValue("currency", currentOrg.currency);
           }
         }
       } catch {

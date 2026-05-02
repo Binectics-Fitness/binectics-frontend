@@ -44,7 +44,7 @@ export default function TrainerEarningsPage() {
     )
     .reduce((sum, s) => sum + s.amount_paid, 0);
   const activeRevenue = activeSubs.reduce((sum, s) => sum + s.amount_paid, 0);
-  const currency = subscriptions[0]?.currency || "USD";
+  const currency = subscriptions[0]?.currency || currentOrg?.currency || "USD";
 
   return (
     <div className="flex min-h-screen bg-neutral-50">

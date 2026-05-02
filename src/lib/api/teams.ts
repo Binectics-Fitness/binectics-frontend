@@ -51,6 +51,7 @@ export interface Organization {
   description?: string;
   logo?: string;
   account_type: AccountType;
+  currency?: string;
   is_active: boolean;
   is_owner?: boolean;
   can_manage_organization?: boolean;
@@ -118,6 +119,7 @@ export interface UpdateOrganizationRequest {
   name?: string;
   description?: string;
   logo?: string;
+  currency?: string;
   is_active?: boolean;
 }
 

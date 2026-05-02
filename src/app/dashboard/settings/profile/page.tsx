@@ -1,12 +1,14 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
-import { useCountries } from "@/lib/queries/utility";
+import { teamsService } from "@/lib/api/teams";
+import { useCountries, usePlatformConfig } from "@/lib/queries/utility";
 import { UserRole } from "@/lib/types";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -69,6 +71,7 @@ const ALLOWED_IMAGE_UPLOAD_TYPES = new Set([
 
 export default function ProfileSettingsPage() {
   const { user, updateUser } = useAuth();
+  const { currentOrg, refreshOrganizations } = useOrganization();
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
@@ -78,8 +81,37 @@ export default function ProfileSettingsPage() {
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
     null,
   );
+  const [orgCurrency, setOrgCurrency] = useState<string>("");
+  const [isSavingCurrency, setIsSavingCurrency] = useState(false);
   const { data: countries = [], isLoading: countriesLoading } = useCountries();
+  const { data: platformConfig } = usePlatformConfig();
   const profileImagePreviewRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (currentOrg) {
+      setOrgCurrency(currentOrg.currency || "USD");
+    }
+  }, [currentOrg]);
+
+  const handleSaveCurrency = async () => {
+    if (!currentOrg || !orgCurrency) return;
+    setIsSavingCurrency(true);
+    try {
+      const res = await teamsService.updateOrganization(currentOrg._id, {
+        currency: orgCurrency,
+      });
+      if (res.success) {
+        toast.success("Default currency updated.");
+        await refreshOrganizations();
+      } else {
+        toast.error(res.message || "Failed to update currency");
+      }
+    } catch {
+      toast.error("An error occurred while updating currency");
+    } finally {
+      setIsSavingCurrency(false);
+    }
+  };
 
   const displayedProfileImage = profileImagePreview ?? user?.profile_picture;
 
@@ -633,6 +665,49 @@ export default function ProfileSettingsPage() {
       {user.role === UserRole.TRAINER && renderTrainerFields()}
       {user.role === UserRole.DIETITIAN && renderDietitianFields()}
       {user.role === UserRole.USER && renderUserFields()}
+
+      {/* Business Currency (providers only) */}
+      {(user.role === UserRole.GYM_OWNER ||
+        user.role === UserRole.TRAINER ||
+        user.role === UserRole.DIETITIAN) &&
+        currentOrg && (
+          <div className="mb-6 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6">
+            <h3 className="mb-1 text-lg font-bold text-foreground sm:text-xl">
+              Default Currency
+            </h3>
+            <p className="mb-4 text-sm text-foreground-secondary">
+              The currency used for new plans and earnings displays.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <SearchableSelect
+                  name="orgCurrency"
+                  value={orgCurrency}
+                  onChange={(val) => setOrgCurrency(val)}
+                  options={(platformConfig?.currencies ?? [])
+                    .filter((c) => c.is_active)
+                    .map((c) => ({
+                      label: `${c.code} — ${c.name}`,
+                      value: c.code,
+                    }))}
+                  placeholder="Select currency"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveCurrency}
+                disabled={
+                  isSavingCurrency ||
+                  !orgCurrency ||
+                  orgCurrency === (currentOrg.currency || "USD")
+                }
+                className="rounded-lg bg-foreground px-6 py-3 text-sm font-semibold text-background transition-colors hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSavingCurrency ? "Saving..." : "Save Currency"}
+              </button>
+            </div>
+          </div>
+        )}
 
       {/* Save Button */}
       <div className="flex justify-stretch sm:justify-end">
