@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import GymOwnerSidebar from "@/components/GymOwnerSidebar";
@@ -516,7 +517,13 @@ export default function GymOwnerMembersPage() {
                   </select>
                   {plans.length === 0 && (
                     <p className="text-xs text-foreground/50 mt-1">
-                      No active plans found. Create a plan first.
+                      No active plans found.{" "}
+                      <Link
+                        href="/dashboard/gym-owner/plans"
+                        className="text-accent-blue-500 underline hover:text-accent-blue-600"
+                      >
+                        Create a plan first.
+                      </Link>
                     </p>
                   )}
                 </div>
