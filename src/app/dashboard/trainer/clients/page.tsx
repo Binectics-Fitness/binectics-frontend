@@ -6,6 +6,7 @@ import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { progressService } from "@/lib/api/progress";
+import { toast } from "@/components/Toast";
 import { UserRole } from "@/lib/types";
 import { formatLocal } from "@/utils/format";
 import type {
@@ -62,7 +63,6 @@ export default function TrainerClientsPage() {
   const [sentRequests, setSentRequests] = useState<ClientRequestItem[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -170,7 +170,6 @@ export default function TrainerClientsPage() {
   async function handleAddClient(data: AddClientFormData) {
     setSubmitting(true);
     setError(null);
-    setSuccessMessage(null);
     const payload: AddClientRequest = {
       email: data.email,
       first_name: data.first_name || undefined,
@@ -197,7 +196,7 @@ export default function TrainerClientsPage() {
     if (res.success && res.data) {
       setShowAddModal(false);
       resetAddClient();
-      setSuccessMessage(res.data.message);
+      toast.success(res.data.message || "Client added successfully.");
       loadProfiles();
       loadInvitations();
     } else {
@@ -344,18 +343,6 @@ export default function TrainerClientsPage() {
             + Add Client
           </button>
         </div>
-
-        {successMessage && (
-          <div className="mb-6 flex items-center justify-between rounded-lg bg-green-50 p-4 text-sm text-green-700">
-            {successMessage}
-            <button
-              onClick={() => setSuccessMessage(null)}
-              className="ml-4 text-green-500 hover:text-green-700"
-            >
-              &times;
-            </button>
-          </div>
-        )}
 
         {error && (
           <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-700">
@@ -664,7 +651,7 @@ export default function TrainerClientsPage() {
                     <button
                       key={p._id}
                       onClick={() => setSelectedProfileId(p._id)}
-                      className="rounded-2xl bg-white p-5 text-left shadow-sm transition-shadow hover:shadow-md"
+                      className="group rounded-2xl bg-white p-5 text-left shadow-sm transition-shadow hover:shadow-md"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -699,18 +686,18 @@ export default function TrainerClientsPage() {
                         </span>
                       </div>
 
-                      {s && (
-                        <div className="mt-4 grid grid-cols-1 gap-2 text-center sm:grid-cols-3 sm:gap-4">
+                      {s && (s.latest_weight?.weight_kg != null || s.activity_count > 0 || s.meal_count > 0) ? (
+                        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
                           <div>
-                            <p className="text-sm text-foreground-tertiary">
+                            <p className="text-xs text-foreground-tertiary">
                               Weight
                             </p>
                             <p className="text-sm font-semibold text-foreground">
-                              {s.latest_weight?.weight_kg ?? "—"}
+                              {s.latest_weight?.weight_kg != null ? `${s.latest_weight.weight_kg} kg` : "—"}
                             </p>
                           </div>
                           <div>
-                            <p className="text-sm text-foreground-tertiary">
+                            <p className="text-xs text-foreground-tertiary">
                               Activities
                             </p>
                             <p className="text-sm font-semibold text-foreground">
@@ -718,7 +705,7 @@ export default function TrainerClientsPage() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-sm text-foreground-tertiary">
+                            <p className="text-xs text-foreground-tertiary">
                               Meals
                             </p>
                             <p className="text-sm font-semibold text-foreground">
@@ -726,6 +713,10 @@ export default function TrainerClientsPage() {
                             </p>
                           </div>
                         </div>
+                      ) : (
+                        <p className="mt-3 text-xs italic text-foreground-tertiary">
+                          No data yet — check back after their first session.
+                        </p>
                       )}
 
                       {p.goals.length > 0 && (
@@ -745,20 +736,26 @@ export default function TrainerClientsPage() {
                           )}
                         </div>
                       )}
+
+                      <div className="mt-4 flex items-center justify-end border-t border-neutral-100 pt-3">
+                        <span className="text-xs font-semibold text-accent-yellow-600 group-hover:text-accent-yellow-700">
+                          View progress →
+                        </span>
+                      </div>
                     </button>
                   );
                 })}
               </div>
             )}
 
-            {/* Sent connection requests */}
-            {sentRequests.length > 0 && (
+            {/* Pending connection requests */}
+            {sentRequests.filter((r) => r.status.toUpperCase() === "PENDING").length > 0 && (
               <div className="mt-10">
                 <h2 className="mb-4 text-lg font-bold text-foreground">
-                  Sent Connection Requests
+                  Pending Connection Requests
                 </h2>
                 <div className="space-y-3">
-                  {sentRequests.map((req) => {
+                  {sentRequests.filter((r) => r.status.toUpperCase() === "PENDING").map((req) => {
                     const clientInfo =
                       typeof req.client_id === "object" ? req.client_id : null;
                     return (
