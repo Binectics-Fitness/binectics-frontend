@@ -127,6 +127,10 @@ export default function GymOwnerMembersPage() {
   const [enrollSuccess, setEnrollSuccess] = useState("");
   const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
 
+  // ─── Mark-as-paid state ─────────────────────────────────────────
+  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
+  const [markPaidError, setMarkPaidError] = useState<string>("");
+
   const organizationId = currentOrg?._id;
   const queryClient = useQueryClient();
 
@@ -184,6 +188,35 @@ export default function GymOwnerMembersPage() {
       return true;
     });
   }, [subscriptions, statusFilter, planFilter, searchQuery]);
+
+  const handleMarkPaid = async (sub: MembershipSubscription) => {
+    if (!organizationId) return;
+    if (
+      !window.confirm(
+        `Mark ${getMemberName(sub)}'s subscription as paid? This will activate their membership.`,
+      )
+    ) {
+      return;
+    }
+    setMarkingPaidId(sub._id);
+    setMarkPaidError("");
+    const res = await marketplaceService.markSubscriptionPaid(
+      organizationId,
+      sub._id,
+    );
+    setMarkingPaidId(null);
+    if (!res.success) {
+      setMarkPaidError(
+        res.message ?? "Failed to mark subscription as paid. Please retry.",
+      );
+      return;
+    }
+    // Refresh local state and invalidate revenue caches
+    await loadMembers();
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.checkins.orgDashboardStats(organizationId),
+    });
+  };
 
   const handleEnrollMember = async () => {
     if (!organizationId || !enrollEmail.trim() || !enrollPlanId) return;
@@ -346,6 +379,12 @@ export default function GymOwnerMembersPage() {
             </div>
           )}
 
+          {markPaidError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-sm">
+              {markPaidError}
+            </div>
+          )}
+
           <div className="bg-white shadow-[var(--shadow-card)] p-4 mb-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <input
@@ -442,6 +481,9 @@ export default function GymOwnerMembersPage() {
                       <th className="px-6 py-4 text-left text-sm font-bold text-foreground">
                         Expires
                       </th>
+                      <th className="px-6 py-4 text-right text-sm font-bold text-foreground">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -492,6 +534,23 @@ export default function GymOwnerMembersPage() {
                           </td>
                           <td className="px-6 py-4 text-foreground/70 text-sm">
                             {formatDate(sub.end_date)}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            {sub.status ===
+                            MembershipSubscriptionStatus.PENDING_PAYMENT ? (
+                              <button
+                                type="button"
+                                onClick={() => void handleMarkPaid(sub)}
+                                disabled={markingPaidId === sub._id}
+                                className="inline-flex items-center px-3 py-1.5 text-sm font-semibold rounded-lg bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {markingPaidId === sub._id
+                                  ? "Marking…"
+                                  : "Mark as Paid"}
+                              </button>
+                            ) : (
+                              <span className="text-foreground/30 text-sm">—</span>
+                            )}
                           </td>
                         </tr>
                       );

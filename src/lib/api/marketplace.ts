@@ -669,6 +669,17 @@ export const marketplaceService = {
     );
   },
 
+  async markSubscriptionPaid(
+    organizationId: string,
+    subscriptionId: string,
+    data: { payment_reference?: string; payment_proof_url?: string } = {},
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/organizations/${organizationId}/subscriptions/${subscriptionId}/mark-paid`,
+      data,
+    );
+  },
+
   // ==================== PAYMENT CONFIGURATION ====================
 
   async getPaymentConfigs(
