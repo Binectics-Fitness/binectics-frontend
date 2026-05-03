@@ -278,6 +278,7 @@ export interface MarketplaceListing {
   languages: string[];
   facilities: string[];
   amenities: string[];
+  facility_items?: FacilityItem[];
   photos: string[];
   profile_image?: string;
   profile_image_public_id?: string;
@@ -306,6 +307,56 @@ export interface MarketplaceListing {
   review_count: number;
   created_at: string;
   updated_at: string;
+}
+
+// ─── Facility & Amenity (gym Facilities & Amenities page) ──────────────
+
+export enum FacilityCategory {
+  EQUIPMENT = "EQUIPMENT",
+  ROOM = "ROOM",
+  AMENITY = "AMENITY",
+  SERVICE = "SERVICE",
+}
+
+export enum FacilityStatus {
+  AVAILABLE = "AVAILABLE",
+  MAINTENANCE = "MAINTENANCE",
+}
+
+export enum FacilityCondition {
+  EXCELLENT = "EXCELLENT",
+  GOOD = "GOOD",
+  FAIR = "FAIR",
+}
+
+export enum AmenityKey {
+  WIFI = "WIFI",
+  TOWEL_SERVICE = "TOWEL_SERVICE",
+  PERSONAL_TRAINING = "PERSONAL_TRAINING",
+  GROUP_CLASSES = "GROUP_CLASSES",
+  CHILDCARE = "CHILDCARE",
+  ACCESS_24_7 = "ACCESS_24_7",
+  LOCKER_ROOMS = "LOCKER_ROOMS",
+  SHOWERS = "SHOWERS",
+  PARKING = "PARKING",
+  JUICE_BAR = "JUICE_BAR",
+  SAUNA = "SAUNA",
+  POOL = "POOL",
+  STEAM_ROOM = "STEAM_ROOM",
+}
+
+export interface FacilityItem {
+  _id: string;
+  name: string;
+  category: FacilityCategory;
+  status: FacilityStatus;
+  condition: FacilityCondition;
+  description: string;
+  image_url?: string;
+  image_public_id?: string;
+  icon_key?: string;
+  gradient?: string;
+  is_featured: boolean;
 }
 
 export interface MarketplaceListingDocument {

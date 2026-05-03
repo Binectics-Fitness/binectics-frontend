@@ -7,6 +7,11 @@
 import { apiClient } from "./client";
 import type {
   ApiResponse,
+  AmenityKey,
+  FacilityCategory,
+  FacilityCondition,
+  FacilityItem,
+  FacilityStatus,
   MarketplaceListing,
   MarketplaceRequest,
   MarketplaceReview,
@@ -725,6 +730,110 @@ export const marketplaceService = {
   ): Promise<ApiResponse<{ paystack_public_key: string | null }>> {
     return await apiClient.get(
       `/marketplace/listings/${listingId}/payment-config`,
+    );
+  },
+
+  // ==================== MY LISTINGS (multi-location) ====================
+
+  async getMyListings(): Promise<ApiResponse<MarketplaceListing[]>> {
+    return await apiClient.get(`/marketplace/my-listings`);
+  },
+
+  async getMyListingFacilityItems(
+    listingId: string,
+  ): Promise<ApiResponse<FacilityItem[]>> {
+    return await apiClient.get(
+      `/marketplace/my-listings/${listingId}/facility-items`,
+    );
+  },
+
+  async addMyListingFacilityItem(
+    listingId: string,
+    payload: {
+      name: string;
+      category: FacilityCategory;
+      condition: FacilityCondition;
+      status?: FacilityStatus;
+      description?: string;
+      icon_key?: string;
+      gradient?: string;
+      is_featured?: boolean;
+      image?: File;
+    },
+  ): Promise<ApiResponse<FacilityItem>> {
+    const formData = new FormData();
+    formData.append("name", payload.name);
+    formData.append("category", payload.category);
+    formData.append("condition", payload.condition);
+    if (payload.status) formData.append("status", payload.status);
+    if (payload.description != null)
+      formData.append("description", payload.description);
+    if (payload.icon_key) formData.append("icon_key", payload.icon_key);
+    if (payload.gradient) formData.append("gradient", payload.gradient);
+    if (payload.is_featured != null)
+      formData.append("is_featured", String(payload.is_featured));
+    if (payload.image) formData.append("image", payload.image);
+
+    return await apiClient.postFormData<FacilityItem>(
+      `/marketplace/my-listings/${listingId}/facility-items`,
+      formData,
+    );
+  },
+
+  async updateMyListingFacilityItem(
+    listingId: string,
+    itemId: string,
+    payload: {
+      name?: string;
+      category?: FacilityCategory;
+      condition?: FacilityCondition;
+      status?: FacilityStatus;
+      description?: string;
+      icon_key?: string;
+      gradient?: string;
+      is_featured?: boolean;
+      image?: File;
+    },
+  ): Promise<ApiResponse<FacilityItem>> {
+    const formData = new FormData();
+    if (payload.name !== undefined) formData.append("name", payload.name);
+    if (payload.category !== undefined)
+      formData.append("category", payload.category);
+    if (payload.condition !== undefined)
+      formData.append("condition", payload.condition);
+    if (payload.status !== undefined) formData.append("status", payload.status);
+    if (payload.description !== undefined)
+      formData.append("description", payload.description);
+    if (payload.icon_key !== undefined)
+      formData.append("icon_key", payload.icon_key);
+    if (payload.gradient !== undefined)
+      formData.append("gradient", payload.gradient);
+    if (payload.is_featured !== undefined)
+      formData.append("is_featured", String(payload.is_featured));
+    if (payload.image) formData.append("image", payload.image);
+
+    return await apiClient.patchFormData<FacilityItem>(
+      `/marketplace/my-listings/${listingId}/facility-items/${itemId}`,
+      formData,
+    );
+  },
+
+  async deleteMyListingFacilityItem(
+    listingId: string,
+    itemId: string,
+  ): Promise<ApiResponse<{ deleted: true }>> {
+    return await apiClient.delete(
+      `/marketplace/my-listings/${listingId}/facility-items/${itemId}`,
+    );
+  },
+
+  async updateMyListingAmenities(
+    listingId: string,
+    amenities: AmenityKey[],
+  ): Promise<ApiResponse<{ amenities: AmenityKey[] }>> {
+    return await apiClient.patch(
+      `/marketplace/my-listings/${listingId}/amenities`,
+      { amenities },
     );
   },
 };

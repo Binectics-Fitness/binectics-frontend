@@ -67,7 +67,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <Building2 className="h-5 w-5" />,
-    label: "Facility & Amenities",
+    label: "Locations & Facilities",
     href: "/dashboard/gym-owner/facility",
   },
   {

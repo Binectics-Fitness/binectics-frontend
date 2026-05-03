@@ -2,6 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "./keys";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type {
+  AmenityKey,
+  FacilityCategory,
+  FacilityCondition,
+  FacilityItem,
+  FacilityStatus,
   MembershipSubscription,
   MarketplaceListing,
   MarketplaceRequest,
@@ -132,5 +137,93 @@ export function useOrgMembershipPlans(orgId?: string, enabled = true) {
       return res.success && res.data ? res.data : [];
     },
     enabled: enabled && !!orgId,
+  });
+}
+
+// ─── My listings (multi-location) ────────────────────────────────────
+
+export function useMyListings(enabled = true) {
+  return useQuery<MarketplaceListing[]>({
+    queryKey: queryKeys.marketplace.myListings(),
+    queryFn: async () => {
+      const res = await marketplaceService.getMyListings();
+      return res.success && res.data ? res.data : [];
+    },
+    enabled,
+  });
+}
+
+export function useFacilityItems(listingId: string | undefined) {
+  return useQuery<FacilityItem[]>({
+    queryKey: queryKeys.marketplace.facilityItems(listingId ?? ""),
+    queryFn: async () => {
+      const res = await marketplaceService.getMyListingFacilityItems(
+        listingId!,
+      );
+      return res.success && res.data ? res.data : [];
+    },
+    enabled: !!listingId,
+  });
+}
+
+export function useAddFacilityItem(listingId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (
+      payload: Parameters<typeof marketplaceService.addMyListingFacilityItem>[1],
+    ) => marketplaceService.addMyListingFacilityItem(listingId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.facilityItems(listingId),
+      });
+    },
+  });
+}
+
+export function useUpdateFacilityItem(listingId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (args: {
+      itemId: string;
+      payload: Parameters<
+        typeof marketplaceService.updateMyListingFacilityItem
+      >[2];
+    }) =>
+      marketplaceService.updateMyListingFacilityItem(
+        listingId,
+        args.itemId,
+        args.payload,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.facilityItems(listingId),
+      });
+    },
+  });
+}
+
+export function useDeleteFacilityItem(listingId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      marketplaceService.deleteMyListingFacilityItem(listingId, itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.facilityItems(listingId),
+      });
+    },
+  });
+}
+
+export function useUpdateAmenities(listingId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (amenities: AmenityKey[]) =>
+      marketplaceService.updateMyListingAmenities(listingId, amenities),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.myListings(),
+      });
+    },
   });
 }
