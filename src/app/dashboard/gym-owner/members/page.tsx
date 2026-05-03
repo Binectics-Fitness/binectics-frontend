@@ -128,8 +128,15 @@ export default function GymOwnerMembersPage() {
   const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
 
   // ─── Mark-as-paid state ─────────────────────────────────────────
-  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
-  const [markPaidError, setMarkPaidError] = useState<string>("");
+  const [markPaidSub, setMarkPaidSub] = useState<MembershipSubscription | null>(
+    null,
+  );
+  const [markPaidReference, setMarkPaidReference] = useState("");
+  const [markPaidProofFile, setMarkPaidProofFile] = useState<File | null>(null);
+  const [markPaidProofUrl, setMarkPaidProofUrl] = useState("");
+  const [markPaidUploading, setMarkPaidUploading] = useState(false);
+  const [markPaidSubmitting, setMarkPaidSubmitting] = useState(false);
+  const [markPaidError, setMarkPaidError] = useState("");
 
   const organizationId = currentOrg?._id;
   const queryClient = useQueryClient();
@@ -189,33 +196,86 @@ export default function GymOwnerMembersPage() {
     });
   }, [subscriptions, statusFilter, planFilter, searchQuery]);
 
-  const handleMarkPaid = async (sub: MembershipSubscription) => {
-    if (!organizationId) return;
-    if (
-      !window.confirm(
-        `Mark ${getMemberName(sub)}'s subscription as paid? This will activate their membership.`,
-      )
-    ) {
-      return;
-    }
-    setMarkingPaidId(sub._id);
+  const openMarkPaidModal = (sub: MembershipSubscription) => {
+    setMarkPaidSub(sub);
+    setMarkPaidReference("");
+    setMarkPaidProofFile(null);
+    setMarkPaidProofUrl("");
     setMarkPaidError("");
+  };
+
+  const closeMarkPaidModal = () => {
+    setMarkPaidSub(null);
+    setMarkPaidReference("");
+    setMarkPaidProofFile(null);
+    setMarkPaidProofUrl("");
+    setMarkPaidError("");
+  };
+
+  const submitMarkPaid = async () => {
+    if (!organizationId || !markPaidSub) return;
+    setMarkPaidError("");
+    setMarkPaidSubmitting(true);
+
+    // Upload proof first if a fresh file was picked
+    let proofUrl = markPaidProofUrl;
+    if (markPaidProofFile && !proofUrl) {
+      setMarkPaidUploading(true);
+      const fd = new FormData();
+      fd.append("file", markPaidProofFile);
+      fd.append("folder", "payments/proofs");
+      const uploadRes = await apiClient.postFormData<{ url: string }>(
+        "/upload/image",
+        fd,
+      );
+      setMarkPaidUploading(false);
+      if (!uploadRes.success || !uploadRes.data?.url) {
+        setMarkPaidError(
+          uploadRes.message ?? "Failed to upload payment proof image",
+        );
+        setMarkPaidSubmitting(false);
+        return;
+      }
+      proofUrl = uploadRes.data.url;
+      setMarkPaidProofUrl(proofUrl);
+    }
+
+    const subId = markPaidSub._id;
+    const reference = markPaidReference.trim();
     const res = await marketplaceService.markSubscriptionPaid(
       organizationId,
-      sub._id,
+      subId,
+      {
+        ...(reference && { payment_reference: reference }),
+        ...(proofUrl && { payment_proof_url: proofUrl }),
+      },
     );
-    setMarkingPaidId(null);
+    setMarkPaidSubmitting(false);
+
     if (!res.success) {
       setMarkPaidError(
         res.message ?? "Failed to mark subscription as paid. Please retry.",
       );
       return;
     }
-    // Refresh local state and invalidate revenue caches
-    await loadMembers();
+
+    // Optimistic local update so the row flips instantly
+    setSubscriptions((prev) =>
+      prev.map((s) =>
+        s._id === subId
+          ? {
+              ...s,
+              status: MembershipSubscriptionStatus.ACTIVE,
+              ...(reference && { payment_reference: reference }),
+              ...(proofUrl && { payment_proof_url: proofUrl }),
+            }
+          : s,
+      ),
+    );
     void queryClient.invalidateQueries({
       queryKey: queryKeys.checkins.orgDashboardStats(organizationId),
     });
+    closeMarkPaidModal();
   };
 
   const handleEnrollMember = async () => {
@@ -379,12 +439,6 @@ export default function GymOwnerMembersPage() {
             </div>
           )}
 
-          {markPaidError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-sm">
-              {markPaidError}
-            </div>
-          )}
-
           <div className="bg-white shadow-[var(--shadow-card)] p-4 mb-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <input
@@ -540,13 +594,10 @@ export default function GymOwnerMembersPage() {
                             MembershipSubscriptionStatus.PENDING_PAYMENT ? (
                               <button
                                 type="button"
-                                onClick={() => void handleMarkPaid(sub)}
-                                disabled={markingPaidId === sub._id}
-                                className="inline-flex items-center px-3 py-1.5 text-sm font-semibold rounded-lg bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => openMarkPaidModal(sub)}
+                                className="inline-flex items-center px-3 py-1.5 text-sm font-semibold rounded-lg bg-primary-500 text-white hover:bg-primary-600"
                               >
-                                {markingPaidId === sub._id
-                                  ? "Marking…"
-                                  : "Mark as Paid"}
+                                Mark as Paid
                               </button>
                             ) : (
                               <span className="text-foreground/30 text-sm">—</span>
@@ -838,6 +889,141 @@ export default function GymOwnerMembersPage() {
                     : enrollSubmitting
                       ? "Enrolling…"
                       : "Enroll Member"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Mark as Paid Modal ──────────────────────────────────── */}
+        {markPaidSub && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-foreground">
+                  Mark as Paid
+                </h2>
+                <button
+                  onClick={closeMarkPaidModal}
+                  className="text-foreground/40 hover:text-foreground text-2xl leading-none"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+
+              <p className="mb-4 text-sm text-foreground/70">
+                Confirm payment for{" "}
+                <span className="font-semibold text-foreground">
+                  {getMemberName(markPaidSub)}
+                </span>{" "}
+                on{" "}
+                <span className="font-semibold text-foreground">
+                  {getPlanName(markPaidSub)}
+                </span>
+                . This will activate the membership immediately.
+              </p>
+
+              {markPaidError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                  {markPaidError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Payment Reference{" "}
+                    <span className="text-foreground/50 font-normal">
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={markPaidReference}
+                    onChange={(e) => setMarkPaidReference(e.target.value)}
+                    placeholder="e.g. receipt #, cash, bank transfer"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Payment Proof{" "}
+                    <span className="text-foreground/50 font-normal">
+                      (optional)
+                    </span>
+                  </label>
+                  {markPaidProofFile ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-neutral-200 p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={URL.createObjectURL(markPaidProofFile)}
+                        alt="Payment proof preview"
+                        className="h-14 w-14 rounded object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {markPaidProofFile.name}
+                        </p>
+                        <p className="text-xs text-foreground/50">
+                          {(markPaidProofFile.size / 1024).toFixed(0)} KB
+                          {markPaidProofUrl ? " • uploaded" : ""}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMarkPaidProofFile(null);
+                          setMarkPaidProofUrl("");
+                        }}
+                        className="text-sm font-medium text-red-600 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-neutral-300 px-4 py-4 text-center cursor-pointer hover:border-accent-blue-500 hover:bg-accent-blue-50/30 transition-colors">
+                      <span className="text-sm font-semibold text-accent-blue-500">
+                        Click to upload an image
+                      </span>
+                      <span className="text-xs text-foreground/50">
+                        JPG, PNG, or WEBP — up to 10MB
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            setMarkPaidProofFile(f);
+                            setMarkPaidProofUrl("");
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={closeMarkPaidModal}
+                  className="flex-1 h-12 border border-neutral-200 text-foreground font-semibold rounded-lg hover:bg-neutral-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => void submitMarkPaid()}
+                  disabled={markPaidSubmitting || markPaidUploading}
+                  className="flex-1 h-12 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {markPaidUploading
+                    ? "Uploading proof…"
+                    : markPaidSubmitting
+                      ? "Confirming…"
+                      : "Confirm Payment"}
                 </button>
               </div>
             </div>
