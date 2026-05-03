@@ -21,6 +21,8 @@ export function useNotifications(
     },
     enabled,
     retry: false,
+    // User-perceived freshness; mark-as-read mutations invalidate this key.
+    staleTime: 30_000,
   });
 }
 

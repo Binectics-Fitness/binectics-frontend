@@ -22,6 +22,8 @@ export function useDashboardStats(enabled = true) {
       return res.success && res.data ? res.data : null;
     },
     enabled,
+    // Aggregate stats; mutations invalidate this key.
+    staleTime: 5 * 60_000,
   });
 }
 

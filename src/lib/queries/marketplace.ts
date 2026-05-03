@@ -28,6 +28,8 @@ export function useSearchListings(
     },
     enabled,
     retry: false,
+    // Same query key is reused on filter toggles; matches public HTTP cache.
+    staleTime: 30_000,
   });
 }
 

@@ -16,6 +16,9 @@ export function useOrgDashboardStats(orgId?: string) {
       return res.success && res.data ? res.data : null;
     },
     enabled: !!orgId,
+    // Aggregate ($facet across multiple collections) is expensive; numbers
+    // don't drift second-by-second. Mutations (mark-paid etc.) invalidate.
+    staleTime: 5 * 60_000,
   });
 }
 
