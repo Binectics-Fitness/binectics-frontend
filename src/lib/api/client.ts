@@ -114,6 +114,12 @@ class ApiClient {
         success: false,
         message: data.message || data.error || "An error occurred",
         errors: data.errors,
+        code: typeof data.error === "string" ? data.error : undefined,
+        details:
+          data.details && typeof data.details === "object"
+            ? (data.details as Record<string, unknown>)
+            : undefined,
+        status: response.status,
       };
     }
 

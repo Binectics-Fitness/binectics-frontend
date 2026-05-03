@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
@@ -13,8 +14,10 @@ export default function SettingsLayout({
   children: React.ReactNode;
 }) {
   const { user, isLoading } = useAuth();
+  const { organizations } = useOrganization();
   const router = useRouter();
   const pathname = usePathname();
+  const ownsAnyOrg = organizations.some((o) => o.is_owner);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -135,6 +138,29 @@ export default function SettingsLayout({
         </svg>
       ),
     },
+    ...(ownsAnyOrg
+      ? [
+          {
+            name: "Plan & Usage",
+            href: "/dashboard/settings/organization-billing",
+            icon: (
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                />
+              </svg>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (

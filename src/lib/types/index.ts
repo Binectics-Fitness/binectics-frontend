@@ -452,6 +452,12 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   message?: string;
   errors?: Record<string, string[]>;
+  /** Backend error code (e.g. 'BILLING_LIMIT_REACHED') from structured 4xx responses. */
+  code?: string;
+  /** Backend `details` payload from structured 4xx responses. */
+  details?: Record<string, unknown>;
+  /** HTTP status code from the response (only set on failures). */
+  status?: number;
 }
 
 // ─── Membership Subscriptions ─────────────────────────────────────────────
