@@ -185,7 +185,7 @@ export default function GymMembershipsPage() {
               href="/register"
               className="inline-flex items-center justify-center rounded-lg bg-primary-500 px-8 py-3 text-base font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
             >
-              Start Free Trial
+              Get Started
             </Link>
             <Link
               href="/gyms"
@@ -423,13 +423,13 @@ export default function GymMembershipsPage() {
             Ready to Train Anywhere?
           </h2>
           <p className="text-lg text-foreground-secondary mb-8">
-            Start your free trial and experience unlimited gym access today
+            Join Binectics today and unlock unlimited gym access worldwide
           </p>
           <Link
             href="/register"
             className="inline-flex items-center justify-center rounded-lg bg-primary-500 px-8 py-3 text-base font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
           >
-            Start 7-Day Free Trial
+            Get Started
           </Link>
         </div>
       </section>

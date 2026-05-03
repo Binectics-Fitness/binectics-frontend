@@ -28,11 +28,6 @@ export default function FAQPage() {
           answer:
             "We're currently available in 50+ countries across North America, Europe, Asia, Australia, and South America. Our network is constantly expanding. Check our countries page for the full list of supported locations.",
         },
-        {
-          question: "Is there a free trial?",
-          answer:
-            "Yes! All new members get a 14-day free trial with full access to our platform. No credit card required to start. You can cancel anytime during the trial without being charged.",
-        },
       ],
     },
     {
@@ -131,7 +126,7 @@ export default function FAQPage() {
         {
           question: "When am I charged?",
           answer:
-            "Monthly subscriptions are charged on the same day each month. Annual subscriptions are charged once per year. After your free trial ends, your first payment will be processed automatically unless you cancel.",
+            "Monthly subscriptions are charged on the same day each month. Annual subscriptions are charged once per year. Your first payment is processed when you subscribe to a plan.",
         },
         {
           question: "Can I get a refund?",

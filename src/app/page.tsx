@@ -45,11 +45,6 @@ export default function Home() {
         "Simply sign up, choose your plan, and get verified. You'll receive a unique QR code that works at any partner gym worldwide. You can also browse and book personal trainers and dietitians through our app, track your progress, and manage everything from one dashboard.",
     },
     {
-      title: "Is there a free trial?",
-      content:
-        "Yes! All new members get a 14-day free trial with full access to our platform. No credit card required to start. You can cancel anytime during the trial without being charged.",
-    },
-    {
       title: "How do I check in at a gym?",
       content:
         "Simply open the Binectics app, navigate to your QR code, and scan it at the gym entrance. The system automatically verifies your membership and logs your visit. Most gyms have dedicated QR scanners at reception.",
@@ -415,10 +410,10 @@ export default function Home() {
               href="/register"
               className="inline-flex h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
             >
-              Start Your Free Trial
+              Get Started
             </Link>
             <p className="mt-4 text-sm text-foreground-tertiary">
-              No credit card required • Cancel anytime
+              Cancel anytime
             </p>
           </div>
         </div>

@@ -20,7 +20,7 @@ export default function PricingPage() {
         'Community access',
         'Mobile app access',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: false,
       color: 'accent-blue',
     },
@@ -39,7 +39,7 @@ export default function PricingPage() {
         'Workout plans library',
         'Nutrition guides',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: true,
       color: 'primary',
     },
@@ -59,7 +59,7 @@ export default function PricingPage() {
         'Early access to new features',
         'Priority customer support',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: false,
       color: 'accent-purple',
     },
@@ -140,10 +140,6 @@ export default function PricingPage() {
       answer: 'Yes! You can cancel your subscription at any time. Your access will continue until the end of your current billing period.',
     },
     {
-      question: 'What happens after my free trial?',
-      answer: 'After your 14-day free trial, you\'ll be automatically enrolled in your chosen plan. You can cancel anytime during the trial without being charged.',
-    },
-    {
       question: 'Do you offer refunds?',
       answer: 'We offer a 30-day money-back guarantee on all annual plans. Monthly plans can be canceled anytime, and you won\'t be charged for the next month.',
     },
@@ -161,7 +157,7 @@ export default function PricingPage() {
             Simple, transparent pricing
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
-            Choose the plan that fits your fitness goals. All plans include a 14-day free trial.
+            Choose the plan that fits your fitness goals. Cancel anytime.
           </p>
         </div>
       </section>
@@ -393,10 +389,10 @@ export default function PricingPage() {
       <section className="bg-primary-500 py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
-            Start your 14-day free trial
+            Ready to get started?
           </h2>
           <p className="mt-4 text-lg text-foreground-secondary">
-            No credit card required. Cancel anytime.
+            Join Binectics today. Cancel anytime.
           </p>
           <div className="mt-8">
             <Link
