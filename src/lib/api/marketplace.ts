@@ -141,6 +141,53 @@ export interface EnrollMemberResponse {
   user_created: boolean;
 }
 
+// ==================== FEATURED ====================
+
+export interface FeaturedListingItem {
+  listing: Pick<
+    MarketplaceListing,
+    | "_id"
+    | "account_type"
+    | "headline"
+    | "bio"
+    | "specialties"
+    | "certifications"
+    | "photos"
+    | "profile_image"
+    | "city"
+    | "country_code"
+    | "currency"
+    | "price_from"
+    | "price_label"
+    | "verification_badge"
+    | "average_rating"
+    | "review_count"
+    | "published_at"
+  >;
+  plan: Pick<
+    MarketplaceMembershipPlan,
+    | "_id"
+    | "listing_id"
+    | "name"
+    | "description"
+    | "plan_type"
+    | "duration_days"
+    | "price"
+    | "currency"
+    | "features"
+  > | null;
+}
+
+export interface FeaturedListingsResult {
+  country: string | null;
+  limit: number;
+  categories: {
+    gym_owner: FeaturedListingItem[];
+    personal_trainer: FeaturedListingItem[];
+    dietitian: FeaturedListingItem[];
+  };
+}
+
 // ==================== SERVICE ====================
 
 export const marketplaceService = {
@@ -182,6 +229,19 @@ export const marketplaceService = {
   > {
     return await apiClient.get(
       `/marketplace/listings/${id}/reviews?page=${page}&limit=${limit}`,
+      false,
+    );
+  },
+
+  async getFeatured(
+    params: { country?: string; limit?: number } = {},
+  ): Promise<ApiResponse<FeaturedListingsResult>> {
+    const query = new URLSearchParams();
+    if (params.country) query.append("country", params.country);
+    if (params.limit) query.append("limit", String(params.limit));
+    const qs = query.toString();
+    return await apiClient.get<FeaturedListingsResult>(
+      `/marketplace/featured${qs ? `?${qs}` : ""}`,
       false,
     );
   },
