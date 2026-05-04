@@ -56,6 +56,14 @@ export interface Organization {
   is_owner?: boolean;
   can_manage_organization?: boolean;
   my_role_code?: string | null;
+  /** Optional white-label custom domain (gated by `custom_domain_enabled`). */
+  custom_domain?: string | null;
+  /** Optional white-label "From" sender (gated by `branded_email_enabled`). */
+  branded_email_sender?: string | null;
+  /** Token to publish at `_binectics-verify.<domain>` (TXT) to prove ownership. */
+  branded_email_sender_verification_token?: string | null;
+  /** ISO timestamp set when DNS verification last succeeded. */
+  branded_email_sender_verified_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -121,6 +129,18 @@ export interface UpdateOrganizationRequest {
   logo?: string;
   currency?: string;
   is_active?: boolean;
+  custom_domain?: string | null;
+  branded_email_sender?: string | null;
+}
+
+export interface BrandedEmailVerificationResult {
+  organization_id: string;
+  branded_email_sender: string | null;
+  verification_host: string | null;
+  verification_token: string | null;
+  verified_at: string | null;
+  /** True only on the call that flipped the org from unverified → verified. */
+  verified_now: boolean;
 }
 
 export interface CreateTeamRoleRequest {
@@ -190,6 +210,21 @@ export const teamsService = {
     return await apiClient.patch<Organization>(
       `/teams/organizations/${organizationId}`,
       data,
+    );
+  },
+
+  /**
+   * Trigger DNS-TXT verification for the org's branded email sender domain.
+   * The backend looks for the issued token at `_binectics-verify.<domain>`.
+   * Always returns the current verification state — callers should poll or
+   * re-call after the admin publishes the TXT record.
+   */
+  async verifyBrandedEmailSender(
+    organizationId: string,
+  ): Promise<ApiResponse<BrandedEmailVerificationResult>> {
+    return await apiClient.post<BrandedEmailVerificationResult>(
+      `/teams/organizations/${organizationId}/branded-email/verify`,
+      {},
     );
   },
 

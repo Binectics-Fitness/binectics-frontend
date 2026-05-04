@@ -14,6 +14,7 @@ import {
   type ProviderPlanOption,
   type BillingInterval,
 } from "@/lib/api/providerBilling";
+import { teamsService, type Organization } from "@/lib/api/teams";
 
 const STATUS_LABEL: Record<ProviderSubscriptionStatus, string> = {
   [ProviderSubscriptionStatus.ACTIVE]: "Active",
@@ -144,6 +145,9 @@ export default function OrganizationBillingPage() {
       />
       <UsageCard status={status} />
       <FeaturesCard status={status} />
+      {status.features.branded_email_enabled && (
+        <BrandedEmailCard orgId={currentOrg._id} />
+      )}
       <InvoicesCard invoices={invoices} />
 
       {showUpgrade && (
@@ -553,6 +557,256 @@ function UpgradeModal({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Branded email sender (white-label) ────────────────────────────────────
+
+function BrandedEmailCard({ orgId }: { orgId: string }) {
+  const [org, setOrg] = useState<Organization | null>(null);
+  const [draft, setDraft] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verification, setVerification] = useState<{
+    host: string | null;
+    token: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void teamsService.getOrganization(orgId).then((res) => {
+      if (!active) return;
+      if (res.success && res.data) {
+        setOrg(res.data);
+        setDraft(res.data.branded_email_sender ?? "");
+        if (res.data.branded_email_sender_verification_token) {
+          // The backend stores the host in `_binectics-verify.<domain>` form;
+          // derive locally from the sender so we can render before the first
+          // verify call. Falls back to null when the address is malformed.
+          const at = (res.data.branded_email_sender ?? "").lastIndexOf("@");
+          const domain =
+            at >= 0
+              ? res.data.branded_email_sender!.slice(at + 1).toLowerCase()
+              : "";
+          setVerification({
+            host: domain ? `_binectics-verify.${domain}` : null,
+            token: res.data.branded_email_sender_verification_token,
+          });
+        }
+      } else {
+        toast.error(res.message || "Failed to load organization settings");
+      }
+      setIsLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [orgId]);
+
+  const verifiedAt = org?.branded_email_sender_verified_at ?? null;
+  const currentSender = org?.branded_email_sender ?? null;
+  const senderUnchanged = (draft.trim() || null) === currentSender;
+
+  async function handleSave() {
+    setIsSaving(true);
+    const next = draft.trim() ? draft.trim() : null;
+    const res = await teamsService.updateOrganization(orgId, {
+      branded_email_sender: next,
+    });
+    setIsSaving(false);
+    if (res.success && res.data) {
+      setOrg(res.data);
+      if (res.data.branded_email_sender_verification_token && next) {
+        const at = next.lastIndexOf("@");
+        const domain = at >= 0 ? next.slice(at + 1).toLowerCase() : "";
+        setVerification({
+          host: domain ? `_binectics-verify.${domain}` : null,
+          token: res.data.branded_email_sender_verification_token,
+        });
+      } else {
+        setVerification(null);
+      }
+      toast.success(
+        next
+          ? "Saved. Publish the TXT record below, then click Verify domain."
+          : "Branded sender cleared.",
+      );
+    } else {
+      toast.error(res.message || "Failed to save branded sender");
+    }
+  }
+
+  async function handleVerify() {
+    setIsVerifying(true);
+    const res = await teamsService.verifyBrandedEmailSender(orgId);
+    setIsVerifying(false);
+    if (res.success && res.data) {
+      setVerification({
+        host: res.data.verification_host,
+        token: res.data.verification_token,
+      });
+      setOrg((prev) =>
+        prev
+          ? { ...prev, branded_email_sender_verified_at: res.data!.verified_at }
+          : prev,
+      );
+      if (res.data.verified_at) {
+        toast.success(
+          res.data.verified_now
+            ? "Domain verified! Branded emails will now use this sender."
+            : "Domain is already verified.",
+        );
+      } else {
+        toast.error(
+          "TXT record not found yet. DNS can take a few minutes to propagate — try again shortly.",
+        );
+      }
+    } else {
+      toast.error(res.message || "Verification failed");
+    }
+  }
+
+  function copy(text: string) {
+    void navigator.clipboard
+      .writeText(text)
+      .then(() => toast.success("Copied to clipboard"))
+      .catch(() => toast.error("Could not copy"));
+  }
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+        <div className="h-5 w-40 animate-pulse rounded bg-neutral-200" />
+        <div className="mt-4 h-10 w-full animate-pulse rounded bg-neutral-100" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-foreground">
+            Branded email sender
+          </h3>
+          <p className="mt-1 text-sm text-foreground/60">
+            Send subscription emails from your own verified address instead of
+            the platform default.
+          </p>
+        </div>
+        <span
+          className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold ${
+            verifiedAt
+              ? "bg-primary-500/15 text-primary-700"
+              : currentSender
+                ? "bg-amber-100 text-amber-700"
+                : "bg-neutral-200 text-foreground/70"
+          }`}
+        >
+          {verifiedAt
+            ? "Verified"
+            : currentSender
+              ? "Pending verification"
+              : "Not configured"}
+        </span>
+      </div>
+
+      <label className="mt-4 block">
+        <span className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+          From address
+        </span>
+        <input
+          type="email"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="no-reply@yourgym.com"
+          className="mt-1 block w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
+        />
+      </label>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving || senderUnchanged}
+          className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSaving ? "Saving…" : "Save sender"}
+        </button>
+        {currentSender && (
+          <button
+            type="button"
+            onClick={handleVerify}
+            disabled={isVerifying}
+            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isVerifying ? "Checking…" : "Verify domain"}
+          </button>
+        )}
+      </div>
+
+      {currentSender && verification?.token && !verifiedAt && (
+        <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-900">
+            Add this TXT record to your DNS to prove ownership
+          </p>
+          <p className="mt-1 text-xs text-amber-800">
+            Once it propagates (usually within a few minutes), click{" "}
+            <strong>Verify domain</strong>.
+          </p>
+          <dl className="mt-3 space-y-2 text-sm">
+            <DnsRow
+              label="Host"
+              value={verification.host ?? "—"}
+              onCopy={() => verification.host && copy(verification.host)}
+            />
+            <DnsRow label="Type" value="TXT" />
+            <DnsRow
+              label="Value"
+              value={verification.token}
+              onCopy={() => verification.token && copy(verification.token)}
+            />
+          </dl>
+        </div>
+      )}
+
+      {verifiedAt && (
+        <p className="mt-4 text-xs text-foreground/60">
+          Last verified {formatDate(verifiedAt)}.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DnsRow({
+  label,
+  value,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  onCopy?: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <dt className="w-16 shrink-0 text-xs font-semibold uppercase tracking-wide text-amber-900/70">
+        {label}
+      </dt>
+      <dd className="flex-1 break-all rounded bg-white px-2 py-1 font-mono text-xs text-foreground">
+        {value}
+      </dd>
+      {onCopy && (
+        <button
+          type="button"
+          onClick={onCopy}
+          className="shrink-0 rounded border border-amber-300 px-2 py-1 text-[11px] font-semibold text-amber-900 hover:bg-amber-100"
+        >
+          Copy
+        </button>
+      )}
     </div>
   );
 }
