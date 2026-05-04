@@ -178,7 +178,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.success && response.data) {
         setUser(response.data.user);
-        router.push(getDashboardRoute(response.data.user.role));
+        if (response.data.user.must_change_password) {
+          router.push("/admin/change-password");
+        } else {
+          router.push(getDashboardRoute(response.data.user.role));
+        }
         return { success: true };
       }
 

@@ -45,6 +45,11 @@ export interface User {
   preferred_activities?: string[];
   other_name?: string;
   date_of_birth?: string;
+  /**
+   * When true, the user must change their password before accessing
+   * any other authenticated route (used for seeded/temporary credentials).
+   */
+  must_change_password?: boolean;
 }
 
 export interface AuthTokens {

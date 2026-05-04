@@ -26,6 +26,16 @@ export default function AdminClientShell({
     // Redirect non-admin users to login page
     if (!isLoading && (!user || user.role !== "ADMIN")) {
       router.push("/admin");
+      return;
+    }
+
+    // Force admins with temporary credentials onto the change-password page
+    if (
+      !isLoading &&
+      user?.must_change_password &&
+      pathname !== "/admin/change-password"
+    ) {
+      router.push("/admin/change-password");
     }
   }, [user, isLoading, router, pathname]);
 

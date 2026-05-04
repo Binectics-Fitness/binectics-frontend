@@ -128,6 +128,17 @@ export const authService = {
   },
 
   /**
+   * Change password for the authenticated user (used for the
+   * "must_change_password" forced rotation flow on first login).
+   */
+  async changePassword(data: {
+    current_password: string;
+    new_password: string;
+  }): Promise<ApiResponse<{ message: string }>> {
+    return apiClient.post("/auth/change-password", data);
+  },
+
+  /**
    * Verify email address with token
    */
   async verifyEmail(
