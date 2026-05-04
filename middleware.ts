@@ -17,6 +17,8 @@ const authRoutes = ["/login", "/register"];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("access_token")?.value;
+  const mustChangePassword =
+    request.cookies.get("must_change_password")?.value === "1";
 
   // Check if the current route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -33,8 +35,27 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Force users with temporary credentials onto /admin/change-password
+  // before any other authenticated route resolves. Allowed escapes:
+  // /admin/change-password itself and the auth surface (handled below).
+  if (
+    token &&
+    mustChangePassword &&
+    isProtectedRoute &&
+    pathname !== "/admin/change-password"
+  ) {
+    return NextResponse.redirect(
+      new URL("/admin/change-password", request.url),
+    );
+  }
+
   // Redirect to dashboard if accessing auth routes with valid token
   if (isAuthRoute && token) {
+    if (mustChangePassword) {
+      return NextResponse.redirect(
+        new URL("/admin/change-password", request.url),
+      );
+    }
     const roleMapping: Record<string, string> = {
       USER: "/dashboard",
       GYM_OWNER: "/dashboard/gym-owner",

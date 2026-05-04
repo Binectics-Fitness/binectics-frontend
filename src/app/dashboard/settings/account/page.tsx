@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { showAlert } from "@/lib/ui/dialogs";
+import { authService } from "@/lib/api/auth";
 import {
   changePasswordSchema,
   type ChangePasswordFormData,
@@ -23,16 +24,32 @@ export default function AccountSettingsPage() {
     handleSubmit,
     reset,
     formState: { errors },
+    setError,
   } = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: { current: "", new: "", confirm: "" },
   });
 
-  const onPasswordChange = async () => {
+  const onPasswordChange = async (values: ChangePasswordFormData) => {
     setIsChangingPassword(true);
-    // Simulate password change
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const res = await authService.changePassword({
+      current_password: values.current,
+      new_password: values.new,
+    });
     setIsChangingPassword(false);
+
+    if (!res.success) {
+      // Surface a 401 against the current-password field so the user
+      // gets actionable feedback instead of a generic error.
+      const message = res.message || "Could not change password";
+      if (res.status === 401) {
+        setError("current", { message: "Current password is incorrect" });
+      } else {
+        await showAlert(message);
+      }
+      return;
+    }
+
     reset();
     await showAlert("Password changed successfully!");
   };

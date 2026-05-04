@@ -101,10 +101,20 @@ export const userStorage = {
     if (!isBrowser()) return;
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
 
+    const maxAge = 60 * 60; // 1 hour (matches access token)
+
     // Set user_role cookie so middleware can redirect to the correct dashboard
     if (user.role) {
-      const maxAge = 60 * 60; // 1 hour (matches access token)
       document.cookie = `user_role=${user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    }
+
+    // Mirror must_change_password to a cookie so middleware can gate
+    // /admin/* server-side without waiting for the client shell.
+    if (user.must_change_password) {
+      document.cookie = `must_change_password=1; path=/; max-age=${maxAge}; SameSite=Lax`;
+    } else {
+      document.cookie =
+        "must_change_password=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
   },
 
@@ -112,9 +122,11 @@ export const userStorage = {
     if (!isBrowser()) return;
     localStorage.removeItem(STORAGE_KEYS.USER);
 
-    // Also remove user_role cookie
+    // Also remove user_role + must_change_password cookies
     document.cookie =
       "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie =
+      "must_change_password=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   },
 };
 
