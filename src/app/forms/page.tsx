@@ -66,6 +66,13 @@ function FormsListContent() {
       return;
     }
 
+    // Forms are a provider-only feature (gyms, trainers, dietitians, admins).
+    // Fitness Members landing here directly are sent back to their dashboard.
+    if (user && user.role === "USER") {
+      router.replace("/dashboard");
+      return;
+    }
+
     if (user) {
       void loadForms();
     }

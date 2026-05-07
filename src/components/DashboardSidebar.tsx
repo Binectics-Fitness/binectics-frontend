@@ -13,7 +13,6 @@ import {
   BookOpen,
   Dumbbell,
   Apple,
-  FileText,
   Calendar,
   Ticket,
   QrCode,
@@ -83,11 +82,6 @@ const navItems: NavItem[] = [
     icon: <Apple className="h-5 w-5" />,
     label: "Nutrition",
     href: "/dashboard/nutrition",
-  },
-  {
-    icon: <FileText className="h-5 w-5" />,
-    label: "Forms",
-    href: "/forms",
   },
   {
     icon: <Calendar className="h-5 w-5" />,
