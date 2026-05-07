@@ -21,7 +21,14 @@ export default function GymProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const gymId = Array.isArray(params.gymId) ? params.gymId[0] : params.gymId;
+  const gymIdParam = Array.isArray(params.gymId)
+    ? params.gymId[0]
+    : params.gymId;
+  const [resolvedId, setResolvedId] = useState<string | null>(
+    gymIdParam && /^[0-9a-f]{24}$/i.test(String(gymIdParam))
+      ? String(gymIdParam)
+      : null,
+  );
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -58,10 +65,15 @@ export default function GymProfilePage() {
     let mounted = true;
 
     async function loadListingOwner() {
-      const response = await marketplaceService.getListingById(String(gymId));
+      if (!gymIdParam) return;
+      const isObjectId = /^[0-9a-f]{24}$/i.test(String(gymIdParam));
+      const response = isObjectId
+        ? await marketplaceService.getListingById(String(gymIdParam))
+        : await marketplaceService.getListingBySlug(String(gymIdParam));
       if (!mounted || !response.success || !response.data) return;
 
       setListing(response.data);
+      setResolvedId(response.data._id);
 
       const professionalId =
         typeof response.data.professional_id === "object"
@@ -79,31 +91,30 @@ export default function GymProfilePage() {
     return () => {
       mounted = false;
     };
-  }, [gymId]);
+  }, [gymIdParam]);
 
   const loadPlans = useCallback(async () => {
-    if (!gymId) return;
+    if (!resolvedId) return;
     setPlansLoading(true);
     try {
-      const response = await marketplaceService.getPublicListingPlans(
-        String(gymId),
-      );
+      const response =
+        await marketplaceService.getPublicListingPlans(resolvedId);
       if (response.success && response.data) {
         setPlans(response.data);
       }
     } finally {
       setPlansLoading(false);
     }
-  }, [gymId]);
+  }, [resolvedId]);
 
   useEffect(() => {
     window.setTimeout(() => void loadPlans(), 0);
   }, [loadPlans]);
 
   const handleSubscribe = async () => {
-    if (!selectedPlan) return;
+    if (!selectedPlan || !resolvedId) return;
     if (!user) {
-      router.push(`/login?redirect=/gyms/${String(gymId)}`);
+      router.push(`/login?redirect=/gyms/${String(gymIdParam)}`);
       return;
     }
     setSubscribeLoading(true);
@@ -111,7 +122,7 @@ export default function GymProfilePage() {
     setSubscribeSuccess(null);
     try {
       const response = await marketplaceService.subscribeToListingPlan(
-        String(gymId),
+        resolvedId,
         selectedPlan,
       );
       if (response.success) {
@@ -356,7 +367,7 @@ export default function GymProfilePage() {
 
             <ProviderReviewsSection
               targetType={ReviewTargetType.GYM}
-              targetId={String(gymId)}
+              targetId={resolvedId ?? ""}
               title="Member Reviews"
               accentClassName="bg-primary-100 text-primary-700"
               providerOwnerUserId={reviewOwnerUserId}

@@ -6,6 +6,7 @@ import LocationFilter from "@/components/LocationFilter";
 import SearchableSelect from "@/components/SearchableSelect";
 import { CardSkeleton } from "@/components/CardSkeleton";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { listingHref } from "@/lib/utils/listingHref";
 import type { MarketplaceListing } from "@/lib/types";
 import { Search as SearchIcon, MapPin, Dumbbell } from "lucide-react";
 
@@ -341,7 +342,7 @@ export default function GymsPage() {
                       )}
 
                       <Link
-                        href={`/gyms/${listing._id}`}
+                        href={listingHref(listing)}
                         className="mt-auto block w-full rounded-lg bg-primary-500 px-4 py-3 text-center font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
                       >
                         View Details

@@ -6,6 +6,7 @@ import LocationFilter from "@/components/LocationFilter";
 import { CardSkeleton } from "@/components/CardSkeleton";
 import { stripHtml } from "@/utils";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { listingHref } from "@/lib/utils/listingHref";
 import type { MarketplaceListing } from "@/lib/types";
 import { Search as SearchIcon, MapPin, Apple } from "lucide-react";
 
@@ -408,7 +409,7 @@ export default function DietitiansPage() {
                         )}
                       </div>
                       <Link
-                        href={`/dietitians/${listing._id}`}
+                        href={listingHref(listing)}
                         className="inline-flex items-center justify-center bg-accent-purple-500 px-6 py-2 text-center font-semibold text-white transition-colors hover:bg-accent-purple-600"
                       >
                         View Profile

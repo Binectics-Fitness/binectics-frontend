@@ -12,6 +12,7 @@ import { useMyCheckInStats } from "@/lib/queries/checkins";
 import { useMyOrganizations } from "@/lib/queries/teams";
 import { useMyJournalEntries } from "@/lib/queries/progress";
 import { useSearchListings } from "@/lib/queries/marketplace";
+import { listingHref } from "@/lib/utils/listingHref";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -299,7 +300,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <Link
-                    href={`/marketplace/${featuredListing._id}`}
+                    href={listingHref(featuredListing)}
                     className="inline-flex h-11 sm:h-12 items-center justify-center bg-primary-500 px-6 sm:px-8 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
                   >
                     View Profile
@@ -349,7 +350,7 @@ export default function DashboardPage() {
               {recommendedListings.map((listing) => (
                 <Link
                   key={listing._id}
-                  href={`/marketplace/${listing._id}`}
+                  href={listingHref(listing)}
                   className="group bg-white p-4 sm:p-6 rounded-xl shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 h-full flex flex-col"
                 >
                   <div className="mb-4 inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center bg-accent-blue-100 rounded-lg overflow-hidden">

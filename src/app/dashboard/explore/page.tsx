@@ -4,6 +4,7 @@ import { useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { useSearchListings } from "@/lib/queries/marketplace";
+import { listingHref } from "@/lib/utils/listingHref";
 import type { MarketplaceAccountType, MarketplaceSearchParams } from "@/lib/types";
 
 type SortOption = "rating" | "newest";
@@ -192,7 +193,7 @@ export default function ExplorePage() {
                 {listings.map((listing) => (
                   <Link
                     key={listing._id}
-                    href={`/marketplace/${listing._id}`}
+                    href={listingHref(listing)}
                     className="group bg-background p-4 sm:p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] h-full flex flex-col"
                   >
                     {/* Type Badge */}

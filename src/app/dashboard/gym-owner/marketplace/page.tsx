@@ -14,6 +14,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import RichTextEditor from "@/components/RichTextEditor";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { listingHref } from "@/lib/utils/listingHref";
 import { useCountries, usePlatformConfig } from "@/lib/queries/utility";
 import type { PlatformConfig, CountryItem } from "@/lib/api/utility";
 import type {
@@ -829,7 +830,7 @@ export default function OrgMarketplaceListingPage() {
                 </span>
                 {listing.is_published && (
                   <Link
-                    href={`/marketplace/${listing._id}`}
+                    href={listingHref(listing)}
                     className="text-xs text-primary-500 hover:text-primary-600 font-medium"
                   >
                     View public page →

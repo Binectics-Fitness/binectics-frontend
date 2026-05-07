@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 
 import { marketplaceService } from "@/lib/api/marketplace";
+import { listingHref } from "@/lib/utils/listingHref";
 import type {
   FeaturedListingItem,
   FeaturedListingsResult,
@@ -261,7 +262,7 @@ function CategorySection({
                 key={item.listing._id}
                 item={item}
                 accent={accent}
-                detailHref={`/marketplace/${item.listing._id}`}
+                detailHref={listingHref(item.listing)}
               />
             ))}
           </div>

@@ -20,9 +20,14 @@ export default function DietitianProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const dietitianId = Array.isArray(params.dietitianId)
+  const dietitianIdParam = Array.isArray(params.dietitianId)
     ? params.dietitianId[0]
     : params.dietitianId;
+  const [resolvedId, setResolvedId] = useState<string | null>(
+    dietitianIdParam && /^[0-9a-f]{24}$/i.test(String(dietitianIdParam))
+      ? String(dietitianIdParam)
+      : null,
+  );
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [reviewOwnerUserId, setReviewOwnerUserId] = useState<string | null>(
     null,
@@ -35,27 +40,28 @@ export default function DietitianProfilePage() {
   const [subscribeError, setSubscribeError] = useState<string | null>(null);
 
   const loadPlans = useCallback(async () => {
-    if (!dietitianId) return;
+    if (!resolvedId) return;
     try {
-      const res = await marketplaceService.getPublicListingPlans(
-        String(dietitianId),
-      );
+      const res = await marketplaceService.getPublicListingPlans(resolvedId);
       if (res.success && res.data) setPlans(res.data);
     } finally {
       setPlansLoading(false);
     }
-  }, [dietitianId]);
+  }, [resolvedId]);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadListingOwner() {
-      const response = await marketplaceService.getListingById(
-        String(dietitianId),
-      );
+      if (!dietitianIdParam) return;
+      const isObjectId = /^[0-9a-f]{24}$/i.test(String(dietitianIdParam));
+      const response = isObjectId
+        ? await marketplaceService.getListingById(String(dietitianIdParam))
+        : await marketplaceService.getListingBySlug(String(dietitianIdParam));
       if (!mounted || !response.success || !response.data) return;
 
       setListing(response.data);
+      setResolvedId(response.data._id);
 
       const professionalId =
         typeof response.data.professional_id === "object"
@@ -63,7 +69,6 @@ export default function DietitianProfilePage() {
           : response.data.professional_id;
 
       setReviewOwnerUserId(professionalId ?? null);
-      void loadPlans();
     }
 
     void loadListingOwner();
@@ -71,12 +76,16 @@ export default function DietitianProfilePage() {
     return () => {
       mounted = false;
     };
-  }, [dietitianId, loadPlans]);
+  }, [dietitianIdParam]);
+
+  useEffect(() => {
+    if (resolvedId) void loadPlans();
+  }, [resolvedId, loadPlans]);
 
   const handleSubscribe = async () => {
-    if (!selectedPlan) return;
+    if (!selectedPlan || !resolvedId) return;
     if (!user) {
-      router.push(`/login?redirect=/dietitians/${dietitianId}`);
+      router.push(`/login?redirect=/dietitians/${dietitianIdParam}`);
       return;
     }
     setSubscribeLoading(true);
@@ -84,7 +93,7 @@ export default function DietitianProfilePage() {
     setSubscribeError(null);
     try {
       const res = await marketplaceService.subscribeToListingPlan(
-        String(dietitianId),
+        resolvedId,
         selectedPlan,
       );
       if (res.success) {
@@ -379,7 +388,7 @@ export default function DietitianProfilePage() {
 
             <ProviderReviewsSection
               targetType={ReviewTargetType.DIETITIAN}
-              targetId={String(dietitianId)}
+              targetId={resolvedId ?? ""}
               title="Client Reviews"
               accentClassName="bg-accent-purple-100 text-accent-purple-700"
               providerOwnerUserId={reviewOwnerUserId}

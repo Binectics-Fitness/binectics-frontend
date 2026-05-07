@@ -7,6 +7,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { CardSkeleton } from "@/components/CardSkeleton";
 import { stripHtml } from "@/utils";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { listingHref } from "@/lib/utils/listingHref";
 import type {
   MarketplaceListing,
   MarketplaceAccountType,
@@ -107,7 +108,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
 
   return (
     <Link
-      href={`/marketplace/${listing._id}`}
+      href={listingHref(listing)}
       className="group block h-full rounded-2xl bg-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5"
     >
       <div className="flex h-full flex-col p-6 sm:p-8">

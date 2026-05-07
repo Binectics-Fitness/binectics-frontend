@@ -19,9 +19,14 @@ export default function TrainerProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const trainerId = Array.isArray(params.trainerId)
+  const trainerIdParam = Array.isArray(params.trainerId)
     ? params.trainerId[0]
     : params.trainerId;
+  const [resolvedId, setResolvedId] = useState<string | null>(
+    trainerIdParam && /^[0-9a-f]{24}$/i.test(String(trainerIdParam))
+      ? String(trainerIdParam)
+      : null,
+  );
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
@@ -34,30 +39,32 @@ export default function TrainerProfilePage() {
   );
 
   const loadPlans = useCallback(async () => {
-    if (!trainerId) return;
+    if (!resolvedId) return;
     setPlansLoading(true);
     try {
-      const response = await marketplaceService.getPublicListingPlans(
-        String(trainerId),
-      );
+      const response =
+        await marketplaceService.getPublicListingPlans(resolvedId);
       if (response.success && response.data) {
         setPlans(response.data);
       }
     } finally {
       setPlansLoading(false);
     }
-  }, [trainerId]);
+  }, [resolvedId]);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadListingOwner() {
-      const response = await marketplaceService.getListingById(
-        String(trainerId),
-      );
+      if (!trainerIdParam) return;
+      const isObjectId = /^[0-9a-f]{24}$/i.test(String(trainerIdParam));
+      const response = isObjectId
+        ? await marketplaceService.getListingById(String(trainerIdParam))
+        : await marketplaceService.getListingBySlug(String(trainerIdParam));
       if (!mounted || !response.success || !response.data) return;
 
       setListing(response.data);
+      setResolvedId(response.data._id);
 
       const professionalId =
         typeof response.data.professional_id === "object"
@@ -68,17 +75,20 @@ export default function TrainerProfilePage() {
     }
 
     void loadListingOwner();
-    void loadPlans();
 
     return () => {
       mounted = false;
     };
-  }, [trainerId, loadPlans]);
+  }, [trainerIdParam]);
+
+  useEffect(() => {
+    if (resolvedId) void loadPlans();
+  }, [resolvedId, loadPlans]);
 
   const handleSubscribe = async () => {
-    if (!selectedPlan) return;
+    if (!selectedPlan || !resolvedId) return;
     if (!user) {
-      router.push(`/login?redirect=/trainers/${String(trainerId)}`);
+      router.push(`/login?redirect=/trainers/${String(trainerIdParam)}`);
       return;
     }
     setSubscribeLoading(true);
@@ -86,7 +96,7 @@ export default function TrainerProfilePage() {
     setSubscribeSuccess(null);
     try {
       const response = await marketplaceService.subscribeToListingPlan(
-        String(trainerId),
+        resolvedId,
         selectedPlan,
       );
       if (response.success) {
@@ -385,7 +395,7 @@ export default function TrainerProfilePage() {
 
             <ProviderReviewsSection
               targetType={ReviewTargetType.TRAINER}
-              targetId={String(trainerId)}
+              targetId={resolvedId ?? ""}
               title="Client Reviews"
               accentClassName="bg-accent-yellow-100 text-accent-yellow-700"
               providerOwnerUserId={reviewOwnerUserId}

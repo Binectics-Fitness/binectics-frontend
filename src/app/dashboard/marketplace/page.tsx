@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLoading from "@/components/DashboardLoading";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { listingHref } from "@/lib/utils/listingHref";
 import { useMyListing } from "@/lib/queries/marketplace";
 import { useCountries } from "@/lib/queries/utility";
 import type { CountryItem } from "@/lib/api/utility";
@@ -319,7 +320,7 @@ export default function MyMarketplaceListingPage() {
                 </span>
                 {listing.is_published && (
                   <Link
-                    href={`/marketplace/${listing._id}`}
+                    href={listingHref(listing)}
                     className="text-xs text-primary-500 hover:text-primary-600 font-medium"
                   >
                     View public page →
