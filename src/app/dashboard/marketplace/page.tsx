@@ -28,6 +28,7 @@ import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
 import RichTextEditor from "@/components/RichTextEditor";
 import RichTextDisplay from "@/components/RichTextDisplay";
+import SlugEditor from "@/components/marketplace/SlugEditor";
 import {
   TRAINER_SPECIALIZATIONS,
   DIETITIAN_SPECIALIZATIONS,
@@ -433,6 +434,21 @@ export default function MyMarketplaceListingPage() {
             <h2 className="text-xl font-bold text-foreground mb-6">
               Edit Listing
             </h2>
+            {listing && (
+              <div className="mb-5">
+                <SlugEditor
+                  listingId={listing._id}
+                  accountType={listing.account_type}
+                  currentSlug={listing.slug}
+                  fallbackBase={listing.headline}
+                  onSaved={() =>
+                    queryClient.invalidateQueries({
+                      queryKey: queryKeys.marketplace.myListing(),
+                    })
+                  }
+                />
+              </div>
+            )}
             <ListingForm
               isCreate={false}
               register={register}

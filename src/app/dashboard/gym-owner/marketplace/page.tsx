@@ -13,6 +13,7 @@ import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
 import RichTextEditor from "@/components/RichTextEditor";
 import RichTextDisplay from "@/components/RichTextDisplay";
+import SlugEditor from "@/components/marketplace/SlugEditor";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { listingHref } from "@/lib/utils/listingHref";
 import { useCountries, usePlatformConfig } from "@/lib/queries/utility";
@@ -1191,6 +1192,23 @@ export default function OrgMarketplaceListingPage() {
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3">
                   <p className="text-sm text-red-800">{formError}</p>
                 </div>
+              )}
+              {listing && (
+                <SlugEditor
+                  listingId={listing._id}
+                  accountType={listing.account_type}
+                  currentSlug={listing.slug}
+                  fallbackBase={
+                    (typeof listing.organization_id === "object"
+                      ? listing.organization_id?.name
+                      : undefined) ?? listing.headline
+                  }
+                  onSaved={(newSlug) =>
+                    setListing((prev) =>
+                      prev ? { ...prev, slug: newSlug } : prev,
+                    )
+                  }
+                />
               )}
               <FormFields
                 register={register}
