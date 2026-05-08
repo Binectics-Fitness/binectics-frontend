@@ -131,7 +131,14 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
       : listing.headline;
 
   const profileImage = org ? org.logo : professional?.profile_picture;
-  const coverImage = listing.photos?.[0] ?? profileImage ?? null;
+  // Only treat real cover photos (not the small avatar/logo) as cover image
+  const coverImage = listing.photos?.[0] ?? null;
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
 
   const style = ACCOUNT_TYPE_STYLES[listing.account_type];
   const TypeIcon = style.icon;
@@ -157,8 +164,33 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <TypeIcon className={`h-14 w-14 ${style.text} opacity-60`} />
+          <div className="relative flex h-full w-full items-center justify-center">
+            {/* Decorative pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.07]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(currentColor 1px, transparent 1px)",
+                backgroundSize: "16px 16px",
+              }}
+            />
+            {/* Avatar / logo */}
+            <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-4 ring-white/60">
+              {profileImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profileImage}
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span
+                  className={`text-2xl font-black tracking-tight ${style.text}`}
+                >
+                  {initials || <TypeIcon className="h-8 w-8" />}
+                </span>
+              )}
+            </div>
           </div>
         )}
 
