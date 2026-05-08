@@ -29,6 +29,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import RichTextEditor from "@/components/RichTextEditor";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import SlugEditor from "@/components/marketplace/SlugEditor";
+import AcceptingClientsToggle from "@/components/marketplace/AcceptingClientsToggle";
 import {
   TRAINER_SPECIALIZATIONS,
   DIETITIAN_SPECIALIZATIONS,
@@ -328,21 +329,27 @@ export default function MyMarketplaceListingPage() {
                   </Link>
                 )}
               </div>
-              <button
-                onClick={handleTogglePublish}
-                disabled={isPublishing}
-                className={`rounded-xl px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  listing.is_published
-                    ? "border-2 border-neutral-300 text-foreground hover:border-red-300 hover:text-red-600"
-                    : "bg-primary-500 text-white hover:bg-primary-600"
-                }`}
-              >
-                {isPublishing
-                  ? "..."
-                  : listing.is_published
-                    ? "Unpublish"
-                    : "Publish"}
-              </button>
+              <div className="flex items-center gap-3">
+                <AcceptingClientsToggle
+                  listing={listing}
+                  onUpdated={updateListingCache}
+                />
+                <button
+                  onClick={handleTogglePublish}
+                  disabled={isPublishing}
+                  className={`rounded-xl px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
+                    listing.is_published
+                      ? "border-2 border-neutral-300 text-foreground hover:border-red-300 hover:text-red-600"
+                      : "bg-primary-500 text-white hover:bg-primary-600"
+                  }`}
+                >
+                  {isPublishing
+                    ? "..."
+                    : listing.is_published
+                      ? "Unpublish"
+                      : "Publish"}
+                </button>
+              </div>
             </div>
 
             {/* Listing Preview */}
