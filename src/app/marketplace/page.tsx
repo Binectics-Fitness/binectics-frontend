@@ -446,223 +446,225 @@ export default function MarketplacePage() {
 
       {/* Content */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:gap-8">
-          {/* Filters Sidebar */}
-          <aside className="lg:col-span-1">
-            <div className="rounded-2xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-6 lg:sticky lg:top-20">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-foreground">Filters</h2>
+        {/* Horizontal Filter Bar */}
+        <div className="mb-6 rounded-2xl bg-white p-4 shadow-[var(--shadow-card)] sm:p-5">
+          {/* Type quick chips */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {(
+              [
+                { value: "", label: "All", icon: null },
+                { value: "gym_owner", label: "Gyms", icon: Dumbbell },
+                {
+                  value: "personal_trainer",
+                  label: "Trainers",
+                  icon: Dumbbell,
+                },
+                { value: "dietitian", label: "Dietitians", icon: Apple },
+              ] as const
+            ).map((opt) => {
+              const active = accountType === opt.value;
+              const Icon = opt.icon;
+              return (
                 <button
-                  onClick={clearFilters}
-                  className="text-xs text-primary-500 hover:text-primary-600 font-medium"
+                  key={opt.value || "all"}
+                  type="button"
+                  onClick={() => {
+                    setAccountType(opt.value as MarketplaceAccountType | "");
+                    setPage(1);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ring-1 transition-colors ${
+                    active
+                      ? "bg-foreground text-white ring-foreground"
+                      : "bg-white text-foreground ring-neutral-200 hover:bg-neutral-50"
+                  }`}
                 >
-                  Clear all
+                  {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+                  {opt.label}
                 </button>
-              </div>
-
-              {/* Type Filter */}
-              <div className="mb-6">
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Professional Type
-                </label>
-                <select
-                  value={accountType}
-                  onChange={(e) => {
-                    setAccountType(
-                      e.target.value as MarketplaceAccountType | "",
-                    );
-                    setPage(1);
-                  }}
-                  className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
-                >
-                  <option value="">All Types</option>
-                  <option value="gym_owner">Gyms</option>
-                  <option value="personal_trainer">Personal Trainers</option>
-                  <option value="dietitian">Dietitians</option>
-                </select>
-              </div>
-
-              {/* City Filter */}
-              <div className="mb-6">
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  City
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. London"
-                  value={city}
-                  onChange={(e) => {
-                    setCity(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Specialty Filter */}
-              <div className="mb-6">
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Specialty
-                </label>
-                <SearchableSelect
-                  value={selectedSpecialty}
-                  onChange={(val) => {
-                    setSelectedSpecialty(val);
-                    setPage(1);
-                  }}
-                  options={[
-                    { label: "All Specialties", value: "" },
-                    ...SPECIALTY_OPTIONS.map((s) => ({ label: s, value: s })),
-                  ]}
-                  placeholder="All Specialties"
-                />
-              </div>
-
-              {/* Location Filter */}
-              <div className="mb-6">
-                <LocationFilter
-                  lat={geoLat}
-                  lng={geoLng}
-                  radiusKm={radiusKm}
-                  onLocationChange={(lat, lng) => {
-                    setGeoLat(lat);
-                    setGeoLng(lng);
-                    if (lat !== null && lng !== null) setSortBy("nearest");
-                    setPage(1);
-                  }}
-                  onRadiusChange={(km) => {
-                    setRadiusKm(km);
-                    setPage(1);
-                  }}
-                />
-              </div>
-
-              {/* Min Rating */}
-              <div className="mb-6">
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Minimum Rating
-                </label>
-                <select
-                  value={minRating}
-                  onChange={(e) => {
-                    setMinRating(e.target.value ? Number(e.target.value) : "");
-                    setPage(1);
-                  }}
-                  className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
-                >
-                  <option value="">Any Rating</option>
-                  <option value="4">4+ Stars</option>
-                  <option value="3">3+ Stars</option>
-                  <option value="2">2+ Stars</option>
-                </select>
-              </div>
-
-              {/* Sort */}
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Sort By
-                </label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(
-                      e.target.value as "rating" | "newest" | "nearest",
-                    );
-                    setPage(1);
-                  }}
-                  className="w-full rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm text-foreground focus:border-primary-500 focus:outline-none"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="rating">Highest Rated</option>
-                  <option value="nearest">Nearest</option>
-                </select>
-              </div>
+              );
+            })}
+            <div className="ml-auto">
+              <button
+                onClick={clearFilters}
+                className="text-xs font-medium text-primary-500 hover:text-primary-600"
+              >
+                Clear all
+              </button>
             </div>
-          </aside>
-
-          {/* Results */}
-          <div className="lg:col-span-3">
-            {/* Results Header */}
-            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-foreground-secondary">
-                {isLoading
-                  ? "Searching..."
-                  : `${total} professional${total !== 1 ? "s" : ""} found`}
-              </p>
-            </div>
-
-            {/* Loading */}
-            {isLoading && (
-              <CardSkeleton count={6} columns="2" variant="avatar" />
-            )}
-
-            {/* Empty State */}
-            {!isLoading && listings.length === 0 && (
-              <div className="rounded-2xl bg-white p-8 text-center shadow-[var(--shadow-card)] sm:p-12">
-                <svg
-                  className="mx-auto h-16 w-16 text-neutral-300 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  No listings found
-                </h3>
-                <p className="text-foreground-secondary mb-4">
-                  Try adjusting your search or filters to find professionals.
-                </p>
-                <button
-                  onClick={clearFilters}
-                  className="inline-flex items-center rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-600 transition-colors"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            )}
-
-            {/* Results Grid */}
-            {!isLoading && listings.length > 0 && (
-              <>
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-                  {listings.map((listing) => (
-                    <ListingCard key={listing._id} listing={listing} />
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="rounded-lg border-2 border-neutral-300 px-4 py-2 text-sm font-medium text-foreground hover:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Previous
-                    </button>
-                    <span className="text-sm text-foreground-secondary px-4">
-                      Page {page} of {totalPages}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      disabled={page === totalPages}
-                      className="rounded-lg border-2 border-neutral-300 px-4 py-2 text-sm font-medium text-foreground hover:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
           </div>
+
+          {/* Filter inputs row */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground-secondary">
+                City
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. London"
+                value={city}
+                onChange={(e) => {
+                  setCity(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-foreground placeholder:text-foreground-secondary/50 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground-secondary">
+                Specialty
+              </label>
+              <SearchableSelect
+                value={selectedSpecialty}
+                onChange={(val) => {
+                  setSelectedSpecialty(val);
+                  setPage(1);
+                }}
+                options={[
+                  { label: "All Specialties", value: "" },
+                  ...SPECIALTY_OPTIONS.map((s) => ({ label: s, value: s })),
+                ]}
+                placeholder="All Specialties"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground-secondary">
+                Min Rating
+              </label>
+              <select
+                value={minRating}
+                onChange={(e) => {
+                  setMinRating(e.target.value ? Number(e.target.value) : "");
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              >
+                <option value="">Any Rating</option>
+                <option value="4">4+ Stars</option>
+                <option value="3">3+ Stars</option>
+                <option value="2">2+ Stars</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground-secondary">
+                Sort by
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value as "rating" | "newest" | "nearest");
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              >
+                <option value="newest">Newest</option>
+                <option value="rating">Highest Rated</option>
+                <option value="nearest">Nearest</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground-secondary">
+                Location
+              </label>
+              <LocationFilter
+                lat={geoLat}
+                lng={geoLng}
+                radiusKm={radiusKm}
+                onLocationChange={(lat, lng) => {
+                  setGeoLat(lat);
+                  setGeoLng(lng);
+                  if (lat !== null && lng !== null) setSortBy("nearest");
+                  setPage(1);
+                }}
+                onRadiusChange={(km) => {
+                  setRadiusKm(km);
+                  setPage(1);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Results */}
+        <div>
+          {/* Results Header */}
+          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-foreground-secondary">
+              {isLoading
+                ? "Searching..."
+                : `${total} professional${total !== 1 ? "s" : ""} found`}
+            </p>
+          </div>
+
+          {/* Loading */}
+          {isLoading && (
+            <CardSkeleton count={6} columns="3" variant="avatar" />
+          )}
+
+          {/* Empty State */}
+          {!isLoading && listings.length === 0 && (
+            <div className="rounded-2xl bg-white p-8 text-center shadow-[var(--shadow-card)] sm:p-12">
+              <svg
+                className="mx-auto h-16 w-16 text-neutral-300 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <h3 className="text-xl font-bold text-foreground mb-2">
+                No listings found
+              </h3>
+              <p className="text-foreground-secondary mb-4">
+                Try adjusting your search or filters to find professionals.
+              </p>
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-600 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+
+          {/* Results Grid */}
+          {!isLoading && listings.length > 0 && (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {listings.map((listing) => (
+                  <ListingCard key={listing._id} listing={listing} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="rounded-lg border-2 border-neutral-300 px-4 py-2 text-sm font-medium text-foreground hover:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-foreground-secondary px-4">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="rounded-lg border-2 border-neutral-300 px-4 py-2 text-sm font-medium text-foreground hover:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
     </div>
