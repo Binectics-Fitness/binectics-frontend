@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { Apple, Dumbbell, MapPin, ShieldCheck, Sparkles, Star } from "lucide-react";
 import LocationFilter from "@/components/LocationFilter";
 import SearchableSelect from "@/components/SearchableSelect";
 import { CardSkeleton } from "@/components/CardSkeleton";
@@ -21,10 +22,43 @@ const ACCOUNT_TYPE_LABELS: Record<MarketplaceAccountType, string> = {
   dietitian: "Dietitian",
 };
 
-const ACCOUNT_TYPE_COLORS: Record<MarketplaceAccountType, string> = {
-  gym_owner: "bg-accent-blue-100 text-accent-blue-700",
-  personal_trainer: "bg-accent-yellow-100 text-accent-yellow-700",
-  dietitian: "bg-accent-purple-100 text-accent-purple-700",
+interface AccountTypeStyle {
+  chip: string;
+  bg: string;
+  text: string;
+  ring: string;
+  icon: typeof Dumbbell;
+  gradient: string;
+}
+
+const ACCOUNT_TYPE_STYLES: Record<MarketplaceAccountType, AccountTypeStyle> = {
+  gym_owner: {
+    chip: "bg-accent-blue-100 text-accent-blue-700",
+    bg: "bg-accent-blue-50",
+    text: "text-accent-blue-700",
+    ring: "ring-accent-blue-200",
+    icon: Dumbbell,
+    gradient:
+      "bg-[radial-gradient(circle_at_30%_20%,rgba(2,103,242,0.18),rgba(2,103,242,0.04))]",
+  },
+  personal_trainer: {
+    chip: "bg-accent-yellow-100 text-accent-yellow-700",
+    bg: "bg-accent-yellow-50",
+    text: "text-accent-yellow-700",
+    ring: "ring-accent-yellow-200",
+    icon: Dumbbell,
+    gradient:
+      "bg-[radial-gradient(circle_at_30%_20%,rgba(253,185,14,0.22),rgba(253,185,14,0.04))]",
+  },
+  dietitian: {
+    chip: "bg-accent-purple-100 text-accent-purple-700",
+    bg: "bg-accent-purple-50",
+    text: "text-accent-purple-700",
+    ring: "ring-accent-purple-200",
+    icon: Apple,
+    gradient:
+      "bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,0.20),rgba(139,92,246,0.04))]",
+  },
 };
 
 const SPECIALTY_OPTIONS = [
@@ -42,48 +76,40 @@ const SPECIALTY_OPTIONS = [
   "Senior Fitness",
 ];
 
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <svg
-          key={star}
-          className={`h-4 w-4 ${star <= Math.round(rating) ? "text-accent-yellow-500" : "text-neutral-300"}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-      <span className="ml-1 text-sm text-foreground-secondary">
-        {rating.toFixed(1)}
-      </span>
-    </div>
-  );
-}
-
-function ListingBadge({ badge }: { badge: MarketplaceVerificationBadge }) {
+function ListingBadge({
+  badge,
+  className = "",
+}: {
+  badge: MarketplaceVerificationBadge;
+  className?: string;
+}) {
   if (badge === "none") return null;
 
   if (badge === "verified") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-accent-blue-100 px-2 py-0.5 text-xs font-semibold text-accent-blue-700">
-        ✓ Verified
+      <span
+        className={`inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-xs font-semibold text-accent-blue-700 shadow-sm ring-1 ring-accent-blue-200 ${className}`}
+      >
+        <ShieldCheck className="h-3 w-3" /> Verified
       </span>
     );
   }
 
   if (badge === "premium_verified") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-accent-yellow-100 px-2 py-0.5 text-xs font-semibold text-accent-yellow-700">
-        ✓ Premium
+      <span
+        className={`inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-xs font-semibold text-accent-yellow-700 shadow-sm ring-1 ring-accent-yellow-200 ${className}`}
+      >
+        <ShieldCheck className="h-3 w-3" /> Premium
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">
-      ★ Featured
+    <span
+      className={`inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-xs font-semibold text-foreground shadow-sm ring-1 ring-neutral-200 ${className}`}
+    >
+      <Sparkles className="h-3 w-3 text-accent-yellow-500" /> Featured
     </span>
   );
 }
@@ -102,130 +128,153 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
     ? org.name
     : professional
       ? `${professional.first_name} ${professional.last_name}`
-      : "Professional";
+      : listing.headline;
 
   const profileImage = org ? org.logo : professional?.profile_picture;
+  const coverImage = listing.photos?.[0] ?? profileImage ?? null;
+
+  const style = ACCOUNT_TYPE_STYLES[listing.account_type];
+  const TypeIcon = style.icon;
+
+  const location = [listing.city, listing.country_code?.toUpperCase()]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <Link
       href={listingHref(listing)}
-      className="group block h-full rounded-2xl bg-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)] ring-1 ring-neutral-100 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] hover:ring-neutral-200"
     >
-      <div className="flex h-full flex-col p-6 sm:p-8">
-        {/* Header */}
-        <div className="mb-4 flex items-start gap-4">
-          <div className="h-14 w-14 shrink-0 rounded-xl bg-neutral-200 overflow-hidden flex items-center justify-center">
-            {profileImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profileImage}
-                alt={displayName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-xl font-bold text-foreground/40">
-                {displayName[0]}
-              </span>
-            )}
+      {/* Cover */}
+      <div
+        className={`relative aspect-[16/9] w-full overflow-hidden ${style.gradient}`}
+      >
+        {coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverImage}
+            alt={displayName}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <TypeIcon className={`h-14 w-14 ${style.text} opacity-60`} />
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-foreground truncate group-hover:text-primary-500 transition-colors">
-              {listing.headline}
-            </h3>
-            <p className="text-sm text-foreground-secondary truncate">
-              {displayName}
-            </p>
-            <div className="mt-1">
-              <ListingBadge badge={listing.verification_badge} />
-            </div>
-          </div>
-        </div>
+        )}
 
-        {/* Type Badge + Location */}
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${ACCOUNT_TYPE_COLORS[listing.account_type]}`}
-          >
-            {ACCOUNT_TYPE_LABELS[listing.account_type]}
+        {/* Top-left: type chip */}
+        <span
+          className={`absolute left-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ${style.chip}`}
+        >
+          <TypeIcon className="h-3 w-3" />
+          {ACCOUNT_TYPE_LABELS[listing.account_type]}
+        </span>
+
+        {/* Top-right: verification badge */}
+        <ListingBadge
+          badge={listing.verification_badge}
+          className="absolute right-3 top-3"
+        />
+
+        {/* Bottom-right: not accepting pill */}
+        {!listing.accepting_clients && (
+          <span className="absolute bottom-3 right-3 inline-flex items-center rounded-full bg-foreground/85 px-2.5 py-1 text-xs font-medium text-white">
+            Not accepting clients
           </span>
-          {listing.city && (
-            <span className="text-xs text-foreground-secondary">
-              📍 {listing.city}
-              {listing.country_code
-                ? `, ${listing.country_code.toUpperCase()}`
-                : ""}
-            </span>
-          )}
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <div>
+          <h3 className="line-clamp-1 text-base font-bold text-foreground transition-colors group-hover:text-primary-600">
+            {displayName}
+          </h3>
+          <p className="mt-0.5 line-clamp-1 text-sm text-foreground-secondary">
+            {listing.headline}
+          </p>
         </div>
 
-        {/* Bio */}
-        <p className="text-sm text-foreground-secondary mb-4 line-clamp-2">
-          {stripHtml(listing.bio)}
-        </p>
+        {/* Meta row: location · rating */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-foreground-secondary">
+          {location ? (
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" />
+              {location}
+            </span>
+          ) : null}
+          <span className="inline-flex items-center gap-1">
+            <Star
+              className={`h-3.5 w-3.5 ${listing.review_count > 0 ? "fill-accent-yellow-500 text-accent-yellow-500" : "text-neutral-300"}`}
+            />
+            {listing.review_count > 0 ? (
+              <>
+                <span className="font-semibold text-foreground">
+                  {listing.average_rating.toFixed(1)}
+                </span>
+                <span>· {listing.review_count} reviews</span>
+              </>
+            ) : (
+              <span>No reviews yet</span>
+            )}
+          </span>
+        </div>
+
+        {/* Bio preview */}
+        {listing.bio ? (
+          <p className="line-clamp-2 text-sm text-foreground-secondary">
+            {stripHtml(listing.bio)}
+          </p>
+        ) : null}
 
         {/* Specialties */}
-        {listing.specialties.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
+        {listing.specialties.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
             {listing.specialties.slice(0, 3).map((s) => (
               <span
                 key={s}
-                className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs text-foreground-secondary"
+                className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-foreground/70"
               >
                 {s}
               </span>
             ))}
             {listing.specialties.length > 3 && (
-              <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs text-foreground-secondary">
+              <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-foreground/50">
                 +{listing.specialties.length - 3}
               </span>
             )}
           </div>
-        )}
+        ) : null}
 
-        {/* Footer: Rating + Price */}
-        <div className="mt-auto flex flex-col gap-3 border-t border-neutral-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            {listing.review_count > 0 ? (
-              <div className="flex items-center gap-1">
-                <StarRating rating={listing.average_rating} />
-                <span className="text-xs text-foreground-secondary">
-                  ({listing.review_count})
-                </span>
-              </div>
-            ) : (
-              <span className="text-xs text-foreground-secondary">
-                No reviews yet
-              </span>
-            )}
-          </div>
-          <div className="sm:text-right">
+        {/* Footer: price + cta hint */}
+        <div className="mt-auto flex items-end justify-between border-t border-neutral-100 pt-3">
+          <div>
             {listing.price_from != null ? (
-              <div>
-                <span className="text-sm font-semibold text-foreground">
+              <>
+                <div className="text-xs font-medium text-foreground-secondary">
+                  From
+                </div>
+                <div className="text-base font-black text-foreground">
                   {listing.currency} {listing.price_from}
-                </span>
-                {listing.price_label && (
-                  <span className="text-xs text-foreground-secondary ml-1">
-                    / {listing.price_label}
-                  </span>
-                )}
-              </div>
+                  {listing.price_label && (
+                    <span className="ml-1 text-xs font-medium text-foreground-secondary">
+                      / {listing.price_label}
+                    </span>
+                  )}
+                </div>
+              </>
             ) : (
-              <span className="text-xs text-foreground-secondary">
+              <span className="text-sm font-medium text-foreground-secondary">
                 Contact for pricing
               </span>
             )}
           </div>
+          <span
+            className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${style.bg} ${style.text} ring-1 ${style.ring} transition-colors group-hover:bg-foreground group-hover:text-white group-hover:ring-foreground`}
+          >
+            View profile →
+          </span>
         </div>
-
-        {/* Accepting clients indicator */}
-        {!listing.accepting_clients && (
-          <div className="mt-3 rounded-lg bg-neutral-100 px-3 py-1.5 text-center">
-            <span className="text-xs font-medium text-foreground-secondary">
-              Not accepting new clients
-            </span>
-          </div>
-        )}
       </div>
     </Link>
   );
