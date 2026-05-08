@@ -222,9 +222,11 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
           <h3 className="line-clamp-1 text-base font-bold text-foreground transition-colors group-hover:text-primary-600">
             {displayName}
           </h3>
-          <p className="mt-0.5 line-clamp-1 text-sm text-foreground-secondary">
-            {listing.headline}
-          </p>
+          {listing.headline && listing.headline !== displayName ? (
+            <p className="mt-0.5 line-clamp-1 text-sm text-foreground-secondary">
+              {listing.headline}
+            </p>
+          ) : null}
         </div>
 
         {/* Meta row: location · rating */}
@@ -494,7 +496,7 @@ export default function MarketplacePage() {
           </div>
 
           {/* Filter inputs row */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="mb-1 block text-xs font-medium text-foreground-secondary">
                 City
@@ -562,26 +564,25 @@ export default function MarketplacePage() {
                 <option value="nearest">Nearest</option>
               </select>
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-foreground-secondary">
-                Location
-              </label>
-              <LocationFilter
-                lat={geoLat}
-                lng={geoLng}
-                radiusKm={radiusKm}
-                onLocationChange={(lat, lng) => {
-                  setGeoLat(lat);
-                  setGeoLng(lng);
-                  if (lat !== null && lng !== null) setSortBy("nearest");
-                  setPage(1);
-                }}
-                onRadiusChange={(km) => {
-                  setRadiusKm(km);
-                  setPage(1);
-                }}
-              />
-            </div>
+          </div>
+
+          {/* Location row (separate so its variable height doesn't push other inputs) */}
+          <div className="mt-3 border-t border-neutral-100 pt-3">
+            <LocationFilter
+              lat={geoLat}
+              lng={geoLng}
+              radiusKm={radiusKm}
+              onLocationChange={(lat, lng) => {
+                setGeoLat(lat);
+                setGeoLng(lng);
+                if (lat !== null && lng !== null) setSortBy("nearest");
+                setPage(1);
+              }}
+              onRadiusChange={(km) => {
+                setRadiusKm(km);
+                setPage(1);
+              }}
+            />
           </div>
         </div>
 
