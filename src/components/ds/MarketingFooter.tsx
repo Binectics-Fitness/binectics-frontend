@@ -21,6 +21,7 @@ const COLS = [
     { href: "/careers", label: "Careers" },
     { href: "/press", label: "Press" },
     { href: "/partners", label: "Partners" },
+    { href: "/contact", label: "Contact" },
   ]},
   { title: "Resources", links: [
     { href: "/help", label: "Help center" },

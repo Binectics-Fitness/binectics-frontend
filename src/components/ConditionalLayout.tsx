@@ -23,7 +23,7 @@ export default function ConditionalLayout({
   const isFormSubmit = pathname?.match(/^\/forms\/[^\/]+\/submit$/);
   const isProvider = pathname?.match(/^\/(gyms|trainers|dietitians)\/[^\/]+$/);
   const isLanding = pathname === "/";
-  const isMarketing = ["/about", "/pricing", "/help", "/support", "/privacy", "/terms", "/cookies", "/security", "/careers", "/press", "/partners", "/contact", "/booking", "/legal", "/for-gyms", "/for-trainers", "/for-dietitians", "/for-members", "/case-studies", "/status", "/review"].some(p => pathname === p || pathname?.startsWith(p + "/"));
+  const isMarketing = ["/about", "/pricing", "/help", "/support", "/privacy", "/terms", "/cookies", "/security", "/careers", "/press", "/partners", "/contact", "/booking", "/legal", "/for-gyms", "/for-trainers", "/for-dietitians", "/for-members", "/case-studies", "/status", "/review", "/blog", "/qr-help"].some(p => pathname === p || pathname?.startsWith(p + "/"));
 
   const hideChrome = isDashboard || isAdmin || isFormSubmit || isMarketplace || isProvider || isRegister || isCheckIn || isAuth || isMarketing || isLanding || isUtility || isOnboarding;
 

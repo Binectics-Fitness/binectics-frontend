@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 
@@ -142,8 +142,11 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
   },
 };
 
-export default function LegalPage() {
-  const [activeDoc, setActiveDoc] = useState<DocType>("privacy");
+function LegalPageContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab: DocType = tabParam === "terms" || tabParam === "cookies" ? tabParam : "privacy";
+  const [activeDoc, setActiveDoc] = useState<DocType>(initialTab);
   const doc = DOCS[activeDoc];
 
   return (
@@ -239,5 +242,13 @@ export default function LegalPage() {
 
       <MarketingFooter />
     </div>
+  );
+}
+
+export default function LegalPage() {
+  return (
+    <Suspense fallback={<div style={{ background: "var(--bg)", minHeight: "100vh" }} />}>
+      <LegalPageContent />
+    </Suspense>
   );
 }
