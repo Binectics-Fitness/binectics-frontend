@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BinecticsMark, BinecticsLockup } from "@/components/BinecticsLogo";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import HeartbeatMotion from "@/components/HeartbeatMotion";
 import ScrollReveal from "@/components/ScrollReveal";
 import CountUp from "@/components/CountUp";
 import FaqAccordion from "@/components/FaqAccordion";
+import DashboardMosaic from "@/components/DashboardMosaic";
 
 export const metadata: Metadata = {
-  title: "Binectics — the operating system for fitness",
+  title: "Binectics — everything fitness runs on",
   description:
     "One marketplace, one set of dashboards, one tab. Discovery, payments, check-ins, and client health for gyms, trainers, and dietitians in 50+ countries.",
   alternates: { canonical: "/" },
@@ -21,7 +21,7 @@ const jsonLd = {
   name: "Binectics",
   url: "https://binectics.com",
   description:
-    "The operating system for fitness. One marketplace connecting gyms, trainers, and dietitians in 50+ countries.",
+    "Everything fitness runs on. One marketplace connecting gyms, trainers, and dietitians in 50+ countries.",
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer support",
@@ -30,9 +30,12 @@ const jsonLd = {
 };
 
 const faqItems = [
+  { q: "What is Binectics and who is it for?", a: "Binectics is a single platform that connects gyms, personal trainers, dietitians, and the members who work with them. Members find and subscribe to verified providers in their own currency. Providers get dashboards for plans, clients, check-ins, journals, and earnings — all in one tab." },
   { q: "How is Binectics different from a class-booking app?", a: "Class-booking apps point a member at one studio. Binectics is the rails underneath: discovery, payments, check-ins, client health, journals, plans, and reviews — for gyms, trainers, and dietitians, in one place. Members get one tab; providers get one set of tools." },
   { q: "Which countries and currencies are supported?", a: "Live in 50+ countries with eight currencies (USD, EUR, GBP, NGN, KES, ZAR, AED, INR). Payments route automatically — Stripe for USD / EUR / GBP / AED / INR, Paystack for NGN / KES / ZAR, and Flutterwave across NGN / GHS / KES / TZS / UGX." },
   { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents — business registration, certifications, identity — and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
+  { q: "Is my data secure?", a: "All data is encrypted at rest and in transit. Payment credentials are handled by PCI-compliant processors (Stripe, Paystack, Flutterwave) — we never store card numbers. Infrastructure runs on Azure with SOC 2-aligned controls, automated backups, and region-isolated databases." },
+  { q: "Can I cancel or downgrade anytime?", a: "Yes. Downgrade from Studio to Starter at any time — your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Enterprise plans follow the terms in your service agreement." },
   { q: "Can I bring my own payment processor?", a: "Yes — Studio and Enterprise plans let providers configure their own Stripe, Paystack, or Flutterwave keys. Payments settle directly to your account; Binectics never holds funds." },
   { q: "How do team and multi-location plans work?", a: "Gym owners create an organization, invite staff with role and permission scopes, and manage multiple listings — each with its own facility details, amenities, gallery, and documents. Assignment rules route new clients to the right staff automatically." },
 ];
@@ -48,7 +51,7 @@ export default function Home() {
           { href: "#how", label: "How it works" },
           { href: "/marketplace", label: "Marketplace" },
           { href: "#roles", label: "For providers" },
-          { href: "/pricing", label: "Pricing" },
+          { href: "#pricing", label: "Pricing" },
           { href: "#faq", label: "FAQ" },
         ]}
       />
@@ -60,29 +63,29 @@ export default function Home() {
           {/* Left column — hero text */}
           <div>
             {/* Live ticker pill */}
-            <div className="hidden sm:flex items-center gap-4 border border-border rounded-full px-3.5 py-1 bg-bg w-fit text-[12.5px] text-fg-2 mb-7">
+            <div className="flex items-center gap-2 sm:gap-4 border border-border rounded-full px-3 sm:px-3.5 py-1 bg-bg w-fit text-[11px] sm:text-[12.5px] text-fg-2 mb-5 sm:mb-7">
               <span className="w-4.5 h-4.5 rounded-full bg-signal-soft flex items-center justify-center">
                 <span className="w-1.75 h-1.75 rounded-full bg-signal" />
               </span>
               <span>Live across 50+ countries</span>
               <span className="text-border-2">{"·"}</span>
               <span className="font-mono text-fg-3">2,481</span>
-              <span>check-ins in the last hour</span>
+              <span className="hidden sm:inline">check-ins in the last hour</span>
+              <span className="sm:hidden">check-ins/hr</span>
             </div>
 
             <h1
               className="text-[40px] sm:text-[60px] lg:text-[76px] leading-[0.94] font-medium"
               style={{ letterSpacing: "-0.04em", color: "var(--ink)" }}
             >
-              The operating system
+              Everything fitness
               <br />
-              for <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>fitness</em>.
+              <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>runs on</em>.
             </h1>
 
             <p className="text-[16px] sm:text-[19px] text-fg-2 max-w-[580px] mt-5 sm:mt-7 leading-relaxed">
-              Binectics connects gyms, trainers, dietitians, and the people they work with —
-              in one calm marketplace, one set of dashboards, one tab. Discovery, payments,
-              check-ins, and client health, all running on the same rails.
+              One marketplace for gyms, trainers, and dietitians. One set of dashboards
+              for the people who run them. Discovery, payments, check-ins — same rails, same tab.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mt-7 sm:mt-9 items-start sm:items-center">
@@ -91,7 +94,7 @@ export default function Home() {
                 className="inline-flex items-center justify-center h-[42px] px-4.5 rounded-(--r-2) bg-ink text-[14px] font-medium hover:bg-[oklch(0.08_0.008_80)] w-full sm:w-auto"
                 style={{ letterSpacing: "-0.005em", color: "var(--bg)" }}
               >
-                Start your gym free →
+                Get started free →
               </Link>
               <Link
                 href="/marketplace"
@@ -110,15 +113,15 @@ export default function Home() {
         </div>
 
         {/* Strap — proof stats */}
-        <div className="flex flex-wrap gap-6 sm:gap-9 pt-7 border-t border-border">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 sm:gap-9 pt-7 border-t border-border">
           {[
             { n: "14,200+", l: "Providers" },
             { n: "8", l: "Currencies" },
             { n: "50+", l: "Countries" },
-            { n: "$2.1M", l: "Monthly GMV · Apr" },
-            { n: "4.82", l: "Avg provider rating" },
+            { n: "43,000+", l: "Monthly check-ins" },
+            { n: "4.82", l: "Avg rating" },
           ].map((s) => (
-            <div key={s.l} className="flex-1 min-w-[140px]">
+            <div key={s.l}>
               <CountUp value={s.n} className="text-[24px] sm:text-[36px] font-medium text-ink block" style={{ letterSpacing: "-0.025em", fontVariantNumeric: "tabular-nums" }} />
               <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.04em] text-fg-3 mt-1">{s.l}</div>
             </div>
@@ -131,7 +134,7 @@ export default function Home() {
         <ScrollReveal>
           <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
             <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
-              Built for the<br />four people<br />who make<br /><em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>fitness work.</em>
+              Four roles,<br />one <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>product</em>.
             </h2>
             <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
               A marketplace is only as good as the operators on it. Binectics gives each role its
@@ -150,7 +153,7 @@ export default function Home() {
           ].map((role, i) => (
             <div key={role.micro} className={`p-6 sm:p-7 flex flex-col gap-3.5 min-h-60 sm:min-h-80 ${i < 3 ? "border-b sm:border-b-0 sm:border-r border-border" : ""} ${i === 1 ? "lg:border-r" : ""}`}>
               <div className="flex items-center gap-2.5">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`role-icon role-icon-${i}`} style={{ color: `var(--${role.micro === "Member" ? "ink" : role.micro === "Gym owner" ? "gym" : role.micro === "Trainer" ? "trainer" : "dietitian"})` }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`role-icon role-icon-${i}`} style={{ color: `var(--${role.micro === "Member" ? "ink" : role.micro === "Gym owner" ? "gym" : role.micro === "Trainer" ? "trainer" : "dietitian"})` }}>
                   {role.micro === "Member" && <><circle cx="10" cy="5" r="2.5" /><path d="M5 18v-2a5 5 0 0 1 10 0v2" /><path d="M10 11v3" className="role-heartbeat" /></>}
                   {role.micro === "Gym owner" && <><rect x="2" y="6" width="16" height="12" rx="1.5" /><path d="M2 10h16" /><rect x="5" y="2" width="2" height="4" rx="0.5" fill="currentColor" stroke="none" /><rect x="13" y="2" width="2" height="4" rx="0.5" fill="currentColor" stroke="none" /><circle cx="10" cy="14" r="1.5" className="role-pulse" /></>}
                   {role.micro === "Trainer" && <><path d="M3 10h14" /><rect x="1" y="7" width="4" height="6" rx="1" /><rect x="15" y="7" width="4" height="6" rx="1" /><rect x="7" y="8.5" width="2" height="3" rx="0.5" fill="currentColor" stroke="none" /><rect x="11" y="8.5" width="2" height="3" rx="0.5" fill="currentColor" stroke="none" className="role-lift" /></>}
@@ -170,7 +173,7 @@ export default function Home() {
         </ScrollReveal>
       </section>
 
-      {/* ═══ PRODUCT PREVIEW ═══ */}
+      {/* ═══ PRODUCT PREVIEW — Dashboard Mosaic ═══ */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border">
         <ScrollReveal>
           <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
@@ -185,115 +188,11 @@ export default function Home() {
           </div>
         </ScrollReveal>
 
-        {/* Mobile dashboard mockup — phone-style frame */}
-        <ScrollReveal delay={120} className="sm:hidden">
-        <div className="mx-auto max-w-[320px] rounded-[24px] overflow-hidden" style={{ border: "3px solid var(--ink)", background: "var(--bg)" }}>
-          <div className="flex items-center justify-center py-1.5" style={{ background: "var(--ink)" }}>
-            <div className="w-16 h-1 rounded-full" style={{ background: "oklch(0.4 0 0)" }} />
-          </div>
-          <div className="px-3.5 pt-3 pb-1.5" style={{ borderBottom: "1px solid var(--border)" }}>
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-[4px] flex items-center justify-center text-[8px] font-semibold" style={{ background: "var(--gym)", color: "oklch(0.98 0 0)" }}>IL</span>
-                <span className="text-[12px] font-medium" style={{ color: "var(--ink)" }}>Iron Lab</span>
-              </div>
-              <div className="flex gap-1.5">
-                <span className="w-5 h-5 rounded-full" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }} />
-                <span className="w-5 h-5 rounded-full" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }} />
-              </div>
-            </div>
-            <div className="font-mono text-[8px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Tuesday · 12 May 2026</div>
-            <div className="text-[13px] font-medium mt-0.5 mb-2" style={{ color: "var(--ink)", letterSpacing: "-0.01em" }}>Good afternoon, Lerato</div>
-          </div>
-          <div className="p-3.5">
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              {[{ l: "Members", v: "142", d: "+18" }, { l: "Active subs", v: "1,284", d: "+12.4%" }, { l: "Revenue", v: "$42.8k", d: "−2.1%", down: true }, { l: "Rating", v: "4.82", d: "±0.00", flat: true }].map((s) => (
-                <div key={s.l} className="rounded-(--r-2) px-2.5 py-2" style={{ border: "1px solid var(--border)" }}>
-                  <div className="font-mono text-[7px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.l}</div>
-                  <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{s.v}</div>
-                  <div className="font-mono text-[7px] mt-0.5" style={{ color: s.down ? "var(--danger)" : s.flat ? "var(--fg-3)" : "var(--signal-ink)" }}>{s.d}</div>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-(--r-2) overflow-hidden mb-3" style={{ border: "1px solid var(--border)" }}>
-              <svg viewBox="0 0 600 110" preserveAspectRatio="none" className="w-full" style={{ height: "72px" }}>
-                <defs><linearGradient id="gAm" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="oklch(0.68 0.16 148)" stopOpacity="0.18" /><stop offset="1" stopColor="oklch(0.68 0.16 148)" stopOpacity="0" /></linearGradient></defs>
-                <path d="M0,85 L40,72 L80,76 L120,60 L160,64 L200,48 L240,52 L280,40 L320,46 L360,30 L400,38 L440,22 L480,30 L520,18 L560,24 L600,12 L600,110 L0,110 Z" fill="url(#gAm)" />
-                <path d="M0,85 L40,72 L80,76 L120,60 L160,64 L200,48 L240,52 L280,40 L320,46 L360,30 L400,38 L440,22 L480,30 L520,18 L560,24 L600,12" fill="none" stroke="oklch(0.68 0.16 148)" strokeWidth="1.6" />
-                <g stroke="oklch(0.86 0.008 85)" strokeWidth="0.5"><line x1="0" x2="600" y1="30" y2="30" /><line x1="0" x2="600" y1="55" y2="55" /><line x1="0" x2="600" y1="80" y2="80" /></g>
-              </svg>
-              <div className="flex justify-between px-2.5 py-1 font-mono text-[7px]" style={{ color: "var(--fg-3)", borderTop: "1px solid var(--border)" }}>
-                {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <span key={i}>{d}</span>)}
-              </div>
-            </div>
-            <div className="flex items-center justify-between px-2.5 py-2 rounded-(--r-2)" style={{ background: "var(--signal-soft)" }}>
-              <span className="text-[10px] font-medium" style={{ color: "var(--signal-ink)" }}>3 staff requests pending</span>
-              <span className="text-[9px] font-mono" style={{ color: "var(--signal-ink)" }}>Review →</span>
-            </div>
-          </div>
-          <div className="flex justify-around py-2" style={{ borderTop: "1px solid var(--border)" }}>
-            {["Home", "Members", "Plans", "More"].map((t) => (
-              <span key={t} className="flex flex-col items-center gap-0.5">
-                <span className="w-4 h-4 rounded-full" style={{ background: t === "Home" ? "var(--ink)" : "var(--bg-3)" }} />
-                <span className="text-[7px] font-mono" style={{ color: t === "Home" ? "var(--ink)" : "var(--fg-3)" }}>{t}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-        </ScrollReveal>
-
-        {/* Desktop dashboard mockup — browser-style frame */}
-        <ScrollReveal delay={120} className="hidden sm:block">
-        <div className="rounded-(--r-3) overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_oklch(0_0_0/0.08)] hover:-translate-y-1" style={{ border: "1px solid var(--border)" }}>
-          <div className="flex items-center gap-3 px-4 py-2.5 font-mono text-[11px]" style={{ background: "var(--bg-2)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}>
-            <div className="flex gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /></div>
-            <span>app.binectics.com / dashboard / gym-owner</span>
-            <span className="ml-auto flex gap-3.5"><span>Iron Lab · 4 locations</span><span>·</span><span>14:32 GMT</span></span>
-          </div>
-          <div className="flex" style={{ background: "var(--bg)" }}>
-            <div className="flex flex-col gap-0.5 py-4 px-4 shrink-0" style={{ width: "160px", borderRight: "1px solid var(--border)", background: "var(--bg-2)" }}>
-              <div className="font-mono text-[9px] uppercase tracking-[0.06em] px-2 py-1.5" style={{ color: "var(--fg-4)" }}>Overview</div>
-              <div className="text-[12px] px-2 py-1 rounded-(--r-1) font-medium" style={{ background: "var(--bg)", color: "var(--ink)" }}>Dashboard</div>
-              {["Analytics", "Revenue"].map((s) => <div key={s} className="text-[12px] px-2 py-1" style={{ color: "var(--fg-3)" }}>{s}</div>)}
-              <div className="font-mono text-[9px] uppercase tracking-[0.06em] px-2 py-1.5 mt-2" style={{ color: "var(--fg-4)" }}>Operations</div>
-              {["Plans", "Members", "Check-ins", "Classes", "Staff"].map((s) => <div key={s} className="text-[12px] px-2 py-1" style={{ color: "var(--fg-3)" }}>{s}</div>)}
-              <div className="font-mono text-[9px] uppercase tracking-[0.06em] px-2 py-1.5 mt-2" style={{ color: "var(--fg-4)" }}>Marketplace</div>
-              {["Listing", "Reviews"].map((s) => <div key={s} className="text-[12px] px-2 py-1" style={{ color: "var(--fg-3)" }}>{s}</div>)}
-            </div>
-            <div className="flex-1 p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Tuesday · 12 May 2026</div>
-                  <div className="text-[16px] font-medium mt-1" style={{ color: "var(--ink)", letterSpacing: "-0.01em" }}>Good afternoon, Lerato</div>
-                </div>
-                <span className="btn-signal-v2 sm">Approve 3 staff requests</span>
-              </div>
-              <div className="grid grid-cols-4 gap-3 mb-4">
-                {[{ l: "Members today", v: "142", d: "+18 vs avg" }, { l: "Active subs", v: "1,284", d: "+12.4%" }, { l: "Revenue · MTD", v: "$42.8k", d: "−2.1%", down: true }, { l: "Avg rating", v: "4.82", d: "±0.00", flat: true }].map((s) => (
-                  <div key={s.l} className="rounded-(--r-2) px-3 py-2.5 transition-all duration-200 hover:shadow-[0_2px_8px_oklch(0_0_0/0.06)] hover:-translate-y-0.5" style={{ border: "1px solid var(--border)" }}>
-                    <div className="font-mono text-[9px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.l}</div>
-                    <div className="text-[18px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{s.v}</div>
-                    <div className="font-mono text-[9px] mt-0.5" style={{ color: s.down ? "var(--danger)" : s.flat ? "var(--fg-3)" : "var(--signal-ink)" }}>{s.d}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-(--r-2) overflow-hidden" style={{ border: "1px solid var(--border)" }}>
-                <svg viewBox="0 0 600 110" preserveAspectRatio="none" className="w-full" style={{ height: "100px" }}>
-                  <defs><linearGradient id="gA" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="oklch(0.68 0.16 148)" stopOpacity="0.18" /><stop offset="1" stopColor="oklch(0.68 0.16 148)" stopOpacity="0" /></linearGradient></defs>
-                  <path d="M0,85 L40,72 L80,76 L120,60 L160,64 L200,48 L240,52 L280,40 L320,46 L360,30 L400,38 L440,22 L480,30 L520,18 L560,24 L600,12 L600,110 L0,110 Z" fill="url(#gA)" />
-                  <path d="M0,85 L40,72 L80,76 L120,60 L160,64 L200,48 L240,52 L280,40 L320,46 L360,30 L400,38 L440,22 L480,30 L520,18 L560,24 L600,12" fill="none" stroke="oklch(0.68 0.16 148)" strokeWidth="1.6" />
-                  <g stroke="oklch(0.86 0.008 85)" strokeWidth="0.5"><line x1="0" x2="600" y1="30" y2="30" /><line x1="0" x2="600" y1="55" y2="55" /><line x1="0" x2="600" y1="80" y2="80" /></g>
-                </svg>
-                <div className="flex justify-between px-3 py-1.5 font-mono text-[9px]" style={{ color: "var(--fg-3)", borderTop: "1px solid var(--border)" }}>
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <span key={d}>{d}</span>)}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ScrollReveal delay={100}>
+          <DashboardMosaic />
         </ScrollReveal>
         <div className="text-center mt-5">
-          <Link href="/dashboard/gym-owner" className="btn-ghost-v2">Open the full dashboard →</Link>
+          <Link href="/marketplace" className="btn-ghost-v2">Explore the marketplace →</Link>
         </div>
       </section>
 
@@ -324,7 +223,7 @@ export default function Home() {
               <p className="text-[14px] text-fg-2 leading-relaxed m-0">{step.desc}</p>
               <div className="mt-auto pt-4 flex justify-center" style={{ borderTop: "1px solid var(--border)" }}>
                 {step.title === "Find" && (
-                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
+                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
                     <rect x="14" y="14" width="172" height="22" rx="4" />
                     <circle cx="26" cy="25" r="4" className="step-find-lens" />
                     <path d="m31 30 5 5" className="step-find-lens" />
@@ -336,7 +235,7 @@ export default function Home() {
                   </svg>
                 )}
                 {step.title === "Subscribe" && (
-                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
+                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
                     <rect x="36" y="20" width="128" height="70" rx="6" />
                     <rect x="44" y="32" width="50" height="6" rx="1" fill="currentColor" />
                     <rect x="44" y="44" width="80" height="3" rx="1.5" fill="var(--fg-3)" stroke="none" />
@@ -353,7 +252,7 @@ export default function Home() {
                   </svg>
                 )}
                 {step.title === "Show up" && (
-                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
+                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
                     <rect x="60" y="14" width="80" height="80" rx="6" />
                     <g fill="currentColor" stroke="none">
                       <rect x="70" y="24" width="18" height="18" rx="1" />
@@ -378,9 +277,9 @@ export default function Home() {
 
       {/* ═══ TRUST STRIP ═══ */}
       <div className="mx-auto max-w-360">
-        <ScrollReveal stagger staggerInterval={60} className="grid grid-cols-3 sm:grid-cols-5 border-b border-border">
+        <ScrollReveal stagger staggerInterval={60} className="grid grid-cols-5 border-b border-border">
           {["Stripe", "Paystack", "Flutterwave", "Apple Pay", "Google Pay"].map((name, i) => (
-            <div key={name} className={`py-5 sm:py-7 px-4 sm:px-6 text-center text-fg-3 font-mono text-[11px] sm:text-[12px] uppercase tracking-[0.04em] ${i < 4 ? "border-r border-border" : ""} ${i >= 3 ? "hidden sm:block" : ""}`}>
+            <div key={name} className={`py-4 sm:py-7 px-2 sm:px-6 text-center text-fg-3 font-mono text-[9px] sm:text-[12px] uppercase tracking-[0.04em] ${i < 4 ? "border-r border-border" : ""}`}>
               {name}
             </div>
           ))}
@@ -400,7 +299,7 @@ export default function Home() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal stagger staggerInterval={120} className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <ScrollReveal stagger staggerInterval={120} className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {[
             {
               quote: "We went from three spreadsheets and a WhatsApp group to one dashboard. Check-ins are automatic, revenue is tracked, and I finally know which tiers actually show up. Should have switched two years ago.",
@@ -419,12 +318,20 @@ export default function Home() {
               statLabel: "saved per day",
             },
             {
-              quote: "The food database actually has the foods my clients eat. Not just chicken breast and broccoli — fufu, bobotie, jollof. I built 340 meal plans last year without manually entering a single macronutrient. That alone is worth it.",
+              quote: "The food database actually has the foods my clients eat. Not just chicken breast and broccoli — shawarma, biryani, machboos, hummus. I built 340 meal plans last year without manually entering a single macronutrient. That alone is worth it.",
               name: "Dr. Nadia Hassan",
               meta: "Clinical dietitian · Dubai · RD, ISAK",
               accent: "var(--dietitian)",
               stat: "2,400+",
               statLabel: "foods in FCDB",
+            },
+            {
+              quote: "I found a verified gym two streets from my office, subscribed in Naira, and checked in with a QR code the same afternoon. My streak is at 247 days now. I have never stuck with a gym this long — the progress tracking makes it feel like a game I keep winning.",
+              name: "Kemi Abayomi",
+              meta: "Member · Lagos · 18-month streak",
+              accent: "var(--ink)",
+              stat: "247",
+              statLabel: "day streak",
             },
           ].map((t) => (
             <div key={t.name} className="rounded-(--r-3) border border-border bg-bg p-6 sm:p-7 flex flex-col justify-between">
@@ -483,7 +390,7 @@ export default function Home() {
             <h3 className="text-[24px] font-medium mt-1" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Free</h3>
             <div className="font-mono text-[12px] text-fg-3">For new providers · forever free</div>
             <ul className="flex flex-col gap-1.5 list-none p-0 mt-3">
-              {["One marketplace listing", "Up to 50 active members", "QR check-ins included", "Standard payment fees apply"].map((b) => (
+              {["One marketplace listing", "Up to 50 active members", "QR check-ins included", "5% platform fee on transactions"].map((b) => (
                 <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
               ))}
             </ul>
@@ -494,7 +401,7 @@ export default function Home() {
           <div className="p-6 sm:p-7 flex flex-col gap-3.5 border-b sm:border-b-0 sm:border-r border-border" style={{ background: "var(--bg-2)" }}>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-3">Studio</span>
-              <span className="inline-flex items-center gap-1.25 h-4.5 px-2 rounded-(--r-1) text-[11px] font-medium bg-signal-soft text-signal-ink border border-[oklch(0.88_0.05_148)]">Most picked</span>
+              <span className="inline-flex items-center gap-1.25 h-4.5 px-2 rounded-(--r-1) text-[11px] font-medium bg-signal-soft text-signal-ink border border-[oklch(0.88_0.05_148)]">Recommended</span>
             </div>
             <h3 className="text-[24px] font-medium mt-1" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
               $48 <span className="font-mono text-[13px] text-fg-3 font-normal">/ month</span>
@@ -548,7 +455,7 @@ export default function Home() {
             className="text-[32px] sm:text-[56px] font-medium leading-[0.98] max-w-[12ch]"
             style={{ letterSpacing: "-0.035em", color: "var(--bg)" }}
           >
-            The next 142 check-ins are already on the way.{" "}
+            Your next members are already searching.{" "}
             <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>Be ready for them.</em>
           </h2>
           <div className="flex flex-col gap-4 items-start">

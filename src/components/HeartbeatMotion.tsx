@@ -141,6 +141,7 @@ export default function HeartbeatMotion() {
   const recentPulses = useRef<number[]>([]);
   const timeoutIds = useRef<ReturnType<typeof setTimeout>[]>([]);
   const alive = useRef(true);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   const setHubDotRef = useCallback(
     (id: string) => (el: SVGCircleElement | null) => {
@@ -152,14 +153,19 @@ export default function HeartbeatMotion() {
   useEffect(() => {
     alive.current = true;
     const layer = pulseLayerRef.current;
-    if (!layer) return;
+    const stage = stageRef.current;
+    if (!layer || !stage) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let visible = true;
 
     function spawnPulse() {
-      if (!alive.current || !layer) return;
+      if (!alive.current || !layer || !visible) return;
 
       const a = ARTERY_PATHS[Math.floor(Math.random() * ARTERY_PATHS.length)];
       const isAccent = Math.random() < 0.16;
-      const dur = 1800 + Math.random() * 800;
+      const dur = 3200 + Math.random() * 1200;
 
       const c = document.createElementNS(NS, "circle");
       c.setAttribute("r", isAccent ? "3.2" : "2.4");
@@ -218,10 +224,20 @@ export default function HeartbeatMotion() {
       };
 
       // schedule next pulse
-      const nextDelay = 300 + Math.random() * 600;
+      const nextDelay = 800 + Math.random() * 1200;
       const tid = setTimeout(spawnPulse, nextDelay);
       timeoutIds.current.push(tid);
     }
+
+    const visObs = new IntersectionObserver(
+      ([entry]) => {
+        const wasHidden = !visible;
+        visible = entry.isIntersecting;
+        if (visible && wasHidden) spawnPulse();
+      },
+      { threshold: 0.05 }
+    );
+    visObs.observe(stage);
 
     // staggered start
     const t1 = setTimeout(spawnPulse, 200);
@@ -231,6 +247,7 @@ export default function HeartbeatMotion() {
 
     return () => {
       alive.current = false;
+      visObs.disconnect();
       timeoutIds.current.forEach(clearTimeout);
       timeoutIds.current = [];
       // clean any remaining pulse circles
@@ -241,7 +258,7 @@ export default function HeartbeatMotion() {
   }, []);
 
   return (
-    <div className="hb-stage">
+    <div className="hb-stage" ref={stageRef}>
       <style>{`
         .hb-stage {
           --hb-bg-2: oklch(0.94 0.014 75);
@@ -404,6 +421,8 @@ export default function HeartbeatMotion() {
         className="hb-svg"
         viewBox="0 0 480 480"
         xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="Animated network graph showing live sessions between London, Lagos, Dubai, Cape Town, and Nairobi"
       >
         <defs>
           {ARTERY_PATHS.slice(0, 8).map((a, i) => (

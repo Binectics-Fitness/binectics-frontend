@@ -34,13 +34,14 @@ function formatNumber(n: number, decimals: number, useCommas: boolean): string {
   return dec ? `${commaInt}.${dec}` : commaInt;
 }
 
-export default function CountUp({ value, duration = 1200, className, style }: CountUpProps) {
+export default function CountUp({ value, duration: durationProp, className, style }: CountUpProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [display, setDisplay] = useState(value);
   const hasAnimated = useRef(false);
 
   const { prefix, number, suffix, decimals } = parseNumeric(value);
   const useCommas = value.includes(",");
+  const duration = durationProp ?? (number < 10 ? 400 : number < 100 ? 700 : 1200);
 
   useEffect(() => {
     const el = ref.current;
