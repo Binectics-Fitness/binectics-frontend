@@ -134,7 +134,7 @@ export default function Home() {
         <ScrollReveal>
           <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
             <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
-              Four roles,<br />one <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>product</em>.
+              Four roles.<br />One product.
             </h2>
             <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
               A marketplace is only as good as the operators on it. Binectics gives each role its
@@ -185,16 +185,14 @@ export default function Home() {
       </div>
 
       {/* ═══ PRODUCT PREVIEW — Dashboard Mosaic ═══ */}
-      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border">
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-20 sm:py-32 border-b border-border">
         <ScrollReveal>
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
-            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
-              The dashboard is <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>calm</em>.<br />The work isn&apos;t.
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              The dashboard is <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>calm</em>. The work isn&apos;t.
             </h2>
-            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
-              Dense data on flat surfaces. Tabular numerals everywhere. One signal color
-              reserved for the action that actually matters — so when something asks for
-              your attention, you know it earned it.
+            <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed">
+              Dense data, flat surfaces, one signal color.
             </p>
           </div>
         </ScrollReveal>
@@ -207,14 +205,13 @@ export default function Home() {
       {/* ═══ HOW IT WORKS ═══ */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border" id="how">
         <ScrollReveal>
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
-            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
-              Three steps<br />from <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>signup</em><br />to <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>sweat</em>.
+          <div className="text-center mb-10 sm:mb-14">
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-fg-3 mb-3">3 steps</div>
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              How it works
             </h2>
-            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
-              Members find verified providers in seconds. Providers list once and earn from
-              the first day. Payments route to the right rails per currency — Stripe, Paystack,
-              Flutterwave — without anyone thinking about it.
+            <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed max-w-120 mx-auto">
+              Find a verified provider, subscribe in your currency, and check in by QR — all in one tab.
             </p>
           </div>
         </ScrollReveal>
@@ -284,30 +281,35 @@ export default function Home() {
       </section>
 
       {/* ═══ TESTIMONIALS — Metric Cards ═══ */}
-      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border">
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-14 sm:py-20 border-b border-border">
         <ScrollReveal>
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
-            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
-              What they&apos;re<br /><em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>saying</em>.
-            </h2>
-            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
-              Gym owners, trainers, dietitians, and members — from Lagos to Cape Town to Dubai. Here&apos;s what switching to one platform actually feels like.
-            </p>
+          <h2 className="text-[32px] sm:text-[48px] font-medium leading-none mb-10 sm:mb-14" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+            Real operators, real numbers.
+          </h2>
+        </ScrollReveal>
+
+        {/* Hero testimonial — full width, horizontal */}
+        <ScrollReveal>
+          <div className="rounded-(--r-3) border border-border bg-bg p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-6 sm:gap-10 items-center mb-3.5">
+            <div className="sm:border-r sm:border-border sm:pr-10">
+              <div className="text-[48px] sm:text-[64px] font-medium leading-none" style={{ color: "var(--gym)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.03em" }}>94%</div>
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-1.5" style={{ color: "var(--fg-3)" }}>check-in accuracy</div>
+            </div>
+            <div>
+              <p className="text-[16px] sm:text-[18px] leading-[1.65] text-fg-2 mb-5">
+                &ldquo;We went from three spreadsheets and a WhatsApp group to one dashboard. Check-ins are automatic, revenue is tracked, and I finally know which tiers actually show up.&rdquo;
+              </p>
+              <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Adaeze Okonkwo</div>
+              <div className="font-mono text-[11px] mt-0.5" style={{ color: "var(--fg-3)" }}>Gym owner · FitZone · Lagos</div>
+            </div>
           </div>
         </ScrollReveal>
 
-        <ScrollReveal stagger staggerInterval={120} className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {/* Remaining 3 testimonials — 3-col grid */}
+        <ScrollReveal stagger staggerInterval={100} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           {[
             {
-              quote: "We went from three spreadsheets and a WhatsApp group to one dashboard. Check-ins are automatic, revenue is tracked, and I finally know which tiers actually show up. Should have switched two years ago.",
-              name: "Adaeze Okonkwo",
-              meta: "Gym owner · FitZone · Lagos",
-              accent: "var(--gym)",
-              stat: "94%",
-              statLabel: "check-in accuracy",
-            },
-            {
-              quote: "I used to spend 90 minutes a day on invoices and scheduling. Now I open one tab, see my sessions, and payments just land. The client journal means I actually remember what we did last Tuesday. My clients noticed the difference.",
+              quote: "I used to spend 90 minutes a day on invoices and scheduling. Now I open one tab, see my sessions, and payments just land. The client journal means I actually remember what we did last Tuesday.",
               name: "Sarah Okafor",
               meta: "Personal trainer · Cape Town · CSCS",
               accent: "var(--trainer)",
@@ -315,7 +317,7 @@ export default function Home() {
               statLabel: "saved per day",
             },
             {
-              quote: "The food database actually has the foods my clients eat. Not just chicken breast and broccoli — shawarma, biryani, machboos, hummus. I built 340 meal plans last year without manually entering a single macronutrient. That alone is worth it.",
+              quote: "The food database actually has the foods my clients eat. Not just chicken breast and broccoli — shawarma, biryani, machboos, hummus. I built 340 meal plans last year without manually entering a single macronutrient.",
               name: "Dr. Nadia Hassan",
               meta: "Clinical dietitian · Dubai · RD, ISAK",
               accent: "var(--dietitian)",
@@ -323,7 +325,7 @@ export default function Home() {
               statLabel: "foods in FCDB",
             },
             {
-              quote: "I found a verified gym two streets from my office, subscribed in Naira, and checked in with a QR code the same afternoon. My streak is at 247 days now. I have never stuck with a gym this long — the progress tracking makes it feel like a game I keep winning.",
+              quote: "I found a verified gym two streets from my office, subscribed in Naira, and checked in with a QR code the same afternoon. My streak is at 247 days — the progress tracking makes it feel like a game I keep winning.",
               name: "Kemi Abayomi",
               meta: "Member · Lagos · 18-month streak",
               accent: "var(--ink)",
@@ -369,13 +371,12 @@ export default function Home() {
       {/* ═══ PRICING ═══ */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border" id="pricing">
         <ScrollReveal>
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
-            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
-              Pricing<br />that <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>scales</em><br />with you.
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              Transparent pricing.
             </h2>
-            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
-              Free to list. Members pay providers directly; we take a transparent platform fee
-              on processed payments. No setup fees, no per-seat charges, no annual lock-ins.
+            <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed">
+              Free to list. We take a platform fee on processed payments — no setup costs, no lock-ins.
             </p>
           </div>
         </ScrollReveal>
@@ -428,21 +429,24 @@ export default function Home() {
       </section>
 
       {/* ═══ FAQ ═══ */}
-      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border" id="faq">
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-14 sm:py-20 border-b border-border" id="faq">
         <ScrollReveal>
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
-            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
-              Questions,<br />answered <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>plainly</em>.
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              Common questions
             </h2>
-            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
-              If your question isn&apos;t here, contact provider success at help@binectics.com — most replies in under four hours during weekdays.
-            </p>
           </div>
         </ScrollReveal>
 
         <ScrollReveal delay={80} className="border border-border rounded-(--r-3) overflow-hidden bg-bg">
           <FaqAccordion items={faqItems} />
         </ScrollReveal>
+
+        <div className="text-center mt-6">
+          <p className="font-mono text-[11px] text-fg-3 tracking-[0.02em]">
+            Still have questions? Reach us at help@binectics.com — most replies in under four hours.
+          </p>
+        </div>
       </section>
 
       {/* ═══ CTA ═══ */}
