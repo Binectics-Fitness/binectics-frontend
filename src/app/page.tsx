@@ -185,15 +185,73 @@ export default function Home() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal delay={120}>
+        {/* Mobile dashboard mockup — phone-style frame */}
+        <ScrollReveal delay={120} className="sm:hidden">
+        <div className="mx-auto max-w-[320px] rounded-[24px] overflow-hidden" style={{ border: "3px solid var(--ink)", background: "var(--bg)" }}>
+          <div className="flex items-center justify-center py-1.5" style={{ background: "var(--ink)" }}>
+            <div className="w-16 h-1 rounded-full" style={{ background: "oklch(0.4 0 0)" }} />
+          </div>
+          <div className="px-3.5 pt-3 pb-1.5" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-[4px] flex items-center justify-center text-[8px] font-semibold" style={{ background: "var(--gym)", color: "oklch(0.98 0 0)" }}>IL</span>
+                <span className="text-[12px] font-medium" style={{ color: "var(--ink)" }}>Iron Lab</span>
+              </div>
+              <div className="flex gap-1.5">
+                <span className="w-5 h-5 rounded-full" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }} />
+                <span className="w-5 h-5 rounded-full" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }} />
+              </div>
+            </div>
+            <div className="font-mono text-[8px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Tuesday · 12 May 2026</div>
+            <div className="text-[13px] font-medium mt-0.5 mb-2" style={{ color: "var(--ink)", letterSpacing: "-0.01em" }}>Good afternoon, Lerato</div>
+          </div>
+          <div className="p-3.5">
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {[{ l: "Members", v: "142", d: "+18" }, { l: "Active subs", v: "1,284", d: "+12.4%" }, { l: "Revenue", v: "$42.8k", d: "−2.1%", down: true }, { l: "Rating", v: "4.82", d: "±0.00", flat: true }].map((s) => (
+                <div key={s.l} className="rounded-(--r-2) px-2.5 py-2" style={{ border: "1px solid var(--border)" }}>
+                  <div className="font-mono text-[7px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.l}</div>
+                  <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{s.v}</div>
+                  <div className="font-mono text-[7px] mt-0.5" style={{ color: s.down ? "var(--danger)" : s.flat ? "var(--fg-3)" : "var(--signal-ink)" }}>{s.d}</div>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-(--r-2) overflow-hidden mb-3" style={{ border: "1px solid var(--border)" }}>
+              <svg viewBox="0 0 600 110" preserveAspectRatio="none" className="w-full" style={{ height: "72px" }}>
+                <defs><linearGradient id="gAm" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="oklch(0.68 0.16 148)" stopOpacity="0.18" /><stop offset="1" stopColor="oklch(0.68 0.16 148)" stopOpacity="0" /></linearGradient></defs>
+                <path d="M0,85 L40,72 L80,76 L120,60 L160,64 L200,48 L240,52 L280,40 L320,46 L360,30 L400,38 L440,22 L480,30 L520,18 L560,24 L600,12 L600,110 L0,110 Z" fill="url(#gAm)" />
+                <path d="M0,85 L40,72 L80,76 L120,60 L160,64 L200,48 L240,52 L280,40 L320,46 L360,30 L400,38 L440,22 L480,30 L520,18 L560,24 L600,12" fill="none" stroke="oklch(0.68 0.16 148)" strokeWidth="1.6" />
+                <g stroke="oklch(0.86 0.008 85)" strokeWidth="0.5"><line x1="0" x2="600" y1="30" y2="30" /><line x1="0" x2="600" y1="55" y2="55" /><line x1="0" x2="600" y1="80" y2="80" /></g>
+              </svg>
+              <div className="flex justify-between px-2.5 py-1 font-mono text-[7px]" style={{ color: "var(--fg-3)", borderTop: "1px solid var(--border)" }}>
+                {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <span key={i}>{d}</span>)}
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-2.5 py-2 rounded-(--r-2)" style={{ background: "var(--signal-soft)" }}>
+              <span className="text-[10px] font-medium" style={{ color: "var(--signal-ink)" }}>3 staff requests pending</span>
+              <span className="text-[9px] font-mono" style={{ color: "var(--signal-ink)" }}>Review →</span>
+            </div>
+          </div>
+          <div className="flex justify-around py-2" style={{ borderTop: "1px solid var(--border)" }}>
+            {["Home", "Members", "Plans", "More"].map((t) => (
+              <span key={t} className="flex flex-col items-center gap-0.5">
+                <span className="w-4 h-4 rounded-full" style={{ background: t === "Home" ? "var(--ink)" : "var(--bg-3)" }} />
+                <span className="text-[7px] font-mono" style={{ color: t === "Home" ? "var(--ink)" : "var(--fg-3)" }}>{t}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+        </ScrollReveal>
+
+        {/* Desktop dashboard mockup — browser-style frame */}
+        <ScrollReveal delay={120} className="hidden sm:block">
         <div className="rounded-(--r-3) overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_oklch(0_0_0/0.08)] hover:-translate-y-1" style={{ border: "1px solid var(--border)" }}>
           <div className="flex items-center gap-3 px-4 py-2.5 font-mono text-[11px]" style={{ background: "var(--bg-2)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}>
             <div className="flex gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /></div>
             <span>app.binectics.com / dashboard / gym-owner</span>
-            <span className="ml-auto hidden sm:flex gap-3.5"><span>Iron Lab · 4 locations</span><span>·</span><span>14:32 GMT</span></span>
+            <span className="ml-auto flex gap-3.5"><span>Iron Lab · 4 locations</span><span>·</span><span>14:32 GMT</span></span>
           </div>
           <div className="flex" style={{ background: "var(--bg)" }}>
-            <div className="hidden sm:flex flex-col gap-0.5 py-4 px-4 shrink-0" style={{ width: "160px", borderRight: "1px solid var(--border)", background: "var(--bg-2)" }}>
+            <div className="flex flex-col gap-0.5 py-4 px-4 shrink-0" style={{ width: "160px", borderRight: "1px solid var(--border)", background: "var(--bg-2)" }}>
               <div className="font-mono text-[9px] uppercase tracking-[0.06em] px-2 py-1.5" style={{ color: "var(--fg-4)" }}>Overview</div>
               <div className="text-[12px] px-2 py-1 rounded-(--r-1) font-medium" style={{ background: "var(--bg)", color: "var(--ink)" }}>Dashboard</div>
               {["Analytics", "Revenue"].map((s) => <div key={s} className="text-[12px] px-2 py-1" style={{ color: "var(--fg-3)" }}>{s}</div>)}
@@ -202,15 +260,15 @@ export default function Home() {
               <div className="font-mono text-[9px] uppercase tracking-[0.06em] px-2 py-1.5 mt-2" style={{ color: "var(--fg-4)" }}>Marketplace</div>
               {["Listing", "Reviews"].map((s) => <div key={s} className="text-[12px] px-2 py-1" style={{ color: "var(--fg-3)" }}>{s}</div>)}
             </div>
-            <div className="flex-1 p-4 sm:p-6">
+            <div className="flex-1 p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <div className="font-mono text-[10px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Tuesday · 12 May 2026</div>
                   <div className="text-[16px] font-medium mt-1" style={{ color: "var(--ink)", letterSpacing: "-0.01em" }}>Good afternoon, Lerato</div>
                 </div>
-                <span className="hidden sm:inline-flex btn-signal-v2 sm">Approve 3 staff requests</span>
+                <span className="btn-signal-v2 sm">Approve 3 staff requests</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-4 gap-3 mb-4">
                 {[{ l: "Members today", v: "142", d: "+18 vs avg" }, { l: "Active subs", v: "1,284", d: "+12.4%" }, { l: "Revenue · MTD", v: "$42.8k", d: "−2.1%", down: true }, { l: "Avg rating", v: "4.82", d: "±0.00", flat: true }].map((s) => (
                   <div key={s.l} className="rounded-(--r-2) px-3 py-2.5 transition-all duration-200 hover:shadow-[0_2px_8px_oklch(0_0_0/0.06)] hover:-translate-y-0.5" style={{ border: "1px solid var(--border)" }}>
                     <div className="font-mono text-[9px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.l}</div>
