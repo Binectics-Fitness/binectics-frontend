@@ -1374,8 +1374,11 @@ function Row3DashCard() {
 
   return (
     <div ref={r3Ref} className="bento-card bento-r3" role="img" aria-label="Gym owner analytics dashboard preview" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <div className="r3-mob-headline">
+      <div className="r3-desk-headline">
         <h3>Gym owner analytics, <em>live</em>.</h3>
+      </div>
+      <div className="r3-mob-headline">
+        <h3>Subscribe in <em>seconds</em>.</h3>
       </div>
       {/* Breathing wave background */}
       <div className="r3-breath-bg" aria-hidden="true">
@@ -2254,18 +2257,19 @@ export default function DashboardMosaic() {
           .kiosk-playing .k-tick svg path { animation: none; stroke-dashoffset: 0; }
         }
 
-        /* ── Row 3 headline ── */
-        .r3-mob-headline {
+        /* ── Row 3 headlines ── */
+        .r3-desk-headline, .r3-mob-headline {
           position: absolute;
           top: 28px; left: 28px;
           z-index: 5;
         }
-        .r3-mob-headline h3 {
+        .r3-desk-headline h3, .r3-mob-headline h3 {
           font-size: 26px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0;
         }
-        .r3-mob-headline em {
+        .r3-desk-headline em, .r3-mob-headline em {
           font-family: var(--font-serif); font-style: italic; font-weight: 400;
         }
+        .r3-mob-headline { display: none; }
 
         /* ── Tablet (769–1024px) ───────────────── */
         @media (max-width: 1024px) and (min-width: 769px) {
@@ -2312,6 +2316,8 @@ export default function DashboardMosaic() {
 
           /* Row 3 */
           .bento-r3 { grid-column: span 1; min-height: 400px; }
+          .r3-desk-headline { display: none; }
+          .r3-mob-headline { display: block; }
           .r3-mob-headline h3 { font-size: 22px; }
           .r3-window { display: none; }
           .r3-float {
