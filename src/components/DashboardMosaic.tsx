@@ -697,7 +697,7 @@ function Row1BigCard() {
       </div>
       <DashboardPreview />
       <div className="bento-big-headline">
-        <h3>Train, track, <em>repeat</em>.</h3>
+        <h3>Train, track, repeat.</h3>
       </div>
     </div>
   );
@@ -791,7 +791,7 @@ function Row1SmallCard() {
         </svg>
       </div>
       <div className="bento-small-headline">
-        <h3>Never miss a <em>day</em>.</h3>
+        <h3>Never miss a day.</h3>
       </div>
       <div className="small-card-content" style={{ position: "relative", padding: "0 8%", paddingTop: 170, display: "flex", flexDirection: "column", justifyContent: "flex-start", height: "100%", gap: 16 }}>
         {/* Stat tile */}
@@ -1059,7 +1059,7 @@ function Row2QRCard() {
         {[1, 2, 3, 4].map(i => <div key={i} className="radar-circle" style={{ width: 100 + i * 120, height: 100 + i * 120 }} />)}
         <div className="radar-sweep" />
       </div>
-      <div className="r2-headline"><h3>Walk in, you&apos;re <em>in</em>.</h3></div>
+      <div className="r2-headline"><h3>Walk in, you&apos;re in.</h3></div>
       <div className="r2-content"><KioskFrame playing={playing} member={KIOSK_MEMBERS[memberIdx]} playKey={playKey} /></div>
     </div>
   );
@@ -1099,7 +1099,7 @@ function Row2VerifyCard() {
           } as React.CSSProperties}>{c.ch}</span>
         ))}
       </div>
-      <div className="r2-headline"><h3>Trust, <em>verified</em>.</h3></div>
+      <div className="r2-headline"><h3>Trust, verified.</h3></div>
       <div className="r2-content">
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, width: "100%", maxWidth: 300 }}>
           <div className="verify-shield" style={{ flexShrink: 0, padding: 8 }}>
@@ -1159,7 +1159,7 @@ function Row2GlobalCard() {
           <path key={`lat-${i}`} className="meridian-lat" d={`M 0 ${y} Q 200 ${y + 15} 400 ${y}`} stroke="oklch(0.14 0.008 80 / 0.06)" strokeWidth="1" style={{ transitionDelay: `${i * 80}ms` }} />
         ))}
       </svg>
-      <div className="r2-headline"><h3>Everywhere <em>you</em> train.</h3></div>
+      <div className="r2-headline"><h3>Everywhere you train.</h3></div>
       <div className="r2-content">
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, width: "100%" }}>
           <div className="globe-cluster">
@@ -1375,10 +1375,10 @@ function Row3DashCard() {
   return (
     <div ref={r3Ref} className="bento-card bento-r3" role="img" aria-label="Gym owner analytics dashboard preview" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <div className="r3-desk-headline">
-        <h3>Gym owner analytics, <em>live</em>.</h3>
+        <h3>Gym owner analytics, live.</h3>
       </div>
       <div className="r3-mob-headline">
-        <h3>Subscribe in <em>seconds</em>.</h3>
+        <h3>Subscribe in seconds.</h3>
       </div>
       {/* Breathing wave background */}
       <div className="r3-breath-bg" aria-hidden="true">
@@ -1807,11 +1807,6 @@ export default function DashboardMosaic() {
           color: var(--ink);
           margin: 0;
         }
-        .bento-big-headline em {
-          font-family: var(--font-serif);
-          font-style: italic;
-          font-weight: 400;
-        }
 
         /* ── Small card headline ────────────────── */
         .bento-small-headline {
@@ -1826,11 +1821,6 @@ export default function DashboardMosaic() {
           letter-spacing: -0.02em;
           color: var(--ink);
           margin: 0;
-        }
-        .bento-small-headline em {
-          font-family: var(--font-serif);
-          font-style: italic;
-          font-weight: 400;
         }
 
         .small-card-inner {
@@ -1881,7 +1871,6 @@ export default function DashboardMosaic() {
         .bento-r2 { grid-column: span 1; min-height: 800px; cursor: default; }
         .r2-headline { position: absolute; top: 28px; left: 28px; z-index: 5; }
         .r2-headline h3 { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
-        .r2-headline em { font-family: var(--font-serif); font-style: italic; font-weight: 400; }
         .r2-content { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; min-height: 100%; padding: 80px 24px 32px; box-sizing: border-box; }
 
         /* ── Radar sweep (QR card) ─────────────── */
@@ -2265,9 +2254,6 @@ export default function DashboardMosaic() {
         }
         .r3-desk-headline h3, .r3-mob-headline h3 {
           font-size: 26px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0;
-        }
-        .r3-desk-headline em, .r3-mob-headline em {
-          font-family: var(--font-serif); font-style: italic; font-weight: 400;
         }
         .r3-mob-headline { display: none; }
 
