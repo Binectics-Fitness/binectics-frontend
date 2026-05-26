@@ -101,7 +101,7 @@ export default function PublishSuccessModal({
                 className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg bg-white text-foreground-secondary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
-              <Button onClick={handleCopyLink} variant="secondary">
+              <Button onClick={handleCopyLink} variant="ghost">
                 {copied ? (
                   <>
                     <svg
@@ -146,7 +146,7 @@ export default function PublishSuccessModal({
 
           {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-            <Button onClick={handleViewForm} variant="secondary">
+            <Button onClick={handleViewForm} variant="ghost">
               <svg
                 className="w-4 h-4 mr-2"
                 fill="none"
@@ -168,7 +168,7 @@ export default function PublishSuccessModal({
               </svg>
               Preview Form
             </Button>
-            <Button onClick={handleViewResponses} variant="secondary">
+            <Button onClick={handleViewResponses} variant="ghost">
               <svg
                 className="w-4 h-4 mr-2"
                 fill="none"

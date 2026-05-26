@@ -5,22 +5,15 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
-import { Input, PasswordInput } from "@/components";
 import { AccountType } from "@/lib/types";
 import { registerSchema, type RegisterFormData } from "@/lib/schemas/auth";
 import { mapApiErrors } from "@/lib/utils/form-errors";
+import { BinecticsLockup } from "@/components/BinecticsLogo";
 
-const REGISTER_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "password",
-  "confirmPassword",
-] as const;
+const REGISTER_FIELDS = ["firstName", "lastName", "email", "password", "confirmPassword"] as const;
 
 export default function GymOwnerRegisterPage() {
   const { register: authRegister, isLoading: authLoading } = useAuth();
-
   const {
     register: registerField,
     handleSubmit,
@@ -28,231 +21,115 @@ export default function GymOwnerRegisterPage() {
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      acceptTos: false,
-    },
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", acceptTos: false },
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [apiErrors, setApiErrors] = useState<string[]>([]);
+  const [showPw, setShowPw] = useState(false);
+  const [showCpw, setShowCpw] = useState(false);
 
   const onSubmit = async (data: RegisterFormData) => {
     setApiErrors([]);
     setIsLoading(true);
-
     try {
       const result = await authRegister({
-        email: data.email,
-        password: data.password,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        role: AccountType.GYM_OWNER,
-        accept_tos: data.acceptTos,
+        email: data.email, password: data.password,
+        first_name: data.firstName, last_name: data.lastName,
+        role: AccountType.GYM_OWNER, accept_tos: data.acceptTos,
       });
-
       if (!result.success) {
         const unmapped = mapApiErrors(result, setError, REGISTER_FIELDS);
-        if (unmapped.length > 0) {
-          setApiErrors(unmapped);
-        }
+        if (unmapped.length > 0) setApiErrors(unmapped);
       }
-    } catch (error) {
-      setApiErrors(["An unexpected error occurred. Please try again."]);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch { setApiErrors(["Something went wrong. Please try again."]); }
+    finally { setIsLoading(false); }
   };
 
-  return (
-    <div className="min-h-screen bg-background-secondary">
-      <main className="py-12 sm:py-16">
-        <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 text-sm font-medium text-foreground-secondary transition-colors hover:text-accent-blue-500 mb-8"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Back to role selection
-          </Link>
+  const EyeIcon = ({ show }: { show: boolean }) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{show ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></> : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
+  );
 
+  const inputCls = "h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]";
+  const inputStyle = (err?: string) => ({ background: "var(--bg)", border: err ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" as const });
+  const lbl = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
+      <header className="flex items-center h-14 px-6" style={{ borderBottom: "1px solid var(--border)" }}>
+        <Link href="/"><BinecticsLockup /></Link>
+      </header>
+      <main className="flex-1 flex items-center justify-center px-5 py-12">
+        <div className="w-full max-w-md">
+          <Link href="/register" className="inline-flex items-center gap-2 text-[13px] font-medium mb-6" style={{ color: "var(--fg-2)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m15 19-7-7 7-7"/></svg>
+            Back
+          </Link>
           <div className="mb-8">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent-blue-100 px-4 py-2">
-              <svg
-                className="h-5 w-5 text-accent-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10"
-                />
-              </svg>
-              <span className="text-sm font-semibold text-accent-blue-600">
-                Gym Owner
-              </span>
+            <div className="inline-flex items-center gap-2 h-6 px-2.5 rounded-(--r-1) mb-3" style={{ background: "var(--gym-soft)", border: "1px solid oklch(0.88 0.04 248)" }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--gym)" }} />
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.05em]" style={{ color: "var(--gym)" }}>Gym / studio</span>
             </div>
-            <h1 className="font-display text-3xl font-black text-foreground sm:text-4xl">
-              Get started as a gym owner
-            </h1>
-            <p className="mt-2 text-base text-foreground-secondary">
-              You'll complete your gym details after creating your account
-            </p>
+            <h1 className="text-[28px] font-medium leading-tight" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>Create your gym account</h1>
+            <p className="text-[14.5px] mt-2" style={{ color: "var(--fg-3)" }}>List your gym and start growing your membership.</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
             {apiErrors.length > 0 && (
-              <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
-                <div className="flex gap-3">
-                  <svg
-                    className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div className="flex-1">
-                    <ul className="text-sm text-red-800 space-y-1">
-                      {apiErrors.map((error, index) => (
-                        <li key={index}>• {error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+              <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-(--r-2)" style={{ background: "oklch(0.95 0.03 25)", border: "1px solid oklch(0.85 0.06 25)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                <div className="text-[13px]" style={{ color: "var(--danger)" }}>{apiErrors.map((e, i) => <p key={i}>{e}</p>)}</div>
               </div>
             )}
-
-            <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)]">
-              <div className="space-y-5">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="First Name"
-                    placeholder="John"
-                    error={errors.firstName?.message}
-                    {...registerField("firstName")}
-                  />
-                  <Input
-                    label="Last Name"
-                    placeholder="Doe"
-                    error={errors.lastName?.message}
-                    {...registerField("lastName")}
-                  />
-                </div>
-                <Input
-                  label="Email Address"
-                  type="email"
-                  placeholder="john@gym.com"
-                  error={errors.email?.message}
-                  {...registerField("email")}
-                />
-                <PasswordInput
-                  label="Password"
-                  placeholder="••••••••"
-                  error={errors.password?.message}
-                  helperText="Min 12 characters with uppercase, lowercase, number, and special character (!@#$%^&*)"
-                  {...registerField("password")}
-                />
-                <PasswordInput
-                  label="Confirm Password"
-                  placeholder="••••••••"
-                  error={errors.confirmPassword?.message}
-                  {...registerField("confirmPassword")}
-                />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className={lbl} style={{ color: "var(--fg-3)" }}>First name <span style={{ color: "var(--danger)" }}>*</span></label>
+                <input placeholder="John" className={inputCls} style={inputStyle(errors.firstName?.message)} {...registerField("firstName")} />
+                {errors.firstName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.firstName.message}</p>}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={lbl} style={{ color: "var(--fg-3)" }}>Last name <span style={{ color: "var(--danger)" }}>*</span></label>
+                <input placeholder="Doe" className={inputCls} style={inputStyle(errors.lastName?.message)} {...registerField("lastName")} />
+                {errors.lastName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.lastName.message}</p>}
               </div>
             </div>
-
-            <div className="rounded-xl bg-accent-blue-50 p-4 border-2 border-accent-blue-200">
-              <div className="flex gap-3">
-                <svg
-                  className="h-5 w-5 text-accent-blue-600 flex-shrink-0 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-accent-blue-800 mb-1">
-                    Quick signup, complete later
-                  </p>
-                  <p className="text-sm text-accent-blue-700">
-                    After creating your account, you'll be guided to add your
-                    gym details, location, facilities, and business information.
-                  </p>
-                </div>
+            <div className="flex flex-col gap-1.5">
+              <label className={lbl} style={{ color: "var(--fg-3)" }}>Email <span style={{ color: "var(--danger)" }}>*</span></label>
+              <input type="email" placeholder="you@example.com" className={inputCls} style={inputStyle(errors.email?.message)} {...registerField("email")} />
+              {errors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.email.message}</p>}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className={lbl} style={{ color: "var(--fg-3)" }}>Password <span style={{ color: "var(--danger)" }}>*</span></label>
+              <div className="relative">
+                <input type={showPw ? "text" : "password"} placeholder="••••••••••••" className={`${inputCls} pr-9`} style={inputStyle(errors.password?.message)} {...registerField("password")} />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }}><EyeIcon show={showPw} /></button>
               </div>
+              {errors.password && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.password.message}</p>}
+              <p className="text-[12px]" style={{ color: "var(--fg-3)" }}>Min 12 characters with uppercase, lowercase, number, and special character</p>
             </div>
-
-            {/* Terms of Service Checkbox */}
-            <div className="space-y-2">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
-                  {...registerField("acceptTos")}
-                />
-                <span className="text-sm text-foreground-secondary">
-                  I agree to the{" "}
-                  <Link
-                    href="/terms"
-                    target="_blank"
-                    className="text-accent-blue-500 hover:text-accent-blue-600 font-medium"
-                  >
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/privacy"
-                    target="_blank"
-                    className="text-accent-blue-500 hover:text-accent-blue-600 font-medium"
-                  >
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-              {errors.acceptTos && (
-                <p className="text-sm text-red-600 ml-7">
-                  {errors.acceptTos.message}
-                </p>
-              )}
+            <div className="flex flex-col gap-1.5">
+              <label className={lbl} style={{ color: "var(--fg-3)" }}>Confirm password <span style={{ color: "var(--danger)" }}>*</span></label>
+              <div className="relative">
+                <input type={showCpw ? "text" : "password"} placeholder="••••••••••••" className={`${inputCls} pr-9`} style={inputStyle(errors.confirmPassword?.message)} {...registerField("confirmPassword")} />
+                <button type="button" onClick={() => setShowCpw(!showCpw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }}><EyeIcon show={showCpw} /></button>
+              </div>
+              {errors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.confirmPassword.message}</p>}
             </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || authLoading}
-              className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading || authLoading
-                ? "Creating Account..."
-                : "Create Account"}
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" className="sr-only" {...registerField("acceptTos")} />
+              <span className="w-4 h-4 rounded-1 border flex items-center justify-center shrink-0" style={{ background: "var(--bg)", borderColor: errors.acceptTos ? "var(--danger)" : "var(--border-2)" }} />
+              <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
+                I agree to the <Link href="/terms" target="_blank" className="font-medium" style={{ color: "var(--ink)" }}>Terms</Link> and <Link href="/privacy" target="_blank" className="font-medium" style={{ color: "var(--ink)" }}>Privacy Policy</Link>
+              </span>
+            </label>
+            {errors.acceptTos && <p className="text-[12px] -mt-3" style={{ color: "var(--danger)" }}>{errors.acceptTos.message}</p>}
+            <button type="submit" disabled={isLoading || authLoading} className="btn-signal-v2 w-full" style={{ height: "38px" }}>
+              {isLoading || authLoading ? "Creating account…" : "Create account"}
             </button>
           </form>
+          <p className="text-[13px] text-center mt-6" style={{ color: "var(--fg-3)" }}>
+            Already have an account? <Link href="/login" className="font-medium" style={{ color: "var(--ink)" }}>Sign in</Link>
+          </p>
         </div>
       </main>
     </div>

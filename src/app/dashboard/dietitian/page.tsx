@@ -1,620 +1,320 @@
-"use client";
+import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 
-import { useMemo } from "react";
-import Link from "next/link";
-import DietitianSidebar from "@/components/DietitianSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import ProviderOnboardingChecklist from "@/components/ProviderOnboardingChecklist";
-import { EmptyState } from "@/components/EmptyState";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { UserRole } from "@/lib/types";
-import {
-  ConsultationBookingStatus,
-  type ConsultationBooking,
-} from "@/lib/api/consultations";
-import { type ClientProfile, type LatestWeight } from "@/lib/api/progress";
-import {
-  useDashboardStats,
-  useClientProfiles,
-  useLatestWeights,
-} from "@/lib/queries/progress";
-import { useProviderBookings } from "@/lib/queries/consultations";
+/**
+ * Dietitian dashboard — Dr Nadia Hassan · Lagos
+ * Hardcoded to match dashboard-dietitian.html prototype.
+ */
 
-function getClientName(profile: ClientProfile): string {
-  if (typeof profile.client_id === "object" && profile.client_id) {
-    return `${profile.client_id.first_name} ${profile.client_id.last_name}`;
-  }
-  return "Unknown Client";
-}
+const STATS = [
+  { label: "Active clients", value: "68", delta: "+ 5 this month" },
+  { label: "Adherence · 30d avg", value: "76", suffix: "%", delta: "↑ 4 pts vs apr" },
+  { label: "Plans expiring · 7d", value: "9", delta: "Renewal nudge sent", warn: true },
+  { label: "Earnings · MTD", value: "₦ 1.84M", delta: "↑ 9% vs apr" },
+];
 
-function computeProgress(
-  profile: ClientProfile,
-  latestWeights: Record<string, LatestWeight | null>,
-): number {
-  const start = profile.starting_weight_kg;
-  const target = profile.target_weight_kg;
-  if (typeof start !== "number" || typeof target !== "number") return 0;
-  if (!isFinite(start) || !isFinite(target) || start === target) return 0;
+const CONSULTS = [
+  { time: "08:00", init: "FA", name: "Folake Adebayo", meta: "Initial assessment · PCOS · 75 min · Video", type: "intake", badge: "New · intake", badgeStyle: "signal", actions: ["Intake form", "Start consult"] },
+  { time: "10:00", init: "BO", name: "Bisi Okonkwo", meta: "Wk 6 review · cutting protocol · 30 min · 76% adherence", type: "review", badge: "Online", badgeStyle: "gym", actions: ["Open plan", "Join"] },
+  { time: "11:30", init: "KE", name: "Kemi Eze", meta: "Wk 12 check‑in · maintenance · 30 min · in‑person VI", actions: ["Open plan", "Check‑in"] },
+  { time: "14:00", init: "CO", name: "Chinedu O.", meta: "Wk 4 review · sport performance · 45 min · Iron Lab Lagos", actions: ["Open plan", "Check‑in"], afterGap: true },
+  { time: "15:30", init: "AT", name: "Adaora T.", meta: "Refund issued · rebooked May 14, 11:00", type: "cancelled", badge: "Cancelled · 09:14", badgeStyle: "danger" },
+  { time: "16:30", init: "SA", name: "Samuel Akinwale", meta: "Initial · type 2 diabetes referral · 75 min · video", type: "intake", badge: "New · intake", badgeStyle: "signal", actions: ["Intake form", "Start consult"], last: true },
+];
 
-  const latest = latestWeights[profile._id];
-  if (!latest) return 0;
+const CLIENTS = [
+  { init: "BO", name: "Bisi Okonkwo", plan: "Cutting · wk 6 / 12", kcal: "1,650 kcal target", spark: [78,92,64,88,80,84,90], sparkTypes: ["good","good","ok","good","good","good","good"], adherence: "82%", macros: [{k:"P",w:92,v:"138g"},{k:"C",w:70,v:"122g"},{k:"F",w:80,v:"52g"}], flag: "On track", flagType: "green" },
+  { init: "KE", name: "Kemi Eze", plan: "Maintenance · wk 12 / 16", kcal: "2,100 kcal target", spark: [85,78,88,92,80,86,84], sparkTypes: ["good","good","good","good","good","good","good"], adherence: "93%", macros: [{k:"P",w:95,v:"155g"},{k:"C",w:88,v:"220g"},{k:"F",w:92,v:"68g"}], flag: "Excellent", flagType: "green" },
+  { init: "CO", name: "Chinedu Okoro", plan: "Sport perf · wk 4 / 8", kcal: "3,200 kcal target", spark: [60,55,30,80,65,78,82], sparkTypes: ["ok","ok","miss","good","ok","good","good"], adherence: "64%", macros: [{k:"P",w:70,v:"168g"},{k:"C",w:52,v:"240g"},{k:"F",w:65,v:"82g"}], flag: "Needs nudge", flagType: "amber" },
+  { init: "AT", name: "Adaora Tunde", plan: "PCOS · wk 3 / 12", kcal: "1,750 kcal target", spark: [22,18,0,0,28,0,0], sparkTypes: ["miss","miss","miss","miss","miss","miss","miss"], adherence: "12%", macros: [{k:"P",w:18,v:"28g"},{k:"C",w:12,v:"22g"},{k:"F",w:8,v:"5g"}], flag: "4d silent", flagType: "red" },
+  { init: "MO", name: "Maryam Olawale", plan: "Gestational · wk 8 / 12", kcal: "2,300 kcal target", spark: [88,84,80,92,86,78,82], sparkTypes: ["good","good","good","good","good","good","good"], adherence: "86%", macros: [{k:"P",w:88,v:"142g"},{k:"C",w:80,v:"258g"},{k:"F",w:85,v:"78g"}], flag: "On track", flagType: "green" },
+];
 
-  const current = latest.weight_kg;
-  const totalChange = target - start;
-  const currentChange = current - start;
-  let progress = (currentChange / totalChange) * 100;
+const TEMPLATES = [
+  { t: "Cutting · West African staples · 1,650 kcal", s: "Halal · high‑P · 4 weeks · jollof / beans / fish base", used: "used 14×" },
+  { t: "PCOS protocol · low‑GI · 1,800 kcal", s: "Inositol guidance · 12 weeks", used: "used 9×" },
+  { t: "Type 2 diabetes · stepped carb · 1,950 kcal", s: "CGM‑aware · 16 weeks", used: "used 22×" },
+  { t: "Sport performance · contact sports · 3,200 kcal", s: "Periodised · creatine timing · 8 weeks", used: "used 6×" },
+];
 
-  return Math.max(0, Math.min(100, Math.round(progress)));
-}
+const ACTIONS = [
+  { bar: "var(--danger)", t: "Adaora T. · 4 days silent", s: "No logs since May 7 · auto‑nudge failed. Personal check‑in recommended.", btn: "Open" },
+  { bar: "var(--warn)", t: "2 new plans due today", s: "Folake A. (after intake) · Samuel A. (after intake)", btn: "Queue" },
+  { bar: "var(--gym)", t: "3 follow‑up logs to review", s: "Bisi O. · Chinedu O. · Maryam O. — photos & weigh‑ins attached", btn: "Review" },
+  { bar: "var(--signal)", t: "9 plans expire in 7 days", s: "Renewal nudges already sent · 4 viewed", btn: "Track" },
+];
+
+const MESSAGES = [
+  { init: "BO", name: "Bisi Okonkwo", pill: "Log", ts: "12m", preview: "Weight is down 1.4 kg this week, energy good. Photo attached…", unread: true },
+  { init: "CO", name: "Chinedu Okoro", pill: "Question", ts: "38m", preview: "Two‑a‑days this week, should I push carbs up on training days?", unread: true },
+  { init: "MO", name: "Maryam Olawale", pill: "Log", ts: "1h", preview: "Iron supplement makes me nauseous on empty stomach, can I take it…", unread: true },
+  { init: "FA", name: "Folake Adebayo", ts: "3h", preview: "Intake form submitted — see you at 08:00 tomorrow. Excited!", unread: false },
+  { init: "KE", name: "Kemi Eze", ts: "Yesterday", preview: "Confirmed renewal for the next 16‑week block 🙏", unread: false },
+];
+
+const EARNINGS = [
+  { t: "Maintenance · 16wk plan", s: "Kemi E. · May 04 · renewal", amt: "+ ₦ 480,000", color: "var(--signal-ink)" },
+  { t: "PCOS protocol · 12wk", s: "Adaora T. · Apr 28", amt: "+ ₦ 360,000", color: "var(--signal-ink)" },
+  { t: "Sport perf · 8wk", s: "Chinedu O. · Apr 22", amt: "+ ₦ 280,000", color: "var(--signal-ink)" },
+  { t: "Initial assessments · 3×", s: "May 11 · today", amt: "₦ 165,000 pending", color: "var(--fg-3)" },
+  { t: "Refund · Adaora T.", s: "15:30 consult cancelled", amt: "− ₦ 18,000", color: "var(--danger)" },
+];
+
+const BORDER_LEFT: Record<string, string> = { intake: "var(--signal)", review: "var(--gym)", cancelled: "var(--fg-4)" };
+const BADGE_S: Record<string, React.CSSProperties> = {
+  signal: { background: "var(--signal-soft)", border: "1px solid oklch(0.88 0.05 148)", color: "var(--signal-ink)" },
+  gym: { background: "transparent", border: "1px solid var(--gym)", color: "var(--gym)" },
+  danger: { background: "transparent", border: "1px solid var(--danger)", color: "var(--danger)" },
+};
+const SPARK_BG: Record<string, string> = { good: "var(--signal)", ok: "oklch(0.85 0.06 148)", miss: "oklch(0.88 0.02 80)" };
+const FLAG_S: Record<string, React.CSSProperties> = {
+  green: { background: "var(--signal-soft)", color: "var(--signal-ink)" },
+  amber: { background: "oklch(0.94 0.06 75)", color: "oklch(0.35 0.12 75)" },
+  red: { background: "var(--danger-soft)", color: "var(--danger)" },
+};
+
+/* ═══ PAGE ═══ */
 
 export default function DietitianDashboard() {
-  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
-
-  const todayRange = useMemo(() => {
-    const now = new Date();
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(now);
-    endOfDay.setHours(23, 59, 59, 999);
-    return { from: startOfDay.toISOString(), to: endOfDay.toISOString() };
-  }, []);
-
-  const { data: dashboardStats } = useDashboardStats(!!user);
-  const { data: allClientProfiles } = useClientProfiles(undefined, !!user);
-  const clientProfiles = allClientProfiles?.slice(0, 4) ?? [];
-  const { data: latestWeights } = useLatestWeights(!!user);
-  const { data: todayProviderBookings } = useProviderBookings(
-    todayRange,
-    !!user,
-  );
-
-  if (isLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
-
-  const displayName = user ? `${user.first_name} ${user.last_name}` : "";
-  const completedTodayCount = (todayProviderBookings ?? []).filter(
-    (booking) => booking.status === ConsultationBookingStatus.COMPLETED,
-  ).length;
-  const upcomingTodayCount = (todayProviderBookings ?? []).filter(
-    (booking) =>
-      booking.status === ConsultationBookingStatus.CONFIRMED ||
-      booking.status === ConsultationBookingStatus.PENDING,
-  ).length;
-
-  // Stats cards
-  const stats = [
-    {
-      label: "Consultations Today",
-      value: (todayProviderBookings ?? []).length.toString(),
-      subtext: `${completedTodayCount} completed, ${upcomingTodayCount} upcoming`,
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-          />
-        </svg>
-      ),
-      color: "icon-glow-purple",
-    },
-    {
-      label: "Active Clients",
-      value: dashboardStats?.active_clients?.toString() ?? "—",
-      subtext: `${dashboardStats?.total_clients ?? 0} total clients`,
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-      ),
-      color: "icon-glow-green",
-    },
-    {
-      label: "Pending Requests",
-      value: dashboardStats?.pending_requests?.toString() ?? "0",
-      subtext: "Awaiting your review",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
-      ),
-      color: "icon-glow-yellow",
-    },
-    {
-      label: "Pending Invitations",
-      value: dashboardStats?.pending_invitations?.toString() ?? "0",
-      subtext: "Sent to potential clients",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-      color: "icon-glow-blue",
-    },
-  ];
-
-  // Transform API bookings to display format
-  const todayConsultations = (todayProviderBookings ?? []).map((booking) => {
-    const startDate = new Date(booking.startsAt);
-    const endDate = new Date(booking.endsAt);
-
-    // Format time as HH:MM AM/PM
-    const time = startDate.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    // Calculate duration in minutes
-    const durationMs = endDate.getTime() - startDate.getTime();
-    const durationMinutes = Math.round(durationMs / (1000 * 60));
-    const duration = `${durationMinutes} min`;
-
-    // Look up client name from clientProfiles array
-    const clientProfile = clientProfiles.find((profile) => {
-      const clientId =
-        typeof profile.client_id === "string"
-          ? profile.client_id
-          : profile.client_id?._id;
-      return clientId === booking.clientUserId;
-    });
-
-    let client = "Client";
-    if (clientProfile) {
-      const clientObj =
-        typeof clientProfile.client_id === "object"
-          ? clientProfile.client_id
-          : null;
-      if (clientObj) {
-        client =
-          `${clientObj.first_name || ""} ${clientObj.last_name || ""}`.trim();
-      }
-    }
-
-    // Map booking status to display status
-    const displayStatus =
-      booking.status === ConsultationBookingStatus.COMPLETED ||
-      booking.status === ConsultationBookingStatus.NO_SHOW
-        ? "completed"
-        : "upcoming";
-
-    // Generic user avatar SVG
-    const avatar = (
-      <svg
-        className="h-8 w-8"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-        />
-      </svg>
-    );
-
-    return {
-      time,
-      client,
-      type: "Consultation", // Generic type since we don't fetch type name yet
-      duration,
-      status: displayStatus,
-      avatar,
-    };
-  });
-
-  // Recent meal plans (no integration yet)
-  const recentMealPlans: Array<{
-    name: string;
-    client: string;
-    calories: string;
-    macros: string;
-    duration: string;
-  }> = [];
-
-  // Quick actions
-  const quickActions = [
-    {
-      label: "Create Meal Plan",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-          />
-        </svg>
-      ),
-      href: "/dashboard/dietitian/meal-plans/create",
-      color: "bg-primary-500",
-    },
-    {
-      label: "View All Clients",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-      ),
-      href: "/dashboard/dietitian/clients",
-      color: "bg-accent-purple-500",
-    },
-    {
-      label: "Check Schedule",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-      href: "/dashboard/dietitian/consultations",
-      color: "bg-accent-yellow-500",
-    },
-  ];
-
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <DietitianSidebar />
-
-      {/* Main Content */}
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-3 sm:mb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-1 rounded-full bg-gradient-to-b from-accent-purple-500 to-accent-purple-600" />
-              <div>
-                <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-1 sm:mb-2">
-                  Welcome back, {displayName}!
-                </h1>
-                <p className="text-sm text-foreground-secondary">
-                  {dashboardStats
-                    ? `${dashboardStats.active_clients} active clients • ${dashboardStats.pending_requests} pending requests`
-                    : "Loading stats..."}
-                </p>
-              </div>
+    <DietitianDashboardShell
+      activeItem="Today"
+      crumb="Today"
+      actions={<><button className="btn-ghost-v2 sm">View public profile →</button><button className="btn-primary-v2 sm">+ New plan</button></>}
+    >
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
+            <div>
+              <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Today, Nadia</h1>
+              <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>Mon · May 11 · 5 consults · 3 follow‑ups · 2 plans due</div>
             </div>
-            <Link
-              href="/dashboard/dietitian/settings"
-              className="inline-flex h-10 items-center justify-center border border-neutral-200 bg-background px-4 sm:px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50 whitespace-nowrap"
-            >
-              Edit Profile
-            </Link>
+            <div className="flex gap-2">
+              <button className="btn-ghost-v2 sm">Block off time</button>
+              <button className="btn-ghost-v2 sm">Copy link to book</button>
+            </div>
           </div>
-        </div>
 
-        {/* Onboarding Checklist */}
-        <ProviderOnboardingChecklist className="mb-8" />
-
-        {/* Stats Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
-            >
-              <div
-                className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 ${stat.color} text-2xl`}
-              >
-                {stat.icon}
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {STATS.map((s) => (
+              <div key={s.label} className="flex flex-col gap-1.5 rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.label}</div>
+                <div className="text-[28px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.value}{s.suffix && <small className="font-mono text-[13px] font-normal ml-1" style={{ color: "var(--fg-3)" }}>{s.suffix}</small>}</div>
+                <div className="font-mono text-[12px]" style={{ color: s.warn ? "oklch(0.45 0.16 65)" : "var(--signal-ink)" }}>{s.delta}</div>
               </div>
-              <p className="font-display text-2xl font-black text-foreground mb-1">
-                {stat.value}
-              </p>
-              <p className="text-sm text-foreground-secondary mb-1">
-                {stat.label}
-              </p>
-              <p className="text-sm text-foreground-tertiary">{stat.subtext}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Quick Actions */}
-        <section className="mb-8">
-          <h2 className="font-display text-xl font-black text-foreground mb-4">
-            Quick Actions
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {quickActions.map((action, index) => (
-              <Link
-                key={index}
-                href={action.href}
-                className={`group rounded-xl ${action.color} p-6 text-center text-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
-              >
-                <div className="mb-3 flex justify-center">{action.icon}</div>
-                <p className="font-semibold text-white">{action.label}</p>
-              </Link>
             ))}
           </div>
-        </section>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Today's Consultations */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl font-black text-foreground">
-                Today's Consultations
-              </h2>
-              <Link
-                href="/dashboard/dietitian/consultations"
-                className="text-sm font-medium text-primary-600 hover:text-primary-700"
-              >
-                View All
-              </Link>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
-              {todayConsultations.length === 0 ? (
-                <EmptyState message="No consultations scheduled for today." />
-              ) : (
-                <ul className="space-y-4">
-                  {todayConsultations.map((consultation, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-2xl shrink-0">
-                        {consultation.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">
-                          {consultation.client}
-                        </p>
-                        <p className="text-sm text-foreground-secondary">
-                          {consultation.type} • {consultation.duration}
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {consultation.time}
-                        </p>
-                        <span
-                          className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                            consultation.status === "completed"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          {consultation.status === "completed"
-                            ? "Done"
-                            : "Upcoming"}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
+          {/* Two-col: 1.7fr 1fr */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-3 items-start">
 
-          {/* Client Nutrition Progress */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl font-black text-foreground">
-                Client Progress
-              </h2>
-              <Link
-                href="/dashboard/dietitian/clients"
-                className="text-sm font-medium text-primary-600 hover:text-primary-700"
-              >
-                View All
-              </Link>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
-              {clientProfiles.length === 0 ? (
-                <EmptyState message="No clients yet. Add your first client to get started." />
-              ) : (
-                <ul className="space-y-5">
-                  {clientProfiles.map((profile) => {
-                    const name = getClientName(profile);
-                    const goal = profile.goals?.[0] ?? "—";
-                    const start = profile.starting_weight_kg;
-                    const target = profile.target_weight_kg;
-                    const progress = computeProgress(
-                      profile,
-                      latestWeights ?? {},
-                    );
+            {/* LEFT */}
+            <div className="flex flex-col gap-3">
+              {/* Consults timeline */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Today&apos;s consults</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>5 confirmed · 1 cancellation · 3 follow‑up logs to review</div>
+                  </div>
+                  <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>Open calendar →</span>
+                </div>
+                <div className="grid py-2" style={{ gridTemplateColumns: "70px 1fr" }}>
+                  {CONSULTS.map((c, i) => {
+                    const bl = BORDER_LEFT[c.type || ""] || "var(--dietitian)";
                     return (
-                      <li
-                        key={profile._id}
-                        className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0"
-                      >
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-xl shrink-0">
-                            {typeof profile.client_id === "object" &&
-                            profile.client_id.profile_picture ? (
-                              <img
-                                src={profile.client_id.profile_picture}
-                                alt={name}
-                                className="h-10 w-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <svg
-                                className="h-5 w-5 text-neutral-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-foreground truncate">
-                              {name}
-                            </p>
-                            <p className="text-sm text-foreground-tertiary">
-                              {start ? `${start} kg` : "—"} →{" "}
-                              {target ? `${target} kg` : "—"}
-                            </p>
-                          </div>
-                          <span className="bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 shrink-0">
-                            {goal}
-                          </span>
-                        </div>
-                        {start &&
-                          target &&
-                          start !== target &&
-                          (latestWeights?.[profile._id] ? (
-                            <div>
-                              <div className="flex items-center justify-between text-sm mb-1">
-                                <span className="text-foreground-secondary">
-                                  Progress
-                                </span>
-                                <span className="font-semibold text-foreground">
-                                  {progress}%
-                                </span>
-                              </div>
-                              <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-primary-500 rounded-full transition-all duration-300"
-                                  style={{ width: `${progress}%` }}
-                                />
+                      <div key={i} className="contents">
+                        {c.afterGap && (
+                          <>
+                            <div />
+                            <div className="flex items-center gap-2 px-4.5 py-1.5 font-mono text-[11px]" style={{ color: "var(--fg-4)" }}>
+                              <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                              12:30 – 14:00 · 90 min · lunch &amp; admin
+                              <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                            </div>
+                          </>
+                        )}
+                        <div className="font-mono text-[11.5px] text-right pr-3 pl-4.5 pt-3.5" style={{ color: "var(--fg-3)", borderRight: "1px solid var(--border)", fontVariantNumeric: "tabular-nums" }}>{c.time}</div>
+                        <div className={`px-4.5 py-2.5 ${c.last ? "pb-4.5" : ""}`}>
+                          <div className="flex justify-between items-center rounded-(--r-2) px-3.5 py-3" style={{ border: "1px solid var(--border)", borderLeft: `3px solid ${bl}`, background: "var(--bg)", opacity: c.type === "cancelled" ? 0.5 : 1 }}>
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{c.init}</span>
+                              <div>
+                                <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
+                                  {c.name}
+                                  {c.badge && <span className="inline-flex items-center h-4.5 px-2 rounded-(--r-1) text-[12px] font-medium ml-1.5" style={BADGE_S[c.badgeStyle || "signal"]}>{c.badge}</span>}
+                                </div>
+                                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>{c.meta}</div>
                               </div>
                             </div>
-                          ) : (
-                            <p className="text-sm text-foreground-tertiary">
-                              No weight logs yet
-                            </p>
-                          ))}
-                      </li>
+                            {c.actions && (
+                              <div className="flex gap-1.5">
+                                {c.actions.map((a, j) => (
+                                  <button key={a} className={j === c.actions!.length - 1 ? "btn-primary-v2 sm" : "btn-ghost-v2 sm"}>{a}</button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
-                </ul>
-              )}
-            </div>
-          </section>
-        </div>
-
-        {/* Recent Meal Plans */}
-        <section className="mt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-xl font-black text-foreground">
-              Recent Meal Plans
-            </h2>
-            <Link
-              href="/dashboard/dietitian/meal-plans"
-              className="text-sm font-medium text-primary-600 hover:text-primary-700"
-            >
-              View All
-            </Link>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {recentMealPlans.length === 0 ? (
-              <div className="sm:col-span-2 lg:col-span-3 bg-white rounded-xl shadow-[var(--shadow-card)]">
-                <EmptyState
-                  compact
-                  accent="purple"
-                  title="No meal plans yet"
-                  description="Create your first meal plan to start guiding your clients."
-                  actionLabel="Create Meal Plan"
-                  actionHref="/dashboard/dietitian/meal-plans"
-                />
-              </div>
-            ) : (
-              recentMealPlans.map((plan, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
-              >
-                <h3 className="font-display text-lg font-bold text-foreground mb-2">
-                  {plan.name}
-                </h3>
-                <p className="text-sm text-foreground-secondary mb-4">
-                  {plan.client}
-                </p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground-tertiary">Calories</span>
-                    <span className="font-semibold text-foreground">
-                      {plan.calories}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground-tertiary">Macros</span>
-                    <span className="font-semibold text-foreground">
-                      {plan.macros}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground-tertiary">Duration</span>
-                    <span className="font-semibold text-foreground">
-                      {plan.duration}
-                    </span>
-                  </div>
                 </div>
               </div>
-              ))
-            )}
+
+              {/* Clients adherence */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Active clients · adherence</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>68 total · sorted by needs‑attention · last 7 days</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="btn-ghost-v2 sm">Filter</button>
+                    <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>View all →</span>
+                  </div>
+                </div>
+                {/* Column headers */}
+                <div className="overflow-x-auto">
+                <div className="grid gap-4 px-4.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.05em] min-w-[600px]" style={{ gridTemplateColumns: "1fr 130px 130px 100px", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}>
+                  <span>Client &amp; plan</span><span>7‑day log</span><span>Macros · today</span><span style={{ textAlign: "right" }}>Status</span>
+                </div>
+                {CLIENTS.map((c, i) => (
+                  <div key={c.init} className="grid gap-4 px-4.5 py-3.5 items-center hover:bg-bg-2 min-w-[600px]" style={{ gridTemplateColumns: "1fr 130px 130px 100px", borderBottom: i < CLIENTS.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
+                    {/* Who */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{c.init}</span>
+                      <div>
+                        <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{c.name}</div>
+                        <div className="flex items-center gap-2.5 font-mono text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                          <span>{c.plan}</span>
+                          <span className="w-[3px] h-[3px] rounded-full" style={{ background: "var(--border-2)" }} />
+                          <span>{c.kcal}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Spark + adherence */}
+                    <div>
+                      <div className="flex items-end gap-0.5 h-7">
+                        {c.spark.map((h, j) => (
+                          <span key={j} className="flex-1 rounded-[1px]" style={{ height: `${h}%`, background: SPARK_BG[c.sparkTypes[j]], minHeight: "2px" }} />
+                        ))}
+                      </div>
+                      <div className="font-mono text-[12px] text-right mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{c.adherence}</div>
+                    </div>
+                    {/* Macros */}
+                    <div className="flex flex-col gap-1">
+                      {c.macros.map((m) => (
+                        <div key={m.k} className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+                          <span className="w-3.5">{m.k}</span>
+                          <span className="flex-1 h-[3px] rounded-[1px] overflow-hidden relative" style={{ background: "var(--bg-3)" }}>
+                            <span className="absolute inset-y-0 left-0" style={{ width: `${m.w}%`, background: "var(--ink)" }} />
+                          </span>
+                          <span className="min-w-7 text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{m.v}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Flag */}
+                    <div className="text-right">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-[7px] py-[3px] rounded-(--r-1)" style={FLAG_S[c.flagType]}>{c.flag}</span>
+                    </div>
+                  </div>
+                ))}
+                </div>{/* close overflow-x-auto */}
+              </div>
+
+              {/* Plan templates */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>My plan templates</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>8 active · pull a template to start a new plan in 30 seconds</div>
+                  </div>
+                  <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>Manage library →</span>
+                </div>
+                {TEMPLATES.map((t, i) => (
+                  <div key={i} className="flex justify-between items-center px-4.5 py-3 hover:bg-bg-2" style={{ borderBottom: i < TEMPLATES.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
+                    <div>
+                      <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{t.t}</div>
+                      <div className="font-mono text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>{t.s}</div>
+                    </div>
+                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{t.used}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT */}
+            <div className="flex flex-col gap-3">
+              {/* Action queue */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Action queue</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>5 items · time‑sensitive</div>
+                  </div>
+                  <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>All tasks →</span>
+                </div>
+                {ACTIONS.map((a, i) => (
+                  <div key={i} className="flex gap-2.5 px-4.5 py-3 items-start" style={{ borderBottom: i < ACTIONS.length - 1 ? "1px solid var(--border)" : "none" }}>
+                    <span className="w-1 h-[38px] rounded-sm shrink-0 mt-0.5" style={{ background: a.bar }} />
+                    <div className="flex-1">
+                      <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{a.t}</div>
+                      <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>{a.s}</div>
+                    </div>
+                    <button className="btn-ghost-v2 sm">{a.btn}</button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Inbox */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Inbox</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>12 unread · 24h SLA</div>
+                  </div>
+                  <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>Open inbox →</span>
+                </div>
+                <div className="py-1">
+                  {MESSAGES.map((m, i) => (
+                    <div key={i} className="flex gap-3 px-4.5 py-3 items-start hover:bg-bg-2" style={{ borderBottom: i < MESSAGES.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
+                      <span className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{m.init}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline gap-2">
+                          <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>
+                            {m.name}
+                            {m.pill && <span className="font-mono text-[9.5px] uppercase tracking-[0.05em] px-1.25 py-[2px] rounded-(--r-1) ml-1.5 align-[1px]" style={{ color: "var(--dietitian)", border: "1px solid currentColor" }}>{m.pill}</span>}
+                            {m.unread && <span className="inline-block w-1.5 h-1.5 rounded-full ml-1.5 -translate-y-px" style={{ background: "var(--signal)" }} />}
+                          </span>
+                          <span className="font-mono text-[11px] shrink-0" style={{ color: "var(--fg-3)" }}>{m.ts}</span>
+                        </div>
+                        <div className="text-[13px] mt-1 truncate" style={{ color: m.unread ? "var(--ink)" : "var(--fg-2)", fontWeight: m.unread ? 500 : 400, lineHeight: "1.45" }}>{m.preview}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Earnings */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Earnings · this month</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>₦ 1.84M booked · next payout May 13</div>
+                  </div>
+                  <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>Statement →</span>
+                </div>
+                {EARNINGS.map((e, i) => (
+                  <div key={i} className="flex justify-between items-center px-4.5 py-3" style={{ borderBottom: i < EARNINGS.length - 1 ? "1px solid var(--border)" : "none" }}>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[13.5px]" style={{ color: "var(--ink)" }}>{e.t}</span>
+                      <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{e.s}</span>
+                    </div>
+                    <span className="font-mono text-[14px] font-medium" style={{ color: e.color, fontVariantNumeric: "tabular-nums" }}>{e.amt}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </section>
-      </main>
-    </div>
+    </DietitianDashboardShell>
   );
 }

@@ -1,56 +1,50 @@
 import React from "react";
 
+/**
+ * Card — 10px radius, 1px border, no shadows.
+ *
+ * card:      white bg + border (default)
+ * card-flat: bg-2 + border (sections, sidebars)
+ *
+ * No hover lift. No accent borders. No gradients.
+ */
+
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "elevated" | "bordered" | "glass";
+  variant?: "default" | "flat";
   padding?: "none" | "sm" | "md" | "lg";
   interactive?: boolean;
-  accent?: "green" | "blue" | "yellow" | "purple" | "none";
 }
+
+const variantStyles = {
+  default: "bg-bg border border-border rounded-(--r-3)",
+  flat: "bg-bg-2 border border-border rounded-(--r-3)",
+};
+
+const paddingStyles = {
+  none: "",
+  sm: "p-3.5",
+  md: "p-4.5",
+  lg: "p-7",
+};
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   (
     {
       children,
       variant = "default",
-      padding = "md",
+      padding = "none",
       interactive = false,
-      accent = "none",
       className = "",
       ...props
     },
     ref,
   ) => {
-    const variants = {
-      default: "bg-background-secondary",
-      elevated: "bg-white shadow-[var(--shadow-card)]",
-      bordered: "bg-white border border-neutral-200",
-      glass:
-        "bg-white/80 backdrop-blur-sm border border-neutral-200/60 shadow-[var(--shadow-card)]",
-    };
-
-    const paddings = {
-      none: "",
-      sm: "p-4",
-      md: "p-6",
-      lg: "p-8",
-    };
-
-    const accentMap = {
-      none: "",
-      green: "card-accent-green",
-      blue: "card-accent-blue",
-      yellow: "card-accent-yellow",
-      purple: "card-accent-purple",
-    };
-
-    const interactiveStyles = interactive
-      ? "cursor-pointer hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
-      : "transition-shadow duration-300";
-
     return (
       <div
         ref={ref}
-        className={`rounded-xl ${variants[variant]} ${paddings[padding]} ${accentMap[accent]} ${interactiveStyles} ${className}`}
+        className={`${variantStyles[variant]} ${paddingStyles[padding]} overflow-hidden ${
+          interactive ? "cursor-pointer hover:border-ink" : ""
+        } ${className}`}
         {...props}
       >
         {children}
@@ -61,63 +55,48 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 
 Card.displayName = "Card";
 
-export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+export function CardHead({
   children,
   className = "",
   ...props
-}) => {
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`mb-4 ${className}`} {...props}>
-      {children}
-    </div>
-  );
-};
-
-export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
-  children,
-  className = "",
-  ...props
-}) => {
-  return (
-    <h3
-      className={`text-xl font-semibold text-foreground ${className}`}
+    <div
+      className={`flex items-center justify-between px-4.5 py-3.5 border-b border-border ${className}`}
       {...props}
     >
       {children}
-    </h3>
+    </div>
   );
-};
+}
 
-export const CardDescription: React.FC<
-  React.HTMLAttributes<HTMLParagraphElement>
-> = ({ children, className = "", ...props }) => {
+export function CardHeadTitle({
+  children,
+  sub,
+  className = "",
+}: {
+  children: React.ReactNode;
+  sub?: string;
+  className?: string;
+}) {
   return (
-    <p className={`text-sm text-foreground-secondary ${className}`} {...props}>
-      {children}
-    </p>
+    <div className={className}>
+      <h3 className="text-[14px] font-medium text-ink" style={{ letterSpacing: "-0.005em" }}>
+        {children}
+      </h3>
+      {sub && <div className="text-[12px] text-fg-3">{sub}</div>}
+    </div>
   );
-};
+}
 
-export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+export function CardBody({
   children,
   className = "",
   ...props
-}) => {
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={className} {...props}>
+    <div className={`p-4.5 ${className}`} {...props}>
       {children}
     </div>
   );
-};
-
-export const CardFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
-  children,
-  className = "",
-  ...props
-}) => {
-  return (
-    <div className={`mt-4 ${className}`} {...props}>
-      {children}
-    </div>
-  );
-};
+}

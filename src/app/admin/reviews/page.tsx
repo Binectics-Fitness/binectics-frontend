@@ -1,352 +1,186 @@
 "use client";
 
 import { useState } from "react";
-import AdminSidebar from "@/components/AdminSidebar";
-import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import { showAlert, showPrompt } from "@/lib/ui/dialogs";
+import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 
-enum ReviewModerationStatus {
-  PUBLISHED = "Published",
-  FLAGGED = "Flagged",
+/* ─── Data ──────────────────────────────────────────────── */
+
+const KPIS = [
+  { label: "Flagged", value: "12", delta: "3 high priority", valueColor: "var(--danger)", deltaColor: "var(--danger)" },
+  { label: "Auto-moderated", value: "84", delta: "Last 7 days", deltaColor: "var(--fg-3)" },
+  { label: "Pending", value: "9", delta: "Avg 1.8 hrs wait" },
+  { label: "Resolved today", value: "6", delta: "↑ 20% vs yesterday" },
+];
+
+type Filter = "All" | "Flagged" | "Auto-held" | "Resolved";
+
+const REVIEWS = [
+  { id: "RVW_001", reviewer: "Tunde Adebayo", rInitials: "TA", provider: "Iron Lab", rating: 1, flags: "Offensive language", date: "May 25", status: "Flagged" as const },
+  { id: "RVW_002", reviewer: "Naledi Phiri", rInitials: "NP", provider: "Sarah Okafor", rating: 2, flags: "Suspected fake", date: "May 25", status: "Flagged" as const },
+  { id: "RVW_003", reviewer: "anonymous_412", rInitials: "AN", provider: "FitZone Lagos", rating: 1, flags: "Spam content", date: "May 24", status: "Auto-held" as const },
+  { id: "RVW_004", reviewer: "David Kim", rInitials: "DK", provider: "Peak Performance", rating: 3, flags: "Competitor mention", date: "May 24", status: "Flagged" as const },
+  { id: "RVW_005", reviewer: "Jessica Smith", rInitials: "JS", provider: "Dr. Nadia Hassan", rating: 5, flags: "Incentivized", date: "May 23", status: "Auto-held" as const },
+  { id: "RVW_006", reviewer: "Ryan Botha", rInitials: "RB", provider: "Wellness Hub", rating: 1, flags: "Personal attack", date: "May 23", status: "Resolved" as const },
+  { id: "RVW_007", reviewer: "Aisha Ogundimu", rInitials: "AO", provider: "Reza Mahmoud", rating: 4, flags: "Duplicate", date: "May 22", status: "Resolved" as const },
+  { id: "RVW_008", reviewer: "Chloe Mthembu", rInitials: "CM", provider: "Iron Lab", rating: 2, flags: "Misleading", date: "May 22", status: "Flagged" as const },
+];
+
+const FILTERS: { label: Filter; count: string }[] = [
+  { label: "All", count: "12" },
+  { label: "Flagged", count: "5" },
+  { label: "Auto-held", count: "4" },
+  { label: "Resolved", count: "3" },
+];
+
+/* ─── Helpers ────────────────────────────────────────────── */
+
+function StatusBadge({ status }: { status: "Flagged" | "Auto-held" | "Resolved" }) {
+  const map: Record<string, { bg: string; color: string }> = {
+    Flagged: { bg: "var(--danger-soft)", color: "var(--danger)" },
+    "Auto-held": { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)" },
+    Resolved: { bg: "var(--signal-soft)", color: "var(--signal-ink)" },
+  };
+  const s = map[status];
+  return (
+    <span
+      className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px]"
+      style={{ background: s.bg, color: s.color }}
+    >
+      <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
+      {status}
+    </span>
+  );
 }
 
-type AdminReview = {
-  id: number;
-  user: string;
-  userEmail: string;
-  provider: string;
-  rating: number;
-  comment: string;
-  date: string;
-  status: ReviewModerationStatus;
-  flagged: boolean;
-  reports: number;
-  flagReason?: string;
-};
+function RatingStars({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5 items-center">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <svg key={n} width="12" height="12" viewBox="0 0 24 24" fill={n <= rating ? "var(--trainer)" : "none"} stroke={n <= rating ? "var(--trainer)" : "var(--fg-4)"} strokeWidth="1.5">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Page ───────────────────────────────────────────────── */
 
 export default function AdminReviewsPage() {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const { requestConfirmation, confirmationModal } = useConfirmationModal();
+  const [activeFilter, setActiveFilter] = useState<Filter>("All");
 
-  // Mock data
-  const reviews: AdminReview[] = [
-    {
-      id: 1,
-      user: "John Smith",
-      userEmail: "john@example.com",
-      provider: "PowerHouse Gym",
-      rating: 5,
-      comment:
-        "Amazing facilities and great staff! The equipment is top-notch and always well-maintained.",
-      date: "2024-02-14",
-      status: ReviewModerationStatus.PUBLISHED,
-      flagged: false,
-      reports: 0,
-    },
-    {
-      id: 2,
-      user: "Sarah Johnson",
-      userEmail: "sarah@example.com",
-      provider: "Mike Chen - Personal Training",
-      rating: 5,
-      comment:
-        "Mike is an incredible trainer! Lost 15 pounds in 2 months with his guidance.",
-      date: "2024-02-13",
-      status: ReviewModerationStatus.PUBLISHED,
-      flagged: false,
-      reports: 0,
-    },
-    {
-      id: 3,
-      user: "Emily Davis",
-      userEmail: "emily@example.com",
-      provider: "Dr. Maria Garcia - Nutrition",
-      rating: 2,
-      comment:
-        "This service is terrible and a complete waste of money. The dietitian was unprofessional and rude.",
-      date: "2024-02-12",
-      status: ReviewModerationStatus.FLAGGED,
-      flagged: true,
-      reports: 3,
-      flagReason: "Inappropriate language, possible fake review",
-    },
-    {
-      id: 4,
-      user: "Mike Wilson",
-      userEmail: "mike@example.com",
-      provider: "FitCore Studio",
-      rating: 4,
-      comment:
-        "Great gym overall, but can get crowded during peak hours. Would still recommend!",
-      date: "2024-02-11",
-      status: ReviewModerationStatus.PUBLISHED,
-      flagged: false,
-      reports: 0,
-    },
-    {
-      id: 5,
-      user: "Anonymous User",
-      userEmail: "fake@temporary.com",
-      provider: "PowerHouse Gym",
-      rating: 1,
-      comment: "Scam! DO NOT JOIN! They stole my money!!!",
-      date: "2024-02-10",
-      status: ReviewModerationStatus.FLAGGED,
-      flagged: true,
-      reports: 5,
-      flagReason: "Suspected fake review, spam content",
-    },
-    {
-      id: 6,
-      user: "Lisa Anderson",
-      userEmail: "lisa@example.com",
-      provider: "Mike Chen - Personal Training",
-      rating: 5,
-      comment:
-        "Best decision I ever made! Mike helped me achieve my fitness goals.",
-      date: "2024-02-09",
-      status: ReviewModerationStatus.PUBLISHED,
-      flagged: false,
-      reports: 0,
-    },
-  ];
-
-  const handleApproveReview = (id: number, provider: string) => {
-    requestConfirmation({
-      title: "Approve review?",
-      description: `Publish this review for ${provider} to the live platform.`,
-      confirmLabel: "Approve Review",
-      confirmVariant: "primary",
-      onConfirm: async () => {
-        await showAlert("Review approved and published");
-      },
-    });
-  };
-
-  const handleRemoveReview = async (id: number, provider: string) => {
-    const reason = await showPrompt({
-      title: "Remove review",
-      message: `Please provide a reason for removing this review from ${provider}:`,
-      placeholder: "Reason",
-      confirmLabel: "Remove",
-    });
-    if (reason) {
-      await showAlert("Review removed successfully. User will be notified.");
-    }
-  };
-
-  const getRatingStars = (rating: number) => {
-    return "⭐".repeat(rating) + "☆".repeat(5 - rating);
-  };
+  const filtered = activeFilter === "All"
+    ? REVIEWS
+    : REVIEWS.filter((r) => r.status === activeFilter);
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <AdminSidebar />
+    <AdminDashboardShell
+      activeItem="Reviews"
+      crumb="Reviews"
+      actions={
+        <div className="flex items-center gap-2">
+          <button className="btn-ghost-v2">Export</button>
+          <button className="btn-primary-v2">Bulk resolve</button>
+        </div>
+      }
+    >
+      {/* Heading */}
+      <div>
+        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
+          Reviews
+        </h1>
+        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+          Flagged and auto-moderated reviews requiring manual action
+        </p>
+      </div>
 
-      <div className="flex-1 md:ml-64">
-        {/* Header */}
-        <header className="bg-white border-b border-neutral-200">
-          <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
-            <h1 className="text-3xl font-black text-foreground">
-              Review Moderation
-            </h1>
-            <p className="mt-1 text-foreground/60">
-              Moderate user reviews and handle flagged content
-            </p>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {KPIS.map((kpi) => (
+          <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
+            <div className="text-[22px] font-medium mt-1" style={{ color: kpi.valueColor || "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}>{kpi.value}</div>
+            <div className="font-mono text-[11px] mt-1" style={{ color: kpi.deltaColor || "var(--signal-ink)" }}>{kpi.delta}</div>
           </div>
-        </header>
+        ))}
+      </div>
 
-        <div className="p-4 sm:p-6 md:p-8">
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
-              <p className="text-sm font-medium text-foreground/60">
-                Total Reviews
-              </p>
-              <p className="text-3xl font-black text-foreground mt-2">2,847</p>
-            </div>
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
-              <p className="text-sm font-medium text-foreground/60">
-                Published
-              </p>
-              <p className="text-3xl font-black text-primary-500 mt-2">2,729</p>
-            </div>
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
-              <p className="text-sm font-medium text-foreground/60">Flagged</p>
-              <p className="text-3xl font-black text-red-500 mt-2">18</p>
-            </div>
-            <div className="bg-white p-6 shadow-[var(--shadow-card)]">
-              <p className="text-sm font-medium text-foreground/60">
-                Avg. Rating
-              </p>
-              <p className="text-3xl font-black text-foreground mt-2">4.7</p>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)] mb-6">
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              <button
-                onClick={() => setStatusFilter("all")}
-                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
-                  statusFilter === "all"
-                    ? "bg-red-500 text-foreground"
-                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
-                }`}
-              >
-                All Reviews
-              </button>
-              <button
-                onClick={() => setStatusFilter("flagged")}
-                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
-                  statusFilter === "flagged"
-                    ? "bg-red-500 text-foreground"
-                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
-                }`}
-              >
-                Flagged ({reviews.filter((r) => r.flagged).length})
-              </button>
-              <button
-                onClick={() => setStatusFilter("published")}
-                className={`px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold ${
-                  statusFilter === "published"
-                    ? "bg-red-500 text-foreground"
-                    : "bg-neutral-100 text-foreground/60 hover:bg-neutral-200"
-                }`}
-              >
-                Published
-              </button>
-            </div>
-          </div>
-
-          {/* Reviews List */}
-          <div className="space-y-4">
-            {reviews.map((review) => (
-              <div
-                key={review.id}
-                className={`bg-white p-4 sm:p-6 shadow-[var(--shadow-card)] ${review.flagged ? "border-2 border-red-500" : ""}`}
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-foreground">
-                        {review.user}
-                      </h3>
-                      <span className="text-foreground/60">→</span>
-                      <p className="text-foreground/60">{review.provider}</p>
-                    </div>
-                    <p className="text-sm text-foreground/60">
-                      {review.userEmail}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-foreground/60">{review.date}</p>
-                    {review.flagged && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold">
-                          ⚠️ FLAGGED
-                        </span>
-                        <span className="text-xs text-red-600 font-semibold">
-                          {review.reports} reports
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Rating */}
-                <div className="mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">
-                      {getRatingStars(review.rating)}
-                    </span>
-                    <span className="font-semibold text-foreground">
-                      {review.rating}/5
-                    </span>
-                  </div>
-                </div>
-
-                {/* Comment */}
-                <div className="mb-4 p-4 bg-neutral-50 border-l-4 border-neutral-300">
-                  <p className="text-foreground">{review.comment}</p>
-                </div>
-
-                {/* Flag Reason */}
-                {review.flagged && review.flagReason && (
-                  <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500">
-                    <p className="text-sm font-semibold text-red-700 mb-1">
-                      Flag Reason:
-                    </p>
-                    <p className="text-sm text-red-600">{review.flagReason}</p>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-neutral-200">
-                  <button className="px-4 py-2 sm:px-6 border-2 border-neutral-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base">
-                    View Full Details
-                  </button>
-                  {review.flagged ? (
-                    <>
-                      <button
-                        onClick={() =>
-                          handleApproveReview(review.id, review.provider)
-                        }
-                        className="flex-1 px-4 py-2 sm:px-6 bg-primary-500 text-foreground font-semibold hover:bg-primary-600 transition-colors text-sm sm:text-base"
-                      >
-                        ✓ Approve Review
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleRemoveReview(review.id, review.provider)
-                        }
-                        className="flex-1 px-4 py-2 sm:px-6 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors text-sm sm:text-base"
-                      >
-                        ✗ Remove Review
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() =>
-                        handleRemoveReview(review.id, review.provider)
-                      }
-                      className="px-6 py-2 text-red-500 font-semibold hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <p className="text-sm text-foreground/60">
-              Showing 1 to 6 of 2,847 reviews
-            </p>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 border border-neutral-200 text-foreground/60 font-semibold hover:bg-neutral-50">
-                Previous
-              </button>
-              <button className="px-4 py-2 bg-red-500 text-foreground font-semibold hover:bg-red-600">
-                1
-              </button>
-              <button className="px-4 py-2 border border-neutral-200 text-foreground/60 font-semibold hover:bg-neutral-50">
-                2
-              </button>
-              <button className="px-4 py-2 border border-neutral-200 text-foreground/60 font-semibold hover:bg-neutral-50">
-                3
-              </button>
-              <button className="px-4 py-2 border border-neutral-200 text-foreground/60 font-semibold hover:bg-neutral-50">
-                Next
-              </button>
-            </div>
-          </div>
+      {/* Toolbar */}
+      <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="flex-1 min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search by reviewer, provider, or RVW_ID..." style={{ color: "var(--ink)" }} readOnly />
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {FILTERS.map((f) => (
+            <button
+              key={f.label}
+              onClick={() => setActiveFilter(f.label)}
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
+              style={{
+                background: activeFilter === f.label ? "var(--ink)" : "var(--bg)",
+                color: activeFilter === f.label ? "var(--bg)" : "var(--fg-3)",
+                border: activeFilter === f.label ? "1px solid var(--ink)" : "1px solid var(--border)",
+              }}
+            >
+              {f.label} <span style={{ color: activeFilter === f.label ? "oklch(0.75 0.005 85)" : "var(--fg-4)", marginLeft: 4 }}>{f.count}</span>
+            </button>
+          ))}
         </div>
       </div>
-      {confirmationModal}
-    </div>
+
+      {/* Table */}
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                {["Reviewer", "Provider", "Rating", "Flags", "Date", "Status"].map((h) => (
+                  <th
+                    key={h}
+                    className="font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 text-left"
+                    style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)", fontWeight: 500 }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r) => (
+                <tr key={r.id} className="hover:bg-[var(--bg-2)] cursor-pointer">
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <div className="flex gap-2.5 items-center">
+                      <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
+                        {r.rInitials}
+                      </span>
+                      <div>
+                        <div className="font-medium" style={{ color: "var(--ink)" }}>{r.reviewer}</div>
+                        <div className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{r.id}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>{r.provider}</span>
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <RatingStars rating={r.rating} />
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <span className="font-mono text-[11px] px-1.5 py-[2px] rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--danger-soft)", color: "var(--danger)" }}>{r.flags}</span>
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{r.date}</span>
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <StatusBadge status={r.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </AdminDashboardShell>
   );
 }

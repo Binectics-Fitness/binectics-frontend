@@ -129,7 +129,7 @@ function SuccessContent() {
           </Button>
           <Button
             onClick={() => router.push("/marketplace")}
-            variant="secondary"
+            variant="ghost"
             className="flex-1"
           >
             Browse Marketplace

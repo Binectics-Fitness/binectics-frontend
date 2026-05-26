@@ -1,473 +1,178 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import AdminSidebar from "@/components/AdminSidebar";
-import SearchableSelect from "@/components/SearchableSelect";
-import { UserRole } from "@/lib/types";
-import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import { showAlert } from "@/lib/ui/dialogs";
-import { adminService } from "@/services";
-
-enum AdminUserStatus {
-  ACTIVE = "Active",
-  SUSPENDED = "Suspended",
-}
-
-type AdminUser = {
-  id: number;
-  name: string;
-  email: string;
-  role: UserRole;
-  country: string;
-  status: AdminUserStatus;
-  signupDate: string;
-  subscriptions: number;
-};
+import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import Link from "next/link";
 
 export default function AdminUsersPage() {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
-  const { requestConfirmation, confirmationModal } = useConfirmationModal();
-
-  // Mock data
-  const users: AdminUser[] = [
-    {
-      id: 1,
-      name: "John Smith",
-      email: "john@example.com",
-      role: UserRole.USER,
-      country: "United States",
-      status: AdminUserStatus.ACTIVE,
-      signupDate: "2024-01-15",
-      subscriptions: 2,
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      email: "sarah@example.com",
-      role: UserRole.USER,
-      country: "United Kingdom",
-      status: AdminUserStatus.ACTIVE,
-      signupDate: "2024-01-18",
-      subscriptions: 1,
-    },
-    {
-      id: 3,
-      name: "Mike Chen",
-      email: "mike@example.com",
-      role: UserRole.TRAINER,
-      country: "Hong Kong",
-      status: AdminUserStatus.ACTIVE,
-      signupDate: "2024-01-20",
-      subscriptions: 0,
-    },
-    {
-      id: 4,
-      name: "Emily Davis",
-      email: "emily@example.com",
-      role: UserRole.USER,
-      country: "Australia",
-      status: AdminUserStatus.SUSPENDED,
-      signupDate: "2024-01-22",
-      subscriptions: 3,
-    },
-    {
-      id: 5,
-      name: "David Kim",
-      email: "david@example.com",
-      role: UserRole.GYM_OWNER,
-      country: "South Korea",
-      status: AdminUserStatus.ACTIVE,
-      signupDate: "2024-01-25",
-      subscriptions: 0,
-    },
-    {
-      id: 6,
-      name: "Maria Garcia",
-      email: "maria@example.com",
-      role: UserRole.DIETITIAN,
-      country: "Spain",
-      status: AdminUserStatus.ACTIVE,
-      signupDate: "2024-01-28",
-      subscriptions: 0,
-    },
-    {
-      id: 7,
-      name: "James Wilson",
-      email: "james@example.com",
-      role: UserRole.USER,
-      country: "Canada",
-      status: AdminUserStatus.ACTIVE,
-      signupDate: "2024-02-01",
-      subscriptions: 1,
-    },
-    {
-      id: 8,
-      name: "Lisa Anderson",
-      email: "lisa@example.com",
-      role: UserRole.TRAINER,
-      country: "United States",
-      status: AdminUserStatus.ACTIVE,
-      signupDate: "2024-02-03",
-      subscriptions: 0,
-    },
-  ];
-
-  const handleSuspendUser = (userId: number, userName: string) => {
-    requestConfirmation({
-      title: "Suspend user?",
-      description: `${userName} will lose access to the platform until reactivated. Active subscriptions will be cancelled and pending bookings will be cancelled.`,
-      confirmLabel: "Suspend User",
-      onConfirm: async () => {
-        const res = await adminService.suspendUser(String(userId));
-        if (res.success) {
-          const c = res.data?.cascaded;
-          await showAlert(
-            `User suspended. ${c?.listingsSuspended ?? 0} listing(s), ${c?.subscriptionsCancelled ?? 0} subscription(s), ${c?.bookingsCancelled ?? 0} booking(s) affected.`,
-          );
-        } else {
-          await showAlert(res.message || "Failed to suspend user");
-        }
-      },
-    });
-  };
-
-  const handleActivateUser = (userId: number, userName: string) => {
-    requestConfirmation({
-      title: "Activate user?",
-      description: `${userName} will regain access to the platform and their listings will be restored.`,
-      confirmLabel: "Activate User",
-      confirmVariant: "primary",
-      onConfirm: async () => {
-        const res = await adminService.unsuspendUser(String(userId));
-        if (res.success) {
-          await showAlert("User activated successfully");
-        } else {
-          await showAlert(res.message || "Failed to activate user");
-        }
-      },
-    });
-  };
-
-  const handleViewUser = (userId: number) => {
-    router.push(`/admin/users/${userId}`);
-  };
-
-  const getRoleBadgeColor = (role: UserRole) => {
-    switch (role) {
-      case UserRole.GYM_OWNER:
-        return "bg-accent-blue-100 text-accent-blue-700";
-      case UserRole.TRAINER:
-        return "bg-accent-yellow-100 text-accent-yellow-700";
-      case UserRole.DIETITIAN:
-        return "bg-accent-purple-100 text-accent-purple-700";
-      default:
-        return "bg-neutral-100 text-neutral-700";
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-background flex">
-      <AdminSidebar />
+    <AdminDashboardShell
+      activeItem="Users"
+      crumb="Users"
+      actions={
+        <div className="flex items-center gap-2">
+          <button className="btn-ghost-v2">Export</button>
+          <button className="btn-primary-v2">Impersonate user</button>
+        </div>
+      }
+    >
+      {/* Heading */}
+      <div>
+        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
+          Users
+        </h1>
+        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+          418,260 active across 52 countries · search any handle, email, ID, or phone
+        </p>
+      </div>
 
-      <div className="flex-1 md:ml-64">
-        {/* Header */}
-        <header className="bg-white border-b border-neutral-200">
-          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
-            <h1 className="text-2xl sm:text-3xl font-black text-foreground">
-              User Management
-            </h1>
-            <p className="mt-1 text-sm sm:text-base text-foreground/60">
-              View and manage all platform users
-            </p>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {[
+          { label: "Total active", value: "418k", delta: "+ 6.4% MoM" },
+          { label: "New · 30d", value: "28,142", delta: "↑ 12%" },
+          { label: "Providers", value: "14.2k", delta: "+ 312 net" },
+          { label: "Flagged", value: "42", delta: "8 priority", valueColor: "var(--danger)", deltaColor: "var(--danger)" },
+          { label: "Suspended", value: "118", delta: "last 30d", deltaColor: "var(--fg-3)" },
+        ].map((kpi) => (
+          <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
+            <div className="text-[22px] font-medium mt-1" style={{ color: kpi.valueColor || "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}>{kpi.value}</div>
+            <div className="font-mono text-[11px] mt-1" style={{ color: kpi.deltaColor || "var(--signal-ink)" }}>{kpi.delta}</div>
           </div>
-        </header>
+        ))}
+      </div>
 
-        <div className="p-4 sm:p-6 md:p-8">
-          {/* Filters */}
-          <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)] mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium text-foreground/70 mb-2">
-                  Search Users
-                </label>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name or email..."
-                  className="w-full px-4 py-3 border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground/70 mb-2">
-                  Filter by Role
-                </label>
-                <SearchableSelect
-                  value={roleFilter}
-                  onChange={(val) => setRoleFilter(val as "all" | UserRole)}
-                  placeholder="All Roles"
-                  options={[
-                    { label: "All Roles", value: "all" },
-                    { label: "Users", value: UserRole.USER },
-                    { label: "Gym Owners", value: UserRole.GYM_OWNER },
-                    { label: "Trainers", value: UserRole.TRAINER },
-                    { label: "Dietitians", value: UserRole.DIETITIAN },
-                  ]}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
-              <p className="text-xs sm:text-sm font-medium text-foreground/60">
-                Total Users
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-foreground mt-2">
-                12,458
-              </p>
-            </div>
-            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
-              <p className="text-xs sm:text-sm font-medium text-foreground/60">
-                Active
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-primary-500 mt-2">
-                11,892
-              </p>
-            </div>
-            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
-              <p className="text-xs sm:text-sm font-medium text-foreground/60">
-                Suspended
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-red-500 mt-2">
-                566
-              </p>
-            </div>
-            <div className="bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]">
-              <p className="text-xs sm:text-sm font-medium text-foreground/60">
-                New This Week
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-foreground mt-2">
-                284
-              </p>
-            </div>
-          </div>
-
-          {/* Users Table - Desktop View */}
-          <div className="hidden md:block bg-white shadow-[var(--shadow-card)] overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-neutral-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Country
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Signup Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider">
-                    Subscriptions
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-neutral-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {user.name}
-                        </p>
-                        <p className="text-sm text-foreground/60">
-                          {user.email}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 text-xs font-semibold ${getRoleBadgeColor(user.role)}`}
-                      >
-                        {user.role.replace("_", " ")}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {user.country}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 text-xs font-semibold ${
-                          user.status === AdminUserStatus.ACTIVE
-                            ? "bg-primary-100 text-primary-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground/60">
-                      {user.signupDate}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {user.subscriptions}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleViewUser(user.id)}
-                          className="text-red-500 hover:text-red-700 font-semibold"
-                        >
-                          View
-                        </button>
-                        {user.status === AdminUserStatus.ACTIVE ? (
-                          <button
-                            onClick={() =>
-                              handleSuspendUser(user.id, user.name)
-                            }
-                            className="text-foreground/60 hover:text-red-600 font-semibold"
-                          >
-                            Suspend
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() =>
-                              handleActivateUser(user.id, user.name)
-                            }
-                            className="text-primary-500 hover:text-primary-700 font-semibold"
-                          >
-                            Activate
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Users Cards - Mobile View */}
-          <div className="md:hidden space-y-3 mb-6">
-            {users.map((user) => (
-              <div
-                key={user.id}
-                className="bg-white p-4 shadow-[var(--shadow-card)] rounded-lg border border-neutral-100"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground truncate">
-                      {user.name}
-                    </p>
-                    <p className="text-xs sm:text-sm text-foreground/60 truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                  <span
-                    className={`ml-2 shrink-0 px-2 py-1 text-xs font-semibold whitespace-nowrap ${getRoleBadgeColor(user.role)}`}
-                  >
-                    {user.role.replace("_", " ")}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mb-3 text-xs sm:text-sm">
-                  <div>
-                    <span className="text-foreground/60">Country: </span>
-                    <span className="text-foreground font-medium">
-                      {user.country}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-foreground/60">Subscriptions: </span>
-                    <span className="text-foreground font-medium">
-                      {user.subscriptions}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-foreground/60">Joined: </span>
-                    <span className="text-foreground font-medium">
-                      {user.signupDate}
-                    </span>
-                  </div>
-                  <div>
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold ${
-                        user.status === AdminUserStatus.ACTIVE
-                          ? "bg-primary-100 text-primary-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {user.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleViewUser(user.id)}
-                    className="flex-1 px-3 py-2 bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-colors"
-                  >
-                    View
-                  </button>
-                  {user.status === AdminUserStatus.ACTIVE ? (
-                    <button
-                      onClick={() => handleSuspendUser(user.id, user.name)}
-                      className="flex-1 px-3 py-2 border border-red-300 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors"
-                    >
-                      Suspend
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleActivateUser(user.id, user.name)}
-                      className="flex-1 px-3 py-2 border border-primary-300 text-primary-600 text-xs font-semibold hover:bg-primary-50 transition-colors"
-                    >
-                      Activate
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs sm:text-sm text-foreground/60 text-center sm:text-left">
-              Showing 1 to 8 of 12,458 users
-            </p>
-            <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
-              <button className="px-3 sm:px-4 py-2 border border-neutral-200 text-foreground/60 text-sm font-semibold hover:bg-neutral-50">
-                Previous
-              </button>
-              <button className="px-3 sm:px-4 py-2 bg-red-500 text-white text-sm font-semibold hover:bg-red-600">
-                1
-              </button>
-              <button className="px-3 sm:px-4 py-2 border border-neutral-200 text-foreground/60 text-sm font-semibold hover:bg-neutral-50">
-                2
-              </button>
-              <button className="px-3 sm:px-4 py-2 border border-neutral-200 text-foreground/60 text-sm font-semibold hover:bg-neutral-50">
-                3
-              </button>
-              <button className="px-3 sm:px-4 py-2 border border-neutral-200 text-foreground/60 text-sm font-semibold hover:bg-neutral-50">
-                Next
-              </button>
-            </div>
-          </div>
-          {confirmationModal}
+      {/* Toolbar */}
+      <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="flex-1 min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search by name · email · phone · USR_ID..." style={{ color: "var(--ink)" }} readOnly />
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {[
+            { label: "All", count: "418k", active: true },
+            { label: "Members", count: "404k", active: false },
+            { label: "Trainers", count: "9.2k", active: false },
+            { label: "Gyms", count: "684", active: false },
+            { label: "Dietitians", count: "412", active: false },
+            { label: "Flagged", count: "42", active: false },
+          ].map((f) => (
+            <span
+              key={f.label}
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
+              style={{
+                background: f.active ? "var(--ink)" : "var(--bg)",
+                color: f.active ? "var(--bg)" : "var(--fg-3)",
+                border: f.active ? "1px solid var(--ink)" : "1px solid var(--border)",
+              }}
+            >
+              {f.label} <span style={{ color: f.active ? "oklch(0.75 0.005 85)" : "var(--fg-4)", marginLeft: 4 }}>{f.count}</span>
+            </span>
+          ))}
         </div>
       </div>
-    </div>
+
+      {/* Users table */}
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                {["User", "ID", "Role", "Country", "Joined", "Status", "LTV"].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 ${i === 6 ? "text-right" : "text-left"}`}
+                    style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)", fontWeight: 500 }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {USERS.map((u) => (
+                <tr key={u.id} className="hover:bg-[var(--bg-2)] cursor-pointer">
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <Link href={`/admin/users/${u.id}`} className="flex gap-2.5 items-center no-underline" style={{ color: "inherit" }}>
+                      <span
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0`}
+                        style={{ background: u.avaBg, color: u.avaColor }}
+                      >
+                        {u.initials}
+                      </span>
+                      <div>
+                        <div className="font-medium" style={{ color: "var(--ink)" }}>{u.name}</div>
+                        <div className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{u.email}</div>
+                      </div>
+                    </Link>
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{u.id}</span>
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <RolePill role={u.role} />
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <span className="font-mono text-[11.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{u.country}</span>
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{u.joined}</span>
+                  </td>
+                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <StatusBadge status={u.status} statusText={u.statusText} />
+                  </td>
+                  <td className="py-3 px-4.5 text-right font-mono" style={{ borderBottom: "1px solid var(--border)", fontVariantNumeric: "tabular-nums" }}>
+                    {u.ltv}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </AdminDashboardShell>
+  );
+}
+
+/* ─── Data ──────────────────────────────────────────────────── */
+const USERS = [
+  { initials: "TA", name: "Tunde Adebayo", email: "tunde@gmail.com", id: "USR_412884", role: "member" as const, country: "ZA", joined: "Jan 2025", status: "active" as const, statusText: "Active", ltv: "R 18,400", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
+  { initials: "SO", name: "Sarah Okafor", email: "sarah@binectics.com", id: "USR_018421", role: "trainer" as const, country: "ZA", joined: "Mar 2024", status: "active" as const, statusText: "Active", ltv: "R 182k", avaBg: "var(--trainer)", avaColor: "oklch(0.2 0.05 75)" },
+  { initials: "IL", name: "Iron Lab (Lerato M.)", email: "lerato@ironlab.co.za", id: "USR_001182", role: "gym" as const, country: "ZA", joined: "Mar 2024", status: "active" as const, statusText: "Active", ltv: "R 14.2M", avaBg: "var(--gym)", avaColor: "oklch(0.95 0 0)" },
+  { initials: "NH", name: "Dr Nadia Hassan", email: "nadia@binectics.com", id: "USR_022941", role: "diet" as const, country: "NG", joined: "Feb 2025", status: "active" as const, statusText: "Active", ltv: "₦ 8.62M", avaBg: "var(--dietitian)", avaColor: "oklch(0.95 0 0)" },
+  { initials: "RM", name: "Reza M.", email: "reza.m@example.ae", id: "USR_412884", role: "member" as const, country: "AE", joined: "Aug 2025", status: "flagged" as const, statusText: "Refund abuse · 11 / 30d", ltv: "د.إ 12,400", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
+  { initials: "DK", name: "\"Daniel Kane\"", email: "d.kane@protonmail.com", id: "USR_008198", role: "trainer" as const, country: "GB", joined: "May 2026", status: "flagged" as const, statusText: "ID mismatch · priority", ltv: "£ 0", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
+  { initials: "PB", name: "Pier Botha", email: "pierb@uct.ac.za", id: "USR_322118", role: "member" as const, country: "ZA", joined: "Mar 2026", status: "active" as const, statusText: "Active · open dispute", ltv: "R 1,680", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
+  { initials: "FR", name: "\"Fitness Republic\"", email: "contact@fitnessrepublic.in", id: "USR_008242", role: "gym" as const, country: "IN", joined: "May 2026", status: "suspended" as const, statusText: "Frozen · stolen card", ltv: "₹ 0", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
+  { initials: "AK", name: "Andile K.", email: "andile@binectics.com", id: "USR_000003", role: "admin" as const, country: "ZA", joined: "Founder", status: "active" as const, statusText: "Active", ltv: "-", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
+];
+
+/* ─── Helpers ──────────────────────────────────────────────── */
+function RolePill({ role }: { role: "member" | "trainer" | "gym" | "diet" | "admin" }) {
+  const map: Record<string, { bg: string; color: string; border?: string; label: string }> = {
+    member: { bg: "var(--gym-soft)", color: "var(--gym)", label: "Member" },
+    trainer: { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)", label: "Trainer" },
+    gym: { bg: "var(--bg-2)", color: "var(--fg-2)", border: "1px solid var(--border)", label: "Gym owner" },
+    diet: { bg: "var(--dietitian-soft)", color: "var(--dietitian)", label: "Dietitian" },
+    admin: { bg: "var(--ink)", color: "var(--bg)", label: "Super admin" },
+  };
+  const s = map[role];
+  return (
+    <span className="font-mono text-[9.5px] px-1.5 py-[2px] rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: s.bg, color: s.color, border: s.border }}>
+      {s.label}
+    </span>
+  );
+}
+
+function StatusBadge({ status, statusText }: { status: "active" | "flagged" | "suspended"; statusText: string }) {
+  const map: Record<string, { bg: string; color: string; border?: string }> = {
+    active: { bg: "var(--signal-soft)", color: "var(--signal-ink)" },
+    flagged: { bg: "var(--danger-soft)", color: "var(--danger)" },
+    suspended: { bg: "var(--bg-2)", color: "var(--fg-3)", border: "1px solid var(--border)" },
+  };
+  const s = map[status];
+  return (
+    <span className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px]" style={{ background: s.bg, color: s.color, border: s.border }}>
+      <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
+      {statusText}
+    </span>
   );
 }

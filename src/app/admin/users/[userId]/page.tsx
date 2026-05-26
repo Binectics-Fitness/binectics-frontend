@@ -1,441 +1,123 @@
-"use client";
+import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import React from "react";
 
-import { useRouter, useParams } from "next/navigation";
-import AdminSidebar from "@/components/AdminSidebar";
-import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import { showAlert, showPrompt } from "@/lib/ui/dialogs";
-
-export default function AdminUserDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const userId = params.userId;
-  const { requestConfirmation, confirmationModal } = useConfirmationModal();
-
-  // Mock user data
-  const user = {
-    id: userId,
-    name: "John Smith",
-    email: "john@example.com",
-    role: "USER",
-    country: "United States",
-    city: "Los Angeles",
-    phone: "+1 (555) 123-4567",
-    status: "Active",
-    signupDate: "2024-01-15",
-    lastLogin: "2024-02-14 14:32",
-    emailVerified: true,
-    phoneVerified: false,
-  };
-
-  const subscriptions = [
-    {
-      id: 1,
-      provider: "PowerHouse Gym",
-      plan: "Premium Monthly",
-      status: "ACTIVE",
-      startDate: "2024-01-15",
-      nextBilling: "2024-03-15",
-      amount: "$49.99",
-    },
-    {
-      id: 2,
-      provider: "Mike Chen - Personal Training",
-      plan: "Basic Package",
-      status: "ACTIVE",
-      startDate: "2024-02-01",
-      nextBilling: "2024-03-01",
-      amount: "$99.99",
-    },
-    {
-      id: 3,
-      provider: "FitCore Studio",
-      plan: "Day Pass",
-      status: "EXPIRED",
-      startDate: "2024-01-20",
-      nextBilling: "-",
-      amount: "$15.00",
-    },
-  ];
-
-  const activityLog = [
-    {
-      date: "2024-02-14 14:32",
-      action: "Logged in",
-      details: "From Los Angeles, USA",
-    },
-    {
-      date: "2024-02-14 10:15",
-      action: "Checked in",
-      details: "PowerHouse Gym",
-    },
-    {
-      date: "2024-02-13 18:20",
-      action: "Updated profile",
-      details: "Changed phone number",
-    },
-    {
-      date: "2024-02-13 09:30",
-      action: "New subscription",
-      details: "Mike Chen - Basic Package",
-    },
-    {
-      date: "2024-02-10 16:45",
-      action: "Logged in",
-      details: "From Los Angeles, USA",
-    },
-  ];
-
-  const handleSuspendUser = () => {
-    requestConfirmation({
-      title: "Suspend user?",
-      description: `${user.name} will lose access to the platform until reactivated.`,
-      confirmLabel: "Suspend User",
-      onConfirm: async () => {
-        await showAlert("User suspended successfully");
-        router.push("/admin/users");
-      },
-    });
-  };
-
-  const handleDeleteUser = async () => {
-    const confirmation = await showPrompt({
-      title: "Delete account",
-      message: `Type "${user.email}" to confirm permanent deletion of this account:`,
-      placeholder: user.email,
-      confirmLabel: "Delete",
-    });
-    if (confirmation === user.email) {
-      await showAlert("User account deleted permanently");
-      router.push("/admin/users");
-    } else if (confirmation) {
-      await showAlert("Confirmation failed. Account not deleted.");
-    }
-  };
-
-  const handleSendEmail = async () => {
-    const message = await showPrompt({
-      title: "Send email",
-      message: "Enter email message to send to user:",
-      placeholder: "Message",
-      confirmLabel: "Send",
-    });
-    if (message) {
-      await showAlert("Email sent successfully");
-    }
-  };
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return "bg-primary-100 text-primary-700";
-      case "EXPIRED":
-        return "bg-red-100 text-red-700";
-      case "CANCELLED":
-        return "bg-neutral-100 text-neutral-700";
-      default:
-        return "bg-accent-yellow-100 text-accent-yellow-700";
-    }
-  };
+export default function AdminUserDetailPage({
+  params,
+}: {
+  params: Promise<{ userId: string }>;
+}) {
+  const { userId } = React.use(params);
+  void userId;
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <AdminSidebar />
-
-      <div className="flex-1 md:ml-64">
-        {/* Header */}
-        <header className="bg-white border-b border-neutral-200">
-          <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
-            <button
-              onClick={() => router.push("/admin/users")}
-              className="text-sm text-foreground/60 hover:text-foreground flex items-center gap-2 mb-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Back to Users
-            </button>
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-black text-foreground">
-                  {user.name}
-                </h1>
-                <p className="mt-1 text-foreground/60">{user.email}</p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSendEmail}
-                  className="px-4 py-2 sm:px-6 sm:py-3 border-2 border-neutral-200 text-foreground font-semibold hover:border-red-500 transition-colors text-sm sm:text-base"
-                >
-                  Send Email
-                </button>
-                <button
-                  onClick={handleSuspendUser}
-                  className="px-4 py-2 sm:px-6 sm:py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors text-sm sm:text-base"
-                >
-                  Suspend User
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <div className="p-4 sm:p-6 md:p-8">
-          {/* User Info */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            <div className="lg:col-span-2">
-              <div className="bg-white p-6 shadow-[var(--shadow-card)] mb-6">
-                <h2 className="text-xl font-bold text-foreground mb-6">
-                  User Information
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-sm font-medium text-foreground/60 mb-1">
-                      Full Name
-                    </p>
-                    <p className="font-semibold text-foreground">{user.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground/60 mb-1">
-                      Email
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground/60 mb-1">
-                      Role
-                    </p>
-                    <span className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm font-semibold">
-                      {user.role}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground/60 mb-1">
-                      Status
-                    </p>
-                    <span className="px-3 py-1 bg-primary-100 text-primary-700 text-sm font-semibold">
-                      {user.status}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground/60 mb-1">
-                      Phone
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {user.phone}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground/60 mb-1">
-                      Location
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {user.city}, {user.country}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground/60 mb-1">
-                      Signup Date
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {user.signupDate}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground/60 mb-1">
-                      Last Login
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {user.lastLogin}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Subscriptions */}
-              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
-                <h2 className="text-xl font-bold text-foreground mb-6">
-                  Active Subscriptions
-                </h2>
-                <div className="space-y-4">
-                  {subscriptions.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="p-4 border-2 border-neutral-200 hover:border-red-500 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-bold text-foreground mb-1">
-                            {sub.provider}
-                          </h3>
-                          <p className="text-sm text-foreground/60">
-                            {sub.plan}
-                          </p>
-                        </div>
-                        <span
-                          className={`px-3 py-1 text-xs font-semibold ${getStatusBadgeColor(sub.status)}`}
-                        >
-                          {sub.status}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="text-foreground/60">Amount</p>
-                          <p className="font-semibold text-foreground">
-                            {sub.amount}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-foreground/60">Start Date</p>
-                          <p className="font-semibold text-foreground">
-                            {sub.startDate}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-foreground/60">Next Billing</p>
-                          <p className="font-semibold text-foreground">
-                            {sub.nextBilling}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Verification Status */}
-              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
-                <h3 className="text-lg font-bold text-foreground mb-4">
-                  Verification Status
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground/60">Email</span>
-                    <span
-                      className={
-                        user.emailVerified ? "text-primary-500" : "text-red-500"
-                      }
-                    >
-                      {user.emailVerified ? "✓ Verified" : "✗ Not Verified"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground/60">Phone</span>
-                    <span
-                      className={
-                        user.phoneVerified ? "text-primary-500" : "text-red-500"
-                      }
-                    >
-                      {user.phoneVerified ? "✓ Verified" : "✗ Not Verified"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="bg-white p-6 shadow-[var(--shadow-card)]">
-                <h3 className="text-lg font-bold text-foreground mb-4">
-                  Quick Stats
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-foreground/60">
-                      Total Subscriptions
-                    </p>
-                    <p className="text-2xl font-black text-foreground">3</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground/60">Total Spent</p>
-                    <p className="text-2xl font-black text-foreground">
-                      $164.98
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground/60">Check-ins</p>
-                    <p className="text-2xl font-black text-foreground">42</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Danger Zone */}
-              <div className="bg-red-50 border-2 border-red-500 p-6">
-                <h3 className="text-lg font-bold text-red-700 mb-4">
-                  Danger Zone
-                </h3>
-                <button
-                  onClick={handleDeleteUser}
-                  className="w-full px-6 py-3 bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
-                >
-                  Delete Account Permanently
-                </button>
-                <p className="text-xs text-red-600 mt-2">
-                  This action cannot be undone. All user data will be
-                  permanently deleted.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Activity Log */}
-          <div className="bg-white p-6 shadow-[var(--shadow-card)]">
-            <h2 className="text-xl font-bold text-foreground mb-6">
-              Recent Activity
-            </h2>
-            <div className="space-y-3">
-              {activityLog.map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-4 pb-3 border-b border-neutral-100 last:border-0"
-                >
-                  <div className="p-2 bg-neutral-100">
-                    <svg
-                      className="w-4 h-4 text-foreground/60"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-semibold text-foreground">
-                        {activity.action}
-                      </p>
-                      <p className="text-sm text-foreground/60">
-                        {activity.date}
-                      </p>
-                    </div>
-                    <p className="text-sm text-foreground/60 mt-1">
-                      {activity.details}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+    <AdminDashboardShell
+      activeItem="Users"
+      crumb="USR-2026-008412"
+      actions={
+        <div className="flex items-center gap-2">
+          <button className="btn-ghost-v2">Impersonate</button>
+          <button className="btn-ghost-v2">Send DM</button>
+          <button className="btn-primary-v2" style={{ background: "var(--danger)", borderColor: "var(--danger)", color: "oklch(0.98 0 0)" }}>
+            Suspend
+          </button>
+        </div>
+      }
+    >
+      {/* Header with avatar */}
+      <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
+        <div
+          className="w-[72px] h-[72px] rounded-[12px] shrink-0"
+          style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 120), oklch(0.72 0.06 100))" }}
+        />
+        <div className="flex-1">
+          <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
+            Tunde Adebayo
+          </h1>
+          <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
+            USR-2026-008412 · joined 18 Jan 2025 · Cape Town · ZA ·{" "}
+            <Pill variant="ok">Good standing</Pill>
+          </p>
         </div>
       </div>
-      {confirmationModal}
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        {[
+          { label: "LTV", value: "R 18,400", delta: "Top 12%" },
+          { label: "Bookings", value: "42", delta: "88% completed" },
+          { label: "Disputes", value: "1", delta: "Resolved · split", deltaColor: "var(--fg-3)" },
+          { label: "Risk score", value: "12", delta: "/ 100 · low" },
+        ].map((kpi) => (
+          <div key={kpi.label} className="rounded-[10px] p-[13px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
+            <div className="text-[22px] font-medium mt-1" style={{ color: "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}>{kpi.value}</div>
+            <div className="font-mono text-[11px] mt-1" style={{ color: kpi.deltaColor || "var(--signal-ink)" }}>{kpi.delta}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Two-column: Account info + Admin notes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <Card title="Account info">
+          <div className="overflow-x-auto">
+          <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
+            <tbody>
+              {[
+                { label: "Name", val: "Tunde Adebayo" },
+                { label: "Email", val: <>tunde@email.com <Pill variant="ok">verified</Pill></> },
+                { label: "Phone", val: <>+27 82 *** 4218 <Pill variant="ok">2FA on</Pill></> },
+                { label: "Country", val: "South Africa" },
+                { label: "Sign-in method", val: "Email · Apple SSO" },
+                { label: "Devices", val: "2 · iPhone 15 · MacBook Air" },
+                { label: "Joined from", val: "Instagram ad · Q1 2025 campaign" },
+              ].map((r) => (
+                <tr key={r.label}>
+                  <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
+                  <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        </Card>
+
+        <Card title="Admin notes · 3">
+          <div className="flex flex-col gap-2.5">
+            {[
+              { text: "\"Asked about adding a second city for travel. Routed to settings docs.\"", by: "Andile · 14 May" },
+              { text: "\"Dispute opened DSP-2401 · 50/50 split agreed with Iron Lab. Member happy.\"", by: "Andile · 18 May" },
+            ].map((note) => (
+              <div key={note.by} className="p-[10px_12px] rounded-(--r-2)" style={{ background: "var(--bg-2)" }}>
+                <p className="text-[13px] leading-relaxed" style={{ color: "var(--fg-2)" }}>{note.text}</p>
+                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-1" style={{ color: "var(--fg-3)" }}>{note.by}</div>
+              </div>
+            ))}
+            <button className="btn-ghost-v2 self-start">+ Add note</button>
+          </div>
+        </Card>
+      </div>
+    </AdminDashboardShell>
+  );
+}
+
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-[12px] p-[22px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <h3 className="text-[14px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>{title}</h3>
+      {children}
     </div>
+  );
+}
+
+function Pill({ variant, children }: { variant: "ok" | "warn" | "danger"; children: React.ReactNode }) {
+  const styles: Record<string, { background: string; color: string }> = {
+    ok: { background: "var(--signal-soft)", color: "var(--signal-ink)" },
+    warn: { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" },
+    danger: { background: "var(--danger-soft)", color: "var(--danger)" },
+  };
+  return (
+    <span className="font-mono text-[10px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em]" style={styles[variant]}>
+      {children}
+    </span>
   );
 }

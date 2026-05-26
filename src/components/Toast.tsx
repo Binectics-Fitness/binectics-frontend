@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+
+/**
+ * Toast — ink bg for success, danger for error, warn for warning.
+ * r-2 radius, 13.5px text, no icons that brag. Plain and fast.
+ */
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -16,46 +21,21 @@ interface ToastProps {
   onDismiss: (id: string) => void;
 }
 
-const ICONS: Record<ToastType, React.ReactNode> = {
-  success: (
-    <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
-  ),
-  error: (
-    <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  ),
-  warning: (
-    <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-    </svg>
-  ),
-  info: (
-    <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z" />
-    </svg>
-  ),
-};
-
 const STYLES: Record<ToastType, string> = {
-  success: "bg-foreground text-background",
-  error: "bg-red-600 text-white",
-  warning: "bg-accent-yellow-500 text-foreground",
-  info: "bg-accent-blue-500 text-white",
+  success: "bg-ink text-bg",
+  error: "bg-danger text-white",
+  warning: "bg-[oklch(0.72_0.14_75)] text-ink",
+  info: "bg-ink text-bg",
 };
 
-function ToastItem({ toast, onDismiss }: ToastProps) {
+function ToastEntry({ toast, onDismiss }: ToastProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Trigger enter animation
     const enterTimer = setTimeout(() => setVisible(true), 10);
-    // Auto-dismiss
     const dismissTimer = setTimeout(() => {
       setVisible(false);
-      setTimeout(() => onDismiss(toast.id), 300);
+      setTimeout(() => onDismiss(toast.id), 220);
     }, 3500);
     return () => {
       clearTimeout(enterTimer);
@@ -65,22 +45,35 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-lg text-sm font-semibold max-w-sm w-full pointer-events-auto transition-all duration-300 ${STYLES[toast.type]} ${
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-      }`}
+      className={`flex items-center gap-3 rounded-(--r-2) px-3.5 py-2.5 text-[13.5px] font-medium max-w-sm w-full pointer-events-auto border border-transparent ${STYLES[toast.type]}`}
+      style={{
+        boxShadow: "var(--shadow-2)",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(6px)",
+        transition: "opacity var(--motion-base), transform var(--motion-base)",
+        transitionTimingFunction: "var(--ease-out)",
+        letterSpacing: "-0.005em",
+      }}
     >
-      {ICONS[toast.type]}
       <span className="flex-1">{toast.message}</span>
       <button
         onClick={() => {
           setVisible(false);
-          setTimeout(() => onDismiss(toast.id), 300);
+          setTimeout(() => onDismiss(toast.id), 220);
         }}
-        className="opacity-70 hover:opacity-100 transition-opacity ml-1"
+        className="opacity-60 hover:opacity-100 ml-1 shrink-0"
         aria-label="Dismiss"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <svg
+          className="w-3.5 h-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>
     </div>
@@ -91,7 +84,7 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
 
 type ToastListener = (toasts: ToastItem[]) => void;
 let _toasts: ToastItem[] = [];
-let _listeners: Set<ToastListener> = new Set();
+const _listeners: Set<ToastListener> = new Set();
 
 function notify() {
   _listeners.forEach((fn) => fn([..._toasts]));
@@ -137,7 +130,7 @@ export function ToastContainer() {
       className="fixed bottom-6 right-4 sm:right-6 z-[9999] flex flex-col gap-2 items-end pointer-events-none"
     >
       {toasts.map((t) => (
-        <ToastItem key={t.id} toast={t} onDismiss={dismiss} />
+        <ToastEntry key={t.id} toast={t} onDismiss={dismiss} />
       ))}
     </div>,
     document.body,

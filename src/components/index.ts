@@ -11,9 +11,6 @@ export type { PasswordInputProps } from "./PasswordInput";
 export { Card } from "./Card";
 export type { CardProps } from "./Card";
 
-export { Container } from "./Container";
-export type { ContainerProps } from "./Container";
-
 export { Badge } from "./Badge";
 export type { BadgeProps } from "./Badge";
 
@@ -32,7 +29,6 @@ export { default as ConditionalLayout } from "./ConditionalLayout";
 // Feature Components (default exports)
 export { default as CookieConsent } from "./CookieConsent";
 export { default as CookieSettings } from "./CookieSettings";
-export { default as ProfessionalsTab } from "./ProfessionalsTab";
 
 // Dashboard Components (default exports)
 export { default as DashboardSidebar } from "./DashboardSidebar";
@@ -54,8 +50,3 @@ export { InactivityNotification } from "./InactivityNotification";
 // Utility UI Components
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
-
-// Enhanced UI Components
-export { SectionWrapper } from "./SectionWrapper";
-export { StatCard } from "./StatCard";
-export { PageHeader } from "./PageHeader";

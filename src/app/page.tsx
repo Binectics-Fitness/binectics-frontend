@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Accordion } from "../components/Accordion";
-import ProfessionalsTab from "../components/ProfessionalsTab";
+import { BinecticsMark, BinecticsLockup } from "@/components/BinecticsLogo";
+import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
+import HeartbeatMotion from "@/components/HeartbeatMotion";
+import ScrollReveal from "@/components/ScrollReveal";
+import CountUp from "@/components/CountUp";
+import FaqAccordion from "@/components/FaqAccordion";
 
 export const metadata: Metadata = {
-  title: "Binectics - Your Global Fitness Ecosystem",
+  title: "Binectics — the operating system for fitness",
   description:
-    "Connect with verified gyms, personal trainers, and dietitians in 50+ countries. Subscribe to fitness plans, book consultations, and track your progress.",
+    "One marketplace, one set of dashboards, one tab. Discovery, payments, check-ins, and client health for gyms, trainers, and dietitians in 50+ countries.",
   alternates: { canonical: "/" },
 };
 
@@ -16,1619 +21,428 @@ const jsonLd = {
   name: "Binectics",
   url: "https://binectics.com",
   description:
-    "A global fitness ecosystem connecting gyms, personal trainers, and dietitians in 50+ countries.",
-  sameAs: [],
+    "The operating system for fitness. One marketplace connecting gyms, trainers, and dietitians in 50+ countries.",
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer support",
-    email: "support@binectics.com",
-  },
-  offers: {
-    "@type": "AggregateOffer",
-    priceCurrency: "USD",
-    lowPrice: "19",
-    highPrice: "99",
-    offerCount: "3",
+    email: "help@binectics.com",
   },
 };
 
+const faqItems = [
+  { q: "How is Binectics different from a class-booking app?", a: "Class-booking apps point a member at one studio. Binectics is the rails underneath: discovery, payments, check-ins, client health, journals, plans, and reviews — for gyms, trainers, and dietitians, in one place. Members get one tab; providers get one set of tools." },
+  { q: "Which countries and currencies are supported?", a: "Live in 50+ countries with eight currencies (USD, EUR, GBP, NGN, KES, ZAR, AED, INR). Payments route automatically — Stripe for USD / EUR / GBP / AED / INR, Paystack for NGN / KES / ZAR, and Flutterwave across NGN / GHS / KES / TZS / UGX." },
+  { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents — business registration, certifications, identity — and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
+  { q: "Can I bring my own payment processor?", a: "Yes — Studio and Enterprise plans let providers configure their own Stripe, Paystack, or Flutterwave keys. Payments settle directly to your account; Binectics never holds funds." },
+  { q: "How do team and multi-location plans work?", a: "Gym owners create an organization, invite staff with role and permission scopes, and manage multiple listings — each with its own facility details, amenities, gallery, and documents. Assignment rules route new clients to the right staff automatically." },
+];
+
 export default function Home() {
-  const faqItems = [
-    {
-      title: "What is Binectics?",
-      content:
-        "Binectics is a global fitness ecosystem that connects verified gyms, certified personal trainers, and expert dietitians in one platform. With a single subscription, you get access to 500+ gyms across 50+ countries, plus the ability to book trainers and dietitians wherever you are.",
-    },
-    {
-      title: "How does Binectics work?",
-      content:
-        "Simply sign up, choose your plan, and get verified. You'll receive a unique QR code that works at any partner gym worldwide. You can also browse and book personal trainers and dietitians through our app, track your progress, and manage everything from one dashboard.",
-    },
-    {
-      title: "How do I check in at a gym?",
-      content:
-        "Simply open the Binectics app, navigate to your QR code, and scan it at the gym entrance. The system automatically verifies your membership and logs your visit. Most gyms have dedicated QR scanners at reception.",
-    },
-    {
-      title: "Can I visit any gym multiple times?",
-      content:
-        "Yes! With our Pro and Elite plans, you get unlimited access to all partner gyms. The Starter plan includes 5 gym visits per month. There are no restrictions on which gyms you can visit or how often.",
-    },
-    {
-      title: "What payment methods do you accept?",
-      content:
-        "We accept all major credit cards (Visa, Mastercard, American Express, Discover), debit cards, and digital wallets (Apple Pay, Google Pay). For annual plans, we also accept bank transfers and PayPal.",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-neutral-100">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
+      <MarketingTopbar
+        activeLabel="Home"
+        links={[
+          { href: "#how", label: "How it works" },
+          { href: "/marketplace", label: "Marketplace" },
+          { href: "#roles", label: "For providers" },
+          { href: "/pricing", label: "Pricing" },
+          { href: "#faq", label: "FAQ" },
+        ]}
       />
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-background-secondary py-16 sm:py-24">
-        {/* Subtle gradient background */}
-        <div className="pointer-events-none absolute inset-0 gradient-hero opacity-60" />
-        <div className="pointer-events-none absolute -right-64 -top-64 h-[500px] w-[500px] rounded-full bg-primary-500/[0.03] blur-3xl" />
-        <div className="pointer-events-none absolute -left-32 bottom-0 h-[400px] w-[400px] rounded-full bg-accent-blue-500/[0.03] blur-3xl" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-500/10 px-4 py-2">
-                <svg
-                  className="h-5 w-5 text-primary-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="text-sm font-semibold text-foreground">
-                  Available in 50+ countries
-                </span>
-              </div>
-              <h1 className="font-display text-4xl font-black leading-[1.1] text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-                Your global fitness ecosystem—
-                <span className="text-primary-500">
-                  gyms, trainers & dietitians
-                </span>
-              </h1>
-              <p className="mt-6 max-w-lg text-lg leading-relaxed text-foreground-secondary sm:text-xl">
-                One unified marketplace connecting verified gyms, certified
-                trainers, and expert dietitians worldwide. Subscribe, book, and
-                track—all in one place.
-              </p>
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Link
-                  href="/marketplace"
-                  className="inline-flex min-h-[44px] h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
-                >
-                  Explore the Marketplace
-                </Link>
-                <p className="text-sm text-foreground-tertiary text-center sm:text-left animate-fade-in">
-                  Join 10,000+ members across 50 countries
-                </p>
-              </div>
-            </div>
-            <div className="relative hidden lg:block">
-              <div className="relative h-[500px] w-full">
-                {/* Visual element - illustrated icons */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 space-y-6">
-                  <div
-                    className="flex items-center gap-4 rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 hover:-translate-y-0.5 animate-fade-in"
-                    style={{ animationDelay: "0.2s" }}
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl icon-glow-blue">
-                      <svg
-                        className="h-6 w-6 text-accent-blue-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-foreground">
-                        500+ Gyms
-                      </div>
-                      <div className="text-xs text-foreground-secondary">
-                        in 50 countries
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="flex items-center gap-4 rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 hover:-translate-y-0.5 animate-fade-in"
-                    style={{ animationDelay: "0.4s" }}
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl icon-glow-yellow">
-                      <svg
-                        className="h-6 w-6 text-accent-yellow-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z M16 8a2 2 0 100-4 2 2 0 000 4z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-foreground">
-                        Certified Trainers
-                      </div>
-                      <div className="text-xs text-foreground-secondary">
-                        verified & rated
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="flex items-center gap-4 rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 hover:-translate-y-0.5 animate-fade-in"
-                    style={{ animationDelay: "0.6s" }}
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl icon-glow-purple">
-                      <svg
-                        className="h-6 w-6 text-accent-orange-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v13m0-13c-2.21 0-4-1.79-4-4m4 4c2.21 0 4-1.79 4-4m-9 13h10M3 21h18"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-foreground">
-                        Meal Plans
-                      </div>
-                      <div className="text-xs text-foreground-secondary">
-                        custom nutrition
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Stats */}
-          <div className="mt-20 grid gap-6 sm:grid-cols-3">
-            <div
-              className="group text-center rounded-2xl bg-white/70 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 animate-fade-in"
-              style={{ animationDelay: "0.1s" }}
+      {/* ═══ HERO ═══ */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 pt-12 sm:pt-18 pb-16 sm:pb-25 border-b border-border relative">
+        {/* hero-top: 2-column grid on desktop, stacked on mobile */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] gap-y-10 lg:gap-x-14 items-center mb-12 sm:mb-18">
+          {/* Left column — hero text */}
+          <div>
+            {/* Live ticker pill */}
+            <div className="hidden sm:flex items-center gap-4 border border-border rounded-full px-3.5 py-1 bg-bg w-fit text-[12.5px] text-fg-2 mb-7">
+              <span className="w-4.5 h-4.5 rounded-full bg-signal-soft flex items-center justify-center">
+                <span className="w-1.75 h-1.75 rounded-full bg-signal" />
+              </span>
+              <span>Live across 50+ countries</span>
+              <span className="text-border-2">{"·"}</span>
+              <span className="font-mono text-fg-3">2,481</span>
+              <span>check-ins in the last hour</span>
+            </div>
+
+            <h1
+              className="text-[40px] sm:text-[60px] lg:text-[76px] leading-[0.94] font-medium"
+              style={{ letterSpacing: "-0.04em", color: "var(--ink)" }}
             >
-              <div className="mb-2 flex items-center justify-center">
-                <svg
-                  className="h-6 w-6 text-primary-500"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                </svg>
-              </div>
-              <div className="font-display text-4xl font-bold text-foreground">
-                500+
-              </div>
-              <div className="mt-1 text-sm font-medium text-foreground-secondary">
-                Verified Professionals
-              </div>
-            </div>
-            <div
-              className="group text-center rounded-2xl bg-white/70 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 animate-fade-in"
-              style={{ animationDelay: "0.2s" }}
-            >
-              <div className="mb-2 flex items-center justify-center">
-                <svg
-                  className="h-6 w-6 text-primary-500"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-              </div>
-              <div className="font-display text-4xl font-bold text-foreground">
-                4.8
-              </div>
-              <div className="mt-1 text-sm font-medium text-foreground-secondary">
-                Average Rating
-              </div>
-            </div>
-            <div
-              className="group text-center rounded-2xl bg-white/70 backdrop-blur-sm p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 animate-fade-in"
-              style={{ animationDelay: "0.3s" }}
-            >
-              <div className="mb-2 flex items-center justify-center">
-                <svg
-                  className="h-6 w-6 text-primary-500"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-                </svg>
-              </div>
-              <div className="font-display text-4xl font-bold text-foreground">
-                10K+
-              </div>
-              <div className="mt-1 text-sm font-medium text-foreground-secondary">
-                Active Members
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+              The operating system
+              <br />
+              for <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>fitness</em>.
+            </h1>
 
-      {/* How It Works Section */}
-      <section
-        id="how-it-works"
-        className="relative bg-background-secondary py-20 sm:py-28 gradient-section-green"
-      >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
-              Get started in 3 simple steps
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
-              From signup to your first workout in minutes
+            <p className="text-[16px] sm:text-[19px] text-fg-2 max-w-[580px] mt-5 sm:mt-7 leading-relaxed">
+              Binectics connects gyms, trainers, dietitians, and the people they work with —
+              in one calm marketplace, one set of dashboards, one tab. Discovery, payments,
+              check-ins, and client health, all running on the same rails.
             </p>
-          </div>
 
-          <div className="mt-16 grid gap-12 lg:grid-cols-3">
-            {[
-              {
-                step: "01",
-                title: "Browse & Discover",
-                description:
-                  "Search 500+ gyms, trainers, and nutritionists across 50 countries. Filter by specialty, location, ratings, and price.",
-                color: "blue",
-                icon: (
-                  <svg
-                    className="h-10 w-10"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                step: "02",
-                title: "Subscribe & Connect",
-                description:
-                  "Choose your plan and subscribe to your favorite gyms and trainers. All payments and bookings managed in one place.",
-                color: "yellow",
-                icon: (
-                  <svg
-                    className="h-10 w-10"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                step: "03",
-                title: "Train & Track",
-                description:
-                  "Check in with your QR code, complete workouts, and track progress automatically. Access your stats anytime, anywhere.",
-                color: "purple",
-                icon: (
-                  <svg
-                    className="h-10 w-10"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                    />
-                  </svg>
-                ),
-              },
-            ].map((item, index) => {
-              const colorClasses = {
-                blue: "icon-glow-blue",
-                yellow: "icon-glow-yellow",
-                purple: "icon-glow-purple",
-              };
-
-              return (
-                <div key={index} className="relative">
-                  {/* Connector Line - Hidden on mobile, shown on desktop */}
-                  {index < 2 && (
-                    <div
-                      className="absolute left-1/2 top-16 hidden h-0.5 w-full bg-gradient-to-r from-neutral-300 to-neutral-200 lg:block"
-                      style={{ zIndex: 0 }}
-                    ></div>
-                  )}
-
-                  <div className="relative z-10 text-center group">
-                    {/* Step Number */}
-                    <div className="mb-6 flex justify-center">
-                      <div
-                        className={`flex h-20 w-20 items-center justify-center rounded-2xl ${colorClasses[item.color as keyof typeof colorClasses]} transition-all duration-300 group-hover:scale-105 group-hover:shadow-[var(--shadow-card-hover)]`}
-                      >
-                        {item.icon}
-                      </div>
-                    </div>
-
-                    {/* Step Label */}
-                    <div className="mb-3 text-sm font-bold uppercase tracking-wider text-foreground-tertiary">
-                      Step {item.step}
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="mb-3 font-display text-xl font-bold text-foreground">
-                      {item.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-sm leading-relaxed text-foreground-secondary">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* CTA */}
-          <div className="mt-16 text-center">
-            <Link
-              href="/register"
-              className="inline-flex h-14 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
-            >
-              Get Started
-            </Link>
-            <p className="mt-4 text-sm text-foreground-tertiary">
-              Cancel anytime
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Use Cases Section - Lifestyle Photos */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
-              Work out anywhere—home, gym, or park
-            </h2>
-            <p className="mt-4 text-base sm:text-lg leading-relaxed text-foreground-secondary">
-              Access fitness professionals and facilities wherever life takes
-              you
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                label: "At the Gym",
-                description:
-                  "QR check-in, track workouts, access equipment guides",
-                color: "blue",
-                icon: (
-                  <svg
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Personal Training",
-                description: "One-on-one sessions with certified trainers",
-                color: "yellow",
-                icon: (
-                  <svg
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M13 10V3L4 14h7v7l9-11h-7z M16 8a2 2 0 100-4 2 2 0 000 4z"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Nutrition Plans",
-                description: "Custom meal plans from expert dietitians",
-                color: "orange",
-                icon: (
-                  <svg
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 8v13m0-13c-2.21 0-4-1.79-4-4m4 4c2.21 0 4-1.79 4-4m-9 13h10M3 21h18"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Progress Tracking",
-                description: "Monitor your goals with detailed analytics",
-                color: "purple",
-                icon: (
-                  <svg
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                ),
-              },
-            ].map((useCase, index) => {
-              const colorClasses = {
-                blue: "icon-glow-blue",
-                yellow: "icon-glow-yellow",
-                orange: "icon-glow-purple",
-                purple: "icon-glow-purple",
-              };
-
-              return (
-                <div key={index} className="group relative">
-                  <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1">
-                    <div
-                      className={`mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl transition-transform duration-300 group-hover:scale-105 ${colorClasses[useCase.color as keyof typeof colorClasses]}`}
-                    >
-                      {useCase.icon}
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">
-                      {useCase.label}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-foreground-secondary">
-                      {useCase.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section
-        id="features"
-        className="relative bg-background-secondary py-20 sm:py-28 gradient-section-blue"
-      >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl">
-              Browse 500+ trainers and gyms near you
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
-              Find fitness professionals specialized in your goals
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                label: "Strength Training",
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Yoga & Flexibility",
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v.01M8 8v.01M16 8v.01M12 12c-2.21 0-4 1.79-4 4v4h8v-4c0-2.21-1.79-4-4-4z M12 2a2 2 0 100 4 2 2 0 000-4z"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Nutrition & Diet",
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v13m0-13c-2.21 0-4-1.79-4-4m4 4c2.21 0 4-1.79 4-4m-9 13h10M3 21h18"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Cardio & Running",
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z M16 8a2 2 0 100-4 2 2 0 000 4z"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Bodybuilding",
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z M4 8v8m16-8v8 M2 10h2m16 0h2M2 14h2m16 0h2"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "CrossFit & HIIT",
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 3v18l7-4 7 4V3M9 6h6M9 10h6"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Mental Wellness",
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                label: "Sports Performance",
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                ),
-              },
-            ].map((category, index) => (
-              <button
-                key={index}
-                className="group flex items-center gap-3 text-left transition-colors duration-200"
+            <div className="flex flex-col sm:flex-row gap-3 mt-7 sm:mt-9 items-start sm:items-center">
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center h-[42px] px-4.5 rounded-(--r-2) bg-ink text-[14px] font-medium hover:bg-[oklch(0.08_0.008_80)] w-full sm:w-auto"
+                style={{ letterSpacing: "-0.005em", color: "var(--bg)" }}
               >
-                <span className="text-foreground-secondary transition-colors group-hover:text-primary-500">
-                  {category.icon}
-                </span>
-                <span className="text-sm font-medium text-foreground transition-colors group-hover:text-primary-500">
-                  {category.label}
-                </span>
-              </button>
-            ))}
+                Start your gym free →
+              </Link>
+              <Link
+                href="/marketplace"
+                className="inline-flex items-center justify-center h-[42px] px-4.5 rounded-(--r-2) text-[14px] font-medium border border-border hover:bg-bg-2 hover:border-border-2 w-full sm:w-auto"
+                style={{ letterSpacing: "-0.005em", color: "var(--fg-2)" }}
+              >
+                Browse the marketplace
+              </Link>
+            </div>
           </div>
 
-          <div className="mt-16 grid gap-8 lg:grid-cols-3">
-            {[
-              {
-                title: "For Gyms",
-                description:
-                  "Digitize your facility, manage memberships, and grow your business with our comprehensive gym management platform.",
-                color: "blue",
-                icon: (
-                  <svg
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M3 10h2m0 0v4m0-4h2m12 0h2m0 0v4m0-4h-2m-8-4v12m0-12h4v12h-4z M7 10h10M7 14h10"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                title: "For Trainers",
-                description:
-                  "Build your brand, sell training programs, and track client progress with powerful tools designed for fitness professionals.",
-                color: "yellow",
-                icon: (
-                  <svg
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M5 3v18l7-4 7 4V3M9 6h6M9 10h6"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                title: "For Dietitians",
-                description:
-                  "Offer personalized meal plans, track nutrition goals, and help clients succeed with integrated diet management tools.",
-                color: "orange",
-                icon: (
-                  <svg
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 8v13m0-13c-2.21 0-4-1.79-4-4m4 4c2.21 0 4-1.79 4-4m-9 13h10M3 21h18"
-                    />
-                  </svg>
-                ),
-              },
-            ].map((feature) => (
-              <div
-                key={feature.title}
-                className="group rounded-2xl bg-background p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5"
-              >
-                <div
-                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-${feature.color}-100 text-accent-${feature.color}-600`}
-                >
-                  {feature.icon}
-                </div>
-                <h3 className="font-display text-xl font-bold text-foreground">
-                  {feature.title}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-foreground-secondary">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+          {/* Right column — HeartbeatMotion */}
+          <div className="w-full max-w-[480px] mx-auto lg:max-w-none" style={{ aspectRatio: "1 / 1" }}>
+            <HeartbeatMotion />
           </div>
+        </div>
+
+        {/* Strap — proof stats */}
+        <div className="flex flex-wrap gap-6 sm:gap-9 pt-7 border-t border-border">
+          {[
+            { n: "14,200+", l: "Providers" },
+            { n: "8", l: "Currencies" },
+            { n: "50+", l: "Countries" },
+            { n: "$2.1M", l: "Monthly GMV · Apr" },
+            { n: "4.82", l: "Avg provider rating" },
+          ].map((s) => (
+            <div key={s.l} className="flex-1 min-w-[140px]">
+              <CountUp value={s.n} className="text-[24px] sm:text-[36px] font-medium text-ink block" style={{ letterSpacing: "-0.025em", fontVariantNumeric: "tabular-nums" }} />
+              <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.04em] text-fg-3 mt-1">{s.l}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Platform Features - PRD Capabilities */}
-      <section className="relative bg-background-secondary py-20 sm:py-28 gradient-section-warm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
-              Everything you need in one platform
+      {/* ═══ ROLES ═══ */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border" id="roles">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              Built for the<br />four people<br />who make<br /><em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>fitness work.</em>
             </h2>
-            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
-              Powerful features for users and professionals
+            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
+              A marketplace is only as good as the operators on it. Binectics gives each role its
+              own dashboard, its own KPIs, and the same calm chrome — so an admin reviewing
+              verifications and a trainer writing a journal entry are working in the same product.
             </p>
           </div>
+        </ScrollReveal>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: "QR Check-in",
-                description:
-                  "Seamless gym access with QR code scanning. Check in instantly and track your attendance automatically.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                    />
-                  </svg>
-                ),
-                color: "blue",
-              },
-              {
-                title: "Verified Professionals",
-                description:
-                  "All gyms, trainers, and dietitians are verified with credentials, certifications, and background checks.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                ),
-                color: "green",
-              },
-              {
-                title: "Client Journals",
-                description:
-                  "Trainers and dietitians log your progress. View notes, metrics, and track your fitness journey over time.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                ),
-                color: "yellow",
-              },
-              {
-                title: "Flexible Subscriptions",
-                description:
-                  "Choose from monthly memberships, fixed-duration programs, or one-time training packages that fit your schedule.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                ),
-                color: "purple",
-              },
-              {
-                title: "Multi-Currency Payments",
-                description:
-                  "Secure payments in your local currency via Stripe and regional gateways. All transactions are encrypted and safe.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    />
-                  </svg>
-                ),
-                color: "blue",
-              },
-              {
-                title: "Location-Based Search",
-                description:
-                  "Find gyms, trainers, and dietitians near you with smart filters by specialty, price, ratings, and verified status.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                ),
-                color: "green",
-              },
-            ].map((feature, index) => {
-              const colorClasses = {
-                blue: "icon-glow-blue",
-                green: "icon-glow-green",
-                yellow: "icon-glow-yellow",
-                purple: "icon-glow-purple",
-              };
-
-              return (
-                <div
-                  key={index}
-                  className="group rounded-xl sm:rounded-2xl bg-white p-5 sm:p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
-                >
-                  <div
-                    className={`mb-3 sm:mb-4 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl transition-transform duration-300 group-hover:scale-110 ${colorClasses[feature.color as keyof typeof colorClasses]}`}
-                  >
-                    {feature.icon}
-                  </div>
-                  <h3 className="mb-2 font-display text-lg sm:text-xl font-bold text-foreground">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-foreground-secondary">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Global Reach Section */}
-      <section className="relative bg-background-secondary py-20 sm:py-28 gradient-section-green">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
-              Your fitness passport to 50+ countries
-            </h2>
-            <p className="mt-4 text-base sm:text-lg leading-relaxed text-foreground-secondary">
-              One subscription works everywhere. From Tokyo to Toronto, your
-              fitness never stops.
-            </p>
-          </div>
-
-          <div className="mt-12 sm:mt-16 grid gap-6 sm:gap-8 grid-cols-2 lg:grid-cols-4">
-            {[
-              { country: "United States", gyms: "180+", trainers: "250+" },
-              { country: "United Kingdom", gyms: "90+", trainers: "120+" },
-              { country: "Australia", gyms: "60+", trainers: "85+" },
-              { country: "Canada", gyms: "70+", trainers: "95+" },
-              { country: "Germany", gyms: "50+", trainers: "70+" },
-              { country: "France", gyms: "45+", trainers: "65+" },
-              { country: "Japan", gyms: "40+", trainers: "55+" },
-              { country: "Singapore", gyms: "30+", trainers: "45+" },
-            ].map((location, index) => (
-              <div
-                key={index}
-                className="group rounded-xl sm:rounded-2xl bg-background p-4 sm:p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
-              >
-                <div className="mb-3 sm:mb-4 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-primary-100">
-                  <svg
-                    className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="font-display text-base sm:text-lg font-bold text-foreground">
-                  {location.country}
-                </h3>
-                <div className="mt-2 sm:mt-3 space-y-1 text-xs sm:text-sm">
-                  <p className="text-foreground-secondary">
-                    {location.gyms} gyms
-                  </p>
-                  <p className="text-foreground-secondary">
-                    {location.trainers} trainers
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-16 text-center">
-            <p className="text-sm text-foreground-tertiary">
-              + 42 more countries including Brazil, India, UAE, Spain, Italy,
-              Thailand, and more
-            </p>
-            <Link
-              href="#"
-              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent-blue-500 hover:text-accent-blue-600"
-            >
-              View all countries
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* QR Check-in Highlight */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-center gap-8 lg:gap-12 lg:grid-cols-2">
-            <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent-blue-500/10 px-3 sm:px-4 py-1.5 sm:py-2">
-                <svg
-                  className="h-4 w-4 sm:h-5 sm:w-5 text-accent-blue-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
+        <ScrollReveal stagger staggerInterval={80} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-border rounded-(--r-3) overflow-hidden bg-bg">
+          {[
+            { accent: "bg-ink", micro: "Member", title: "Find a coach. Show up. Repeat.", desc: "Browse verified providers, subscribe in your own currency, check in by QR, and watch your streak count itself.", bullets: ["QR check-in & streaks", "Weight, meal, activity logs", "Read your coach\u2019s journal", "Loyalty & gamification"] },
+            { accent: "bg-gym", micro: "Gym owner", title: "Run the floor and the books.", desc: "Multi-location management, plans, members, staff schedules, revenue dashboards — and a verified marketplace listing on top.", bullets: ["Multi-location facilities", "Plans, members, classes", "Staff & assignment rules", "Revenue + check-in analytics"] },
+            { accent: "bg-trainer", micro: "Trainer", title: "Coach more humans, less inbox.", desc: "Workout plans, structured exercises, client journals with mood and adherence, sessions, and earnings — in one tab.", bullets: ["Workout plan library", "Client invites & journals", "Sessions & consultations", "Earnings dashboard"] },
+            { accent: "bg-dietitian", micro: "Dietitian", title: "Plans, meals, progress — connected.", desc: "Build meal plans, attach PDFs, watch clients log feedback, and turn weight data into plan adjustments without spreadsheets.", bullets: ["Meal plan library", "Diet plans with PDF support", "Meal feedback & ratings", "Client weight tracking"] },
+          ].map((role, i) => (
+            <div key={role.micro} className={`p-6 sm:p-7 flex flex-col gap-3.5 min-h-60 sm:min-h-80 ${i < 3 ? "border-b sm:border-b-0 sm:border-r border-border" : ""} ${i === 1 ? "lg:border-r" : ""}`}>
+              <div className="flex items-center gap-2.5">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`role-icon role-icon-${i}`} style={{ color: `var(--${role.micro === "Member" ? "ink" : role.micro === "Gym owner" ? "gym" : role.micro === "Trainer" ? "trainer" : "dietitian"})` }}>
+                  {role.micro === "Member" && <><circle cx="10" cy="5" r="2.5" /><path d="M5 18v-2a5 5 0 0 1 10 0v2" /><path d="M10 11v3" className="role-heartbeat" /></>}
+                  {role.micro === "Gym owner" && <><rect x="2" y="6" width="16" height="12" rx="1.5" /><path d="M2 10h16" /><rect x="5" y="2" width="2" height="4" rx="0.5" fill="currentColor" stroke="none" /><rect x="13" y="2" width="2" height="4" rx="0.5" fill="currentColor" stroke="none" /><circle cx="10" cy="14" r="1.5" className="role-pulse" /></>}
+                  {role.micro === "Trainer" && <><path d="M3 10h14" /><rect x="1" y="7" width="4" height="6" rx="1" /><rect x="15" y="7" width="4" height="6" rx="1" /><rect x="7" y="8.5" width="2" height="3" rx="0.5" fill="currentColor" stroke="none" /><rect x="11" y="8.5" width="2" height="3" rx="0.5" fill="currentColor" stroke="none" className="role-lift" /></>}
+                  {role.micro === "Dietitian" && <><circle cx="10" cy="10" r="7" /><path d="M10 5v4M8 7c0-2 4-2 4 0" /><path d="M10 13v2" className="role-grow" /><circle cx="10" cy="12" r="0.8" fill="currentColor" stroke="none" /></>}
                 </svg>
-                <span className="text-xs sm:text-sm font-semibold text-accent-blue-600">
-                  Seamless Access
-                </span>
+                <span className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-3">{role.micro}</span>
               </div>
-              <h2 className="font-display text-2xl font-black leading-tight text-foreground sm:text-3xl lg:text-4xl xl:text-5xl">
-                Check in with a tap. Walk straight to your workout.
-              </h2>
-              <p className="mt-4 sm:mt-6 text-base sm:text-lg leading-relaxed text-foreground-secondary">
-                No more front desk queues or membership cards. Simply scan the
-                gym's QR code with your phone, and you're in. Your attendance is
-                tracked automatically, and your trainer gets notified when you
-                arrive.
-              </p>
-              <div className="mt-6 sm:mt-8 grid gap-3 sm:gap-4 sm:grid-cols-2">
-                {[
-                  {
-                    title: "Instant Access",
-                    description: "QR scan takes less than 2 seconds",
-                  },
-                  {
-                    title: "Auto-Tracking",
-                    description: "Attendance logged automatically",
-                  },
-                  {
-                    title: "Trainer Alerts",
-                    description: "Your trainer knows when you arrive",
-                  },
-                  {
-                    title: "History View",
-                    description: "See all your gym visits in one place",
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <svg
-                      className="h-5 w-5 flex-shrink-0 text-accent-blue-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <div>
-                      <h4 className="font-bold text-foreground">
-                        {item.title}
-                      </h4>
-                      <p className="text-sm text-foreground-secondary">
-                        {item.description}
-                      </p>
-                    </div>
+              <h3 className="text-[20px] sm:text-[24px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>{role.title}</h3>
+              <p className="text-[13.5px] text-fg-2 leading-relaxed">{role.desc}</p>
+              <ul className="mt-auto flex flex-col gap-1.5 list-none p-0">
+                {role.bullets.map((b) => (
+                  <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </ScrollReveal>
+      </section>
+
+      {/* ═══ PRODUCT PREVIEW ═══ */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              The dashboard is <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>calm</em>.<br />The work isn&apos;t.
+            </h2>
+            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
+              Dense data on flat surfaces. Tabular numerals everywhere. One signal color
+              reserved for the action that actually matters — so when something asks for
+              your attention, you know it earned it.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal delay={120}>
+        <div className="rounded-(--r-3) overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_oklch(0_0_0/0.08)] hover:-translate-y-1" style={{ border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-3 px-4 py-2.5 font-mono text-[11px]" style={{ background: "var(--bg-2)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}>
+            <div className="flex gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /><span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--fg-4)" }} /></div>
+            <span>app.binectics.com / dashboard / gym-owner</span>
+            <span className="ml-auto hidden sm:flex gap-3.5"><span>Iron Lab · 4 locations</span><span>·</span><span>14:32 GMT</span></span>
+          </div>
+          <div className="flex" style={{ background: "var(--bg)" }}>
+            <div className="hidden sm:flex flex-col gap-0.5 py-4 px-4 shrink-0" style={{ width: "160px", borderRight: "1px solid var(--border)", background: "var(--bg-2)" }}>
+              <div className="font-mono text-[9px] uppercase tracking-[0.06em] px-2 py-1.5" style={{ color: "var(--fg-4)" }}>Overview</div>
+              <div className="text-[12px] px-2 py-1 rounded-(--r-1) font-medium" style={{ background: "var(--bg)", color: "var(--ink)" }}>Dashboard</div>
+              {["Analytics", "Revenue"].map((s) => <div key={s} className="text-[12px] px-2 py-1" style={{ color: "var(--fg-3)" }}>{s}</div>)}
+              <div className="font-mono text-[9px] uppercase tracking-[0.06em] px-2 py-1.5 mt-2" style={{ color: "var(--fg-4)" }}>Operations</div>
+              {["Plans", "Members", "Check-ins", "Classes", "Staff"].map((s) => <div key={s} className="text-[12px] px-2 py-1" style={{ color: "var(--fg-3)" }}>{s}</div>)}
+              <div className="font-mono text-[9px] uppercase tracking-[0.06em] px-2 py-1.5 mt-2" style={{ color: "var(--fg-4)" }}>Marketplace</div>
+              {["Listing", "Reviews"].map((s) => <div key={s} className="text-[12px] px-2 py-1" style={{ color: "var(--fg-3)" }}>{s}</div>)}
+            </div>
+            <div className="flex-1 p-4 sm:p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Tuesday · 12 May 2026</div>
+                  <div className="text-[16px] font-medium mt-1" style={{ color: "var(--ink)", letterSpacing: "-0.01em" }}>Good afternoon, Lerato</div>
+                </div>
+                <span className="hidden sm:inline-flex btn-signal-v2 sm">Approve 3 staff requests</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {[{ l: "Members today", v: "142", d: "+18 vs avg" }, { l: "Active subs", v: "1,284", d: "+12.4%" }, { l: "Revenue · MTD", v: "$42.8k", d: "−2.1%", down: true }, { l: "Avg rating", v: "4.82", d: "±0.00", flat: true }].map((s) => (
+                  <div key={s.l} className="rounded-(--r-2) px-3 py-2.5 transition-all duration-200 hover:shadow-[0_2px_8px_oklch(0_0_0/0.06)] hover:-translate-y-0.5" style={{ border: "1px solid var(--border)" }}>
+                    <div className="font-mono text-[9px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.l}</div>
+                    <div className="text-[18px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{s.v}</div>
+                    <div className="font-mono text-[9px] mt-0.5" style={{ color: s.down ? "var(--danger)" : s.flat ? "var(--fg-3)" : "var(--signal-ink)" }}>{s.d}</div>
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="relative mt-8 lg:mt-0">
-              <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-accent-blue-500 to-accent-blue-600 p-8 sm:p-12 text-center shadow-2xl">
-                {/* QR Code Visual */}
-                <div className="mx-auto w-48 sm:w-64 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6">
-                  <svg
-                    className="h-full w-full"
-                    viewBox="0 0 100 100"
-                    fill="none"
-                  >
-                    {/* Simplified QR code pattern */}
-                    <rect width="100" height="100" fill="white" />
-                    <rect x="10" y="10" width="20" height="20" fill="black" />
-                    <rect x="70" y="10" width="20" height="20" fill="black" />
-                    <rect x="10" y="70" width="20" height="20" fill="black" />
-                    <rect x="15" y="15" width="10" height="10" fill="white" />
-                    <rect x="75" y="15" width="10" height="10" fill="white" />
-                    <rect x="15" y="75" width="10" height="10" fill="white" />
-                    <rect x="40" y="15" width="5" height="5" fill="black" />
-                    <rect x="50" y="15" width="5" height="5" fill="black" />
-                    <rect x="40" y="25" width="5" height="5" fill="black" />
-                    <rect x="55" y="25" width="5" height="5" fill="black" />
-                    <rect x="40" y="35" width="5" height="5" fill="black" />
-                    <rect x="45" y="40" width="5" height="5" fill="black" />
-                    <rect x="55" y="40" width="5" height="5" fill="black" />
-                    <rect x="40" y="50" width="5" height="5" fill="black" />
-                    <rect x="50" y="50" width="5" height="5" fill="black" />
-                    <rect x="45" y="60" width="5" height="5" fill="black" />
-                    <rect x="55" y="60" width="5" height="5" fill="black" />
-                    <rect x="70" y="40" width="5" height="5" fill="black" />
-                    <rect x="75" y="45" width="5" height="5" fill="black" />
-                    <rect x="70" y="55" width="5" height="5" fill="black" />
-                    <rect x="80" y="60" width="5" height="5" fill="black" />
-                  </svg>
-                </div>
-                <p className="mt-4 sm:mt-6 text-base sm:text-lg font-semibold text-white">
-                  Scan to check in
-                </p>
-                <p className="mt-2 text-xs sm:text-sm text-white/80">
-                  Elite Fitness Center - Downtown
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="relative bg-background-secondary py-20 sm:py-28 gradient-section-purple">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
-              Trusted by members and professionals worldwide
-            </h2>
-            <p className="mt-4 text-base sm:text-lg leading-relaxed text-foreground-secondary">
-              From gym owners to fitness enthusiasts, see how Binectics is
-              transforming fitness
-            </p>
-          </div>
-
-          <div className="mt-12 sm:mt-16 grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                name: "Sarah Chen",
-                role: "Marathon Runner",
-                location: "Singapore",
-                image: "👩🏻‍💼",
-                color: "blue",
-                rating: 5,
-                text: "I travel for work constantly. Binectics lets me access gyms in 15+ countries with one subscription. Game changer for maintaining my training schedule.",
-              },
-              {
-                name: "Marcus Johnson",
-                role: "Bodybuilder",
-                location: "Los Angeles, USA",
-                image: "👨🏿‍💼",
-                color: "yellow",
-                rating: 5,
-                text: "Found my coach through Binectics 8 months ago. Down 40lbs and competing in my first show next month. The nutrition tracking integration is incredible.",
-              },
-              {
-                name: "Priya Patel",
-                role: "Certified Dietitian",
-                location: "Mumbai, India",
-                image: "👩🏽‍💼",
-                color: "purple",
-                rating: 5,
-                text: "Binectics transformed my nutrition practice. I manage 50+ clients with custom meal plans, track their progress with journals, and they love the seamless experience.",
-              },
-              {
-                name: "Alex Rodriguez",
-                role: "CrossFit Athlete",
-                location: "Madrid, Spain",
-                image: "👨🏻‍💼",
-                color: "orange",
-                rating: 5,
-                text: "The QR check-in is so smooth. I visit 3 different boxes depending on my schedule, and everything syncs automatically. No more paper sign-ins!",
-              },
-              {
-                name: "Jake Martinez",
-                role: "Personal Trainer",
-                location: "Miami, USA",
-                image: "👨🏽‍💼",
-                color: "blue",
-                rating: 5,
-                text: "Went from 12 clients to 45 in 6 months on Binectics. The verification badge builds instant trust, and the client journal feature keeps everyone accountable and motivated.",
-              },
-              {
-                name: "David Kim",
-                role: "Gym Owner",
-                location: "Seoul, South Korea",
-                image: "👨🏻‍💼",
-                color: "yellow",
-                rating: 5,
-                text: "Switched our entire facility to Binectics. Member retention up 35%, admin work down by half. The analytics dashboard shows exactly what's working.",
-              },
-            ].map((testimonial, index) => (
-              <div
-                key={index}
-                className="group relative rounded-2xl sm:rounded-3xl bg-background p-5 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5"
-              >
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div
-                    className={`flex h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-accent-${testimonial.color}-100 text-2xl sm:text-3xl`}
-                  >
-                    {testimonial.image}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-sm sm:text-base text-foreground truncate">
-                          {testimonial.name}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-foreground-secondary">
-                          {testimonial.role}
-                        </p>
-                      </div>
-                      <div className="flex gap-0.5 flex-shrink-0">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <svg
-                            key={i}
-                            className="h-3 w-3 sm:h-4 sm:w-4 text-accent-yellow-500"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="mt-1 text-xs text-foreground-tertiary">
-                      {testimonial.location}
-                    </p>
-                  </div>
-                </div>
-                <blockquote className="mt-4 sm:mt-6 text-sm leading-relaxed text-foreground-secondary">
-                  "{testimonial.text}"
-                </blockquote>
-              </div>
-            ))}
-          </div>
-
-          {/* Trust Metrics */}
-          <div className="mt-12 sm:mt-16 lg:mt-20 rounded-2xl sm:rounded-3xl bg-neutral-100 px-6 py-8 sm:px-8 sm:py-12">
-            <div className="grid gap-6 sm:gap-8 sm:grid-cols-3">
-              <div className="text-center">
-                <div className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-                  4.9/5
-                </div>
-                <div className="mt-2 flex items-center justify-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <svg
-                      key={i}
-                      className="h-4 w-4 sm:h-5 sm:w-5 text-accent-yellow-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <div className="mt-2 text-xs sm:text-sm text-foreground-secondary">
-                  Average rating
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-                  10,000+
-                </div>
-                <div className="mt-2 text-xs sm:text-sm text-foreground-secondary">
-                  Active members
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-                  50+
-                </div>
-                <div className="mt-2 text-xs sm:text-sm text-foreground-secondary">
-                  Countries served
+              <div className="rounded-(--r-2) overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+                <svg viewBox="0 0 600 110" preserveAspectRatio="none" className="w-full" style={{ height: "100px" }}>
+                  <defs><linearGradient id="gA" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="oklch(0.68 0.16 148)" stopOpacity="0.18" /><stop offset="1" stopColor="oklch(0.68 0.16 148)" stopOpacity="0" /></linearGradient></defs>
+                  <path d="M0,85 L40,72 L80,76 L120,60 L160,64 L200,48 L240,52 L280,40 L320,46 L360,30 L400,38 L440,22 L480,30 L520,18 L560,24 L600,12 L600,110 L0,110 Z" fill="url(#gA)" />
+                  <path d="M0,85 L40,72 L80,76 L120,60 L160,64 L200,48 L240,52 L280,40 L320,46 L360,30 L400,38 L440,22 L480,30 L520,18 L560,24 L600,12" fill="none" stroke="oklch(0.68 0.16 148)" strokeWidth="1.6" />
+                  <g stroke="oklch(0.86 0.008 85)" strokeWidth="0.5"><line x1="0" x2="600" y1="30" y2="30" /><line x1="0" x2="600" y1="55" y2="55" /><line x1="0" x2="600" y1="80" y2="80" /></g>
+                </svg>
+                <div className="flex justify-between px-3 py-1.5 font-mono text-[9px]" style={{ color: "var(--fg-3)", borderTop: "1px solid var(--border)" }}>
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <span key={d}>{d}</span>)}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Trust & Verification Section */}
-      <section className="bg-neutral-100 py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center animate-fade-in">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-500/10 px-4 py-2">
-              <svg
-                className="h-5 w-5 text-primary-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-sm font-semibold text-primary-600">
-                Verified & Trusted
-              </span>
-            </div>
-            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl lg:text-5xl">
-              Every professional is verified
-            </h2>
-            <p className="mt-4 text-base sm:text-lg leading-relaxed text-foreground-secondary">
-              We ensure safety and quality through rigorous verification
-              processes
-            </p>
-          </div>
-
-          <div className="mt-12 sm:mt-16 grid gap-6 sm:gap-8 md:grid-cols-3">
-            {[
-              {
-                title: "Identity Verification",
-                description:
-                  "Government-issued ID verification for all professionals. We validate identity documents to ensure authenticity.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
-                    />
-                  </svg>
-                ),
-                step: "01",
-              },
-              {
-                title: "Credential Check",
-                description:
-                  "Professional certifications, training credentials, and qualifications verified by our team.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                    />
-                  </svg>
-                ),
-                step: "02",
-              },
-              {
-                title: "Business Validation",
-                description:
-                  "For gyms: business registration, facility licenses, and insurance documentation verified.",
-                icon: (
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
-                ),
-                step: "03",
-              },
-            ].map((item, index) => (
-              <div
-                key={index}
-                className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
-              >
-                <div className="absolute right-3 top-3 sm:right-4 sm:top-4 text-4xl sm:text-6xl font-black text-neutral-200 opacity-50">
-                  {item.step}
-                </div>
-                <div className="relative">
-                  <div className="mb-3 sm:mb-4 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-primary-100 text-primary-600">
-                    {item.icon}
-                  </div>
-                  <h3 className="mb-2 sm:mb-3 font-display text-lg sm:text-xl font-bold text-foreground">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-foreground-secondary">
-                    {item.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Verification Badge Preview */}
-          <div className="mt-12 sm:mt-16 overflow-hidden rounded-2xl sm:rounded-3xl bg-primary-500 p-8 sm:p-12 text-center">
-            <div className="mx-auto max-w-2xl">
-              <div className="mb-4 sm:mb-6 flex justify-center">
-                <div className="rounded-full bg-foreground p-3 sm:p-4">
-                  <svg
-                    className="h-10 w-10 sm:h-12 sm:w-12 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <h3 className="font-display text-xl font-black text-foreground sm:text-2xl lg:text-3xl">
-                Look for the Verified Badge
-              </h3>
-              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-foreground-secondary">
-                All verified professionals display this badge on their profile.
-                It means they've completed our full verification process and
-                meet our standards for safety and quality.
-              </p>
-              <div className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-foreground-secondary">
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="h-5 w-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span>ID Verified</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="h-5 w-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span>Credentials Checked</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="h-5 w-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span>Background Reviewed</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        </ScrollReveal>
+        <div className="text-center mt-5">
+          <Link href="/dashboard/gym-owner" className="btn-ghost-v2">Open the full dashboard →</Link>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="bg-neutral-100 py-20 sm:py-28">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center animate-fade-in">
-            <h2 className="font-display text-3xl font-black leading-tight text-foreground sm:text-4xl">
-              Frequently asked questions
+      {/* ═══ HOW IT WORKS ═══ */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border" id="how">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              Three steps<br />from <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>signup</em><br />to <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>sweat</em>.
             </h2>
-            <p className="mt-4 text-lg leading-relaxed text-foreground-secondary">
-              Everything you need to know about using Binectics
+            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
+              Members find verified providers in seconds. Providers list once and earn from
+              the first day. Payments route to the right rails per currency — Stripe, Paystack,
+              Flutterwave — without anyone thinking about it.
             </p>
           </div>
+        </ScrollReveal>
 
-          <div className="mt-12">
-            <Accordion items={faqItems} />
+        <ScrollReveal stagger staggerInterval={100} className="grid grid-cols-1 sm:grid-cols-3 border border-border rounded-(--r-3) overflow-hidden bg-bg">
+          {[
+            { num: "Step 01", title: "Find", desc: "Search, filter by city, rating, and price. Every listing is verified — green badge means we\u2019ve reviewed the documents ourselves." },
+            { num: "Step 02", title: "Subscribe", desc: "Pick a plan in your own currency. One-time or monthly. Apple Pay, card, or local rails — all in a single checkout sheet." },
+            { num: "Step 03", title: "Show up", desc: "Scan the QR at the door. Your streak counts itself; your coach sees the check-in in real time and writes the next journal entry." },
+          ].map((step, i) => (
+            <div key={step.title} className={`p-6 sm:p-7 pt-7 sm:pt-8 flex flex-col gap-4 ${i < 2 ? "border-b sm:border-b-0 sm:border-r border-border" : ""}`}>
+              <div className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-4">{step.num}</div>
+              <h3 className="text-[22px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{step.title}</h3>
+              <p className="text-[14px] text-fg-2 leading-relaxed m-0">{step.desc}</p>
+              <div className="mt-auto pt-4 flex justify-center" style={{ borderTop: "1px solid var(--border)" }}>
+                {step.title === "Find" && (
+                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
+                    <rect x="14" y="14" width="172" height="22" rx="4" />
+                    <circle cx="26" cy="25" r="4" className="step-find-lens" />
+                    <path d="m31 30 5 5" className="step-find-lens" />
+                    <rect x="14" y="46" width="80" height="50" rx="4" fill="var(--bg-3)" />
+                    <rect x="106" y="46" width="80" height="50" rx="4" />
+                    <rect x="22" y="86" width="40" height="4" rx="2" fill="currentColor" />
+                    <rect x="22" y="78" width="30" height="3" rx="1.5" fill="var(--fg-3)" stroke="none" />
+                    <circle cx="183" cy="53" r="3" fill="oklch(0.68 0.16 148)" stroke="none" className="step-find-dot" />
+                  </svg>
+                )}
+                {step.title === "Subscribe" && (
+                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
+                    <rect x="36" y="20" width="128" height="70" rx="6" />
+                    <rect x="44" y="32" width="50" height="6" rx="1" fill="currentColor" />
+                    <rect x="44" y="44" width="80" height="3" rx="1.5" fill="var(--fg-3)" stroke="none" />
+                    <rect x="44" y="58" width="100" height="22" rx="4" fill="oklch(0.18 0.008 80)" stroke="none" className="step-sub-btn" />
+                    <text x="94" y="73" textAnchor="middle" fontFamily="Geist" fontSize="10" fontWeight="500" fill="var(--bg)" stroke="none">Pay $48.00</text>
+                    <rect x="44" y="58" width="100" height="22" rx="4" fill="url(#shimmer)" stroke="none" className="step-sub-shimmer" />
+                    <defs>
+                      <linearGradient id="shimmer" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0" stopColor="white" stopOpacity="0" />
+                        <stop offset="0.5" stopColor="white" stopOpacity="0.12" />
+                        <stop offset="1" stopColor="white" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                )}
+                {step.title === "Show up" && (
+                  <svg viewBox="0 0 200 110" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: "var(--ink)", maxHeight: 80, width: "auto" }}>
+                    <rect x="60" y="14" width="80" height="80" rx="6" />
+                    <g fill="currentColor" stroke="none">
+                      <rect x="70" y="24" width="18" height="18" rx="1" />
+                      <rect x="112" y="24" width="18" height="18" rx="1" />
+                      <rect x="70" y="66" width="18" height="18" rx="1" />
+                      <rect x="96" y="50" width="6" height="6" />
+                      <rect x="108" y="58" width="6" height="6" />
+                      <rect x="118" y="68" width="10" height="6" />
+                      <rect x="100" y="74" width="6" height="10" />
+                    </g>
+                    <rect x="76" y="30" width="6" height="6" fill="var(--bg)" stroke="none" />
+                    <rect x="118" y="30" width="6" height="6" fill="var(--bg)" stroke="none" />
+                    <rect x="76" y="72" width="6" height="6" fill="var(--bg)" stroke="none" />
+                    <line x1="60" y1="54" x2="140" y2="54" stroke="oklch(0.68 0.16 148)" strokeWidth="1.5" strokeOpacity="0.6" className="step-qr-scan" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          ))}
+        </ScrollReveal>
+      </section>
+
+      {/* ═══ TRUST STRIP ═══ */}
+      <div className="mx-auto max-w-360">
+        <ScrollReveal stagger staggerInterval={60} className="grid grid-cols-3 sm:grid-cols-5 border-b border-border">
+          {["Stripe", "Paystack", "Flutterwave", "Apple Pay", "Google Pay"].map((name, i) => (
+            <div key={name} className={`py-5 sm:py-7 px-4 sm:px-6 text-center text-fg-3 font-mono text-[11px] sm:text-[12px] uppercase tracking-[0.04em] ${i < 4 ? "border-r border-border" : ""} ${i >= 3 ? "hidden sm:block" : ""}`}>
+              {name}
+            </div>
+          ))}
+        </ScrollReveal>
+      </div>
+
+      {/* ═══ PRICING ═══ */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border" id="pricing">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              Pricing<br />that <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>scales</em><br />with you.
+            </h2>
+            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
+              Free to list. Members pay providers directly; we take a transparent platform fee
+              on processed payments. No setup fees, no per-seat charges, no annual lock-ins.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal stagger staggerInterval={100} className="grid grid-cols-1 sm:grid-cols-3 border border-border rounded-(--r-3) overflow-hidden bg-bg">
+          {/* Starter */}
+          <div className="p-6 sm:p-7 flex flex-col gap-3.5 border-b sm:border-b-0 sm:border-r border-border">
+            <div className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-3">Starter</div>
+            <h3 className="text-[24px] font-medium mt-1" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Free</h3>
+            <div className="font-mono text-[12px] text-fg-3">For new providers · forever free</div>
+            <ul className="flex flex-col gap-1.5 list-none p-0 mt-3">
+              {["One marketplace listing", "Up to 50 active members", "QR check-ins included", "Standard payment fees apply"].map((b) => (
+                <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
+              ))}
+            </ul>
+            <Link href="/register" className="btn-ghost-v2 md mt-auto self-start">Start free</Link>
           </div>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-foreground-secondary">
-              Have more questions?{" "}
+          {/* Studio */}
+          <div className="p-6 sm:p-7 flex flex-col gap-3.5 border-b sm:border-b-0 sm:border-r border-border" style={{ background: "var(--bg-2)" }}>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-3">Studio</span>
+              <span className="inline-flex items-center gap-1.25 h-4.5 px-2 rounded-(--r-1) text-[11px] font-medium bg-signal-soft text-signal-ink border border-[oklch(0.88_0.05_148)]">Most picked</span>
+            </div>
+            <h3 className="text-[24px] font-medium mt-1" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
+              $48 <span className="font-mono text-[13px] text-fg-3 font-normal">/ month</span>
+            </h3>
+            <div className="font-mono text-[12px] text-fg-3">For single-location operators</div>
+            <ul className="flex flex-col gap-1.5 list-none p-0 mt-3">
+              {["Up to 500 active members", "Staff & client management", "Custom payment gateway keys", "Revenue + check-in analytics", "Email digest, in-app inbox"].map((b) => (
+                <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
+              ))}
+            </ul>
+            <Link href="/register" className="btn-signal-v2 mt-auto self-start" style={{ height: "34px", padding: "0 14px" }}>Choose Studio</Link>
+          </div>
+
+          {/* Enterprise */}
+          <div className="p-6 sm:p-7 flex flex-col gap-3.5" style={{ background: "var(--ink)" }}>
+            <div className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "oklch(0.78 0.005 85)" }}>Enterprise</div>
+            <h3 className="text-[24px] font-medium mt-1" style={{ letterSpacing: "-0.022em", color: "var(--bg)" }}>Custom</h3>
+            <div className="font-mono text-[12px]" style={{ color: "oklch(0.78 0.005 85)" }}>Multi-location · multi-country</div>
+            <ul className="flex flex-col gap-1.5 list-none p-0 mt-3">
+              {["Unlimited locations & members", "Org-level billing & SSO", "Assignment rules & team roles", "Dedicated provider success", "SLA & audit logs"].map((b) => (
+                <li key={b} className="text-[12.5px] pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px" style={{ color: "oklch(0.78 0.005 85)" }}>{b}</li>
+              ))}
+            </ul>
+            <Link href="/contact" className="btn-ghost-v2 md mt-auto self-start" style={{ background: "var(--bg)", color: "var(--ink)", borderColor: "var(--bg)" }}>Talk to us</Link>
+          </div>
+        </ScrollReveal>
+      </section>
+
+      {/* ═══ FAQ ═══ */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border" id="faq">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              Questions,<br />answered <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>plainly</em>.
+            </h2>
+            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
+              If your question isn&apos;t here, contact provider success at help@binectics.com — most replies in under four hours during weekdays.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal delay={80} className="border border-border rounded-(--r-3) overflow-hidden bg-bg">
+          <FaqAccordion items={faqItems} />
+        </ScrollReveal>
+      </section>
+
+      {/* ═══ CTA ═══ */}
+      <ScrollReveal className="max-w-340 mx-auto px-5 sm:px-10 my-10 sm:my-16">
+        <div className="bg-ink rounded-(--r-3) px-6 sm:px-10 py-12 sm:py-20 grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-8 sm:gap-12 items-end">
+          <h2
+            className="text-[32px] sm:text-[56px] font-medium leading-[0.98] max-w-[12ch]"
+            style={{ letterSpacing: "-0.035em", color: "var(--bg)" }}
+          >
+            The next 142 check-ins are already on the way.{" "}
+            <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>Be ready for them.</em>
+          </h2>
+          <div className="flex flex-col gap-4 items-start">
+            <p className="text-[15px] sm:text-[16px] max-w-[36ch] leading-relaxed m-0" style={{ color: "oklch(0.78 0.005 85)" }}>
+              List your gym, studio, or practice today. Free to start, three minutes to publish, verified within two business days.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <Link
-                href="/contact"
-                className="font-medium text-primary-500 hover:text-primary-600"
+                href="/register"
+                className="inline-flex items-center justify-center h-[42px] px-4.5 rounded-(--r-2) bg-signal text-[14px] font-medium hover:bg-[oklch(0.62_0.17_148)] w-full sm:w-auto"
+                style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}
               >
-                Contact our support team
+                Create your account →
               </Link>
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* For Professionals - Tabbed Section */}
-      <ProfessionalsTab />
-
-      {/* CTA Section */}
-      <section className="bg-background-secondary py-16 sm:py-20 lg:py-28">
-        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl gradient-hero-green px-6 py-12 sm:px-12 sm:py-16 lg:py-20">
-            {/* Decorative circles */}
-            <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-white/[0.07]" />
-            <div className="relative">
-              <h2 className="font-display text-2xl font-black leading-tight text-foreground sm:text-3xl lg:text-4xl xl:text-5xl">
-                Join 10,000+ members worldwide
-              </h2>
-              <p className="mt-3 sm:mt-4 text-base sm:text-lg leading-relaxed text-foreground-secondary">
-                Access gyms and fitness pros anywhere. No credit card required
-                to start.
-              </p>
-              <div className="mt-6 sm:mt-8 flex flex-col items-center gap-4 sm:gap-6">
-                <Link
-                  href="/register"
-                  className="inline-flex min-h-[44px] h-12 sm:h-14 items-center justify-center rounded-lg bg-white px-6 sm:px-8 text-sm sm:text-base font-semibold text-foreground shadow-lg transition-colors duration-200 hover:bg-neutral-50 active:bg-neutral-100 w-full sm:w-auto"
-                >
-                  Explore Free
-                </Link>
-                <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-                  <a
-                    href="#"
-                    className="inline-flex items-center gap-2 rounded-lg bg-foreground/10 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-colors duration-200 hover:bg-foreground/20 active:bg-foreground/30"
-                  >
-                    <svg
-                      className="h-6 w-6"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-                    </svg>
-                    App Store
-                  </a>
-                  <a
-                    href="#"
-                    className="inline-flex items-center gap-2 rounded-lg bg-foreground/10 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-colors duration-200 hover:bg-foreground/20 active:bg-foreground/30"
-                  >
-                    <svg
-                      className="h-6 w-6"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" />
-                    </svg>
-                    Google Play
-                  </a>
-                </div>
-              </div>
+              <Link
+                href="/marketplace"
+                className="inline-flex items-center justify-center h-[42px] px-4.5 rounded-(--r-2) text-[14px] font-medium border hover:bg-[oklch(0.20_0.008_80)] w-full sm:w-auto"
+                style={{ letterSpacing: "-0.005em", color: "var(--bg)", borderColor: "oklch(0.35 0.008 80)" }}
+              >
+                Browse first
+              </Link>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+      </ScrollReveal>
+
+      <MarketingFooter />
+    </>
   );
 }

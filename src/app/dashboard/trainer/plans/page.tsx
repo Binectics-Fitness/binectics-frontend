@@ -1,276 +1,167 @@
-"use client";
-
-import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useQueryClient } from "@tanstack/react-query";
-import TrainerSidebar from "@/components/TrainerSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { EmptyState } from "@/components/EmptyState";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { useOrganization } from "@/contexts/OrganizationContext";
-import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import { marketplaceService } from "@/lib/api/marketplace";
-import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
-import { queryKeys } from "@/lib/queries/keys";
-import { UserRole, MembershipPlanType } from "@/lib/types";
-import { formatCurrency } from "@/utils/format";
-import type { MarketplaceMembershipPlan } from "@/lib/types";
+import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 
-export default function TrainerPlansPage() {
-  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
-  const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const { requestConfirmation, confirmationModal } = useConfirmationModal();
-  const queryClient = useQueryClient();
+const PKGS = [
+  {
+    name: "Single session · in‑person",
+    price: "R 1,200",
+    per: "/ session",
+    desc: "60 min · Iron Lab Sea Point · 1‑1‑on‑1 · barbell + dumbbell focus.",
+    features: ["Movement screen before first session", "Session recording included", "Free reschedule 24h+ before"],
+    stats: [{ k: "Picked", v: "214" }, { k: "Avg / mo", v: "18" }, { k: "Refund rate", v: "2%" }],
+    featured: false,
+    on: true,
+  },
+  {
+    name: "Studio · 24‑session pack",
+    price: "R 23,800",
+    per: "/ pack",
+    desc: "24 sessions over 4 months · save 17% vs single · custom program included.",
+    features: ["R 992 / session · save R 208 per", "4‑month window · pause 30d / year", "Custom 12‑week program built around your goals", "Take‑home programming weeks 13–24"],
+    stats: [{ k: "Picked", v: "86" }, { k: "Avg / mo", v: "7" }, { k: "Refund rate", v: "0%" }],
+    featured: true,
+    on: true,
+  },
+  {
+    name: "Strength 12‑pack",
+    price: "R 13,200",
+    per: "/ pack",
+    desc: "12 sessions over 8 weeks · save 8% · best for first‑time committed clients.",
+    features: ["R 1,100 / session · save R 100 per", "8‑week window · no extensions", "4‑week program with check‑in"],
+    stats: [{ k: "Picked", v: "42" }, { k: "Avg / mo", v: "4" }, { k: "Refund rate", v: "3%" }],
+    featured: false,
+    on: true,
+  },
+  {
+    name: "Online · video session",
+    price: "R 850",
+    per: "/ session",
+    desc: "45 min · video call · programming review & form check · for clients outside Cape Town.",
+    features: ["Zoom · async video review", "Programming worksheet delivered after", "Best paired with a take‑home plan"],
+    stats: [{ k: "Picked", v: "68" }, { k: "Avg / mo", v: "6" }, { k: "Refund rate", v: "1%" }],
+    featured: false,
+    on: true,
+  },
+  {
+    name: "Online · monthly programming",
+    price: "R 2,400",
+    per: "/ month",
+    desc: "Take‑home programming + 2 video check‑ins / month. For self‑directed lifters.",
+    features: ["Weekly programming delivered Sunday", "2 × 30 min video check‑ins / month", "Unlimited messages between"],
+    stats: [{ k: "Active subs", v: "12" }, { k: "Avg LTV", v: "R 14.4k" }, { k: "Churn", v: "8%" }],
+    featured: false,
+    on: true,
+  },
+  {
+    name: "Postnatal 8‑pack",
+    price: "R 7,600",
+    per: "/ pack",
+    desc: "Paused since March · 8 sessions for new mums · referring to Thandi while on leave.",
+    features: ["R 950 / session · 8 sessions", "16‑week window", "Diastasis-aware programming"],
+    stats: [{ k: "Picked", v: "14" }, { k: "Avg / mo", v: "0" }, { k: "Refund rate", v: "0%" }],
+    featured: false,
+    on: false,
+  },
+];
 
-  const orgId = currentOrg?._id;
-  const { data: plans = [], isLoading: loadingData } = useOrgMembershipPlans(
-    orgId,
-    !!user && !isLoading && !orgLoading,
-  );
-  const [mutatingId, setMutatingId] = useState<string | null>(null);
-  const [error, setError] = useState("");
-
-  const invalidatePlans = () =>
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.marketplace.orgMembershipPlans(orgId ?? ""),
-    });
-
-  const handleToggle = async (plan: MarketplaceMembershipPlan) => {
-    if (!orgId) return;
-    setMutatingId(plan._id);
-    setError("");
-    const res = plan.is_active
-      ? await marketplaceService.deactivateOrgMembershipPlan(orgId, plan._id)
-      : await marketplaceService.activateOrgMembershipPlan(orgId, plan._id);
-    if (res.success) await invalidatePlans();
-    else setError(res.message || "Failed to update plan");
-    setMutatingId(null);
-  };
-
-  const handleDelete = (plan: MarketplaceMembershipPlan) => {
-    if (!orgId) return;
-    requestConfirmation({
-      title: "Delete plan?",
-      description: `Delete "${plan.name}" permanently? This action cannot be undone.`,
-      confirmLabel: "Delete Plan",
-      onConfirm: async () => {
-        setMutatingId(plan._id);
-        const res = await marketplaceService.deleteOrgMembershipPlan(
-          orgId,
-          plan._id,
-        );
-        if (res.success) await invalidatePlans();
-        else setError(res.message || "Failed to delete plan");
-        setMutatingId(null);
-      },
-    });
-  };
-
-  const stats = useMemo(() => {
-    const activePlans = plans.filter((p) => p.is_active).length;
-    const activeMembers = plans.reduce((s, p) => s + p.active_members, 0);
-    return { total: plans.length, activePlans, activeMembers };
-  }, [plans]);
-
-  if (isLoading || orgLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
-
+export default function TrainerPackagesPage() {
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <TrainerSidebar />
-
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">
-              Training Plans
-            </h1>
-            <p className="mt-1 text-sm text-foreground-secondary">
-              Create and manage your membership plans
-            </p>
-          </div>
-          {orgId && (
-            <Link
-              href="/dashboard/trainer/plans/create"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-yellow-500 px-5 text-sm font-semibold text-foreground hover:bg-accent-yellow-600"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Create Plan
-            </Link>
-          )}
+    <TrainerDashboardShell
+      activeItem="Packages"
+      crumb="Packages"
+      actions={
+        <div className="flex gap-2">
+          <button className="btn-ghost-v2 sm">Preview profile</button>
+          <Link href="/dashboard/trainer/plans/create" className="btn-primary-v2 sm">+ New package</Link>
         </div>
+      }
+    >
+      <div>
+        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Packages</h1>
+        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>What members can book on your profile · drag to reorder · toggle off to hide without deleting</div>
+      </div>
 
-        {error && (
-          <div className="mb-6 rounded-lg border-2 border-red-200 bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: "Active packages", value: "5", delta: "1 paused" },
+          { label: "Most picked", value: "Studio 24‑pack", small: true, delta: "218 picks · this year" },
+          { label: "Highest LTV", value: "Online · monthly", small: true, delta: "R 14.4k avg" },
+          { label: "Avg session price", value: "R 1,150", delta: "↑ R 18 MoM" },
+        ].map((k) => (
+          <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
+            <div className={`font-medium mt-1.5 ${k.small ? "text-[17px]" : "text-[24px]"}`} style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</div>
+            <div className="font-mono text-[11.5px] mt-1" style={{ color: "var(--signal-ink)" }}>{k.delta}</div>
           </div>
-        )}
+        ))}
+      </div>
 
-        {!orgId ? (
-          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
-            <EmptyState
-              title="No Organization"
-              description="Create or join an organization to manage membership plans."
-              actionLabel="Go to Dashboard"
-              actionHref="/dashboard/trainer"
-            />
-          </div>
-        ) : loadingData ? (
-          <DashboardLoading />
-        ) : (
-          <>
-            <div className="mb-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm text-foreground-secondary">Total Plans</p>
-                <p className="mt-1 text-3xl font-black text-foreground">
-                  {stats.total}
-                </p>
+      {/* Package cards grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        {PKGS.map((p) => (
+          <div
+            key={p.name}
+            className={`rounded-(--r-3) overflow-hidden flex flex-col cursor-pointer ${!p.on ? "opacity-55" : ""}`}
+            style={{ background: "var(--bg)", border: p.featured ? "1px solid var(--ink)" : "1px solid var(--border)", transition: "border-color var(--motion-fast) var(--ease)" }}
+          >
+            {/* Head */}
+            <div className="px-5.5 pt-5.5 pb-4 relative">
+              {p.featured && (
+                <span className="inline-flex items-center gap-1.25 font-mono text-[10px] uppercase tracking-[0.05em] px-2 py-0.75 rounded-full mb-2" style={{ background: "var(--ink)", color: "var(--bg)" }}>
+                  <span className="w-1 h-1 rounded-full" style={{ background: "var(--signal)" }} />Most picked
+                </span>
+              )}
+              <div className="text-[17px] font-medium" style={{ letterSpacing: "-0.012em", color: "var(--ink)" }}>{p.name}</div>
+              <div className="mt-2.5" style={{ lineHeight: 1 }}>
+                <span className="text-[32px] font-medium" style={{ letterSpacing: "-0.025em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{p.price}</span>
+                <span className="font-mono text-[13px] ml-1" style={{ color: "var(--fg-3)" }}>{p.per}</span>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm text-foreground-secondary">
-                  Active Plans
-                </p>
-                <p className="mt-1 text-3xl font-black text-foreground">
-                  {stats.activePlans}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm text-foreground-secondary">
-                  Active Members
-                </p>
-                <p className="mt-1 text-3xl font-black text-foreground">
-                  {stats.activeMembers}
-                </p>
-              </div>
+              <div className="text-[13.5px] mt-2.5" style={{ color: "var(--fg-2)", lineHeight: 1.5, maxWidth: "36ch" }}>{p.desc}</div>
             </div>
 
-            <div className="rounded-2xl bg-white shadow-[var(--shadow-card)] overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-neutral-200 bg-neutral-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
-                        Plan
-                      </th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
-                        Price
-                      </th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
-                        Duration
-                      </th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
-                        Members
-                      </th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left font-semibold text-foreground-secondary">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-100">
-                    {plans.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="px-6 py-10 text-center text-foreground-secondary"
-                        >
-                          No plans yet. Create your first plan to get started.
-                        </td>
-                      </tr>
-                    ) : (
-                      plans.map((plan) => (
-                        <tr key={plan._id} className="hover:bg-neutral-50">
-                          <td className="px-6 py-4">
-                            <p className="font-semibold text-foreground">
-                              {plan.name}
-                            </p>
-                            {plan.description && (
-                              <p className="text-xs text-foreground-secondary line-clamp-1 mt-0.5">
-                                {plan.description}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                                plan.plan_type ===
-                                MembershipPlanType.SUBSCRIPTION
-                                  ? "bg-accent-blue-100 text-accent-blue-700"
-                                  : "bg-primary-100 text-primary-700"
-                              }`}
-                            >
-                              {plan.plan_type ===
-                              MembershipPlanType.SUBSCRIPTION
-                                ? "Subscription"
-                                : "One-time"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 font-semibold text-foreground">
-                            {formatCurrency(plan.price, plan.currency)}
-                          </td>
-                          <td className="px-6 py-4 text-foreground-secondary">
-                            {plan.duration_days} days
-                          </td>
-                          <td className="px-6 py-4 text-foreground-secondary">
-                            {plan.active_members}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                                plan.is_active
-                                  ? "bg-primary-100 text-primary-700"
-                                  : "bg-neutral-100 text-neutral-600"
-                              }`}
-                            >
-                              {plan.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3 text-sm">
-                              <button
-                                onClick={() => handleToggle(plan)}
-                                disabled={mutatingId === plan._id}
-                                className="font-medium text-foreground-secondary hover:text-foreground disabled:opacity-50"
-                              >
-                                {plan.is_active ? "Deactivate" : "Activate"}
-                              </button>
-                              <button
-                                onClick={() => handleDelete(plan)}
-                                disabled={mutatingId === plan._id}
-                                className="font-medium text-red-500 hover:text-red-700 disabled:opacity-50"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+            {/* Features */}
+            <div className="px-5.5 pb-4 flex-1">
+              <ul className="flex flex-col gap-2">
+                {p.features.map((f) => (
+                  <li key={f} className="text-[13px] pl-5 relative" style={{ color: "var(--fg-2)", lineHeight: 1.5 }}>
+                    <span className="absolute left-0 top-[6px] w-2.25 h-1.25 border-l-[1.5px] border-b-[1.5px] -rotate-45" style={{ borderColor: "var(--ink)" }} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
             </div>
-          </>
-        )}
-      </main>
-      {confirmationModal}
-    </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3" style={{ borderTop: "1px solid var(--border)", background: "var(--bg-2)" }}>
+              {p.stats.map((s, si) => (
+                <div key={s.k} className="py-3.5" style={{ padding: "14px 10px", paddingLeft: si === 0 ? "22px" : "10px", paddingRight: si === 2 ? "22px" : "10px", borderRight: si < 2 ? "1px solid var(--border)" : "none" }}>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.k}</div>
+                  <div className="text-[15px] font-medium mt-0.75" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.015em" }}>{s.v}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Toggle footer */}
+            <div className="flex items-center justify-between px-5.5 py-3" style={{ borderTop: "1px solid var(--border)" }}>
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{p.on ? "Live on profile" : "Hidden · paused"}</span>
+              <span className="w-[30px] h-[18px] rounded-full relative cursor-pointer" style={{ background: p.on ? "var(--ink)" : "var(--border-2)" }}>
+                <span className="absolute w-3.5 h-3.5 rounded-full top-0.5" style={{ background: "var(--bg)", left: p.on ? "14px" : "2px", transition: "left var(--motion-fast) var(--ease)" }} />
+              </span>
+            </div>
+          </div>
+        ))}
+
+        {/* Add new package card */}
+        <div
+          className="rounded-(--r-3) flex flex-col items-center justify-center gap-2.5 cursor-pointer min-h-[360px]"
+          style={{ border: "1.5px dashed var(--border-2)", color: "var(--fg-3)", transition: "border-color var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease)" }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+          <span className="text-[14px] font-medium">New package</span>
+          <span className="text-[12.5px] text-center" style={{ maxWidth: "28ch", lineHeight: 1.4 }}>Single session, multi‑pack, or subscription. Set your own price and pause rules.</span>
+        </div>
+      </div>
+    </TrainerDashboardShell>
   );
 }

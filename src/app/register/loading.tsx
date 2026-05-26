@@ -1,5 +1,5 @@
-import { LoadingSpinner } from "@/components/LoadingSpinner";
-
+// PROTOTYPE MODE: disabled loading spinner to avoid layout interference
+// TODO: Restore when wiring to real API
 export default function RegisterLoadingPage() {
-  return <LoadingSpinner label="Loading..." />;
+  return null;
 }

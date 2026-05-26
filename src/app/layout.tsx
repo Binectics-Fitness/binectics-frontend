@@ -9,36 +9,35 @@ import { ToastContainer } from "@/components/Toast";
 
 export const metadata: Metadata = {
   title: {
-    default: "Binectics - Your Global Fitness Ecosystem",
-    template: "%s | Binectics",
+    default: "Binectics — the operating system for fitness",
+    template: "%s — Binectics",
   },
   description:
-    "Connect with verified gyms, personal trainers, and dietitians in 50+ countries. Subscribe to fitness plans, book consultations, and track your progress.",
+    "One marketplace, one set of dashboards, one tab. Discovery, payments, check-ins, and client health for gyms, trainers, and dietitians in 50+ countries.",
   keywords: [
-    "fitness",
-    "gym",
-    "personal trainer",
-    "dietitian",
-    "workout",
-    "nutrition",
     "fitness marketplace",
-    "gym membership",
-    "online training",
-    "fitness ecosystem",
+    "gym management",
+    "personal trainer software",
+    "dietitian platform",
+    "QR check-in",
+    "fitness payments",
+    "client management",
+    "workout plans",
+    "multi-currency fitness",
   ],
   openGraph: {
     type: "website",
     siteName: "Binectics",
-    title: "Binectics - Your Global Fitness Ecosystem",
+    title: "Binectics — the operating system for fitness",
     description:
-      "Connect with verified gyms, personal trainers, and dietitians in 50+ countries.",
+      "One marketplace, one set of dashboards, one tab. Gyms, trainers, and dietitians in 50+ countries.",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Binectics - Your Global Fitness Ecosystem",
+    title: "Binectics — the operating system for fitness",
     description:
-      "Connect with verified gyms, personal trainers, and dietitians in 50+ countries.",
+      "One marketplace, one set of dashboards, one tab. Gyms, trainers, and dietitians in 50+ countries.",
   },
   robots: {
     index: true,
@@ -56,6 +55,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="antialiased" suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>

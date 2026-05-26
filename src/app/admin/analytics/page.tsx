@@ -1,295 +1,232 @@
-"use client";
-
-import AdminSidebar from "@/components/AdminSidebar";
-import { adminService } from "@/lib/api/admin";
-import { useQuery } from "@tanstack/react-query";
-
-const KPI_TARGETS = {
-  verifiedBusinesses: 100,
-  countries: 3,
-  averageSubscriptionValue: 25,
-  conversionRate: 10,
-  satisfaction: 60,
-} as const;
-
-function formatCurrency(amount: number, currency = "USD") {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function KpiCard({
-  label,
-  value,
-  target,
-  helper,
-  hit,
-}: {
-  label: string;
-  value: string;
-  target: string;
-  helper?: string;
-  hit: boolean;
-}) {
-  return (
-    <div className="bg-white p-6 shadow-[var(--shadow-card)] rounded-2xl">
-      <p className="text-sm font-medium text-foreground/60">{label}</p>
-      <p className="text-3xl font-black text-foreground mt-2">{value}</p>
-      <p
-        className={`text-sm mt-2 font-semibold ${
-          hit ? "text-primary-600" : "text-amber-600"
-        }`}
-      >
-        {hit ? "✓ KPI met" : "→ Target: " + target}
-      </p>
-      {helper && (
-        <p className="text-xs text-foreground/50 mt-1">{helper}</p>
-      )}
-    </div>
-  );
-}
+import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 
 export default function AdminAnalyticsPage() {
-  const metricsQuery = useQuery({
-    queryKey: ["admin", "platform-metrics"],
-    queryFn: () => adminService.getPlatformMetrics(),
-    staleTime: 60_000,
-  });
-
-  const feedbackQuery = useQuery({
-    queryKey: ["admin", "feedback-summary"],
-    queryFn: () => adminService.getFeedbackSummary(),
-    staleTime: 60_000,
-  });
-
-  const metrics = metricsQuery.data?.data;
-  const feedback = feedbackQuery.data?.data;
-
-  const verifiedTotal = metrics?.verifiedProviders.total ?? 0;
-  const distinctCountries = metrics?.verifiedProviders.distinctCountries ?? 0;
-  const avgValue = metrics?.subscriptions.averageValueUsd ?? 0;
-  const conversion = metrics?.conversion.conversionRate ?? 0;
-  const satisfaction = feedback?.positivePercentage ?? 0;
-
-  const loading = metricsQuery.isLoading || feedbackQuery.isLoading;
-
   return (
-    <div className="min-h-screen bg-background flex">
-      <AdminSidebar />
+    <AdminDashboardShell
+      activeItem="Analytics"
+      crumb="Analytics"
+      actions={
+        <div className="flex items-center gap-2">
+          <button className="btn-ghost-v2">Custom report</button>
+          <button className="btn-primary-v2">Export</button>
+        </div>
+      }
+    >
+      {/* Page heading */}
+      <div>
+        <h1
+          className="text-[28px] font-medium"
+          style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}
+        >
+          Platform analytics
+        </h1>
+        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+          Live · GMV, retention, funnels, cohort behaviour · last refresh 8m ago
+        </p>
+      </div>
 
-      <div className="flex-1 md:ml-64">
-        <header className="bg-white border-b border-neutral-200">
-          <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
-            <h1 className="text-3xl font-black text-foreground">
-              Platform Analytics
-            </h1>
-            <p className="mt-1 text-sm text-foreground/60">
-              Live KPIs against MVP targets — verified businesses, subscription
-              value, conversion, and user satisfaction.
-            </p>
-          </div>
-        </header>
-
-        <div className="p-4 sm:p-6 md:p-8">
-          {loading && (
-            <p className="text-sm text-foreground/60 mb-4">Loading metrics…</p>
-          )}
-          {(metricsQuery.isError || feedbackQuery.isError) && (
-            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6 text-sm">
-              Failed to load some metrics. Try refreshing.
+      {/* KPI row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        {[
+          { label: "GMV · 30d", value: "$ 4.82M", delta: "↑ 18% MoM" },
+          { label: "Active members", value: "418k", delta: "↑ 6.4% MoM" },
+          { label: "Retention · 90d", value: "68%", delta: "Industry avg 42%" },
+          { label: "Provider NPS", value: "+62", delta: "From + 58 last Q" },
+        ].map((kpi) => (
+          <div
+            key={kpi.label}
+            className="rounded-[10px] p-[13px_16px]"
+            style={{
+              background: "var(--bg)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <div
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
+              style={{ color: "var(--fg-3)" }}
+            >
+              {kpi.label}
             </div>
-          )}
-
-          <h2 className="text-xl font-bold text-foreground mb-4">MVP KPIs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <KpiCard
-              label="Verified Businesses"
-              value={verifiedTotal.toLocaleString()}
-              target={`${KPI_TARGETS.verifiedBusinesses}+`}
-              hit={verifiedTotal >= KPI_TARGETS.verifiedBusinesses}
-              helper={`${distinctCountries} countries (target: ${KPI_TARGETS.countries}+)`}
-            />
-            <KpiCard
-              label="Avg. Subscription Value (USD)"
-              value={formatCurrency(avgValue)}
-              target={`≥ $${KPI_TARGETS.averageSubscriptionValue}`}
-              hit={avgValue >= KPI_TARGETS.averageSubscriptionValue}
-              helper={`${metrics?.subscriptions.activeCount ?? 0} active subscriptions`}
-            />
-            <KpiCard
-              label="Free → Paid Conversion"
-              value={`${conversion.toFixed(1)}%`}
-              target={`≥ ${KPI_TARGETS.conversionRate}%`}
-              hit={conversion >= KPI_TARGETS.conversionRate}
-              helper={`${metrics?.conversion.payingUsers ?? 0} paying / ${metrics?.conversion.totalUsers ?? 0} total users`}
-            />
-            <KpiCard
-              label="User Satisfaction (CSAT)"
-              value={
-                feedback && feedback.responseCount > 0
-                  ? `${satisfaction.toFixed(1)}%`
-                  : "—"
-              }
-              target={`≥ ${KPI_TARGETS.satisfaction}%`}
-              hit={satisfaction >= KPI_TARGETS.satisfaction}
-              helper={
-                feedback
-                  ? `${feedback.responseCount} responses · avg ${feedback.averageScore}/5`
-                  : "No responses yet"
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white p-6 shadow-[var(--shadow-card)] rounded-2xl">
-              <h2 className="text-xl font-bold text-foreground mb-6">
-                Verified Businesses by Country
-              </h2>
-              {!metrics || metrics.verifiedProviders.byCountry.length === 0 ? (
-                <p className="text-sm text-foreground/60">
-                  No verified businesses yet.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {metrics.verifiedProviders.byCountry
-                    .slice(0, 10)
-                    .map((row) => {
-                      const pct = verifiedTotal
-                        ? (row.count / verifiedTotal) * 100
-                        : 0;
-                      return (
-                        <div key={row.country_code}>
-                          <div className="flex items-center justify-between mb-1 text-sm">
-                            <p className="font-semibold text-foreground">
-                              {row.country_code}
-                            </p>
-                            <p className="text-foreground/60">
-                              {row.count} ({pct.toFixed(1)}%)
-                            </p>
-                          </div>
-                          <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
-                            <div
-                              className="bg-accent-blue-500 h-2"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
+            <div
+              className="text-[22px] font-medium mt-1"
+              style={{
+                color: "var(--ink)",
+                letterSpacing: "-0.018em",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {kpi.value}
             </div>
-
-            <div className="bg-white p-6 shadow-[var(--shadow-card)] rounded-2xl">
-              <h2 className="text-xl font-bold text-foreground mb-6">
-                Active Subscriptions by Currency
-              </h2>
-              {!metrics || metrics.subscriptions.byCurrency.length === 0 ? (
-                <p className="text-sm text-foreground/60">
-                  No active paid subscriptions yet.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {metrics.subscriptions.byCurrency.map((row) => (
-                    <div
-                      key={row.currency}
-                      className="flex items-center justify-between border-b border-neutral-100 pb-3 last:border-0"
-                    >
-                      <div>
-                        <p className="font-bold text-foreground">
-                          {row.currency}
-                        </p>
-                        <p className="text-xs text-foreground/60">
-                          {row.count} subscriptions
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-foreground">
-                          {formatCurrency(row.total, row.currency)}
-                        </p>
-                        <p className="text-xs text-foreground/60">
-                          avg {formatCurrency(row.average, row.currency)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div
+              className="font-mono text-[11px] mt-1"
+              style={{ color: "var(--signal-ink)" }}
+            >
+              {kpi.delta}
             </div>
           </div>
+        ))}
+      </div>
 
-          <div className="bg-white p-6 shadow-[var(--shadow-card)] rounded-2xl">
-            <h2 className="text-xl font-bold text-foreground mb-6">
-              User Feedback (CSAT)
-            </h2>
-            {!feedback || feedback.responseCount === 0 ? (
-              <p className="text-sm text-foreground/60">
-                No feedback responses collected yet. The in-app prompt fires
-                every 14 days for active dashboard users.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <p className="text-sm font-medium text-foreground/60 mb-3">
-                    Score distribution
-                  </p>
-                  <div className="space-y-2">
-                    {[5, 4, 3, 2, 1].map((s) => {
-                      const count = feedback.scoreDistribution[String(s)] ?? 0;
-                      const pct = feedback.responseCount
-                        ? (count / feedback.responseCount) * 100
-                        : 0;
-                      return (
-                        <div key={s} className="flex items-center gap-3">
-                          <span className="w-8 text-sm font-semibold">
-                            {s}★
-                          </span>
-                          <div className="flex-1 bg-neutral-200 h-2 rounded-full overflow-hidden">
-                            <div
-                              className={`h-2 ${s >= 4 ? "bg-primary-500" : s === 3 ? "bg-accent-yellow-500" : "bg-red-400"}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="text-sm text-foreground/60 w-16 text-right">
-                            {count} ({pct.toFixed(0)}%)
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground/60 mb-3">
-                    Recent comments
-                  </p>
-                  {feedback.recentComments.length === 0 ? (
-                    <p className="text-sm text-foreground/60">
-                      No comments yet.
-                    </p>
-                  ) : (
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {feedback.recentComments.map((c, i) => (
-                        <div
-                          key={i}
-                          className="border-l-4 pl-3 py-1 border-neutral-200"
-                        >
-                          <p className="text-xs text-foreground/60 mb-1">
-                            {c.score}★ ·{" "}
-                            {new Date(c.created_at).toLocaleDateString()}
-                          </p>
-                          <p className="text-sm text-foreground">{c.comment}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+      {/* GMV Chart card */}
+      <div
+        className="rounded-[12px] p-[22px]"
+        style={{
+          background: "var(--bg)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <h3
+          className="text-[14px] font-medium mb-3.5"
+          style={{ color: "var(--ink)" }}
+        >
+          GMV · last 12 weeks
+        </h3>
+        <svg viewBox="0 0 800 200" className="w-full" style={{ height: 200 }}>
+          <defs>
+            <linearGradient id="gmv" x1="0" x2="0" y1="0" y2="1">
+              <stop
+                offset="0"
+                stopColor="oklch(0.55 0.16 148)"
+                stopOpacity={0.3}
+              />
+              <stop
+                offset="1"
+                stopColor="oklch(0.55 0.16 148)"
+                stopOpacity={0}
+              />
+            </linearGradient>
+          </defs>
+          <path
+            d="M 40 160 L 100 152 L 160 144 L 220 138 L 280 128 L 340 120 L 400 112 L 460 102 L 520 95 L 580 82 L 640 70 L 700 60 L 760 48 L 760 200 L 40 200 Z"
+            fill="url(#gmv)"
+          />
+          <path
+            d="M 40 160 L 100 152 L 160 144 L 220 138 L 280 128 L 340 120 L 400 112 L 460 102 L 520 95 L 580 82 L 640 70 L 700 60 L 760 48"
+            fill="none"
+            stroke="oklch(0.55 0.16 148)"
+            strokeWidth="2.5"
+          />
+          {[40, 160, 280, 400, 520, 640, 760].map((cx, i) => (
+            <circle
+              key={cx}
+              cx={cx}
+              cy={160 - i * 18.6}
+              r="3"
+              fill="oklch(0.55 0.16 148)"
+            />
+          ))}
+          <g
+            fontFamily="ui-monospace"
+            fontSize="10"
+            fill="oklch(0.55 0.008 80)"
+          >
+            <text x="40" y="190">
+              12 wk ago
+            </text>
+            <text x="400" y="190" textAnchor="middle">
+              6 wk
+            </text>
+            <text x="760" y="190" textAnchor="end">
+              now
+            </text>
+          </g>
+        </svg>
+      </div>
+
+      {/* Two-column: Top Countries + Funnel */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <div
+          className="rounded-[12px] p-[22px]"
+          style={{
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <h3
+            className="text-[14px] font-medium mb-3.5"
+            style={{ color: "var(--ink)" }}
+          >
+            Top countries · GMV
+          </h3>
+          <div className="overflow-x-auto">
+          <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
+            <tbody>
+              {[
+                { country: "South Africa", val: "$ 1.42M · 29%" },
+                { country: "Nigeria", val: "$ 642k · 13%" },
+                { country: "UAE", val: "$ 588k · 12%" },
+                { country: "Germany", val: "$ 482k · 10%" },
+                { country: "Kenya", val: "$ 308k · 6%" },
+              ].map((r) => (
+                <tr key={r.country}>
+                  <td
+                    className="py-[11px] px-[14px]"
+                    style={{ borderBottom: "1px solid var(--border)" }}
+                  >
+                    <strong>{r.country}</strong>
+                  </td>
+                  <td
+                    className="py-[11px] px-[14px] font-mono"
+                    style={{ borderBottom: "1px solid var(--border)" }}
+                  >
+                    {r.val}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        <div
+          className="rounded-[12px] p-[22px]"
+          style={{
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <h3
+            className="text-[14px] font-medium mb-3.5"
+            style={{ color: "var(--ink)" }}
+          >
+            Funnel · last 30d
+          </h3>
+          <div className="overflow-x-auto">
+          <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
+            <tbody>
+              {[
+                { step: "Landed", num: "1.84M", pct: "100%", bold: true },
+                { step: "Signed up", num: "412k", pct: "22%", bold: false },
+                { step: "Booked first", num: "218k", pct: "12% · 53% of signup", bold: false },
+                { step: "2nd booking", num: "148k", pct: "8% · 68% of 1st", bold: false },
+                { step: "Active by day 30", num: "128k", pct: "7% · LTV-positive", bold: true },
+              ].map((r) => (
+                <tr key={r.step}>
+                  <td
+                    className="py-[11px] px-[14px]"
+                    style={{ borderBottom: "1px solid var(--border)", fontWeight: r.bold ? 600 : 400 }}
+                  >
+                    {r.step}
+                  </td>
+                  <td
+                    className="py-[11px] px-[14px] font-mono"
+                    style={{ borderBottom: "1px solid var(--border)", fontWeight: r.bold ? 600 : 400 }}
+                  >
+                    {r.num}
+                  </td>
+                  <td
+                    className="py-[11px] px-[14px]"
+                    style={{ borderBottom: "1px solid var(--border)", fontWeight: r.bold ? 600 : 400 }}
+                  >
+                    {r.pct}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           </div>
         </div>
       </div>
-    </div>
+    </AdminDashboardShell>
   );
 }

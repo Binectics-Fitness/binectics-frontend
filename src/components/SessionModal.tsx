@@ -66,7 +66,7 @@ export default function SessionModal({
               <>
                 <Button
                   onClick={onLogout}
-                  variant="secondary"
+                  variant="ghost"
                   className="flex-1"
                 >
                   Log Out

@@ -1,204 +1,339 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
-import { Input, PasswordInput } from "@/components";
-import { InactivityNotification } from "@/components/InactivityNotification";
+import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { getDashboardRoute } from "@/lib/constants/routes";
-import { UserRole } from "@/lib/types";
 import { loginSchema, type LoginFormData } from "@/lib/schemas/auth";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const { login, isLoading: authLoading, user } = useAuth();
+/**
+ * Auth — auth.html prototype.
+ * 2-column: left auth form (login/signup/reset panels) + right dark editorial panel.
+ * Panels switch via state. OAuth row, 2FA code input, remember-me toggle.
+ */
 
-  const {
-    register: registerField,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
+type Panel = "login" | "2fa" | "signup" | "reset" | "reset-sent";
+
+export default function AuthPage() {
+  const router = useRouter();
+  const { login, isLoading: authLoading } = useAuth();
+  const [panel, setPanel] = useState<Panel>("login");
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [showPw, setShowPw] = useState(false);
+
+  const { register: registerField, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      // Admin users should use /admin login
-      if (user.role === UserRole.ADMIN) {
-        router.push("/admin");
-        return;
-      }
-      // Redirect to role-based dashboard
-      router.push(getDashboardRoute(user.role));
-    }
-  }, [user, router]);
-
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState<string>("");
-
   const onSubmit = async (data: LoginFormData) => {
     setApiError("");
     setIsLoading(true);
-
     try {
-      const result = await login({
-        email: data.email,
-        password: data.password,
-        rememberMe,
-      });
-
+      const result = await login({ email: data.email, password: data.password, rememberMe });
       if (!result.success) {
-        setApiError(result.error || "Login failed. Please try again.");
+        setApiError(result.error || "Login failed. Please check your credentials.");
         setIsLoading(false);
-        return;
       }
-
-      // Redirect is handled by AuthContext
-    } catch (error) {
-      setApiError("An unexpected error occurred. Please try again.");
+    } catch {
+      setApiError("Something went wrong. Please try again.");
       setIsLoading(false);
     }
   };
 
+  const switcherText: Record<Panel, { text: string; link: string; panel: Panel }> = {
+    login: { text: "Don’t have an account?", link: "Sign up", panel: "signup" },
+    "2fa": { text: "", link: "← Sign in", panel: "login" },
+    signup: { text: "Have an account?", link: "Sign in", panel: "login" },
+    reset: { text: "", link: "← Sign in", panel: "login" },
+    "reset-sent": { text: "", link: "← Sign in", panel: "login" },
+  };
+
+  const sw = switcherText[panel];
+
   return (
-    <div className="min-h-screen bg-background-secondary">
-      {/* Inactivity Notification */}
-      <InactivityNotification />
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[1fr_1.1fr]" style={{ background: "var(--bg)" }}>
 
-      {/* Main Content */}
-      <main className="flex min-h-[calc(100vh-4rem)] items-center py-12 sm:py-16">
-        <div className="mx-auto w-full max-w-md px-4 sm:px-6 lg:px-8">
-          {/* Page Header */}
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl icon-glow-green">
-              <svg
-                className="h-8 w-8"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                />
-              </svg>
-            </div>
-            <h1 className="font-display text-3xl font-black text-foreground sm:text-4xl">
-              Welcome back
-            </h1>
-            <p className="mt-2 text-base text-foreground-secondary">
-              Sign in to your Binectics account
-            </p>
+      {/* ═══ LEFT — Auth form ═══ */}
+      <div className="flex flex-col min-h-screen px-5 py-6 sm:px-8 sm:py-8 lg:px-12">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <Link href="/"><BinecticsLockup /></Link>
+          <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
+            {sw.text}{" "}
+            <button onClick={() => setPanel(sw.panel)} className="font-medium underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>{sw.link}</button>
           </div>
+        </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* API Error Message */}
-            {apiError && (
-              <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
-                <div className="flex gap-3">
-                  <svg
-                    className="h-5 w-5 shrink-0 text-red-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <p className="text-sm text-red-800">{apiError}</p>
+        {/* Body */}
+        <div className="flex-1 flex items-center justify-center py-12">
+          <div className="max-w-[380px] w-full">
+
+            {/* ── LOGIN ── */}
+            {panel === "login" && (
+              <>
+                <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Sign in</div>
+                <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+                  Welcome back.<br />Pick up where you <em className="font-serif font-normal italic">left off</em>.
+                </h1>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>3 upcoming sessions waiting — including Wed 08:30 with Sarah.</p>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5 mt-8">
+                  {apiError && (
+                    <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-(--r-2)" style={{ background: "var(--danger-soft, oklch(0.95 0.03 25))", border: "1px solid oklch(0.85 0.06 25)" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                      <p className="text-[13px]" style={{ color: "var(--danger)" }}>{apiError}</p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email or phone</label>
+                    <input type="email" placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: errors.email ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("email")} />
+                    {errors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.email.message}</p>}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Password</label>
+                      <button type="button" onClick={() => setPanel("reset")} className="font-mono text-[11px] uppercase tracking-[0.05em] underline underline-offset-3" style={{ color: "var(--fg-2)", textDecorationColor: "var(--border-2)" }}>Forgot password</button>
+                    </div>
+                    <div className="relative">
+                      <input type={showPw ? "text" : "password"} placeholder="••••••••••••" className="h-10.5 w-full rounded-(--r-2) px-3.5 pr-10 text-[14px]" style={{ border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("password")} />
+                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{showPw ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/></> : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
+                      </button>
+                    </div>
+                    {errors.password && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.password.message}</p>}
+                  </div>
+
+                  <label className="flex items-center gap-2 cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
+                    <span className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 ${rememberMe ? "bg-ink border-ink" : "bg-bg border-border-2"}`}>
+                      {rememberMe && <span className="w-[7px] h-1 border-l-[1.5px] border-b-[1.5px] -rotate-45 -translate-y-px" style={{ borderColor: "var(--bg)" }} />}
+                    </span>
+                    <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>Keep me signed in on this device</span>
+                  </label>
+
+                  <button type="submit" disabled={isLoading || authLoading} className="btn-primary-v2 lg w-full justify-center">
+                    {isLoading || authLoading ? "Signing in…" : "Sign in →"}
+                  </button>
+                </form>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3.5 my-6">
+                  <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                  <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>or</span>
+                  <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
                 </div>
-              </div>
+
+                {/* OAuth */}
+                <div className="grid grid-cols-3 gap-2">
+                  <button className="flex items-center justify-center gap-2 h-10 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)", transition: "border-color 120ms, background 120ms" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h5.9c-.3 1.4-1 2.5-2.2 3.3v2.7h3.6c2.1-1.9 3.2-4.7 3.2-8.1z"/><path d="M12 23c2.9 0 5.3-1 7.1-2.6l-3.6-2.7c-1 .7-2.2 1-3.5 1-2.7 0-5-1.8-5.8-4.3H2.5v2.7C4.3 20.5 7.9 23 12 23z"/><path d="M6.2 14.3c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.6H2.5C1.8 9 1.4 10.5 1.4 12s.4 3 1.1 4.4l3.7-2.1z"/><path d="M12 4.8c1.5 0 2.9.5 4 1.5l3-3C17.3 1.7 14.9.7 12 .7 7.9.7 4.3 3.2 2.5 6.8l3.7 2.7c.8-2.5 3.1-4.7 5.8-4.7z"/></svg>
+                    Google
+                  </button>
+                  <button className="flex items-center justify-center gap-2 h-10 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)", transition: "border-color 120ms, background 120ms" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 12.5c0-2.6 2.1-3.9 2.2-3.9-1.2-1.7-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.3 2.5 1.3 0 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.2 3.2-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.9-1.1-3.1-4.4zM15 4.5c.7-.9 1.2-2.1 1.1-3.3-1 0-2.3.7-3 1.5-.7.8-1.3 2-1.1 3.2 1.1.1 2.3-.5 3-1.4z"/></svg>
+                    Apple
+                  </button>
+                  <button className="flex items-center justify-center gap-2 h-10 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)", transition: "border-color 120ms, background 120ms" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16v16H4z"/><path d="M4 4l16 16M20 4L4 20"/></svg>
+                    SSO
+                  </button>
+                </div>
+              </>
             )}
 
-            <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-[var(--shadow-card)]">
-              <div className="space-y-5">
-                {/* Email */}
-                <Input
-                  label="Email Address"
-                  type="email"
-                  placeholder="john@example.com"
-                  error={errors.email?.message}
-                  {...registerField("email")}
-                />
+            {/* ── 2FA ── */}
+            {panel === "2fa" && (
+              <>
+                <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>2-step verification</div>
+                <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+                  Check the <em className="font-serif font-normal italic">code</em> on your phone.
+                </h1>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Sent to +27 82 ••• 1284 — should arrive in a few seconds. The code expires in 5 minutes.</p>
 
-                {/* Password */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label
-                      htmlFor="password"
-                      className="block text-sm font-semibold text-foreground"
-                    >
-                      Password
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-sm font-medium text-accent-blue-500 hover:text-accent-blue-600"
-                    >
-                      Forgot?
-                    </Link>
+                <div className="flex flex-col gap-3.5 mt-8">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>6-digit code</label>
+                    <div className="flex gap-2">
+                      {["4", "2", "9", "1", "", ""].map((v, i) => (
+                        <input key={i} maxLength={1} defaultValue={v} placeholder="•" className="w-11 h-12 rounded-(--r-2) text-center text-[20px] font-medium" style={{ border: "1px solid var(--border-2)", color: v ? "var(--ink)" : "var(--fg-4)", background: "var(--bg)", fontFamily: "inherit" }} readOnly />
+                      ))}
+                    </div>
                   </div>
-                  <PasswordInput
-                    id="password"
-                    placeholder="••••••••"
-                    error={errors.password?.message}
-                    className="h-12"
-                    {...registerField("password")}
-                  />
-                </div>
+                  <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                    Code didn&apos;t arrive?{" "}
+                    <span className="underline underline-offset-3 cursor-pointer" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Resend in 28s</span>
+                    {" · "}
+                    <span className="underline underline-offset-3 cursor-pointer" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Use authenticator app</span>
+                  </div>
 
-                {/* Remember Me */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-accent-blue-500 focus:ring-accent-blue-500"
-                  />
-                  <label
-                    htmlFor="rememberMe"
-                    className="ml-2 text-sm text-foreground"
-                  >
-                    Remember me for 30 days
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 bg-bg border-border-2" />
+                    <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>Trust this device for 30 days</span>
                   </label>
+
+                  <div className="flex gap-2">
+                    <button onClick={() => setPanel("login")} className="btn-ghost-v2">← Back</button>
+                    <button className="btn-primary-v2 lg flex-1 justify-center">Sign in →</button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading || authLoading}
-              className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading || authLoading ? "Signing in..." : "Sign In"}
-            </button>
+            {/* ── SIGNUP ── */}
+            {panel === "signup" && (
+              <>
+                <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Create an account</div>
+                <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+                  Find your <em className="font-serif font-normal italic">people</em>.<br />It takes a minute.
+                </h1>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Free to join. Pay only for what you book. Cancel any session up to 24h before.</p>
 
-            {/* Sign Up Link */}
-            <p className="text-center text-sm text-foreground-secondary">
-              Don't have an account?{" "}
-              <Link
-                href="/register"
-                className="font-semibold text-accent-blue-500 hover:text-accent-blue-600"
-              >
-                Sign up
-              </Link>
-            </p>
-          </form>
+                <div className="flex flex-col gap-3.5 mt-8">
+                  <div className="grid grid-cols-2 gap-3.5">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name</label>
+                      <input placeholder="Tunde" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Last name</label>
+                      <input placeholder="Adebayo" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email</label>
+                    <input type="email" placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Password</label>
+                    <input type="password" placeholder="At least 10 characters" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>Mix it up. Long passphrases beat short complex ones.</span>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Country</label>
+                    <input defaultValue="Nigeria · NG" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>Determines your default currency and gateway. Change later anytime.</span>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="w-4 h-4 rounded-[3px] border bg-ink border-ink flex items-center justify-center">
+                      <span className="w-[7px] h-1 border-l-[1.5px] border-b-[1.5px] -rotate-45 -translate-y-px" style={{ borderColor: "var(--bg)" }} />
+                    </span>
+                    <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>I agree to the <Link href="/terms" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Terms</Link> and <Link href="/privacy" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Privacy</Link></span>
+                  </label>
+                  <button className="btn-primary-v2 lg w-full justify-center" onClick={() => setPanel("login")}>Create account →</button>
+                </div>
+
+                <div className="flex items-center gap-3.5 my-6">
+                  <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                  <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>or continue with</span>
+                  <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Google", "Apple", "SSO"].map((p) => (
+                    <button key={p} className="flex items-center justify-center gap-2 h-10 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" }}>{p}</button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* ── RESET ── */}
+            {panel === "reset" && (
+              <>
+                <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Reset password</div>
+                <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+                  No worries.<br />Let&apos;s <em className="font-serif font-normal italic">get you in</em>.
+                </h1>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Tell us where to send the reset link. It expires in 30 minutes.</p>
+                <div className="flex flex-col gap-3.5 mt-8">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email or phone</label>
+                    <input type="text" placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <span className="text-[12px] leading-relaxed" style={{ color: "var(--fg-3)" }}>If we find an account, you&apos;ll get an email. We don&apos;t say either way to protect privacy.</span>
+                  </div>
+                  <button className="btn-primary-v2 lg w-full justify-center" onClick={() => setPanel("reset-sent")}>Send reset link →</button>
+                  <button className="btn-ghost-v2 w-full justify-center" onClick={() => setPanel("login")}>← Back to sign in</button>
+                </div>
+              </>
+            )}
+
+            {/* ── RESET SENT ── */}
+            {panel === "reset-sent" && (
+              <>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5" style={{ background: "var(--signal-soft)" }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="oklch(0.22 0.05 148)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                </div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Check your inbox</div>
+                <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+                  We&apos;ve sent the <em className="font-serif font-normal italic">link</em>.
+                </h1>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>If the email matches an account, the link should arrive within a minute. Check spam if you don&apos;t see it.</p>
+                <div className="flex flex-col gap-3.5 mt-8">
+                  <button className="btn-primary-v2 lg w-full justify-center" onClick={() => setPanel("login")}>Back to sign in</button>
+                  <div className="text-[12.5px] text-center" style={{ color: "var(--fg-3)" }}>
+                    Wrong email? <button onClick={() => setPanel("reset")} className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Try another</button>
+                  </div>
+                </div>
+              </>
+            )}
+
+          </div>
         </div>
-      </main>
+
+        {/* Footer */}
+        <div className="flex justify-between font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+          <span>© 2026 Binectics</span>
+          <span className="flex gap-2">
+            <Link href="/help" style={{ color: "var(--fg-2)" }}>Help</Link> ·{" "}
+            <Link href="/privacy" style={{ color: "var(--fg-2)" }}>Privacy</Link> ·{" "}
+            <Link href="/terms" style={{ color: "var(--fg-2)" }}>Terms</Link>
+          </span>
+        </div>
+      </div>
+
+      {/* ═══ RIGHT — Dark editorial panel ═══ */}
+      <aside className="hidden lg:flex flex-col justify-between gap-12" style={{ background: "var(--ink)", color: "var(--bg)", padding: "56px" }}>
+        <div className="flex justify-between items-center">
+          <div />
+          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.05em] px-2.5 py-1.25 rounded-full" style={{ color: "oklch(0.85 0.005 85)", border: "1px solid oklch(0.3 0.005 85)" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--signal)", boxShadow: "0 0 0 3px oklch(0.68 0.16 148 / 0.2)" }} />
+            2,481 sessions booked today
+          </span>
+        </div>
+
+        <div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.05em] mb-4.5" style={{ color: "oklch(0.65 0.005 85)" }}>Member · Lagos</div>
+          <p className="font-serif italic text-[48px] leading-[1.1] max-w-[18ch]" style={{ letterSpacing: "-0.02em", color: "var(--bg)" }}>
+            Every coach I&apos;ve found here is verified, and the booking actually works the first time.
+          </p>
+          <div className="flex items-center gap-3 mt-8">
+            <span className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold" style={{ background: "var(--signal)", color: "oklch(0.2 0.05 148)" }}>AB</span>
+            <div>
+              <div className="text-[14px] font-medium">Adaora Beneteau</div>
+              <div className="font-mono text-[11px] uppercase tracking-[0.05em] mt-0.5" style={{ color: "oklch(0.65 0.005 85)" }}>Booked 47 sessions over 8 months</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-5 pt-8" style={{ borderTop: "1px solid oklch(0.3 0.005 85)" }}>
+          {[
+            { v: "14,200+", k: "Verified providers" },
+            { v: "52", k: "Countries · 8 currencies" },
+            { v: "4.82", k: "Average rating · 30d" },
+          ].map((s) => (
+            <div key={s.k}>
+              <div className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{s.v}</div>
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.05em] mt-1.5" style={{ color: "oklch(0.65 0.005 85)" }}>{s.k}</div>
+            </div>
+          ))}
+        </div>
+      </aside>
     </div>
   );
 }

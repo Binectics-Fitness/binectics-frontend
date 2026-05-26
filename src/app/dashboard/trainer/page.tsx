@@ -1,454 +1,292 @@
-"use client";
+import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 
-import Link from "next/link";
-import Image from "next/image";
-import TrainerSidebar from "@/components/TrainerSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { EmptyState } from "@/components/EmptyState";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { UserRole } from "@/lib/types";
-import { type ClientProfile } from "@/lib/api/progress";
-import { useDashboardStats, useClientProfiles } from "@/lib/queries/progress";
+/**
+ * Trainer dashboard — Sarah Okafor · CPT
+ * Hardcoded to match dashboard-trainer.html prototype.
+ * Every CSS value from shared.css + page styles verified.
+ */
 
-function getClientName(profile: ClientProfile): string {
-  if (typeof profile.client_id === "object" && profile.client_id) {
-    return `${profile.client_id.first_name} ${profile.client_id.last_name}`;
-  }
-  return "Unknown Client";
+function FireIcon() {
+  return <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style={{ color: "var(--signal-ink)" }}><path d="M12 2s4 6 4 10a4 4 0 1 1-8 0c0-2 2-4 2-6 0 0 0 2 2 2s0-2 0-6z" /></svg>;
 }
 
+const STATS = [
+  { label: "Sessions · this week", value: "28", suffix: "/ 32 slots", delta: "88% utilization" },
+  { label: "Active clients", value: "42", delta: "+ 3 this month" },
+  { label: "Earnings · MTD", value: "R 38,400", delta: "↑ 14% vs apr" },
+  { label: "Rating · last 30d", value: "4.9", delta: "No change", steady: true },
+];
+
+const SESSIONS = [
+  { time: "06:30", init: "JC", name: "Jamal Chen", meta: "Intake + assessment · 60 min · Iron Lab Sea Point", type: "first", badge: "First session", badgeStyle: "signal", actions: ["Notes", "Check‑in"] },
+  { time: "08:00", init: "LM", name: "Linda Mokoena", meta: "Session 14 / 24 · Strength upper · 60 min", streak: 32, actions: ["Plan", "Check‑in"] },
+  { time: "09:30", init: "WC", name: "Wei Chen", meta: "Session 8 / 12 · Olympic basics · 90 min", actions: ["Plan", "Check‑in"] },
+  { time: "11:30", init: "AA", name: "Aisha Adams", meta: "Programming review · Dubai (GMT+4) · 30 min · Zoom", type: "online", badge: "Online", badgeStyle: "gym", avatarBg: "var(--gym)", avatarColor: "oklch(0.95 0 0)", actions: ["Notes", "Join"] },
+  { time: "13:00", init: "PB", name: "Pier Botha", meta: "Refund issued · slot reopened for booking", type: "cancelled", badge: "Cancelled · 06:42", badgeStyle: "danger" },
+  { time: "15:30", init: "TN", name: "Thandi Nkosi", meta: "Session 6 / 12 · Postnatal strength · 60 min", streak: 18, actions: ["Plan", "Check‑in"] },
+  { time: "17:00", init: "MK", name: "Mike Khumalo", meta: "Session 22 / 24 · Conditioning · 60 min", actions: ["Plan", "Check‑in"], last: true },
+];
+
+const CLIENTS = [
+  { init: "LM", name: "Linda Mokoena", meta: ["Studio · 24‑session package", "Next today · 08:00", "Joined Mar 2025"], progress: 58, label: "14 / 24", streak: "32 day streak" },
+  { init: "WC", name: "Wei Chen", meta: ["Olympic 12‑pack", "Next today · 09:30", "Joined Feb 2026"], progress: 67, label: "8 / 12", streak: "11 days" },
+  { init: "AA", name: "Aisha Adams", meta: ["Online · monthly", "Next today · 11:30", "Joined Jan 2026"], progress: 85, label: "Monthly", streak: "45 days" },
+  { init: "TN", name: "Thandi Nkosi", meta: ["Postnatal 12‑pack", "Next today · 15:30", "Joined Apr 2026"], progress: 42, label: "5 / 12", streak: "18 days" },
+  { init: "MK", name: "Mike Khumalo", meta: ["Conditioning 24‑pack", "Next today · 17:00", "Joined Oct 2025"], progress: 92, label: "22 / 24", streak: "62 days" },
+];
+
+const MESSAGES = [
+  { init: "NK", name: "Nthabiseng K.", ts: "3m", preview: "Hi Sarah — would Tuesday at 7 work for a first consult? Heard great…", unread: true },
+  { init: "AA", name: "Aisha Adams", ts: "28m", preview: "Quick Q on today's programming — should I do the front squats at…", unread: true },
+  { init: "RJ", name: "Rashid J.", ts: "1h", preview: "Booked 8 sessions — looking forward. PAR‑Q form attached.", unread: true },
+  { init: "LM", name: "Linda Mokoena", ts: "Yesterday", preview: "PR'd squat at 92.5! Thank you 🙌 Will send vid tonight", unread: false },
+  { init: "WC", name: "Wei Chen", ts: "2d", preview: "Snatch felt off today, attached the slo‑mo. Bar drifting forward in…", unread: false },
+];
+
+const EARNINGS = [
+  { title: "Studio · 24‑session pack", sub: "Linda M. · May 02", amt: "+ R 14,400", color: "var(--signal-ink)" },
+  { title: "Olympic 12‑pack", sub: "Wei C. · Apr 28", amt: "+ R 14,400", color: "var(--signal-ink)" },
+  { title: "Online monthly · May", sub: "Aisha A. · Dubai", amt: "$ 320 pending", color: "var(--fg-3)" },
+  { title: "Postnatal 12‑pack", sub: "Thandi N. · Apr 22", amt: "+ R 11,400", color: "var(--signal-ink)" },
+  { title: "Refund · Pier B.", sub: "Cancelled session · 13:00", amt: "− R 1,200", color: "var(--danger)" },
+];
+
+const CAL_ROWS = [
+  [28,29,30,1,2,3,4], [5,6,7,8,9,10,11], [12,13,14,15,16,17,18], [19,20,21,22,23,24,25], [26,27,28,29,30,31,1],
+];
+const CAL_HAS = new Set([1,2,5,6,7,8,9,11,12,13,14,15,16,19,20,21,23,26,27,28,29,30]);
+
+const BORDER_LEFT: Record<string, string> = { first: "var(--signal)", online: "var(--gym)", cancelled: "var(--fg-4)" };
+const BADGE_STYLE: Record<string, React.CSSProperties> = {
+  signal: { background: "var(--signal-soft)", border: "1px solid oklch(0.88 0.05 148)", color: "var(--signal-ink)" },
+  gym: { background: "transparent", border: "1px solid var(--gym)", color: "var(--gym)" },
+  danger: { background: "transparent", border: "1px solid var(--danger)", color: "var(--danger)" },
+};
+
+/* ═══ PAGE ═══ */
+
 export default function TrainerDashboard() {
-  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.TRAINER);
-  const { data: dashboardStats } = useDashboardStats(!!user);
-  const { data: allClientProfiles } = useClientProfiles(undefined, !!user);
-  const clientProfiles = allClientProfiles?.slice(0, 4) ?? [];
-
-  if (isLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
-
-  const displayName = user ? `${user.first_name} ${user.last_name}` : "";
-
-  // Stats cards (only fields backed by real API data)
-  const stats = [
-    {
-      label: "Active Clients",
-      value: dashboardStats?.active_clients?.toString() ?? "0",
-      subtext: `${dashboardStats?.total_clients ?? 0} total clients`,
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-      ),
-      color: "icon-glow-green",
-    },
-    {
-      label: "Pending Requests",
-      value: dashboardStats?.pending_requests?.toString() ?? "0",
-      subtext: "Awaiting your review",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
-      ),
-      color: "icon-glow-blue",
-    },
-    {
-      label: "Pending Invitations",
-      value: dashboardStats?.pending_invitations?.toString() ?? "0",
-      subtext: "Sent to potential clients",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-      color: "icon-glow-yellow",
-    },
-    {
-      label: "Total Clients",
-      value: dashboardStats?.total_clients?.toString() ?? "0",
-      subtext: "All-time client roster",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-          />
-        </svg>
-      ),
-      color: "icon-glow-purple",
-    },
-  ];
-
-  // Today's sessions (no integration yet)
-  const todaySessions: Array<{
-    time: string;
-    client: string;
-    type: string;
-    duration: string;
-    status: "upcoming" | "completed";
-    avatar: React.ReactNode;
-  }> = [];
-
-  // Quick actions
-  const quickActions = [
-    {
-      label: "Create Workout Plan",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 10V3L4 14h7v7l9-11h-7z"
-          />
-        </svg>
-      ),
-      href: "/dashboard/trainer/workouts/create",
-      color: "bg-primary-500",
-    },
-    {
-      label: "View All Clients",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-      ),
-      href: "/dashboard/trainer/clients",
-      color: "bg-accent-blue-500",
-    },
-    {
-      label: "Check Schedule",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-      href: "/dashboard/trainer/sessions",
-      color: "bg-accent-yellow-500",
-    },
-    {
-      label: "Exercise Library",
-      icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-          />
-        </svg>
-      ),
-      href: "/dashboard/trainer/exercises",
-      color: "bg-accent-purple-500",
-    },
-  ];
-
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <TrainerSidebar />
-
-      {/* Main Content */}
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-1 rounded-full bg-gradient-to-b from-accent-yellow-500 to-accent-yellow-600" />
-              <div>
-                <h1 className="font-display text-3xl font-black text-foreground mb-2">
-                  Welcome back, {displayName}!
-                </h1>
-                <p className="text-foreground-secondary">
-                  {dashboardStats
-                    ? `${dashboardStats.active_clients} active clients • ${dashboardStats.pending_requests} pending requests`
-                    : "Loading stats..."}
-                </p>
-              </div>
+    <TrainerDashboardShell
+      activeItem="Today"
+      crumb="Today"
+      actions={<><button className="btn-ghost-v2 sm">View public profile →</button><button className="btn-primary-v2 sm">+ Book session</button></>}
+    >
+          {/* Head */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
+            <div>
+              <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Today, Sarah</h1>
+              <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>Mon · May 11 · 6 sessions · R 7,200 forecast</div>
             </div>
-            <Link
-              href="/dashboard/trainer/settings"
-              className="inline-flex h-10 items-center justify-center border border-neutral-200 bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-50"
-            >
-              Edit Profile
-            </Link>
+            <div className="flex gap-2">
+              <button className="btn-ghost-v2 sm">Block off time</button>
+              <button className="btn-ghost-v2 sm">Copy link to book</button>
+            </div>
           </div>
-        </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
-            >
-              <div
-                className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 ${stat.color} text-2xl`}
-              >
-                {stat.icon}
+          {/* Stats — grid 4, gap 12px */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {STATS.map((s) => (
+              <div key={s.label} className="flex flex-col gap-1.5 rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.label}</div>
+                <div className="text-[28px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.value}{s.suffix && <small className="font-mono text-[13px] font-normal ml-1" style={{ color: "var(--fg-3)" }}>{s.suffix}</small>}</div>
+                <div className="font-mono text-[12px]" style={{ color: s.steady ? "var(--fg-3)" : "var(--signal-ink)" }}>{s.delta}</div>
               </div>
-              <p className="font-display text-2xl font-black text-foreground mb-1">
-                {stat.value}
-              </p>
-              <p className="text-sm text-foreground-secondary mb-1">
-                {stat.label}
-              </p>
-              <p className="text-sm text-foreground-tertiary">{stat.subtext}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Quick Actions */}
-        <section className="mb-8">
-          <h2 className="font-display text-xl font-black text-foreground mb-4">
-            Quick Actions
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {quickActions.map((action, index) => (
-              <Link
-                key={index}
-                href={action.href}
-                className={`group flex flex-col gap-3 rounded-xl ${action.color} p-5 text-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1`}
-              >
-                <div className="text-white/90">{action.icon}</div>
-                <p className="text-base font-semibold leading-snug">
-                  {action.label}
-                </p>
-              </Link>
             ))}
           </div>
-        </section>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Today's Sessions */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl font-black text-foreground">
-                Today&apos;s Sessions
-              </h2>
-              <Link
-                href="/dashboard/trainer/sessions"
-                className="text-sm font-medium text-primary-600 hover:text-primary-700"
-              >
-                View All
-              </Link>
-            </div>
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)]">
-              {todaySessions.length === 0 ? (
-                <EmptyState
-                  compact
-                  accent="blue"
-                  title="No sessions today"
-                  description="You don't have any sessions scheduled for today. Enjoy the break or open up new availability."
-                  actionLabel="View Schedule"
-                  actionHref="/dashboard/trainer/sessions"
-                  icon={
-                    <svg
-                      className="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V11.25A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
-                      />
-                    </svg>
-                  }
-                />
-              ) : (
-                <ul className="space-y-4 p-6">
-                  {todaySessions.map((session, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center gap-4 pb-4 border-b border-neutral-100 last:border-0 last:pb-0"
-                    >
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-2xl">
-                        {session.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">
-                          {session.client}
-                        </p>
-                        <p className="text-sm text-foreground-secondary">
-                          {session.type} • {session.duration}
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {session.time}
-                        </p>
-                        <span
-                          className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                            session.status === "completed"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          {session.status === "completed" ? "Done" : "Upcoming"}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
+          {/* Two-col: 1.7fr 1fr, gap 12px */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-3 items-start">
 
-          {/* Client Progress */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl font-black text-foreground">
-                Client Progress
-              </h2>
-              <Link
-                href="/dashboard/trainer/clients"
-                className="text-sm font-medium text-primary-600 hover:text-primary-700"
-              >
-                View All
-              </Link>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-[var(--shadow-card)]">
-              {clientProfiles.length === 0 ? (
-                <EmptyState message="No clients yet. Add your first client to get started." />
-              ) : (
-                <ul className="space-y-5">
-                  {clientProfiles.map((profile) => {
-                    const name = getClientName(profile);
-                    const goal = profile.goals?.[0] ?? "—";
-                    const joined = new Date(
-                      profile.created_at,
-                    ).toLocaleDateString();
+            {/* LEFT */}
+            <div className="flex flex-col gap-3">
+              {/* Sessions timeline */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Today&apos;s schedule</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>6 confirmed · 1 cancellation · gap 14:00–15:30</div>
+                  </div>
+                  <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>Open calendar →</span>
+                </div>
+
+                {/* Timeline grid: 70px 1fr */}
+                <div className="grid py-2" style={{ gridTemplateColumns: "70px 1fr" }}>
+                  {SESSIONS.map((s, i) => {
+                    const borderLeft = BORDER_LEFT[s.type || ""] || "var(--ink)";
+                    const isCancelled = s.type === "cancelled";
+
+                    // Gap line before 15:30
+                    const showGap = s.time === "15:30";
+
                     return (
-                      <li
-                        key={profile._id}
-                        className="pb-5 border-b border-neutral-100 last:border-0 last:pb-0"
-                      >
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xl">
-                            {typeof profile.client_id === "object" &&
-                            profile.client_id.profile_picture ? (
-                              <Image
-                                src={profile.client_id.profile_picture}
-                                alt={name}
-                                width={40}
-                                height={40}
-                                className="h-10 w-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <svg
-                                className="h-5 w-5 text-neutral-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                />
-                              </svg>
+                      <div key={i} className="contents">
+                        {showGap && (
+                          <>
+                            <div />
+                            <div className="flex items-center gap-2 px-4.5 py-1.5 font-mono text-[11px]" style={{ color: "var(--fg-4)" }}>
+                              <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                              14:00 – 15:30 · 90 min open
+                              <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                            </div>
+                          </>
+                        )}
+
+                        {/* Time */}
+                        <div className="font-mono text-[11.5px] text-right pr-3 pl-4.5 pt-3.5" style={{ color: "var(--fg-3)", borderRight: "1px solid var(--border)", fontVariantNumeric: "tabular-nums" }}>{s.time}</div>
+
+                        {/* Session card */}
+                        <div className={`px-4.5 py-2.5 ${s.last ? "pb-4.5" : ""}`}>
+                          <div className="flex justify-between items-center rounded-(--r-2) px-3.5 py-3" style={{ border: "1px solid var(--border)", borderLeft: `3px solid ${borderLeft}`, background: "var(--bg)", opacity: isCancelled ? 0.5 : 1, transition: "border-color 120ms" }}>
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0" style={{ background: s.avatarBg || "var(--bg-3)", color: s.avatarColor || "var(--fg-2)" }}>{s.init}</span>
+                              <div>
+                                <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
+                                  {s.name}
+                                  {s.badge && <span className="inline-flex items-center h-4.5 px-2 rounded-(--r-1) text-[12px] font-medium ml-1.5" style={BADGE_STYLE[s.badgeStyle || "signal"]}>{s.badge}</span>}
+                                  {s.streak && (
+                                    <span className="inline-flex items-center gap-1.25 font-mono text-[12px] px-2 py-1 rounded-full ml-1.5" style={{ background: "var(--bg-2)", color: "var(--ink)" }}>
+                                      <FireIcon />{s.streak}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>{s.meta}</div>
+                              </div>
+                            </div>
+                            {s.actions && (
+                              <div className="flex gap-1.5">
+                                {s.actions.map((a) => (
+                                  <button key={a} className={a === s.actions![s.actions!.length - 1] ? "btn-primary-v2 sm" : "btn-ghost-v2 sm"}>{a}</button>
+                                ))}
+                              </div>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-foreground truncate">
-                              {name}
-                            </p>
-                            <p className="text-sm text-foreground-tertiary">
-                              Joined {joined}
-                            </p>
-                          </div>
-                          <span className="bg-primary-100 shrink-0 px-2 py-1 text-xs font-semibold text-primary-700">
-                            {goal}
-                          </span>
                         </div>
-                        {profile.starting_weight_kg &&
-                          profile.target_weight_kg &&
-                          profile.starting_weight_kg !==
-                            profile.target_weight_kg && (
-                            <p className="text-sm text-foreground-tertiary">
-                              {profile.starting_weight_kg} kg →{" "}
-                              {profile.target_weight_kg} kg
-                            </p>
-                          )}
-                      </li>
+                      </div>
                     );
                   })}
-                </ul>
-              )}
+                </div>
+              </div>
+
+              {/* Active clients */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Active clients</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>42 total · ranked by next session</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="btn-ghost-v2 sm">Filter</button>
+                    <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>View all →</span>
+                  </div>
+                </div>
+                {CLIENTS.map((c, i) => (
+                  <div key={c.init} className="grid gap-4 px-4.5 py-3.5 items-center hover:bg-bg-2" style={{ gridTemplateColumns: "1fr auto auto", borderBottom: i < CLIENTS.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{c.init}</span>
+                      <div>
+                        <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{c.name}</div>
+                        <div className="flex items-center gap-2.5 font-mono text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                          {c.meta.map((m, j) => (
+                            <span key={j} className="flex items-center gap-2.5">
+                              {j > 0 && <span className="w-[3px] h-[3px] rounded-full" style={{ background: "var(--border-2)" }} />}
+                              {m}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="w-20 h-1 rounded-sm overflow-hidden" style={{ background: "var(--bg-3)" }}><div className="h-full" style={{ width: `${c.progress}%`, background: "var(--ink)" }} /></div>
+                      <div className="font-mono text-[11px] text-right mt-1" style={{ color: "var(--fg-3)" }}>{c.label}</div>
+                    </div>
+                    <span className="inline-flex items-center gap-1.25 font-mono text-[12px] px-2 py-1 rounded-full" style={{ background: "var(--bg-2)", color: "var(--ink)" }}><FireIcon />{c.streak}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </section>
-        </div>
-      </main>
-    </div>
+
+            {/* RIGHT */}
+            <div className="flex flex-col gap-3">
+              {/* Mini calendar */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>May 2026</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Mon, May 11 · 6 sessions</div>
+                  </div>
+                  <div className="flex gap-1">
+                    <button className="w-7 h-7 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <button className="w-7 h-7 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m9 18 6-6-6-6"/></svg></button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-7 gap-1 px-4.5 py-3.5 text-[12px]" style={{ color: "var(--fg-2)" }}>
+                  {["M","T","W","T","F","S","S"].map((d,i) => (
+                    <div key={i} className="font-mono text-[10px] text-center uppercase py-1" style={{ color: "var(--fg-4)" }}>{d}</div>
+                  ))}
+                  {CAL_ROWS.flat().map((day, i) => {
+                    const isMuted = (i < 3 && day > 20) || (i > 34 && day < 10);
+                    const isToday = day === 11 && !isMuted;
+                    const hasSession = CAL_HAS.has(day) && !isMuted;
+                    return (
+                      <div key={i} className="aspect-square flex items-center justify-center font-mono rounded-(--r-2) relative cursor-pointer hover:bg-bg-2" style={{ color: isToday ? "var(--bg)" : isMuted ? "var(--fg-4)" : "var(--fg-2)", background: isToday ? "var(--ink)" : "transparent", fontVariantNumeric: "tabular-nums" }}>
+                        {day}
+                        {hasSession && !isToday && <span className="absolute w-1 h-1 rounded-full bottom-1" style={{ background: "var(--ink)" }} />}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Inbox */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Inbox</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>7 unread · 24h SLA</div>
+                  </div>
+                  <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>Open inbox →</span>
+                </div>
+                <div className="py-1 overflow-hidden" style={{ maxHeight: "460px" }}>
+                  {MESSAGES.map((m, i) => (
+                    <div key={i} className="flex gap-3 px-4.5 py-3 items-start hover:bg-bg-2" style={{ borderBottom: i < MESSAGES.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
+                      <span className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{m.init}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline gap-2">
+                          <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>
+                            {m.name}
+                            {m.unread && <span className="inline-block w-1.5 h-1.5 rounded-full ml-1.5 -translate-y-px" style={{ background: "var(--signal)" }} />}
+                          </span>
+                          <span className="font-mono text-[11px] shrink-0" style={{ color: "var(--fg-3)" }}>{m.ts}</span>
+                        </div>
+                        <div className="text-[13px] mt-1 truncate" style={{ color: m.unread ? "var(--ink)" : "var(--fg-2)", fontWeight: m.unread ? 500 : 400, lineHeight: "1.45" }}>{m.preview}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Earnings */}
+              <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div>
+                    <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Earnings · this month</h3>
+                    <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>R 38,400 booked · next payout May 13</div>
+                  </div>
+                  <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>Statement →</span>
+                </div>
+                {EARNINGS.map((e, i) => (
+                  <div key={i} className="flex justify-between items-center px-4.5 py-3" style={{ borderBottom: i < EARNINGS.length - 1 ? "1px solid var(--border)" : "none" }}>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[13.5px]" style={{ color: "var(--ink)" }}>{e.title}</span>
+                      <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{e.sub}</span>
+                    </div>
+                    <span className="font-mono text-[14px] font-medium" style={{ color: e.color, fontVariantNumeric: "tabular-nums" }}>{e.amt}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+    </TrainerDashboardShell>
   );
 }

@@ -1,463 +1,121 @@
-"use client";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import DashboardLoading from "@/components/DashboardLoading";
-import GymOwnerSidebar from "@/components/GymOwnerSidebar";
-import { useOrganization } from "@/contexts/OrganizationContext";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
-import {
-  InvitationStatus,
-  MemberStatus,
-  teamsService,
-  type OrganizationMember,
-  type TeamInvitation,
-  type TeamRole,
-} from "@/lib/api/teams";
-import { formatLocal } from "@/utils/format";
+interface StaffMeta { k: string; v: string; warn?: boolean }
 
-const STATUS_STYLES: Record<MemberStatus, string> = {
-  [MemberStatus.ACTIVE]: "bg-primary-100 text-primary-700",
-  [MemberStatus.PENDING]: "bg-yellow-100 text-yellow-700",
-  [MemberStatus.INACTIVE]: "bg-neutral-100 text-neutral-700",
+const STAFF: { init: string; name: string; role: string; avaType: "trainer" | "dietitian" | "front"; meta: StaffMeta[]; status: string; statusColor: string; statusBg: string; locs: string }[] = [
+  { init: "SO", name: "Sarah Okafor", role: "Trainer · CSCS", avaType: "trainer" as const, meta: [{ k: "Sessions · MTD", v: "68" }, { k: "Rating", v: "4.9 · 312" }, { k: "Joined", v: "Mar 2024" }, { k: "Cert renewal", v: "Mar 2028" }], status: "Active", statusColor: "var(--signal-ink)", statusBg: "var(--signal-soft)", locs: "Sea Point · Foreshore" },
+  { init: "TM", name: "Themba Mokoena", role: "Trainer · USAW L2", avaType: "trainer" as const, meta: [{ k: "Sessions · MTD", v: "54" }, { k: "Rating", v: "4.8 · 192" }, { k: "Joined", v: "Jun 2024" }, { k: "Cert renewal", v: "14 Jun 2026", warn: true }], status: "Cert due · 27 days", statusColor: "var(--danger)", statusBg: "var(--danger-soft)", locs: "Sea Point" },
+  { init: "MB", name: "Marcus Bell", role: "Trainer · mobility", avaType: "trainer" as const, meta: [{ k: "Sessions · MTD", v: "42" }, { k: "Rating", v: "4.9 · 142" }, { k: "Joined", v: "Aug 2024" }, { k: "Cert renewal", v: "Jul 2027" }], status: "Active", statusColor: "var(--signal-ink)", statusBg: "var(--signal-soft)", locs: "Camps Bay" },
+  { init: "TN", name: "Thandi Nkosi", role: "Trainer · postnatal", avaType: "trainer" as const, meta: [{ k: "Sessions · MTD", v: "28" }, { k: "Rating", v: "5.0 · 64" }, { k: "Joined", v: "Jan 2025" }, { k: "Cert renewal", v: "Jan 2027" }], status: "Active", statusColor: "var(--signal-ink)", statusBg: "var(--signal-soft)", locs: "Foreshore · Sea Point" },
+  { init: "CK", name: "Coach K (Khanyi)", role: "Trainer · NSCA", avaType: "trainer" as const, meta: [{ k: "Sessions · MTD", v: "71" }, { k: "Rating", v: "4.8 · 218" }, { k: "Joined", v: "Sep 2024" }, { k: "Cert renewal", v: "02 Jun 2026", warn: true }], status: "Cert due · 15 days", statusColor: "var(--danger)", statusBg: "var(--danger-soft)", locs: "Sea Point" },
+  { init: "NH", name: "Dr Nadia Hassan", role: "Dietitian · RD", avaType: "dietitian" as const, meta: [{ k: "Consults · MTD", v: "22" }, { k: "Rating", v: "4.9 · 84" }, { k: "Joined", v: "Feb 2025" }, { k: "License renewal", v: "Sep 2027" }], status: "Away · back Wed", statusColor: "oklch(0.42 0.13 75)", statusBg: "var(--trainer-soft)", locs: "Foreshore · Online" },
+  { init: "PM", name: "Pamela Mthembu", role: "Front desk · manager", avaType: "front" as const, meta: [{ k: "Shifts · MTD", v: "18" }, { k: "Check‑ins", v: "2,418" }, { k: "Joined", v: "Apr 2024" }, { k: "Role scope", v: "Members + payouts" }], status: "Active · on shift", statusColor: "var(--signal-ink)", statusBg: "var(--signal-soft)", locs: "Sea Point" },
+  { init: "DV", name: "Dineo van Wyk", role: "Front desk", avaType: "front" as const, meta: [{ k: "Shifts · MTD", v: "14" }, { k: "Check‑ins", v: "1,684" }, { k: "Joined", v: "Aug 2025" }, { k: "Role scope", v: "Members only" }], status: "Active", statusColor: "var(--signal-ink)", statusBg: "var(--signal-soft)", locs: "Woodstock" },
+  { init: "OB", name: "Olu Bankole", role: "Trainer · Olympic", avaType: "trainer" as const, meta: [{ k: "Sessions · MTD", v: "38" }, { k: "Rating", v: "4.9 · 96" }, { k: "Joined", v: "Nov 2024" }, { k: "Cert renewal", v: "22 Jun 2026", warn: true }], status: "Cert due · 35 days", statusColor: "var(--danger)", statusBg: "var(--danger-soft)", locs: "Foreshore" },
+];
+
+const AVA_STYLES: Record<string, { bg: string; color: string }> = {
+  trainer: { bg: "var(--trainer)", color: "oklch(0.2 0.05 75)" },
+  dietitian: { bg: "var(--dietitian)", color: "oklch(0.95 0 0)" },
+  front: { bg: "var(--gym)", color: "oklch(0.98 0 0)" },
 };
 
-function getMemberUser(member: OrganizationMember) {
-  return typeof member.user_id === "object" && member.user_id !== null
-    ? member.user_id
-    : null;
-}
-
-function getMemberRole(member: OrganizationMember): TeamRole | null {
-  return typeof member.team_role_id === "object" && member.team_role_id !== null
-    ? member.team_role_id
-    : null;
-}
-
-function getMemberName(member: OrganizationMember): string {
-  const user = getMemberUser(member);
-  if (!user) return "Unknown team member";
-  return `${user.first_name} ${user.last_name}`.trim();
-}
-
-function getMemberEmail(member: OrganizationMember): string {
-  const user = getMemberUser(member);
-  return user?.email ?? "No email available";
-}
-
-function getMemberInitials(member: OrganizationMember): string {
-  const user = getMemberUser(member);
-  if (!user) return "?";
-  return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
-}
-
-function getRoleLabel(member: OrganizationMember): string {
-  return getMemberRole(member)?.name ?? "Unassigned role";
-}
-
-function formatStatusLabel(status: MemberStatus): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-export default function StaffPage() {
-  const router = useRouter();
-  const { isLoading: authLoading, isAuthenticated: isAuthorized } =
-    useRequireAuth();
-  const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | MemberStatus>("all");
-  const [members, setMembers] = useState<OrganizationMember[]>([]);
-  const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (authLoading || orgLoading || !isAuthorized) return;
-    if (!currentOrg?._id) {
-      setMembers([]);
-      setInvitations([]);
-      setIsLoading(false);
-      return;
-    }
-    const organizationId = currentOrg._id;
-
-    let mounted = true;
-
-    async function loadStaff() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [membersResponse, invitationsResponse] = await Promise.all([
-          teamsService.getMembers(organizationId),
-          teamsService.getInvitations(organizationId),
-        ]);
-
-        if (!mounted) return;
-
-        if (membersResponse.success && membersResponse.data) {
-          setMembers(membersResponse.data);
-        } else {
-          setMembers([]);
-        }
-
-        if (invitationsResponse.success && invitationsResponse.data) {
-          setInvitations(invitationsResponse.data);
-        } else {
-          setInvitations([]);
-        }
-
-        const failures: string[] = [];
-        if (!membersResponse.success) {
-          failures.push(
-            membersResponse.message ?? "Failed to load team members.",
-          );
-        }
-        if (!invitationsResponse.success) {
-          failures.push(
-            invitationsResponse.message ??
-              "Failed to load pending invitations.",
-          );
-        }
-        if (failures.length > 0) {
-          setError(failures.join(" "));
-        }
-      } catch {
-        if (mounted) {
-          setMembers([]);
-          setInvitations([]);
-          setError("Failed to load your staff directory.");
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void loadStaff();
-
-    return () => {
-      mounted = false;
-    };
-  }, [authLoading, currentOrg?._id, isAuthorized, orgLoading]);
-
-  const filteredMembers = useMemo(() => {
-    const search = searchQuery.trim().toLowerCase();
-
-    return members.filter((member) => {
-      const roleLabel = getRoleLabel(member).toLowerCase();
-      const matchesSearch =
-        search.length === 0 ||
-        getMemberName(member).toLowerCase().includes(search) ||
-        getMemberEmail(member).toLowerCase().includes(search) ||
-        roleLabel.includes(search);
-
-      const matchesStatus =
-        filterStatus === "all" || member.status === filterStatus;
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [filterStatus, members, searchQuery]);
-
-  const pendingInvitations = invitations.filter(
-    (invitation) => invitation.status === InvitationStatus.PENDING,
-  );
-  const activeMembers = members.filter(
-    (member) => member.status === MemberStatus.ACTIVE,
-  ).length;
-  const inactiveMembers = members.filter(
-    (member) => member.status === MemberStatus.INACTIVE,
-  ).length;
-
-  if (authLoading || orgLoading || isLoading) {
-    return <DashboardLoading />;
-  }
-
-  if (!isAuthorized) {
-    return null;
-  }
-
+export default function GymStaffPage() {
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <GymOwnerSidebar />
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div>
-              <h1 className="text-3xl font-black text-foreground">
-                Staff & Trainers
-              </h1>
-              <p className="mt-1 text-foreground/60">
-                {currentOrg
-                  ? `Manage coaches, instructors, and team members for ${currentOrg.name}.`
-                  : "Select an organization to manage your staff directory."}
-              </p>
-            </div>
-            <button
-              onClick={() => router.push("/dashboard/gym-owner/staff/invite")}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-blue-500 px-6 py-3 font-semibold text-white hover:bg-accent-blue-600"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Invite Staff Member
-            </button>
+    <GymDashboardShell
+      activeItem="Staff"
+      crumb="Staff"
+      actions={
+        <>
+          <button className="btn-ghost-v2 sm">Invite link</button>
+          <button className="btn-primary-v2 sm">+ Add staff</button>
+        </>
+      }
+    >
+      <div>
+        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Staff</h1>
+        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>22 active across 4 locations · 3 cert renewals due in next 30 days</div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: "Total staff", value: "22", delta: "+ 2 this quarter" },
+          { label: "Coaches", value: "18", delta: "3 PRs in May" },
+          { label: "Cert renewals", value: "3", warn: true, delta: "Due in 30 days" },
+          { label: "Utilization", value: "82%", delta: "↑ 4 pts MoM" },
+        ].map((k) => (
+          <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
+            <div className="text-[26px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", color: k.warn ? "oklch(0.45 0.16 75)" : "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</div>
+            <div className="font-mono text-[11.5px] mt-1" style={{ color: k.warn ? "oklch(0.45 0.16 75)" : "var(--signal-ink)" }}>{k.delta}</div>
           </div>
+        ))}
+      </div>
 
-          {!currentOrg ? (
-            <div className="rounded-xl bg-white p-8 shadow-[var(--shadow-card)]">
-              <h2 className="text-xl font-bold text-foreground">
-                No organization selected
-              </h2>
-              <p className="mt-2 text-foreground/60">
-                Choose or create an organization first so the dashboard can load
-                team members and invitations.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-                  <p className="text-sm font-medium text-foreground/60">
-                    Total Staff
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-foreground">
-                    {members.length}
-                  </p>
-                  <p className="mt-1 text-sm text-accent-blue-500">
-                    {activeMembers} active right now
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-                  <p className="text-sm font-medium text-foreground/60">
-                    Pending Invites
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-foreground">
-                    {pendingInvitations.length}
-                  </p>
-                  <p className="mt-1 text-sm text-foreground/60">
-                    Waiting for acceptance
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-                  <p className="text-sm font-medium text-foreground/60">
-                    Inactive Members
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-foreground">
-                    {inactiveMembers}
-                  </p>
-                  <p className="mt-1 text-sm text-foreground/60">
-                    Access currently paused
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-                  <p className="text-sm font-medium text-foreground/60">
-                    Role Coverage
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-foreground">
-                    {
-                      new Set(members.map((member) => getRoleLabel(member)))
-                        .size
-                    }
-                  </p>
-                  <p className="mt-1 text-sm text-foreground/60">
-                    Distinct staff roles assigned
-                  </p>
-                </div>
-              </div>
-
-              {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
-
-              <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <div className="flex flex-col gap-4 lg:flex-row">
-                  <div className="flex-1">
-                    <label className="mb-2 block text-sm font-semibold text-foreground">
-                      Search staff
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Search by name, email, or role"
-                      value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
-                      className="w-full rounded-lg border-2 border-neutral-200 px-4 py-3 focus:border-accent-blue-500 focus:outline-none"
-                    />
-                  </div>
-                  <div className="w-full lg:max-w-xs">
-                    <label className="mb-2 block text-sm font-semibold text-foreground">
-                      Filter by status
-                    </label>
-                    <select
-                      value={filterStatus}
-                      onChange={(event) =>
-                        setFilterStatus(
-                          event.target.value as "all" | MemberStatus,
-                        )
-                      }
-                      className="w-full rounded-lg border-2 border-neutral-200 px-4 py-3 focus:border-accent-blue-500 focus:outline-none"
-                    >
-                      <option value="all">All statuses</option>
-                      <option value={MemberStatus.ACTIVE}>Active</option>
-                      <option value={MemberStatus.PENDING}>Pending</option>
-                      <option value={MemberStatus.INACTIVE}>Inactive</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-                <div className="rounded-xl bg-white shadow-[var(--shadow-card)]">
-                  <div className="border-b border-neutral-100 px-6 py-4">
-                    <h2 className="text-lg font-bold text-foreground">
-                      Team Directory
-                    </h2>
-                    <p className="mt-1 text-sm text-foreground/60">
-                      {filteredMembers.length} of {members.length} member
-                      {members.length === 1 ? "" : "s"} shown
-                    </p>
-                  </div>
-
-                  {filteredMembers.length === 0 ? (
-                    <div className="px-6 py-12 text-center text-foreground/60">
-                      No team members matched your current filters.
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-100">
-                      {filteredMembers.map((member) => (
-                        <button
-                          key={member._id}
-                          type="button"
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/gym-owner/staff/${member._id}`,
-                            )
-                          }
-                          className="flex w-full flex-col gap-4 px-6 py-5 text-left hover:bg-neutral-50 sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <div className="flex items-start gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-blue-500 text-sm font-bold text-white">
-                              {getMemberInitials(member)}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-foreground">
-                                {getMemberName(member)}
-                              </p>
-                              <p className="text-sm text-foreground/60">
-                                {getMemberEmail(member)}
-                              </p>
-                              <div className="mt-2 flex flex-wrap items-center gap-2">
-                                <span className="rounded-full bg-accent-blue-50 px-3 py-1 text-xs font-semibold text-accent-blue-700">
-                                  {getRoleLabel(member)}
-                                </span>
-                                <span
-                                  className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[member.status]}`}
-                                >
-                                  {formatStatusLabel(member.status)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="sm:text-right">
-                            <p className="text-sm font-semibold text-foreground">
-                              {member.joined_at
-                                ? `Joined ${formatLocal(member.joined_at, "MMM d, yyyy")}`
-                                : `Invited ${formatLocal(member.created_at, "MMM d, yyyy")}`}
-                            </p>
-                            <p className="mt-1 text-sm text-foreground/60">
-                              View role, permissions, and access
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-6">
-                  <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-                    <h2 className="text-lg font-bold text-foreground">
-                      Pending Invitations
-                    </h2>
-                    <p className="mt-1 text-sm text-foreground/60">
-                      Invitations that still need to be accepted.
-                    </p>
-
-                    <div className="mt-4 space-y-3">
-                      {pendingInvitations.length === 0 ? (
-                        <p className="text-sm text-foreground/60">
-                          No pending invites.
-                        </p>
-                      ) : (
-                        pendingInvitations.slice(0, 5).map((invitation) => {
-                          const role =
-                            typeof invitation.team_role_id === "object" &&
-                            invitation.team_role_id !== null
-                              ? invitation.team_role_id.name
-                              : "Assigned role";
-
-                          return (
-                            <div
-                              key={invitation._id}
-                              className="rounded-lg border border-neutral-200 p-4"
-                            >
-                              <p className="font-semibold text-foreground">
-                                {invitation.email}
-                              </p>
-                              <p className="mt-1 text-sm text-foreground/60">
-                                {role}
-                              </p>
-                              <p className="mt-2 text-xs text-foreground/60">
-                                Expires{" "}
-                                {formatLocal(
-                                  invitation.expires_at,
-                                  "MMM d, yyyy",
-                                )}
-                              </p>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-                    <h2 className="text-lg font-bold text-foreground">
-                      What changed
-                    </h2>
-                    <ul className="mt-4 space-y-2 text-sm text-foreground/70">
-                      <li>
-                        Live team members now come from your organization
-                        membership data.
-                      </li>
-                      <li>
-                        Role labels are taken from team roles instead of
-                        page-level placeholders.
-                      </li>
-                      <li>
-                        Invitation status is surfaced directly from pending team
-                        invites.
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+      {/* Toolbar */}
+      <div className="flex items-center gap-3.5 p-3.5 rounded-(--r-3) flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="flex items-center gap-2 h-8 px-3 rounded-(--r-2) flex-1 min-w-70" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--fg-3)" }}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span className="text-[13px]" style={{ color: "var(--fg-3)" }}>Search by name or certification…</span>
         </div>
-      </main>
-    </div>
+        <div className="flex gap-1 overflow-x-auto">
+          {[
+            { label: "All", count: "22", on: true },
+            { label: "Coaches", count: "18" },
+            { label: "Front desk", count: "3" },
+            { label: "Manager", count: "1" },
+            { label: "Cert due", count: "3" },
+          ].map((p) => (
+            <span key={p.label} className={`inline-flex items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.75 py-1.5 rounded-full cursor-pointer shrink-0 border ${p.on ? "bg-ink border-ink" : "bg-bg border-border"}`} style={{ color: p.on ? "var(--bg)" : "var(--fg-3)" }}>
+              {p.label} <span style={{ color: p.on ? "oklch(0.75 0.005 85)" : "var(--fg-4)" }}>{p.count}</span>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          <button className="btn-ghost-v2 sm">Filter</button>
+          <button className="btn-ghost-v2 sm">Sort</button>
+        </div>
+      </div>
+
+      {/* Staff grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        {STAFF.map((s) => {
+          const ava = AVA_STYLES[s.avaType];
+          return (
+            <div key={s.init} className="rounded-(--r-3) overflow-hidden cursor-pointer" style={{ background: "var(--bg)", border: "1px solid var(--border)", transition: "border-color var(--motion-fast) var(--ease)" }}>
+              {/* Head row */}
+              <div className="flex items-center gap-3.5 px-5 py-4.5">
+                <span className="w-12 h-12 rounded-full flex items-center justify-center text-[15px] font-semibold shrink-0" style={{ background: ava.bg, color: ava.color }}>{s.init}</span>
+                <div className="flex-1">
+                  <div className="text-[15px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.005em" }}>{s.name}</div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-0.75" style={{ color: "var(--fg-3)" }}>{s.role}</div>
+                </div>
+                <span className="w-6.5 h-6.5 rounded-(--r-1) flex items-center justify-center cursor-pointer" style={{ color: "var(--fg-3)" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
+                </span>
+              </div>
+
+              {/* Meta grid */}
+              <div className="grid grid-cols-2 gap-3 px-5 pb-3.5">
+                {s.meta.map((m) => (
+                  <div key={m.k}>
+                    <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{m.k}</div>
+                    <div className="text-[12.5px] font-medium mt-0.5" style={{ color: m.warn ? "oklch(0.45 0.16 75)" : "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{m.v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-5 py-3" style={{ borderTop: "1px solid var(--border)", background: "var(--bg-2)" }}>
+                <span className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full" style={{ color: s.statusColor, background: s.statusBg }}>
+                  <span className="w-1.25 h-1.25 rounded-full bg-current" />{s.status}
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.locs}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </GymDashboardShell>
   );
 }

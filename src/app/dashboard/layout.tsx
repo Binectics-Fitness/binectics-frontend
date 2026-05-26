@@ -1,12 +1,17 @@
-import type { Metadata } from "next";
-import { ReactNode } from "react";
-import DashboardClientShell from "@/components/DashboardClientShell";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Dashboard",
-  robots: { index: false, follow: false },
-};
+// PROTOTYPE MODE: bypass DashboardClientShell (auth hooks)
+// TODO: Restore DashboardClientShell when wiring to real API
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
-  return <DashboardClientShell>{children}</DashboardClientShell>;
+import { useEffect } from "react";
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // Match prototype: body bg-2 for dashboard pages
+  useEffect(() => {
+    const prev = document.body.style.background;
+    document.body.style.background = "var(--bg-2)";
+    return () => { document.body.style.background = prev; };
+  }, []);
+
+  return <>{children}</>;
 }

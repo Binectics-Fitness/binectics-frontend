@@ -1,408 +1,458 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import DietitianSidebar from "@/components/DietitianSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { EmptyState } from "@/components/EmptyState";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { useOrganization } from "@/contexts/OrganizationContext";
-import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import { progressService } from "@/lib/api/progress";
-import { UserRole, PlanStatus, DietPlanDeliveryType } from "@/lib/types";
-import type { ClientProfile, DietPlan } from "@/lib/api/progress";
-import { formatLocal } from "@/utils/format";
+import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 
-// ─── Helpers ───────────────────────────────────────────────────────
+type Category = "all" | "cutting" | "clinical" | "sport" | "maintenance";
 
-function planClientName(plan: DietPlan): string {
-  if (plan.client_id && typeof plan.client_id === "object") {
-    return `${plan.client_id.first_name} ${plan.client_id.last_name}`;
-  }
-  return "Unassigned";
+interface Template {
+  name: string;
+  meta: string;
+  category: Category;
+  pillLabel: string;
+  pillClass: string;
+  kcal: string;
+  protein: string;
+  carbs: string;
+  fat: string;
+  usedCount: string;
+  updatedAgo: string;
 }
 
-function formatDate(iso: string) {
-  return formatLocal(iso, "MMM d, yyyy");
-}
+const TEMPLATES: Template[] = [
+  {
+    name: "Cutting · West African staples",
+    meta: "Halal · high‑P · 4‑week cycle",
+    category: "cutting",
+    pillLabel: "Cutting",
+    pillClass: "cutting",
+    kcal: "1,650",
+    protein: "142g",
+    carbs: "160g",
+    fat: "52g",
+    usedCount: "22 plans this year",
+    updatedAgo: "Updated 2 weeks ago",
+  },
+  {
+    name: "PCOS · low‑GI protocol",
+    meta: "Inositol guidance · 12‑week protocol",
+    category: "clinical",
+    pillLabel: "PCOS",
+    pillClass: "pcos",
+    kcal: "1,800",
+    protein: "130g",
+    carbs: "180g",
+    fat: "62g",
+    usedCount: "9 plans this year",
+    updatedAgo: "Updated 1 month ago",
+  },
+  {
+    name: "Stepped carb · CGM‑aware",
+    meta: "16‑week protocol · weekly carb step",
+    category: "clinical",
+    pillLabel: "T2 diabetes",
+    pillClass: "diabetes",
+    kcal: "1,950",
+    protein: "148g",
+    carbs: "170g",
+    fat: "76g",
+    usedCount: "14 plans this year",
+    updatedAgo: "Updated 3 weeks ago",
+  },
+  {
+    name: "Sport performance · contact",
+    meta: "Periodised · creatine timing · 8‑week",
+    category: "sport",
+    pillLabel: "Sport",
+    pillClass: "sport",
+    kcal: "3,200",
+    protein: "198g",
+    carbs: "420g",
+    fat: "88g",
+    usedCount: "6 plans this year",
+    updatedAgo: "Updated 5 weeks ago",
+  },
+  {
+    name: "Gestational · 2nd / 3rd trim",
+    meta: "Iron + folate · weekly weight check",
+    category: "clinical",
+    pillLabel: "Gestational",
+    pillClass: "gestational",
+    kcal: "2,300",
+    protein: "142g",
+    carbs: "280g",
+    fat: "78g",
+    usedCount: "4 plans this year",
+    updatedAgo: "Updated 1 month ago",
+  },
+  {
+    name: "Maintenance · West African",
+    meta: "16‑week · balanced macros",
+    category: "maintenance",
+    pillLabel: "Maintenance",
+    pillClass: "maintenance",
+    kcal: "2,100",
+    protein: "152g",
+    carbs: "232g",
+    fat: "72g",
+    usedCount: "18 plans this year",
+    updatedAgo: "Updated 1 week ago",
+  },
+  {
+    name: "Cutting · vegetarian",
+    meta: "High‑P from legumes · 4‑week cycle",
+    category: "cutting",
+    pillLabel: "Cutting",
+    pillClass: "cutting",
+    kcal: "1,700",
+    protein: "128g",
+    carbs: "180g",
+    fat: "58g",
+    usedCount: "8 plans this year",
+    updatedAgo: "Updated 2 months ago",
+  },
+  {
+    name: "Low FODMAP · 6‑week elim",
+    meta: "Then 8‑week reintroduction",
+    category: "maintenance",
+    pillLabel: "IBS / FODMAP",
+    pillClass: "maintenance",
+    kcal: "1,850",
+    protein: "128g",
+    carbs: "190g",
+    fat: "68g",
+    usedCount: "5 plans this year",
+    updatedAgo: "Updated 1 month ago",
+  },
+];
 
-function deliveryLabel(type: DietPlanDeliveryType): string {
-  const labels: Record<DietPlanDeliveryType, string> = {
-    [DietPlanDeliveryType.PLATFORM]: "Platform",
-    [DietPlanDeliveryType.DOCUMENT]: "Document",
-  };
-  return labels[type] || type;
-}
+const PILL_STYLES: Record<string, React.CSSProperties> = {
+  cutting: {
+    background: "var(--gym-soft)",
+    color: "var(--gym)",
+    border: "1px solid oklch(0.88 0.04 248)",
+  },
+  pcos: {
+    background: "var(--dietitian-soft)",
+    color: "var(--dietitian)",
+    border: "1px solid oklch(0.88 0.04 300)",
+  },
+  diabetes: {
+    background: "oklch(0.94 0.06 75)",
+    color: "oklch(0.42 0.13 75)",
+    border: "1px solid oklch(0.88 0.07 75)",
+  },
+  sport: {
+    background: "var(--signal-soft)",
+    color: "var(--signal-ink)",
+    border: "1px solid oklch(0.88 0.05 148)",
+  },
+  gestational: {
+    background: "oklch(0.94 0.06 320)",
+    color: "oklch(0.45 0.16 320)",
+    border: "1px solid oklch(0.88 0.07 320)",
+  },
+  maintenance: {
+    background: "var(--bg-2)",
+    color: "var(--fg-2)",
+    border: "1px solid var(--border)",
+  },
+};
 
-function deliveryColor(type: DietPlanDeliveryType): string {
-  const colors: Record<DietPlanDeliveryType, string> = {
-    [DietPlanDeliveryType.PLATFORM]:
-      "bg-accent-purple-100 text-accent-purple-700",
-    [DietPlanDeliveryType.DOCUMENT]: "bg-accent-blue-100 text-accent-blue-700",
-  };
-  return colors[type] || "bg-neutral-100 text-neutral-600";
-}
-
-function statusColor(status: PlanStatus): string {
-  const colors: Record<PlanStatus, string> = {
-    [PlanStatus.ACTIVE]: "bg-green-100 text-green-700",
-    [PlanStatus.INACTIVE]: "bg-neutral-100 text-neutral-600",
-    [PlanStatus.ARCHIVED]: "bg-red-100 text-red-600",
-  };
-  return colors[status] || "bg-neutral-100 text-neutral-600";
-}
-
-// ─── Page ──────────────────────────────────────────────────────────
+const CATEGORIES: { value: Category; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "cutting", label: "Cutting" },
+  { value: "clinical", label: "Clinical" },
+  { value: "sport", label: "Sport" },
+  { value: "maintenance", label: "Maintenance" },
+];
 
 export default function DietitianMealPlansPage() {
-  const { isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
-  const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const { requestConfirmation, confirmationModal } = useConfirmationModal();
+  const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [search, setSearch] = useState("");
 
-  const [profiles, setProfiles] = useState<ClientProfile[]>([]);
-  const [dietPlans, setDietPlans] = useState<DietPlan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [archivingId, setArchivingId] = useState<string | null>(null);
-  const [error, setError] = useState("");
-
-  const orgId = currentOrg?._id;
-
-  const loadAllPlans = useCallback(async () => {
-    setError("");
-    setLoading(true);
-    try {
-      const profileRes = orgId
-        ? await progressService.getOrgClientProfiles(orgId)
-        : await progressService.getMyClientProfiles();
-      const active =
-        profileRes.success && profileRes.data
-          ? profileRes.data.filter((p) => p.is_active)
-          : [];
-      setProfiles(active);
-
-      // Fetch client-assigned plans + standalone plans in parallel
-      const [planResults, providerRes] = await Promise.all([
-        Promise.allSettled(
-          active.map((p) =>
-            orgId
-              ? progressService.getDietPlansInOrg(orgId, p._id)
-              : progressService.getDietPlans(p._id),
-          ),
-        ),
-        orgId
-          ? progressService.getProviderDietPlansInOrg(orgId)
-          : progressService.getProviderDietPlans(),
-      ]);
-
-      const allPlans: DietPlan[] = [];
-      const seenIds = new Set<string>();
-
-      // Add standalone / provider plans first
-      if (providerRes.success && providerRes.data) {
-        for (const plan of providerRes.data) {
-          if (!seenIds.has(plan._id)) {
-            seenIds.add(plan._id);
-            allPlans.push(plan);
-          }
-        }
-      }
-
-      // Add client-scoped plans (dedup against provider response)
-      for (const result of planResults) {
-        if (
-          result.status === "fulfilled" &&
-          result.value.success &&
-          result.value.data
-        ) {
-          for (const plan of result.value.data) {
-            if (!seenIds.has(plan._id)) {
-              seenIds.add(plan._id);
-              allPlans.push(plan);
-            }
-          }
-        }
-      }
-
-      // Sort by most recently assigned first
-      allPlans.sort(
-        (a, b) =>
-          new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime(),
-      );
-      setDietPlans(allPlans);
-    } catch {
-      setError("Failed to load meal plans");
-    }
-    setLoading(false);
-  }, [orgId]);
-
-  useEffect(() => {
-    if (!isAuthorized || orgLoading) return;
-    loadAllPlans();
-  }, [isAuthorized, orgLoading, loadAllPlans]);
-
-  const handleArchive = (plan: DietPlan) => {
-    requestConfirmation({
-      title: "Archive diet plan?",
-      description: `Archive "${plan.title}"? It will no longer be visible to the client.`,
-      confirmLabel: "Archive",
-      onConfirm: async () => {
-        setArchivingId(plan._id);
-        try {
-          const res = plan.client_profile_id
-            ? orgId
-              ? await progressService.archiveDietPlanInOrg(
-                  orgId,
-                  plan.client_profile_id,
-                  plan._id,
-                )
-              : await progressService.archiveDietPlan(
-                  plan.client_profile_id,
-                  plan._id,
-                )
-            : orgId
-              ? await progressService.archiveStandaloneDietPlanInOrg(
-                  orgId,
-                  plan._id,
-                )
-              : await progressService.archiveStandaloneDietPlan(plan._id);
-          if (res.success) {
-            await loadAllPlans();
-          } else {
-            setError(res.message || "Failed to archive plan");
-          }
-        } catch {
-          setError("Failed to archive plan");
-        }
-        setArchivingId(null);
-      },
-    });
-  };
-
-  if (isLoading || orgLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
-
-  const activePlans = dietPlans.filter((p) => p.status === PlanStatus.ACTIVE);
-  const inactivePlans = dietPlans.filter((p) => p.status !== PlanStatus.ACTIVE);
-  const platformPlans = dietPlans.filter(
-    (p) => p.delivery_type === DietPlanDeliveryType.PLATFORM,
-  );
-  const documentPlans = dietPlans.filter(
-    (p) => p.delivery_type === DietPlanDeliveryType.DOCUMENT,
-  );
+  const filtered = TEMPLATES.filter((t) => {
+    const matchesCategory = activeCategory === "all" || t.category === activeCategory;
+    const matchesSearch = search === "" || t.name.toLowerCase().includes(search.toLowerCase()) || t.meta.toLowerCase().includes(search.toLowerCase()) || t.pillLabel.toLowerCase().includes(search.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <DietitianSidebar />
-
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">
-              Meal Plans
-            </h1>
-            <p className="mt-1 text-sm text-foreground-secondary">
-              Create and manage diet plans for your clients
-            </p>
-          </div>
-          <Link
-            href="/dashboard/dietitian/meal-plans/create"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent-purple-500 px-5 text-sm font-semibold text-white hover:bg-accent-purple-600"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            New Meal Plan
-          </Link>
+    <DietitianDashboardShell
+      activeItem="Meal plans"
+      crumb="Meal plan library"
+      actions={
+        <Link
+          href="/dashboard/dietitian/meal-plans/create"
+          className="btn-primary-v2 sm"
+        >
+          + New template
+        </Link>
+      }
+    >
+      {/* Page header */}
+      <div>
+        <h1
+          className="text-[30px] font-medium"
+          style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}
+        >
+          Meal plan library
+        </h1>
+        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+          8 active templates &middot; used in 142 client plans &middot; drag a
+          template to start a new plan in 30 seconds
         </div>
+      </div>
 
-        {error && (
-          <div className="mb-6 rounded-lg border-2 border-red-200 bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: "Templates", value: "8", delta: "+ 1 this month" },
+          { label: "Plans built · MTD", value: "24", delta: "↑ 18% MoM" },
+          { label: "Most picked", value: "Cutting · WA", small: true, delta: "22 plans this year" },
+          { label: "Avg adherence", value: "76%", delta: "↑ 4 pts MoM" },
+        ].map((k) => (
+          <div
+            key={k.label}
+            className="rounded-(--r-3) px-4.5 py-4"
+            style={{
+              background: "var(--bg)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <div
+              className="font-mono text-[11px] uppercase tracking-[0.04em]"
+              style={{ color: "var(--fg-3)" }}
+            >
+              {k.label}
+            </div>
+            <div
+              className={`font-medium mt-1.5 ${k.small ? "text-[17px]" : "text-[24px]"}`}
+              style={{
+                letterSpacing: "-0.02em",
+                color: "var(--ink)",
+                fontVariantNumeric: "tabular-nums",
+                lineHeight: 1,
+              }}
+            >
+              {k.value}
+            </div>
+            <div
+              className="font-mono text-[11.5px] mt-1"
+              style={{ color: "var(--signal-ink)" }}
+            >
+              {k.delta}
+            </div>
           </div>
-        )}
+        ))}
+      </div>
 
-        {/* Client Selector */}
-        {loading ? (
-          <DashboardLoading />
-        ) : (
-          <>
-            {/* Stats */}
-            <div className="mb-8 grid gap-4 sm:grid-cols-4">
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm text-foreground-secondary">Total Plans</p>
-                <p className="mt-1 text-3xl font-black text-foreground">
-                  {dietPlans.length}
-                </p>
+      {/* Search + filter toolbar */}
+      <div
+        className="rounded-(--r-3) flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-3.5 py-2.5"
+        style={{
+          background: "var(--bg)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <div
+          className="flex items-center gap-2 h-8 px-3 rounded-(--r-2) flex-1 min-w-0 sm:min-w-[280px]"
+          style={{
+            border: "1px solid var(--border)",
+            background: "var(--bg-2)",
+          }}
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--fg-3)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search by condition, cuisine, or kcal range…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 border-0 bg-transparent text-[13px] outline-none"
+            style={{ color: "var(--ink)" }}
+          />
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {CATEGORIES.map((c) => (
+            <button
+              key={c.value}
+              onClick={() => setActiveCategory(c.value)}
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.75 py-1.5 rounded-full cursor-pointer"
+              style={{
+                border:
+                  activeCategory === c.value
+                    ? "1px solid var(--ink)"
+                    : "1px solid var(--border)",
+                background:
+                  activeCategory === c.value ? "var(--ink)" : "var(--bg)",
+                color:
+                  activeCategory === c.value ? "var(--bg)" : "var(--fg-3)",
+              }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Template grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        {filtered.map((t) => (
+          <div
+            key={t.name}
+            className="rounded-(--r-3) overflow-hidden cursor-pointer"
+            style={{
+              background: "var(--bg)",
+              border: "1px solid var(--border)",
+              transition: "border-color var(--motion-fast) var(--ease)",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.borderColor = "var(--ink)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.borderColor = "var(--border)")
+            }
+          >
+            {/* Head */}
+            <div className="px-5.5 pt-4.5 pb-3.5">
+              <span
+                className="inline-block font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-(--r-1) mb-2"
+                style={PILL_STYLES[t.pillClass]}
+              >
+                {t.pillLabel}
+              </span>
+              <div
+                className="text-[16px] font-medium"
+                style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}
+              >
+                {t.name}
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm text-foreground-secondary">
-                  Active Plans
-                </p>
-                <p className="mt-1 text-3xl font-black text-foreground">
-                  {activePlans.length}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm text-foreground-secondary">
-                  Platform Plans
-                </p>
-                <p className="mt-1 text-3xl font-black text-foreground">
-                  {platformPlans.length}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm text-foreground-secondary">
-                  Document Plans
-                </p>
-                <p className="mt-1 text-3xl font-black text-foreground">
-                  {documentPlans.length}
-                </p>
+              <div
+                className="font-mono text-[11px] uppercase tracking-[0.04em] mt-1"
+                style={{ color: "var(--fg-3)" }}
+              >
+                {t.meta}
               </div>
             </div>
 
-            {/* Plans List */}
-            {dietPlans.length === 0 ? (
-              <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)]">
-                <EmptyState
-                  title="No Meal Plans"
-                  description="Create a meal plan to get started."
-                  actionLabel="Create Meal Plan"
-                  actionHref="/dashboard/dietitian/meal-plans/create"
-                />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {[...activePlans, ...inactivePlans].map((plan) => (
+            {/* Macros row */}
+            <div
+              className="grid grid-cols-4 px-5.5 py-3"
+              style={{ borderTop: "1px solid var(--border)" }}
+            >
+              {[
+                { label: "Kcal", value: t.kcal },
+                { label: "Protein", value: t.protein },
+                { label: "Carbs", value: t.carbs },
+                { label: "Fat", value: t.fat },
+              ].map((m, i) => (
+                <div
+                  key={m.label}
+                  className="px-2.5"
+                  style={{
+                    borderRight:
+                      i < 3 ? "1px solid var(--border)" : "none",
+                    paddingLeft: i === 0 ? "0" : undefined,
+                    paddingRight: i === 3 ? "0" : undefined,
+                  }}
+                >
                   <div
-                    key={plan._id}
-                    className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]"
+                    className="font-mono text-[9.5px] uppercase tracking-[0.04em]"
+                    style={{ color: "var(--fg-3)" }}
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <Link
-                            href={`/dashboard/dietitian/meal-plans/${plan._id}${plan.client_profile_id ? `?profileId=${plan.client_profile_id}` : ""}`}
-                            className="text-lg font-bold text-foreground hover:text-accent-purple-600"
-                          >
-                            {plan.title}
-                          </Link>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor(plan.status)}`}
-                          >
-                            {plan.status}
-                          </span>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${deliveryColor(plan.delivery_type)}`}
-                          >
-                            {deliveryLabel(plan.delivery_type)}
-                          </span>
-                          {plan.version > 1 && (
-                            <span className="inline-flex items-center rounded-full bg-accent-blue-100 px-2.5 py-0.5 text-xs font-medium text-accent-blue-700">
-                              v{plan.version}
-                            </span>
-                          )}
-                        </div>
-
-                        {plan.description && (
-                          <p className="text-sm text-foreground-secondary mb-2 line-clamp-2">
-                            {plan.description}
-                          </p>
-                        )}
-
-                        <div className="flex flex-wrap gap-4 text-sm text-foreground-secondary">
-                          <span className="flex items-center gap-1">
-                            <svg
-                              className="h-3.5 w-3.5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                              />
-                            </svg>
-                            {planClientName(plan)}
-                          </span>
-                          {plan.delivery_type ===
-                            DietPlanDeliveryType.PLATFORM && (
-                            <span>
-                              {plan.meals.length} meal
-                              {plan.meals.length !== 1 ? "s" : ""}
-                            </span>
-                          )}
-                          {plan.delivery_type ===
-                            DietPlanDeliveryType.DOCUMENT &&
-                            plan.document_file_name && (
-                              <span className="flex items-center gap-1">
-                                <svg
-                                  className="h-3.5 w-3.5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                  />
-                                </svg>
-                                {plan.document_file_name}
-                              </span>
-                            )}
-                          <span>Assigned {formatDate(plan.assigned_at)}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Link
-                          href={`/dashboard/dietitian/meal-plans/${plan._id}${plan.client_profile_id ? `?profileId=${plan.client_profile_id}` : ""}`}
-                          className="inline-flex h-9 items-center rounded-lg border border-neutral-300 bg-white px-3 text-sm font-medium text-foreground hover:bg-neutral-50"
-                        >
-                          View
-                        </Link>
-                        <Link
-                          href={`/dashboard/dietitian/meal-plans/${plan._id}/edit${plan.client_profile_id ? `?profileId=${plan.client_profile_id}` : ""}`}
-                          className="inline-flex h-9 items-center rounded-lg border border-neutral-300 bg-white px-3 text-sm font-medium text-foreground hover:bg-neutral-50"
-                        >
-                          Edit
-                        </Link>
-                        {plan.status !== PlanStatus.ARCHIVED && (
-                          <button
-                            onClick={() => handleArchive(plan)}
-                            disabled={archivingId === plan._id}
-                            className="inline-flex h-9 items-center rounded-lg border border-red-200 bg-white px-3 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-                          >
-                            {archivingId === plan._id
-                              ? "Archiving…"
-                              : "Archive"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    {m.label}
                   </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+                  <div
+                    className="text-[14px] font-medium mt-0.75"
+                    style={{
+                      color: "var(--ink)",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {m.value}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-        {confirmationModal}
-      </main>
-    </div>
+            {/* Footer */}
+            <div
+              className="px-5.5 py-3 flex justify-between items-center"
+              style={{
+                background: "var(--bg-2)",
+                borderTop: "1px solid var(--border)",
+              }}
+            >
+              <span
+                className="text-[12.5px] font-medium"
+                style={{
+                  color: "var(--ink)",
+                  letterSpacing: "-0.005em",
+                }}
+              >
+                {t.usedCount}
+              </span>
+              <span
+                className="font-mono text-[11px] uppercase tracking-[0.04em]"
+                style={{ color: "var(--fg-3)" }}
+              >
+                {t.updatedAgo}
+              </span>
+            </div>
+          </div>
+        ))}
+
+        {/* New template tile */}
+        <div
+          className="rounded-(--r-3) flex flex-col items-center justify-center gap-2.5 cursor-pointer min-h-[220px]"
+          style={{
+            border: "1.5px dashed var(--border-2)",
+            color: "var(--fg-3)",
+            transition: "border-color var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "var(--ink)";
+            e.currentTarget.style.color = "var(--ink)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "var(--border-2)";
+            e.currentTarget.style.color = "var(--fg-3)";
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <div className="text-[14px] font-medium">New template</div>
+          <div
+            className="text-[12.5px] text-center"
+            style={{ maxWidth: "28ch" }}
+          >
+            Build from scratch or duplicate an existing one
+          </div>
+        </div>
+      </div>
+    </DietitianDashboardShell>
   );
 }

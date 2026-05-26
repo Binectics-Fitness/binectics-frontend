@@ -20,6 +20,14 @@ export function middleware(request: NextRequest) {
   const mustChangePassword =
     request.cookies.get("must_change_password")?.value === "1";
 
+  // ── PROTOTYPE MODE: bypass auth for visual showcase ──
+  // TODO: Remove this block when wiring to real API
+  const PROTOTYPE_MODE = true;
+  if (PROTOTYPE_MODE) {
+    return NextResponse.next();
+  }
+  // ── END PROTOTYPE MODE ──
+
   // Check if the current route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route),

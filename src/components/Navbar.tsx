@@ -8,20 +8,26 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardRoute } from "@/lib/constants/routes";
 import {
   LayoutDashboard,
-  LogIn,
   LogOut,
   Settings,
   ChevronDown,
   User as UserIcon,
 } from "lucide-react";
+import { BinecticsLockup } from "./BinecticsLogo";
 import MobileNav from "./MobileNav";
 
+/**
+ * Navbar — marketing topbar.
+ * Sticky, 56px, backdrop-blur, 1px bottom border.
+ * Matches shared.css .topbar pattern.
+ */
+
 const MARKETING_LINKS = [
-  { href: "/#features", label: "Features", match: "/#features" },
-  { href: "/#how-it-works", label: "How it Works", match: "/#how-it-works" },
-  { href: "/pricing", label: "Pricing", match: "/pricing" },
-  { href: "/marketplace", label: "Marketplace", match: "/marketplace" },
-  { href: "/#faq", label: "FAQ", match: "/#faq" },
+  { href: "#how", label: "How it works" },
+  { href: "/marketplace", label: "Marketplace" },
+  { href: "#roles", label: "For providers" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 function getInitials(first?: string, last?: string) {
@@ -34,7 +40,7 @@ function getInitials(first?: string, last?: string) {
 }
 
 function isActiveLink(pathname: string, href: string) {
-  if (href.startsWith("/#")) return false;
+  if (href.startsWith("#")) return false;
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(href + "/");
 }
@@ -70,169 +76,154 @@ export default function Navbar() {
     : "";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200 bg-background-secondary shadow-[0_1px_3px_rgb(0_0_0/0.04)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500 focus-visible:ring-offset-2"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500">
-              <span className="text-xl font-bold text-foreground">B</span>
-            </div>
-            <span className="font-display text-xl font-bold text-foreground">
-              Binectics
-            </span>
-          </Link>
+    <header
+      className="sticky top-0 z-50 border-b border-border"
+      style={{
+        background: "oklch(0.985 0.005 85 / 0.85)",
+        backdropFilter: "blur(8px) saturate(140%)",
+        WebkitBackdropFilter: "blur(8px) saturate(140%)",
+      }}
+    >
+      <div className="mx-auto flex h-14 max-w-360 items-center justify-between px-5 sm:px-10">
+        {/* Logo */}
+        <Link href="/" className="focus:outline-none">
+          <BinecticsLockup />
+        </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {MARKETING_LINKS.map((link) => {
-              const active = isActiveLink(pathname, link.match);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500 focus-visible:ring-offset-2 ${
-                    active
-                      ? "text-accent-blue-600"
-                      : "text-foreground-secondary hover:text-accent-blue-500"
-                  }`}
-                >
-                  {link.label}
-                  {active && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-accent-blue-500"
+        {/* Desktop nav */}
+        <nav className="hidden lg:flex items-center gap-1">
+          {MARKETING_LINKS.map((link) => {
+            const active = isActiveLink(pathname, link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-2.5 py-1.5 rounded-(--r-2) text-[13.5px] ${
+                  active
+                    ? "text-ink bg-bg-2"
+                    : "text-fg-2 hover:text-ink hover:bg-bg-2"
+                }`}
+                style={{ letterSpacing: "-0.005em" }}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Right cluster */}
+        <div className="flex items-center gap-2">
+          {user ? (
+            <div className="relative hidden lg:block" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="Open account menu"
+                className="flex h-8 items-center gap-2 rounded-(--r-2) border border-border bg-bg px-2 text-[13px] text-fg-2 hover:bg-bg-2 hover:text-ink"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-bg-3 text-[11px] font-semibold text-fg-2 overflow-hidden">
+                  {user.profile_picture ? (
+                    <Image
+                      src={user.profile_picture}
+                      alt=""
+                      fill
+                      sizes="24px"
+                      className="object-cover"
                     />
+                  ) : (
+                    getInitials(user.first_name, user.last_name)
                   )}
-                </Link>
-              );
-            })}
-          </nav>
+                </span>
+                <ChevronDown
+                  className={`h-3 w-3 text-fg-3 transition-transform ${
+                    menuOpen ? "rotate-180" : ""
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
 
-          {/* Right cluster */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {user ? (
-              <div className="relative hidden lg:block" ref={menuRef}>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((o) => !o)}
-                  aria-haspopup="menu"
-                  aria-expanded={menuOpen}
-                  aria-label="Open account menu"
-                  className="flex h-10 items-center gap-2 rounded-full border border-neutral-200 bg-white py-1 pl-1 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500"
+              {menuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-56 rounded-(--r-3) border border-border bg-bg"
+                  style={{ boxShadow: "var(--shadow-2)" }}
                 >
-                  <span className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-xs font-bold text-primary-700">
-                    {user.profile_picture ? (
-                      <Image
-                        src={user.profile_picture}
-                        alt=""
-                        fill
-                        sizes="32px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      getInitials(user.first_name, user.last_name)
-                    )}
-                  </span>
-                  <ChevronDown
-                    className={`h-4 w-4 text-foreground-tertiary transition-transform ${
-                      menuOpen ? "rotate-180" : ""
-                    }`}
-                    aria-hidden="true"
-                  />
-                </button>
-
-                {menuOpen && (
-                  <div
-                    role="menu"
-                    className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-neutral-200 bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
-                  >
-                    <div className="border-b border-neutral-100 px-4 py-3">
-                      <div className="text-sm font-semibold text-foreground truncate">
-                        {fullName}
-                      </div>
-                      <div className="text-xs text-foreground-tertiary truncate">
-                        {user.email}
-                      </div>
+                  <div className="border-b border-border px-3.5 py-3">
+                    <div className="text-[13px] font-medium text-ink truncate">
+                      {fullName}
                     </div>
-                    <div className="py-1">
-                      <Link
-                        href={dashboardHref}
-                        role="menuitem"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
-                      >
-                        <LayoutDashboard
-                          className="h-4 w-4 text-foreground-tertiary"
-                          aria-hidden="true"
-                        />
-                        Dashboard
-                      </Link>
-                      <Link
-                        href={`${dashboardHref}/profile`}
-                        role="menuitem"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
-                      >
-                        <UserIcon
-                          className="h-4 w-4 text-foreground-tertiary"
-                          aria-hidden="true"
-                        />
-                        Profile
-                      </Link>
-                      <Link
-                        href={`${dashboardHref}/settings`}
-                        role="menuitem"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-neutral-50"
-                      >
-                        <Settings
-                          className="h-4 w-4 text-foreground-tertiary"
-                          aria-hidden="true"
-                        />
-                        Settings
-                      </Link>
-                    </div>
-                    <div className="border-t border-neutral-100 py-1">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          logout();
-                        }}
-                        className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <LogOut className="h-4 w-4" aria-hidden="true" />
-                        Logout
-                      </button>
+                    <div className="text-[11px] font-mono text-fg-3 truncate">
+                      {user.email}
                     </div>
                   </div>
-                )}
-              </div>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="hidden lg:inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground-secondary transition-colors hover:bg-neutral-100 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500"
-                >
-                  <LogIn className="h-4 w-4" aria-hidden="true" />
-                  Sign In
-                </Link>
-                <Link
-                  href="/register"
-                  prefetch={false}
-                  className="hidden lg:inline-flex h-10 items-center justify-center rounded-lg bg-primary-500 px-5 text-sm font-semibold text-foreground transition-colors hover:bg-primary-600 active:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
-                >
-                  Join Free
-                </Link>
-              </>
-            )}
-            <MobileNav />
-          </div>
+                  <div className="py-1">
+                    <Link
+                      href={dashboardHref}
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-fg-2 hover:bg-bg-2 hover:text-ink"
+                    >
+                      <LayoutDashboard className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/settings/profile"
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-fg-2 hover:bg-bg-2 hover:text-ink"
+                    >
+                      <UserIcon className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                      Profile
+                    </Link>
+                    <Link
+                      href="/dashboard/settings"
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-fg-2 hover:bg-bg-2 hover:text-ink"
+                    >
+                      <Settings className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                      Settings
+                    </Link>
+                  </div>
+                  <div className="border-t border-border py-1">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        logout();
+                      }}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] text-danger hover:bg-danger-soft"
+                    >
+                      <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden lg:inline-flex h-7 items-center px-2.5 rounded-(--r-2) text-[13.5px] border border-border hover:bg-bg-2"
+                style={{ letterSpacing: "-0.005em", color: "var(--fg-2)" }}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                prefetch={false}
+                className="hidden lg:inline-flex h-7 items-center px-2.5 rounded-(--r-2) text-[13.5px] bg-ink hover:bg-[oklch(0.08_0.008_80)]"
+                style={{ letterSpacing: "-0.005em", color: "var(--bg)" }}
+              >
+                Get started
+              </Link>
+            </>
+          )}
+          <MobileNav />
         </div>
       </div>
     </header>
