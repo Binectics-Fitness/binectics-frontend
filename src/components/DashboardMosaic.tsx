@@ -2354,9 +2354,8 @@ export default function DashboardMosaic() {
           .globe-stats { gap: 14px !important; }
         }
 
-        /* ── Touch: freeze waves + particles ───── */
+        /* ── Touch: freeze particles in gathered state ───── */
         @media (hover: none) {
-          .r3-wave { animation-play-state: paused; }
           .particle { animation: none; translate: calc(var(--rx) - var(--sx)) calc(var(--ry) - var(--sy)); }
           .particle-blob { opacity: 1; }
         }

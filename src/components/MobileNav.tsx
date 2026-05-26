@@ -7,6 +7,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardRoute } from "@/lib/constants/routes";
+import { BinecticsLockup } from "./BinecticsLogo";
 import {
   Menu,
   X,
@@ -51,7 +52,6 @@ export default function MobileNav() {
     return () => setMounted(false);
   }, []);
 
-  // Lock body scroll + close on Escape when open
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -66,7 +66,6 @@ export default function MobileNav() {
     };
   }, [isOpen]);
 
-  // Auto-close on route change
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
@@ -82,39 +81,38 @@ export default function MobileNav() {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[9998] bg-foreground/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[9998] backdrop-blur-sm lg:hidden"
+          style={{ background: "oklch(0.14 0.008 80 / 0.40)" }}
           onClick={close}
           aria-hidden="true"
         />
       )}
 
       <div
-        className={`fixed right-0 top-0 z-[9999] h-full w-full max-w-sm transform bg-background shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed right-0 top-0 z-[9999] h-full w-full max-w-sm transform shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{ background: "var(--bg)" }}
         role="dialog"
         aria-modal="true"
         aria-label="Mobile navigation"
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
-            <Link
-              href="/"
-              onClick={close}
-              className="flex items-center gap-2"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-500">
-                <span className="text-base font-bold text-foreground">B</span>
-              </div>
-              <span className="text-lg font-bold text-foreground">
-                Binectics
-              </span>
+          <div
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: "1px solid var(--border)" }}
+          >
+            <Link href="/" onClick={close} className="flex items-center gap-2">
+              <BinecticsLockup />
             </Link>
             <button
               type="button"
               onClick={close}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-(--r-2) transition-colors focus:outline-none"
+              style={{ color: "var(--fg-2)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-2)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               aria-label="Close menu"
             >
               <X className="h-5 w-5" />
@@ -123,13 +121,19 @@ export default function MobileNav() {
 
           {/* User card (when signed in) */}
           {user && (
-            <div className="border-b border-neutral-200 px-5 py-4">
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
               <Link
                 href={dashboardHref}
                 onClick={close}
-                className="flex items-center gap-3 rounded-xl bg-neutral-50 p-3 transition-colors hover:bg-neutral-100"
+                className="flex items-center gap-3 rounded-(--r-2) p-3 transition-colors"
+                style={{ background: "var(--bg-2)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-3)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--bg-2)")}
               >
-                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-sm font-bold text-primary-700">
+                <span
+                  className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold"
+                  style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}
+                >
                   {user.profile_picture ? (
                     <Image
                       src={user.profile_picture}
@@ -143,10 +147,10 @@ export default function MobileNav() {
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-foreground truncate">
+                  <div className="text-sm font-semibold truncate" style={{ color: "var(--ink)" }}>
                     {fullName}
                   </div>
-                  <div className="text-xs text-foreground-tertiary truncate">
+                  <div className="text-xs truncate" style={{ color: "var(--fg-3)" }}>
                     {user.email}
                   </div>
                 </div>
@@ -156,10 +160,13 @@ export default function MobileNav() {
 
           <nav className="flex-1 overflow-y-auto px-3 py-4">
             {/* Marketing */}
-            <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-foreground-tertiary">
+            <div
+              className="px-2 pb-2 font-mono text-[10.5px] uppercase"
+              style={{ letterSpacing: "0.06em", color: "var(--fg-3)" }}
+            >
               Explore
             </div>
-            <ul className="space-y-1">
+            <ul className="space-y-0.5 list-none p-0 m-0">
               {MARKETING_LINKS.map((link) => {
                 const active = isActiveLink(pathname, link.href);
                 return (
@@ -167,11 +174,23 @@ export default function MobileNav() {
                     <Link
                       href={link.href}
                       onClick={close}
-                      className={`flex items-center rounded-lg px-3 py-2.5 text-base font-medium transition-colors ${
-                        active
-                          ? "bg-accent-blue-50 text-accent-blue-700"
-                          : "text-foreground-secondary hover:bg-neutral-100 hover:text-foreground"
-                      }`}
+                      className="flex items-center rounded-(--r-2) px-3 py-2.5 text-[15px] font-medium transition-colors"
+                      style={{
+                        color: active ? "var(--signal-ink)" : "var(--fg-2)",
+                        background: active ? "var(--signal-soft)" : "transparent",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!active) {
+                          e.currentTarget.style.background = "var(--bg-2)";
+                          e.currentTarget.style.color = "var(--ink)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = "var(--fg-2)";
+                        }
+                      }}
                     >
                       {link.label}
                     </Link>
@@ -181,19 +200,25 @@ export default function MobileNav() {
             </ul>
 
             {/* Account */}
-            <div className="mt-6 px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-foreground-tertiary">
+            <div
+              className="mt-6 px-2 pb-2 font-mono text-[10.5px] uppercase"
+              style={{ letterSpacing: "0.06em", color: "var(--fg-3)" }}
+            >
               Account
             </div>
-            <ul className="space-y-1">
+            <ul className="space-y-0.5 list-none p-0 m-0">
               {user ? (
                 <>
                   <li>
                     <Link
                       href={dashboardHref}
                       onClick={close}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors"
+                      className="flex items-center gap-3 rounded-(--r-2) px-3 py-2.5 text-[15px] font-medium transition-colors"
+                      style={{ color: "var(--fg-2)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-2)"; e.currentTarget.style.color = "var(--ink)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--fg-2)"; }}
                     >
-                      <LayoutDashboard className="h-5 w-5 text-foreground-tertiary" aria-hidden="true" />
+                      <LayoutDashboard className="h-[18px] w-[18px]" style={{ color: "var(--fg-3)" }} aria-hidden="true" />
                       Dashboard
                     </Link>
                   </li>
@@ -201,9 +226,12 @@ export default function MobileNav() {
                     <Link
                       href={`${dashboardHref}/profile`}
                       onClick={close}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors"
+                      className="flex items-center gap-3 rounded-(--r-2) px-3 py-2.5 text-[15px] font-medium transition-colors"
+                      style={{ color: "var(--fg-2)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-2)"; e.currentTarget.style.color = "var(--ink)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--fg-2)"; }}
                     >
-                      <UserIcon className="h-5 w-5 text-foreground-tertiary" aria-hidden="true" />
+                      <UserIcon className="h-[18px] w-[18px]" style={{ color: "var(--fg-3)" }} aria-hidden="true" />
                       Profile
                     </Link>
                   </li>
@@ -211,9 +239,12 @@ export default function MobileNav() {
                     <Link
                       href={`${dashboardHref}/settings`}
                       onClick={close}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors"
+                      className="flex items-center gap-3 rounded-(--r-2) px-3 py-2.5 text-[15px] font-medium transition-colors"
+                      style={{ color: "var(--fg-2)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-2)"; e.currentTarget.style.color = "var(--ink)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--fg-2)"; }}
                     >
-                      <Settings className="h-5 w-5 text-foreground-tertiary" aria-hidden="true" />
+                      <Settings className="h-[18px] w-[18px]" style={{ color: "var(--fg-3)" }} aria-hidden="true" />
                       Settings
                     </Link>
                   </li>
@@ -223,10 +254,13 @@ export default function MobileNav() {
                   <Link
                     href="/login"
                     onClick={close}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors"
+                    className="flex items-center gap-3 rounded-(--r-2) px-3 py-2.5 text-[15px] font-medium transition-colors"
+                    style={{ color: "var(--fg-2)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-2)"; e.currentTarget.style.color = "var(--ink)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--fg-2)"; }}
                   >
-                    <LogIn className="h-5 w-5 text-foreground-tertiary" aria-hidden="true" />
-                    Sign In
+                    <LogIn className="h-[18px] w-[18px]" style={{ color: "var(--fg-3)" }} aria-hidden="true" />
+                    Sign in
                   </Link>
                 </li>
               )}
@@ -234,7 +268,7 @@ export default function MobileNav() {
           </nav>
 
           {/* Footer CTA */}
-          <div className="border-t border-neutral-200 p-4">
+          <div className="p-4" style={{ borderTop: "1px solid var(--border)" }}>
             {user ? (
               <button
                 type="button"
@@ -242,19 +276,33 @@ export default function MobileNav() {
                   close();
                   logout();
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                className="flex w-full items-center justify-center gap-2 rounded-(--r-2) px-4 py-3 text-sm font-medium transition-colors"
+                style={{
+                  border: "1px solid oklch(0.70 0.18 25 / 0.25)",
+                  color: "oklch(0.55 0.20 25)",
+                  background: "transparent",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "oklch(0.55 0.20 25 / 0.06)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
-                Logout
+                Log out
               </button>
             ) : (
               <Link
                 href="/register"
                 prefetch={false}
                 onClick={close}
-                className="flex w-full items-center justify-center rounded-lg bg-primary-500 px-4 py-3 text-base font-semibold text-foreground transition-colors hover:bg-primary-600"
+                className="flex w-full items-center justify-center rounded-(--r-2) px-4 py-3 text-[14px] font-medium transition-colors"
+                style={{
+                  letterSpacing: "-0.005em",
+                  background: "var(--ink)",
+                  color: "var(--bg)",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "oklch(0.08 0.008 80)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--ink)")}
               >
-                Join Free
+                Get started free
               </Link>
             )}
           </div>
@@ -268,7 +316,10 @@ export default function MobileNav() {
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
-        className="inline-flex lg:hidden h-10 w-10 items-center justify-center rounded-lg text-foreground-secondary hover:bg-neutral-100 hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-500"
+        className="inline-flex lg:hidden h-10 w-10 items-center justify-center rounded-(--r-2) transition-colors focus:outline-none"
+        style={{ color: "var(--fg-2)" }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-2)"; e.currentTarget.style.color = "var(--ink)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--fg-2)"; }}
         aria-label={isOpen ? "Close menu" : "Open menu"}
         aria-expanded={isOpen}
       >
