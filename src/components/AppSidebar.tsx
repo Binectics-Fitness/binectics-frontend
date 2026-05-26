@@ -163,12 +163,13 @@ export default function AppSidebar({
               onClick={() => setIsMobileMenuOpen(false)}
               className="w-8 h-8 flex items-center justify-center rounded-[var(--r-2)]"
               style={{ border: "1px solid var(--border)", color: "var(--fg-2)" }}
+              aria-label="Close navigation"
             >
               <X size={14} />
             </button>
           </div>
         </div>
-        <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-0.5">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-0.5" aria-label="Sidebar navigation">
           {navItems.map((item) => (
             <div key={item.href}>{renderNavItem(item, true)}</div>
           ))}
@@ -198,7 +199,7 @@ export default function AppSidebar({
           )}
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-0.5">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-0.5" aria-label="Sidebar navigation">
           {navItems.map((item) => (
             <div key={item.href}>{renderNavItem(item)}</div>
           ))}

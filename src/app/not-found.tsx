@@ -1,21 +1,16 @@
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
+import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 
 export default function NotFound() {
   return (
-    <div
-      className="min-h-screen grid place-items-center p-8"
-      style={{ background: "var(--bg-2)", fontFamily: "var(--font-sans)" }}
-    >
-      <div
-        className="w-full text-center"
-        style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r-3)",
-          maxWidth: 540,
-          padding: "clamp(32px, 6vw, 56px) clamp(20px, 5vw, 48px)",
-        }}
+    <div style={{ background: "var(--bg)" }}>
+      <MarketingTopbar />
+
+      <section
+        className="mx-auto max-w-360 px-5 sm:px-10 flex flex-col items-center justify-center text-center"
+        style={{ minHeight: "calc(100vh - 64px - 200px)", paddingTop: 80, paddingBottom: 80 }}
       >
         {/* Brand mark */}
         <div className="flex justify-center" style={{ marginBottom: 28 }}>
@@ -24,50 +19,24 @@ export default function NotFound() {
 
         {/* Eyebrow */}
         <div
-          className="inline-flex items-center justify-center"
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            color: "var(--fg-3)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: 14,
-            gap: 6,
-          }}
+          className="eyebrow"
+          style={{ marginBottom: 16 }}
         >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              background: "var(--fg-3)",
-              borderRadius: "50%",
-            }}
-          />
-          Error &middot; 404
+          404
         </div>
 
         {/* Heading */}
         <h1
           style={{
-            fontSize: 36,
-            letterSpacing: "-0.028em",
+            fontSize: 44,
+            letterSpacing: "-0.035em",
             fontWeight: 500,
             color: "var(--ink)",
-            lineHeight: 1.1,
+            lineHeight: 1.05,
             marginBottom: 14,
           }}
         >
-          Lost in the{" "}
-          <em
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontStyle: "italic",
-              fontWeight: 400,
-            }}
-          >
-            weeds
-          </em>
-          .
+          Page not found.
         </h1>
 
         {/* Description */}
@@ -76,91 +45,25 @@ export default function NotFound() {
             fontSize: 16,
             color: "var(--fg-2)",
             lineHeight: 1.55,
-            marginBottom: 28,
-            maxWidth: "38ch",
-            marginLeft: "auto",
-            marginRight: "auto",
+            marginBottom: 32,
+            maxWidth: "40ch",
           }}
         >
-          The page you&apos;re looking for isn&apos;t here. It might have moved,
-          been renamed, or never existed.
+          The page you&apos;re looking for doesn&apos;t exist, or it may have
+          been moved.
         </p>
 
         {/* Actions */}
-        <div className="flex gap-2 justify-center flex-wrap">
-          <Link
-            href="/"
-            className="btn-primary-v2"
-            style={{ height: 38, padding: "0 16px" }}
-          >
-            Back to landing
-          </Link>
-          <Link
-            href="/marketplace"
-            className="btn-ghost-v2"
-            style={{ height: 38, padding: "0 16px" }}
-          >
-            Browse marketplace
-          </Link>
-        </div>
-
-        {/* Detail rows */}
-        <div
-          style={{
-            marginTop: 28,
-            paddingTop: 22,
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
-          }}
+        <Link
+          href="/"
+          className="btn-primary-v2"
+          style={{ height: 38, padding: "0 20px" }}
         >
-          <div
-            className="flex justify-between"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11.5,
-              color: "var(--fg-3)",
-              padding: "4px 0",
-            }}
-          >
-            <span>Path</span>
-            <strong
-              style={{
-                color: "var(--ink)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 13,
-                fontWeight: 500,
-                letterSpacing: "-0.005em",
-              }}
-            >
-              /unknown
-            </strong>
-          </div>
-          <div
-            className="flex justify-between"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11.5,
-              color: "var(--fg-3)",
-              padding: "4px 0",
-            }}
-          >
-            <span>Trace</span>
-            <strong
-              style={{
-                color: "var(--ink)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 13,
-                fontWeight: 500,
-                letterSpacing: "-0.005em",
-              }}
-            >
-              4xx-2026-9212
-            </strong>
-          </div>
-        </div>
-      </div>
+          Back to home
+        </Link>
+      </section>
+
+      <MarketingFooter />
     </div>
   );
 }

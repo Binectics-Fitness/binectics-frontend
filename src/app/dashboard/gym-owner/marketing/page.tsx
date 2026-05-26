@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Marketing",
+  description: "Run promotions and marketing campaigns for your gym.",
+};
 
 const KPIS = [
   { label: "Referral code uses", value: "42", delta: "This month" },

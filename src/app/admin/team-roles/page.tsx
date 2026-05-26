@@ -1,4 +1,10 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Team & Roles",
+  description: "Manage admin team members and their role permissions.",
+};
 
 export default function AdminTeamRolesPage() {
   return (

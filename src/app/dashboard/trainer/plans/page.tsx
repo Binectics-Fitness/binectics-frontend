@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Plans",
+  description: "Create and manage your training plans and packages.",
+};
 
 const PKGS = [
   {

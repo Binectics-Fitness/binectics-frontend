@@ -1,4 +1,10 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Payments",
+  description: "Monitor payment transactions across all gateways.",
+};
 
 const TRANSACTIONS = [
   { tx: "PI_3OqL1k_4221", booking: "BIN-040112", member: "Tunde A.", gw: "Stripe", gwColor: "oklch(0.45 0.13 280)", amount: "R 1,200", status: "Captured", statusType: "ok", latency: "312ms", at: "2s ago" },

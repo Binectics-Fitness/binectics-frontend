@@ -1,4 +1,10 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Refunds",
+  description: "Process and track refund requests across the platform.",
+};
 
 export default function AdminRefundsPage() {
   return (

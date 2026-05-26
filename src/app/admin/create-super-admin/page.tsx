@@ -200,30 +200,40 @@ export default function CreateSuperAdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="text"
+              required
+              minLength={2}
+              maxLength={50}
               placeholder="First Name"
               {...register("firstName")}
               className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="text"
+              required
+              minLength={2}
+              maxLength={50}
               placeholder="Last Name"
               {...register("lastName")}
               className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="email"
+              required
               placeholder="Email"
               {...register("email")}
               className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
             <input
               type="password"
+              required
+              minLength={8}
               placeholder="Password"
               {...register("password")}
               className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
             />
             <input
               type="text"
+              required
               placeholder="Country"
               {...register("country")}
               className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"

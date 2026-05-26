@@ -1,6 +1,12 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import Link from "next/link";
 import React from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Country Details",
+  description: "View and manage country-specific settings and provider statistics.",
+};
 
 export default function AdminSingleCountryPage({
   params,

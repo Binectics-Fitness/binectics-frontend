@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Payouts",
+  description: "Track your payout history and upcoming disbursements.",
+};
 
 const PAYOUTS = [
   { date: "Wed · 20 May 09:00", ref: "PO_2026_0520", dest: "ABSA •••• 2241", gw: "Paystack", status: "Scheduled", statusColor: "var(--fg-2)", statusBg: "var(--bg-2)", border: true, amt: "R 84,200.00" },

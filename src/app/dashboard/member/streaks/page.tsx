@@ -1,4 +1,10 @@
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Streaks",
+  description: "View your workout streaks and consistency stats.",
+};
 
 const EARNED_BADGES = [
   { name: "First step", sub: "Day 1" },

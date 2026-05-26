@@ -1,4 +1,10 @@
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Weight Log",
+  description: "Track your weight over time with charts and trends.",
+};
 
 const WEIGHT_ROWS = [
   { date: "Today", weight: "73.4 kg", note: "Felt lighter", photo: false, bold: true },

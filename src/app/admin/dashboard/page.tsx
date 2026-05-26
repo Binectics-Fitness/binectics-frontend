@@ -1,4 +1,10 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard",
+  description: "Platform overview with key metrics, activity, and alerts.",
+};
 
 /**
  * Admin console — Platform overview
@@ -74,7 +80,7 @@ export default function AdminDashboard() {
         <span style={{ color: "var(--ink)" }}>All systems normal</span>
         <span> · 99.97% uptime · p95 142ms</span>
       </div>
-      <button className="w-8 h-8 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M14 21a2 2 0 0 1-4 0"/></svg></button>
+      <button className="w-8 h-8 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }} aria-label="Notifications"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M14 21a2 2 0 0 1-4 0"/></svg></button>
       <button className="btn-ghost-v2 sm hidden sm:inline-flex">Impersonate user</button>
     </div>
   );

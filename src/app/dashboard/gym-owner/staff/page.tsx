@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Staff",
+  description: "Manage your gym staff, roles, and permissions.",
+};
 
 interface StaffMeta { k: string; v: string; warn?: boolean }
 

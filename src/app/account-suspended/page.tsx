@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Account Suspended",
+  description: "Your Binectics account has been suspended. Contact support for assistance.",
+};
 
 export default function AccountSuspendedPage() {
   return (

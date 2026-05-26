@@ -79,6 +79,7 @@ export default function ForgotPasswordPage() {
                   </label>
                   <input
                     type="email"
+                    required
                     placeholder="you@example.com"
                     className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]"
                     style={{

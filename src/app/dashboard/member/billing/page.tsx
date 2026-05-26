@@ -1,4 +1,10 @@
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Billing",
+  description: "Manage your payment methods, subscriptions, and invoices.",
+};
 
 const TRANSACTIONS = [
   { date: "18 May 14:32", desc: "Session · Sarah Okafor · 20 May 08:30", amount: "R 1,200", status: "Charged", refund: false },

@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Calendar",
+  description: "View and manage your upcoming sessions, bookings, and events.",
+};
 
 /**
  * Calendar — calendar.html prototype.

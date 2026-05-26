@@ -1,5 +1,11 @@
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Case Studies",
+  description: "Real stories from gyms, trainers, and dietitians growing their business with Binectics.",
+};
 
 /**
  * Case Studies — three provider case studies with quote + KPI grid.

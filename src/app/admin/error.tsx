@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { BinecticsMark } from "@/components/BinecticsLogo";
 
 export default function AdminError({
   error,
@@ -15,46 +16,97 @@ export default function AdminError({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-      <div className="max-w-md w-full text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100">
-          <svg
-            className="h-8 w-8 text-red-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
+    <div
+      className="min-h-screen grid place-items-center p-8"
+      style={{ background: "var(--bg)", fontFamily: "var(--font-sans)" }}
+    >
+      <div
+        className="w-full text-center"
+        style={{
+          background: "var(--bg)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--r-3)",
+          maxWidth: 480,
+          padding: "clamp(32px, 6vw, 48px) clamp(20px, 5vw, 40px)",
+        }}
+      >
+        {/* Brand mark */}
+        <div className="flex justify-center" style={{ marginBottom: 24 }}>
+          <BinecticsMark size={28} className="text-(--ink)" />
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">Admin Error</h2>
-        <p className="text-sm text-neutral-500 mb-6">
-          An error occurred while loading this page. Please try again.
+
+        {/* Eyebrow */}
+        <div
+          className="eyebrow"
+          style={{ color: "var(--danger)", marginBottom: 16 }}
+        >
+          Admin error
+        </div>
+
+        {/* Heading */}
+        <h1
+          style={{
+            fontSize: 28,
+            letterSpacing: "-0.025em",
+            fontWeight: 500,
+            color: "var(--ink)",
+            lineHeight: 1.15,
+            marginBottom: 12,
+          }}
+        >
+          Something went wrong.
+        </h1>
+
+        {/* Description */}
+        <p
+          style={{
+            fontSize: 15,
+            color: "var(--fg-2)",
+            lineHeight: 1.55,
+            marginBottom: 28,
+            maxWidth: "36ch",
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}
+        >
+          An error occurred while loading this page. Try again or return to the
+          admin dashboard.
         </p>
-        {error.digest && (
-          <p className="text-xs text-neutral-400 mb-4">
-            Error ID: {error.digest}
-          </p>
-        )}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+
+        {/* Actions */}
+        <div className="flex gap-2 justify-center flex-wrap">
           <button
             onClick={() => reset()}
-            className="px-5 py-2.5 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors"
+            className="btn-primary-v2"
+            style={{ height: 36, padding: "0 16px" }}
           >
-            Try Again
+            Try again
           </button>
           <Link
-            href="/admin"
-            className="px-5 py-2.5 border border-neutral-200 text-foreground font-semibold rounded-lg text-sm hover:bg-neutral-100 transition-colors"
+            href="/admin/dashboard"
+            className="btn-ghost-v2"
+            style={{ height: 36, padding: "0 16px" }}
           >
-            Back to Admin
+            Back to admin
           </Link>
         </div>
+
+        {/* Error digest */}
+        {error.digest && (
+          <div
+            style={{
+              marginTop: 24,
+              paddingTop: 16,
+              borderTop: "1px solid var(--border)",
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              color: "var(--fg-3)",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {error.digest}
+          </div>
+        )}
       </div>
     </div>
   );

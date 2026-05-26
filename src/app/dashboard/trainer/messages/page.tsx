@@ -1,4 +1,10 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Messages",
+  description: "Chat with your training clients.",
+};
 
 /**
  * Messages — 3-pane inbox from messages.html prototype.

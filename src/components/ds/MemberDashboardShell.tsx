@@ -55,7 +55,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
           </Link>
 
           {/* Center — nav links */}
-          <nav className="flex items-center" style={{ gap: 4 }}>
+          <nav className="flex items-center" style={{ gap: 4 }} aria-label="Main navigation">
             {NAV_LINKS.map((link) => {
               const isActive = link.label === activeLabel;
               return (
@@ -250,7 +250,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
             </div>
 
             {/* Nav links */}
-            <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }}>
+            <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }} aria-label="Mobile navigation">
               {NAV_LINKS.map((link) => {
                 const isActive = link.label === activeLabel;
                 return (

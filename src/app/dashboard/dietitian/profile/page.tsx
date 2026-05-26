@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dietitian Profile",
+  description: "Edit your dietitian profile, specialties, and credentials.",
+};
 
 const SECTIONS = [
   { id: "basics", label: "Basics", complete: true },
@@ -80,12 +86,12 @@ export default function DietitianProfilePage() {
             <div className="flex flex-col gap-4 p-5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Headline</label>
-                <input defaultValue="Clinical dietitian specialising in sports nutrition & metabolic health" className="h-8.5 rounded-(--r-2) px-3 text-[13.5px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                <input required maxLength={80} defaultValue="Clinical dietitian specialising in sports nutrition & metabolic health" className="h-8.5 rounded-(--r-2) px-3 text-[13.5px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                 <span className="font-mono text-[10.5px]" style={{ color: "var(--fg-4)" }}>68 / 80 characters</span>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Bio</label>
-                <textarea defaultValue="Registered dietitian with 8 years of clinical experience across South Africa and the UAE. I built the Binectics FCDB to include the foods my clients actually eat — fufu, bobotie, shawarma, and 2,400+ others. My approach is evidence-based, culturally informed, and designed for people who want sustainable results without eliminating entire food groups." className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] leading-relaxed resize-y" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: "120px" }} />
+                <textarea required minLength={50} maxLength={500} defaultValue="Registered dietitian with 8 years of clinical experience across South Africa and the UAE. I built the Binectics FCDB to include the foods my clients actually eat — fufu, bobotie, shawarma, and 2,400+ others. My approach is evidence-based, culturally informed, and designed for people who want sustainable results without eliminating entire food groups." className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] leading-relaxed resize-y" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: "120px" }} />
                 <span className="font-mono text-[10.5px]" style={{ color: "var(--fg-4)" }}>342 / 500 characters</span>
               </div>
             </div>
@@ -95,7 +101,7 @@ export default function DietitianProfilePage() {
             <h2 className="text-[20px] font-medium" style={{ letterSpacing: "-0.015em", color: "var(--ink)" }}>Photos</h2>
             <p className="text-[13px] mt-1 mb-5" style={{ color: "var(--fg-3)" }}>A professional headshot and up to 4 gallery images. First image is your listing card.</p>
             <div className="p-5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {["Headshot", "Consultation", "Kitchen setup", "+ Add photo"].map((label, i) => (
                   <div key={label} className="aspect-square rounded-(--r-2) flex items-center justify-center text-[12px] cursor-pointer" style={{ background: i < 3 ? "var(--bg-3)" : "transparent", border: i < 3 ? "none" : "1.5px dashed var(--border-2)", color: "var(--fg-3)" }}>
                     {i < 3 ? (

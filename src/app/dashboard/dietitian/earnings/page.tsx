@@ -1,4 +1,10 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Earnings",
+  description: "Track your dietitian earnings, payouts, and revenue.",
+};
 
 export default function DietitianEarningsPage() {
   return (

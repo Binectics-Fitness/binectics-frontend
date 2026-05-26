@@ -1,5 +1,11 @@
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "System Status",
+  description: "Check the current operational status of all Binectics platform services.",
+};
 
 /**
  * Status — system status page with service list + incident log.

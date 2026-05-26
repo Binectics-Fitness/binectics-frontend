@@ -80,9 +80,9 @@ export default function FraudPage() {
       </div>
 
       <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <div className="flex-1 min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+        <div className="flex-1 min-w-0 sm:min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-          <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search by user, FRD_ID, or signal type..." style={{ color: "var(--ink)" }} readOnly />
+          <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search fraud cases..." style={{ color: "var(--ink)" }} readOnly />
         </div>
         <div className="flex gap-1 flex-wrap">
           {FILTERS.map((f) => (
@@ -107,9 +107,15 @@ export default function FraudPage() {
           <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--bg-2)", borderBottom: "1px solid var(--border)" }}>
-                {["ID", "User", "Type", "Signal", "Linked accts", "Exposure", "Flagged", "Risk", ""].map((h) => (
-                  <th key={h} className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>{h}</th>
-                ))}
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>ID</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>User</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap hidden md:table-cell" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Type</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Signal</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap hidden sm:table-cell" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Linked accts</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Exposure</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Flagged</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Risk</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -122,11 +128,11 @@ export default function FraudPage() {
                       <span className="font-medium" style={{ color: "var(--ink)" }}>{c.user}</span>
                     </div>
                   </td>
-                  <td className="px-3.5 py-3 whitespace-nowrap" style={{ color: "var(--fg-2)" }}>{c.type}</td>
-                  <td className="px-3.5 py-3 text-[12px]" style={{ color: "var(--fg-2)", maxWidth: 220 }}>{c.signal}</td>
-                  <td className="px-3.5 py-3 font-mono text-[12px] text-center" style={{ color: c.accounts > 1 ? "var(--danger)" : "var(--fg-3)" }}>{c.accounts}</td>
+                  <td className="px-3.5 py-3 whitespace-nowrap hidden md:table-cell" style={{ color: "var(--fg-2)" }}>{c.type}</td>
+                  <td className="px-3.5 py-3 text-[12px] hidden lg:table-cell" style={{ color: "var(--fg-2)", maxWidth: 220 }}>{c.signal}</td>
+                  <td className="px-3.5 py-3 font-mono text-[12px] text-center hidden sm:table-cell" style={{ color: c.accounts > 1 ? "var(--danger)" : "var(--fg-3)" }}>{c.accounts}</td>
                   <td className="px-3.5 py-3 font-mono text-[12px] whitespace-nowrap" style={{ color: "var(--ink)" }}>{c.amount}</td>
-                  <td className="px-3.5 py-3 font-mono text-[11px] whitespace-nowrap" style={{ color: "var(--fg-3)" }}>{c.flagged}</td>
+                  <td className="px-3.5 py-3 font-mono text-[11px] whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--fg-3)" }}>{c.flagged}</td>
                   <td className="px-3.5 py-3"><RiskBadge risk={c.risk} /></td>
                   <td className="px-3.5 py-3">
                     <Link href={`/admin/fraud/${c.id}`} className="btn-ghost-v2 sm text-[12px]" style={{ padding: "4px 10px" }}>View</Link>

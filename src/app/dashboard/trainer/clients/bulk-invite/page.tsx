@@ -1,4 +1,10 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Bulk Invite",
+  description: "Invite multiple clients to join your training program.",
+};
 
 const PREVIEW_ROWS = [
   { name: "Adaora Tunde", email: "adaora@gmail.com", phone: "+234 80 ••• 4218", status: "Ready", ok: true },

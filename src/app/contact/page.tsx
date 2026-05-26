@@ -101,6 +101,9 @@ export default function ContactPage() {
                 <label className="block font-mono text-[11px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Name</label>
                 <input
                   type="text"
+                  required
+                  minLength={2}
+                  maxLength={100}
                   placeholder="Your full name"
                   className="w-full rounded-(--r-2) px-4 py-3 text-[15px] outline-none"
                   style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
@@ -110,6 +113,7 @@ export default function ContactPage() {
                 <label className="block font-mono text-[11px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Email</label>
                 <input
                   type="email"
+                  required
                   placeholder="you@example.com"
                   className="w-full rounded-(--r-2) px-4 py-3 text-[15px] outline-none"
                   style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
@@ -119,6 +123,9 @@ export default function ContactPage() {
                 <label className="block font-mono text-[11px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Subject</label>
                 <input
                   type="text"
+                  required
+                  minLength={3}
+                  maxLength={200}
                   placeholder="e.g. Partnership enquiry"
                   className="w-full rounded-(--r-2) px-4 py-3 text-[15px] outline-none"
                   style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
@@ -128,6 +135,9 @@ export default function ContactPage() {
                 <label className="block font-mono text-[11px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Message</label>
                 <textarea
                   rows={5}
+                  required
+                  minLength={10}
+                  maxLength={2000}
                   placeholder="Tell us what you need..."
                   className="w-full rounded-(--r-2) px-4 py-3 text-[15px] outline-none resize-y"
                   style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}

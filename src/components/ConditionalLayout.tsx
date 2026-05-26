@@ -28,13 +28,13 @@ export default function ConditionalLayout({
   const hideChrome = isDashboard || isAdmin || isFormSubmit || isMarketplace || isProvider || isRegister || isCheckIn || isAuth || isMarketing || isLanding || isUtility || isOnboarding;
 
   if (hideChrome) {
-    return <>{children}</>;
+    return <div id="main-content">{children}</div>;
   }
 
   return (
     <>
       <Navbar />
-      {children}
+      <div id="main-content">{children}</div>
       <Footer />
     </>
   );

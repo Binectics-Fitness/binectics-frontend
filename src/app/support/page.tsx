@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Support",
+  description: "Get help from the Binectics support team with account, billing, or technical issues.",
+};
 
 /**
  * Support — support.html prototype.

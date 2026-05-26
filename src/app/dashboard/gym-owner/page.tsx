@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Gym Dashboard",
+  description: "Gym performance overview with revenue, members, and check-in stats.",
+};
 
 /**
  * Gym owner dashboard — Iron Lab · Lerato M.

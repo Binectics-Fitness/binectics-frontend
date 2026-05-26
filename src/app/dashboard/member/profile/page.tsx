@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Profile",
+  description: "View and edit your member profile information.",
+};
 
 const GOALS = [
   { label: "Primary", value: "Two Oceans half-marathon · 25 Oct" },

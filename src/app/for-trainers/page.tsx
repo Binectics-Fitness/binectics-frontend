@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "For Trainers",
+  description: "Grow your personal training business with client management, scheduling, and payments on Binectics.",
+};
 
 /**
  * For Trainers — marketing landing page for personal trainers.

@@ -76,7 +76,7 @@ export function MarketingMobileNav({ links }: MarketingMobileNavProps) {
             </div>
 
             {/* Nav links */}
-            <nav className="flex flex-col px-5 pt-6 gap-1">
+            <nav className="flex flex-col px-5 pt-6 gap-1" aria-label="Mobile navigation">
               {links.map((l) => (
                 <Link
                   key={l.label}
@@ -156,6 +156,7 @@ export function DashboardMobileNav({ children }: DashboardMobileNavProps) {
                 onClick={() => setOpen(false)}
                 className="w-8 h-8 rounded-(--r-2) flex items-center justify-center"
                 style={{ border: "1px solid var(--border)", color: "var(--fg-2)" }}
+                aria-label="Close navigation"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>

@@ -1,4 +1,10 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Countries",
+  description: "Manage country availability, currencies, and regional settings.",
+};
 
 const COUNTRIES = [
   { iso: "ZA", name: "South Africa", sub: "ZAR · EN/AF", color: "#0F8C5B", status: "live", providers: "1,840", members: "148k", gmv: "$ 1.42M", takeRate: "7.0%" },

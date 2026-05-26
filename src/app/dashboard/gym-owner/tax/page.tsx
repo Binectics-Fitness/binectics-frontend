@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tax",
+  description: "View tax summaries, withholding, and download tax documents.",
+};
 
 const FORMS = [
   { period: "Q1 · Mar–May", status: "In progress", statusType: "warn" as const, revenue: "R 3.2M", tax: "R 412k (est.)", action: "Preview" },

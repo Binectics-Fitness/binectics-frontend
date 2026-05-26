@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Client Details",
+  description: "View client profile, progress, and session history.",
+};
 
 /**
  * Client detail — client.html prototype.

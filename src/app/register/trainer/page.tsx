@@ -151,14 +151,14 @@ export default function OnboardingTrainer() {
             {/* Headline */}
             <div className="flex flex-col gap-1.5" style={{ gridColumn: "1 / -1" }}>
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Headline</label>
-              <input className="rounded-(--r-2) px-3.5 py-3 text-[14px]" style={{ border: "1px solid var(--border-2)", background: "var(--bg)", color: "var(--ink)", fontFamily: "inherit", outline: "none" }} defaultValue="Strength & running coach · Lagos · in‑person + remote" />
+              <input required maxLength={80} className="rounded-(--r-2) px-3.5 py-3 text-[14px]" style={{ border: "1px solid var(--border-2)", background: "var(--bg)", color: "var(--ink)", fontFamily: "inherit", outline: "none" }} defaultValue="Strength & running coach · Lagos · in‑person + remote" />
               <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>Shows under your name in marketplace results. 60 characters used of 80.</span>
             </div>
 
             {/* About */}
             <div className="flex flex-col gap-1.5" style={{ gridColumn: "1 / -1" }}>
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>About your practice</label>
-              <textarea className="rounded-(--r-2) px-3.5 py-3 text-[14px] resize-none" style={{ border: "1px solid var(--border-2)", background: "var(--bg)", color: "var(--ink)", fontFamily: "inherit", outline: "none", minHeight: "88px" }} defaultValue="I've coached recreational runners and lifters in Lagos for 9 years. My work is barbell strength built around your sport — most clients run a marathon, train for a triathlon, or just want to keep showing up without injury at 40+. Sessions in Lekki, V/I, and Ikeja. Remote programming for clients outside Lagos." />
+              <textarea required minLength={50} maxLength={500} className="rounded-(--r-2) px-3.5 py-3 text-[14px] resize-none" style={{ border: "1px solid var(--border-2)", background: "var(--bg)", color: "var(--ink)", fontFamily: "inherit", outline: "none", minHeight: "88px" }} defaultValue="I've coached recreational runners and lifters in Lagos for 9 years. My work is barbell strength built around your sport — most clients run a marathon, train for a triathlon, or just want to keep showing up without injury at 40+. Sessions in Lekki, V/I, and Ikeja. Remote programming for clients outside Lagos." />
               <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>240 characters · members see the first 180 in the search card.</span>
             </div>
 

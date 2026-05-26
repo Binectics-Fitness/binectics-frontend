@@ -1,4 +1,10 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dietitian Settings",
+  description: "Configure your practice preferences and availability.",
+};
 
 function Toggle({ on = true }: { on?: boolean }) {
   return (

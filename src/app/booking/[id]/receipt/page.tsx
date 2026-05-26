@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Booking Receipt",
+  description: "View and download your Binectics booking receipt.",
+};
 
 /**
  * Booking Receipt — printable receipt card with line items.

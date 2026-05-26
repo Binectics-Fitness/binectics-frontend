@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Plans",
+  description: "Create and manage membership plans for your gym.",
+};
 
 /**
  * Plans & pricing — gym-plans.html prototype.

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { BinecticsMark } from "@/components/BinecticsLogo";
 
-export default function Error({
+export default function GlobalError({
   error,
   reset,
 }: {
@@ -18,18 +18,9 @@ export default function Error({
   return (
     <div
       className="min-h-screen grid place-items-center p-8"
-      style={{ background: "var(--bg-2)", fontFamily: "var(--font-sans)" }}
+      style={{ background: "var(--bg)", fontFamily: "var(--font-sans)" }}
     >
-      <div
-        className="w-full text-center"
-        style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r-3)",
-          maxWidth: 540,
-          padding: "clamp(32px, 6vw, 56px) clamp(20px, 5vw, 48px)",
-        }}
-      >
+      <div className="text-center" style={{ maxWidth: 480 }}>
         {/* Brand mark */}
         <div className="flex justify-center" style={{ marginBottom: 28 }}>
           <BinecticsMark size={32} className="text-(--ink)" />
@@ -37,26 +28,10 @@ export default function Error({
 
         {/* Eyebrow */}
         <div
-          className="inline-flex items-center justify-center"
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            color: "var(--danger)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: 14,
-            gap: 6,
-          }}
+          className="eyebrow"
+          style={{ color: "var(--danger)", marginBottom: 16 }}
         >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              background: "var(--danger)",
-              borderRadius: "50%",
-            }}
-          />
-          Error &middot; 500
+          Something went wrong
         </div>
 
         {/* Heading */}
@@ -70,16 +45,7 @@ export default function Error({
             marginBottom: 14,
           }}
         >
-          <em
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontStyle: "italic",
-              fontWeight: 400,
-            }}
-          >
-            Sorry
-          </em>{" "}
-          — that one&apos;s on us.
+          An unexpected error occurred.
         </h1>
 
         {/* Description */}
@@ -88,14 +54,14 @@ export default function Error({
             fontSize: 16,
             color: "var(--fg-2)",
             lineHeight: 1.55,
-            marginBottom: 28,
+            marginBottom: 32,
             maxWidth: "38ch",
             marginLeft: "auto",
             marginRight: "auto",
           }}
         >
-          Something broke on our end. We&apos;ve already been paged and will
-          sort it. Try the page again in a minute, or check our status feed.
+          We&apos;ve been notified and are looking into it. Try refreshing the
+          page, or head back to the homepage.
         </p>
 
         {/* Actions */}
@@ -103,104 +69,52 @@ export default function Error({
           <button
             onClick={() => reset()}
             className="btn-primary-v2"
-            style={{ height: 38, padding: "0 16px" }}
+            style={{ height: 38, padding: "0 20px" }}
           >
-            Retry
+            Try again
           </button>
-          <Link
-            href="#"
-            className="btn-ghost-v2"
-            style={{ height: 38, padding: "0 16px" }}
-          >
-            View status
-          </Link>
           <Link
             href="/"
             className="btn-ghost-v2"
-            style={{ height: 38, padding: "0 16px" }}
+            style={{ height: 38, padding: "0 20px" }}
           >
-            Back to landing
+            Back to home
           </Link>
         </div>
 
-        {/* Detail rows */}
-        <div
-          style={{
-            marginTop: 28,
-            paddingTop: 22,
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
-          }}
-        >
+        {/* Error digest */}
+        {error.digest && (
           <div
-            className="flex justify-between"
             style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11.5,
-              color: "var(--fg-3)",
-              padding: "4px 0",
+              marginTop: 28,
+              paddingTop: 20,
+              borderTop: "1px solid var(--border)",
             }}
           >
-            <span>Incident</span>
-            <strong
+            <div
+              className="flex justify-between"
               style={{
-                color: "var(--ink)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 13,
-                fontWeight: 500,
-                letterSpacing: "-0.005em",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11.5,
+                color: "var(--fg-3)",
+                padding: "4px 0",
               }}
             >
-              {error.digest ?? "INC-2026-7712"}
-            </strong>
+              <span>Error ID</span>
+              <strong
+                style={{
+                  color: "var(--ink)",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  letterSpacing: "-0.005em",
+                }}
+              >
+                {error.digest}
+              </strong>
+            </div>
           </div>
-          <div
-            className="flex justify-between"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11.5,
-              color: "var(--fg-3)",
-              padding: "4px 0",
-            }}
-          >
-            <span>Reported</span>
-            <strong
-              style={{
-                color: "var(--ink)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 13,
-                fontWeight: 500,
-                letterSpacing: "-0.005em",
-              }}
-            >
-              just now
-            </strong>
-          </div>
-          <div
-            className="flex justify-between"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11.5,
-              color: "var(--fg-3)",
-              padding: "4px 0",
-            }}
-          >
-            <span>Affected</span>
-            <strong
-              style={{
-                color: "var(--ink)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 13,
-                fontWeight: 500,
-                letterSpacing: "-0.005em",
-              }}
-            >
-              This page only
-            </strong>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

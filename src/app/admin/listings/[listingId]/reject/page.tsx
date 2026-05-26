@@ -58,6 +58,9 @@ export default function AdminListingRejectPage({
         <div className="rounded-[12px] p-[22px] mb-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h3 className="text-[14px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Message to provider</h3>
           <textarea
+            required
+            minLength={20}
+            maxLength={2000}
             className="w-full rounded-[8px] p-3 text-[13.5px] outline-none resize-y"
             style={{
               minHeight: 120,

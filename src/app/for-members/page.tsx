@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "For Members",
+  description: "Discover gyms, trainers, and dietitians worldwide with one Binectics membership.",
+};
 
 /**
  * For Members — marketing landing page for fitness enthusiasts.

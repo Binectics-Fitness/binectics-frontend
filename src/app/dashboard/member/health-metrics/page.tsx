@@ -1,4 +1,10 @@
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Health Metrics",
+  description: "Track your health metrics including weight, body composition, and vitals.",
+};
 
 const BODY_COMP_ROWS = [
   { metric: "Weight", today: "73.4 kg", m3: "75.2 kg", m6: "77.1 kg", trend: "↓ 3.7 kg", ok: true },

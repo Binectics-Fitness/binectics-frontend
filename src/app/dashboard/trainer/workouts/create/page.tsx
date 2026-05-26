@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Create Workout",
+  description: "Build a new workout plan for your clients.",
+};
 
 /**
  * Plan builder — plan-builder.html prototype.

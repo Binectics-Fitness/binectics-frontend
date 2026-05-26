@@ -60,6 +60,9 @@ export default function AdminDisputeResolvePage({
               Public message to both parties
             </div>
             <textarea
+              required
+              minLength={20}
+              maxLength={2000}
               className="w-full rounded-[8px] p-3 text-[13.5px] outline-none resize-y"
               style={{
                 minHeight: 90,

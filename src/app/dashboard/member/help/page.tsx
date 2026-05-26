@@ -1,4 +1,10 @@
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Help",
+  description: "Get help and find answers to common questions.",
+};
 
 const TICKETS = [
   {

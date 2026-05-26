@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Locations",
+  description: "Manage your gym locations and branch settings.",
+};
 
 /**
  * Gym Locations — Iron Lab · 4 active across Cape Town

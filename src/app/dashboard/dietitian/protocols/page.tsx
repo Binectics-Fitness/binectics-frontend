@@ -1,4 +1,10 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Protocols",
+  description: "Create and manage clinical nutrition protocols.",
+};
 
 const PILL_STYLES: Record<string, React.CSSProperties> = {
   pcos: { background: "var(--dietitian-soft)", color: "var(--dietitian)", border: "1px solid oklch(0.88 0.04 300)" },

@@ -94,7 +94,7 @@ export default function AuthPage() {
 
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email or phone</label>
-                    <input type="email" placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: errors.email ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("email")} />
+                    <input type="email" required placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: errors.email ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("email")} />
                     {errors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.email.message}</p>}
                   </div>
 
@@ -104,8 +104,8 @@ export default function AuthPage() {
                       <button type="button" onClick={() => setPanel("reset")} className="font-mono text-[11px] uppercase tracking-[0.05em] underline underline-offset-3" style={{ color: "var(--fg-2)", textDecorationColor: "var(--border-2)" }}>Forgot password</button>
                     </div>
                     <div className="relative">
-                      <input type={showPw ? "text" : "password"} placeholder="••••••••••••" className="h-10.5 w-full rounded-(--r-2) px-3.5 pr-10 text-[14px]" style={{ border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("password")} />
-                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }}>
+                      <input type={showPw ? "text" : "password"} required minLength={8} placeholder="••••••••••••" className="h-10.5 w-full rounded-(--r-2) px-3.5 pr-10 text-[14px]" style={{ border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("password")} />
+                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }} aria-label={showPw ? "Hide password" : "Show password"}>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{showPw ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/></> : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
                       </button>
                     </div>
@@ -200,25 +200,25 @@ export default function AuthPage() {
                   <div className="grid grid-cols-2 gap-3.5">
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name</label>
-                      <input placeholder="Tunde" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                      <input required placeholder="Tunde" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Last name</label>
-                      <input placeholder="Adebayo" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                      <input required placeholder="Adebayo" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email</label>
-                    <input type="email" placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <input type="email" required placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Password</label>
-                    <input type="password" placeholder="At least 10 characters" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <input type="password" required minLength={10} placeholder="At least 10 characters" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                     <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>Mix it up. Long passphrases beat short complex ones.</span>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Country</label>
-                    <input defaultValue="Nigeria · NG" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <input required defaultValue="Nigeria · NG" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                     <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>Determines your default currency and gateway. Change later anytime.</span>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -254,7 +254,7 @@ export default function AuthPage() {
                 <div className="flex flex-col gap-3.5 mt-8">
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email or phone</label>
-                    <input type="text" placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <input type="email" required placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                     <span className="text-[12px] leading-relaxed" style={{ color: "var(--fg-3)" }}>If we find an account, you&apos;ll get an email. We don&apos;t say either way to protect privacy.</span>
                   </div>
                   <button className="btn-primary-v2 lg w-full justify-center" onClick={() => setPanel("reset-sent")}>Send reset link →</button>

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Press",
+  description: "Binectics press resources, media kit, and recent news coverage.",
+};
 
 /**
  * Press — press coverage + press kit downloads.

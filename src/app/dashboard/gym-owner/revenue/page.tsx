@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Revenue",
+  description: "Track your gym revenue, trends, and financial performance.",
+};
 
 /**
  * Revenue — gym-revenue.html prototype.

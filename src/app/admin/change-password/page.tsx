@@ -65,6 +65,8 @@ export default function AdminChangePasswordPage() {
             </label>
             <input
               type="password"
+              required
+              minLength={8}
               autoComplete="current-password"
               {...register("current")}
               className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -82,6 +84,8 @@ export default function AdminChangePasswordPage() {
             </label>
             <input
               type="password"
+              required
+              minLength={8}
               autoComplete="new-password"
               {...register("new")}
               className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -101,6 +105,8 @@ export default function AdminChangePasswordPage() {
             </label>
             <input
               type="password"
+              required
+              minLength={8}
               autoComplete="new-password"
               {...register("confirm")}
               className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"

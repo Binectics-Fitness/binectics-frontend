@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Facility",
+  description: "Manage your gym facilities, amenities, and equipment.",
+};
 
 const LOCATIONS = [
   { name: "Sea Point", badge: "Flagship", addr: "12 Beach Rd · Sea Point · 8005", members: "380", floor: "1,240", staff: "8", rating: "4.9", amenities: ["24/7", "Showers · 6", "Sauna", "Olympic · 4", "Cardio · 18", "Lockers · 80", "Parking"], hours: "5am–10pm" },

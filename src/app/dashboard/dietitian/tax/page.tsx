@@ -1,4 +1,10 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tax",
+  description: "View tax summaries and download tax documents.",
+};
 
 const KPIS = [
   { label: "Net · 2025", value: "₦ 18.4M", delta: "Tax owed ₦ 4.2M" },

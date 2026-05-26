@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "For Dietitians",
+  description: "Build meal plans, track client adherence, and manage consultations on Binectics.",
+};
 
 /**
  * For Dietitians — marketing landing page for dietitians.

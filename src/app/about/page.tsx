@@ -2,6 +2,12 @@ import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About",
+  description: "Learn about Binectics, our mission to unify the global fitness ecosystem, and the team behind the platform.",
+};
 
 /**
  * About — about.html prototype. Pixel-perfect rebuild.

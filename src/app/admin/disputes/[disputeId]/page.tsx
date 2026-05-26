@@ -1,6 +1,12 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import Link from "next/link";
 import React from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dispute Details",
+  description: "Review dispute details and resolution history.",
+};
 
 export default function AdminSingleDisputePage({
   params,

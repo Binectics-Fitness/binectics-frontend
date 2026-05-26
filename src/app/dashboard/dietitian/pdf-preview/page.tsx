@@ -1,4 +1,10 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "PDF Preview",
+  description: "Preview and export meal plans as PDF documents.",
+};
 
 const PAGES = [1, 2, 3, 4];
 

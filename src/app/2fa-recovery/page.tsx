@@ -115,7 +115,10 @@ export default function TwoFactorRecoveryPage() {
             </label>
             <input
               type="text"
+              required
+              minLength={9}
               maxLength={11}
+              pattern="[A-Z0-9]{4}-[A-Z0-9]{4}"
               placeholder="XXXX-XXXX"
               autoFocus
               value={code}

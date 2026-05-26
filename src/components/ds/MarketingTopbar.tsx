@@ -32,7 +32,7 @@ export function MarketingTopbar({ activeLabel, links = DEFAULT_LINKS }: Marketin
         <Link href="/"><BinecticsLockup /></Link>
 
         {/* Center: nav links */}
-        <nav className="hidden md:flex gap-0.5">
+        <nav className="hidden md:flex gap-0.5" aria-label="Main navigation">
           {navLinks.map((l) => (
             <Link
               key={l.label}

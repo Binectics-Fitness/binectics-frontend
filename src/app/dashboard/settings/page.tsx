@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Settings",
+  description: "Manage your account settings, preferences, and privacy.",
+};
 
 /**
  * Settings — settings.html prototype.
@@ -236,11 +242,11 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name</label>
-                    <input defaultValue="Tunde" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "var(--font-sans)" }} />
+                    <input required minLength={2} maxLength={50} defaultValue="Tunde" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "var(--font-sans)" }} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Last name</label>
-                    <input defaultValue="Adebayo" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "var(--font-sans)" }} />
+                    <input required minLength={2} maxLength={50} defaultValue="Adebayo" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "var(--font-sans)" }} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -259,13 +265,13 @@ export default function SettingsPage() {
                   <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
                     Email <span className="normal-case font-sans" style={{ color: "var(--signal-ink)", letterSpacing: "-0.005em", marginLeft: 4 }}>verified</span>
                   </label>
-                  <input defaultValue="tunde@gmail.com" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "var(--font-sans)" }} />
+                  <input type="email" required defaultValue="tunde@gmail.com" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "var(--font-sans)" }} />
                   <span className="text-[12px] leading-normal" style={{ color: "var(--fg-3)" }}>Used for receipts and security alerts. Change requires re-verification.</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Phone</label>
-                    <input defaultValue="+27 82 ••• 1284" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "var(--font-sans)" }} />
+                    <input type="tel" defaultValue="+27 82 ••• 1284" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "var(--font-sans)" }} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Date of birth</label>

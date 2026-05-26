@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Compare Providers",
+  description: "Compare gyms, trainers, and dietitians side by side on Binectics.",
+};
 
 /**
  * Marketplace Compare — side-by-side provider comparison table.

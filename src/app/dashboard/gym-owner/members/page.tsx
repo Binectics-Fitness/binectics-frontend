@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Members",
+  description: "View and manage your gym members and their subscriptions.",
+};
 
 const KPIS = [
   { label: "Total members", value: "1,284", delta: "+ 38 net this month" },
@@ -36,7 +42,7 @@ function Check({ on }: { on?: boolean }) { return <span className={`w-3.5 h-3.5 
 export default function GymMembersPage() {
   const selectedCount = MEMBERS.filter(m => m.checked).length;
   return (
-    <GymDashboardShell activeItem="Members" crumb="Members" actions={<><button className="w-8 h-8 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button><button className="btn-ghost-v2 sm">Bulk import</button><button className="btn-primary-v2 sm">+ Add member</button></>}>
+    <GymDashboardShell activeItem="Members" crumb="Members" actions={<><button className="w-8 h-8 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }} aria-label="Export members"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button><button className="btn-ghost-v2 sm">Bulk import</button><button className="btn-primary-v2 sm">+ Add member</button></>}>
       <div><h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Members</h1><div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>1,284 active across 4 locations · 38 new this month · 27 paused · 4 past‑due</div></div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">{KPIS.map((k) => (<div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}><div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div><div className="text-[26px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</div><div className="font-mono text-[11.5px] mt-1" style={{ color: k.down ? "var(--danger)" : "var(--signal-ink)" }}>{k.delta}</div></div>))}</div>

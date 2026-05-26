@@ -124,6 +124,7 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 id="email"
+                required
                 {...registerField("email")}
                 placeholder="admin@binectics.com"
                 className={`w-full h-12 border ${
@@ -149,6 +150,8 @@ export default function AdminLoginPage() {
               <input
                 type="password"
                 id="password"
+                required
+                minLength={8}
                 {...registerField("password")}
                 placeholder="••••••••"
                 className={`w-full h-12 border ${

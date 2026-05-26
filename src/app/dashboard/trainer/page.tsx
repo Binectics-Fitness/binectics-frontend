@@ -1,4 +1,10 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Trainer Dashboard",
+  description: "Training overview with client progress, sessions, and earnings.",
+};
 
 /**
  * Trainer dashboard — Sarah Okafor · CPT
@@ -216,8 +222,8 @@ export default function TrainerDashboard() {
                     <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Mon, May 11 · 6 sessions</div>
                   </div>
                   <div className="flex gap-1">
-                    <button className="w-7 h-7 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m15 18-6-6 6-6"/></svg></button>
-                    <button className="w-7 h-7 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m9 18 6-6-6-6"/></svg></button>
+                    <button className="w-7 h-7 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }} aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <button className="w-7 h-7 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }} aria-label="Next month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m9 18 6-6-6-6"/></svg></button>
                   </div>
                 </div>
                 <div className="grid grid-cols-7 gap-1 px-4.5 py-3.5 text-[12px]" style={{ color: "var(--fg-2)" }}>

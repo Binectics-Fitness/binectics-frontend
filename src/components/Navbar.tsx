@@ -91,7 +91,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
           {MARKETING_LINKS.map((link) => {
             const active = isActiveLink(pathname, link.href);
             return (

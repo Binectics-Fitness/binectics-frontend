@@ -93,27 +93,27 @@ export default function UserRegisterPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name <span style={{ color: "var(--danger)" }}>*</span></label>
-                <input placeholder="John" className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]" style={{ background: "var(--bg)", border: errors.firstName ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("firstName")} />
+                <input required minLength={2} maxLength={50} placeholder="John" className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]" style={{ background: "var(--bg)", border: errors.firstName ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("firstName")} />
                 {errors.firstName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.firstName.message}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Last name <span style={{ color: "var(--danger)" }}>*</span></label>
-                <input placeholder="Doe" className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]" style={{ background: "var(--bg)", border: errors.lastName ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("lastName")} />
+                <input required minLength={2} maxLength={50} placeholder="Doe" className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]" style={{ background: "var(--bg)", border: errors.lastName ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("lastName")} />
                 {errors.lastName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.lastName.message}</p>}
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email <span style={{ color: "var(--danger)" }}>*</span></label>
-              <input type="email" placeholder="you@example.com" className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]" style={{ background: "var(--bg)", border: errors.email ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("email")} />
+              <input type="email" required placeholder="you@example.com" className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]" style={{ background: "var(--bg)", border: errors.email ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("email")} />
               {errors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.email.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Password <span style={{ color: "var(--danger)" }}>*</span></label>
               <div className="relative">
-                <input type={showPw ? "text" : "password"} placeholder="••••••••••••" className="h-8.5 w-full rounded-(--r-2) px-3 pr-9 text-[13.5px]" style={{ background: "var(--bg)", border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("password")} />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }}>
+                <input type={showPw ? "text" : "password"} required minLength={12} placeholder="••••••••••••" className="h-8.5 w-full rounded-(--r-2) px-3 pr-9 text-[13.5px]" style={{ background: "var(--bg)", border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("password")} />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }} aria-label={showPw ? "Hide password" : "Show password"}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{showPw ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></> : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
                 </button>
               </div>
@@ -124,8 +124,8 @@ export default function UserRegisterPage() {
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Confirm password <span style={{ color: "var(--danger)" }}>*</span></label>
               <div className="relative">
-                <input type={showCpw ? "text" : "password"} placeholder="••••••••••••" className="h-8.5 w-full rounded-(--r-2) px-3 pr-9 text-[13.5px]" style={{ background: "var(--bg)", border: errors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("confirmPassword")} />
-                <button type="button" onClick={() => setShowCpw(!showCpw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }}>
+                <input type={showCpw ? "text" : "password"} required minLength={12} placeholder="••••••••••••" className="h-8.5 w-full rounded-(--r-2) px-3 pr-9 text-[13.5px]" style={{ background: "var(--bg)", border: errors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", fontFamily: "inherit" }} {...registerField("confirmPassword")} />
+                <button type="button" onClick={() => setShowCpw(!showCpw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }} aria-label={showCpw ? "Hide password" : "Show password"}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{showCpw ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></> : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
                 </button>
               </div>

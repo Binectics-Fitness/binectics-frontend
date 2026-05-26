@@ -1,4 +1,10 @@
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Meal Log",
+  description: "Track your daily meals and nutrition intake.",
+};
 
 const MEALS = [
   { time: "07:42", name: "Breakfast", desc: "Oats + banana + whey", macros: "420 kcal · 32P 58C 8F", planned: false },

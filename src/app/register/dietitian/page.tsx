@@ -84,25 +84,25 @@ export default function DietitianRegisterPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className={lbl} style={{ color: "var(--fg-3)" }}>First name <span style={{ color: "var(--danger)" }}>*</span></label>
-                <input placeholder="John" className={inputCls} style={inputStyle(errors.firstName?.message)} {...registerField("firstName")} />
+                <input required minLength={2} maxLength={50} placeholder="John" className={inputCls} style={inputStyle(errors.firstName?.message)} {...registerField("firstName")} />
                 {errors.firstName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.firstName.message}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className={lbl} style={{ color: "var(--fg-3)" }}>Last name <span style={{ color: "var(--danger)" }}>*</span></label>
-                <input placeholder="Doe" className={inputCls} style={inputStyle(errors.lastName?.message)} {...registerField("lastName")} />
+                <input required minLength={2} maxLength={50} placeholder="Doe" className={inputCls} style={inputStyle(errors.lastName?.message)} {...registerField("lastName")} />
                 {errors.lastName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.lastName.message}</p>}
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className={lbl} style={{ color: "var(--fg-3)" }}>Email <span style={{ color: "var(--danger)" }}>*</span></label>
-              <input type="email" placeholder="you@example.com" className={inputCls} style={inputStyle(errors.email?.message)} {...registerField("email")} />
+              <input type="email" required placeholder="you@example.com" className={inputCls} style={inputStyle(errors.email?.message)} {...registerField("email")} />
               {errors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.email.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className={lbl} style={{ color: "var(--fg-3)" }}>Password <span style={{ color: "var(--danger)" }}>*</span></label>
               <div className="relative">
-                <input type={showPw ? "text" : "password"} placeholder="••••••••••••" className={`${inputCls} pr-9`} style={inputStyle(errors.password?.message)} {...registerField("password")} />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }}><EyeIcon show={showPw} /></button>
+                <input type={showPw ? "text" : "password"} required minLength={12} placeholder="••••••••••••" className={`${inputCls} pr-9`} style={inputStyle(errors.password?.message)} {...registerField("password")} />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }} aria-label={showPw ? "Hide password" : "Show password"}><EyeIcon show={showPw} /></button>
               </div>
               {errors.password && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.password.message}</p>}
               <p className="text-[12px]" style={{ color: "var(--fg-3)" }}>Min 12 characters with uppercase, lowercase, number, and special character</p>
@@ -110,8 +110,8 @@ export default function DietitianRegisterPage() {
             <div className="flex flex-col gap-1.5">
               <label className={lbl} style={{ color: "var(--fg-3)" }}>Confirm password <span style={{ color: "var(--danger)" }}>*</span></label>
               <div className="relative">
-                <input type={showCpw ? "text" : "password"} placeholder="••••••••••••" className={`${inputCls} pr-9`} style={inputStyle(errors.confirmPassword?.message)} {...registerField("confirmPassword")} />
-                <button type="button" onClick={() => setShowCpw(!showCpw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }}><EyeIcon show={showCpw} /></button>
+                <input type={showCpw ? "text" : "password"} required minLength={12} placeholder="••••••••••••" className={`${inputCls} pr-9`} style={inputStyle(errors.confirmPassword?.message)} {...registerField("confirmPassword")} />
+                <button type="button" onClick={() => setShowCpw(!showCpw)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }} aria-label={showCpw ? "Hide password" : "Show password"}><EyeIcon show={showCpw} /></button>
               </div>
               {errors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.confirmPassword.message}</p>}
             </div>

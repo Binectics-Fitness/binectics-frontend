@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Member Dashboard",
+  description: "Your fitness overview with streaks, workouts, and upcoming sessions.",
+};
 
 const WEEK_DAYS = [
   { day: "Mon", date: 19, done: true },

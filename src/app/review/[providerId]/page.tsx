@@ -104,6 +104,9 @@ export default function ReviewProviderPage({
           <div className="flex flex-col gap-1.5 mb-6">
             <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Your review</label>
             <textarea
+              required
+              minLength={30}
+              maxLength={500}
               placeholder="What went well? Anything Sarah could improve?"
               className="rounded-(--r-2) px-3.5 py-3 text-[14px] outline-none resize-y"
               style={{ background: "var(--bg)", border: "1px solid var(--border-2)", font: "inherit", minHeight: "100px" }}
@@ -123,7 +126,7 @@ export default function ReviewProviderPage({
           {/* Actions */}
           <div className="flex gap-2 justify-end">
             <Link href="/dashboard/bookings" className="btn-ghost-v2 sm">Skip</Link>
-            <button className="btn-primary-v2 sm cursor-pointer">Post review</button>
+            <button type="submit" className="btn-primary-v2 sm cursor-pointer">Post review</button>
           </div>
         </div>
       </div>

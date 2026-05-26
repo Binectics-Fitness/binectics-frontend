@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Gym Settings",
+  description: "Configure your gym profile, hours, and operational settings.",
+};
 
 const SECTIONS = [
   { group: "Business", items: [{ id: "org", label: "Organization" }, { id: "currency", label: "Currency & locale" }, { id: "tax", label: "Tax & VAT" }] },
@@ -110,7 +116,7 @@ export default function GymSettingsPage() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Primary email</label>
-                <input defaultValue="lerato@ironlab.co.za" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                <input type="email" required defaultValue="lerato@ironlab.co.za" className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
               </div>
             </div>
           </section>

@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Saved Providers",
+  description: "View your saved gyms, trainers, and dietitians.",
+};
 
 /**
  * Saved Providers — saved-providers.html prototype.

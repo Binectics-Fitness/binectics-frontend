@@ -1,4 +1,10 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Trainer Settings",
+  description: "Configure your training preferences and availability.",
+};
 
 function Toggle({ on = true }: { on?: boolean }) {
   return (

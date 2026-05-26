@@ -1,4 +1,10 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Client Feedback",
+  description: "Review client meal logs and provide nutrition feedback.",
+};
 
 const MEALS = [
   { name: "Folake A.", day: "Day 12 · breakfast", meal: "High protein oats", status: "ok", statusText: "✓ on plan", time: "Today 07:42" },

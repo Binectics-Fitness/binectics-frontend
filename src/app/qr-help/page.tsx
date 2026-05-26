@@ -74,8 +74,8 @@ export default function QrHelpPage() {
         </h2>
         <div className="flex flex-col gap-3.5">
           {STEPS.map((s) => (
-            <div key={s.step} className="grid grid-cols-[48px_1fr] sm:grid-cols-[64px_1fr] items-start gap-4 rounded-(--r-3) p-6" style={{ background: "var(--bg-2)" }}>
-              <span className="text-[28px] sm:text-[32px] font-medium font-mono" style={{ color: "var(--signal)", lineHeight: 1 }}>{s.step}</span>
+            <div key={s.step} className="grid grid-cols-[40px_1fr] sm:grid-cols-[64px_1fr] items-start gap-3 sm:gap-4 rounded-(--r-3) p-5 sm:p-6" style={{ background: "var(--bg-2)" }}>
+              <span className="text-[24px] sm:text-[32px] font-medium font-mono" style={{ color: "var(--signal)", lineHeight: 1 }}>{s.step}</span>
               <div>
                 <h3 className="text-[17px] font-medium mb-1.5" style={{ color: "var(--ink)" }}>{s.title}</h3>
                 <p className="text-[13.5px] leading-[1.55] max-w-[55ch]" style={{ color: "var(--fg-2)" }}>{s.desc}</p>
@@ -102,8 +102,8 @@ export default function QrHelpPage() {
 
       {/* CTA */}
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-16" style={{ borderTop: "1px solid var(--border)" }}>
-        <div className="rounded-(--r-3) p-8 sm:p-12 text-center" style={{ background: "var(--bg-2)" }}>
-          <h2 className="text-[28px] sm:text-[36px] font-medium mb-3" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
+        <div className="rounded-(--r-3) p-6 sm:p-12 text-center" style={{ background: "var(--bg-2)" }}>
+          <h2 className="text-[24px] sm:text-[36px] font-medium mb-3" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
             Ready to <em className="font-serif font-normal italic">check in</em>?
           </h2>
           <p className="text-[15px] sm:text-[17px] leading-[1.55] max-w-[45ch] mx-auto mb-6" style={{ color: "var(--fg-2)" }}>

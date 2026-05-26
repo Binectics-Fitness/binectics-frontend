@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Booking Details",
+  description: "View your booking details, timeline, and manage your appointment on Binectics.",
+};
 
 const TIMELINE = [
   { when: "11 May · 14:32", title: "Booking placed", desc: "Card authorized · waiting on Sarah.", done: true },

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
@@ -173,7 +174,7 @@ export default function ProviderPage() {
           const photo = photos[i];
           return (
             <div key={i} className={`rounded-(--r-3) overflow-hidden relative border border-border min-h-[180px] sm:min-h-0 ${i >= 3 ? "hidden sm:block" : ""} ${i === 0 ? "sm:row-span-2" : ""}`} style={{ background: photo ? undefined : phBg }}>
-              {photo && <img src={photo} alt={`${name} photo ${i + 1}`} className="absolute inset-0 w-full h-full object-cover" />}
+              {photo && <Image src={photo} alt={`${name} photo ${i + 1}`} fill className="object-cover" sizes="(max-width: 640px) 100vw, 50vw" />}
               {!photo && <span className="absolute bottom-2.5 left-3 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{typeLabel} · {name}</span>}
               {i === 4 && photos.length > 5 && (
                 <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 bg-bg border border-border px-3 py-1.5 rounded-full text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>

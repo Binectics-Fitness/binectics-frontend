@@ -387,6 +387,81 @@ export default function Home() {
         </ScrollReveal>
       </div>
 
+      {/* ═══ TESTIMONIALS — Metric Cards ═══ */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 mb-10 sm:mb-14 items-end">
+            <h2 className="text-[32px] sm:text-[48px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>
+              What they&apos;re<br /><em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>saying</em>.
+            </h2>
+            <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
+              Gym owners, trainers, dietitians, and members — from Lagos to Cape Town to Dubai. Here&apos;s what switching to one platform actually feels like.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal stagger staggerInterval={120} className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          {[
+            {
+              quote: "We went from three spreadsheets and a WhatsApp group to one dashboard. Check-ins are automatic, revenue is tracked, and I finally know which tiers actually show up. Should have switched two years ago.",
+              name: "Adaeze Okonkwo",
+              meta: "Gym owner · FitZone · Lagos",
+              accent: "var(--gym)",
+              stat: "94%",
+              statLabel: "check-in accuracy",
+            },
+            {
+              quote: "I used to spend 90 minutes a day on invoices and scheduling. Now I open one tab, see my sessions, and payments just land. The client journal means I actually remember what we did last Tuesday. My clients noticed the difference.",
+              name: "Sarah Okafor",
+              meta: "Personal trainer · Cape Town · CSCS",
+              accent: "var(--trainer)",
+              stat: "52 min",
+              statLabel: "saved per day",
+            },
+            {
+              quote: "The food database actually has the foods my clients eat. Not just chicken breast and broccoli — fufu, bobotie, jollof. I built 340 meal plans last year without manually entering a single macronutrient. That alone is worth it.",
+              name: "Dr. Nadia Hassan",
+              meta: "Clinical dietitian · Dubai · RD, ISAK",
+              accent: "var(--dietitian)",
+              stat: "2,400+",
+              statLabel: "foods in FCDB",
+            },
+          ].map((t) => (
+            <div key={t.name} className="rounded-(--r-3) border border-border bg-bg p-6 sm:p-7 flex flex-col justify-between">
+              <div>
+                <div className="mb-5 pb-5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div className="text-[36px] sm:text-[44px] font-medium leading-none" style={{ color: t.accent, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.03em" }}>{t.stat}</div>
+                  <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-1.5" style={{ color: "var(--fg-3)" }}>{t.statLabel}</div>
+                </div>
+                <p className="text-[14px] sm:text-[15px] leading-[1.65] text-fg-2 mb-6">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+              </div>
+              <div>
+                <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{t.name}</div>
+                <div className="font-mono text-[11px] mt-0.5" style={{ color: "var(--fg-3)" }}>{t.meta}</div>
+              </div>
+            </div>
+          ))}
+        </ScrollReveal>
+
+        <ScrollReveal delay={200}>
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mt-10 pt-8" style={{ borderTop: "1px solid var(--border)" }}>
+            {[
+              { v: "4.82", l: "avg rating" },
+              { v: "14,200+", l: "providers" },
+              { v: "52", l: "countries" },
+              { v: "98%", l: "would recommend" },
+            ].map((s) => (
+              <div key={s.l} className="flex items-baseline gap-2">
+                <span className="text-[20px] sm:text-[24px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{s.v}</span>
+                <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.l}</span>
+              </div>
+            ))}
+          </div>
+        </ScrollReveal>
+      </section>
+
       {/* ═══ PRICING ═══ */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border" id="pricing">
         <ScrollReveal>

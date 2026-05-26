@@ -1,4 +1,10 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Compliance",
+  description: "Regulatory compliance monitoring and audit tools for Binectics.",
+};
 
 export default function AdminCompliancePage() {
   return (

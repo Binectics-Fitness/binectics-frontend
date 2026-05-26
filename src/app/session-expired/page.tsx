@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Session Expired",
+  description: "Your Binectics session has expired. Please log in again.",
+};
 
 export default function SessionExpiredPage() {
   return (

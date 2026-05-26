@@ -4,7 +4,7 @@ import { DashboardMobileNav } from "./MobileNav";
 
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {d ? <path d={d} /> : children}
     </svg>
   );
@@ -48,7 +48,7 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
         <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>Iron Lab</span>
       </div>
       {SIDEBAR.map((s) => (
-        <nav key={s.label} className="flex flex-col gap-0.5">
+        <nav key={s.label} className="flex flex-col gap-0.5" aria-label={s.label}>
           <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] px-2 py-1 mb-1" style={{ color: "var(--fg-4)" }}>{s.label}</div>
           {s.items.map((item) => {
             const isActive = item.name === activeItem;
@@ -83,7 +83,7 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
       {/* Desktop layout */}
       <div className="hidden lg:grid" style={{ gridTemplateColumns: "232px 1fr", minHeight: "100vh" }}>
         {/* Desktop sidebar */}
-        <aside className="flex flex-col gap-6 sticky top-0 h-screen overflow-y-auto" style={{ background: "var(--bg)", borderRight: "1px solid var(--border)", padding: "18px 14px" }}>
+        <aside className="flex flex-col gap-6 sticky top-0 h-screen overflow-y-auto" style={{ background: "var(--bg)", borderRight: "1px solid var(--border)", padding: "18px 14px" }} aria-label="Sidebar navigation">
           <SidebarContent activeItem={activeItem} />
         </aside>
 

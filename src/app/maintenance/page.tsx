@@ -1,4 +1,10 @@
 import Link from 'next/link';
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Maintenance",
+  description: "Binectics is currently undergoing scheduled maintenance. We will be back shortly.",
+};
 
 export default function MaintenancePage() {
   return (

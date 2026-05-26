@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Notifications",
+  description: "View your latest notifications and alerts.",
+};
 
 /**
  * Notifications kit — notifications.html prototype.

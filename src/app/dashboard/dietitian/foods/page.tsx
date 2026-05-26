@@ -1,4 +1,10 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Food Database",
+  description: "Manage your custom food database with macronutrient data.",
+};
 
 const FOODS = [
   { name: "Jollof rice · West African", meta: "Tomato base · long-grain rice", source: "custom" as const, serving: "1 cup · 200g", kcal: "320", protein: "6g", carbs: "62g", fat: "5g", logged: "214" },

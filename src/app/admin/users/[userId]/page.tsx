@@ -1,5 +1,11 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import React from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "User Details",
+  description: "View user account details, activity, and manage their status.",
+};
 
 export default function AdminUserDetailPage({
   params,

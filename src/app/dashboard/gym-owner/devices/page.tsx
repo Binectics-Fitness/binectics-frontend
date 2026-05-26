@@ -1,4 +1,10 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Devices",
+  description: "Manage QR scanners and check-in devices at your gym locations.",
+};
 
 const DEVICES: {
   name: string; meta: string; type: "kiosk" | "scanner" | "printer";

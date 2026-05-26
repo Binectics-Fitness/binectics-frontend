@@ -1,6 +1,12 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import Link from "next/link";
 import React from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Listing Details",
+  description: "Review and moderate a provider listing.",
+};
 
 export default function AdminSingleListingPage({
   params,

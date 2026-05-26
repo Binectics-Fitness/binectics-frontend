@@ -79,9 +79,9 @@ export default function DisputesPage() {
       </div>
 
       <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <div className="flex-1 min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+        <div className="flex-1 min-w-0 sm:min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-          <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search by member, provider, or DSP_ID..." style={{ color: "var(--ink)" }} readOnly />
+          <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search disputes..." style={{ color: "var(--ink)" }} readOnly />
         </div>
         <div className="flex gap-1 flex-wrap">
           {FILTERS.map((f) => (
@@ -106,9 +106,15 @@ export default function DisputesPage() {
           <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--bg-2)", borderBottom: "1px solid var(--border)" }}>
-                {["ID", "Member", "Provider", "Reason", "Amount", "SLA", "Opened", "Status", ""].map((h) => (
-                  <th key={h} className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>{h}</th>
-                ))}
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>ID</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Member</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap hidden md:table-cell" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Provider</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Reason</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Amount</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap hidden sm:table-cell" style={{ color: "var(--fg-3)", fontWeight: 400 }}>SLA</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Opened</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}>Status</th>
+                <th className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-left px-3.5 py-2.5 whitespace-nowrap" style={{ color: "var(--fg-3)", fontWeight: 400 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -121,11 +127,11 @@ export default function DisputesPage() {
                       <span className="font-medium" style={{ color: "var(--ink)" }}>{d.member}</span>
                     </div>
                   </td>
-                  <td className="px-3.5 py-3 whitespace-nowrap" style={{ color: "var(--fg-2)" }}>{d.provider}</td>
-                  <td className="px-3.5 py-3" style={{ color: "var(--fg-2)", maxWidth: 200 }}>{d.reason}</td>
+                  <td className="px-3.5 py-3 whitespace-nowrap hidden md:table-cell" style={{ color: "var(--fg-2)" }}>{d.provider}</td>
+                  <td className="px-3.5 py-3 hidden lg:table-cell" style={{ color: "var(--fg-2)", maxWidth: 200 }}>{d.reason}</td>
                   <td className="px-3.5 py-3 font-mono text-[12px] whitespace-nowrap" style={{ color: "var(--ink)" }}>{d.amount}</td>
-                  <td className="px-3.5 py-3 font-mono text-[11px] whitespace-nowrap" style={{ color: d.sla === "Overdue" ? "var(--danger)" : "var(--fg-3)" }}>{d.sla}</td>
-                  <td className="px-3.5 py-3 font-mono text-[11px] whitespace-nowrap" style={{ color: "var(--fg-3)" }}>{d.opened}</td>
+                  <td className="px-3.5 py-3 font-mono text-[11px] whitespace-nowrap hidden sm:table-cell" style={{ color: d.sla === "Overdue" ? "var(--danger)" : "var(--fg-3)" }}>{d.sla}</td>
+                  <td className="px-3.5 py-3 font-mono text-[11px] whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--fg-3)" }}>{d.opened}</td>
                   <td className="px-3.5 py-3"><StatusBadge status={d.status} /></td>
                   <td className="px-3.5 py-3">
                     <Link href={`/admin/disputes/${d.id}`} className="btn-ghost-v2 sm text-[12px]" style={{ padding: "4px 10px" }}>View</Link>

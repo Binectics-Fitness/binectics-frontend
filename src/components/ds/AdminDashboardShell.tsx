@@ -8,7 +8,7 @@ import { BinecticsMark } from "@/components/BinecticsLogo";
 
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {d ? <path d={d} /> : children}
     </svg>
   );
@@ -78,7 +78,7 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
 
       {/* Nav sections */}
       {SIDEBAR.map((s) => (
-        <nav key={s.label} className="flex flex-col gap-0.5">
+        <nav key={s.label} className="flex flex-col gap-0.5" aria-label={s.label}>
           <div
             className="font-mono text-[10.5px] uppercase tracking-[0.06em] px-2 py-1 mb-1"
             style={{ color: "oklch(0.55 0.008 80)" }}
@@ -221,6 +221,7 @@ export function AdminDashboardShell({ activeItem, crumb, actions, children }: Ad
             padding: "18px 14px",
             color: "oklch(0.85 0.005 85)",
           }}
+          aria-label="Sidebar navigation"
         >
           <SidebarContent activeItem={activeItem} />
         </aside>

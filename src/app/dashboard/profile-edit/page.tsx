@@ -399,11 +399,11 @@ export default function ProfileEditPage() {
                   <label className="font-mono text-[10.5px] uppercase flex justify-between" style={{ color: "var(--fg-3)", letterSpacing: "0.06em" }}>
                     Short bio <span className="font-mono text-[11px]" style={{ color: "var(--fg-4)", textTransform: "none", letterSpacing: "normal" }}>186 / 240</span>
                   </label>
-                  <textarea defaultValue="CSCS-certified strength coach helping runners lift heavier without giving up their miles. 7 years, 400+ clients, Iron Lab Sea Point." className="rounded-(--r-2) px-3.5 py-3 text-[14px] resize-y" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 80 }} />
+                  <textarea required minLength={20} maxLength={240} defaultValue="CSCS-certified strength coach helping runners lift heavier without giving up their miles. 7 years, 400+ clients, Iron Lab Sea Point." className="rounded-(--r-2) px-3.5 py-3 text-[14px] resize-y" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 80 }} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="font-mono text-[10.5px] uppercase" style={{ color: "var(--fg-3)", letterSpacing: "0.06em" }}>Full bio</label>
-                  <textarea defaultValue="I started powerlifting in 2019 and fell in love with the barbell. After getting my CSCS and training 400+ people, I still believe that getting strong is the simplest thing you can do for your health — and the hardest to do alone. My sessions are structured but never rigid. You bring the effort; I bring the plan, the coaching cues, and the accountability." className="rounded-(--r-2) px-3.5 py-3 text-[14px] resize-y" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 120 }} />
+                  <textarea required minLength={50} maxLength={1000} defaultValue="I started powerlifting in 2019 and fell in love with the barbell. After getting my CSCS and training 400+ people, I still believe that getting strong is the simplest thing you can do for your health — and the hardest to do alone. My sessions are structured but never rigid. You bring the effort; I bring the plan, the coaching cues, and the accountability." className="rounded-(--r-2) px-3.5 py-3 text-[14px] resize-y" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 120 }} />
                 </div>
               </div>
             </section>

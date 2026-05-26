@@ -1,5 +1,11 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import React from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Review Details",
+  description: "Moderate a user review and take action if needed.",
+};
 
 export default function AdminSingleReviewPage({
   params,

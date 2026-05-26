@@ -1,4 +1,10 @@
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Workout Log",
+  description: "Log and review your workout history.",
+};
 
 const HEATMAP_COLORS = [
   "oklch(0.95 0.005 80)", "var(--gym-soft)", "var(--signal-soft)", "var(--signal-soft)",

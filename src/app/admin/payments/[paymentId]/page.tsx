@@ -1,5 +1,11 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import React from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Payment Details",
+  description: "View payment transaction details and processing history.",
+};
 
 export default function AdminSinglePaymentPage({
   params,

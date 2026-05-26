@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Careers",
+  description: "Join the Binectics team and help build the operating system for global fitness.",
+};
 
 /**
  * Careers — open roles + culture page.

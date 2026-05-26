@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "For Gyms",
+  description: "Manage memberships, check-ins, and revenue with Binectics gym management tools.",
+};
 
 /**
  * For Gyms — marketing landing page for gym owners.

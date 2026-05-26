@@ -105,7 +105,7 @@ export default function BlogPage() {
                 </span>
                 <h3 className="text-[17px] font-medium leading-[1.3] mb-2" style={{ color: "var(--ink)" }}>{post.title}</h3>
                 <p className="text-[13.5px] leading-[1.55] mb-4" style={{ color: "var(--fg-2)" }}>{post.excerpt}</p>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{post.author}</span>
                   <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{post.date} &middot; {post.readTime}</span>
                 </div>

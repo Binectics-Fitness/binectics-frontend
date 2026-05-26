@@ -1,5 +1,11 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import React from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Fraud Case Details",
+  description: "Investigate fraud case evidence and take action.",
+};
 
 export default function AdminSingleFraudPage({
   params,

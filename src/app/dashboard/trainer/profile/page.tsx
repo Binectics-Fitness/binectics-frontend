@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Trainer Profile",
+  description: "Edit your trainer profile, specialties, and certifications.",
+};
 
 /**
  * Profile edit — profile-edit.html prototype.
@@ -94,12 +100,12 @@ export default function TrainerProfileEditPage() {
             <div className="flex flex-col gap-4 p-5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Headline</label>
-                <input defaultValue="Strength & running coach · Lagos · in-person + remote" className="h-8.5 rounded-(--r-2) px-3 text-[13.5px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                <input required maxLength={80} defaultValue="Strength & running coach · Lagos · in-person + remote" className="h-8.5 rounded-(--r-2) px-3 text-[13.5px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                 <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>60 characters used of 80. Shows under your name in marketplace results.</span>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>About your practice</label>
-                <textarea defaultValue="I've coached recreational runners and lifters in Lagos for 9 years. My work is barbell strength built around your sport — most clients run a marathon, train for a triathlon, or just want to keep showing up without injury at 40+." className="rounded-(--r-2) px-3 py-3 text-[14px] resize-y" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: "100px" }} />
+                <textarea required minLength={50} maxLength={500} defaultValue="I've coached recreational runners and lifters in Lagos for 9 years. My work is barbell strength built around your sport — most clients run a marathon, train for a triathlon, or just want to keep showing up without injury at 40+." className="rounded-(--r-2) px-3 py-3 text-[14px] resize-y" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: "100px" }} />
                 <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>240 characters · members see the first 180 in the search card.</span>
               </div>
             </div>

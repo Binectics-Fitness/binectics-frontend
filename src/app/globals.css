@@ -109,6 +109,31 @@
   --radius-full: 999px;
 }
 
+/* ─── Skip-to-content link ──────────────────────────────────── */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: var(--r-2);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 16px;
+}
+
+/* ─── Focus ring consistency ───────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 /* ─── Base reset ─────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
@@ -150,6 +175,14 @@ input,
 textarea,
 select {
   font-family: inherit;
+}
+
+/* ─── Form validation — :user-invalid fires only after interaction ─ */
+input:user-invalid,
+textarea:user-invalid,
+select:user-invalid {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 1px var(--danger);
 }
 
 h1, h2, h3, h4, h5, h6 {

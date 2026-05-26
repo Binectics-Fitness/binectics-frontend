@@ -1,4 +1,10 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Earnings",
+  description: "Track your training earnings, payouts, and revenue trends.",
+};
 
 export default function TrainerEarningsPage() {
   return (

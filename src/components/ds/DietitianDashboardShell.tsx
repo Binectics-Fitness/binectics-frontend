@@ -3,7 +3,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { DashboardMobileNav } from "./MobileNav";
 
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{d ? <path d={d} /> : children}</svg>;
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d ? <path d={d} /> : children}</svg>;
 }
 
 const SIDEBAR = [
@@ -36,7 +36,7 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
         <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>Dr. Priya Iyer</span>
       </div>
       {SIDEBAR.map((s) => (
-        <nav key={s.label} className="flex flex-col gap-0.5">
+        <nav key={s.label} className="flex flex-col gap-0.5" aria-label={s.label}>
           <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] px-2 py-1 mb-1" style={{ color: "var(--fg-4)" }}>{s.label}</div>
           {s.items.map((item) => {
             const isActive = item.name === activeItem;
@@ -65,7 +65,7 @@ export function DietitianDashboardShell({ activeItem, crumb, actions, children }
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
       <DashboardMobileNav><SidebarContent activeItem={activeItem} /></DashboardMobileNav>
       <div className="hidden lg:grid" style={{ gridTemplateColumns: "232px 1fr", minHeight: "100vh" }}>
-        <aside className="flex flex-col gap-6 sticky top-0 h-screen overflow-y-auto" style={{ background: "var(--bg)", borderRight: "1px solid var(--border)", padding: "18px 14px" }}><SidebarContent activeItem={activeItem} /></aside>
+        <aside className="flex flex-col gap-6 sticky top-0 h-screen overflow-y-auto" style={{ background: "var(--bg)", borderRight: "1px solid var(--border)", padding: "18px 14px" }} aria-label="Sidebar navigation"><SidebarContent activeItem={activeItem} /></aside>
         <div className="flex flex-col min-w-0">
           <header className="flex items-center justify-between h-14 px-7 sticky top-0 z-10" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
             <div className="text-[13px]" style={{ color: "var(--fg-3)" }}><Link href="/dashboard/dietitian" className="hover:underline" style={{ color: "var(--fg-3)", textDecoration: "none" }}>Dr. Priya Iyer</Link><span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span><span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span></div>

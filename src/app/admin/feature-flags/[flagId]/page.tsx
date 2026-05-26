@@ -1,5 +1,11 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import React from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Feature Flag Details",
+  description: "Configure and monitor a feature flag rollout.",
+};
 
 export default function AdminFeatureFlagDetailPage({
   params,

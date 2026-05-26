@@ -2,6 +2,12 @@ import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Help Centre",
+  description: "Find answers to common questions about using Binectics as a member or provider.",
+};
 
 /**
  * Help center — help.html prototype. Pixel-perfect rebuild.

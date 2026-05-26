@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Account Deleted",
+  description: "Your Binectics account has been deleted.",
+};
 
 export default function AccountDeletedPage() {
   return (

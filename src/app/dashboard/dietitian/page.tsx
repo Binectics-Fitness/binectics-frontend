@@ -1,4 +1,10 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dietitian Dashboard",
+  description: "Nutrition practice overview with clients, adherence, and earnings.",
+};
 
 /**
  * Dietitian dashboard — Dr Nadia Hassan · Lagos
