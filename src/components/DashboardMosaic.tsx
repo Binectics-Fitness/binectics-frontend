@@ -2330,13 +2330,21 @@ export default function DashboardMosaic() {
 
         /* ── Small phone (≤480px) ──────────────── */
         @media (max-width: 480px) {
-          .bento-big { min-height: 460px; }
-          .bento-big-content { min-height: 460px; padding: 20px 16px 40px; }
-          .bento-small { min-height: 420px; }
+          .bento-big { min-height: 500px; }
+          .bento-big-content { min-height: 500px; padding: 56px 16px 40px; }
+          .bento-big-headline { top: 20px; left: 20px; }
+          .bento-big-headline h3 { font-size: 20px; }
+          .bento-small { min-height: 480px; }
+          .bento-small-headline { top: 20px; left: 20px; }
+          .bento-small-headline h3 { font-size: 20px; }
           .bento-r2 { min-height: 420px; }
+          .r2-headline { top: 20px; left: 20px; }
+          .r2-headline h3 { font-size: 20px; }
           .bento-r3 { min-height: 380px; }
-          .r3-float { width: calc(100% - 32px); margin: 64px auto 20px; }
-          .r2-content { padding: 72px 16px 24px; }
+          .r3-mob-headline { top: 20px; left: 20px; }
+          .r3-mob-headline h3 { font-size: 20px; }
+          .r3-float { width: calc(100% - 32px); margin: 56px auto 20px; }
+          .r2-content { padding: 64px 16px 24px; }
           .globe-stats { gap: 14px !important; }
         }
 

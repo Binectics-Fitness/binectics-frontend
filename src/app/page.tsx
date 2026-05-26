@@ -177,7 +177,7 @@ export default function Home() {
       <div className="mx-auto max-w-360 px-5 sm:px-10">
         <ScrollReveal stagger staggerInterval={60} className="grid grid-cols-5 border-b border-border">
           {["Stripe", "Paystack", "Flutterwave", "Apple Pay", "Google Pay"].map((name, i) => (
-            <div key={name} className={`py-4 sm:py-7 px-2 sm:px-6 text-center text-fg-3 font-mono text-[9px] sm:text-[12px] uppercase tracking-[0.04em] ${i < 4 ? "border-r border-border" : ""}`}>
+            <div key={name} className={`py-4 sm:py-7 px-1 sm:px-6 text-center text-fg-3 font-mono text-[8px] sm:text-[12px] uppercase tracking-[0.02em] sm:tracking-[0.04em] ${i < 4 ? "border-r border-border" : ""}`}>
               {name}
             </div>
           ))}
