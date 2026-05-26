@@ -107,7 +107,7 @@ export default function Home() {
           </div>
 
           {/* Right column — HeartbeatMotion */}
-          <div className="w-full max-w-[480px] mx-auto lg:max-w-none" style={{ aspectRatio: "1 / 1" }}>
+          <div className="w-full max-w-[480px] mx-auto lg:max-w-none" style={{ aspectRatio: "1 / 1" }} aria-hidden="true">
             <HeartbeatMotion />
           </div>
         </div>
@@ -153,11 +153,11 @@ export default function Home() {
           ].map((role, i) => (
             <div key={role.micro} className={`p-6 sm:p-7 flex flex-col gap-3.5 min-h-60 sm:min-h-80 ${i < 3 ? "border-b sm:border-b-0 sm:border-r border-border" : ""} ${i === 1 ? "lg:border-r" : ""}`}>
               <div className="flex items-center gap-2.5">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`role-icon role-icon-${i}`} style={{ color: `var(--${role.micro === "Member" ? "ink" : role.micro === "Gym owner" ? "gym" : role.micro === "Trainer" ? "trainer" : "dietitian"})` }}>
-                  {role.micro === "Member" && <><circle cx="10" cy="5" r="2.5" /><path d="M5 18v-2a5 5 0 0 1 10 0v2" /><path d="M10 11v3" className="role-heartbeat" /></>}
-                  {role.micro === "Gym owner" && <><rect x="2" y="6" width="16" height="12" rx="1.5" /><path d="M2 10h16" /><rect x="5" y="2" width="2" height="4" rx="0.5" fill="currentColor" stroke="none" /><rect x="13" y="2" width="2" height="4" rx="0.5" fill="currentColor" stroke="none" /><circle cx="10" cy="14" r="1.5" className="role-pulse" /></>}
-                  {role.micro === "Trainer" && <><path d="M3 10h14" /><rect x="1" y="7" width="4" height="6" rx="1" /><rect x="15" y="7" width="4" height="6" rx="1" /><rect x="7" y="8.5" width="2" height="3" rx="0.5" fill="currentColor" stroke="none" /><rect x="11" y="8.5" width="2" height="3" rx="0.5" fill="currentColor" stroke="none" className="role-lift" /></>}
-                  {role.micro === "Dietitian" && <><circle cx="10" cy="10" r="7" /><path d="M10 5v4M8 7c0-2 4-2 4 0" /><path d="M10 13v2" className="role-grow" /><circle cx="10" cy="12" r="0.8" fill="currentColor" stroke="none" /></>}
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: `var(--${role.micro === "Member" ? "ink" : role.micro === "Gym owner" ? "gym" : role.micro === "Trainer" ? "trainer" : "dietitian"})` }}>
+                  {role.micro === "Member" && <><circle cx="10" cy="5" r="2.5" /><path d="M5 18v-2a5 5 0 0 1 10 0v2" /><path d="M10 11v3" /></>}
+                  {role.micro === "Gym owner" && <><rect x="2" y="6" width="16" height="12" rx="1.5" /><path d="M2 10h16" /><rect x="5" y="2" width="2" height="4" rx="0.5" fill="currentColor" stroke="none" /><rect x="13" y="2" width="2" height="4" rx="0.5" fill="currentColor" stroke="none" /><circle cx="10" cy="14" r="1.5" /></>}
+                  {role.micro === "Trainer" && <><path d="M3 10h14" /><rect x="1" y="7" width="4" height="6" rx="1" /><rect x="15" y="7" width="4" height="6" rx="1" /><rect x="7" y="8.5" width="2" height="3" rx="0.5" fill="currentColor" stroke="none" /><rect x="11" y="8.5" width="2" height="3" rx="0.5" fill="currentColor" stroke="none" /></>}
+                  {role.micro === "Dietitian" && <><circle cx="10" cy="10" r="7" /><path d="M10 5v4M8 7c0-2 4-2 4 0" /><path d="M10 13v2" /><circle cx="10" cy="12" r="0.8" fill="currentColor" stroke="none" /></>}
                 </svg>
                 <span className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-3">{role.micro}</span>
               </div>
@@ -172,6 +172,17 @@ export default function Home() {
           ))}
         </ScrollReveal>
       </section>
+
+      {/* ═══ TRUST STRIP ═══ */}
+      <div className="mx-auto max-w-360 px-5 sm:px-10">
+        <ScrollReveal stagger staggerInterval={60} className="grid grid-cols-5 border-b border-border">
+          {["Stripe", "Paystack", "Flutterwave", "Apple Pay", "Google Pay"].map((name, i) => (
+            <div key={name} className={`py-4 sm:py-7 px-2 sm:px-6 text-center text-fg-3 font-mono text-[9px] sm:text-[12px] uppercase tracking-[0.04em] ${i < 4 ? "border-r border-border" : ""}`}>
+              {name}
+            </div>
+          ))}
+        </ScrollReveal>
+      </div>
 
       {/* ═══ PRODUCT PREVIEW — Dashboard Mosaic ═══ */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border">
@@ -191,9 +202,6 @@ export default function Home() {
         <ScrollReveal delay={100}>
           <DashboardMosaic />
         </ScrollReveal>
-        <div className="text-center mt-5">
-          <Link href="/marketplace" className="btn-ghost-v2">Explore the marketplace →</Link>
-        </div>
       </section>
 
       {/* ═══ HOW IT WORKS ═══ */}
@@ -275,17 +283,6 @@ export default function Home() {
         </ScrollReveal>
       </section>
 
-      {/* ═══ TRUST STRIP ═══ */}
-      <div className="mx-auto max-w-360">
-        <ScrollReveal stagger staggerInterval={60} className="grid grid-cols-5 border-b border-border">
-          {["Stripe", "Paystack", "Flutterwave", "Apple Pay", "Google Pay"].map((name, i) => (
-            <div key={name} className={`py-4 sm:py-7 px-2 sm:px-6 text-center text-fg-3 font-mono text-[9px] sm:text-[12px] uppercase tracking-[0.04em] ${i < 4 ? "border-r border-border" : ""}`}>
-              {name}
-            </div>
-          ))}
-        </ScrollReveal>
-      </div>
-
       {/* ═══ TESTIMONIALS — Metric Cards ═══ */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-16 sm:py-24 border-b border-border">
         <ScrollReveal>
@@ -357,7 +354,7 @@ export default function Home() {
             {[
               { v: "4.82", l: "avg rating" },
               { v: "14,200+", l: "providers" },
-              { v: "52", l: "countries" },
+              { v: "50+", l: "countries" },
               { v: "98%", l: "would recommend" },
             ].map((s) => (
               <div key={s.l} className="flex items-baseline gap-2">
