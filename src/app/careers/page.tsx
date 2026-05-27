@@ -84,7 +84,7 @@ export default function CareersPage() {
       {/* Culture */}
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
         <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-          How we <em className="font-serif font-normal italic">work</em>.
+          How we work.
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           {CULTURE.map((c) => (

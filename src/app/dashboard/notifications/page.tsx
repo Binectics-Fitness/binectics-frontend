@@ -88,7 +88,7 @@ export default function NotificationsPage() {
             className="text-[26px] font-medium"
             style={{ letterSpacing: "-0.02em", marginBottom: 18, color: "var(--ink)" }}
           >
-            Push &middot; <em className="font-serif font-normal italic">iOS</em>
+            Push &middot; iOS
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {PUSH_CARDS.map((c) => (
@@ -127,7 +127,7 @@ export default function NotificationsPage() {
             className="text-[26px] font-medium"
             style={{ letterSpacing: "-0.02em", marginBottom: 18, color: "var(--ink)" }}
           >
-            SMS &middot; <em className="font-serif font-normal italic">critical only</em>
+            SMS &middot; critical only
           </h2>
           <p
             className="text-[14px] leading-[1.6]"
@@ -182,7 +182,7 @@ export default function NotificationsPage() {
             className="text-[26px] font-medium"
             style={{ letterSpacing: "-0.02em", marginBottom: 18, color: "var(--ink)" }}
           >
-            In-app <em className="font-serif font-normal italic">components</em>
+            In-app components
           </h2>
           <p
             className="text-[14px] leading-[1.6]"

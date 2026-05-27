@@ -992,7 +992,7 @@ function LegalPageContent() {
             <div style={S.railH}>Plain{"‑"}English commitment</div>
             <div style={S.railCard}>
               <p style={S.railCardP}>
-                We don&apos;t hide behind legalese. <em style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--ink)" }}>If a clause doesn&apos;t make sense to a non{"‑"}lawyer, that&apos;s our problem to fix.</em>
+                We don&apos;t hide behind legalese. If a clause doesn&apos;t make sense to a non{"‑"}lawyer, that&apos;s our problem to fix.
               </p>
               <p style={{ ...S.railCardP, margin: 0 }}>
                 Spotted something opaque? Tell us - <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink)" }}>legal@binectics.com</code>

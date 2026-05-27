@@ -63,8 +63,7 @@ export default function PartnersPage() {
       {TIERS.map((tier) => (
         <section key={tier.label} className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
           <h2 className="text-[28px] sm:text-[32px] font-medium mb-2" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-            {tier.label.split(" ")[0]}{" "}
-            <em className="font-serif font-normal italic">{tier.label.split(" ").slice(1).join(" ")}</em>.
+            {tier.label}.
           </h2>
           <p className="text-[15px] leading-[1.55] mb-5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>{tier.desc}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
@@ -82,7 +81,7 @@ export default function PartnersPage() {
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-16" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="rounded-(--r-3) p-6 sm:p-12 text-center" style={{ background: "var(--bg-2)" }}>
           <h2 className="text-[24px] sm:text-[36px] font-medium mb-3" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-            Become a <em className="font-serif font-normal italic">partner</em>.
+            Become a partner.
           </h2>
           <p className="text-[15px] sm:text-[17px] leading-[1.55] max-w-[50ch] mx-auto mb-6" style={{ color: "var(--fg-2)" }}>
             We&apos;re always looking for payment processors, fitness bodies, and technology partners who share our mission to make fitness accessible everywhere.

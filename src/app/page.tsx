@@ -416,7 +416,7 @@ export default function Home() {
             style={{ letterSpacing: "-0.035em", color: "var(--bg)" }}
           >
             Your next members are already searching.{" "}
-            <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>Be ready for them.</em>
+            Be ready for them.
           </h2>
           <div className="flex flex-col gap-4 items-start">
             <p className="text-[15px] sm:text-[16px] max-w-[36ch] leading-relaxed m-0" style={{ color: "oklch(0.78 0.005 85)" }}>

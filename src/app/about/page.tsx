@@ -18,15 +18,15 @@ export const metadata: Metadata = {
 
 const STATS = [
   { v: <>14,200<small className="font-mono text-[16px] font-normal ml-0.5" style={{ color: "var(--fg-3)" }}>+</small></>, l: "Verified providers across the platform" },
-  { v: <>$ <em className="font-serif italic font-normal">4.82</em>M</>, l: "Monthly GMV · April 2026 · up 18% MoM" },
+  { v: <>$4.82M</>, l: "Monthly GMV · April 2026 · up 18% MoM" },
   { v: "52", l: "Countries live · 8 currencies supported" },
   { v: <>99.97<small className="font-mono text-[16px] font-normal ml-0.5" style={{ color: "var(--fg-3)" }}>%</small></>, l: "Platform uptime, trailing 90 days" },
 ];
 
 const PRINCIPLES = [
-  { num: "01", title: <>Providers run businesses.<br />We run <em className="font-serif font-normal italic">rails</em>.</>, desc: <>Trainers pick their prices. Gyms set their cancellation policies. Dietitians own their methodology. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>We never recommend what to charge.</strong> Marketplaces that price-set become race-to-the-bottoms; we&apos;d rather earn 5% of work that&apos;s worth it.</> },
-  { num: "02", title: <>Money moves through. It doesn&apos;t <em className="font-serif font-normal italic">stop</em>.</>, desc: <>Payments settle directly to provider bank accounts. We never hold funds beyond the gateway settlement period. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>Float isn&apos;t our business model.</strong> It would compromise the trust the whole platform runs on.</> },
-  { num: "03", title: <>If we&apos;re not in the room, the work still <em className="font-serif font-normal italic">happens</em>.</>, desc: <>The product is a tool, not a relationship. We don&apos;t gamify, we don&apos;t push, we don&apos;t optimize for daily active users. We optimize for sessions completed and providers who renew. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>One measures pretending. The other measures fit.</strong></> },
+  { num: "01", title: <>Providers run businesses.<br />We run rails.</>, desc: <>Trainers pick their prices. Gyms set their cancellation policies. Dietitians own their methodology. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>We never recommend what to charge.</strong> Marketplaces that price-set become race-to-the-bottoms; we&apos;d rather earn 5% of work that&apos;s worth it.</> },
+  { num: "02", title: <>Money moves through. It doesn&apos;t stop.</>, desc: <>Payments settle directly to provider bank accounts. We never hold funds beyond the gateway settlement period. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>Float isn&apos;t our business model.</strong> It would compromise the trust the whole platform runs on.</> },
+  { num: "03", title: <>If we&apos;re not in the room, the work still happens.</>, desc: <>The product is a tool, not a relationship. We don&apos;t gamify, we don&apos;t push, we don&apos;t optimize for daily active users. We optimize for sessions completed and providers who renew. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>One measures pretending. The other measures fit.</strong></> },
 ];
 
 const TEAM = [
@@ -66,13 +66,13 @@ export default function AboutPage() {
       {/* Origin — section head: 1.2fr/2fr grid */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-12 sm:py-16 lg:py-24" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 items-end mb-12">
-          <h2 className="text-[36px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>Why we<br /><em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>started</em>.</h2>
+          <h2 className="text-[36px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>Why we<br />started.</h2>
           <p className="text-[17px] max-w-[50ch] leading-[1.55]" style={{ color: "var(--fg-2)" }}>The first version of Binectics was a spreadsheet. The founder was running a strength gym in Cape Town and trying to manage 142 members in Google Sheets. Everything you&apos;d expect went wrong.</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 text-[16px] leading-[1.65]" style={{ color: "var(--fg-2)" }}>
           <div>
             <p className="mb-4.5 max-w-[56ch]">In 2023, <strong style={{ color: "var(--ink)", fontWeight: 500 }}>Lerato Mokoena</strong> ran Iron Lab in Sea Point. Four locations, 22 coaches, a sheet of paper at the front desk for check‑ins. The sheet got lost twice in one week. Lerato spent her Sundays reconciling SnapScan receipts against a Google Sheet against a printed register.</p>
-            <p className="max-w-[56ch]">The software she could buy was either built for Crunch Gym (and priced for it) or for a single trainer with three clients (and useless past that). The local fitness marketplace was Instagram DMs. <em className="font-serif italic text-[18px]" style={{ color: "var(--ink)" }}>There was nothing in the middle.</em></p>
+            <p className="max-w-[56ch]">The software she could buy was either built for Crunch Gym (and priced for it) or for a single trainer with three clients (and useless past that). The local fitness marketplace was Instagram DMs. There was nothing in the middle.</p>
           </div>
           <div>
             <p className="mb-4.5 max-w-[56ch]">So we built it. The first version went live in Cape Town in March 2024 with three gyms, twelve trainers, and one nutritionist. The second came live in Lagos six months later. By the time we hit a year, we&apos;d grown to 8 countries and a thousand providers.</p>
@@ -155,7 +155,7 @@ export default function AboutPage() {
       <div className="mx-auto max-w-340 px-5 sm:px-10 my-10 sm:my-16">
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-8 lg:gap-12 items-end rounded-(--r-3) p-6 sm:p-10 lg:p-20" style={{ background: "var(--ink)", color: "var(--bg)" }}>
           <h2 className="text-[36px] sm:text-[48px] lg:text-[56px] font-medium max-w-[14ch]" style={{ lineHeight: 0.98, letterSpacing: "-0.035em", color: "var(--bg)" }}>
-            List your practice today. <em className="font-serif font-normal italic">Build something real.</em>
+            List your practice today. Build something real.
           </h2>
           <div className="flex flex-col gap-4 items-start">
             <p className="text-[16px] max-w-[36ch] leading-[1.5]" style={{ color: "oklch(0.78 0.005 85)", margin: 0 }}>Free to start, three minutes to publish. Or — if our principles resonate — we&apos;re hiring across engineering, design, and provider success.</p>

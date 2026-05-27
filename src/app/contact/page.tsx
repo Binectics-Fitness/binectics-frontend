@@ -77,7 +77,7 @@ export default function ContactPage() {
           {/* Left — contact methods */}
           <div className="flex flex-col gap-5">
             <h2 className="text-[28px] sm:text-[32px] font-medium mb-1" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-              Reach <em className="font-serif font-normal italic">us</em>.
+              Reach us.
             </h2>
             {METHODS.map((m) => (
               <div key={m.label} className="rounded-(--r-3) p-6" style={{ background: "var(--bg-2)" }}>
@@ -152,7 +152,7 @@ export default function ContactPage() {
       {/* Offices */}
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
         <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-          Our <em className="font-serif font-normal italic">offices</em>.
+          Our offices.
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {OFFICES.map((o) => (

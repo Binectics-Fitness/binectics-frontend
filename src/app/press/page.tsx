@@ -68,7 +68,7 @@ export default function PressPage() {
       {/* In the news */}
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
         <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-          In the <em className="font-serif font-normal italic">news</em>.
+          In the news.
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {ARTICLES.map((a) => (
@@ -87,7 +87,7 @@ export default function PressPage() {
       {/* Press kit */}
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
         <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-          Press <em className="font-serif font-normal italic">kit</em>.
+          Press kit.
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           {KIT.map((k) => (

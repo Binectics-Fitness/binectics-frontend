@@ -70,7 +70,7 @@ export default function QrHelpPage() {
       {/* Steps */}
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
         <h2 className="text-[28px] sm:text-[32px] font-medium mb-6" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-          How to <em className="font-serif font-normal italic">check in</em>.
+          How to check in.
         </h2>
         <div className="flex flex-col gap-3.5">
           {STEPS.map((s) => (
@@ -88,7 +88,7 @@ export default function QrHelpPage() {
       {/* FAQ */}
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
         <h2 className="text-[28px] sm:text-[32px] font-medium mb-6" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-          Common <em className="font-serif font-normal italic">questions</em>.
+          Common questions.
         </h2>
         <div className="flex flex-col gap-3.5">
           {FAQS.map((f) => (
@@ -104,7 +104,7 @@ export default function QrHelpPage() {
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-16" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="rounded-(--r-3) p-6 sm:p-12 text-center" style={{ background: "var(--bg-2)" }}>
           <h2 className="text-[24px] sm:text-[36px] font-medium mb-3" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-            Ready to <em className="font-serif font-normal italic">check in</em>?
+            Ready to check in?
           </h2>
           <p className="text-[15px] sm:text-[17px] leading-[1.55] max-w-[45ch] mx-auto mb-6" style={{ color: "var(--fg-2)" }}>
             Download the Binectics app and start your first gym visit today.

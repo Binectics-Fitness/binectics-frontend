@@ -297,7 +297,7 @@ export default function PricingPage() {
 
       {/* Regional pricing — 4-col cards */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-10 sm:py-16" style={{ borderBottom: "1px solid var(--border)" }}>
-        <h2 className="text-[40px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>The <em className="font-serif font-normal italic">same</em> deal, in every country.</h2>
+        <h2 className="text-[40px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>The same deal, in every country.</h2>
         <p className="text-[15.5px] max-w-[56ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>52 countries · 8 currencies. We route payments through the gateway that works best where you are — the percentage we take stays the same.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
           {REGIONS.map((r) => (
@@ -318,7 +318,7 @@ export default function PricingPage() {
       {/* FAQ — 1fr/2fr grid, details/summary */}
       <section className="mx-auto max-w-360 grid grid-cols-1 lg:grid-cols-[1fr_2fr] items-start" style={{ padding: "clamp(32px, 6vw, 64px) clamp(20px, 5vw, 40px)", gap: "clamp(24px, 5vw, 64px)", borderBottom: "1px solid var(--border)" }}>
         <div>
-          <h2 className="text-[40px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>The questions we get <em className="font-serif font-normal italic">most.</em></h2>
+          <h2 className="text-[40px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>The questions we get most.</h2>
           <p className="text-[15.5px] max-w-[36ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>If yours isn&apos;t here, email <span className="font-mono text-[14px]" style={{ color: "var(--ink)" }}>sales@binectics.com</span> — most replies within 2 hours, weekdays SAST.</p>
         </div>
         <div className="rounded-(--r-3) overflow-hidden" style={{ border: "1px solid var(--border)" }}>
@@ -338,7 +338,7 @@ export default function PricingPage() {
       <div className="mx-auto max-w-[1360px] px-5 sm:px-10 my-16">
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-12 items-end rounded-(--r-3)" style={{ background: "var(--ink)", color: "var(--bg)", padding: "clamp(32px, 7vw, 72px) clamp(20px, 5vw, 48px)" }}>
           <h2 className="text-[36px] sm:text-[48px] font-medium max-w-[14ch]" style={{ lineHeight: 0.98, letterSpacing: "-0.032em", color: "var(--bg)" }}>
-            List your practice today. <em className="font-serif font-normal italic">Verified within two business days.</em>
+            List your practice today. Verified within two business days.
           </h2>
           <div className="flex flex-col gap-4 items-start">
             <p className="text-[15px] max-w-[36ch] leading-[1.5]" style={{ color: "oklch(0.78 0.005 85)", margin: 0 }}>Free to start, three minutes to publish. We email you when verification clears so you know exactly when search traffic kicks in.</p>
