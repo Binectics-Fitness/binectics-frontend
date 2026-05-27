@@ -205,7 +205,7 @@ export default function MarketplacePage() {
           <div className="flex items-center gap-2">
             <button className="lg:hidden w-10 h-10 sm:w-8 sm:h-8 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><Search /></button>
             <Link href="/login" className="btn-ghost-v2 sm hidden sm:inline-flex">Log in</Link>
-            <Link href="/register" className="btn-primary-v2 sm">Sign up</Link>
+            <Link href="/login?mode=signup" className="btn-primary-v2 sm">Sign up</Link>
           </div>
         </div>
       </header>

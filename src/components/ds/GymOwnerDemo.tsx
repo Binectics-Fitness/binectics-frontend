@@ -265,7 +265,7 @@ const GYM_OWNER_CSS = `
 }
 .gyd-chip {
   border: 1px solid var(--border); border-radius: var(--r-2);
-  padding: 8px 10px; background: var(--bg); text-align: left;
+  padding: 10px 10px; background: var(--bg); text-align: left;
   cursor: pointer; transition: border-color 120ms, background 120ms;
   display: flex; flex-direction: column; gap: 2px;
 }
@@ -306,7 +306,7 @@ const GYM_OWNER_CSS = `
 @keyframes gyd-livedot { 50% { opacity: 0.4; } }
 
 .gyd-card {
-  width: 480px;
+  width: min(480px, 100%);
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--r-3);
@@ -316,6 +316,7 @@ const GYM_OWNER_CSS = `
 }
 @media (max-width: 640px) {
   .gyd-card { width: 100%; padding: 16px 14px; }
+  .gyd-kpi-value { font-size: 18px; }
 }
 
 .gyd-kpi-grid {

@@ -160,7 +160,7 @@ export default function AboutPage() {
           <div className="flex flex-col gap-4 items-start">
             <p className="text-[16px] max-w-[36ch] leading-[1.5]" style={{ color: "oklch(0.78 0.005 85)", margin: 0 }}>Free to start, three minutes to publish. Or — if our principles resonate — we&apos;re hiring across engineering, design, and provider success.</p>
             <div className="flex gap-3">
-              <Link href="/register" className="btn-signal-v2 lg" style={{ color: "oklch(0.18 0.05 148)" }}>Create your account →</Link>
+              <Link href="/login?mode=signup" className="btn-signal-v2 lg" style={{ color: "oklch(0.18 0.05 148)" }}>Create your account →</Link>
               <Link href="/careers" className="btn-ghost-v2 lg" style={{ color: "var(--bg)", borderColor: "oklch(0.35 0.008 80)" }}>See open roles</Link>
             </div>
           </div>

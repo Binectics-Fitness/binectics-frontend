@@ -95,7 +95,7 @@ export default function QRCheckinFeaturePage() {
           dashboard in real time. No card readers, no PINs, no friction.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/register" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
             Set up your kiosk &rarr;
           </Link>
           <Link href="/qr-help" className="btn-ghost-v2 lg">
@@ -138,7 +138,7 @@ export default function QRCheckinFeaturePage() {
         >
           Setup in three steps
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {HOW_IT_WORKS.map((w) => (
             <div
               key={w.step}
@@ -309,7 +309,7 @@ export default function QRCheckinFeaturePage() {
                 {k.label}
               </div>
               <div
-                className="text-[32px] font-medium mt-1"
+                className="text-[24px] sm:text-[32px] font-medium mt-1"
                 style={{
                   letterSpacing: "-0.024em",
                   color: "var(--ink)",
@@ -340,7 +340,7 @@ export default function QRCheckinFeaturePage() {
           Set up your first kiosk in under 10 minutes. Free on every
           Binectics gym plan.
         </p>
-        <Link href="/register" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
           Get started free &rarr;
         </Link>
       </section>

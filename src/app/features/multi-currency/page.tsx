@@ -134,7 +134,7 @@ export default function MultiCurrencyPage() {
           one clean number in your dashboard.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/register" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
             Start accepting payments &rarr;
           </Link>
           <Link href="/pricing" className="btn-ghost-v2 lg">
@@ -175,7 +175,7 @@ export default function MultiCurrencyPage() {
         >
           How a payment moves
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {WORKFLOW.map((w) => (
             <div
               key={w.step}
@@ -380,7 +380,7 @@ export default function MultiCurrencyPage() {
           {FEE_BREAKDOWN.map((f, i) => (
             <div
               key={f.item}
-              className="flex items-center justify-between px-5 py-3.5 text-[14px]"
+              className="flex flex-wrap items-center justify-between gap-1 px-5 py-3.5 text-[14px]"
               style={{
                 borderTop: i > 0 ? "1px solid var(--border)" : undefined,
                 background: i % 2 === 0 ? "var(--bg)" : "var(--bg-2)",
@@ -417,7 +417,7 @@ export default function MultiCurrencyPage() {
                 {k.label}
               </div>
               <div
-                className="text-[32px] font-medium mt-1"
+                className="text-[24px] sm:text-[32px] font-medium mt-1"
                 style={{
                   letterSpacing: "-0.024em",
                   color: "var(--ink)",
@@ -448,7 +448,7 @@ export default function MultiCurrencyPage() {
           Don&rsquo;t lose a sale because you can&rsquo;t accept their
           currency. Start accepting payments from 52 countries today.
         </p>
-        <Link href="/register" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
           Get started free &rarr;
         </Link>
       </section>

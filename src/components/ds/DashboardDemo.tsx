@@ -673,12 +673,12 @@ const DASHBOARD_CSS = `
   text-transform: uppercase; letter-spacing: 0.04em;
   padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
 }
-@media (max-width: 640px) { .dd-adh-header { grid-template-columns: 1fr 80px 70px; } }
+@media (max-width: 640px) { .dd-adh-header { grid-template-columns: 1fr 60px 55px; } }
 .dd-adh-row {
   display: grid; grid-template-columns: 1fr 100px 80px; gap: 8px;
   align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);
 }
-@media (max-width: 640px) { .dd-adh-row { grid-template-columns: 1fr 80px 70px; } }
+@media (max-width: 640px) { .dd-adh-row { grid-template-columns: 1fr 60px 55px; } }
 .dd-adh-row:last-child { border-bottom: none; }
 .dd-adh-name { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink); font-weight: 500; }
 .dd-adh-avatar {
@@ -688,6 +688,7 @@ const DASHBOARD_CSS = `
 }
 .dd-adh-dots { display: flex; align-items: center; gap: 3px; }
 .dd-adh-dot { width: 6px; height: 6px; border-radius: 50%; }
+@media (max-width: 640px) { .dd-adh-dots { gap: 2px; } .dd-adh-dot { width: 5px; height: 5px; } }
 .dd-adh-pct { font-family: var(--font-mono); font-size: 9px; color: var(--fg-3); margin-left: 4px; }
 .dd-adh-status { font-size: 10px; font-weight: 500; }
 
@@ -718,7 +719,7 @@ const DASHBOARD_CSS = `
 .dd-week-today .dd-week-label { color: var(--bg); }
 
 /* ---- Member: quick log ---- */
-.dd-quick-btns { display: flex; gap: 6px; }
+.dd-quick-btns { display: flex; flex-wrap: wrap; gap: 6px; }
 .dd-quick-btn {
   font-size: 11px; color: var(--fg-2); padding: 6px 12px;
   border: 1px solid var(--border); border-radius: var(--r-2); background: var(--bg-2);

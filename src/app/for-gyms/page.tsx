@@ -36,31 +36,37 @@ const FEATURES = [
     title: "Member CRM",
     desc: "Profiles, streaks, payment history, and custom tags in one searchable directory. Filter by status, plan, last check-in, or any custom field you create.",
     stat: "10k members indexed in 30ms",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   },
   {
     title: "Class scheduling",
     desc: "Drag-and-drop weekly schedule with recurring classes, waitlists, and capacity alerts. Members book from the app and get automatic reminders.",
     stat: "Avg class fill rate 84%",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>,
   },
   {
     title: "QR check-in",
     desc: "Mount an iPad at the door and let members scan in. The kiosk shows their name, streak count, and next class. Offline queue syncs when connectivity returns.",
     stat: "92.4% first-scan success",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><path d="M14 14h2v2h-2z"/><path d="M20 14h2v2h-2z"/><path d="M14 20h2v2h-2z"/><path d="M20 20h2v2h-2z"/><path d="M17 17h2v2h-2z"/></svg>,
   },
   {
     title: "Revenue dashboard",
     desc: "Daily, weekly, and monthly revenue graphs with comparison overlays. Payout timeline shows the next amount, date, and destination bank. Gateway reconciliation built in.",
     stat: "R 1.08M avg monthly processed",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
   {
     title: "Multi-location",
     desc: "Shared member directory across all branches with separate P&Ls per location. Consolidated reporting when you need the big picture, location switcher when you don't.",
     stat: "Up to 12 locations per account",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/></svg>,
   },
   {
     title: "Staff management",
     desc: "Define roles with granular permissions. Receptionists see check-ins but not payouts. Managers edit schedules but can't change billing. Shift scheduling and attendance tracking included.",
     stat: "Granular access for 6 role types",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
   },
 ];
 
@@ -103,7 +109,7 @@ export default function ForGymsPage() {
           one place. No more Excel + Mindbody + WhatsApp groups.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/register" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
             Get started free &rarr;
           </Link>
           <Link href="/features/dashboard" className="btn-ghost-v2 lg">
@@ -195,9 +201,11 @@ export default function ForGymsPage() {
               style={{ background: "var(--bg-2)" }}
             >
               <div
-                className="w-8 h-8 rounded-(--r-2) mb-4"
-                style={{ background: "var(--bg)" }}
-              />
+                className="w-8 h-8 rounded-(--r-2) mb-4 flex items-center justify-center"
+                style={{ background: "var(--bg)", color: "var(--fg-2)" }}
+              >
+                {f.icon}
+              </div>
               <h3
                 className="text-[17px] font-medium mb-2"
                 style={{ color: "var(--ink)" }}
@@ -279,7 +287,7 @@ export default function ForGymsPage() {
                 {k.label}
               </div>
               <div
-                className="text-[32px] font-medium mt-1"
+                className="text-[24px] sm:text-[32px] font-medium mt-1"
                 style={{
                   letterSpacing: "-0.024em",
                   color: "var(--ink)",
@@ -333,7 +341,7 @@ export default function ForGymsPage() {
           Create a free account and see the dashboard in under 10 minutes.
           No credit card required.
         </p>
-        <Link href="/register" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
           Get started free &rarr;
         </Link>
       </section>

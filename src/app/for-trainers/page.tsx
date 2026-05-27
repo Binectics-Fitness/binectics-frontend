@@ -36,31 +36,37 @@ const FEATURES = [
     title: "Marketplace profile",
     desc: "SEO-optimized listing with verified badge, specialties, photo gallery, and client reviews. Prospective clients find you through search and location filters.",
     stat: "Avg 8.4 leads/month per profile",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
   },
   {
     title: "Smart calendar",
     desc: "Recurring sessions, configurable buffer time, timezone support. Syncs with Google Calendar and Apple Calendar so you never double-book.",
     stat: "Zero double-bookings reported",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>,
   },
   {
     title: "Client management",
     desc: "Full roster with session history, rebooking status, and progress tracking. See who is overdue, who is thriving, and who needs a check-in.",
     stat: "42 avg active clients per trainer",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   },
   {
     title: "Program builder",
     desc: "Sets, reps, tempo, rest. Drag-and-drop exercises. Copy-to-next-week for progressive overload. Template library for common goals.",
     stat: "8 min avg program build time",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>,
   },
   {
     title: "Earnings dashboard",
     desc: "Per-client revenue breakdown, monthly trends, projected earnings, and payout timeline. Know exactly what is coming and when.",
     stat: "R 38.4K avg monthly earnings",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
   {
     title: "Client journals",
     desc: "Log workouts, notes, and metrics after every session. Clients see their own feed with progress over time. Builds accountability and trust.",
     stat: "+34% client retention with journals",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h4"/></svg>,
   },
 ];
 
@@ -119,7 +125,7 @@ export default function ForTrainersPage() {
           hours every week.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/register" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
             List your practice — free
           </Link>
           <Link href="/features/dashboard" className="btn-ghost-v2 lg">
@@ -209,6 +215,12 @@ export default function ForTrainersPage() {
               className="rounded-(--r-3) p-6"
               style={{ background: "var(--bg-2)" }}
             >
+              <div
+                className="w-8 h-8 rounded-(--r-2) mb-4 flex items-center justify-center"
+                style={{ background: "var(--bg)", color: "var(--fg-2)" }}
+              >
+                {f.icon}
+              </div>
               <h3
                 className="text-[17px] font-medium mb-2"
                 style={{ color: "var(--ink)" }}
@@ -320,7 +332,7 @@ export default function ForTrainersPage() {
                 {k.label}
               </div>
               <div
-                className="text-[32px] font-medium mt-1"
+                className="text-[24px] sm:text-[32px] font-medium mt-1"
                 style={{
                   letterSpacing: "-0.024em",
                   color: "var(--ink)",
@@ -374,7 +386,7 @@ export default function ForTrainersPage() {
           Create your profile in under 10 minutes. Start showing up in
           marketplace results today.
         </p>
-        <Link href="/register" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
           List your practice — free
         </Link>
       </section>

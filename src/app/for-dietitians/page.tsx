@@ -24,31 +24,37 @@ const FEATURES = [
     title: "Credential verification",
     desc: "DAN, HPCSA, CDR verification against the regulator. We confirm your licence is active, check disciplinary history, and add a verified badge to your profile. Re-checked on a rolling cycle so clients always see current status.",
     stat: "Re-verified every 24 months",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
   },
   {
     title: "Meal plan builder",
     desc: "Drag and drop meals across days, auto-calculate macros per meal and per day, and save plans as reusable templates. When you are done, export as a branded PDF with your name, credentials, and colour scheme.",
     stat: "12,842 foods in the database",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>,
   },
   {
     title: "Food database",
     desc: "1,840 Nigerian FCDB entries, South African, Kenyan, and Indian staples. Jollof rice, ugali, dhal — accurate macros verified against government composition tables, not crowd-sourced guesswork.",
     stat: "1,840 West African entries",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>,
   },
   {
     title: "Client adherence tracking",
     desc: "Daily macro compliance graphs, 7-day sparklines, and an adherence score from 0 to 100 for every client. Set thresholds and receive nudge alerts when a client falls below target for three consecutive days.",
     stat: "76% avg client adherence",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>,
   },
   {
     title: "Consultation calendar",
     desc: "Video call integration with prep notes, recurring consult scheduling, and timezone support for international clients. Clients book from your public profile and receive calendar invites automatically.",
     stat: "Avg 4.2 consults/day per dietitian",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m22 8-6 4 6 4V8z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>,
   },
   {
     title: "Protocol library",
     desc: "Save clinical methodologies for PCOS, T2DM, weight management, and other conditions. Track outcomes across clients who follow the same protocol. Reuse across similar cases without starting from scratch.",
     stat: "42 community protocols available",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h4"/></svg>,
   },
 ];
 
@@ -111,7 +117,7 @@ export default function ForDietitiansPage() {
           African staples already in it.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/register" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
             Apply to list &rarr;
           </Link>
           <Link href="/features/dashboard" className="btn-ghost-v2 lg">
@@ -201,6 +207,12 @@ export default function ForDietitiansPage() {
               className="rounded-(--r-3) p-6"
               style={{ background: "var(--bg-2)" }}
             >
+              <div
+                className="w-8 h-8 rounded-(--r-2) mb-4 flex items-center justify-center"
+                style={{ background: "var(--bg)", color: "var(--fg-2)" }}
+              >
+                {f.icon}
+              </div>
               <h3
                 className="text-[17px] font-medium mb-2"
                 style={{ color: "var(--ink)" }}
@@ -320,7 +332,7 @@ export default function ForDietitiansPage() {
                 {k.label}
               </div>
               <div
-                className="text-[32px] font-medium mt-1"
+                className="text-[24px] sm:text-[32px] font-medium mt-1"
                 style={{
                   letterSpacing: "-0.024em",
                   color: "var(--ink)",
@@ -375,7 +387,7 @@ export default function ForDietitiansPage() {
           Apply to list your practice. Verification takes 36 hours on
           average. Start seeing clients on Binectics this week.
         </p>
-        <Link href="/register" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
           Apply to list &rarr;
         </Link>
       </section>

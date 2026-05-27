@@ -319,7 +319,7 @@ const TRAINER_CSS = `
 }
 .trd-chip {
   border: 1px solid var(--border); border-radius: var(--r-2);
-  padding: 8px 10px; background: var(--bg); text-align: left;
+  padding: 10px 10px; background: var(--bg); text-align: left;
   cursor: pointer; transition: border-color 120ms, background 120ms;
   display: flex; flex-direction: column; gap: 2px;
 }
@@ -360,7 +360,7 @@ const TRAINER_CSS = `
 @keyframes trd-livedot { 50% { opacity: 0.4; } }
 
 .trd-card {
-  width: 400px;
+  width: min(400px, 100%);
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--r-3);
@@ -446,6 +446,9 @@ const TRAINER_CSS = `
 .trd-session-meta {
   font-size: 12px; color: var(--fg-3); margin-top: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 640px) {
+  .trd-session-meta { white-space: normal; }
 }
 
 .trd-badge {

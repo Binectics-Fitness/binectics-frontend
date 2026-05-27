@@ -39,31 +39,37 @@ const FEATURES = [
     title: "Verified providers",
     desc: "Every trainer, gym, and dietitian is credential-checked by a human. Government ID, professional certs, and background verification. The green badge means something.",
     stat: "100% of providers verified",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
   },
   {
     title: "One profile",
     desc: "Bookings, health metrics, payment history, and progress photos — all in one place, across every provider you work with. Switch trainers without losing your data.",
     stat: "Zero data lock-in",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   },
   {
     title: "Check-in streaks",
     desc: "Scan a QR code at the gym door. Your streak counter updates instantly. Miss a day and it resets — no gamification tricks, just a clean record of when you showed up.",
     stat: "32-day avg streak",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3-7.5.5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.5-2.5 1.5-3.5l1 1z"/></svg>,
   },
   {
     title: "Progress journal",
     desc: "Your trainer or dietitian logs notes, metrics, and plans. You see the same data they see — weight graphs, adherence scores, photo timelines. Read-only, transparent.",
     stat: "3.4 entries/week avg",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h4"/></svg>,
   },
   {
     title: "Smart booking",
     desc: "Browse the marketplace, pick a provider, choose a slot, pay. Confirmation in under 60 seconds. Syncs to your calendar automatically.",
     stat: "Under 60s to book",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>,
   },
   {
     title: "Free for members",
     desc: "No subscription fee, no premium tier, no feature gates. You pay your provider directly at their listed price. We take our cut from the provider side.",
     stat: "R 0 platform fee",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1"/></svg>,
   },
 ];
 
@@ -222,9 +228,11 @@ export default function ForMembersPage() {
               style={{ background: "var(--bg-2)" }}
             >
               <div
-                className="w-8 h-8 rounded-(--r-2) mb-4"
-                style={{ background: "var(--bg)" }}
-              />
+                className="w-8 h-8 rounded-(--r-2) mb-4 flex items-center justify-center"
+                style={{ background: "var(--bg)", color: "var(--fg-2)" }}
+              >
+                {f.icon}
+              </div>
               <h3
                 className="text-[17px] font-medium mb-2"
                 style={{ color: "var(--ink)" }}
@@ -309,7 +317,7 @@ export default function ForMembersPage() {
                 {k.label}
               </div>
               <div
-                className="text-[32px] font-medium mt-1"
+                className="text-[24px] sm:text-[32px] font-medium mt-1"
                 style={{
                   letterSpacing: "-0.024em",
                   color: "var(--ink)",

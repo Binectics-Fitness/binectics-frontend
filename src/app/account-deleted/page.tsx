@@ -176,7 +176,7 @@ export default function AccountDeletedPage() {
         >
           Want to{" "}
           <Link
-            href="/register"
+            href="/login?mode=signup"
             style={{
               color: "var(--ink)",
               textDecoration: "underline",

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,9 +19,19 @@ import { loginSchema, type LoginFormData } from "@/lib/schemas/auth";
 type Panel = "login" | "2fa" | "signup" | "reset" | "reset-sent";
 
 export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}><div className="w-10 h-10 rounded-full border-[3px] border-border-2 border-t-ink animate-spin" /></div>}>
+      <AuthContent />
+    </Suspense>
+  );
+}
+
+function AuthContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, isLoading: authLoading } = useAuth();
-  const [panel, setPanel] = useState<Panel>("login");
+  const initialMode = searchParams.get("mode");
+  const [panel, setPanel] = useState<Panel>(initialMode === "signup" ? "signup" : "login");
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -196,7 +206,7 @@ export default function AuthPage() {
                 </h1>
                 <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Free to join. Pay only for what you book. Cancel any session up to 24h before.</p>
 
-                <div className="flex flex-col gap-3.5 mt-8">
+                <form className="flex flex-col gap-3.5 mt-8" onSubmit={(e) => { e.preventDefault(); setPanel("login"); }}>
                   <div className="grid grid-cols-2 gap-3.5">
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name</label>
@@ -227,8 +237,8 @@ export default function AuthPage() {
                     </span>
                     <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>I agree to the <Link href="/terms" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Terms</Link> and <Link href="/privacy" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Privacy</Link></span>
                   </label>
-                  <button className="btn-primary-v2 lg w-full justify-center" onClick={() => setPanel("login")}>Create account →</button>
-                </div>
+                  <button type="submit" className="btn-primary-v2 lg w-full justify-center">Create account →</button>
+                </form>
 
                 <div className="flex items-center gap-3.5 my-6">
                   <div className="flex-1 h-px" style={{ background: "var(--border)" }} />

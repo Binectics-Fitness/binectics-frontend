@@ -9,7 +9,7 @@ import { UserRole } from "@/lib/types";
  */
 export const AUTH_ROUTES = {
   LOGIN: "/login",
-  REGISTER: "/register",
+  REGISTER: "/login?mode=signup",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   VERIFICATION: "/verification",

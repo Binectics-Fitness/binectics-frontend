@@ -90,7 +90,7 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-3 mt-7 sm:mt-9 items-start sm:items-center">
               <Link
-                href="/register"
+                href="/login?mode=signup"
                 className="inline-flex items-center justify-center h-[42px] px-4.5 rounded-(--r-2) bg-ink text-[14px] font-medium hover:bg-[oklch(0.08_0.008_80)] w-full sm:w-auto"
                 style={{ letterSpacing: "-0.005em", color: "var(--bg)" }}
               >
@@ -392,7 +392,7 @@ export default function Home() {
                 <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
               ))}
             </ul>
-            <Link href="/register" className="btn-ghost-v2 md mt-auto self-start">Start free</Link>
+            <Link href="/login?mode=signup" className="btn-ghost-v2 md mt-auto self-start">Start free</Link>
           </div>
 
           {/* Studio */}
@@ -410,7 +410,7 @@ export default function Home() {
                 <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
               ))}
             </ul>
-            <Link href="/register" className="btn-signal-v2 mt-auto self-start" style={{ height: "34px", padding: "0 14px" }}>Choose Studio</Link>
+            <Link href="/login?mode=signup" className="btn-signal-v2 mt-auto self-start" style={{ height: "34px", padding: "0 14px" }}>Choose Studio</Link>
           </div>
 
           {/* Enterprise */}
@@ -465,7 +465,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <Link
-                href="/register"
+                href="/login?mode=signup"
                 className="inline-flex items-center justify-center h-[42px] px-4.5 rounded-(--r-2) bg-signal text-[14px] font-medium hover:bg-[oklch(0.62_0.17_148)] w-full sm:w-auto"
                 style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}
               >

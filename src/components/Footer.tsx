@@ -15,7 +15,7 @@ const columns = {
       { name: "For gyms", href: "/gyms" },
       { name: "For trainers", href: "/trainers" },
       { name: "For dietitians", href: "/dietitians" },
-      { name: "Members", href: "/register" },
+      { name: "Members", href: "/login?mode=signup" },
     ],
   },
   company: {

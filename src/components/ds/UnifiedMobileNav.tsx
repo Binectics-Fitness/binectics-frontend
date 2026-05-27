@@ -193,7 +193,7 @@ export function UnifiedMobileNav() {
             <button
               type="button"
               onClick={close}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-(--r-2) transition-colors"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-(--r-2) transition-colors"
               style={{ color: "var(--fg-2)" }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = "var(--bg-2)")
@@ -401,7 +401,7 @@ export function UnifiedMobileNav() {
                   Log in
                 </Link>
                 <Link
-                  href="/register"
+                  href="/login?mode=signup"
                   prefetch={false}
                   onClick={close}
                   className="flex w-full items-center justify-center rounded-(--r-2) px-4 py-3 text-[14px] font-medium transition-colors"
@@ -428,7 +428,7 @@ export function UnifiedMobileNav() {
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
-        className="inline-flex lg:hidden h-9 w-9 items-center justify-center rounded-(--r-2) transition-colors"
+        className="inline-flex lg:hidden h-11 w-11 items-center justify-center rounded-(--r-2) transition-colors"
         style={{ color: "var(--fg-2)" }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = "var(--bg-2)";

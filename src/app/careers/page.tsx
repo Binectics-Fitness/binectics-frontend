@@ -74,7 +74,7 @@ export default function CareersPage() {
               </div>
               <div className="flex flex-col gap-2 items-start sm:items-end">
                 <span className="font-mono text-[10px] px-2 py-0.75 rounded-full uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>Live</span>
-                <Link href="/register" className="btn-primary-v2 sm">Apply &rarr;</Link>
+                <Link href="/login?mode=signup" className="btn-primary-v2 sm">Apply &rarr;</Link>
               </div>
             </div>
           ))}

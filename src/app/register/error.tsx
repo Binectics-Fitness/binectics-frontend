@@ -51,10 +51,10 @@ export default function RegisterError({
             Try Again
           </button>
           <Link
-            href="/register"
+            href="/login?mode=signup"
             className="px-5 py-2.5 border border-neutral-200 text-foreground font-semibold rounded-lg text-sm hover:bg-neutral-100 transition-colors"
           >
-            Back to Registration
+            Back to Sign up
           </Link>
         </div>
       </div>

@@ -129,7 +129,7 @@ export default function ClientJournalsPage() {
           real time — same data, same graphs, no surprises.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/register" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
             Start journaling free &rarr;
           </Link>
           <Link href="/for-trainers" className="btn-ghost-v2 lg">
@@ -170,7 +170,7 @@ export default function ClientJournalsPage() {
         >
           How it works
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {WORKFLOW.map((w) => (
             <div
               key={w.step}
@@ -364,7 +364,7 @@ export default function ClientJournalsPage() {
                 {k.label}
               </div>
               <div
-                className="text-[32px] font-medium mt-1"
+                className="text-[24px] sm:text-[32px] font-medium mt-1"
                 style={{
                   letterSpacing: "-0.024em",
                   color: "var(--ink)",
@@ -395,7 +395,7 @@ export default function ClientJournalsPage() {
           Start logging today. Your first 5 clients are free — no trial
           countdown, no feature gates.
         </p>
-        <Link href="/register" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
           Get started free &rarr;
         </Link>
       </section>

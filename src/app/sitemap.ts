@@ -18,7 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     // Auth
     { path: "/login", changeFrequency: "yearly", priority: 0.5 },
-    { path: "/register", changeFrequency: "yearly", priority: 0.6 },
+    { path: "/login?mode=signup", changeFrequency: "yearly", priority: 0.6 },
     { path: "/forgot-password", changeFrequency: "yearly", priority: 0.3 },
 
     // Info

@@ -125,7 +125,7 @@ export default function DashboardFeaturePage() {
           — all on the same platform, all sharing the same data layer.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/register" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
             Try it free &rarr;
           </Link>
           <Link href="/#roles" className="btn-ghost-v2 lg">
@@ -315,7 +315,7 @@ export default function DashboardFeaturePage() {
                 {k.label}
               </div>
               <div
-                className="text-[32px] font-medium mt-1"
+                className="text-[24px] sm:text-[32px] font-medium mt-1"
                 style={{
                   letterSpacing: "-0.024em",
                   color: "var(--ink)",
@@ -346,7 +346,7 @@ export default function DashboardFeaturePage() {
           Create a free account and explore the dashboard for your role. No
           credit card, no demo call, no 14-day countdown.
         </p>
-        <Link href="/register" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
           Get started free &rarr;
         </Link>
       </section>

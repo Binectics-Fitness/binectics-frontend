@@ -384,9 +384,12 @@ const MEMBER_CSS = `
 .md-chips {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
 }
+@media (max-width: 640px) {
+  .md-chips { grid-template-columns: repeat(2, 1fr); }
+}
 .md-chip {
   border: 1px solid var(--border); border-radius: var(--r-2);
-  padding: 8px 10px; background: var(--bg); text-align: left;
+  padding: 10px 10px; background: var(--bg); text-align: left;
   cursor: pointer; transition: border-color 120ms, background 120ms;
   display: flex; flex-direction: column; gap: 2px;
 }
@@ -427,7 +430,7 @@ const MEMBER_CSS = `
 @keyframes md-livedot { 50% { opacity: 0.4; } }
 
 .md-phone {
-  width: 320px; height: 580px;
+  width: min(320px, 100%); height: 580px;
   border: 3px solid var(--ink);
   border-radius: 32px;
   background: var(--bg);
@@ -436,7 +439,7 @@ const MEMBER_CSS = `
   position: relative;
 }
 @media (max-width: 640px) {
-  .md-phone { width: 280px; height: 510px; }
+  .md-phone { width: min(280px, 100%); height: 510px; }
 }
 
 .md-notch {
@@ -516,7 +519,7 @@ const MEMBER_CSS = `
   border-radius: 8px; padding: 10px 12px;
 }
 .md-kpi-label {
-  font-family: var(--font-mono); font-size: 9px;
+  font-family: var(--font-mono); font-size: 10px;
   text-transform: uppercase; color: var(--fg-3);
   letter-spacing: 0.05em; margin-bottom: 2px;
 }
@@ -564,7 +567,7 @@ const MEMBER_CSS = `
   gap: 2px; color: var(--fg-3);
 }
 .md-tab-active { color: var(--ink); }
-.md-tab-label { font-size: 9px; }
+.md-tab-label { font-size: 10px; }
 
 .md-searchbar {
   margin: 12px 16px 0; height: 36px;
@@ -662,7 +665,7 @@ const MEMBER_CSS = `
   background: var(--bg-2); color: var(--fg-3);
 }
 .md-week-day {
-  font-family: var(--font-mono); font-size: 8px;
+  font-family: var(--font-mono); font-size: 10px;
   text-transform: uppercase;
 }
 .md-week-date {

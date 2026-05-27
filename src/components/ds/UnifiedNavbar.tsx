@@ -175,7 +175,7 @@ export default function UnifiedNavbar() {
                 Log in
               </Link>
               <Link
-                href="/register"
+                href="/login?mode=signup"
                 prefetch={false}
                 className="hidden lg:inline-flex h-9 items-center px-4 rounded-(--r-2) text-[14px] font-medium transition-colors"
                 style={{

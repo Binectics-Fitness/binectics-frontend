@@ -290,7 +290,7 @@ export default function MobileNav() {
               </button>
             ) : (
               <Link
-                href="/register"
+                href="/login?mode=signup"
                 prefetch={false}
                 onClick={close}
                 className="flex w-full items-center justify-center rounded-(--r-2) px-4 py-3 text-[14px] font-medium transition-colors"

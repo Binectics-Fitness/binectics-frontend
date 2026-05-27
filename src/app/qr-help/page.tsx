@@ -109,7 +109,7 @@ export default function QrHelpPage() {
           <p className="text-[15px] sm:text-[17px] leading-[1.55] max-w-[45ch] mx-auto mb-6" style={{ color: "var(--fg-2)" }}>
             Download the Binectics app and start your first gym visit today.
           </p>
-          <Link href="/register" className="btn-primary-v2">Download the app &rarr;</Link>
+          <Link href="/login?mode=signup" className="btn-primary-v2">Download the app &rarr;</Link>
         </div>
       </section>
 

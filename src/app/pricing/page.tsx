@@ -144,7 +144,7 @@ export default function PricingPage() {
               {p.price}<small className="font-mono text-[14px] font-normal" style={{ color: p.ink ? "oklch(0.7 0.005 85)" : "var(--fg-3)" }}>{p.priceSub}</small>
             </div>
             <p className="text-[13.5px] leading-[1.5] max-w-[32ch]" style={{ color: p.ink ? "oklch(0.82 0.005 85)" : "var(--fg-2)" }}>{p.tagline}</p>
-            <Link href={p.ink ? "#" : "/register"} className={`${p.featured ? "btn-primary-v2" : p.ink ? "btn-signal-v2" : "btn-ghost-v2"} w-full justify-center`} style={p.ink ? { color: "oklch(0.18 0.05 148)" } : undefined}>{p.cta}</Link>
+            <Link href={p.ink ? "#" : "/login?mode=signup"} className={`${p.featured ? "btn-primary-v2" : p.ink ? "btn-signal-v2" : "btn-ghost-v2"} w-full justify-center`} style={p.ink ? { color: "oklch(0.18 0.05 148)" } : undefined}>{p.cta}</Link>
             <div className="font-mono text-[10.5px] uppercase tracking-[0.05em]" style={{ borderTop: `1px solid ${p.ink ? "oklch(0.3 0.008 80)" : "var(--border)"}`, marginTop: "4px", paddingTop: "16px", color: p.ink ? "oklch(0.7 0.005 85)" : "var(--fg-3)" }}>{p.divider}</div>
             <ul className="flex flex-col gap-2.25 list-none p-0 m-0">
               {p.features.map((f) => (
@@ -284,7 +284,7 @@ export default function PricingPage() {
           <div className="flex flex-col gap-4 items-start">
             <p className="text-[15px] max-w-[36ch] leading-[1.5]" style={{ color: "oklch(0.78 0.005 85)", margin: 0 }}>Free to start, three minutes to publish. We email you when verification clears so you know exactly when search traffic kicks in.</p>
             <div className="flex gap-3">
-              <Link href="/register" className="btn-signal-v2 lg" style={{ color: "oklch(0.18 0.05 148)" }}>Create your account →</Link>
+              <Link href="/login?mode=signup" className="btn-signal-v2 lg" style={{ color: "oklch(0.18 0.05 148)" }}>Create your account →</Link>
               <Link href="/marketplace" className="btn-ghost-v2 lg" style={{ color: "var(--bg)", borderColor: "oklch(0.35 0.008 80)" }}>Browse first</Link>
             </div>
           </div>

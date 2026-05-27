@@ -233,6 +233,7 @@ const CURRENCY_CSS = `
 }
 @media (max-width: 640px) {
   .cd-stage { padding: 20px 12px; min-height: 460px; }
+  .cd-price-amount { font-size: 28px; }
 }
 .cd-stage-tag {
   position: absolute; top: 14px; left: 16px;

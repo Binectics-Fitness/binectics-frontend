@@ -389,7 +389,7 @@ const DTD_CSS = `
 }
 .dtd-chip {
   border: 1px solid var(--border); border-radius: var(--r-2);
-  padding: 8px 10px; background: var(--bg); text-align: left;
+  padding: 10px 10px; background: var(--bg); text-align: left;
   cursor: pointer; transition: border-color 120ms, background 120ms;
   display: flex; flex-direction: column; gap: 2px;
 }
@@ -430,7 +430,7 @@ const DTD_CSS = `
 @keyframes dtd-livedot { 50% { opacity: 0.4; } }
 
 .dtd-card {
-  width: 520px;
+  width: min(520px, 100%);
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--r-3);
@@ -588,6 +588,10 @@ const DTD_CSS = `
   font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-3);
   flex-shrink: 0;
 }
+@media (max-width: 640px) {
+  .dtd-template-title { white-space: normal; }
+  .dtd-template-meta { white-space: normal; }
+}
 
 .dtd-action-row {
   display: flex; align-items: flex-start; gap: 10px;
@@ -613,7 +617,7 @@ const DTD_CSS = `
 .dtd-action-btn {
   border: 1px solid var(--border); border-radius: var(--r-2);
   background: transparent; color: var(--ink);
-  font-size: 12px; font-weight: 500; height: 28px; padding: 0 10px;
+  font-size: 12px; font-weight: 500; height: 34px; padding: 0 10px;
   cursor: pointer; flex-shrink: 0;
   transition: border-color 120ms, background 120ms;
 }
