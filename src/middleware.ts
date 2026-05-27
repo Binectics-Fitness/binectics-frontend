@@ -18,6 +18,8 @@ const authRoutes = ["/login", "/register"];
 function detectCountry(request: NextRequest): string {
   const vercel = request.headers.get("x-vercel-ip-country");
   if (vercel && vercel !== "XX") return vercel.toUpperCase();
+  const netlify = request.headers.get("x-country");
+  if (netlify && netlify !== "XX") return netlify.toUpperCase();
   const cf = request.headers.get("cf-ipcountry");
   if (cf && cf !== "XX" && cf !== "T1") return cf.toUpperCase();
   return "US";
