@@ -37,7 +37,7 @@ export function RegionSelector() {
     <div ref={ref} className="relative inline-flex">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 font-mono text-[11.5px] cursor-pointer rounded-(--r-2) px-2 py-1 hover:bg-bg-2"
+        className="inline-flex items-center gap-1.5 font-mono text-[11.5px] cursor-pointer rounded-(--r-2) px-2.5 py-2 min-h-11 hover:bg-bg-2"
         style={{ color: "var(--fg-3)", background: "transparent", border: "none" }}
         aria-label="Change currency region"
         aria-expanded={open}
@@ -60,8 +60,10 @@ export function RegionSelector() {
             return (
               <button
                 key={r.code}
+                role="option"
+                aria-selected={isActive}
                 onClick={() => { setRegion(r.code); setOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left cursor-pointer hover:bg-bg-2"
+                className="w-full flex items-center gap-2.5 px-3.5 py-3 min-h-11 text-left cursor-pointer hover:bg-bg-2"
                 style={{ background: isActive ? "var(--bg-2)" : "transparent", border: "none", borderBottom: "1px solid var(--border)" }}
               >
                 <span className="text-[15px]">{FLAG[r.code] ?? "🌐"}</span>

@@ -164,7 +164,7 @@ export default function PricingPage() {
           <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>I&apos;m a</span>
           <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
             {(["provider", "member"] as const).map((a) => (
-              <button key={a} onClick={() => setAudience(a)} className="px-4.5 py-2 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: audience === a ? "var(--bg)" : "transparent", color: audience === a ? "var(--ink)" : "var(--fg-3)", boxShadow: audience === a ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
+              <button key={a} onClick={() => setAudience(a)} className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: audience === a ? "var(--bg)" : "transparent", color: audience === a ? "var(--ink)" : "var(--fg-3)", boxShadow: audience === a ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
                 {a === "provider" ? "Provider" : "Member"}
               </button>
             ))}
@@ -174,7 +174,7 @@ export default function PricingPage() {
           <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Billed</span>
           <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
             {(["monthly", "annual"] as const).map((b) => (
-              <button key={b} onClick={() => setPeriod(b)} className="px-4.5 py-2 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: period === b ? "var(--bg)" : "transparent", color: period === b ? "var(--ink)" : "var(--fg-3)", boxShadow: period === b ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
+              <button key={b} onClick={() => setPeriod(b)} className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: period === b ? "var(--bg)" : "transparent", color: period === b ? "var(--ink)" : "var(--fg-3)", boxShadow: period === b ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
                 {b === "monthly" ? "Monthly" : "Annual"}
               </button>
             ))}
@@ -199,11 +199,11 @@ export default function PricingPage() {
               <div className="text-[16px] font-medium" style={{ letterSpacing: "-0.005em", color: p.ink ? "var(--bg)" : "var(--ink)" }}>{p.name}</div>
               <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: p.ink ? "oklch(0.65 0.005 85)" : "var(--fg-3)" }}>{p.meta}</div>
             </div>
-            <div className={`font-medium flex items-baseline gap-2 ${p.text ? "text-[36px]" : "text-[56px]"}`} style={{ letterSpacing: "-0.04em", lineHeight: 1, color: p.ink ? "var(--bg)" : "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-              {p.price}<small className="font-mono text-[14px] font-normal" style={{ color: p.ink ? "oklch(0.7 0.005 85)" : "var(--fg-3)" }}>{p.priceSub}</small>
+            <div className={`font-medium flex items-baseline gap-2 flex-wrap ${p.text ? "text-[36px]" : "text-[32px] sm:text-[56px]"}`} style={{ letterSpacing: "-0.04em", lineHeight: 1, color: p.ink ? "var(--bg)" : "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+              {p.price}<small className="font-mono text-[12px] sm:text-[14px] font-normal" style={{ color: p.ink ? "oklch(0.7 0.005 85)" : "var(--fg-3)" }}>{p.priceSub}</small>
             </div>
             <p className="text-[13.5px] leading-[1.5] max-w-[32ch]" style={{ color: p.ink ? "oklch(0.82 0.005 85)" : "var(--fg-2)" }}>{p.tagline}</p>
-            <Link href={p.ink ? "#" : "/login?mode=signup"} className={`${p.featured ? "btn-primary-v2" : p.ink ? "btn-signal-v2" : "btn-ghost-v2"} w-full justify-center`} style={p.ink ? { color: "oklch(0.18 0.05 148)" } : undefined}>{p.cta}</Link>
+            <Link href={p.ink ? "#" : "/login?mode=signup"} className={`${p.featured ? "btn-primary-v2" : p.ink ? "btn-signal-v2" : "btn-ghost-v2"} w-full justify-center min-h-11`} style={p.ink ? { color: "oklch(0.18 0.05 148)" } : undefined}>{p.cta}</Link>
             <div className="font-mono text-[10.5px] uppercase tracking-[0.05em]" style={{ borderTop: `1px solid ${p.ink ? "oklch(0.3 0.008 80)" : "var(--border)"}`, marginTop: "4px", paddingTop: "16px", color: p.ink ? "oklch(0.7 0.005 85)" : "var(--fg-3)" }}>{p.divider}</div>
             <ul className="flex flex-col gap-2.25 list-none p-0 m-0">
               {p.features.map((f) => (
@@ -223,21 +223,21 @@ export default function PricingPage() {
           <h2 className="text-[40px] font-medium leading-[1.05] max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>What you <em className="font-serif font-normal italic">actually</em> pay.</h2>
           <p className="text-[16px] leading-[1.55] max-w-[56ch]" style={{ color: "var(--fg-2)", margin: 0 }}>A worked example: a member books a {formatAmount(sessionPrice)} session with a local trainer using a card via {fee.gwName}. Here&apos;s where every unit goes. <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>Amounts shown in {currency}.</span></p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 overflow-x-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
           {/* Fee table */}
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="grid font-mono text-[11px] uppercase tracking-[0.04em]" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "12px 18px", background: "var(--bg-2)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}>
+          <div className="rounded-(--r-3) overflow-x-auto" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="grid font-mono text-[11px] uppercase tracking-[0.04em]" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "12px 18px", background: "var(--bg-2)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)", minWidth: "480px" }}>
               <span>Line item</span><span className="text-right">Member pays</span><span className="text-right">Provider keeps</span><span className="text-right">Goes to</span>
             </div>
             {fee.rows.map((r) => (
-              <div key={r.nm} className="grid items-center" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "14px 18px", borderBottom: "1px solid var(--border)" }}>
+              <div key={r.nm} className="grid items-center" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "14px 18px", borderBottom: "1px solid var(--border)", minWidth: "480px" }}>
                 <div><div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{r.nm}</div><div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.75" style={{ color: "var(--fg-3)" }}>{r.sub}</div></div>
                 <div className="font-mono text-[14px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{r.member}</div>
                 <div className="font-mono text-[14px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{r.provider}</div>
                 <div className="font-mono text-[14px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{r.to}</div>
               </div>
             ))}
-            <div className="grid items-center" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "14px 18px", background: "var(--bg-2)" }}>
+            <div className="grid items-center" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "14px 18px", background: "var(--bg-2)", minWidth: "480px" }}>
               <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>Total · on the card</div>
               <div className="text-[16px] font-medium text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fee.totalMember}</div>
               <div className="text-[16px] font-medium text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fee.totalProvider}</div>
@@ -268,7 +268,7 @@ export default function PricingPage() {
         <p className="text-[15.5px] max-w-[56ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>The same data lives in your dashboard once you&apos;ve signed up.</p>
         <div className="rounded-(--r-3) overflow-x-auto mt-8" style={{ border: "1px solid var(--border)" }}>
           {/* Header */}
-          <div className="grid" style={{ gridTemplateColumns: "1.6fr repeat(3, 1fr)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>
+          <div className="grid" style={{ gridTemplateColumns: "1.6fr repeat(3, 1fr)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)", minWidth: "600px" }}>
             {[{ name: "Feature", price: "Compare side by side" }, { name: "Starter", price: "Free" }, { name: "Studio", price: `${monthlyEq("studio")} / mo${period === "annual" ? " · annual" : ""}`, featured: true }, { name: "Enterprise", price: "Custom" }].map((c) => (
               <div key={c.name} className="py-4.5 px-5" style={{ borderRight: "1px solid var(--border)", background: c.featured ? "var(--ink)" : undefined }}>
                 <div className="text-[15px] font-medium" style={{ letterSpacing: "-0.005em", color: c.featured ? "var(--bg)" : "var(--ink)" }}>{c.name}</div>
@@ -281,7 +281,7 @@ export default function PricingPage() {
             <div key={g.group}>
               <div className="font-mono text-[11px] uppercase tracking-[0.05em] px-5 py-2" style={{ background: "var(--bg-3)", color: "var(--fg-3)", borderBottom: "1px solid var(--border)" }}>{g.group}</div>
               {g.rows.map((r) => (
-                <div key={r.feature} className="grid" style={{ gridTemplateColumns: "1.6fr repeat(3, 1fr)", borderBottom: "1px solid var(--border)" }}>
+                <div key={r.feature} className="grid" style={{ gridTemplateColumns: "1.6fr repeat(3, 1fr)", borderBottom: "1px solid var(--border)", minWidth: "600px" }}>
                   <div className="px-5 py-3 text-[13.5px] flex items-center" style={{ color: "var(--fg-2)", borderRight: "1px solid var(--border)" }}>{r.feature}</div>
                   {[r.starter, r.studio, r.enterprise].map((v, i) => (
                     <div key={i} className="px-5 py-3 flex items-center gap-2 text-[13.5px]" style={{ borderRight: "1px solid var(--border)", background: i === 1 ? "var(--bg-2)" : undefined, color: "var(--ink)" }}>
@@ -299,7 +299,7 @@ export default function PricingPage() {
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-10 sm:py-16" style={{ borderBottom: "1px solid var(--border)" }}>
         <h2 className="text-[40px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>The <em className="font-serif font-normal italic">same</em> deal, in every country.</h2>
         <p className="text-[15.5px] max-w-[56ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>52 countries · 8 currencies. We route payments through the gateway that works best where you are — the percentage we take stays the same.</p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
           {REGIONS.map((r) => (
             <div key={r.country} className="flex flex-col gap-2.5 rounded-(--r-3)" style={{ padding: "18px 20px", border: "1px solid var(--border)", background: "var(--bg)" }}>
               <div className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>
@@ -342,7 +342,7 @@ export default function PricingPage() {
           </h2>
           <div className="flex flex-col gap-4 items-start">
             <p className="text-[15px] max-w-[36ch] leading-[1.5]" style={{ color: "oklch(0.78 0.005 85)", margin: 0 }}>Free to start, three minutes to publish. We email you when verification clears so you know exactly when search traffic kicks in.</p>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/login?mode=signup" className="btn-signal-v2 lg" style={{ color: "oklch(0.18 0.05 148)" }}>Create your account →</Link>
               <Link href="/marketplace" className="btn-ghost-v2 lg" style={{ color: "var(--bg)", borderColor: "oklch(0.35 0.008 80)" }}>Browse first</Link>
             </div>

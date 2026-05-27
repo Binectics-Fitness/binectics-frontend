@@ -24,7 +24,7 @@ export default function LandingPricing() {
           <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>I&apos;m a</span>
           <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
             {(["provider", "member"] as const).map((a) => (
-              <button key={a} onClick={() => setAudience(a)} className="px-4.5 py-2 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: audience === a ? "var(--bg)" : "transparent", color: audience === a ? "var(--ink)" : "var(--fg-3)", boxShadow: audience === a ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
+              <button key={a} onClick={() => setAudience(a)} className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: audience === a ? "var(--bg)" : "transparent", color: audience === a ? "var(--ink)" : "var(--fg-3)", boxShadow: audience === a ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
                 {a === "provider" ? "Provider" : "Member"}
               </button>
             ))}
@@ -34,7 +34,7 @@ export default function LandingPricing() {
           <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Billed</span>
           <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
             {(["monthly", "annual"] as const).map((b) => (
-              <button key={b} onClick={() => setPeriod(b)} className="px-4.5 py-2 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: period === b ? "var(--bg)" : "transparent", color: period === b ? "var(--ink)" : "var(--fg-3)", boxShadow: period === b ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
+              <button key={b} onClick={() => setPeriod(b)} className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: period === b ? "var(--bg)" : "transparent", color: period === b ? "var(--ink)" : "var(--fg-3)", boxShadow: period === b ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
                 {b === "monthly" ? "Monthly" : "Annual"}
               </button>
             ))}
@@ -58,7 +58,7 @@ export default function LandingPricing() {
                 <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
               ))}
             </ul>
-            <Link href="/login?mode=signup" className="btn-ghost-v2 md mt-auto self-start">Start free</Link>
+            <Link href="/login?mode=signup" className="btn-ghost-v2 md mt-auto w-full sm:w-auto sm:self-start min-h-11 justify-center">Start free</Link>
           </div>
 
           {/* Studio */}
@@ -82,7 +82,7 @@ export default function LandingPricing() {
                 <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
               ))}
             </ul>
-            <Link href="/login?mode=signup" className="btn-signal-v2 mt-auto self-start" style={{ height: "34px", padding: "0 14px" }}>Choose Studio</Link>
+            <Link href="/login?mode=signup" className="btn-signal-v2 mt-auto w-full sm:w-auto sm:self-start min-h-11 justify-center" style={{ height: "34px", padding: "0 14px" }}>Choose Studio</Link>
           </div>
 
           {/* Enterprise */}
@@ -95,7 +95,7 @@ export default function LandingPricing() {
                 <li key={b} className="text-[12.5px] pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px" style={{ color: "oklch(0.78 0.005 85)" }}>{b}</li>
               ))}
             </ul>
-            <Link href="/contact" className="btn-ghost-v2 md mt-auto self-start" style={{ background: "var(--bg)", color: "var(--ink)", borderColor: "var(--bg)" }}>Talk to us</Link>
+            <Link href="/contact" className="btn-ghost-v2 md mt-auto w-full sm:w-auto sm:self-start min-h-11 justify-center" style={{ background: "var(--bg)", color: "var(--ink)", borderColor: "var(--bg)" }}>Talk to us</Link>
           </div>
         </div>
       )}
@@ -113,7 +113,7 @@ export default function LandingPricing() {
                 <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
               ))}
             </ul>
-            <Link href="/login?mode=signup" className="btn-ghost-v2 md mt-auto self-start">Create account</Link>
+            <Link href="/login?mode=signup" className="btn-ghost-v2 md mt-auto w-full sm:w-auto sm:self-start min-h-11 justify-center">Create account</Link>
           </div>
 
           {/* Premium */}
@@ -132,7 +132,7 @@ export default function LandingPricing() {
                 <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
               ))}
             </ul>
-            <Link href="/login?mode=signup" className="btn-signal-v2 mt-auto self-start" style={{ height: "34px", padding: "0 14px" }}>Join the waitlist</Link>
+            <Link href="/login?mode=signup" className="btn-signal-v2 mt-auto w-full sm:w-auto sm:self-start min-h-11 justify-center" style={{ height: "34px", padding: "0 14px" }}>Join the waitlist</Link>
           </div>
 
           {/* Family */}
@@ -147,7 +147,7 @@ export default function LandingPricing() {
                 <li key={b} className="text-[12.5px] pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px" style={{ color: "oklch(0.78 0.005 85)" }}>{b}</li>
               ))}
             </ul>
-            <Link href="/login?mode=signup" className="btn-ghost-v2 md mt-auto self-start" style={{ background: "var(--bg)", color: "var(--ink)", borderColor: "var(--bg)" }}>Join waitlist</Link>
+            <Link href="/login?mode=signup" className="btn-ghost-v2 md mt-auto w-full sm:w-auto sm:self-start min-h-11 justify-center" style={{ background: "var(--bg)", color: "var(--ink)", borderColor: "var(--bg)" }}>Join waitlist</Link>
           </div>
         </div>
       )}
