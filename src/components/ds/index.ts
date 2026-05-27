@@ -19,3 +19,8 @@ export { SectionNav } from "./SectionNav";
 
 // Phase 3 — dashboard shells
 export { MemberDashboardShell } from "./MemberDashboardShell";
+
+// Phase 4 — marketing primitives
+export { TogglePill } from "./TogglePill";
+export { PlanCard } from "./PlanCard";
+export type { PlanCardPlan } from "./PlanCard";

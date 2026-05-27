@@ -4,6 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
+import { TogglePill } from "@/components/ds/TogglePill";
+import { PlanCard } from "@/components/ds/PlanCard";
+import type { PlanCardPlan } from "@/components/ds/PlanCard";
 import { useRegion } from "@/contexts/RegionContext";
 import { type PlanTier, type BillingPeriod, type CurrencyCode, getMonthlyEquivalent } from "@/lib/constants/regions";
 
@@ -13,10 +16,7 @@ import { type PlanTier, type BillingPeriod, type CurrencyCode, getMonthlyEquival
  * Fee breakdown table. Feature comparison table. Regional pricing. 7 FAQs. CTA.
  */
 
-interface PricingPlan {
-  name: string; meta: string; price: string; priceSub: string; tagline: string; cta: string; divider: string; features: string[];
-  text?: boolean; ghost?: boolean; featured?: boolean; ink?: boolean; badge?: string;
-}
+type PricingPlan = PlanCardPlan;
 
 function buildProviderPlans(fmt: (amount: number) => string, period: BillingPeriod, monthlyEq: (tier: PlanTier) => string): PricingPlan[] {
   const isAnnual = period === "annual";
@@ -160,25 +160,19 @@ export default function PricingPage() {
 
       {/* Audience + billing toggles */}
       <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 mx-auto max-w-360 px-5 sm:px-10" style={{ paddingTop: "28px" }}>
+        <TogglePill
+          label="I'm a"
+          options={[{ value: "provider" as const, label: "Provider" }, { value: "member" as const, label: "Member" }]}
+          value={audience}
+          onChange={setAudience}
+        />
         <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>I&apos;m a</span>
-          <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-            {(["provider", "member"] as const).map((a) => (
-              <button key={a} onClick={() => setAudience(a)} className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: audience === a ? "var(--bg)" : "transparent", color: audience === a ? "var(--ink)" : "var(--fg-3)", boxShadow: audience === a ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
-                {a === "provider" ? "Provider" : "Member"}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Billed</span>
-          <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-            {(["monthly", "annual"] as const).map((b) => (
-              <button key={b} onClick={() => setPeriod(b)} className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: period === b ? "var(--bg)" : "transparent", color: period === b ? "var(--ink)" : "var(--fg-3)", boxShadow: period === b ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
-                {b === "monthly" ? "Monthly" : "Annual"}
-              </button>
-            ))}
-          </div>
+          <TogglePill
+            label="Billed"
+            options={[{ value: "monthly" as const, label: "Monthly" }, { value: "annual" as const, label: "Annual" }]}
+            value={period}
+            onChange={setPeriod}
+          />
           {period === "annual" && (
             <span className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--signal-ink)" }}>Save ~17%</span>
           )}
@@ -188,32 +182,7 @@ export default function PricingPage() {
       {/* Plans — 3-col, padding: 28px 28px 24px */}
       <section className="mx-auto max-w-360 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-5 sm:px-10 pt-8 sm:pt-10">
         {plans.map((p) => (
-          <div key={p.name} className={`rounded-(--r-3) flex flex-col relative ${p.featured ? "bg-bg-2" : p.ink ? "" : "bg-bg"}`} style={{ padding: "28px 28px 24px", gap: "16px", border: `1px solid ${p.featured || p.ink ? "var(--ink)" : "var(--border)"}`, background: p.ink ? "var(--ink)" : undefined, color: p.ink ? "var(--bg)" : undefined }}>
-            {(p.featured || p.badge) && (
-              <span className="absolute font-mono text-[10.5px] uppercase tracking-[0.05em] inline-flex items-center gap-1.25 rounded-full" style={{ top: "-10px", left: "24px", padding: "4px 10px", background: p.ink ? "var(--signal)" : "var(--ink)", color: p.ink ? "oklch(0.18 0.05 148)" : "var(--bg)" }}>
-                <span className="w-1.25 h-1.25 rounded-full" style={{ background: p.ink ? "oklch(0.18 0.05 148)" : "var(--signal)" }} />
-                {p.badge || "Most picked"}
-              </span>
-            )}
-            <div className="flex justify-between items-baseline">
-              <div className="text-[16px] font-medium" style={{ letterSpacing: "-0.005em", color: p.ink ? "var(--bg)" : "var(--ink)" }}>{p.name}</div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: p.ink ? "oklch(0.65 0.005 85)" : "var(--fg-3)" }}>{p.meta}</div>
-            </div>
-            <div className={`font-medium flex items-baseline gap-2 flex-wrap ${p.text ? "text-[36px]" : "text-[32px] sm:text-[56px]"}`} style={{ letterSpacing: "-0.04em", lineHeight: 1, color: p.ink ? "var(--bg)" : "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-              {p.price}<small className="font-mono text-[12px] sm:text-[14px] font-normal" style={{ color: p.ink ? "oklch(0.7 0.005 85)" : "var(--fg-3)" }}>{p.priceSub}</small>
-            </div>
-            <p className="text-[13.5px] leading-[1.5] max-w-[32ch]" style={{ color: p.ink ? "oklch(0.82 0.005 85)" : "var(--fg-2)" }}>{p.tagline}</p>
-            <Link href={p.ink ? "#" : "/login?mode=signup"} className={`${p.featured ? "btn-primary-v2" : p.ink ? "btn-signal-v2" : "btn-ghost-v2"} w-full justify-center min-h-11`} style={p.ink ? { color: "oklch(0.18 0.05 148)" } : undefined}>{p.cta}</Link>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.05em]" style={{ borderTop: `1px solid ${p.ink ? "oklch(0.3 0.008 80)" : "var(--border)"}`, marginTop: "4px", paddingTop: "16px", color: p.ink ? "oklch(0.7 0.005 85)" : "var(--fg-3)" }}>{p.divider}</div>
-            <ul className="flex flex-col gap-2.25 list-none p-0 m-0">
-              {p.features.map((f) => (
-                <li key={f} className="flex gap-2.5 items-start text-[13.5px] leading-[1.5]" style={{ color: p.ink ? "oklch(0.85 0.005 85)" : "var(--fg-2)" }}>
-                  <span className="w-2.5 h-1.5 border-l-[1.5px] border-b-[1.5px] -rotate-45 shrink-0 mt-[5px]" style={{ borderColor: p.ink ? "var(--signal)" : "var(--ink)" }} />
-                  <span dangerouslySetInnerHTML={{ __html: f.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--ink);font-weight:500">$1</strong>') }} />
-                </li>
-              ))}
-            </ul>
-          </div>
+          <PlanCard key={p.name} plan={p} />
         ))}
       </section>
 

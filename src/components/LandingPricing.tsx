@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRegion } from "@/contexts/RegionContext";
 import { type BillingPeriod, getMonthlyEquivalent } from "@/lib/constants/regions";
+import { TogglePill } from "@/components/ds/TogglePill";
 
 export default function LandingPricing() {
   const [audience, setAudience] = useState<"provider" | "member">("provider");
@@ -20,25 +21,19 @@ export default function LandingPricing() {
     <div>
       {/* Audience + billing toggles */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+        <TogglePill
+          label="I'm a"
+          options={[{ value: "provider" as const, label: "Provider" }, { value: "member" as const, label: "Member" }]}
+          value={audience}
+          onChange={setAudience}
+        />
         <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>I&apos;m a</span>
-          <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-            {(["provider", "member"] as const).map((a) => (
-              <button key={a} onClick={() => setAudience(a)} className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: audience === a ? "var(--bg)" : "transparent", color: audience === a ? "var(--ink)" : "var(--fg-3)", boxShadow: audience === a ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
-                {a === "provider" ? "Provider" : "Member"}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Billed</span>
-          <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-            {(["monthly", "annual"] as const).map((b) => (
-              <button key={b} onClick={() => setPeriod(b)} className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: period === b ? "var(--bg)" : "transparent", color: period === b ? "var(--ink)" : "var(--fg-3)", boxShadow: period === b ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
-                {b === "monthly" ? "Monthly" : "Annual"}
-              </button>
-            ))}
-          </div>
+          <TogglePill
+            label="Billed"
+            options={[{ value: "monthly" as const, label: "Monthly" }, { value: "annual" as const, label: "Annual" }]}
+            value={period}
+            onChange={setPeriod}
+          />
           {isAnnual && (
             <span className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--signal-ink)" }}>Save ~17%</span>
           )}
