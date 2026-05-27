@@ -114,8 +114,8 @@ export default function InviteContent() {
 
   if (status === "needs-signup") {
     const registerUrl = email
-      ? `/register/user?email=${encodeURIComponent(email)}`
-      : "/register/user";
+      ? `/onboarding/member?email=${encodeURIComponent(email)}`
+      : "/onboarding/member";
 
     return (
       <div className="flex min-h-screen items-center justify-center bg-background-secondary">
