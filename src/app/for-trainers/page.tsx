@@ -59,7 +59,7 @@ const FEATURES = [
   {
     title: "Earnings dashboard",
     desc: "Per-client revenue breakdown, monthly trends, projected earnings, and payout timeline. Know exactly what is coming and when.",
-    stat: "R 38.4K avg monthly earnings",
+    stat: "R 38.4K avg monthly earnings (ZA)",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
   {
@@ -88,7 +88,7 @@ const EARNINGS = [
 const KPIS = [
   { label: "Avg leads/month", value: "8.4" },
   { label: "Client retention lift", value: "+34%" },
-  { label: "Avg monthly earnings", value: "R 38.4K" },
+  { label: "Avg monthly earnings (ZA)", value: "R 38.4K" },
   { label: "Active trainers", value: "1,241" },
 ];
 

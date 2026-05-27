@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { RegionSelector } from "@/components/ds/RegionSelector";
 
 /**
  * MarketingFooter — from landing.html prototype.
@@ -80,7 +81,10 @@ export function MarketingFooter() {
       {/* Copyright bar */}
       <div className="mx-auto max-w-360 flex flex-wrap gap-2 justify-between items-center" style={{ padding: "24px clamp(20px, 5vw, 40px) 56px", borderTop: "1px solid var(--border)" }}>
         <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>© 2026 Binectics, Inc. All rights reserved.</span>
-        <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>v 1.0 · 14,200 providers · 52 countries</span>
+        <div className="flex items-center gap-3">
+          <RegionSelector />
+          <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>v 1.0 · 14,200 providers · 52 countries</span>
+        </div>
       </div>
     </>
   );

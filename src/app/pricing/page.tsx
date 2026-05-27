@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
+import { useRegion } from "@/contexts/RegionContext";
+import { type PlanTier, type BillingPeriod, type CurrencyCode, getMonthlyEquivalent } from "@/lib/constants/regions";
 
 /**
  * Pricing — pricing.html prototype. Pixel-perfect rebuild.
@@ -17,23 +18,59 @@ interface PricingPlan {
   text?: boolean; ghost?: boolean; featured?: boolean; ink?: boolean; badge?: string;
 }
 
-const PROVIDER_PLANS: PricingPlan[] = [
-  { name: "Starter", meta: "For new providers", price: "Free", priceSub: "forever", text: true, tagline: "List a single profile, take up to 50 active members. Try the rails before you commit.", cta: "Start free →", ghost: true, divider: "Includes", features: ["1 marketplace listing", "Up to 50 active members or clients", "QR check‑in & streak tracking", "Booking, payments, messages", "Standard payment fees apply", "Email support · 24h response"] },
-  { name: "Studio", meta: "Solo & single‑location", price: "$48", priceSub: "/ month", tagline: "For full‑time trainers, dietitians, and single‑location gyms running a real practice. Cancel any time.", cta: "Choose Studio", featured: true, divider: "Everything in Starter, plus", features: ["Up to 500 active members", "Staff & client management", "Custom gateway keys · Stripe / Paystack / Flutterwave", "Revenue + check‑in analytics", "Plan / program builder", "Verified badge after document review", "Provider success Slack channel"] },
-  { name: "Enterprise", meta: "Multi‑location · multi‑country", price: "Custom", priceSub: "talk to us", text: true, tagline: "For chains with 3+ locations, corporate wellness contracts, or 5,000+ members. We meet your team and shape a deal.", cta: "Talk to sales →", ink: true, divider: "Everything in Studio, plus", features: ["Unlimited locations & members", "Org‑level billing & SSO", "Assignment rules & team scopes", "Dedicated provider success", "99.95% uptime SLA · audit logs", "Sandbox + staging environments", "API access"] },
-];
+function buildProviderPlans(fmt: (amount: number) => string, period: BillingPeriod, monthlyEq: (tier: PlanTier) => string): PricingPlan[] {
+  const isAnnual = period === "annual";
+  return [
+    { name: "Starter", meta: "For new providers", price: "Free", priceSub: "forever", text: true, tagline: "List a single profile, take up to 50 active members. Try the rails before you commit.", cta: "Start free →", ghost: true, divider: "Includes", features: ["1 marketplace listing", "Up to 50 active members or clients", "QR check‑in & streak tracking", "Booking, payments, messages", "Standard payment fees apply", "Email support · 24h response"] },
+    { name: "Studio", meta: "Solo & single‑location", price: monthlyEq("studio"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: isAnnual ? "Pay once a year and save ~17%. For full‑time trainers, dietitians, and single‑location gyms." : "For full‑time trainers, dietitians, and single‑location gyms running a real practice. Cancel any time.", cta: "Choose Studio", featured: true, badge: isAnnual ? "Save 2 months" : undefined, divider: "Everything in Starter, plus", features: ["Up to 500 active members", "Staff & client management", "Custom gateway keys · Stripe / Paystack / Flutterwave", "Revenue + check‑in analytics", "Plan / program builder", "Verified badge after document review", "Provider success Slack channel"] },
+    { name: "Enterprise", meta: "Multi‑location · multi‑country", price: "Custom", priceSub: "talk to us", text: true, tagline: "For chains with 3+ locations, corporate wellness contracts, or 5,000+ members. We meet your team and shape a deal.", cta: "Talk to sales →", ink: true, divider: "Everything in Studio, plus", features: ["Unlimited locations & members", "Org‑level billing & SSO", "Assignment rules & team scopes", "Dedicated provider success", "99.95% uptime SLA · audit logs", "Sandbox + staging environments", "API access"] },
+  ];
+}
 
-const MEMBER_PLANS: PricingPlan[] = [
-  { name: "Member", meta: "For everyone who books", price: "Free", priceSub: "account", text: true, tagline: "No subscription. You only pay for what you book. The 5% platform fee is shown clearly at checkout — never hidden.", cta: "Create account →", divider: "Includes", features: ["Unlimited bookings", "QR check‑in & streak tracking", "Messaging with your providers", "Workout, weight, and meal logs", "One‑click refund flow if something goes wrong", "Available in 52 countries, 8 currencies"] },
-  { name: "Premium", meta: "For frequent bookers", price: "$9", priceSub: "/ month", tagline: "Waive the platform fee on every booking, plus priority support and early access to new providers in your city.", cta: "Join the waitlist", featured: true, badge: "Coming Aug 2026", divider: "Everything in Member, plus", features: ["0% platform fee on all bookings", "Priority booking on full classes", "Early access to new verified providers", "Priority human support · 1h SLA", "Cross‑city portability when you travel"] },
-  { name: "Family", meta: "Up to 5 people", price: "$19", priceSub: "/ month", tagline: "One account, five members. Share bookings, manage kids' schedules, see everyone's check‑ins in one feed.", cta: "Join waitlist →", ink: true, divider: "Everything in Premium, plus", features: ["Up to 5 family members", "Single billing across the family", "Youth profiles with guardian controls", "Joint training plans (siblings, couples)", "Shared streak leaderboard"] },
-];
+function buildMemberPlans(fmt: (amount: number) => string, period: BillingPeriod, monthlyEq: (tier: PlanTier) => string): PricingPlan[] {
+  const isAnnual = period === "annual";
+  return [
+    { name: "Member", meta: "For everyone who books", price: "Free", priceSub: "account", text: true, tagline: "No subscription. You only pay for what you book. The 5% platform fee is shown clearly at checkout — never hidden.", cta: "Create account →", divider: "Includes", features: ["Unlimited bookings", "QR check‑in & streak tracking", "Messaging with your providers", "Workout, weight, and meal logs", "One‑click refund flow if something goes wrong", "Available in 52 countries, 8 currencies"] },
+    { name: "Premium", meta: "For frequent bookers", price: monthlyEq("premium"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: "Waive the platform fee on every booking, plus priority support and early access to new providers in your city.", cta: "Join the waitlist", featured: true, badge: isAnnual ? "Save 2 months" : "Coming Aug 2026", divider: "Everything in Member, plus", features: ["0% platform fee on all bookings", "Priority booking on full classes", "Early access to new verified providers", "Priority human support · 1h SLA", "Cross‑city portability when you travel"] },
+    { name: "Family", meta: "Up to 5 people", price: monthlyEq("family"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: "One account, five members. Share bookings, manage kids' schedules, see everyone's check‑ins in one feed.", cta: "Join waitlist →", ink: true, divider: "Everything in Premium, plus", features: ["Up to 5 family members", "Single billing across the family", "Youth profiles with guardian controls", "Joint training plans (siblings, couples)", "Shared streak leaderboard"] },
+  ];
+}
 
-const FEE_ROWS = [
-  { nm: "Session price", sub: "set by provider", member: "R 1,200.00", provider: "R 1,200.00", to: "Provider" },
-  { nm: "Platform fee", sub: "5% · member side", member: "+ R 60.00", provider: "—", to: "Binectics" },
-  { nm: "Gateway fee", sub: "Paystack · 1.5% + R 1", member: "+ R 19.00", provider: "—", to: "Paystack" },
-];
+const EXAMPLE_SESSION: Record<CurrencyCode, number> = {
+  USD: 80, GBP: 65, EUR: 70, NGN: 25_000, KES: 5_000, ZAR: 1_200, AED: 250, INR: 3_000,
+};
+
+const GATEWAY_INFO: Record<CurrencyCode, { name: string; pct: number; flat: number }> = {
+  USD: { name: "Stripe", pct: 0.029, flat: 0.30 },
+  GBP: { name: "Stripe", pct: 0.015, flat: 0.20 },
+  EUR: { name: "Stripe", pct: 0.014, flat: 0.25 },
+  NGN: { name: "Paystack", pct: 0.015, flat: 100 },
+  KES: { name: "Flutterwave", pct: 0.02, flat: 0 },
+  ZAR: { name: "Paystack", pct: 0.015, flat: 1 },
+  AED: { name: "Stripe", pct: 0.024, flat: 0 },
+  INR: { name: "Razorpay", pct: 0.02, flat: 0 },
+};
+
+function buildFeeRows(currency: CurrencyCode, fmt: (n: number) => string) {
+  const session = EXAMPLE_SESSION[currency];
+  const platform = session * 0.05;
+  const gw = GATEWAY_INFO[currency];
+  const gwFee = Math.round((session * gw.pct + gw.flat) * 100) / 100;
+  const total = session + platform + gwFee;
+  return {
+    rows: [
+      { nm: "Session price", sub: "set by provider", member: fmt(session), provider: fmt(session), to: "Provider" },
+      { nm: "Platform fee", sub: "5% · member side", member: `+ ${fmt(platform)}`, provider: "—", to: "Binectics" },
+      { nm: "Gateway fee", sub: `${gw.name} · ${(gw.pct * 100).toFixed(1)}%${gw.flat ? ` + ${fmt(gw.flat)}` : ""}`, member: `+ ${fmt(gwFee)}`, provider: "—", to: gw.name },
+    ],
+    totalMember: fmt(total),
+    totalProvider: fmt(session),
+    monthlyGross: fmt(session * 80),
+    monthlyGwFees: fmt(gwFee * 80),
+    monthlyNet: fmt(session * 80 - gwFee * 80),
+    gwName: gw.name,
+  };
+}
 
 const COMPARE = [
   { group: "Marketplace", rows: [
@@ -87,7 +124,14 @@ function Check() {
 
 export default function PricingPage() {
   const [audience, setAudience] = useState<"provider" | "member">("provider");
-  const plans = audience === "provider" ? PROVIDER_PLANS : MEMBER_PLANS;
+  const [period, setPeriod] = useState<BillingPeriod>("monthly");
+  const { formatAmount, currency, regionName } = useRegion();
+  const monthlyEq = (tier: PlanTier) => formatAmount(getMonthlyEquivalent(tier, currency, period));
+  const plans = audience === "provider"
+    ? buildProviderPlans(formatAmount, period, monthlyEq)
+    : buildMemberPlans(formatAmount, period, monthlyEq);
+  const fee = buildFeeRows(currency, formatAmount);
+  const sessionPrice = EXAMPLE_SESSION[currency];
 
   return (
     <div style={{ background: "var(--bg)" }}>
@@ -114,15 +158,30 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Audience toggle */}
-      <div className="flex justify-center items-center gap-4.5 mx-auto max-w-360 px-5 sm:px-10" style={{ paddingTop: "28px" }}>
-        <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>I&apos;m a</span>
-        <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-          {(["provider", "member"] as const).map((a) => (
-            <button key={a} onClick={() => setAudience(a)} className={`px-4.5 py-2 rounded-full text-[13px] font-medium cursor-pointer ${audience === a ? "" : ""}`} style={{ background: audience === a ? "var(--bg)" : "transparent", color: audience === a ? "var(--ink)" : "var(--fg-3)", boxShadow: audience === a ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
-              {a === "provider" ? "Provider" : "Member"}
-            </button>
-          ))}
+      {/* Audience + billing toggles */}
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 mx-auto max-w-360 px-5 sm:px-10" style={{ paddingTop: "28px" }}>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>I&apos;m a</span>
+          <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
+            {(["provider", "member"] as const).map((a) => (
+              <button key={a} onClick={() => setAudience(a)} className="px-4.5 py-2 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: audience === a ? "var(--bg)" : "transparent", color: audience === a ? "var(--ink)" : "var(--fg-3)", boxShadow: audience === a ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
+                {a === "provider" ? "Provider" : "Member"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Billed</span>
+          <div className="inline-flex rounded-full" style={{ padding: "4px", background: "var(--bg-2)", border: "1px solid var(--border)" }}>
+            {(["monthly", "annual"] as const).map((b) => (
+              <button key={b} onClick={() => setPeriod(b)} className="px-4.5 py-2 rounded-full text-[13px] font-medium cursor-pointer" style={{ background: period === b ? "var(--bg)" : "transparent", color: period === b ? "var(--ink)" : "var(--fg-3)", boxShadow: period === b ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none", transition: "background var(--motion-fast), color var(--motion-fast)" }}>
+                {b === "monthly" ? "Monthly" : "Annual"}
+              </button>
+            ))}
+          </div>
+          {period === "annual" && (
+            <span className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--signal-ink)" }}>Save ~17%</span>
+          )}
         </div>
       </div>
 
@@ -162,7 +221,7 @@ export default function PricingPage() {
       <section className="mx-auto max-w-360 mt-10 sm:mt-16 px-5 sm:px-10 pb-10 sm:pb-16" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-16 items-end mb-8">
           <h2 className="text-[40px] font-medium leading-[1.05] max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>What you <em className="font-serif font-normal italic">actually</em> pay.</h2>
-          <p className="text-[16px] leading-[1.55] max-w-[56ch]" style={{ color: "var(--fg-2)", margin: 0 }}>A worked example: a member books a R 1,200 session with a Cape Town trainer using a local card. Here&apos;s where every Rand goes.</p>
+          <p className="text-[16px] leading-[1.55] max-w-[56ch]" style={{ color: "var(--fg-2)", margin: 0 }}>A worked example: a member books a {formatAmount(sessionPrice)} session with a local trainer using a card via {fee.gwName}. Here&apos;s where every unit goes. <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>Amounts shown in {currency}.</span></p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 overflow-x-auto">
           {/* Fee table */}
@@ -170,7 +229,7 @@ export default function PricingPage() {
             <div className="grid font-mono text-[11px] uppercase tracking-[0.04em]" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "12px 18px", background: "var(--bg-2)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}>
               <span>Line item</span><span className="text-right">Member pays</span><span className="text-right">Provider keeps</span><span className="text-right">Goes to</span>
             </div>
-            {FEE_ROWS.map((r) => (
+            {fee.rows.map((r) => (
               <div key={r.nm} className="grid items-center" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "14px 18px", borderBottom: "1px solid var(--border)" }}>
                 <div><div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{r.nm}</div><div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.75" style={{ color: "var(--fg-3)" }}>{r.sub}</div></div>
                 <div className="font-mono text-[14px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{r.member}</div>
@@ -180,8 +239,8 @@ export default function PricingPage() {
             ))}
             <div className="grid items-center" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "12px", padding: "14px 18px", background: "var(--bg-2)" }}>
               <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>Total · on the card</div>
-              <div className="text-[16px] font-medium text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>R 1,279.00</div>
-              <div className="text-[16px] font-medium text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>R 1,200.00</div>
+              <div className="text-[16px] font-medium text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fee.totalMember}</div>
+              <div className="text-[16px] font-medium text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fee.totalProvider}</div>
               <div className="font-mono text-[11px] text-right" style={{ color: "var(--fg-3)" }}>Settled overnight</div>
             </div>
           </div>
@@ -190,13 +249,13 @@ export default function PricingPage() {
             <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Why this works</div>
             <p className="font-serif italic text-[22px] leading-[1.3]" style={{ letterSpacing: "-0.015em", color: "var(--ink)" }}>&ldquo;The provider sets a price and gets that price. We charge the convenience to whoever benefits from it most.&rdquo;</p>
             <div className="rounded-(--r-2) p-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.05em] mb-2" style={{ color: "var(--fg-3)" }}>Your monthly take, at a glance</div>
-              {[{ k: "80 sessions @ R 1,200", v: "R 96,000" }, { k: "Binectics fee", v: "R 0" }, { k: "Gateway fees", v: "− R 1,520" }].map((r) => (
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.05em] mb-2" style={{ color: "var(--fg-3)" }}>Your monthly take · {regionName}</div>
+              {[{ k: `80 sessions @ ${formatAmount(sessionPrice)}`, v: fee.monthlyGross }, { k: "Binectics fee", v: formatAmount(0) }, { k: "Gateway fees", v: `− ${fee.monthlyGwFees}` }].map((r) => (
                 <div key={r.k} className="flex justify-between py-1 text-[13px]"><span style={{ color: "var(--fg-3)" }}>{r.k}</span><span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{r.v}</span></div>
               ))}
               <div className="flex justify-between pt-2 mt-1" style={{ borderTop: "1px solid var(--border)" }}>
                 <span className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>Net to your account</span>
-                <span className="font-mono font-medium" style={{ color: "var(--signal-ink)", fontVariantNumeric: "tabular-nums" }}>R 94,480</span>
+                <span className="font-mono font-medium" style={{ color: "var(--signal-ink)", fontVariantNumeric: "tabular-nums" }}>{fee.monthlyNet}</span>
               </div>
             </div>
           </div>
@@ -210,7 +269,7 @@ export default function PricingPage() {
         <div className="rounded-(--r-3) overflow-x-auto mt-8" style={{ border: "1px solid var(--border)" }}>
           {/* Header */}
           <div className="grid" style={{ gridTemplateColumns: "1.6fr repeat(3, 1fr)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>
-            {[{ name: "Feature", price: "Compare side by side" }, { name: "Starter", price: "Free" }, { name: "Studio", price: "$48 / month", featured: true }, { name: "Enterprise", price: "Custom" }].map((c) => (
+            {[{ name: "Feature", price: "Compare side by side" }, { name: "Starter", price: "Free" }, { name: "Studio", price: `${monthlyEq("studio")} / mo${period === "annual" ? " · annual" : ""}`, featured: true }, { name: "Enterprise", price: "Custom" }].map((c) => (
               <div key={c.name} className="py-4.5 px-5" style={{ borderRight: "1px solid var(--border)", background: c.featured ? "var(--ink)" : undefined }}>
                 <div className="text-[15px] font-medium" style={{ letterSpacing: "-0.005em", color: c.featured ? "var(--bg)" : "var(--ink)" }}>{c.name}</div>
                 <div className="font-mono text-[12px] uppercase tracking-[0.04em] mt-1" style={{ color: c.featured ? "oklch(0.65 0.005 85)" : "var(--fg-3)" }}>{c.price}</div>

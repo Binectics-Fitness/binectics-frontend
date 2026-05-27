@@ -5,6 +5,7 @@ import CookieConsent from "@/components/CookieConsent";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
+import { RegionProvider } from "@/contexts/RegionContext";
 import { ToastContainer } from "@/components/Toast";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
@@ -70,9 +71,11 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <OrganizationProvider>
-              <ConditionalLayout>{children}</ConditionalLayout>
-              <CookieConsent />
-              <ToastContainer />
+              <RegionProvider>
+                <ConditionalLayout>{children}</ConditionalLayout>
+                <CookieConsent />
+                <ToastContainer />
+              </RegionProvider>
             </OrganizationProvider>
           </AuthProvider>
         </QueryProvider>

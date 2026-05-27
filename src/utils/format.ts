@@ -105,17 +105,20 @@ export function signedChange(value: number | undefined | null): string {
 export function formatCurrency(
   amount: number,
   currency: string = "USD",
+  locale: string = "en-US",
 ): string {
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       currencyDisplay: "narrowSymbol",
+      maximumFractionDigits: amount >= 1000 ? 0 : 2,
     }).format(amount);
   } catch {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
+      maximumFractionDigits: amount >= 1000 ? 0 : 2,
     }).format(amount);
   }
 }

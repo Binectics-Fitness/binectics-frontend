@@ -7,6 +7,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 import CountUp from "@/components/CountUp";
 import FaqAccordion from "@/components/FaqAccordion";
 import DashboardMosaic from "@/components/DashboardMosaic";
+import LandingPricing from "@/components/LandingPricing";
 
 export const metadata: Metadata = {
   title: "Binectics — everything fitness runs on",
@@ -245,7 +246,7 @@ export default function Home() {
                     <rect x="44" y="32" width="50" height="6" rx="1" fill="currentColor" />
                     <rect x="44" y="44" width="80" height="3" rx="1.5" fill="var(--fg-3)" stroke="none" />
                     <rect x="44" y="58" width="100" height="22" rx="4" fill="oklch(0.18 0.008 80)" stroke="none" className="step-sub-btn" />
-                    <text x="94" y="73" textAnchor="middle" fontFamily="Geist" fontSize="10" fontWeight="500" fill="var(--bg)" stroke="none">Pay $48.00</text>
+                    <text x="94" y="73" textAnchor="middle" fontFamily="Geist" fontSize="10" fontWeight="500" fill="var(--bg)" stroke="none">Subscribe →</text>
                     <rect x="44" y="58" width="100" height="22" rx="4" fill="url(#shimmer)" stroke="none" className="step-sub-shimmer" />
                     <defs>
                       <linearGradient id="shimmer" x1="0" y1="0" x2="1" y2="0">
@@ -381,50 +382,8 @@ export default function Home() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal stagger staggerInterval={100} className="grid grid-cols-1 sm:grid-cols-3 border border-border rounded-(--r-3) overflow-hidden bg-bg">
-          {/* Starter */}
-          <div className="p-6 sm:p-7 flex flex-col gap-3.5 border-b sm:border-b-0 sm:border-r border-border">
-            <div className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-3">Starter</div>
-            <h3 className="text-[24px] font-medium mt-1" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Free</h3>
-            <div className="font-mono text-[12px] text-fg-3">For new providers · forever free</div>
-            <ul className="flex flex-col gap-1.5 list-none p-0 mt-3">
-              {["One marketplace listing", "Up to 50 active members", "QR check-ins included", "5% platform fee on transactions"].map((b) => (
-                <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
-              ))}
-            </ul>
-            <Link href="/login?mode=signup" className="btn-ghost-v2 md mt-auto self-start">Start free</Link>
-          </div>
-
-          {/* Studio */}
-          <div className="p-6 sm:p-7 flex flex-col gap-3.5 border-b sm:border-b-0 sm:border-r border-border" style={{ background: "var(--bg-2)" }}>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-3">Studio</span>
-              <span className="inline-flex items-center gap-1.25 h-4.5 px-2 rounded-(--r-1) text-[11px] font-medium bg-signal-soft text-signal-ink border border-[oklch(0.88_0.05_148)]">Recommended</span>
-            </div>
-            <h3 className="text-[24px] font-medium mt-1" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-              $48 <span className="font-mono text-[13px] text-fg-3 font-normal">/ month</span>
-            </h3>
-            <div className="font-mono text-[12px] text-fg-3">For single-location operators</div>
-            <ul className="flex flex-col gap-1.5 list-none p-0 mt-3">
-              {["Up to 500 active members", "Staff & client management", "Custom payment gateway keys", "Revenue + check-in analytics", "Email digest, in-app inbox"].map((b) => (
-                <li key={b} className="text-[12.5px] text-fg-2 pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px before:bg-fg-3">{b}</li>
-              ))}
-            </ul>
-            <Link href="/login?mode=signup" className="btn-signal-v2 mt-auto self-start" style={{ height: "34px", padding: "0 14px" }}>Choose Studio</Link>
-          </div>
-
-          {/* Enterprise */}
-          <div className="p-6 sm:p-7 flex flex-col gap-3.5" style={{ background: "var(--ink)" }}>
-            <div className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "oklch(0.78 0.005 85)" }}>Enterprise</div>
-            <h3 className="text-[24px] font-medium mt-1" style={{ letterSpacing: "-0.022em", color: "var(--bg)" }}>Custom</h3>
-            <div className="font-mono text-[12px]" style={{ color: "oklch(0.78 0.005 85)" }}>Multi-location · multi-country</div>
-            <ul className="flex flex-col gap-1.5 list-none p-0 mt-3">
-              {["Unlimited locations & members", "Org-level billing & SSO", "Assignment rules & team roles", "Dedicated provider success", "SLA & audit logs"].map((b) => (
-                <li key={b} className="text-[12.5px] pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-px" style={{ color: "oklch(0.78 0.005 85)" }}>{b}</li>
-              ))}
-            </ul>
-            <Link href="/contact" className="btn-ghost-v2 md mt-auto self-start" style={{ background: "var(--bg)", color: "var(--ink)", borderColor: "var(--bg)" }}>Talk to us</Link>
-          </div>
+        <ScrollReveal stagger staggerInterval={100}>
+          <LandingPricing />
         </ScrollReveal>
       </section>
 

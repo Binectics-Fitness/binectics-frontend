@@ -53,7 +53,7 @@ const FEATURES = [
   {
     title: "Revenue dashboard",
     desc: "Daily, weekly, and monthly revenue graphs with comparison overlays. Payout timeline shows the next amount, date, and destination bank. Gateway reconciliation built in.",
-    stat: "R 1.08M avg monthly processed",
+    stat: "R 1.08M avg monthly processed (ZA)",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
   {
