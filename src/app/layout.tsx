@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { RegionProvider } from "@/contexts/RegionContext";
 import { ToastContainer } from "@/components/Toast";
+import { CommandBar } from "@/components/ds/CommandBar";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 export const metadata: Metadata = {
@@ -75,6 +76,7 @@ export default function RootLayout({
                 <ConditionalLayout>{children}</ConditionalLayout>
                 <CookieConsent />
                 <ToastContainer />
+                <CommandBar />
               </RegionProvider>
             </OrganizationProvider>
           </AuthProvider>

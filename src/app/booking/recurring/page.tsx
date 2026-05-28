@@ -62,7 +62,7 @@ export default function RecurringBookingPage() {
       </header>
 
       <div className="mx-auto max-w-150 px-5 sm:px-6 py-8">
-        <div className="rounded-2xl p-8 sm:p-9" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="rounded-(--r-3) p-8 sm:p-9" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <div className="font-mono text-[11px] uppercase tracking-[0.06em] mb-3.5" style={{ color: "var(--fg-3)" }}>Recurring · with Sarah Okafor</div>
           <h1 className="text-[26px] sm:text-[28px] font-medium leading-[1.2] mb-3" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
             Set up a <em className="font-serif font-normal italic">routine</em>.

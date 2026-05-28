@@ -1,10 +1,8 @@
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Payouts",
-  description: "Track your payout history and upcoming disbursements.",
-};
+import { useState } from "react";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { AddBankAccountModal } from "@/components/ds/modals/AddBankAccountModal";
 
 const PAYOUTS = [
   { date: "Wed · 20 May 09:00", ref: "PO_2026_0520", dest: "ABSA •••• 2241", gw: "Paystack", status: "Scheduled", statusColor: "var(--fg-2)", statusBg: "var(--bg-2)", border: true, amt: "R 84,200.00" },
@@ -18,6 +16,8 @@ const PAYOUTS = [
 ];
 
 export default function GymPayoutsPage() {
+  const [addBankOpen, setAddBankOpen] = useState(false);
+
   return (
     <GymDashboardShell
       activeItem="Payouts"
@@ -28,7 +28,7 @@ export default function GymPayoutsPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
           </button>
           <button className="btn-ghost-v2 sm">Statement · PDF</button>
-          <button className="btn-primary-v2 sm">+ New bank account</button>
+          <button className="btn-primary-v2 sm" onClick={() => setAddBankOpen(true)}>+ New bank account</button>
         </>
       }
     >
@@ -159,6 +159,7 @@ export default function GymPayoutsPage() {
           </div>
         </div>
       </div>
+      <AddBankAccountModal open={addBankOpen} onClose={() => setAddBankOpen(false)} />
     </GymDashboardShell>
   );
 }

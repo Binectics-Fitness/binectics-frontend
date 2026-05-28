@@ -15,10 +15,10 @@ export default function NotificationBell({
   return (
     <Link
       href="/dashboard/notifications"
-      className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground ${collapsed ? "justify-center" : ""}`}
+      className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-fg-2 transition-all duration-200 hover:bg-bg-3 hover:text-ink ${collapsed ? "justify-center" : ""}`}
       title={collapsed ? "Notifications" : ""}
     >
-      <span className="relative flex-shrink-0 text-foreground-tertiary">
+      <span className="relative flex-shrink-0 text-fg-3">
         <svg
           className="h-5 w-5"
           fill="none"
@@ -33,7 +33,7 @@ export default function NotificationBell({
           />
         </svg>
         {count > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-bg">
             {count > 99 ? "99+" : count}
           </span>
         )}

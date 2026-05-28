@@ -1,10 +1,8 @@
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Devices",
-  description: "Manage QR scanners and check-in devices at your gym locations.",
-};
+import { useState } from "react";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { PairDeviceModal } from "@/components/ds/modals/PairDeviceModal";
 
 const DEVICES: {
   name: string; meta: string; type: "kiosk" | "scanner" | "printer";
@@ -45,11 +43,13 @@ const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
 };
 
 export default function GymDevicesPage() {
+  const [pairDeviceOpen, setPairDeviceOpen] = useState(false);
+
   return (
     <GymDashboardShell
       activeItem="Devices"
       crumb="Devices"
-      actions={<><button className="btn-ghost-v2 sm">Setup guide</button><button className="btn-primary-v2 sm">+ Pair new device</button></>}
+      actions={<><button className="btn-ghost-v2 sm">Setup guide</button><button className="btn-primary-v2 sm" onClick={() => setPairDeviceOpen(true)}>+ Pair new device</button></>}
     >
       <div>
         <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Devices</h1>
@@ -129,6 +129,7 @@ export default function GymDevicesPage() {
           );
         })}
       </div>
+      <PairDeviceModal open={pairDeviceOpen} onClose={() => setPairDeviceOpen(false)} />
     </GymDashboardShell>
   );
 }

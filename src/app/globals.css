@@ -67,6 +67,23 @@
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* Named spacing scale */
+  --space-2xs: 4px;
+  --space-xs: 6px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 18px;
+  --space-xl: 28px;
+  --space-2xl: 40px;
+
+  /* Named font-size scale */
+  --fs-xs: 11px;
+  --fs-sm: 12.5px;
+  --fs-md: 13.5px;
+  --fs-lg: 16px;
+  --fs-xl: 22px;
+  --fs-2xl: 32px;
 }
 
 /* ─── Tailwind theme ─────────────────────────────────────────── */
@@ -649,4 +666,96 @@ details .faq-icon::before { font-size: 20px; font-family: var(--font-mono); }
   .admin-route [class~="ml-64"] {
     margin-left: 0 !important;
   }
+}
+
+/* ─── Live indicator dot ────────────────────────────────────── */
+.live-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.live-dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--signal);
+  box-shadow: 0 0 0 0 var(--signal);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+.live-dot.warn::before {
+  background: oklch(0.65 0.16 75);
+  box-shadow: 0 0 0 0 oklch(0.65 0.16 75);
+  animation: live-pulse-warn 2s ease-in-out infinite;
+}
+.live-dot.danger::before {
+  background: var(--danger);
+  animation: live-pulse-danger 1.4s ease-in-out infinite;
+}
+.live-dot.idle::before {
+  background: var(--fg-4);
+  animation: none;
+}
+
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 oklch(0.65 0.16 148 / 0.4); }
+  70% { box-shadow: 0 0 0 8px oklch(0.65 0.16 148 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(0.65 0.16 148 / 0); }
+}
+@keyframes live-pulse-warn {
+  0% { box-shadow: 0 0 0 0 oklch(0.65 0.16 75 / 0.4); }
+  70% { box-shadow: 0 0 0 8px oklch(0.65 0.16 75 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(0.65 0.16 75 / 0); }
+}
+@keyframes live-pulse-danger {
+  0% { box-shadow: 0 0 0 0 oklch(0.6 0.2 25 / 0.5); }
+  70% { box-shadow: 0 0 0 10px oklch(0.6 0.2 25 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(0.6 0.2 25 / 0); }
+}
+
+/* ─── Top-of-page loading bar ───────────────────────────────── */
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--ink);
+  z-index: 9999;
+  transition: width 0.3s ease, opacity 0.2s;
+  opacity: 0;
+  pointer-events: none;
+}
+.loading-bar.on { opacity: 1; }
+
+/* ─── Reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .live-dot::before { animation: none !important; }
+  .loading-bar { transition: none !important; }
+}
+
+/* ─── Print stylesheet ──────────────────────────────────────── */
+@media print {
+  nav, header, footer, aside,
+  .loading-bar, .live-dot::before { display: none !important; }
+
+  main { display: block !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+
+  body { background: white !important; color: black !important; font-size: 11pt; }
+  h1 { font-size: 18pt; margin-bottom: 8pt; }
+  h2 { font-size: 14pt; }
+  h3 { font-size: 12pt; }
+
+  table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  thead { display: table-header-group; background: white !important; }
+
+  a { text-decoration: none; color: black !important; }
+  button { display: none !important; }
+
+  .receipt, .invoice, .tax-form { padding: 20mm !important; }
+  .page-break { page-break-before: always; }
 }

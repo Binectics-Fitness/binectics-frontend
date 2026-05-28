@@ -45,11 +45,11 @@ export function InactivityNotification() {
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-slide-down">
-      <div className="rounded-lg bg-accent-yellow-500 border-2 border-accent-yellow-600 p-4 shadow-lg">
+      <div className="rounded-(--r-2) border-2 border-border-2 p-4" style={{ background: "oklch(0.96 0.06 75)" }}>
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <svg
-              className="h-6 w-6 text-foreground"
+              className="h-6 w-6 text-fg"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -63,16 +63,16 @@ export function InactivityNotification() {
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-bold text-foreground mb-1">
+            <h3 className="text-base font-bold text-fg mb-1">
               Session Expired
             </h3>
-            <p className="text-sm text-foreground/90">
+            <p className="text-sm text-fg/90">
               You were automatically logged out at {formatLogoutTime(logoutTime)} due to 1 hour of inactivity. Please sign in again to continue.
             </p>
           </div>
           <button
             onClick={handleClose}
-            className="flex-shrink-0 text-foreground hover:text-foreground/80 transition-colors"
+            className="shrink-0 text-fg hover:text-fg/80 transition-colors"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path

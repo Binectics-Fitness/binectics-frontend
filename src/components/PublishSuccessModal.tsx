@@ -51,21 +51,23 @@ export default function PublishSuccessModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-50"
+        className="fixed inset-0 z-50"
+        style={{ background: "oklch(0.14 0.008 80 / 0.3)" }}
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 animate-fade-in"
+          className="bg-bg rounded-(--r-3) max-w-2xl w-full p-8 animate-fade-in"
+          style={{ boxShadow: "var(--shadow-2)" }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Success Icon */}
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-signal-soft rounded-full flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-green-600"
+                className="w-8 h-8 text-signal-ink"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -81,16 +83,16 @@ export default function PublishSuccessModal({
           </div>
 
           {/* Title */}
-          <h2 className="font-display text-2xl font-black text-foreground text-center mb-2">
+          <h2 className="font-display text-2xl font-black text-ink text-center mb-2">
             Form Published Successfully!
           </h2>
-          <p className="text-foreground-secondary text-center mb-6">
+          <p className="text-fg-2 text-center mb-6">
             {formTitle}
           </p>
 
           {/* Shareable Link */}
-          <div className="bg-background rounded-lg p-4 mb-6">
-            <label className="block text-sm font-semibold text-foreground mb-2">
+          <div className="bg-bg-2 rounded-(--r-2) p-4 mb-6">
+            <label className="block text-sm font-semibold text-fg mb-2">
               Shareable Link
             </label>
             <div className="flex gap-2">
@@ -98,7 +100,7 @@ export default function PublishSuccessModal({
                 type="text"
                 value={submitUrl}
                 readOnly
-                className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg bg-white text-foreground-secondary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="flex-1 px-4 py-2 border border-border-2 rounded-(--r-2) bg-bg text-fg-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
               <Button onClick={handleCopyLink} variant="ghost">
@@ -139,7 +141,7 @@ export default function PublishSuccessModal({
                 )}
               </Button>
             </div>
-            <p className="text-xs text-foreground-tertiary mt-2">
+            <p className="text-xs text-fg-3 mt-2">
               Share this link with others to collect responses
             </p>
           </div>
@@ -205,7 +207,7 @@ export default function PublishSuccessModal({
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="w-full text-sm text-foreground-secondary hover:text-foreground transition-colors"
+            className="w-full text-sm text-fg-2 hover:text-fg transition-colors"
           >
             Continue Editing
           </button>

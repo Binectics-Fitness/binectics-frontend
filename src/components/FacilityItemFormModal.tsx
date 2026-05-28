@@ -119,7 +119,7 @@ export default function FacilityItemFormModal({
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Live preview */}
         <div
-          className={`relative rounded-xl overflow-hidden h-32 bg-gradient-to-br ${gradientClass} flex items-center justify-center`}
+          className={`relative rounded-(--r-3) overflow-hidden h-32 bg-gradient-to-br ${gradientClass} flex items-center justify-center`}
         >
           {imagePreview ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -129,13 +129,13 @@ export default function FacilityItemFormModal({
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
-            <Icon className="h-14 w-14 text-white/90" />
+            <Icon className="h-14 w-14 text-bg/90" />
           )}
         </div>
 
         {/* Name */}
         <div>
-          <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
+          <label className="block text-xs font-semibold text-fg-3 mb-1.5">
             Facility name
           </label>
           <input
@@ -145,14 +145,14 @@ export default function FacilityItemFormModal({
             required
             maxLength={120}
             placeholder="e.g. Free Weights"
-            className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-2 focus:ring-accent-blue-500/20"
+            className="w-full rounded-(--r-2) border border-border px-3 py-2.5 text-sm focus:border-signal focus:outline-none focus-visible:ring-2 focus-visible:ring-signal/20"
           />
         </div>
 
         {/* Category + Status + Condition */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
+            <label className="block text-xs font-semibold text-fg-3 mb-1.5">
               Category
             </label>
             <SearchableSelect
@@ -165,7 +165,7 @@ export default function FacilityItemFormModal({
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
+            <label className="block text-xs font-semibold text-fg-3 mb-1.5">
               Status
             </label>
             <SearchableSelect
@@ -178,7 +178,7 @@ export default function FacilityItemFormModal({
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
+            <label className="block text-xs font-semibold text-fg-3 mb-1.5">
               Condition
             </label>
             <SearchableSelect
@@ -194,7 +194,7 @@ export default function FacilityItemFormModal({
 
         {/* Description */}
         <div>
-          <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
+          <label className="block text-xs font-semibold text-fg-3 mb-1.5">
             Description
           </label>
           <textarea
@@ -203,20 +203,20 @@ export default function FacilityItemFormModal({
             maxLength={500}
             rows={3}
             placeholder="Short description shown on marketplace"
-            className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-2 focus:ring-accent-blue-500/20 resize-none"
+            className="w-full rounded-(--r-2) border border-border px-3 py-2.5 text-sm focus:border-signal focus:outline-none focus-visible:ring-2 focus-visible:ring-signal/20 resize-none"
           />
-          <p className="mt-1 text-xs text-foreground/40">
+          <p className="mt-1 text-xs text-fg-4">
             {values.description.length}/500
           </p>
         </div>
 
         {/* Image */}
         <div>
-          <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
+          <label className="block text-xs font-semibold text-fg-3 mb-1.5">
             Image (optional)
           </label>
           <div className="flex items-center gap-3">
-            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-neutral-200 text-sm font-semibold text-foreground/70 cursor-pointer hover:bg-neutral-50">
+            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-(--r-2) border border-border text-sm font-semibold text-fg-3 cursor-pointer hover:bg-bg-2">
               <Upload className="h-4 w-4" />
               Choose image
               <input
@@ -230,14 +230,14 @@ export default function FacilityItemFormModal({
               <button
                 type="button"
                 onClick={() => handleImage(undefined)}
-                className="inline-flex items-center gap-1 text-xs text-foreground/60 hover:text-foreground"
+                className="inline-flex items-center gap-1 text-xs text-fg-2 hover:text-fg"
               >
                 <X className="h-3.5 w-3.5" />
                 Clear
               </button>
             )}
           </div>
-          <p className="mt-1 text-xs text-foreground/40">
+          <p className="mt-1 text-xs text-fg-4">
             If no image is uploaded, the icon + gradient below are used.
           </p>
         </div>
@@ -246,7 +246,7 @@ export default function FacilityItemFormModal({
         {!imagePreview && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
+              <label className="block text-xs font-semibold text-fg-3 mb-1.5">
                 Icon
               </label>
               <div className="grid grid-cols-5 gap-2">
@@ -259,10 +259,10 @@ export default function FacilityItemFormModal({
                       type="button"
                       onClick={() => update("icon_key", opt.key)}
                       title={opt.label}
-                      className={`h-10 w-full rounded-lg border-2 flex items-center justify-center transition ${
+                      className={`h-10 w-full rounded-(--r-2) border-2 flex items-center justify-center transition ${
                         active
-                          ? "border-accent-blue-500 bg-accent-blue-50 text-accent-blue-600"
-                          : "border-neutral-200 text-foreground/60 hover:border-neutral-300"
+                          ? "border-signal bg-signal-soft text-signal-ink"
+                          : "border-border text-fg-2 hover:border-border-2"
                       }`}
                     >
                       <I className="h-4 w-4" />
@@ -272,7 +272,7 @@ export default function FacilityItemFormModal({
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
+              <label className="block text-xs font-semibold text-fg-3 mb-1.5">
                 Gradient
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -284,9 +284,9 @@ export default function FacilityItemFormModal({
                       type="button"
                       onClick={() => update("gradient", g.key)}
                       title={g.label}
-                      className={`h-10 rounded-lg bg-gradient-to-br ${g.className} ${
+                      className={`h-10 rounded-(--r-2) bg-gradient-to-br ${g.className} ${
                         active
-                          ? "ring-2 ring-offset-2 ring-foreground"
+                          ? "ring-2 ring-offset-2 ring-fg"
                           : "opacity-80 hover:opacity-100"
                       }`}
                     />
@@ -303,27 +303,27 @@ export default function FacilityItemFormModal({
             type="checkbox"
             checked={values.is_featured}
             onChange={(e) => update("is_featured", e.target.checked)}
-            className="h-4 w-4 rounded border-neutral-300 text-accent-blue-500 focus:ring-accent-blue-500"
+            className="h-4 w-4 rounded border-border-2 text-signal focus-visible:ring-signal"
           />
-          <span className="text-sm font-medium text-foreground">
+          <span className="text-sm font-medium text-fg">
             Show in Featured Facilities carousel
           </span>
         </label>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
           <button
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 rounded-lg text-sm font-semibold text-foreground/70 hover:bg-neutral-100"
+            className="px-4 py-2 rounded-(--r-2) text-sm font-semibold text-fg-3 hover:bg-bg-2"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving || !values.name.trim()}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-primary-500 text-foreground hover:bg-primary-600 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-(--r-2) text-sm font-semibold bg-signal text-bg hover:bg-signal/90 disabled:opacity-50"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             {initial ? "Save changes" : "Add facility"}

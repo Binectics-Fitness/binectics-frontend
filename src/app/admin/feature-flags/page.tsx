@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import { NewFeatureFlagModal } from "@/components/ds/modals/NewFeatureFlagModal";
 
 type FlagStatus = "on" | "partial" | "off" | "killed";
 
@@ -200,6 +201,7 @@ function StatusLabel({ status, pct }: { status: FlagStatus; pct: number }) {
 
 export default function FeatureFlagsPage() {
   const [filter, setFilter] = useState("All");
+  const [newFlagOpen, setNewFlagOpen] = useState(false);
 
   const sections = [...new Set(FLAGS.map((f) => f.section))];
 
@@ -216,7 +218,15 @@ export default function FeatureFlagsPage() {
         });
 
   return (
-    <AdminDashboardShell activeItem="Feature flags" crumb="Feature flags">
+    <AdminDashboardShell
+      activeItem="Feature flags"
+      crumb="Feature flags"
+      actions={
+        <button onClick={() => setNewFlagOpen(true)} className="btn-primary-v2">
+          + New flag
+        </button>
+      }
+    >
       <div>
         <h1
           style={{
@@ -598,6 +608,7 @@ export default function FeatureFlagsPage() {
           </div>
         );
       })}
+      <NewFeatureFlagModal open={newFlagOpen} onClose={() => setNewFlagOpen(false)} />
     </AdminDashboardShell>
   );
 }

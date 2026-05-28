@@ -86,7 +86,7 @@ function StripeCardForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="border border-neutral-200 rounded-lg p-4 bg-white">
+      <div className="border border-border rounded-(--r-2) p-4 bg-bg">
         <CardElement
           options={{
             style: {
@@ -442,13 +442,13 @@ function CheckoutContent() {
 
   if (!listingId || !planId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 sm:p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+        <div className="bg-bg rounded-(--r-3) p-6 sm:p-8 max-w-md w-full text-center border border-border">
           <div className="text-5xl mb-4">🛒</div>
-          <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-ink mb-2">
             No Plan Selected
           </h2>
-          <p className="text-foreground-secondary mb-6">
+          <p className="text-fg-2 mb-6">
             Please select a plan from a provider&apos;s profile to proceed.
           </p>
           <Button onClick={() => router.push("/marketplace")}>
@@ -461,13 +461,13 @@ function CheckoutContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 sm:p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+        <div className="bg-bg rounded-(--r-3) p-6 sm:p-8 max-w-md w-full text-center border border-border">
           <div className="text-5xl mb-4">⚠️</div>
-          <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-ink mb-2">
             Checkout Error
           </h2>
-          <p className="text-foreground-secondary mb-6">{error}</p>
+          <p className="text-fg-2 mb-6">{error}</p>
           <Button onClick={() => router.back()}>Go Back</Button>
         </div>
       </div>
@@ -484,17 +484,17 @@ function CheckoutContent() {
   const isFree = plan.price === 0;
 
   return (
-    <div className="min-h-screen bg-background py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-bg py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="text-sm text-foreground-secondary hover:text-foreground mb-4 inline-flex items-center gap-1"
+            className="text-sm text-fg-2 hover:text-fg mb-4 inline-flex items-center gap-1"
           >
             ← Back
           </button>
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-black text-ink">
             Checkout
           </h1>
         </div>
@@ -502,45 +502,45 @@ function CheckoutContent() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Order Summary */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6 sticky top-8">
-              <h2 className="font-display text-lg font-bold text-foreground mb-4">
+            <div className="bg-bg rounded-(--r-3) border border-border p-6 sticky top-8">
+              <h2 className="text-lg font-bold text-ink mb-4">
                 Order Summary
               </h2>
 
-              <div className="border-b border-neutral-200 pb-4 mb-4">
-                <p className="font-semibold text-foreground">{displayName}</p>
-                <p className="text-sm text-foreground-secondary">
+              <div className="border-b border-border pb-4 mb-4">
+                <p className="font-semibold text-fg">{displayName}</p>
+                <p className="text-sm text-fg-2">
                   {listing.headline}
                 </p>
               </div>
 
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-foreground-secondary">Plan</span>
-                  <span className="font-medium text-foreground">
+                  <span className="text-fg-2">Plan</span>
+                  <span className="font-medium text-fg">
                     {plan.name}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-foreground-secondary">Type</span>
-                  <span className="font-medium text-foreground">
+                  <span className="text-fg-2">Type</span>
+                  <span className="font-medium text-fg">
                     {plan.plan_type === MembershipPlanType.SUBSCRIPTION
                       ? "Subscription"
                       : "One-time"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-foreground-secondary">Duration</span>
-                  <span className="font-medium text-foreground">
+                  <span className="text-fg-2">Duration</span>
+                  <span className="font-medium text-fg">
                     {plan.duration_days} days
                   </span>
                 </div>
                 {gateway !== PaymentGateway.STRIPE && !isFree && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-foreground-secondary">
+                    <span className="text-fg-2">
                       Payment via
                     </span>
-                    <span className="font-medium text-foreground">
+                    <span className="font-medium text-fg">
                       {getGatewayDisplayName(gateway)}
                     </span>
                   </div>
@@ -548,17 +548,17 @@ function CheckoutContent() {
               </div>
 
               {plan.features.length > 0 && (
-                <div className="border-t border-neutral-200 pt-4 mb-4">
-                  <p className="text-sm font-semibold text-foreground mb-2">
+                <div className="border-t border-border pt-4 mb-4">
+                  <p className="text-sm font-semibold text-fg mb-2">
                     Includes:
                   </p>
                   <ul className="space-y-1">
                     {plan.features.map((feature, i) => (
                       <li
                         key={i}
-                        className="text-sm text-foreground-secondary flex items-start gap-2"
+                        className="text-sm text-fg-2 flex items-start gap-2"
                       >
-                        <span className="text-primary-500 mt-0.5">✓</span>
+                        <span className="text-signal mt-0.5">✓</span>
                         {feature}
                       </li>
                     ))}
@@ -566,10 +566,10 @@ function CheckoutContent() {
                 </div>
               )}
 
-              <div className="border-t border-neutral-200 pt-4">
+              <div className="border-t border-border pt-4">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-foreground">Total</span>
-                  <span className="text-2xl font-black text-foreground">
+                  <span className="font-semibold text-fg">Total</span>
+                  <span className="text-2xl font-black text-ink">
                     {isFree ? "Free" : formatPrice(plan.price, plan.currency)}
                   </span>
                 </div>
@@ -579,20 +579,20 @@ function CheckoutContent() {
 
           {/* Payment Form */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-6">
+            <div className="bg-bg rounded-(--r-3) border border-border p-6">
+              <h2 className="text-lg font-bold text-ink mb-6">
                 {isFree ? "Confirm Subscription" : "Payment Details"}
               </h2>
 
               {paymentError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
+                <div className="bg-danger-soft border border-danger text-danger px-4 py-3 rounded-(--r-2) mb-6 text-sm">
                   {paymentError}
                 </div>
               )}
 
               {isFree ? (
                 <div className="text-center">
-                  <p className="text-foreground-secondary mb-6">
+                  <p className="text-fg-2 mb-6">
                     This plan is free. Click below to activate your
                     subscription.
                   </p>
@@ -649,7 +649,7 @@ function CheckoutContent() {
                     />
                   )}
 
-                  <p className="text-xs text-foreground-tertiary mt-4 text-center">
+                  <p className="text-xs text-fg-3 mt-4 text-center">
                     Your payment is processed securely. We never store your card
                     details.
                   </p>

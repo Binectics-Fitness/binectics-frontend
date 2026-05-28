@@ -113,8 +113,8 @@ export default function DocumentPreviewModal({
       {/* Overlay */}
       <div
         ref={overlayRef}
-        className="absolute inset-0 bg-foreground/60 backdrop-blur-sm transition-opacity duration-200"
-        style={{ opacity: isAnimating ? 1 : 0 }}
+        className="absolute inset-0 transition-opacity duration-200"
+        style={{ background: "oklch(0.14 0.008 80 / 0.3)", opacity: isAnimating ? 1 : 0 }}
         onClick={onClose}
       />
 
@@ -124,11 +124,11 @@ export default function DocumentPreviewModal({
         style={{ opacity: isAnimating ? 1 : 0 }}
       >
         {/* Top bar */}
-        <div className="flex items-center justify-between bg-white/95 backdrop-blur border-b border-neutral-200 px-4 py-3 sm:px-6">
+        <div className="flex items-center justify-between bg-bg/95 border-b border-border px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-blue-100">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-(--r-2) bg-signal-soft">
               <svg
-                className="h-5 w-5 text-accent-blue-600"
+                className="h-5 w-5 text-signal-ink"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -141,7 +141,7 @@ export default function DocumentPreviewModal({
                 />
               </svg>
             </div>
-            <span className="text-sm font-semibold text-foreground truncate">
+            <span className="text-sm font-semibold text-fg truncate">
               {fileName}
             </span>
           </div>
@@ -152,7 +152,7 @@ export default function DocumentPreviewModal({
                 href={downloadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 text-sm font-medium text-foreground hover:bg-neutral-50"
+                className="inline-flex h-9 items-center gap-2 rounded-(--r-2) border border-border bg-bg px-4 text-sm font-medium text-fg hover:bg-bg-2"
               >
                 <svg
                   className="h-4 w-4"
@@ -172,7 +172,7 @@ export default function DocumentPreviewModal({
             )}
             <button
               onClick={onClose}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-secondary hover:bg-neutral-100 hover:text-foreground"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-(--r-2) text-fg-2 hover:bg-bg-2 hover:text-fg"
               aria-label="Close preview"
             >
               <svg
@@ -197,19 +197,19 @@ export default function DocumentPreviewModal({
           {canPreview ? (
             <>
               {(iframeLoading || !blobUrl) && !blobError && (
-                <div className="absolute inset-0 flex items-center justify-center bg-neutral-100">
+                <div className="absolute inset-0 flex items-center justify-center bg-bg-2">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue-200 border-t-accent-blue-500" />
-                    <p className="text-sm text-foreground-secondary">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-signal-soft border-t-signal" />
+                    <p className="text-sm text-fg-2">
                       Loading document…
                     </p>
                   </div>
                 </div>
               )}
               {blobError ? (
-                <div className="flex h-full items-center justify-center bg-neutral-50">
+                <div className="flex h-full items-center justify-center bg-bg-2">
                   <div className="text-center px-6 max-w-md">
-                    <p className="text-sm text-foreground-secondary mb-4">
+                    <p className="text-sm text-fg-2 mb-4">
                       Unable to load preview.
                     </p>
                     {(downloadUrl || viewUrl) && (
@@ -217,7 +217,7 @@ export default function DocumentPreviewModal({
                         href={downloadUrl || viewUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent-blue-500 px-5 text-sm font-semibold text-white hover:bg-accent-blue-600"
+                        className="inline-flex h-10 items-center gap-2 rounded-(--r-2) bg-signal px-5 text-sm font-semibold text-bg hover:bg-signal/90"
                       >
                         Download instead
                       </a>
@@ -234,11 +234,11 @@ export default function DocumentPreviewModal({
               ) : null}
             </>
           ) : (
-            <div className="flex h-full items-center justify-center bg-neutral-50">
+            <div className="flex h-full items-center justify-center bg-bg-2">
               <div className="text-center px-6 max-w-md">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-200">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-(--r-3) bg-border-2">
                   <svg
-                    className="h-8 w-8 text-neutral-500"
+                    className="h-8 w-8 text-fg-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -251,10 +251,10 @@ export default function DocumentPreviewModal({
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-2">
+                <h3 className="text-lg font-bold text-fg mb-2">
                   Preview not available
                 </h3>
-                <p className="text-sm text-foreground-secondary mb-4">
+                <p className="text-sm text-fg-2 mb-4">
                   This file type cannot be previewed in the browser. Please
                   download it to view.
                 </p>
@@ -263,7 +263,7 @@ export default function DocumentPreviewModal({
                     href={downloadUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent-blue-500 px-6 text-sm font-semibold text-white hover:bg-accent-blue-600"
+                    className="inline-flex h-10 items-center gap-2 rounded-(--r-2) bg-signal px-6 text-sm font-semibold text-bg hover:bg-signal/90"
                   >
                     <svg
                       className="h-4 w-4"

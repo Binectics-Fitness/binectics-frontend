@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components";
 import { authService } from "@/lib/api/auth";
+import { BinecticsLockup } from "@/components/BinecticsLogo";
 import {
   resetPasswordSchema,
   type ResetPasswordFormData,
@@ -54,126 +54,121 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background-secondary">
-      {/* Header */}
-      {/* Main Content */}
-      <main className="flex min-h-[calc(100vh-4rem)] items-center py-12 sm:py-16">
-        <div className="mx-auto w-full max-w-md px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
+      <header className="flex items-center h-14 px-6" style={{ borderBottom: "1px solid var(--border)" }}>
+        <Link href="/"><BinecticsLockup /></Link>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center px-5 py-12">
+        <div className="w-full max-w-sm">
           {!submitted ? (
             <>
-              {/* Page Header */}
-              <div className="mb-8 text-center">
-                <div className="mb-4 inline-flex items-center justify-center h-14 w-14 rounded-full bg-accent-blue-100">
-                  <svg
-                    className="h-7 w-7 text-accent-blue-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                </div>
-                <h1 className="font-display text-3xl font-black text-foreground sm:text-4xl">
+              <div className="mb-8">
+                <div className="eyebrow mb-2">Password reset</div>
+                <h1 className="text-[28px] font-medium leading-tight" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
                   Set new password
                 </h1>
-                <p className="mt-2 text-base text-foreground-secondary">
-                  Your new password must be different from previously used
-                  passwords
+                <p className="text-[14.5px] mt-2" style={{ color: "var(--fg-3)" }}>
+                  Your new password must be different from previously used passwords.
                 </p>
               </div>
 
-              {/* Reset Form */}
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="rounded-2xl bg-background p-6 sm:p-8 shadow-[var(--shadow-card)]">
-                  <div className="space-y-5">
-                    <Input
-                      label="New Password"
-                      type="password"
-                      placeholder="••••••••"
-                      error={errors.password?.message}
-                      helperText="Minimum 8 characters"
-                      {...registerField("password")}
-                    />
-
-                    <Input
-                      label="Confirm Password"
-                      type="password"
-                      placeholder="••••••••"
-                      error={errors.confirmPassword?.message}
-                      {...registerField("confirmPassword")}
-                    />
+              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+                {errors.password?.message && (
+                  <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-(--r-2)" style={{ background: "oklch(0.95 0.03 25)", border: "1px solid oklch(0.85 0.06 25)" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}>
+                      <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+                    </svg>
+                    <p className="text-[13px]" style={{ color: "var(--danger)" }}>{errors.password.message}</p>
                   </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+                    New password <span style={{ color: "var(--danger)" }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Minimum 8 characters"
+                    className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]"
+                    style={{
+                      background: "var(--bg)",
+                      border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)",
+                      color: "var(--ink)",
+                      fontFamily: "inherit",
+                    }}
+                    {...registerField("password")}
+                  />
                 </div>
 
-                {/* Submit Button */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+                    Confirm password <span style={{ color: "var(--danger)" }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Re-enter your password"
+                    className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]"
+                    style={{
+                      background: "var(--bg)",
+                      border: errors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)",
+                      color: "var(--ink)",
+                      fontFamily: "inherit",
+                    }}
+                    {...registerField("confirmPassword")}
+                  />
+                  {errors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.confirmPassword.message}</p>}
+                </div>
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 rounded-lg bg-primary-500 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-signal-v2 w-full"
+                  style={{ height: "38px" }}
                 >
-                  {isSubmitting ? "Resetting..." : "Reset Password"}
+                  {isSubmitting ? "Resetting..." : "Reset password"}
                 </button>
 
-                {/* Back to Login */}
                 <Link
                   href="/login"
-                  className="flex items-center justify-center gap-2 text-sm font-medium text-foreground-secondary transition-colors hover:text-accent-blue-500"
+                  className="flex items-center justify-center gap-2 text-[13px] font-medium mt-1"
+                  style={{ color: "var(--fg-2)" }}
                 >
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m15 19-7-7 7-7"/></svg>
                   Back to sign in
                 </Link>
               </form>
             </>
           ) : (
-            /* Success Message */
             <div className="text-center">
-              <div className="mb-6 inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary-100">
-                <svg
-                  className="h-8 w-8 text-primary-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
+              <div className="mb-5 w-12 h-12 mx-auto rounded-full flex items-center justify-center" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>
               </div>
-              <h2 className="font-display text-2xl font-black text-foreground sm:text-3xl">
+              <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
                 Password reset successful
               </h2>
-              <p className="mt-3 text-base text-foreground-secondary">
-                Your password has been successfully reset.
-              </p>
-              <p className="mt-2 text-base text-foreground-secondary">
-                You can now sign in with your new password.
+              <p className="text-[14px] mt-3" style={{ color: "var(--fg-3)" }}>
+                Your password has been successfully reset. You can now sign in with your new password.
               </p>
               <Link
                 href="/login"
-                className="mt-8 inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground shadow-button transition-colors duration-200 hover:bg-primary-600 active:bg-primary-700"
+                className="btn-signal-v2 inline-flex items-center justify-center mt-8"
+                style={{ height: "38px", padding: "0 24px" }}
               >
-                Continue to Sign In
+                Continue to sign in
               </Link>
+              <div className="mt-6">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 text-[13px] font-medium"
+                  style={{ color: "var(--fg-2)" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m15 19-7-7 7-7"/></svg>
+                  Back to sign in
+                </Link>
+              </div>
             </div>
           )}
         </div>

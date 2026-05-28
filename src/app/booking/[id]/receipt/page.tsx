@@ -51,7 +51,7 @@ export default async function BookingReceiptPage({
       </header>
 
       <div className="mx-auto max-w-160 px-5 sm:px-6 py-8">
-        <div className="rounded-2xl p-8 sm:p-10 lg:px-11" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="rounded-(--r-3) p-8 sm:p-10 lg:px-11" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
             <div>

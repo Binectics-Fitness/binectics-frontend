@@ -55,11 +55,11 @@ function SuccessContent() {
       : (listing?.headline ?? "Provider");
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6 sm:p-10 max-w-lg w-full text-center">
-        <div className="w-16 h-16 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-6">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+      <div className="bg-bg rounded-(--r-3) border border-border p-6 sm:p-10 max-w-lg w-full text-center">
+        <div className="w-16 h-16 bg-signal rounded-full flex items-center justify-center mx-auto mb-6">
           <svg
-            className="w-8 h-8 text-white"
+            className="w-8 h-8 text-bg"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={3}
@@ -73,44 +73,44 @@ function SuccessContent() {
           </svg>
         </div>
 
-        <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-3">
-          Subscription Activated!
+        <h1 className="text-2xl sm:text-3xl font-black text-ink mb-3">
+          Subscription Activated
         </h1>
-        <p className="text-foreground-secondary mb-8">
+        <p className="text-fg-2 mb-8">
           Your subscription has been successfully activated. You now have access
           to all included services.
         </p>
 
         {plan && (
-          <div className="bg-neutral-50 rounded-xl p-5 mb-8 text-left">
+          <div className="bg-bg-2 rounded-(--r-3) p-5 mb-8 text-left">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-foreground-secondary">Provider</span>
-                <span className="font-medium text-foreground">
+                <span className="text-fg-2">Provider</span>
+                <span className="font-medium text-fg">
                   {displayName}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-foreground-secondary">Plan</span>
-                <span className="font-medium text-foreground">{plan.name}</span>
+                <span className="text-fg-2">Plan</span>
+                <span className="font-medium text-fg">{plan.name}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-foreground-secondary">Type</span>
-                <span className="font-medium text-foreground">
+                <span className="text-fg-2">Type</span>
+                <span className="font-medium text-fg">
                   {plan.plan_type === MembershipPlanType.SUBSCRIPTION
                     ? "Subscription"
                     : "One-time"}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-foreground-secondary">Duration</span>
-                <span className="font-medium text-foreground">
+                <span className="text-fg-2">Duration</span>
+                <span className="font-medium text-fg">
                   {plan.duration_days} days
                 </span>
               </div>
-              <div className="flex justify-between text-sm border-t border-neutral-200 pt-2 mt-2">
-                <span className="font-semibold text-foreground">Amount</span>
-                <span className="font-bold text-foreground">
+              <div className="flex justify-between text-sm border-t border-border pt-2 mt-2">
+                <span className="font-semibold text-fg">Amount</span>
+                <span className="font-bold text-ink">
                   {plan.price === 0
                     ? "Free"
                     : formatPrice(plan.price, plan.currency)}

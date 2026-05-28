@@ -1,10 +1,8 @@
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Staff",
-  description: "Manage your gym staff, roles, and permissions.",
-};
+import { useState } from "react";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { AddStaffModal } from "@/components/ds/modals/AddStaffModal";
 
 interface StaffMeta { k: string; v: string; warn?: boolean }
 
@@ -27,6 +25,8 @@ const AVA_STYLES: Record<string, { bg: string; color: string }> = {
 };
 
 export default function GymStaffPage() {
+  const [addStaffOpen, setAddStaffOpen] = useState(false);
+
   return (
     <GymDashboardShell
       activeItem="Staff"
@@ -34,7 +34,7 @@ export default function GymStaffPage() {
       actions={
         <>
           <button className="btn-ghost-v2 sm">Invite link</button>
-          <button className="btn-primary-v2 sm">+ Add staff</button>
+          <button className="btn-primary-v2 sm" onClick={() => setAddStaffOpen(true)}>+ Add staff</button>
         </>
       }
     >
@@ -122,6 +122,7 @@ export default function GymStaffPage() {
           );
         })}
       </div>
+      <AddStaffModal open={addStaffOpen} onClose={() => setAddStaffOpen(false)} />
     </GymDashboardShell>
   );
 }

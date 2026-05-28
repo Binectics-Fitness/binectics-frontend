@@ -1,4 +1,5 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import { BookSessionButton } from "./_actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -76,7 +77,7 @@ export default function TrainerDashboard() {
     <TrainerDashboardShell
       activeItem="Today"
       crumb="Today"
-      actions={<><button className="btn-ghost-v2 sm">View public profile →</button><button className="btn-primary-v2 sm">+ Book session</button></>}
+      actions={<><button className="btn-ghost-v2 sm">View public profile →</button><BookSessionButton /></>}
     >
           {/* Head */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">

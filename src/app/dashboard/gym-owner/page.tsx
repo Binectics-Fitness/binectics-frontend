@@ -1,4 +1,5 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { NewPlanButton } from "./_actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -88,7 +89,7 @@ export default function GymOwnerDashboard() {
     <GymDashboardShell
       activeItem="Overview"
       crumb="Overview"
-      actions={<button className="btn-primary-v2 sm">+ New plan</button>}
+      actions={<NewPlanButton />}
     >
 
           {/* Page head */}

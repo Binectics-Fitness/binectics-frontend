@@ -57,8 +57,8 @@ function AcceptInvitationContent() {
   if (state === "loading" || authLoading) {
     return (
       <div className="flex flex-col items-center gap-4">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-        <p className="text-sm text-foreground-secondary">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-signal border-t-transparent" />
+        <p className="text-sm text-fg-2">
           Accepting invitation...
         </p>
       </div>
@@ -69,9 +69,9 @@ function AcceptInvitationContent() {
   if (state === "requires_login") {
     return (
       <div className="flex flex-col items-center text-center gap-6">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-blue-500/10">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-signal-soft">
           <svg
-            className="h-8 w-8 text-accent-blue-500"
+            className="h-8 w-8 text-signal"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -85,10 +85,10 @@ function AcceptInvitationContent() {
           </svg>
         </div>
         <div>
-          <h2 className="text-2xl font-black text-foreground">
+          <h2 className="text-2xl font-black text-ink">
             Sign in to accept
           </h2>
-          <p className="mt-2 text-sm text-foreground-secondary">
+          <p className="mt-2 text-sm text-fg-2">
             You need to be signed in to accept this invitation. If you
             don&apos;t have an account yet, create one first.
           </p>
@@ -96,13 +96,13 @@ function AcceptInvitationContent() {
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <button
             onClick={handleLoginRedirect}
-            className="rounded-lg bg-primary-500 px-6 py-3 text-sm font-bold text-foreground hover:bg-primary-600 transition-colors"
+            className="rounded-(--r-2) bg-signal px-6 py-3 text-sm font-bold text-bg hover:bg-signal/90 transition-colors"
           >
             Sign In
           </button>
           <Link
             href={`/register?returnUrl=${encodeURIComponent(`/teams/invite/accept?token=${token}`)}`}
-            className="rounded-lg border border-neutral-200 px-6 py-3 text-sm font-semibold text-foreground text-center hover:bg-neutral-50 transition-colors"
+            className="rounded-(--r-2) border border-border px-6 py-3 text-sm font-semibold text-fg text-center hover:bg-bg-2 transition-colors"
           >
             Create Account
           </Link>
@@ -115,9 +115,9 @@ function AcceptInvitationContent() {
   if (state === "success") {
     return (
       <div className="flex flex-col items-center text-center gap-6">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-500">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-signal">
           <svg
-            className="h-8 w-8 text-foreground"
+            className="h-8 w-8 text-bg"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -131,17 +131,17 @@ function AcceptInvitationContent() {
           </svg>
         </div>
         <div>
-          <h2 className="text-2xl font-black text-foreground">
-            Invitation accepted!
+          <h2 className="text-2xl font-black text-ink">
+            Invitation accepted
           </h2>
-          <p className="mt-2 text-sm text-foreground-secondary">
+          <p className="mt-2 text-sm text-fg-2">
             You&#39;ve successfully joined the organization. Head to your Team
             dashboard to get started.
           </p>
         </div>
         <Link
           href="/dashboard/team"
-          className="rounded-lg bg-primary-500 px-6 py-3 text-sm font-bold text-foreground hover:bg-primary-600 transition-colors"
+          className="rounded-(--r-2) bg-signal px-6 py-3 text-sm font-bold text-bg hover:bg-signal/90 transition-colors"
         >
           Go to Team Dashboard
         </Link>
@@ -152,9 +152,9 @@ function AcceptInvitationContent() {
   // ─── Error ───
   return (
     <div className="flex flex-col items-center text-center gap-6">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-danger-soft">
         <svg
-          className="h-8 w-8 text-red-500"
+          className="h-8 w-8 text-danger"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -168,21 +168,21 @@ function AcceptInvitationContent() {
         </svg>
       </div>
       <div>
-        <h2 className="text-2xl font-black text-foreground">
+        <h2 className="text-2xl font-black text-ink">
           Unable to accept
         </h2>
-        <p className="mt-2 text-sm text-foreground-secondary">{errorMessage}</p>
+        <p className="mt-2 text-sm text-fg-2">{errorMessage}</p>
       </div>
       <div className="flex gap-3">
         <Link
           href="/dashboard"
-          className="rounded-lg border border-neutral-200 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-neutral-50 transition-colors"
+          className="rounded-(--r-2) border border-border px-5 py-2.5 text-sm font-semibold text-fg hover:bg-bg-2 transition-colors"
         >
           Go to Dashboard
         </Link>
         <Link
           href="/contact"
-          className="rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
+          className="rounded-(--r-2) bg-signal px-5 py-2.5 text-sm font-semibold text-bg hover:bg-signal/90 transition-colors"
         >
           Contact Support
         </Link>
@@ -193,26 +193,26 @@ function AcceptInvitationContent() {
 
 export default function AcceptInvitationPage() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-10">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center bg-primary-500">
-              <span className="text-xl font-bold text-foreground">B</span>
+            <div className="flex h-10 w-10 items-center justify-center bg-signal">
+              <span className="text-xl font-bold text-bg">B</span>
             </div>
-            <span className="font-display text-xl font-bold text-foreground">
+            <span className="text-xl font-bold text-ink">
               Binectics
             </span>
           </Link>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+        <div className="rounded-(--r-3) border border-border bg-bg p-8">
           <Suspense
             fallback={
               <div className="flex justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-signal border-t-transparent" />
               </div>
             }
           >

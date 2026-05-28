@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { AddLocationButton } from "./_actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -84,7 +85,7 @@ export default function LocationsPage() {
     <GymDashboardShell
       activeItem="Locations · 4"
       crumb="Locations"
-      actions={<button className="btn-primary-v2 sm">+ Add location</button>}
+      actions={<AddLocationButton />}
     >
       {/* Page head */}
       <div className="flex justify-between items-end pb-1">

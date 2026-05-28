@@ -31,10 +31,10 @@ function MenuButton({
       type="button"
       onClick={onClick}
       title={title}
-      className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
+      className={`px-2 py-1 rounded-(--r-1) text-sm font-medium transition-colors ${
         active
-          ? "bg-primary-500/20 text-foreground"
-          : "text-foreground-secondary hover:bg-neutral-100"
+          ? "bg-signal-soft text-ink"
+          : "text-fg-2 hover:bg-bg-2"
       }`}
     >
       {children}
@@ -68,7 +68,7 @@ export default function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 py-3 text-sm text-foreground",
+          "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 py-3 text-sm text-fg",
       },
     },
     onUpdate: ({ editor: e }) => {
@@ -113,14 +113,14 @@ export default function RichTextEditor({
 
   return (
     <div
-      className={`rounded-xl border-2 bg-white overflow-hidden transition-colors ${
+      className={`rounded-(--r-3) border bg-bg overflow-hidden transition-colors ${
         error
-          ? "border-red-400"
-          : "border-neutral-300 focus-within:border-primary-500"
+          ? "border-danger"
+          : "border-border focus-within:border-signal"
       }`}
     >
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-neutral-200 bg-neutral-50">
+      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border bg-bg-2">
         <MenuButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -143,7 +143,7 @@ export default function RichTextEditor({
           <span className="underline">U</span>
         </MenuButton>
 
-        <span className="w-px h-5 bg-neutral-300 mx-1" />
+        <span className="w-px h-5 bg-border-2 mx-1" />
 
         <MenuButton
           active={editor.isActive("heading", { level: 2 })}
@@ -164,7 +164,7 @@ export default function RichTextEditor({
           H3
         </MenuButton>
 
-        <span className="w-px h-5 bg-neutral-300 mx-1" />
+        <span className="w-px h-5 bg-border-2 mx-1" />
 
         <MenuButton
           active={editor.isActive("bulletList")}
@@ -181,14 +181,17 @@ export default function RichTextEditor({
           1.&thinsp;List
         </MenuButton>
 
-        <span className="w-px h-5 bg-neutral-300 mx-1" />
+        <span className="w-px h-5 bg-border-2 mx-1" />
 
         <MenuButton
           active={editor.isActive("link")}
           onClick={setLink}
           title="Link"
         >
-          🔗
+          <svg className="h-3.5 w-3.5 inline-block" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
         </MenuButton>
       </div>
 
@@ -196,7 +199,7 @@ export default function RichTextEditor({
       <EditorContent editor={editor} />
 
       {/* Character count */}
-      <div className="text-right px-3 py-1 text-xs text-foreground-secondary">
+      <div className="text-right px-3 py-1 text-xs text-fg-3">
         {charCount} / {maxLength}
       </div>
     </div>

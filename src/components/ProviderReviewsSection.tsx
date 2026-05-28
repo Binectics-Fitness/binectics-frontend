@@ -30,7 +30,7 @@ export default function ProviderReviewsSection({
   targetType,
   targetId,
   title = "Reviews",
-  accentClassName = "bg-primary-100 text-primary-700",
+  accentClassName = "bg-signal-soft text-signal-ink",
   providerOwnerUserId,
   canRespondAsProvider,
 }: ProviderReviewsSectionProps) {
@@ -201,9 +201,9 @@ export default function ProviderReviewsSection({
   };
 
   return (
-    <div className="bg-white p-6 shadow-[var(--shadow-card)]">
+    <div className="bg-bg p-6 shadow-(--shadow-card)">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+        <h2 className="text-2xl font-bold text-ink">{title}</h2>
 
         <div className="flex items-center gap-3">
           <span
@@ -212,10 +212,10 @@ export default function ProviderReviewsSection({
             {aggregate?.totalReviews ?? 0} reviews
           </span>
           <div className="text-right">
-            <p className="text-lg font-black text-foreground">
+            <p className="text-lg font-black text-fg">
               {aggregate?.averageRating?.toFixed(1) ?? "0.0"}
             </p>
-            <p className="text-xs text-foreground-secondary">
+            <p className="text-xs text-fg-2">
               {stars(Math.round(aggregate?.averageRating ?? 0))}
             </p>
           </div>
@@ -223,7 +223,7 @@ export default function ProviderReviewsSection({
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-(--r-2) bg-danger-soft px-4 py-3 text-sm text-danger">
           {error}
         </div>
       )}
@@ -231,15 +231,15 @@ export default function ProviderReviewsSection({
       {canShowReviewForm && (
         <form
           onSubmit={onSubmitReview}
-          className="mb-6 rounded-xl border border-neutral-200 p-4"
+          className="mb-6 rounded-(--r-3) border border-border p-4"
         >
-          <p className="mb-3 text-sm font-semibold text-foreground">
+          <p className="mb-3 text-sm font-semibold text-fg">
             Leave a review
           </p>
           <div className="mb-3 flex items-center gap-2">
             <label
               htmlFor="rating"
-              className="text-sm text-foreground-secondary"
+              className="text-sm text-fg-2"
             >
               Rating
             </label>
@@ -247,7 +247,7 @@ export default function ProviderReviewsSection({
               id="rating"
               value={ratingInput}
               onChange={(event) => setRatingInput(Number(event.target.value))}
-              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+              className="rounded-(--r-2) border border-border-2 px-3 py-2 text-sm"
             >
               {[5, 4, 3, 2, 1].map((rating) => (
                 <option key={rating} value={rating}>
@@ -262,13 +262,13 @@ export default function ProviderReviewsSection({
             onChange={(event) => setCommentInput(event.target.value)}
             placeholder="Share your experience"
             rows={3}
-            className="mb-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className="mb-3 w-full rounded-(--r-2) border border-border-2 px-3 py-2 text-sm"
           />
 
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-foreground disabled:opacity-50"
+            className="rounded-(--r-2) bg-signal px-4 py-2 text-sm font-semibold text-bg disabled:opacity-50"
           >
             {submitting ? "Submitting..." : "Submit Review"}
           </button>
@@ -276,17 +276,17 @@ export default function ProviderReviewsSection({
       )}
 
       {user && eligibility && !eligibility.canReview && (
-        <p className="mb-6 text-sm text-foreground-secondary">
+        <p className="mb-6 text-sm text-fg-2">
           {eligibility.reason}
         </p>
       )}
 
       {loading ? (
-        <div className="py-10 text-center text-sm text-foreground-secondary">
+        <div className="py-10 text-center text-sm text-fg-2">
           Loading reviews...
         </div>
       ) : reviews.length === 0 ? (
-        <div className="py-10 text-center text-sm text-foreground-secondary">
+        <div className="py-10 text-center text-sm text-fg-2">
           No reviews yet.
         </div>
       ) : (
@@ -294,18 +294,18 @@ export default function ProviderReviewsSection({
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="border-b border-neutral-100 pb-5 last:border-0 last:pb-0"
+              className="border-b border-border pb-5 last:border-0 last:pb-0"
             >
               <div className="mb-2 flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-foreground">
+                  <p className="font-semibold text-fg">
                     {review.reviewerName}
                   </p>
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="text-sm text-foreground">
+                    <span className="text-sm text-fg">
                       {stars(review.rating)}
                     </span>
-                    <span className="text-xs text-foreground-secondary">
+                    <span className="text-xs text-fg-2">
                       {formatLocal(review.createdAt, "MMM d, yyyy")}
                     </span>
                   </div>
@@ -313,25 +313,25 @@ export default function ProviderReviewsSection({
               </div>
 
               {review.comment && (
-                <p className="mb-3 text-sm leading-relaxed text-foreground/80">
+                <p className="mb-3 text-sm leading-relaxed text-fg-2">
                   {review.comment}
                 </p>
               )}
 
               {review.providerResponse && (
-                <div className="mb-3 rounded-lg bg-neutral-50 px-3 py-2">
-                  <p className="text-xs font-semibold text-foreground">
+                <div className="mb-3 rounded-(--r-2) bg-bg-2 px-3 py-2">
+                  <p className="text-xs font-semibold text-fg">
                     Provider response
                   </p>
-                  <p className="mt-1 text-sm text-foreground-secondary">
+                  <p className="mt-1 text-sm text-fg-2">
                     {review.providerResponse.message}
                   </p>
                 </div>
               )}
 
               {isProviderOwner && !review.providerResponse && (
-                <div className="mb-3 rounded-lg border border-neutral-200 p-3">
-                  <p className="mb-2 text-xs font-semibold text-foreground">
+                <div className="mb-3 rounded-(--r-2) border border-border p-3">
+                  <p className="mb-2 text-xs font-semibold text-fg">
                     Respond as provider
                   </p>
                   <textarea
@@ -344,11 +344,11 @@ export default function ProviderReviewsSection({
                       }))
                     }
                     placeholder="Write a response"
-                    className="mb-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                    className="mb-2 w-full rounded-(--r-2) border border-border-2 px-3 py-2 text-sm"
                   />
                   <button
                     onClick={() => onSubmitProviderResponse(review.id)}
-                    className="rounded-lg bg-accent-blue-500 px-3 py-1.5 text-xs font-semibold text-white"
+                    className="rounded-(--r-2) bg-signal px-3 py-1.5 text-xs font-semibold text-bg"
                   >
                     Post Response
                   </button>
@@ -356,19 +356,19 @@ export default function ProviderReviewsSection({
               )}
 
               {review.replies && review.replies.length > 0 && (
-                <div className="mb-3 space-y-2 rounded-lg bg-neutral-50 p-3">
-                  <p className="text-xs font-semibold text-foreground">
+                <div className="mb-3 space-y-2 rounded-(--r-2) bg-bg-2 p-3">
+                  <p className="text-xs font-semibold text-fg">
                     Discussion
                   </p>
                   {review.replies.map((reply) => (
                     <div
                       key={reply.id}
-                      className="rounded-md bg-white px-3 py-2"
+                      className="rounded-md bg-bg px-3 py-2"
                     >
-                      <p className="text-xs text-foreground-tertiary">
+                      <p className="text-xs text-fg-3">
                         {formatLocal(reply.createdAt, "MMM d, yyyy • h:mm a")}
                       </p>
-                      <p className="text-sm text-foreground-secondary">
+                      <p className="text-sm text-fg-2">
                         {reply.message}
                       </p>
                     </div>
@@ -377,8 +377,8 @@ export default function ProviderReviewsSection({
               )}
 
               {user && (
-                <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="mb-2 text-xs font-semibold text-foreground">
+                <div className="rounded-(--r-2) border border-border p-3">
+                  <p className="mb-2 text-xs font-semibold text-fg">
                     Add a reply
                   </p>
                   <textarea
@@ -391,11 +391,11 @@ export default function ProviderReviewsSection({
                       }))
                     }
                     placeholder="Write a reply"
-                    className="mb-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                    className="mb-2 w-full rounded-(--r-2) border border-border-2 px-3 py-2 text-sm"
                   />
                   <button
                     onClick={() => onSubmitReply(review.id)}
-                    className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white"
+                    className="rounded-(--r-2) bg-ink px-3 py-1.5 text-xs font-semibold text-bg"
                   >
                     Reply
                   </button>
@@ -408,17 +408,17 @@ export default function ProviderReviewsSection({
             <button
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
               disabled={page <= 1}
-              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-foreground-secondary disabled:opacity-50"
+              className="rounded-(--r-2) border border-border-2 px-3 py-1.5 text-sm text-fg-2 disabled:opacity-50"
             >
               Previous
             </button>
-            <p className="text-xs text-foreground-tertiary">
+            <p className="text-xs text-fg-3">
               Page {page} of {Math.max(1, totalPages)}
             </p>
             <button
               onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={page >= totalPages}
-              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-foreground-secondary disabled:opacity-50"
+              className="rounded-(--r-2) border border-border-2 px-3 py-1.5 text-sm text-fg-2 disabled:opacity-50"
             >
               Next
             </button>

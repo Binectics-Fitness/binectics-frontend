@@ -43,9 +43,41 @@ interface DSTableThProps {
   children: React.ReactNode;
   align?: "left" | "center" | "right";
   className?: string;
+  sortable?: boolean;
+  sortDirection?: "asc" | "desc" | null;
+  onSort?: () => void;
 }
 
-export function DSTableTh({ children, align = "left", className = "" }: DSTableThProps) {
+export function DSTableTh({
+  children,
+  align = "left",
+  className = "",
+  sortable,
+  sortDirection,
+  onSort,
+}: DSTableThProps) {
+  if (sortable) {
+    return (
+      <th
+        className={`px-4.5 py-2.5 font-medium ${className}`}
+        style={{ textAlign: align }}
+      >
+        <button
+          type="button"
+          onClick={onSort}
+          className="inline-flex items-center gap-1 hover:text-ink"
+          style={{ transition: "color var(--motion-fast)" }}
+        >
+          {children}
+          <span className="inline-flex flex-col text-[8px] leading-none">
+            <span style={{ opacity: sortDirection === "asc" ? 1 : 0.3 }}>&uarr;</span>
+            <span style={{ opacity: sortDirection === "desc" ? 1 : 0.3 }}>&darr;</span>
+          </span>
+        </button>
+      </th>
+    );
+  }
+
   return (
     <th
       className={`px-4.5 py-2.5 font-medium ${className}`}

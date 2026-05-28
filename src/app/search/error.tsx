@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
+import { useEffect } from "react";
+import { BinecticsMark } from "@/components/BinecticsLogo";
 
 export default function SearchError({
   error,
@@ -15,33 +16,98 @@ export default function SearchError({
   }, [error]);
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="max-w-md w-full text-center">
-        <h2 className="text-xl font-bold text-foreground mb-2">
-          Search is temporarily unavailable
-        </h2>
-        <p className="text-sm text-neutral-500 mb-6">
-          We couldn&apos;t load search results. Please try again in a moment.
+    <div
+      className="min-h-screen grid place-items-center p-8"
+      style={{ background: "var(--bg)", fontFamily: "var(--font-sans)" }}
+    >
+      <div className="text-center" style={{ maxWidth: 480 }}>
+        <div className="flex justify-center" style={{ marginBottom: 28 }}>
+          <BinecticsMark size={32} className="text-(--ink)" />
+        </div>
+
+        <div
+          className="eyebrow"
+          style={{ color: "var(--danger)", marginBottom: 16 }}
+        >
+          Search error
+        </div>
+
+        <h1
+          style={{
+            fontSize: 36,
+            letterSpacing: "-0.028em",
+            fontWeight: 500,
+            color: "var(--ink)",
+            lineHeight: 1.1,
+            marginBottom: 14,
+          }}
+        >
+          We couldn&apos;t load search results.
+        </h1>
+
+        <p
+          style={{
+            fontSize: 16,
+            color: "var(--fg-2)",
+            lineHeight: 1.55,
+            marginBottom: 32,
+            maxWidth: "38ch",
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}
+        >
+          Please try again in a moment, or head back to the marketplace.
         </p>
-        {error.digest && (
-          <p className="text-xs text-neutral-400 mb-4">
-            Error ID: {error.digest}
-          </p>
-        )}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+
+        <div className="flex gap-2 justify-center flex-wrap">
           <button
             onClick={() => reset()}
-            className="px-5 py-2.5 bg-primary-500 text-foreground font-semibold rounded-lg text-sm hover:bg-primary-600 transition-colors"
+            className="btn-primary-v2"
+            style={{ height: 38, padding: "0 20px" }}
           >
-            Try Again
+            Try again
           </button>
           <Link
-            href="/"
-            className="px-5 py-2.5 border border-neutral-200 text-foreground font-semibold rounded-lg text-sm hover:bg-neutral-100 transition-colors"
+            href="/marketplace"
+            className="btn-ghost-v2"
+            style={{ height: 38, padding: "0 20px" }}
           >
-            Back to Home
+            Back to marketplace
           </Link>
         </div>
+
+        {error.digest && (
+          <div
+            style={{
+              marginTop: 28,
+              paddingTop: 20,
+              borderTop: "1px solid var(--border)",
+            }}
+          >
+            <div
+              className="flex justify-between"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11.5,
+                color: "var(--fg-3)",
+                padding: "4px 0",
+              }}
+            >
+              <span>Error ID</span>
+              <strong
+                style={{
+                  color: "var(--ink)",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  letterSpacing: "-0.005em",
+                }}
+              >
+                {error.digest}
+              </strong>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

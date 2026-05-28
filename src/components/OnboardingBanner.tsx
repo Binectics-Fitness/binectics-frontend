@@ -135,47 +135,47 @@ export default function OnboardingBanner({
 
   const colorClasses = {
     blue: {
-      bg: "bg-accent-blue-50",
-      border: "border-accent-blue-200",
-      icon: "bg-accent-blue-500 text-white",
+      bg: "bg-gym-soft",
+      border: "border-gym/30",
+      icon: "bg-gym text-bg",
       button:
-        "bg-accent-blue-500 hover:bg-accent-blue-600 active:bg-accent-blue-700",
-      text: "text-accent-blue-900",
-      textMuted: "text-accent-blue-700",
-      checkboxBg: "bg-accent-blue-100",
-      checkboxBorder: "border-accent-blue-300",
+        "bg-gym hover:bg-gym/90 active:bg-gym/80",
+      text: "text-fg",
+      textMuted: "text-fg-2",
+      checkboxBg: "bg-gym-soft",
+      checkboxBorder: "border-gym/30",
     },
     yellow: {
-      bg: "bg-accent-yellow-50",
-      border: "border-accent-yellow-200",
-      icon: "bg-accent-yellow-500 text-foreground",
+      bg: "bg-trainer-soft",
+      border: "border-trainer/30",
+      icon: "bg-trainer text-fg",
       button:
-        "bg-accent-yellow-500 hover:bg-accent-yellow-600 active:bg-accent-yellow-700",
-      text: "text-accent-yellow-900",
-      textMuted: "text-accent-yellow-700",
-      checkboxBg: "bg-accent-yellow-100",
-      checkboxBorder: "border-accent-yellow-300",
+        "bg-trainer hover:bg-trainer/90 active:bg-trainer/80",
+      text: "text-fg",
+      textMuted: "text-fg-2",
+      checkboxBg: "bg-trainer-soft",
+      checkboxBorder: "border-trainer/30",
     },
     purple: {
-      bg: "bg-accent-purple-50",
-      border: "border-accent-purple-200",
-      icon: "bg-accent-purple-500 text-white",
+      bg: "bg-dietitian-soft",
+      border: "border-dietitian/30",
+      icon: "bg-dietitian text-bg",
       button:
-        "bg-accent-purple-500 hover:bg-accent-purple-600 active:bg-accent-purple-700",
-      text: "text-accent-purple-900",
-      textMuted: "text-accent-purple-700",
-      checkboxBg: "bg-accent-purple-100",
-      checkboxBorder: "border-accent-purple-300",
+        "bg-dietitian hover:bg-dietitian/90 active:bg-dietitian/80",
+      text: "text-fg",
+      textMuted: "text-fg-2",
+      checkboxBg: "bg-dietitian-soft",
+      checkboxBorder: "border-dietitian/30",
     },
     green: {
-      bg: "bg-primary-50",
-      border: "border-primary-200",
-      icon: "bg-primary-500 text-foreground",
-      button: "bg-primary-500 hover:bg-primary-600 active:bg-primary-700",
-      text: "text-primary-900",
-      textMuted: "text-primary-700",
-      checkboxBg: "bg-primary-100",
-      checkboxBorder: "border-primary-300",
+      bg: "bg-signal-soft",
+      border: "border-signal/30",
+      icon: "bg-signal text-fg",
+      button: "bg-signal hover:bg-signal/90 active:bg-signal/80",
+      text: "text-fg",
+      textMuted: "text-signal-ink",
+      checkboxBg: "bg-signal-soft",
+      checkboxBorder: "border-signal/30",
     },
   };
 
@@ -183,12 +183,12 @@ export default function OnboardingBanner({
 
   return (
     <div
-      className={`relative rounded-2xl border-2 ${colors.border} ${colors.bg} p-4 sm:p-6 shadow-lg`}
+      className={`relative rounded-(--r-3) border-2 ${colors.border} ${colors.bg} p-4 sm:p-6`}
     >
       {/* Dismiss Button */}
       <button
         onClick={() => setIsDismissed(true)}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 text-foreground-tertiary hover:text-foreground-secondary transition-colors"
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 text-fg-3 hover:text-fg-2 transition-colors"
         aria-label="Dismiss"
       >
         <svg
@@ -209,7 +209,7 @@ export default function OnboardingBanner({
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         {/* Icon */}
         <div
-          className={`h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-xl ${colors.icon} flex items-center justify-center`}
+          className={`h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-(--r-3) ${colors.icon} flex items-center justify-center`}
         >
           {config.icon}
         </div>
@@ -258,13 +258,13 @@ export default function OnboardingBanner({
           <div className="flex gap-3">
             <Link
               href="/dashboard/settings/profile"
-              className={`inline-flex h-10 items-center justify-center rounded-lg ${colors.button} px-5 sm:px-6 text-sm font-semibold text-foreground shadow-button whitespace-nowrap transition-colors duration-200`}
+              className={`inline-flex h-10 items-center justify-center rounded-(--r-2) ${colors.button} px-5 sm:px-6 text-sm font-semibold text-fg whitespace-nowrap transition-colors duration-200`}
             >
               Complete Setup
             </Link>
             <button
               onClick={() => setIsDismissed(true)}
-              className="inline-flex h-10 items-center justify-center rounded-lg border-2 border-foreground-tertiary bg-transparent px-4 text-sm font-semibold text-foreground-secondary hover:bg-white/50 whitespace-nowrap transition-colors duration-200"
+              className="inline-flex h-10 items-center justify-center rounded-(--r-2) border-2 border-fg-3 bg-transparent px-4 text-sm font-semibold text-fg-2 hover:bg-bg/50 whitespace-nowrap transition-colors duration-200"
             >
               Later
             </button>

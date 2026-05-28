@@ -30,15 +30,17 @@ export default function ConfirmationModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+        className="absolute inset-0"
+        style={{ background: "oklch(0.14 0.008 80 / 0.3)" }}
         onClick={isConfirming ? undefined : onCancel}
       />
 
       <div
-        className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        className="relative w-full max-w-md rounded-(--r-3) border border-border bg-bg p-6"
+        style={{ boxShadow: "var(--shadow-2)" }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-danger-soft text-danger">
           <svg
             className="h-7 w-7"
             fill="none"
@@ -54,8 +56,8 @@ export default function ConfirmationModal({
           </svg>
         </div>
 
-        <h3 className="mb-2 text-xl font-black text-foreground">{title}</h3>
-        <p className="mb-6 text-sm leading-6 text-foreground-secondary">
+        <h3 className="mb-2 text-xl font-black text-ink">{title}</h3>
+        <p className="mb-6 text-sm leading-6 text-fg-2">
           {description}
         </p>
 

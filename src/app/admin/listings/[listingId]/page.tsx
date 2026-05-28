@@ -1,7 +1,7 @@
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import Link from "next/link";
 import React from "react";
 import type { Metadata } from "next";
+import { ApproveButton, RejectButton } from "./_actions";
 
 export const metadata: Metadata = {
   title: "Listing Details",
@@ -22,13 +22,9 @@ export default function AdminSingleListingPage({
       crumb="Aisha Adams · LST-2026-04812"
       actions={
         <div className="flex items-center gap-2">
-          <Link href="/admin/listings/LST-2026-04812/reject" className="btn-ghost-v2 no-underline">
-            Reject
-          </Link>
+          <RejectButton listingName="Aisha Adams" />
           <button className="btn-ghost-v2">Send back</button>
-          <button className="btn-primary-v2" style={{ background: "var(--signal)", borderColor: "var(--signal)", color: "oklch(0.18 0.05 148)" }}>
-            Approve
-          </button>
+          <ApproveButton listingName="Aisha Adams" />
         </div>
       }
     >

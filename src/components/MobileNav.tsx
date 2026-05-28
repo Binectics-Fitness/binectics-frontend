@@ -81,7 +81,7 @@ export default function MobileNav() {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[9998] backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[9998] lg:hidden"
           style={{ background: "oklch(0.14 0.008 80 / 0.40)" }}
           onClick={close}
           aria-hidden="true"
@@ -89,7 +89,7 @@ export default function MobileNav() {
       )}
 
       <div
-        className={`fixed right-0 top-0 z-[9999] h-full w-full max-w-sm transform shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed right-0 top-0 z-[9999] h-full w-full max-w-sm transform transition-transform duration-300 ease-in-out lg:hidden ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         style={{ background: "var(--bg)" }}

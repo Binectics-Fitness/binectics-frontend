@@ -10,10 +10,16 @@ import { createPortal } from "react-dom";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface ToastItem {
   id: string;
   message: string;
   type: ToastType;
+  action?: ToastAction;
 }
 
 interface ToastProps {
@@ -56,6 +62,18 @@ function ToastEntry({ toast, onDismiss }: ToastProps) {
       }}
     >
       <span className="flex-1">{toast.message}</span>
+      {toast.action && (
+        <button
+          onClick={() => {
+            toast.action!.onClick();
+            setVisible(false);
+            setTimeout(() => onDismiss(toast.id), 220);
+          }}
+          className="shrink-0 font-semibold underline underline-offset-2 opacity-80 hover:opacity-100"
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         onClick={() => {
           setVisible(false);
@@ -90,16 +108,16 @@ function notify() {
   _listeners.forEach((fn) => fn([..._toasts]));
 }
 
-export function toast(message: string, type: ToastType = "success") {
+export function toast(message: string, type: ToastType = "success", action?: ToastAction) {
   const id = `${Date.now()}-${Math.random()}`;
-  _toasts = [..._toasts, { id, message, type }];
+  _toasts = [..._toasts, { id, message, type, action }];
   notify();
 }
 
-toast.success = (msg: string) => toast(msg, "success");
-toast.error = (msg: string) => toast(msg, "error");
-toast.warning = (msg: string) => toast(msg, "warning");
-toast.info = (msg: string) => toast(msg, "info");
+toast.success = (msg: string, action?: ToastAction) => toast(msg, "success", action);
+toast.error = (msg: string, action?: ToastAction) => toast(msg, "error", action);
+toast.warning = (msg: string, action?: ToastAction) => toast(msg, "warning", action);
+toast.info = (msg: string, action?: ToastAction) => toast(msg, "info", action);
 
 // ── ToastContainer: mount once in root layout ────────────────────────────────
 

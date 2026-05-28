@@ -17,7 +17,7 @@ export default function PhotoGallery({
   profileImage,
   alt = "Photo",
   FallbackIcon = ImageIcon,
-  accentBg = "bg-neutral-200",
+  accentBg = "bg-border-2",
 }: PhotoGalleryProps) {
   const allPhotos = [
     ...(profileImage ? [profileImage] : []),
@@ -33,7 +33,7 @@ export default function PhotoGallery({
         <div
           className={`flex h-72 items-center justify-center sm:h-96 ${accentBg}`}
         >
-          <FallbackIcon className="h-20 w-20 text-foreground/30 sm:h-24 sm:w-24" />
+          <FallbackIcon className="h-20 w-20 text-fg-4 sm:h-24 sm:w-24" />
         </div>
       </div>
     );
@@ -49,7 +49,7 @@ export default function PhotoGallery({
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
-          className="relative block w-full h-72 sm:h-96 overflow-hidden bg-neutral-100 cursor-zoom-in"
+          className="relative block w-full h-72 sm:h-96 overflow-hidden bg-bg-2 cursor-zoom-in"
         >
           <Image
             src={mainPhoto}
@@ -70,7 +70,7 @@ export default function PhotoGallery({
                 onClick={() => setSelectedIndex(i)}
                 className={`relative h-20 sm:h-24 overflow-hidden ${
                   i === selectedIndex
-                    ? "ring-2 ring-primary-500"
+                    ? "ring-2 ring-signal"
                     : "opacity-70 hover:opacity-100"
                 } transition-all`}
               >

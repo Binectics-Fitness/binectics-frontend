@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import { ApproveListingModal } from "@/components/ds/modals/ApproveListingModal";
+import { RejectListingModal } from "@/components/ds/modals/RejectListingModal";
 
 /* ─── Data ──────────────────────────────────────────────── */
 
@@ -75,6 +77,8 @@ function TypePill({ type }: { type: "Gym" | "Trainer" | "Dietitian" }) {
 
 export default function AdminListingsPage() {
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
+  const [approveTarget, setApproveTarget] = useState<{ id: string; name: string } | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = activeFilter === "All"
     ? LISTINGS
@@ -183,8 +187,8 @@ export default function AdminListingsPage() {
                   </td>
                   <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                     <div className="flex gap-1.5">
-                      <button className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)", border: "none" }}>Approve</button>
-                      <button className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "none" }}>Reject</button>
+                      <button onClick={() => setApproveTarget({ id: l.id, name: l.provider })} className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)", border: "none" }}>Approve</button>
+                      <button onClick={() => setRejectTarget({ id: l.id, name: l.provider })} className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "none" }}>Reject</button>
                     </div>
                   </td>
                 </tr>
@@ -193,6 +197,16 @@ export default function AdminListingsPage() {
           </table>
         </div>
       </div>
+      <ApproveListingModal
+        open={approveTarget !== null}
+        onClose={() => setApproveTarget(null)}
+        listingName={approveTarget?.name}
+      />
+      <RejectListingModal
+        open={rejectTarget !== null}
+        onClose={() => setRejectTarget(null)}
+        listingName={rejectTarget?.name}
+      />
     </AdminDashboardShell>
   );
 }

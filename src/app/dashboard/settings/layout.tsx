@@ -27,10 +27,10 @@ export default function SettingsLayout({
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-4 text-foreground/60">Loading settings...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-signal mx-auto"></div>
+          <p className="mt-4 text-fg-2">Loading settings...</p>
         </div>
       </div>
     );
@@ -164,9 +164,9 @@ export default function SettingsLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-bg">
       {/* Header */}
-      <header className="bg-white border-b border-neutral-200">
+      <header className="bg-bg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -182,7 +182,7 @@ export default function SettingsLayout({
                           ? "/admin"
                           : "/dashboard"
                 }
-                className="text-sm text-foreground/60 hover:text-foreground flex items-center gap-2 mb-2"
+                className="text-sm text-fg-2 hover:text-fg flex items-center gap-2 mb-2"
               >
                 <svg
                   className="w-4 h-4"
@@ -199,8 +199,8 @@ export default function SettingsLayout({
                 </svg>
                 Back to Dashboard
               </Link>
-              <h1 className="text-3xl font-black text-foreground">Settings</h1>
-              <p className="mt-1 text-foreground/60">
+              <h1 className="text-3xl font-black text-ink">Settings</h1>
+              <p className="mt-1 text-fg-2">
                 Manage your account and preferences
               </p>
             </div>
@@ -219,10 +219,10 @@ export default function SettingsLayout({
                   <Link
                     key={tab.href}
                     href={tab.href}
-                    className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-3 rounded-(--r-2) px-4 py-3 text-sm font-medium transition-colors ${
                       isActive
-                        ? "bg-primary-500 text-foreground shadow-md"
-                        : "text-foreground/60 hover:bg-neutral-100 hover:text-foreground"
+                        ? "bg-signal text-fg"
+                        : "text-fg-2 hover:bg-bg-2 hover:text-fg"
                     }`}
                   >
                     {tab.icon}

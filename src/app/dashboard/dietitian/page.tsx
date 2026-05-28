@@ -1,4 +1,5 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import { NewPlanButton } from "./_actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -85,7 +86,7 @@ export default function DietitianDashboard() {
     <DietitianDashboardShell
       activeItem="Today"
       crumb="Today"
-      actions={<><button className="btn-ghost-v2 sm">View public profile →</button><button className="btn-primary-v2 sm">+ New plan</button></>}
+      actions={<><button className="btn-ghost-v2 sm">View public profile →</button><NewPlanButton /></>}
     >
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
             <div>

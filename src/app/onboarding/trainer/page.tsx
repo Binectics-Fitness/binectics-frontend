@@ -196,7 +196,7 @@ export default function TrainerOnboarding() {
       style={{ background: "var(--bg-2)" }}
     >
       <div
-        className="w-full max-w-[560px] rounded-2xl border border-[var(--border)]"
+        className="w-full max-w-[560px] rounded-(--r-3) border border-(--border)"
         style={{ background: "var(--bg)", padding: "clamp(24px, 5vw, 40px) clamp(20px, 4vw, 44px)" }}
       >
         {/* Brand mark */}

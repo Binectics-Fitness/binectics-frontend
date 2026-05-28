@@ -136,14 +136,14 @@ export default function AdminSidebar() {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-neutral-200 text-foreground"
-                  : "text-foreground-secondary hover:bg-neutral-200 hover:text-foreground"
+                  ? "bg-bg-2 text-fg"
+                  : "text-fg-2 hover:bg-bg-2 hover:text-fg"
               } ${collapsed ? "justify-center" : ""}`}
               title={collapsed ? item.label : ""}
               onClick={mobile ? () => setIsMobileMenuOpen(false) : undefined}
             >
               <span
-                className={`shrink-0 ${isActive ? "text-foreground" : "text-foreground-tertiary"}`}
+                className={`shrink-0 ${isActive ? "text-fg" : "text-fg-3"}`}
               >
                 {item.icon}
               </span>
@@ -167,14 +167,14 @@ export default function AdminSidebar() {
                 href={item.href!}
                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? "bg-neutral-200 text-foreground"
-                    : "text-foreground-secondary hover:bg-neutral-200 hover:text-foreground"
+                    ? "bg-bg-2 text-fg"
+                    : "text-fg-2 hover:bg-bg-2 hover:text-fg"
                 } ${collapsed ? "justify-center" : ""}`}
                 title={collapsed ? item.label : ""}
                 onClick={mobile ? () => setIsMobileMenuOpen(false) : undefined}
               >
                 <span
-                  className={`shrink-0 ${isActive ? "text-foreground" : "text-foreground-tertiary"}`}
+                  className={`shrink-0 ${isActive ? "text-fg" : "text-fg-3"}`}
                 >
                   {item.icon}
                 </span>
@@ -186,12 +186,12 @@ export default function AdminSidebar() {
                   logout();
                   if (mobile) setIsMobileMenuOpen(false);
                 }}
-                className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground ${
+                className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium text-fg-2 transition-all duration-200 hover:bg-bg-2 hover:text-fg ${
                   collapsed ? "justify-center" : ""
                 }`}
                 title={collapsed ? item.label : ""}
               >
-                <span className="shrink-0 text-foreground-tertiary">
+                <span className="shrink-0 text-fg-3">
                   {item.icon}
                 </span>
                 {!collapsed && item.label}
@@ -205,19 +205,19 @@ export default function AdminSidebar() {
 
   return (
     <>
-      <div className="fixed inset-x-0 top-0 z-40 border-b border-neutral-200 bg-background/95 backdrop-blur md:hidden">
+      <div className="fixed inset-x-0 top-0 z-40 border-b border-border bg-bg/95 md:hidden">
         <div className="flex h-16 items-center justify-between px-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground-tertiary">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-fg-3">
               Admin
             </p>
-            <p className="truncate text-sm font-bold text-foreground">
+            <p className="truncate text-sm font-bold text-ink">
               Control Center
             </p>
           </div>
           <button
             onClick={() => setIsMobileMenuOpen((current) => !current)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-neutral-300 bg-white text-foreground shadow-sm"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border-2 bg-bg text-fg"
             aria-label={
               isMobileMenuOpen
                 ? "Close navigation menu"
@@ -236,39 +236,39 @@ export default function AdminSidebar() {
 
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-fg/20 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
 
       <div
-        className={`fixed inset-y-0 left-0 z-50 flex w-[88vw] max-w-sm flex-col border-r border-neutral-200 bg-background shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[88vw] max-w-sm flex-col border-r border-border bg-bg transition-transform duration-300 md:hidden ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="border-b border-neutral-200 px-4 py-5">
+        <div className="border-b border-border px-4 py-5">
           <div className="flex items-center justify-between gap-3">
             <Link
               href="/admin/dashboard"
               className="flex items-center gap-3"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-red-500">
-                <span className="text-xl font-bold text-white">B</span>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-danger">
+                <span className="text-xl font-bold text-bg">B</span>
               </div>
               <div>
-                <span className="block font-display text-xl font-bold text-foreground">
+                <span className="block font-display text-xl font-bold text-ink">
                   Binectics
                 </span>
-                <span className="mt-1 inline-flex bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+                <span className="mt-1 inline-flex bg-danger-soft px-2.5 py-1 text-xs font-semibold text-danger">
                   Admin
                 </span>
               </div>
             </Link>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 bg-white text-foreground"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border-2 bg-bg text-fg"
               aria-label="Close navigation menu"
             >
               <X className="h-5 w-5" />
@@ -280,30 +280,30 @@ export default function AdminSidebar() {
           {renderTopNav(false, true)}
         </nav>
 
-        <div className="border-t border-neutral-200 px-3 py-4">
+        <div className="border-t border-border px-3 py-4">
           {renderBottomNav(false, true)}
         </div>
       </div>
 
       <aside
-        className={`fixed left-0 top-0 hidden h-screen flex-col overflow-y-auto border-r border-neutral-200 bg-background transition-all duration-300 md:flex ${
+        className={`fixed left-0 top-0 hidden h-screen flex-col overflow-y-auto border-r border-border bg-bg transition-all duration-300 md:flex ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <div className="border-b border-neutral-200 p-6">
+        <div className="border-b border-border p-6">
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-red-500">
-              <span className="text-xl font-bold text-white">B</span>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-danger">
+              <span className="text-xl font-bold text-bg">B</span>
             </div>
             {!isCollapsed && (
-              <span className="whitespace-nowrap font-display text-xl font-bold text-foreground">
+              <span className="whitespace-nowrap font-display text-xl font-bold text-ink">
                 Binectics
               </span>
             )}
           </Link>
           {!isCollapsed && (
-            <div className="mt-3 bg-red-50 px-3 py-1.5">
-              <p className="text-xs font-semibold text-red-700">Admin</p>
+            <div className="mt-3 bg-danger-soft px-3 py-1.5">
+              <p className="text-xs font-semibold text-danger">Admin</p>
             </div>
           )}
         </div>
@@ -312,20 +312,20 @@ export default function AdminSidebar() {
           {renderTopNav(isCollapsed)}
         </nav>
 
-        <div className="border-t border-neutral-200 px-3 py-4">
+        <div className="border-t border-border px-3 py-4">
           {renderBottomNav(isCollapsed)}
         </div>
 
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`fixed z-50 hidden h-8 w-8 items-center justify-center rounded-full border-2 border-neutral-200 bg-white shadow-lg transition-all duration-300 hover:border-red-500 md:flex ${
+          className={`fixed z-50 hidden h-8 w-8 items-center justify-center rounded-full border-2 border-border bg-bg transition-all duration-300 hover:border-danger md:flex ${
             isCollapsed ? "left-15" : "left-60"
           }`}
           style={{ top: "140px" }}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <ChevronLeft
-            className={`h-4 w-4 text-foreground transition-transform duration-300 ${isCollapsed ? "rotate-180" : "rotate-0"}`}
+            className={`h-4 w-4 text-fg transition-transform duration-300 ${isCollapsed ? "rotate-180" : "rotate-0"}`}
           />
         </button>
       </aside>

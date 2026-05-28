@@ -41,10 +41,10 @@ export function ContactForm({ categories }: ContactFormProps) {
 
   if (submitted) {
     return (
-      <div className="rounded-2xl border-2 border-green-200 bg-green-50 p-8 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+      <div className="rounded-(--r-3) border-2 border-signal/30 bg-signal-soft p-8 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-signal-soft">
           <svg
-            className="h-8 w-8 text-green-600"
+            className="h-8 w-8 text-signal"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -57,10 +57,10 @@ export function ContactForm({ categories }: ContactFormProps) {
             />
           </svg>
         </div>
-        <h3 className="mb-2 text-xl font-bold text-green-900">
-          Message Sent Successfully!
+        <h3 className="mb-2 text-xl font-bold text-signal-ink">
+          Message sent successfully
         </h3>
-        <p className="text-green-700">
+        <p className="text-signal-ink">
           We&apos;ve received your message and will respond within 24 hours.
         </p>
       </div>
@@ -89,14 +89,14 @@ export function ContactForm({ categories }: ContactFormProps) {
       <div>
         <label
           htmlFor="category"
-          className="mb-2 block text-sm font-medium text-foreground"
+          className="mb-2 block text-sm font-medium text-fg"
         >
           Category
         </label>
         <select
           id="category"
           {...register("category")}
-          className="w-full rounded-lg border border-neutral-200 bg-background px-4 py-3 text-foreground transition-colors focus:border-accent-blue-500 focus:outline-none focus:ring-2 focus:ring-accent-blue-500/20"
+          className="w-full rounded-(--r-2) border border-border bg-bg px-4 py-3 text-fg transition-colors focus:border-signal focus:outline-none focus:ring-2 focus-visible:ring-signal/20"
         >
           {categories.map((cat) => (
             <option key={cat.value} value={cat.value}>
@@ -117,34 +117,34 @@ export function ContactForm({ categories }: ContactFormProps) {
       <div>
         <label
           htmlFor="message"
-          className="mb-2 block text-sm font-medium text-foreground"
+          className="mb-2 block text-sm font-medium text-fg"
         >
-          Message <span className="text-red-500">*</span>
+          Message <span className="text-danger">*</span>
         </label>
         <textarea
           id="message"
           rows={6}
           {...register("message")}
           placeholder="Tell us more about your inquiry..."
-          className={`w-full rounded-lg border ${
+          className={`w-full rounded-(--r-2) border ${
             errors.message
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-              : "border-neutral-200 focus:border-accent-blue-500 focus:ring-accent-blue-500/20"
-          } bg-background px-4 py-3 text-foreground transition-colors focus:outline-none focus:ring-2`}
+              ? "border-danger focus:border-danger focus:ring-danger/20"
+              : "border-border focus:border-signal focus-visible:ring-signal/20"
+          } bg-bg px-4 py-3 text-fg transition-colors focus:outline-none focus:ring-2`}
         />
         {errors.message && (
-          <p className="mt-1 text-sm text-red-500">{errors.message.message}</p>
+          <p className="mt-1 text-sm text-danger">{errors.message.message}</p>
         )}
       </div>
 
       <button
         type="submit"
-        className="w-full rounded-lg bg-primary-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+        className="w-full rounded-(--r-2) bg-signal px-6 py-3 font-semibold text-bg transition-colors hover:bg-signal/90 focus:outline-none focus:ring-2 focus-visible:ring-signal/50"
       >
         Send Message
       </button>
 
-      <p className="text-center text-sm text-foreground-secondary">
+      <p className="text-center text-sm text-fg-2">
         We typically respond within 24 hours during business days
       </p>
     </form>

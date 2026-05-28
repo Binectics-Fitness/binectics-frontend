@@ -42,15 +42,15 @@ export default function LocationFilter({
 
   return (
     <div>
-      <label className="text-sm font-medium text-foreground mb-2 block">
+      <label className="text-sm font-medium text-fg mb-2 block">
         Location
       </label>
 
       {hasLocation ? (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-lg bg-primary-50 px-3 py-2 text-sm">
+          <div className="flex items-center gap-2 rounded-(--r-2) bg-signal-soft px-3 py-2 text-sm">
             <svg
-              className="h-4 w-4 text-primary-500 shrink-0"
+              className="h-4 w-4 text-signal shrink-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -62,7 +62,7 @@ export default function LocationFilter({
                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
               />
             </svg>
-            <span className="text-foreground font-medium">
+            <span className="text-fg font-medium">
               Using your location
             </span>
             <button
@@ -70,7 +70,7 @@ export default function LocationFilter({
                 onLocationChange(null, null);
                 geo.clearLocation();
               }}
-              className="ml-auto text-foreground/60 hover:text-foreground"
+              className="ml-auto text-fg-2 hover:text-fg"
               aria-label="Clear location"
             >
               <svg
@@ -90,7 +90,7 @@ export default function LocationFilter({
           </div>
 
           <div>
-            <label className="text-xs text-foreground/60 mb-1 block">
+            <label className="text-xs text-fg-2 mb-1 block">
               Radius: {radiusKm} km
             </label>
             <input
@@ -100,9 +100,9 @@ export default function LocationFilter({
               step={5}
               value={radiusKm}
               onChange={(e) => onRadiusChange(Number(e.target.value))}
-              className="w-full accent-primary-500"
+              className="w-full accent-signal"
             />
-            <div className="flex justify-between text-xs text-foreground/40">
+            <div className="flex justify-between text-xs text-fg-4">
               <span>{RADIUS_OPTIONS[0]} km</span>
               <span>{RADIUS_OPTIONS[RADIUS_OPTIONS.length - 1]} km</span>
             </div>
@@ -113,7 +113,7 @@ export default function LocationFilter({
           <button
             onClick={handleUseMyLocation}
             disabled={geo.loading}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-foreground hover:border-primary-500 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-(--r-3) border-2 border-border-2 bg-bg px-4 py-2.5 text-sm font-medium text-fg hover:border-signal transition-colors disabled:opacity-50"
           >
             {geo.loading ? (
               <>
@@ -157,14 +157,14 @@ export default function LocationFilter({
               </>
             )}
           </button>
-          <p className="mt-1.5 text-xs text-foreground/40">
+          <p className="mt-1.5 text-xs text-fg-4">
             Your location is used only to find nearby providers and is not
             stored.
           </p>
         </>
       )}
 
-      {geo.error && <p className="mt-2 text-xs text-red-500">{geo.error}</p>}
+      {geo.error && <p className="mt-2 text-xs text-danger">{geo.error}</p>}
     </div>
   );
 }
