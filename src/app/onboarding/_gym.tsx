@@ -1,6 +1,6 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, SelectInput, TextArea, ChipGrid, UploadZone, RadioCards } from "./_components";
+import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, TextArea, ChipGrid, UploadZone, RadioCards } from "./_components";
 
 function toggleChip(list: string[], chip: string): string[] {
   return list.includes(chip) ? list.filter((c) => c !== chip) : [...list, chip];
@@ -12,8 +12,8 @@ export function GymStep1({ data, setField }: StepProps) {
       <StageHead crumb="Step 01 of 08 — gym track" title="Business details." desc="Tell us who you are — we'll use this on receipts and your verified profile." />
       <FormGrid>
         <Field label="Business name"><TextInput value={(data.bizName as string) || ""} onChange={(v) => setField("bizName", v)} placeholder="Iron Lab" /></Field>
-        <Field label="Legal entity"><SelectInput value={(data.entity as string) || "Pty Ltd"} onChange={(v) => setField("entity", v)} options={["Pty Ltd", "CC", "Sole prop", "LLC", "Inc"]} /></Field>
-        <Field label="Country"><SelectInput value={(data.country as string) || "South Africa"} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Legal entity"><SelectField value={(data.entity as string) || "Pty Ltd"} onChange={(v) => setField("entity", v)} options={["Pty Ltd", "CC", "Sole prop", "LLC", "Inc"]} /></Field>
+        <Field label="Country"><SelectField value={(data.country as string) || "South Africa"} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
         <Field label="Registration #"><TextInput value={(data.regNumber as string) || ""} onChange={(v) => setField("regNumber", v)} placeholder="2018/123456/07" /></Field>
       </FormGrid>
     </>

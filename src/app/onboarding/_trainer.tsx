@@ -1,6 +1,6 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, SelectInput, ChipGrid, UploadZone, RadioCards, PreviewCard } from "./_components";
+import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard } from "./_components";
 
 const SPECIALIZATIONS = ["Strength", "Hypertrophy", "Running", "Olympic lifting", "Powerlifting", "Bodybuilding", "Functional", "Mobility", "HIIT", "CrossFit", "Pre-natal", "Post-natal"];
 const FORMATS = ["In-person 1:1", "In-person small group", "Online video", "Programming only", "Hybrid"];
@@ -19,7 +19,7 @@ export function TrainerStep1({ data, setField }: StepProps) {
         <Field label="First name"><TextInput value={(data.firstName as string) || ""} onChange={(v) => setField("firstName", v)} /></Field>
         <Field label="Last name"><TextInput value={(data.lastName as string) || ""} onChange={(v) => setField("lastName", v)} /></Field>
         <Field label="City"><TextInput value={(data.city as string) || ""} onChange={(v) => setField("city", v)} /></Field>
-        <Field label="Country"><SelectInput value={(data.country as string) || "South Africa"} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Country"><SelectField value={(data.country as string) || "South Africa"} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
         <Field label="Headline (60 char)" hint="Shows under your name in marketplace results." full>
           <TextInput value={(data.headline as string) || ""} onChange={(v) => setField("headline", v)} placeholder="Strength & running coach · Sea Point" />
         </Field>
@@ -63,7 +63,7 @@ export function TrainerStep4({ data, setField }: StepProps) {
       <StageHead crumb="Step 04 of 06 — trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
       <FormGrid>
         <Field label="1:1 session"><TextInput value={(data.price1on1 as string) || ""} onChange={(v) => setField("price1on1", v)} placeholder="₦ 80,000" /></Field>
-        <Field label="Duration"><SelectInput value={(data.duration as string) || "60 min"} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
+        <Field label="Duration"><SelectField value={(data.duration as string) || "60 min"} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
         <Field label="4-session pack"><TextInput value={(data.price4pack as string) || ""} onChange={(v) => setField("price4pack", v)} placeholder="₦ 280,000" /></Field>
         <Field label="12-session pack"><TextInput value={(data.price12pack as string) || ""} onChange={(v) => setField("price12pack", v)} placeholder="₦ 800,000" /></Field>
         <Field label="Online programming · monthly" full><TextInput value={(data.priceMonthly as string) || ""} onChange={(v) => setField("priceMonthly", v)} placeholder="₦ 120,000 / month" /></Field>

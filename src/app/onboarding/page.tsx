@@ -102,14 +102,15 @@ function OnboardingContent() {
       return (
         <>
           <StageHead crumb="Step 01" title="How will you use Binectics?" desc="Pick the role that fits. Each one unlocks a different dashboard and onboarding track." />
-          <div className="ob-role-cards" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div className="ob-role-cards" role="radiogroup" aria-label="Select your role" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             {ROLE_CARDS.map((rc) => {
               const on = role === rc.id;
               return (
-                <button key={rc.id} type="button" onClick={() => { setRole(rc.id); }} style={{
+                <button key={rc.id} type="button" role="radio" aria-checked={on} onClick={() => { setRole(rc.id); }} style={{
                   background: on ? "var(--bg-2)" : "var(--bg)", border: on ? "1px solid var(--ink)" : "1px solid var(--border)",
                   borderRadius: "var(--r-3)", padding: 22, display: "flex", flexDirection: "column", gap: 10,
                   cursor: "pointer", textAlign: "left", position: "relative", transition: "border-color 120ms, background 120ms",
+                  minHeight: 44,
                 }}>
                   <span style={{ position: "absolute", top: 22, right: 22, width: 10, height: 10, borderRadius: "50%", background: rc.color }} />
                   <div style={{ width: 36, height: 36, borderRadius: "var(--r-2)", background: on ? "var(--ink)" : "var(--bg-3)", color: on ? "var(--bg)" : "var(--ink)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -159,7 +160,15 @@ function OnboardingContent() {
       }
       @media (max-width: 480px) {
         .ob-stage-area { padding: 20px 14px; }
+        .ob-stage-area h1 { font-size: 28px !important; }
+      }
+      @media (max-width: 375px) {
+        .ob-stage-area { padding: 20px 12px; }
         .ob-stage-area h1 { font-size: 26px !important; }
+      }
+      @media (max-width: 320px) {
+        .ob-stage-area { padding: 16px 10px; }
+        .ob-stage-area h1 { font-size: 24px !important; }
       }
     `}</style>
     <div className="ob-shell">
@@ -189,17 +198,17 @@ function OnboardingContent() {
         {/* Role pills */}
         <div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", color: "var(--fg-4)", letterSpacing: "0.06em", marginBottom: 12 }}>Role</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div role="radiogroup" aria-label="Select your role" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {ROLES.map((r) => {
               const on = role === r.id;
               return (
-                <button key={r.id} type="button" onClick={() => handleSelectRole(r.id)} style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                <button key={r.id} type="button" role="radio" aria-checked={on} onClick={() => handleSelectRole(r.id)} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", minHeight: 44,
                   border: on ? "1px solid var(--ink)" : "1px solid var(--border)",
                   borderRadius: "var(--r-2)", background: "var(--bg)", cursor: "pointer", textAlign: "left",
                   transition: "border-color 120ms",
                 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: r.color, flexShrink: 0 }} />
+                  <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: r.color, flexShrink: 0 }} />
                   <span style={{ fontSize: 13, color: on ? "var(--ink)" : "var(--fg-2)", fontWeight: 500 }}>{r.label}</span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", color: on ? "var(--ink)" : "var(--fg-4)", letterSpacing: "0.05em", marginLeft: "auto" }}>{on ? "Active" : r.badge}</span>
                 </button>
@@ -211,13 +220,13 @@ function OnboardingContent() {
         {/* Step stepper */}
         <div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", color: "var(--fg-4)", letterSpacing: "0.06em", marginBottom: 14 }}>Onboarding</div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <ol role="list" aria-label={`Onboarding steps: ${steps.length} total`} style={{ display: "flex", flexDirection: "column", listStyle: "none", margin: 0, padding: 0 }}>
             {steps.map((s, i) => {
               const stepNum = i + 1;
               const isDone = step > stepNum;
               const isNow = step === stepNum || (step === 0 && stepNum === 1);
               return (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "22px 1fr", gap: 12, padding: "4px 0", position: "relative" }}>
+                <li key={i} aria-current={isNow ? "step" : undefined} style={{ display: "grid", gridTemplateColumns: "22px 1fr", gap: 12, padding: "4px 0", position: "relative" }}>
                   {i < steps.length - 1 && (
                     <span style={{ position: "absolute", left: 11, top: 26, bottom: 0, width: 1, background: "var(--border-2)", zIndex: 0 }} />
                   )}
@@ -235,10 +244,10 @@ function OnboardingContent() {
                     <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--fg-4)", letterSpacing: "0.05em" }}>{s.label}</div>
                     <div style={{ fontSize: "13.5px", color: isNow ? "var(--ink)" : "var(--fg-2)", marginTop: 2, fontWeight: 500 }}>{s.title}</div>
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ol>
         </div>
       </aside>
 

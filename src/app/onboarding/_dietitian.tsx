@@ -1,6 +1,6 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, SelectInput, ChipGrid, UploadZone, RadioCards, PreviewCard } from "./_components";
+import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard } from "./_components";
 
 const SPECIALIZATIONS = ["PCOS", "Diabetes", "Sport performance", "Gestational", "IBS · FODMAP", "Pre/post-natal", "Weight management", "Cardiovascular", "Renal", "Paediatric", "Eating disorders"];
 const POPULATIONS = ["Adults", "Athletes", "Children", "Pre/post-natal", "Seniors"];
@@ -19,7 +19,7 @@ export function DietStep1({ data, setField }: StepProps) {
         <Field label="Full name (with title)"><TextInput value={(data.fullName as string) || ""} onChange={(v) => setField("fullName", v)} placeholder="Dr Nadia Hassan, RD" /></Field>
         <Field label="Pronouns"><TextInput value={(data.pronouns as string) || ""} onChange={(v) => setField("pronouns", v)} placeholder="she/her" /></Field>
         <Field label="City"><TextInput value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder="Lagos" /></Field>
-        <Field label="Country"><SelectInput value={(data.country as string) || "Nigeria"} onChange={(v) => setField("country", v)} options={["Nigeria", "South Africa", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Country"><SelectField value={(data.country as string) || "Nigeria"} onChange={(v) => setField("country", v)} options={["Nigeria", "South Africa", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
         <Field label="Practice name (optional)" full><TextInput value={(data.practiceName as string) || ""} onChange={(v) => setField("practiceName", v)} placeholder="Nadia Hassan Clinical Nutrition" /></Field>
       </FormGrid>
     </>

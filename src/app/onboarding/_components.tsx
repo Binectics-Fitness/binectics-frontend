@@ -1,5 +1,8 @@
 "use client";
 
+import { useId } from "react";
+import SearchableSelect from "@/components/SearchableSelect";
+
 export interface StepProps {
   data: Record<string, unknown>;
   setField: (key: string, value: unknown) => void;
@@ -11,16 +14,18 @@ export function Field({
   label,
   hint,
   full,
+  htmlFor,
   children,
 }: {
   label: string;
   hint?: string;
   full?: boolean;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, gridColumn: full ? "1 / -1" : undefined }}>
-      <label style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)" }}>
+      <label htmlFor={htmlFor} style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)" }}>
         {label}
       </label>
       {children}
@@ -36,14 +41,18 @@ export function TextInput({
   onChange,
   placeholder,
   type = "text",
+  id,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
+  id?: string;
 }) {
+  const autoId = useId();
   return (
     <input
+      id={id || autoId}
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -62,9 +71,9 @@ export function TextInput({
   );
 }
 
-/* ── Select ───────────────────────────────────────────────── */
+/* ── Select (SearchableSelect wrapper) ────────────────────── */
 
-export function SelectInput({
+export function SelectField({
   value,
   onChange,
   options,
@@ -74,24 +83,11 @@ export function SelectInput({
   options: string[];
 }) {
   return (
-    <select
+    <SearchableSelect
+      options={options.map((o) => ({ label: o, value: o }))}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
-      style={{
-        background: "var(--bg)",
-        border: "1px solid var(--border-2)",
-        borderRadius: "var(--r-2)",
-        padding: "12px 14px",
-        fontSize: 14,
-        color: "var(--ink)",
-        fontFamily: "var(--font-sans)",
-        width: "100%",
-      }}
-    >
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
-    </select>
+      onChange={onChange}
+    />
   );
 }
 
@@ -102,14 +98,18 @@ export function TextArea({
   onChange,
   placeholder,
   minHeight = 88,
+  id,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   minHeight?: number;
+  id?: string;
 }) {
+  const autoId = useId();
   return (
     <textarea
+      id={id || autoId}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
@@ -132,25 +132,30 @@ export function TextArea({
 /* ── Chip grid ────────────────────────────────────────────── */
 
 export function ChipGrid({
+  label,
   options,
   selected,
   onToggle,
 }: {
+  label?: string;
   options: string[];
   selected: string[];
   onToggle: (chip: string) => void;
 }) {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+    <div role="group" aria-label={label || "Select options"} style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
       {options.map((chip) => {
         const on = selected.includes(chip);
         return (
           <button
             key={chip}
             type="button"
+            role="switch"
+            aria-checked={on}
             onClick={() => onToggle(chip)}
             style={{
-              padding: "10px 14px",
+              padding: "12px 16px",
+              minHeight: 44,
               border: on ? "1px solid var(--ink)" : "1px solid var(--border-2)",
               borderRadius: "var(--r-full)",
               fontSize: 13,
@@ -184,7 +189,10 @@ export function UploadZone({
   done?: boolean;
 }) {
   return (
-    <div
+    <button
+      type="button"
+      role="button"
+      aria-label={done ? `${title} — uploaded` : `Upload ${title}`}
       style={{
         border: done ? "1.5px solid var(--signal)" : "1.5px dashed var(--border-2)",
         borderRadius: "var(--r-3)",
@@ -196,6 +204,9 @@ export function UploadZone({
         cursor: "pointer",
         background: done ? "var(--signal-soft)" : "transparent",
         transition: "border-color 120ms, background 120ms",
+        width: "100%",
+        minHeight: 44,
+        fontFamily: "inherit",
       }}
     >
       <div style={{ width: 36, height: 36, color: done ? "var(--signal-ink)" : "var(--fg-3)" }}>
@@ -213,32 +224,37 @@ export function UploadZone({
       </div>
       <div style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>{title}</div>
       <div style={{ fontSize: "12.5px", color: "var(--fg-3)" }}>{hint}</div>
-    </div>
+    </button>
   );
 }
 
 /* ── Radio option cards ───────────────────────────────────── */
 
 export function RadioCards({
+  label,
   options,
   selected,
   onSelect,
 }: {
+  label?: string;
   options: { id: string; title: string; desc: string }[];
   selected: string;
   onSelect: (id: string) => void;
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div role="radiogroup" aria-label={label || "Select an option"} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {options.map((opt) => {
         const on = selected === opt.id;
         return (
           <button
             key={opt.id}
             type="button"
+            role="radio"
+            aria-checked={on}
             onClick={() => onSelect(opt.id)}
             style={{
-              padding: "12px 14px",
+              padding: "14px 16px",
+              minHeight: 44,
               border: on ? "1px solid var(--ink)" : "1px solid var(--border)",
               borderRadius: "var(--r-3)",
               display: "flex",
@@ -251,6 +267,7 @@ export function RadioCards({
             }}
           >
             <span
+              aria-hidden="true"
               style={{
                 width: 14,
                 height: 14,
@@ -302,7 +319,7 @@ export function PreviewCard({
 
 export function FormGrid({ children }: { children: React.ReactNode }) {
   return (
-    <div className="ob-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 18px" }}>
+    <div className="ob-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 18px", maxWidth: 600 }}>
       {children}
     </div>
   );
