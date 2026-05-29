@@ -46,7 +46,7 @@ function AuthContent() {
     defaultValues: { email: "", password: "" },
   });
 
-  const { register: signupField, handleSubmit: handleSignup, formState: { errors: signupErrors } } = useForm<RegisterFormData>({
+  const { register: signupField, handleSubmit: handleSignup, watch: watchSignup, setValue: setSignupValue, formState: { errors: signupErrors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", acceptTos: false },
   });
@@ -164,8 +164,8 @@ function AuthContent() {
                     </div>
                     <div className="relative">
                       <input type={showPw ? "text" : "password"} required minLength={8} placeholder="••••••••••••" className="h-10.5 w-full rounded-(--r-2) px-3.5 pr-10 text-[14px]" style={{ border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("password")} />
-                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-3)" }} aria-label={showPw ? "Hide password" : "Show password"}>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{showPw ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/></> : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
+                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10.5px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }} aria-label={showPw ? "Hide password" : "Show password"}>
+                        {showPw ? "Hide" : "Show"}
                       </button>
                     </div>
                     {errors.password && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.password.message}</p>}
@@ -289,15 +289,12 @@ function AuthContent() {
                     <input type="password" required placeholder="Re-enter your password" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("confirmPassword")} />
                     {signupErrors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.confirmPassword.message}</p>}
                   </div>
-                  <label className="flex items-center gap-2 cursor-pointer" onClick={() => {
-                    const el = document.getElementById("tos-check") as HTMLInputElement | null;
-                    if (el) el.click();
-                  }}>
-                    <input type="checkbox" id="tos-check" className="sr-only" {...signupField("acceptTos")} />
-                    <span className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 ${signupErrors.acceptTos ? "border-danger" : ""}`} style={{ background: "var(--bg)", borderColor: signupErrors.acceptTos ? "var(--danger)" : "var(--border-2)" }}>
+                  <button type="button" className="flex items-center gap-2 cursor-pointer text-left" onClick={() => setSignupValue("acceptTos", !watchSignup("acceptTos"), { shouldValidate: true })}>
+                    <span className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 ${watchSignup("acceptTos") ? "bg-ink border-ink" : ""}`} style={{ background: watchSignup("acceptTos") ? "var(--ink)" : "var(--bg)", borderColor: signupErrors.acceptTos ? "var(--danger)" : watchSignup("acceptTos") ? "var(--ink)" : "var(--border-2)" }}>
+                      {watchSignup("acceptTos") && <span className="w-1.75 h-1 border-l-[1.5px] border-b-[1.5px] -rotate-45 -translate-y-px" style={{ borderColor: "var(--bg)" }} />}
                     </span>
                     <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>I agree to the <Link href="/terms" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Terms</Link> and <Link href="/privacy" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Privacy</Link></span>
-                  </label>
+                  </button>
                   {signupErrors.acceptTos && <p className="text-[12px] -mt-2" style={{ color: "var(--danger)" }}>{signupErrors.acceptTos.message}</p>}
                   <button type="submit" disabled={isLoading || authLoading} className="btn-primary-v2 lg w-full justify-center">
                     {isLoading || authLoading ? "Creating account…" : "Create account →"}
