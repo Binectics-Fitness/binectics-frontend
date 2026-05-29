@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
+import { openCommandBar } from "@/hooks/useCommandBar";
+import { NotificationsDrawer } from "@/components/ds/NotificationsDrawer";
 
 const WEEK = [
   { day: "Mon", date: 19, done: true },
@@ -18,6 +21,7 @@ export default function MemberHomePage() {
   const { user } = useAuth();
   const firstName = user?.first_name || "there";
   const initials = user ? `${(user.first_name?.[0] || "").toUpperCase()}${(user.last_name?.[0] || "").toUpperCase()}` : "—";
+  const [notifOpen, setNotifOpen] = useState(false);
 
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh", fontFamily: "var(--font-sans)" }}>
@@ -78,7 +82,8 @@ export default function MemberHomePage() {
           </button>
           <button
             type="button"
-            title="Search"
+            title="Search · ⌘K"
+            onClick={openCommandBar}
             style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}
           >
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
@@ -86,6 +91,7 @@ export default function MemberHomePage() {
           <button
             type="button"
             title="Notifications"
+            onClick={() => setNotifOpen(true)}
             style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}
           >
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M14 21a2 2 0 0 1-4 0" /></svg>
@@ -189,6 +195,8 @@ export default function MemberHomePage() {
           </div>
         </div>
       </main>
+
+      <NotificationsDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
     </div>
   );
 }
