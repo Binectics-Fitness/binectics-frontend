@@ -1,4 +1,4 @@
-export type RoleId = "trainer" | "gym" | "dietitian";
+export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
 export interface StepDef {
   label: string;
@@ -14,6 +14,18 @@ export interface RoleDef {
 }
 
 export const ROLES: RoleDef[] = [
+  {
+    id: "member",
+    label: "Member",
+    badge: "Consumer",
+    color: "var(--consumer)",
+    steps: [
+      { label: "Step 01", title: "What brings you here?" },
+      { label: "Step 02", title: "Where do you train?" },
+      { label: "Step 03", title: "When do you train?" },
+      { label: "Step 04", title: "You're all set" },
+    ],
+  },
   {
     id: "trainer",
     label: "Trainer",
@@ -69,6 +81,13 @@ export const GENERIC_STEPS: StepDef[] = [
 ];
 
 export const ROLE_CARDS = [
+  {
+    id: "member" as RoleId,
+    title: "Member",
+    desc: "Find gyms, book trainers, track progress, and manage your fitness journey.",
+    meta: "Consumer · free to browse",
+    color: "var(--consumer)",
+  },
   {
     id: "trainer" as RoleId,
     title: "Personal trainer",

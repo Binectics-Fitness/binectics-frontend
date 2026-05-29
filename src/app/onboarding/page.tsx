@@ -6,17 +6,24 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
+import { MEMBER_STEPS } from "./_member";
 import { TRAINER_STEPS } from "./_trainer";
 import { GYM_STEPS } from "./_gym";
 import { DIETITIAN_STEPS } from "./_dietitian";
 
 const STEP_RENDERERS: Record<RoleId, React.ComponentType<{ data: Record<string, unknown>; setField: (k: string, v: unknown) => void }>[]> = {
+  member: MEMBER_STEPS,
   trainer: TRAINER_STEPS,
   gym: GYM_STEPS,
   dietitian: DIETITIAN_STEPS,
 };
 
 const ROLE_ICONS: Record<RoleId, React.ReactNode> = {
+  member: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
   trainer: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -42,7 +49,7 @@ export default function OnboardingPage() {
   );
 }
 
-const VALID_ROLES: RoleId[] = ["trainer", "gym", "dietitian"];
+const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 
 function OnboardingContent() {
   const router = useRouter();
@@ -76,6 +83,7 @@ function OnboardingContent() {
       setStep(step + 1);
     } else {
       const routes: Record<RoleId, string> = {
+        member: "/marketplace",
         trainer: "/dashboard/trainer",
         gym: "/dashboard/gym-owner",
         dietitian: "/dashboard/dietitian",
