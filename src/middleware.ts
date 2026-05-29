@@ -90,13 +90,13 @@ export function middleware(request: NextRequest) {
 
     if (!onboardingComplete) {
       const onboardingMapping: Record<string, string> = {
-        USER: "/onboarding/member",
+        USER: "/onboarding",
         GYM_OWNER: "/onboarding/gym-owner",
         TRAINER: "/onboarding/trainer",
         DIETITIAN: "/onboarding/dietitian",
         ADMIN: "/admin/dashboard",
       };
-      const onboardingPath = onboardingMapping[role] || "/onboarding/member";
+      const onboardingPath = onboardingMapping[role] || "/onboarding";
       return withRegion(NextResponse.redirect(new URL(onboardingPath, request.url)));
     }
 

@@ -38,7 +38,7 @@ export function getDashboardRoute(role: UserRole): string {
  * Onboarding routes by user role
  */
 export const ONBOARDING_ROUTES: Readonly<Record<UserRole, string>> = {
-  USER: "/onboarding/member",
+  USER: "/onboarding",
   GYM_OWNER: "/onboarding/gym-owner",
   TRAINER: "/onboarding/trainer",
   DIETITIAN: "/onboarding/dietitian",
