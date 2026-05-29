@@ -43,8 +43,8 @@ export default function MemberHomePage() {
         .mh-topbar { padding: 12px 32px; }
         .mh-hamburger { display: none; }
         .mh-mobile-menu { display: none; }
-        .mh-next-up { display: flex; gap: 14px; align-items: center; }
-        .mh-next-up-img { width: 56px; height: 56px; flex-shrink: 0; }
+        .mh-next-up { display: flex; gap: 14px; align-items: center; padding: 16px; background: var(--bg-2); border-radius: 10px; }
+        .mh-next-up-img { width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px; }
         @media (max-width: 1024px) {
           .mh-kpis { grid-template-columns: repeat(2, 1fr); }
         }
@@ -57,15 +57,19 @@ export default function MemberHomePage() {
           .mh-kpis { grid-template-columns: 1fr 1fr; }
           .mh-grid { grid-template-columns: 1fr; }
           .mh-shell h1 { font-size: 24px !important; }
-          .mh-next-up { flex-direction: column; align-items: stretch; }
-          .mh-next-up-img { width: 100%; height: 80px; }
+          .mh-next-up { flex-direction: column !important; align-items: stretch !important; }
+          .mh-next-up-img { width: 100% !important; height: 80px !important; }
+          .mh-next-up .btn-primary-v2 { width: 100%; justify-content: center; }
+          .mh-week > div { aspect-ratio: auto !important; min-height: 60px; }
         }
         @media (max-width: 480px) {
           .mh-shell { padding: 16px 14px; }
           .mh-kpis { grid-template-columns: 1fr; }
           .mh-week { gap: 3px; }
-          .mh-week > div { padding: 4px !important; }
+          .mh-week > div { padding: 4px !important; aspect-ratio: auto !important; min-height: 52px; }
           .mh-week .mh-day-num { font-size: 14px !important; }
+          .mh-quick-log { gap: 6px !important; }
+          .mh-quick-log a { font-size: 12px !important; padding: 8px 10px !important; }
         }
       `}</style>
 
@@ -147,8 +151,8 @@ export default function MemberHomePage() {
             {/* Next up */}
             <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 12, padding: 22, marginBottom: 14 }}>
               <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}>Next up</h3>
-              <div className="mh-next-up" style={{ padding: 16, background: "var(--bg-2)", borderRadius: 10 }}>
-                <div className="mh-next-up-img" style={{ borderRadius: 8, background: "linear-gradient(135deg, oklch(0.85 0.05 60), oklch(0.72 0.08 40))" }} />
+              <div className="mh-next-up">
+                <div className="mh-next-up-img" style={{ background: "linear-gradient(135deg, oklch(0.85 0.05 60), oklch(0.72 0.08 40))" }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 500, color: "var(--ink)" }}>Strength session · Sarah Okafor</div>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.04em", marginTop: 3 }}>
@@ -186,7 +190,7 @@ export default function MemberHomePage() {
           <div>
             <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 12, padding: 22 }}>
               <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}>Quick log</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="mh-quick-log" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <Link href="/dashboard/member/weight-log" className="btn-ghost-v2 sm" style={{ justifyContent: "center", width: "100%", gap: 8 }}>
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3v18M3 12h18M7 7l10 10M17 7l-10 10" /></svg>
                   Log weight
