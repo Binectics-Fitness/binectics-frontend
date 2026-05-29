@@ -70,7 +70,7 @@ export default function GymMarketingPage() {
         <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Share kit</h3>
           <p className="text-[13.5px] mb-3.5" style={{ color: "var(--fg-2)" }}>Branded social templates for Instagram, WhatsApp status, and Facebook. Auto-generates with your gym name + photos.</p>
-          <div className="grid grid-cols-3 gap-2 mb-3.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3.5">
             <div className="aspect-square rounded-(--r-2)" style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 60), oklch(0.72 0.06 40))" }} />
             <div className="aspect-square rounded-(--r-2)" style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 200), oklch(0.72 0.06 220))" }} />
             <div className="aspect-square rounded-(--r-2)" style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 120), oklch(0.72 0.06 140))" }} />

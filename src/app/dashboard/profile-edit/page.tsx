@@ -510,7 +510,7 @@ export default function ProfileEditPage() {
                 <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Availability</h2>
               </div>
               <div className="p-5.5 flex flex-col gap-4">
-                <div className="grid grid-cols-3 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   {[
                     { label: "Timezone", value: "Africa/Johannesburg (SAST)" },
                     { label: "Min notice", value: "4 hours" },

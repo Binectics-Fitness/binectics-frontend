@@ -132,7 +132,7 @@ export default function CheckInPage() {
                       Hold your <em className="font-serif font-normal italic">Binectics</em> code up to the camera
                     </div>
                     {/* Viewfinder */}
-                    <div className="relative w-[200px] h-[200px] mb-7">
+                    <div className="relative w-40 h-40 sm:w-50 sm:h-50 mb-7">
                       <span className="absolute top-0 left-0 w-7 h-7" style={{ borderTop: "2px solid var(--ink)", borderLeft: "2px solid var(--ink)" }} />
                       <span className="absolute top-0 right-0 w-7 h-7" style={{ borderTop: "2px solid var(--ink)", borderRight: "2px solid var(--ink)" }} />
                       <span className="absolute bottom-0 left-0 w-7 h-7" style={{ borderBottom: "2px solid var(--ink)", borderLeft: "2px solid var(--ink)" }} />
@@ -157,7 +157,7 @@ export default function CheckInPage() {
 
                     {/* Ring + photo */}
                     <div className="flex justify-center pt-9 mb-5.5">
-                      <div className="w-[140px] h-[140px] rounded-full relative" style={{ background: "var(--signal)", animation: playing ? "ringIn 500ms cubic-bezier(0.34, 1.4, 0.64, 1) 50ms forwards, ringFade 400ms ease-out 800ms forwards" : "none", transform: "scale(0)", opacity: 0 }}>
+                      <div className="w-28 h-28 sm:w-35 sm:h-35 rounded-full relative" style={{ background: "var(--signal)", animation: playing ? "ringIn 500ms cubic-bezier(0.34, 1.4, 0.64, 1) 50ms forwards, ringFade 400ms ease-out 800ms forwards" : "none", transform: "scale(0)", opacity: 0 }}>
                         {/* Tick */}
                         <div className="absolute inset-0 flex items-center justify-center" style={{ animation: playing ? "tickfade 300ms ease-out 850ms forwards" : "none" }}>
                           <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ color: "oklch(0.985 0.005 85)" }}>

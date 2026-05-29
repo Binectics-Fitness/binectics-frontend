@@ -148,7 +148,7 @@ export default function BookingPage() {
                   {/* Time slots */}
                   <div>
                     <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-3.5" style={{ color: "var(--fg-3)" }}>Available · Wed May 20</div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {SLOTS.map((s) => (
                         <div key={s.time} className={`px-2.5 py-3 rounded-(--r-2) text-center cursor-pointer ${s.dis ? "opacity-40 pointer-events-none" : ""}`} style={{ border: s.on ? "1px solid var(--ink)" : "1px solid var(--border)", background: s.on ? "var(--ink)" : "var(--bg)", color: s.on ? "var(--bg)" : "var(--ink)", transition: "border-color 120ms, background 120ms" }}>
                           <div className="font-mono text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums" }}>{s.time}</div>
