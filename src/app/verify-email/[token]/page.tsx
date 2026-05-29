@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
+import { authService } from "@/lib/api/auth";
 import { showAlert } from "@/lib/ui/dialogs";
 
 export default function VerifyEmailPage() {
@@ -17,17 +18,19 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        if (token === "expired") {
-          setStatus("expired");
-        } else if (token === "invalid") {
-          setStatus("error");
-          setErrorMessage("Invalid verification link");
-        } else {
+        const res = await authService.verifyEmail({ token });
+        if (res.success) {
           setStatus("success");
+        } else {
+          const msg = (res.message || "").toLowerCase();
+          if (msg.includes("expired") || msg.includes("expire")) {
+            setStatus("expired");
+          } else {
+            setStatus("error");
+            setErrorMessage(res.message || "Verification failed");
+          }
         }
-      } catch (error) {
+      } catch {
         setStatus("error");
         setErrorMessage("An unexpected error occurred. Please try again.");
       }

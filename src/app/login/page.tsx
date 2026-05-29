@@ -8,7 +8,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { getDashboardRoute } from "@/lib/constants/routes";
-import { loginSchema, type LoginFormData } from "@/lib/schemas/auth";
+import { authService } from "@/lib/api/auth";
+import { loginSchema, registerSchema, type LoginFormData, type RegisterFormData } from "@/lib/schemas/auth";
+import { AccountType } from "@/lib/types";
 
 /**
  * Auth — auth.html prototype.
@@ -29,17 +31,24 @@ export default function AuthPage() {
 function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isLoading: authLoading } = useAuth();
+  const { login, register: authRegister, isLoading: authLoading } = useAuth();
   const initialMode = searchParams.get("mode");
   const [panel, setPanel] = useState<Panel>(initialMode === "signup" ? "signup" : "login");
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [showPw, setShowPw] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   const { register: registerField, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
+  });
+
+  const { register: signupField, handleSubmit: handleSignup, formState: { errors: signupErrors } } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", acceptTos: false },
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -54,6 +63,46 @@ function AuthContent() {
     } catch {
       setApiError("Something went wrong. Please try again.");
       setIsLoading(false);
+    }
+  };
+
+  const onSignup = async (data: RegisterFormData) => {
+    setApiError("");
+    setIsLoading(true);
+    try {
+      const result = await authRegister({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        password: data.password,
+        role: AccountType.FITNESS_MEMBER,
+        accept_tos: data.acceptTos,
+      });
+      if (!result.success) {
+        setApiError(result.error || "Registration failed. Please try again.");
+      }
+    } catch {
+      setApiError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onResetPassword = async () => {
+    if (!resetEmail) return;
+    setApiError("");
+    setResetLoading(true);
+    try {
+      const res = await authService.forgotPassword({ email: resetEmail });
+      if (res.success) {
+        setPanel("reset-sent");
+      } else {
+        setPanel("reset-sent");
+      }
+    } catch {
+      setPanel("reset-sent");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -206,38 +255,53 @@ function AuthContent() {
                 </h1>
                 <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Free to join. Pay only for what you book. Cancel any session up to 24h before.</p>
 
-                <form className="flex flex-col gap-3.5 mt-8" onSubmit={(e) => { e.preventDefault(); setPanel("login"); }}>
+                <form className="flex flex-col gap-3.5 mt-8" onSubmit={handleSignup(onSignup)}>
+                  {apiError && (
+                    <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-(--r-2)" style={{ background: "var(--danger-soft, oklch(0.95 0.03 25))", border: "1px solid oklch(0.85 0.06 25)" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                      <p className="text-[13px]" style={{ color: "var(--danger)" }}>{apiError}</p>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3.5">
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name</label>
-                      <input required placeholder="Tunde" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                      <input required placeholder="Tunde" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.firstName ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("firstName")} />
+                      {signupErrors.firstName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.firstName.message}</p>}
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Last name</label>
-                      <input required placeholder="Adebayo" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                      <input required placeholder="Adebayo" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.lastName ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("lastName")} />
+                      {signupErrors.lastName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.lastName.message}</p>}
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email</label>
-                    <input type="email" required placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <input type="email" required placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.email ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("email")} />
+                    {signupErrors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.email.message}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Password</label>
-                    <input type="password" required minLength={10} placeholder="At least 10 characters" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
-                    <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>Mix it up. Long passphrases beat short complex ones.</span>
+                    <input type="password" required placeholder="At least 8 characters" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("password")} />
+                    {signupErrors.password && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.password.message}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Country</label>
-                    <input required defaultValue="Nigeria · NG" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
-                    <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>Determines your default currency and gateway. Change later anytime.</span>
+                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Confirm password</label>
+                    <input type="password" required placeholder="Re-enter your password" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("confirmPassword")} />
+                    {signupErrors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.confirmPassword.message}</p>}
                   </div>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <span className="w-4 h-4 rounded-[3px] border bg-ink border-ink flex items-center justify-center">
-                      <span className="w-[7px] h-1 border-l-[1.5px] border-b-[1.5px] -rotate-45 -translate-y-px" style={{ borderColor: "var(--bg)" }} />
+                  <label className="flex items-center gap-2 cursor-pointer" onClick={() => {
+                    const el = document.getElementById("tos-check") as HTMLInputElement | null;
+                    if (el) el.click();
+                  }}>
+                    <input type="checkbox" id="tos-check" className="sr-only" {...signupField("acceptTos")} />
+                    <span className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 ${signupErrors.acceptTos ? "border-danger" : ""}`} style={{ background: "var(--bg)", borderColor: signupErrors.acceptTos ? "var(--danger)" : "var(--border-2)" }}>
                     </span>
                     <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>I agree to the <Link href="/terms" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Terms</Link> and <Link href="/privacy" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Privacy</Link></span>
                   </label>
-                  <button type="submit" className="btn-primary-v2 lg w-full justify-center">Create account →</button>
+                  {signupErrors.acceptTos && <p className="text-[12px] -mt-2" style={{ color: "var(--danger)" }}>{signupErrors.acceptTos.message}</p>}
+                  <button type="submit" disabled={isLoading || authLoading} className="btn-primary-v2 lg w-full justify-center">
+                    {isLoading || authLoading ? "Creating account…" : "Create account →"}
+                  </button>
                 </form>
 
                 <div className="flex items-center gap-3.5 my-6">
@@ -264,10 +328,12 @@ function AuthContent() {
                 <div className="flex flex-col gap-3.5 mt-8">
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email or phone</label>
-                    <input type="email" required placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
+                    <input type="email" required placeholder="you@example.com" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />
                     <span className="text-[12px] leading-relaxed" style={{ color: "var(--fg-3)" }}>If we find an account, you&apos;ll get an email. We don&apos;t say either way to protect privacy.</span>
                   </div>
-                  <button className="btn-primary-v2 lg w-full justify-center" onClick={() => setPanel("reset-sent")}>Send reset link →</button>
+                  <button className="btn-primary-v2 lg w-full justify-center" disabled={resetLoading || !resetEmail} onClick={onResetPassword}>
+                    {resetLoading ? "Sending…" : "Send reset link →"}
+                  </button>
                   <button className="btn-ghost-v2 w-full justify-center" onClick={() => setPanel("login")}>← Back to sign in</button>
                 </div>
               </>

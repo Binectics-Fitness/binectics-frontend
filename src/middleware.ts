@@ -48,13 +48,7 @@ export function middleware(request: NextRequest) {
     return res;
   }
 
-  // ── PROTOTYPE MODE: bypass auth for visual showcase ──
-  // TODO: Remove this block when wiring to real API
-  const PROTOTYPE_MODE = true;
-  if (PROTOTYPE_MODE) {
-    return withRegion(NextResponse.next());
-  }
-  // ── END PROTOTYPE MODE ──
+  // PROTOTYPE_MODE removed — auth is now enforced
 
   // Check if the current route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -91,7 +85,7 @@ export function middleware(request: NextRequest) {
       );
     }
     const roleMapping: Record<string, string> = {
-      USER: "/dashboard",
+      USER: "/marketplace",
       GYM_OWNER: "/dashboard/gym-owner",
       TRAINER: "/dashboard/trainer",
       DIETITIAN: "/dashboard/dietitian",
