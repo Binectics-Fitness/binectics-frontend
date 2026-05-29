@@ -214,7 +214,7 @@ function AuthContent() {
               <>
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>2-step verification</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
-                  Check the <em className="font-serif font-normal italic">code</em> on your phone.
+                  Check the code on your phone.
                 </h1>
                 <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Sent to +27 82 ••• 1284 — should arrive in a few seconds. The code expires in 5 minutes.</p>
 
@@ -330,7 +330,7 @@ function AuthContent() {
               <>
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Reset password</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
-                  No worries.<br />Let&apos;s <em className="font-serif font-normal italic">get you in</em>.
+                  No worries.<br />Let&apos;s get you in.
                 </h1>
                 <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Tell us where to send the reset link. It expires in 30 minutes.</p>
                 <div className="flex flex-col gap-3.5 mt-8">
@@ -355,7 +355,7 @@ function AuthContent() {
                 </div>
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Check your inbox</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
-                  We&apos;ve sent the <em className="font-serif font-normal italic">link</em>.
+                  We&apos;ve sent the link.
                 </h1>
                 <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>If the email matches an account, the link should arrive within a minute. Check spam if you don&apos;t see it.</p>
                 <div className="flex flex-col gap-3.5 mt-8">

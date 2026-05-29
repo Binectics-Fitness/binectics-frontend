@@ -151,6 +151,12 @@
   outline-offset: 2px;
 }
 
+/* ─── Placeholder contrast ────────────────────────────────────── */
+::placeholder {
+  color: var(--fg-4);
+  opacity: 1;
+}
+
 /* ─── Base reset ─────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
