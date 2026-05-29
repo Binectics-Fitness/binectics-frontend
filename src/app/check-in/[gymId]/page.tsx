@@ -79,7 +79,7 @@ export default function CheckInPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 lg:gap-10 mb-8 items-end">
           <div>
             <h1 className="text-[26px] sm:text-[36px] font-medium leading-[1.05] max-w-[18ch]" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
-              The <em className="font-serif font-normal italic">one moment</em> that earns the warmth.
+              The one moment that earns the warmth.
             </h1>
             <p className="text-[15px] mt-2.5 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-2)" }}>
               Every other surface in Binectics is a tool. This is the one place — the second the door opens — where motion is the feature, not the finish. A 2‑second sequence, four members, one set of rules.
@@ -165,7 +165,7 @@ export default function CheckInPage() {
                           </svg>
                         </div>
                         {/* Photo */}
-                        <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center font-serif italic text-[56px]" style={{ color: "var(--ink)", background: "oklch(0.86 0.04 80)", opacity: 0, transform: "scale(0.85)", animation: playing ? "photoIn 500ms cubic-bezier(0.16, 1, 0.3, 1) 800ms forwards" : "none" }}>
+                        <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center text-[56px] font-medium" style={{ color: "var(--ink)", background: "oklch(0.86 0.04 80)", opacity: 0, transform: "scale(0.85)", animation: playing ? "photoIn 500ms cubic-bezier(0.16, 1, 0.3, 1) 800ms forwards" : "none" }}>
                           LM
                         </div>
                       </div>

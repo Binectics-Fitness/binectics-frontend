@@ -92,10 +92,10 @@ function StripeCardForm({
             style: {
               base: {
                 fontSize: "16px",
-                color: "#03314b",
-                "::placeholder": { color: "#9ca3af" },
+                color: "oklch(0.16 0.01 80)",
+                "::placeholder": { color: "oklch(0.72 0.005 80)" },
               },
-              invalid: { color: "#ef4444" },
+              invalid: { color: "oklch(0.58 0.18 25)" },
             },
           }}
         />

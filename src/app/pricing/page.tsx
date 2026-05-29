@@ -189,7 +189,7 @@ export default function PricingPage() {
       {/* Fee breakdown — 1.4fr/1fr grid */}
       <section className="mx-auto max-w-360 mt-10 sm:mt-16 px-5 sm:px-10 pb-10 sm:pb-16" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-16 items-end mb-8">
-          <h2 className="text-[40px] font-medium leading-[1.05] max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>What you <em className="font-serif font-normal italic">actually</em> pay.</h2>
+          <h2 className="text-[40px] font-medium leading-[1.05] max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>What you actually pay.</h2>
           <p className="text-[16px] leading-[1.55] max-w-[56ch]" style={{ color: "var(--fg-2)", margin: 0 }}>A worked example: a member books a {formatAmount(sessionPrice)} session with a local trainer using a card via {fee.gwName}. Here&apos;s where every unit goes. <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>Amounts shown in {currency}.</span></p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">

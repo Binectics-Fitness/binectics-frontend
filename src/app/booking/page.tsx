@@ -117,11 +117,11 @@ export default function BookingPage() {
                   {/* Mini calendar */}
                   <div>
                     <div className="flex justify-between items-center mb-3.5">
-                      <button className="w-6.5 h-6.5 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "var(--bg)" }}>
+                      <button className="w-9 h-9 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "var(--bg)" }}>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
                       </button>
                       <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>May 2026</span>
-                      <button className="w-6.5 h-6.5 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "var(--bg)" }}>
+                      <button className="w-9 h-9 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "var(--bg)" }}>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                       </button>
                     </div>

@@ -350,7 +350,7 @@ export default function DietitianMealPlansPage() {
 
             {/* Macros row */}
             <div
-              className="grid grid-cols-4 px-5.5 py-3"
+              className="grid grid-cols-2 sm:grid-cols-4 px-5.5 py-3"
               style={{ borderTop: "1px solid var(--border)" }}
             >
               {[
