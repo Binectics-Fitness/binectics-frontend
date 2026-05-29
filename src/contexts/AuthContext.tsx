@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/api/auth";
-import { getDashboardRoute, getLoginRoute } from "@/lib/constants/routes";
+import { getDashboardRoute, getOnboardingRoute, getLoginRoute } from "@/lib/constants/routes";
 import { tokenStorage } from "@/lib/utils/storage";
 import { apiClient } from "@/lib/api/client";
 import SessionModal from "@/components/SessionModal";
@@ -180,6 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.data.user);
         if (response.data.user.must_change_password) {
           router.push("/admin/change-password");
+        } else if (response.data.user.is_onboarding_complete === false) {
+          router.push(getOnboardingRoute(response.data.user.role));
         } else {
           router.push(getDashboardRoute(response.data.user.role));
         }

@@ -38,6 +38,7 @@ function AuthContent() {
   const [apiError, setApiError] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [showPw, setShowPw] = useState(false);
+  const [showSignupPw, setShowSignupPw] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
 
@@ -160,11 +161,11 @@ function AuthContent() {
                   <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between items-center">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Password</label>
-                      <button type="button" onClick={() => setPanel("reset")} className="font-mono text-[11px] uppercase tracking-[0.05em] underline underline-offset-3" style={{ color: "var(--fg-2)", textDecorationColor: "var(--border-2)" }}>Forgot password</button>
+                      <button type="button" onClick={() => setPanel("reset")} className="font-mono text-[9px] uppercase tracking-[0.05em] underline underline-offset-3" style={{ color: "var(--fg-3)", textDecorationColor: "var(--border-2)" }}>Forgot password</button>
                     </div>
                     <div className="relative">
                       <input type={showPw ? "text" : "password"} required minLength={8} placeholder="••••••••••••" className="h-10.5 w-full rounded-(--r-2) px-3.5 pr-10 text-[14px]" style={{ border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("password")} />
-                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10.5px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }} aria-label={showPw ? "Hide password" : "Show password"}>
+                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[9px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }} aria-label={showPw ? "Hide password" : "Show password"}>
                         {showPw ? "Hide" : "Show"}
                       </button>
                     </div>
@@ -281,12 +282,22 @@ function AuthContent() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Password</label>
-                    <input type="password" required placeholder="At least 8 characters" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("password")} />
+                    <div className="relative">
+                      <input type={showSignupPw ? "text" : "password"} required placeholder="At least 8 characters" className="h-10.5 w-full rounded-(--r-2) px-3.5 pr-14 text-[14px]" style={{ border: signupErrors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("password")} />
+                      <button type="button" onClick={() => setShowSignupPw(!showSignupPw)} className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[9px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }} aria-label={showSignupPw ? "Hide password" : "Show password"}>
+                        {showSignupPw ? "Hide" : "Show"}
+                      </button>
+                    </div>
                     {signupErrors.password && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.password.message}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Confirm password</label>
-                    <input type="password" required placeholder="Re-enter your password" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("confirmPassword")} />
+                    <div className="relative">
+                      <input type={showSignupPw ? "text" : "password"} required placeholder="Re-enter your password" className="h-10.5 w-full rounded-(--r-2) px-3.5 pr-14 text-[14px]" style={{ border: signupErrors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("confirmPassword")} />
+                      <button type="button" onClick={() => setShowSignupPw(!showSignupPw)} className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[9px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }} aria-label={showSignupPw ? "Hide password" : "Show password"}>
+                        {showSignupPw ? "Hide" : "Show"}
+                      </button>
+                    </div>
                     {signupErrors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.confirmPassword.message}</p>}
                   </div>
                   <button type="button" className="flex items-center gap-2 cursor-pointer text-left" onClick={() => setSignupValue("acceptTos", !watchSignup("acceptTos"), { shouldValidate: true })}>

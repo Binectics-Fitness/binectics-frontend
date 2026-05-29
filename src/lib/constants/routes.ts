@@ -35,6 +35,24 @@ export function getDashboardRoute(role: UserRole): string {
 }
 
 /**
+ * Onboarding routes by user role
+ */
+export const ONBOARDING_ROUTES: Readonly<Record<UserRole, string>> = {
+  USER: "/onboarding/member",
+  GYM_OWNER: "/onboarding/gym-owner",
+  TRAINER: "/onboarding/trainer",
+  DIETITIAN: "/onboarding/dietitian",
+  ADMIN: "/admin/dashboard",
+};
+
+/**
+ * Get onboarding route for user role
+ */
+export function getOnboardingRoute(role: UserRole): string {
+  return ONBOARDING_ROUTES[role] || ONBOARDING_ROUTES.USER;
+}
+
+/**
  * Get login route for user role
  */
 export function getLoginRoute(role?: UserRole): string {
