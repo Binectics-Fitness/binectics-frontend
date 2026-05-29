@@ -4,6 +4,7 @@ import { useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { useAuth } from "@/contexts/AuthContext";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import { MEMBER_STEPS } from "./_member";
@@ -54,6 +55,7 @@ const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, updateUser } = useAuth();
   const initialRole = searchParams.get("role") as RoleId | null;
   const preselected = initialRole && VALID_ROLES.includes(initialRole) ? initialRole : null;
 
@@ -82,6 +84,9 @@ function OnboardingContent() {
     } else if (step < totalSteps) {
       setStep(step + 1);
     } else {
+      if (user) {
+        updateUser({ ...user, is_onboarding_complete: true });
+      }
       const routes: Record<RoleId, string> = {
         member: "/member",
         trainer: "/dashboard/trainer",
