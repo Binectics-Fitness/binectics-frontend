@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const STORAGE_KEY = "binectics-cookies";
 const VERSION = "2.2";
@@ -173,7 +174,12 @@ function Toggle({
   );
 }
 
+const AUTH_PREFIXES = ["/dashboard", "/member", "/admin", "/onboarding", "/checkout", "/check-in"];
+
 export default function CookieConsent() {
+  const pathname = usePathname();
+  const isAuthPage = AUTH_PREFIXES.some((p) => pathname?.startsWith(p));
+
   const [isGDPR, setIsGDPR] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
   const [bannerIn, setBannerIn] = useState(false);
@@ -618,8 +624,8 @@ export default function CookieConsent() {
         </div>
       )}
 
-      {/* FAB */}
-      {showFab && !showBanner && !showModal && (
+      {/* FAB — hidden on authenticated pages */}
+      {showFab && !showBanner && !showModal && !isAuthPage && (
         <button
           aria-label="Manage cookies"
           title="Manage cookies"

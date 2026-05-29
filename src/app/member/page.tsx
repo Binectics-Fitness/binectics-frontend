@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { useAuth } from "@/contexts/AuthContext";
 
 const WEEK = [
   { day: "Mon", date: 19, done: true },
@@ -14,12 +15,43 @@ const WEEK = [
 ];
 
 export default function MemberHomePage() {
+  const { user } = useAuth();
+  const firstName = user?.first_name || "there";
+  const initials = user ? `${(user.first_name?.[0] || "").toUpperCase()}${(user.last_name?.[0] || "").toUpperCase()}` : "—";
+
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh", fontFamily: "var(--font-sans)" }}>
+      <style>{`
+        .mh-nav-links { display: flex; gap: 4px; }
+        .mh-shell { max-width: 1100px; margin: 0 auto; padding: 32px; }
+        .mh-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+        .mh-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+        .mh-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .mh-topbar { padding: 12px 32px; }
+        .mh-hamburger { display: none; }
+        @media (max-width: 1024px) {
+          .mh-kpis { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+          .mh-nav-links { display: none; }
+          .mh-hamburger { display: flex; }
+          .mh-topbar { padding: 12px 16px; }
+          .mh-shell { padding: 20px 16px; }
+          .mh-kpis { grid-template-columns: 1fr 1fr; }
+          .mh-grid { grid-template-columns: 1fr; }
+          .mh-shell h1 { font-size: 24px !important; }
+        }
+        @media (max-width: 480px) {
+          .mh-shell { padding: 16px 14px; }
+          .mh-kpis { grid-template-columns: 1fr; }
+          .mh-week { grid-template-columns: repeat(7, 1fr); gap: 3px; }
+        }
+      `}</style>
+
       {/* ── Top nav ── */}
-      <header style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", padding: "12px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 5 }}>
+      <header className="mh-topbar" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 5 }}>
         <Link href="/" style={{ textDecoration: "none" }}><BinecticsLockup /></Link>
-        <nav style={{ display: "flex", gap: 4 }}>
+        <nav className="mh-nav-links">
           {[
             { label: "Home", href: "/member" },
             { label: "Marketplace", href: "/marketplace" },
@@ -39,6 +71,13 @@ export default function MemberHomePage() {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button
             type="button"
+            className="mh-hamburger"
+            style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <button
+            type="button"
             title="Search"
             style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}
           >
@@ -51,26 +90,26 @@ export default function MemberHomePage() {
           >
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M14 21a2 2 0 0 1-4 0" /></svg>
           </button>
-          <Link href="/dashboard/settings" style={{ textDecoration: "none" }}>
-            <span style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-3)", color: "var(--fg-2)", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>TA</span>
+          <Link href="/member/settings" style={{ textDecoration: "none" }}>
+            <span style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-3)", color: "var(--fg-2)", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>{initials}</span>
           </Link>
         </div>
       </header>
 
       {/* ── Shell ── */}
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
+      <main className="mh-shell">
         {/* Greeting */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Sunday · 25 May · Cape Town
           </div>
           <h1 style={{ fontSize: 30, letterSpacing: "-0.024em", fontWeight: 500, marginTop: 6, color: "var(--ink)" }}>
-            Hey, <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>Tunde</em>.
+            Hey, <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>{firstName}</em>.
           </h1>
         </div>
 
         {/* KPI row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+        <div className="mh-kpis">
           {[
             { label: "Streak", value: "32 days", delta: "↑ personal best" },
             { label: "This week", value: "4 / 5", delta: "1 more to hit goal" },
@@ -86,7 +125,7 @@ export default function MemberHomePage() {
         </div>
 
         {/* Main grid: 2fr 1fr */}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
+        <div className="mh-grid">
           {/* Left column */}
           <div>
             {/* Next up card */}
@@ -107,7 +146,7 @@ export default function MemberHomePage() {
             {/* Week plan card */}
             <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 12, padding: 22, marginBottom: 14 }}>
               <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}>This week&apos;s plan · 4/5</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+              <div className="mh-week">
                 {WEEK.map((d) => {
                   let bg = "var(--bg-2)";
                   let color = "var(--fg-3)";
