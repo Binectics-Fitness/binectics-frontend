@@ -7,6 +7,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { openCommandBar } from "@/hooks/useCommandBar";
 import { NotificationsDrawer } from "@/components/ds/NotificationsDrawer";
 
+const NAV_LINKS = [
+  { label: "Home", href: "/member" },
+  { label: "Marketplace", href: "/marketplace" },
+  { label: "Bookings", href: "/dashboard/bookings" },
+  { label: "Messages", href: "/dashboard/messages" },
+  { label: "Activity", href: "/dashboard/member/streaks" },
+];
+
 const WEEK = [
   { day: "Mon", date: 19, done: true },
   { day: "Tue", date: 20, done: true },
@@ -22,6 +30,7 @@ export default function MemberHomePage() {
   const firstName = user?.first_name || "there";
   const initials = user ? `${(user.first_name?.[0] || "").toUpperCase()}${(user.last_name?.[0] || "").toUpperCase()}` : "—";
   const [notifOpen, setNotifOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh", fontFamily: "var(--font-sans)" }}>
@@ -33,22 +42,30 @@ export default function MemberHomePage() {
         .mh-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .mh-topbar { padding: 12px 32px; }
         .mh-hamburger { display: none; }
+        .mh-mobile-menu { display: none; }
+        .mh-next-up { display: flex; gap: 14px; align-items: center; }
+        .mh-next-up-img { width: 56px; height: 56px; flex-shrink: 0; }
         @media (max-width: 1024px) {
           .mh-kpis { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
           .mh-nav-links { display: none; }
           .mh-hamburger { display: flex; }
+          .mh-mobile-menu { display: flex; }
           .mh-topbar { padding: 12px 16px; }
           .mh-shell { padding: 20px 16px; }
           .mh-kpis { grid-template-columns: 1fr 1fr; }
           .mh-grid { grid-template-columns: 1fr; }
           .mh-shell h1 { font-size: 24px !important; }
+          .mh-next-up { flex-direction: column; align-items: stretch; }
+          .mh-next-up-img { width: 100%; height: 80px; }
         }
         @media (max-width: 480px) {
           .mh-shell { padding: 16px 14px; }
           .mh-kpis { grid-template-columns: 1fr; }
-          .mh-week { grid-template-columns: repeat(7, 1fr); gap: 3px; }
+          .mh-week { gap: 3px; }
+          .mh-week > div { padding: 4px !important; }
+          .mh-week .mh-day-num { font-size: 14px !important; }
         }
       `}</style>
 
@@ -56,44 +73,22 @@ export default function MemberHomePage() {
       <header className="mh-topbar" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 5 }}>
         <Link href="/" style={{ textDecoration: "none" }}><BinecticsLockup /></Link>
         <nav className="mh-nav-links">
-          {[
-            { label: "Home", href: "/member" },
-            { label: "Marketplace", href: "/marketplace" },
-            { label: "Bookings", href: "/dashboard/bookings" },
-            { label: "Messages", href: "/dashboard/messages" },
-            { label: "Activity", href: "/dashboard/member/streaks" },
-          ].map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              style={{ padding: "7px 12px", color: link.label === "Home" ? "var(--ink)" : "var(--fg-2)", textDecoration: "none", fontSize: "13.5px", borderRadius: 6 }}
-            >
+          {NAV_LINKS.map((link) => (
+            <Link key={link.label} href={link.href} style={{ padding: "7px 12px", color: link.label === "Home" ? "var(--ink)" : "var(--fg-2)", textDecoration: "none", fontSize: "13.5px", borderRadius: 6 }}>
               {link.label}
             </Link>
           ))}
         </nav>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button
-            type="button"
-            className="mh-hamburger"
-            style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+          <button type="button" className="mh-hamburger" onClick={() => setMenuOpen(!menuOpen)} style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              {menuOpen ? <><path d="M18 6L6 18" /><path d="M6 6l12 12" /></> : <><path d="M4 6h16M4 12h16M4 18h16" /></>}
+            </svg>
           </button>
-          <button
-            type="button"
-            title="Search · ⌘K"
-            onClick={openCommandBar}
-            style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}
-          >
+          <button type="button" title="Search" onClick={openCommandBar} style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           </button>
-          <button
-            type="button"
-            title="Notifications"
-            onClick={() => setNotifOpen(true)}
-            style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}
-          >
+          <button type="button" title="Notifications" onClick={() => setNotifOpen(true)} style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--fg-2)" }}>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M14 21a2 2 0 0 1-4 0" /></svg>
           </button>
           <Link href="/member/settings" style={{ textDecoration: "none" }}>
@@ -101,6 +96,22 @@ export default function MemberHomePage() {
           </Link>
         </div>
       </header>
+
+      {/* ── Mobile menu ── */}
+      {menuOpen && (
+        <div className="mh-mobile-menu" style={{ flexDirection: "column", background: "var(--bg)", borderBottom: "1px solid var(--border)", padding: "8px 16px 14px" }}>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+              style={{ padding: "10px 12px", color: link.label === "Home" ? "var(--ink)" : "var(--fg-2)", textDecoration: "none", fontSize: 14, fontWeight: link.label === "Home" ? 500 : 400, borderRadius: 6 }}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* ── Shell ── */}
       <main className="mh-shell">
@@ -130,26 +141,25 @@ export default function MemberHomePage() {
           ))}
         </div>
 
-        {/* Main grid: 2fr 1fr */}
+        {/* Main grid */}
         <div className="mh-grid">
-          {/* Left column */}
           <div>
-            {/* Next up card */}
+            {/* Next up */}
             <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 12, padding: 22, marginBottom: 14 }}>
               <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}>Next up</h3>
-              <div style={{ display: "flex", gap: 14, alignItems: "center", padding: 16, background: "var(--bg-2)", borderRadius: 10 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 8, background: "linear-gradient(135deg, oklch(0.85 0.05 60), oklch(0.72 0.08 40))", flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
+              <div className="mh-next-up" style={{ padding: 16, background: "var(--bg-2)", borderRadius: 10 }}>
+                <div className="mh-next-up-img" style={{ borderRadius: 8, background: "linear-gradient(135deg, oklch(0.85 0.05 60), oklch(0.72 0.08 40))" }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 500, color: "var(--ink)" }}>Strength session · Sarah Okafor</div>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.04em", marginTop: 3 }}>
                     Wed 28 May · 08:30 · 60 min · Iron Lab Sea Point
                   </div>
                 </div>
-                <Link href="/dashboard/bookings" className="btn-primary-v2 sm">Details</Link>
+                <Link href="/dashboard/bookings" className="btn-primary-v2 sm" style={{ flexShrink: 0 }}>Details</Link>
               </div>
             </div>
 
-            {/* Week plan card */}
+            {/* Week plan */}
             <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 12, padding: 22, marginBottom: 14 }}>
               <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}>This week&apos;s plan · 4/5</h3>
               <div className="mh-week">
@@ -161,7 +171,7 @@ export default function MemberHomePage() {
                   return (
                     <div key={d.day} style={{ aspectRatio: "1", background: bg, color, borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 8 }}>
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: "9.5px", textTransform: "uppercase", letterSpacing: "0.04em", opacity: 0.7 }}>{d.day}</div>
-                      <div style={{ fontSize: 18, fontWeight: 500 }}>{d.date}</div>
+                      <div className="mh-day-num" style={{ fontSize: 18, fontWeight: 500 }}>{d.date}</div>
                       {d.done && (
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12l5 5L20 7" /></svg>
                       )}
@@ -174,7 +184,6 @@ export default function MemberHomePage() {
 
           {/* Right column */}
           <div>
-            {/* Quick log card */}
             <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 12, padding: 22 }}>
               <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}>Quick log</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
