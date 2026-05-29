@@ -110,9 +110,12 @@ class ApiClient {
         }
       }
 
+      const rawMsg = data.message || data.error || "An error occurred";
+      const message = Array.isArray(rawMsg) ? rawMsg.join(". ") : String(rawMsg);
+
       return {
         success: false,
-        message: data.message || data.error || "An error occurred",
+        message,
         errors: data.errors,
         code: typeof data.error === "string" ? data.error : undefined,
         details:

@@ -178,12 +178,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.success && response.data) {
         setUser(response.data.user);
-        if (response.data.user.must_change_password) {
+        const u = response.data.user;
+        if (u.must_change_password) {
           router.push("/admin/change-password");
-        } else if (response.data.user.is_onboarding_complete === false) {
-          router.push(getOnboardingRoute(response.data.user.role));
+        } else if (!u.is_onboarding_complete) {
+          router.push(getOnboardingRoute(u.role));
         } else {
-          router.push(getDashboardRoute(response.data.user.role));
+          // Check for redirect param from middleware (e.g. user tried to access a protected page)
+          const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+          const redirect = params?.get("redirect");
+          router.push(redirect || getDashboardRoute(u.role));
         }
         return { success: true };
       }

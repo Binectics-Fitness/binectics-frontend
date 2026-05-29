@@ -10,6 +10,7 @@ const protectedRoutes = [
   "/check-in",
   "/checkout",
   "/teams",
+  "/onboarding",
 ];
 
 // Routes that should redirect to dashboard if already authenticated
@@ -84,6 +85,21 @@ export function middleware(request: NextRequest) {
         NextResponse.redirect(new URL("/admin/change-password", request.url)),
       );
     }
+    const onboardingComplete = request.cookies.get("onboarding_complete")?.value === "1";
+    const role = request.cookies.get("user_role")?.value ?? "";
+
+    if (!onboardingComplete) {
+      const onboardingMapping: Record<string, string> = {
+        USER: "/onboarding/member",
+        GYM_OWNER: "/onboarding/gym-owner",
+        TRAINER: "/onboarding/trainer",
+        DIETITIAN: "/onboarding/dietitian",
+        ADMIN: "/admin/dashboard",
+      };
+      const onboardingPath = onboardingMapping[role] || "/onboarding/member";
+      return withRegion(NextResponse.redirect(new URL(onboardingPath, request.url)));
+    }
+
     const roleMapping: Record<string, string> = {
       USER: "/marketplace",
       GYM_OWNER: "/dashboard/gym-owner",
@@ -91,8 +107,7 @@ export function middleware(request: NextRequest) {
       DIETITIAN: "/dashboard/dietitian",
       ADMIN: "/admin/dashboard",
     };
-    const role = request.cookies.get("user_role")?.value ?? "";
-    const dashboardPath = roleMapping[role] || "/dashboard";
+    const dashboardPath = roleMapping[role] || "/marketplace";
     return withRegion(NextResponse.redirect(new URL(dashboardPath, request.url)));
   }
 
