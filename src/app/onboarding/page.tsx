@@ -83,7 +83,7 @@ function OnboardingContent() {
       setStep(step + 1);
     } else {
       const routes: Record<RoleId, string> = {
-        member: "/marketplace",
+        member: "/member",
         trainer: "/dashboard/trainer",
         gym: "/dashboard/gym-owner",
         dietitian: "/dashboard/dietitian",

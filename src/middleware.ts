@@ -5,6 +5,7 @@ import { REGION_COOKIE, REGION_OVERRIDE_COOKIE } from "@/lib/constants/regions";
 // Routes that require authentication
 const protectedRoutes = [
   "/dashboard",
+  "/member",
   "/admin/",
   "/forms",
   "/check-in",
@@ -101,7 +102,7 @@ export function middleware(request: NextRequest) {
     }
 
     const roleMapping: Record<string, string> = {
-      USER: "/marketplace",
+      USER: "/member",
       GYM_OWNER: "/dashboard/gym-owner",
       TRAINER: "/dashboard/trainer",
       DIETITIAN: "/dashboard/dietitian",

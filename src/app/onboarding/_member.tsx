@@ -76,10 +76,10 @@ export function MemberStep4({ data }: StepProps) {
     <>
       <StageHead crumb="Step 04 of 04 — member track" title="You're all set." desc={`We've found providers in ${city} who match. Browse, book, or skip to the marketplace.`} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
-        <Link href="/marketplace" className="btn-primary-v2 lg" style={{ justifyContent: "center", width: "100%", textAlign: "center" }}>
+        <Link href="/member" className="btn-primary-v2 lg" style={{ justifyContent: "center", width: "100%", textAlign: "center" }}>
           Browse marketplace →
         </Link>
-        <Link href="/marketplace" className="btn-ghost-v2 lg" style={{ justifyContent: "center", width: "100%", textAlign: "center" }}>
+        <Link href="/member" className="btn-ghost-v2 lg" style={{ justifyContent: "center", width: "100%", textAlign: "center" }}>
           Skip for now
         </Link>
       </div>
