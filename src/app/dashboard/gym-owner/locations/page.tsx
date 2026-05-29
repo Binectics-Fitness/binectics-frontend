@@ -118,7 +118,7 @@ export default function LocationsPage() {
               <div className="font-mono text-[11.5px] uppercase tracking-[0.04em] mt-1" style={{ color: "var(--fg-3)" }}>{loc.addr}</div>
 
               {/* Stats */}
-              <div className="grid grid-cols-4 mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+              <div className="grid grid-cols-2 sm:grid-cols-4 mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
                 {loc.stats.map((s, i) => (
                   <div key={s.label} className="px-3" style={{ borderRight: i < 3 ? "1px solid var(--border)" : "none", paddingLeft: i === 0 ? 0 : undefined, paddingRight: i === 3 ? 0 : undefined }}>
                     <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.label}</div>

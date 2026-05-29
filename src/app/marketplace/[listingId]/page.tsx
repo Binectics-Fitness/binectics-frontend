@@ -288,9 +288,9 @@ export default function ProviderPage() {
                     )}
                     <div className="mt-auto">
                       {i === 0 ? (
-                        <button className="btn-signal-v2 w-full" style={{ height: "34px" }}>Choose {p.name}</button>
+                        <button className="btn-signal-v2 w-full" style={{ height: "44px" }}>Choose {p.name}</button>
                       ) : (
-                        <button className="btn-ghost-v2 w-full" style={{ height: "34px" }}>Choose {p.name}</button>
+                        <button className="btn-ghost-v2 w-full" style={{ height: "44px" }}>Choose {p.name}</button>
                       )}
                     </div>
                   </div>

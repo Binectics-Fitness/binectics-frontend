@@ -18,10 +18,9 @@ export default function GlobalError({
       <body
         style={{
           margin: 0,
-          fontFamily:
-            'CeraPro, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          background: "#f7f4ef",
-          color: "#03314b",
+          fontFamily: 'Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
+          background: "oklch(0.985 0.005 85)",
+          color: "oklch(0.16 0.01 80)",
         }}
       >
         <div
@@ -42,12 +41,12 @@ export default function GlobalError({
                 width: "4rem",
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: "1rem",
-                backgroundColor: "#fee2e2",
+                borderRadius: 10,
+                backgroundColor: "oklch(0.95 0.03 25)",
               }}
             >
               <svg
-                style={{ height: "2rem", width: "2rem", color: "#ef4444" }}
+                style={{ height: "2rem", width: "2rem", color: "oklch(0.58 0.18 25)" }}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -63,7 +62,8 @@ export default function GlobalError({
             <h2
               style={{
                 fontSize: "1.5rem",
-                fontWeight: 900,
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
                 marginBottom: "0.5rem",
               }}
             >
@@ -72,7 +72,7 @@ export default function GlobalError({
             <p
               style={{
                 fontSize: "0.875rem",
-                color: "#6b7280",
+                color: "oklch(0.55 0.01 80)",
                 marginBottom: "1.5rem",
               }}
             >
@@ -81,8 +81,9 @@ export default function GlobalError({
             {error.digest && (
               <p
                 style={{
+                  fontFamily: "Geist Mono, ui-monospace, monospace",
                   fontSize: "0.75rem",
-                  color: "#9ca3af",
+                  color: "oklch(0.72 0.005 80)",
                   marginBottom: "1rem",
                 }}
               >
@@ -93,16 +94,16 @@ export default function GlobalError({
               onClick={() => reset()}
               style={{
                 padding: "0.625rem 2rem",
-                backgroundColor: "#00d991",
-                color: "#03314b",
-                fontWeight: 600,
+                backgroundColor: "oklch(0.16 0.01 80)",
+                color: "oklch(0.985 0.005 85)",
+                fontWeight: 500,
                 fontSize: "0.875rem",
                 border: "none",
-                borderRadius: "0.5rem",
+                borderRadius: 6,
                 cursor: "pointer",
               }}
             >
-              Try Again
+              Try again
             </button>
           </div>
         </div>

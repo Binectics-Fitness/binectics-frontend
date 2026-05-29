@@ -39,7 +39,7 @@ export default function GymLocationsPage() {
             <div className="px-4.5 py-4">
               <h3 className="text-[18px] font-medium" style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>{l.name}</h3>
               <div className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>{l.addr}</div>
-              <div className="grid grid-cols-4 gap-3 mt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
                 {[
                   { k: "Members", v: l.members },
                   { k: "Floor m²", v: l.floor },
