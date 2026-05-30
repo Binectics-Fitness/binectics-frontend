@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
-import { authService } from "@/lib/api/auth";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import { MEMBER_STEPS } from "./_member";
@@ -87,14 +86,6 @@ function OnboardingContent() {
     }
   }, [completed, user]);
 
-  useEffect(() => {
-    if (role && step >= totalSteps && !completed) {
-      markOnboardingDone();
-      setCompleted(true);
-      authService.updateProfile({ is_onboarding_complete: true }).catch(() => {});
-    }
-  }, [step, role, totalSteps, completed]);
-
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
   }, []);
@@ -113,7 +104,7 @@ function OnboardingContent() {
       setStep(step + 1);
     } else if (role) {
       markOnboardingDone();
-      authService.updateProfile({ is_onboarding_complete: true }).catch(() => {});
+      setCompleted(true);
       const routes: Record<RoleId, string> = {
         member: "/member",
         trainer: "/dashboard/trainer",
