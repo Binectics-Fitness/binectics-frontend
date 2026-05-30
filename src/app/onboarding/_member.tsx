@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { StepProps, StageHead, FormGrid, Field, TextInput, ChipGrid, RadioCards } from "./_components";
 
 function toggleChip(list: string[], chip: string): string[] {
@@ -74,14 +73,12 @@ export function MemberStep4({ data }: StepProps) {
   const city = (data.city as string) || "your area";
   return (
     <>
-      <StageHead crumb="Step 04 of 04 — member track" title="You're all set." desc={`We've found providers in ${city} who match. Browse, book, or skip to the marketplace.`} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
-        <Link href="/member" className="btn-primary-v2 lg" style={{ justifyContent: "center", width: "100%", textAlign: "center" }}>
-          Browse marketplace →
-        </Link>
-        <Link href="/member" className="btn-ghost-v2 lg" style={{ justifyContent: "center", width: "100%", textAlign: "center" }}>
-          Skip for now
-        </Link>
+      <StageHead crumb="Step 04 of 04 — member track" title="You're all set." desc={`We've found providers in ${city} who match. Hit "Go to dashboard" below to start exploring.`} />
+      <div style={{ padding: 20, background: "var(--bg-2)", borderRadius: "var(--r-3)", border: "1px solid var(--border)" }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 8 }}>What happens next</div>
+        <div style={{ fontSize: "13.5px", color: "var(--fg-2)", lineHeight: 1.55 }}>
+          Browse the marketplace, book your first session, and track your progress — all from your home page.
+        </div>
       </div>
     </>
   );

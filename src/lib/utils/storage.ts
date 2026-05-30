@@ -117,12 +117,11 @@ export const userStorage = {
         "must_change_password=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
 
-    // Mirror onboarding status so middleware can route correctly
-    if (user.is_onboarding_complete) {
+    // Mirror onboarding status so middleware can route correctly.
+    // Preserve local completion flag — the API may not reflect it yet.
+    const localDone = localStorage.getItem("binectics_onboarding_done") === "1";
+    if (user.is_onboarding_complete || localDone) {
       document.cookie = `onboarding_complete=1; path=/; max-age=${maxAge}; SameSite=Lax`;
-    } else {
-      document.cookie =
-        "onboarding_complete=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
   },
 
