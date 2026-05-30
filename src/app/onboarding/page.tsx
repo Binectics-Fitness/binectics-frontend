@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDashboardRoute } from "@/lib/constants/routes";
 import { authService } from "@/lib/api/auth";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
@@ -75,24 +74,26 @@ function OnboardingContent() {
   const [role, setRole] = useState<RoleId | null>(preselected);
   const [step, setStep] = useState(preselected ? 1 : 0);
   const [data, setData] = useState<Record<string, unknown>>({});
+  const [completed, setCompleted] = useState(isOnboardingDone);
 
   const roleDef = role ? ROLES.find((r) => r.id === role) : null;
   const steps = roleDef?.steps || GENERIC_STEPS;
   const totalSteps = steps.length;
 
   useEffect(() => {
-    if (isOnboardingDone() && user) {
-      router.replace(getDashboardRoute(user.role));
+    if (completed && user) {
+      const routes: Record<string, string> = { USER: "/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
+      window.location.replace(routes[user.role] || "/member");
     }
-  }, [user, router]);
+  }, [completed, user]);
 
   useEffect(() => {
-    if (role && step >= totalSteps) {
+    if (role && step >= totalSteps && !completed) {
       markOnboardingDone();
-      if (user) updateUser({ ...user, is_onboarding_complete: true });
+      setCompleted(true);
       authService.updateProfile({ is_onboarding_complete: true }).catch(() => {});
     }
-  }, [step, role, totalSteps, user, updateUser]);
+  }, [step, role, totalSteps, completed]);
 
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -112,7 +113,6 @@ function OnboardingContent() {
       setStep(step + 1);
     } else if (role) {
       markOnboardingDone();
-      if (user) updateUser({ ...user, is_onboarding_complete: true });
       authService.updateProfile({ is_onboarding_complete: true }).catch(() => {});
       const routes: Record<RoleId, string> = {
         member: "/member",
@@ -120,7 +120,7 @@ function OnboardingContent() {
         gym: "/dashboard/gym-owner",
         dietitian: "/dashboard/dietitian",
       };
-      router.replace(routes[role]);
+      window.location.href = routes[role];
     }
   };
 
