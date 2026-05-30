@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +31,13 @@ export default function MemberHomePage() {
   const initials = user ? `${(user.first_name?.[0] || "").toUpperCase()}${(user.last_name?.[0] || "").toUpperCase()}` : "—";
   const [notifOpen, setNotifOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("binectics_onboarding_done", "1");
+      document.cookie = "onboarding_complete=1; path=/; max-age=31536000; SameSite=Lax";
+    }
+  }, []);
 
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh", fontFamily: "var(--font-sans)" }}>

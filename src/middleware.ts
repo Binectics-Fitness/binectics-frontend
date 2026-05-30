@@ -94,21 +94,7 @@ export function middleware(request: NextRequest) {
         NextResponse.redirect(new URL("/admin/change-password", request.url)),
       );
     }
-    const onboardingComplete = request.cookies.get("onboarding_complete")?.value === "1";
     const role = request.cookies.get("user_role")?.value ?? "";
-
-    if (!onboardingComplete) {
-      const onboardingMapping: Record<string, string> = {
-        USER: "/onboarding",
-        GYM_OWNER: "/onboarding/gym-owner",
-        TRAINER: "/onboarding/trainer",
-        DIETITIAN: "/onboarding/dietitian",
-        ADMIN: "/admin/dashboard",
-      };
-      const onboardingPath = onboardingMapping[role] || "/onboarding";
-      return withRegion(NextResponse.redirect(new URL(onboardingPath, request.url)));
-    }
-
     const roleMapping: Record<string, string> = {
       USER: "/member",
       GYM_OWNER: "/dashboard/gym-owner",
@@ -116,7 +102,7 @@ export function middleware(request: NextRequest) {
       DIETITIAN: "/dashboard/dietitian",
       ADMIN: "/admin/dashboard",
     };
-    const dashboardPath = roleMapping[role] || "/marketplace";
+    const dashboardPath = roleMapping[role] || "/member";
     return withRegion(NextResponse.redirect(new URL(dashboardPath, request.url)));
   }
 

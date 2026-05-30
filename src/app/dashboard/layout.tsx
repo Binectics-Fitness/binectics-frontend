@@ -15,6 +15,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     const prev = document.body.style.background;
     document.body.style.background = "var(--bg-2)";
+    localStorage.setItem("binectics_onboarding_done", "1");
+    document.cookie = "onboarding_complete=1; path=/; max-age=31536000; SameSite=Lax";
     return () => { document.body.style.background = prev; };
   }, []);
 

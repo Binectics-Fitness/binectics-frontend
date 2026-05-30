@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/api/auth";
-import { getDashboardRoute, getOnboardingRoute, getLoginRoute } from "@/lib/constants/routes";
+import { getDashboardRoute, getLoginRoute } from "@/lib/constants/routes";
 import { tokenStorage } from "@/lib/utils/storage";
 import { apiClient } from "@/lib/api/client";
 import SessionModal from "@/components/SessionModal";
@@ -179,13 +179,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.success && response.data) {
         setUser(response.data.user);
         const u = response.data.user;
-        const localOnboardingDone = typeof window !== "undefined" && localStorage.getItem("binectics_onboarding_done") === "1";
         if (u.must_change_password) {
           router.push("/admin/change-password");
-        } else if (!u.is_onboarding_complete && !localOnboardingDone) {
-          router.push(getOnboardingRoute(u.role));
         } else {
-          // Check for redirect param from middleware (e.g. user tried to access a protected page)
           const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
           const redirect = params?.get("redirect");
           router.push(redirect || getDashboardRoute(u.role));
