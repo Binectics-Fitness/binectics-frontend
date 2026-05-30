@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/lib/api/auth";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import { MEMBER_STEPS } from "./_member";
@@ -87,6 +88,9 @@ function OnboardingContent() {
       if (user) {
         updateUser({ ...user, is_onboarding_complete: true });
       }
+      localStorage.setItem("binectics_onboarding_done", "1");
+      document.cookie = "onboarding_complete=1; path=/; max-age=31536000; SameSite=Lax";
+      authService.updateProfile({ is_onboarding_complete: true }).catch(() => {});
       const routes: Record<RoleId, string> = {
         member: "/member",
         trainer: "/dashboard/trainer",

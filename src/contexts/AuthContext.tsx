@@ -179,9 +179,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.success && response.data) {
         setUser(response.data.user);
         const u = response.data.user;
+        const localOnboardingDone = typeof window !== "undefined" && localStorage.getItem("binectics_onboarding_done") === "1";
         if (u.must_change_password) {
           router.push("/admin/change-password");
-        } else if (!u.is_onboarding_complete) {
+        } else if (!u.is_onboarding_complete && !localOnboardingDone) {
           router.push(getOnboardingRoute(u.role));
         } else {
           // Check for redirect param from middleware (e.g. user tried to access a protected page)
