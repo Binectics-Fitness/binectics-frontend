@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, Suspense } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
+import { getDashboardRoute } from "@/lib/constants/routes";
 import { authService } from "@/lib/api/auth";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
@@ -53,6 +54,17 @@ export default function OnboardingPage() {
 
 const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 
+function isOnboardingDone(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("binectics_onboarding_done") === "1";
+}
+
+function markOnboardingDone() {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("binectics_onboarding_done", "1");
+  document.cookie = "onboarding_complete=1; path=/; max-age=31536000; SameSite=Lax";
+}
+
 function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -64,13 +76,27 @@ function OnboardingContent() {
   const [step, setStep] = useState(preselected ? 1 : 0);
   const [data, setData] = useState<Record<string, unknown>>({});
 
-  const setField = useCallback((key: string, value: unknown) => {
-    setData((prev) => ({ ...prev, [key]: value }));
-  }, []);
-
   const roleDef = role ? ROLES.find((r) => r.id === role) : null;
   const steps = roleDef?.steps || GENERIC_STEPS;
   const totalSteps = steps.length;
+
+  useEffect(() => {
+    if (isOnboardingDone() && user) {
+      router.replace(getDashboardRoute(user.role));
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    if (role && step >= totalSteps) {
+      markOnboardingDone();
+      if (user) updateUser({ ...user, is_onboarding_complete: true });
+      authService.updateProfile({ is_onboarding_complete: true }).catch(() => {});
+    }
+  }, [step, role, totalSteps, user, updateUser]);
+
+  const setField = useCallback((key: string, value: unknown) => {
+    setData((prev) => ({ ...prev, [key]: value }));
+  }, []);
   const progress = step === 0 ? 0 : Math.round((step / totalSteps) * 100);
   const minsLeft = Math.max(1, Math.round(((totalSteps - step) / totalSteps) * 8));
 
@@ -84,12 +110,9 @@ function OnboardingContent() {
       setStep(1);
     } else if (step < totalSteps) {
       setStep(step + 1);
-    } else {
-      if (user) {
-        updateUser({ ...user, is_onboarding_complete: true });
-      }
-      localStorage.setItem("binectics_onboarding_done", "1");
-      document.cookie = "onboarding_complete=1; path=/; max-age=31536000; SameSite=Lax";
+    } else if (role) {
+      markOnboardingDone();
+      if (user) updateUser({ ...user, is_onboarding_complete: true });
       authService.updateProfile({ is_onboarding_complete: true }).catch(() => {});
       const routes: Record<RoleId, string> = {
         member: "/member",
@@ -97,7 +120,7 @@ function OnboardingContent() {
         gym: "/dashboard/gym-owner",
         dietitian: "/dashboard/dietitian",
       };
-      if (role) router.push(routes[role]);
+      router.replace(routes[role]);
     }
   };
 

@@ -50,7 +50,15 @@ export function middleware(request: NextRequest) {
     return res;
   }
 
-  // PROTOTYPE_MODE removed — auth is now enforced
+  // If user is on /onboarding but already completed it, redirect to dashboard
+  if (token && pathname.startsWith("/onboarding")) {
+    const onboardingDone = request.cookies.get("onboarding_complete")?.value === "1";
+    if (onboardingDone) {
+      const role = request.cookies.get("user_role")?.value ?? "";
+      const dashMap: Record<string, string> = { USER: "/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
+      return withRegion(NextResponse.redirect(new URL(dashMap[role] || "/member", request.url)));
+    }
+  }
 
   // Check if the current route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>
