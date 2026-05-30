@@ -3,10 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDashboardRoute } from "@/lib/constants/routes";
-import { UserRole } from "@/lib/types";
-
-const ALLOWED_ROLES = [UserRole.GYM_OWNER, UserRole.TRAINER, UserRole.DIETITIAN];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -24,10 +20,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (isLoading) return;
     if (!user) {
       router.replace("/login");
-      return;
-    }
-    if (!ALLOWED_ROLES.includes(user.role)) {
-      router.replace(getDashboardRoute(user.role));
     }
   }, [user, isLoading, router]);
 
@@ -39,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!user || !ALLOWED_ROLES.includes(user.role)) return null;
+  if (!user) return null;
 
   return <>{children}</>;
 }
