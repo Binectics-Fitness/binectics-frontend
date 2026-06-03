@@ -276,6 +276,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  height: 38px;
+  padding: 0 16px;
   background: transparent;
   color: var(--fg-2);
   border: 1px solid var(--border);
@@ -284,6 +286,8 @@ button {
   font-weight: 500;
   letter-spacing: -0.005em;
   white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
   transition: background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast);
 }
 .btn-ghost-v2:hover {
@@ -301,6 +305,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  height: 38px;
+  padding: 0 16px;
   background: var(--signal);
   color: var(--signal-ink);
   border: 1px solid transparent;
@@ -309,6 +315,8 @@ button {
   font-weight: 500;
   letter-spacing: -0.005em;
   white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
   transition: background var(--motion-fast);
 }
 .btn-signal-v2:hover {
@@ -322,6 +330,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  height: 38px;
+  padding: 0 16px;
   background: var(--ink);
   color: var(--bg);
   border: 1px solid transparent;
@@ -330,6 +340,8 @@ button {
   font-weight: 500;
   letter-spacing: -0.005em;
   white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
   transition: background var(--motion-fast);
 }
 .btn-primary-v2:hover {
