@@ -37,11 +37,19 @@ export enum NotificationType {
   ACCOUNT_SUSPENDED = "ACCOUNT_SUSPENDED",
 }
 
+export enum NotificationCategory {
+  BOOKING = "booking",
+  PAYMENT = "payment",
+  MENTION = "mention",
+  SYSTEM = "system",
+}
+
 // ─── Interfaces ─────────────────────────────────────────────────
 
 export interface NotificationItem {
   id: string;
   type: NotificationType;
+  category: NotificationCategory;
   title: string;
   message: string;
   isRead: boolean;
@@ -61,6 +69,18 @@ export interface NotificationPagination {
 export interface PaginatedNotifications {
   notifications: NotificationItem[];
   pagination: NotificationPagination;
+}
+
+export interface NotificationUnreadByCategory {
+  [NotificationCategory.BOOKING]: number;
+  [NotificationCategory.PAYMENT]: number;
+  [NotificationCategory.MENTION]: number;
+  [NotificationCategory.SYSTEM]: number;
+}
+
+export interface NotificationUnreadCount {
+  count: number;
+  by_category: NotificationUnreadByCategory;
 }
 
 export interface NotificationPreferences {
@@ -86,6 +106,7 @@ export const notificationsService = {
     limit?: number;
     is_read?: boolean;
     type?: NotificationType;
+    category?: NotificationCategory;
   }): Promise<ApiResponse<PaginatedNotifications>> {
     const search = new URLSearchParams();
     if (params?.page) search.set("page", String(params.page));
@@ -93,14 +114,17 @@ export const notificationsService = {
     if (params?.is_read !== undefined)
       search.set("is_read", String(params.is_read));
     if (params?.type) search.set("type", params.type);
+    if (params?.category) search.set("category", params.category);
     const query = search.toString();
     return apiClient.get<PaginatedNotifications>(
       `/notifications${query ? `?${query}` : ""}`,
     );
   },
 
-  getUnreadCount(): Promise<ApiResponse<{ count: number }>> {
-    return apiClient.get<{ count: number }>("/notifications/unread-count");
+  getUnreadCount(): Promise<ApiResponse<NotificationUnreadCount>> {
+    return apiClient.get<NotificationUnreadCount>(
+      "/notifications/unread-count",
+    );
   },
 
   markAsRead(

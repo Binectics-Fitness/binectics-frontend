@@ -31,6 +31,14 @@ export interface PlatformConfig {
   amenity_suggestions: string[];
 }
 
+export interface GeoResolveResponse {
+  country: string;
+  currency: string;
+  locale: string;
+  region_name: string;
+  source: "ip_header" | "accept_language" | "default";
+}
+
 class UtilityService {
   async getCountries(): Promise<ApiResponse<CountryItem[]>> {
     return await apiClient.get<CountryItem[]>("/utility/countries");
@@ -38,6 +46,10 @@ class UtilityService {
 
   async getPlatformConfig(): Promise<ApiResponse<PlatformConfig>> {
     return await apiClient.get<PlatformConfig>("/utility/platform-config");
+  }
+
+  async resolveGeo(): Promise<ApiResponse<GeoResolveResponse>> {
+    return await apiClient.get<GeoResolveResponse>("/geo/resolve", false);
   }
 }
 

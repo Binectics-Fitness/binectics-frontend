@@ -1,10 +1,33 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import type { Metadata } from "next";
+import { formatCurrency, formatSignedCurrency } from "@/utils/format";
 
 export const metadata: Metadata = {
   title: "Earnings",
   description: "Track your training earnings, payouts, and revenue trends.",
 };
+
+const EARNINGS_CURRENCY = "ZAR";
+
+const KPI_CARDS = [
+  { label: "Sessions · 30d", value: "68", delta: "88% utilization" },
+  { label: "Avg session", amount: 1150, deltaAmount: 18, deltaLabel: "MoM" },
+  { label: "Refunds", amount: 1200, delta: "1 of 68 · 1.5%", muted: true },
+  { label: "Platform fee", amount: 4140, delta: "5% of gross", muted: true },
+];
+
+const RECENT_EARNINGS = [
+  { date: "17 May 09:42", client: "Wei Chen · Olympic 12‑pack renewal", status: "pending", statusLabel: "Pending · Tue", amount: 12400, currency: "ZAR", refund: false },
+  { date: "13 May 14:18", client: "Linda Mokoena · session 14 / 24", status: "paid", statusLabel: "Paid", amount: 1140, currency: "ZAR", refund: false },
+  { date: "13 May 09:00", client: "Weekly payout · 14 sessions", status: "paid", statusLabel: "Paid · ABSA", amount: 14820, currency: "ZAR", refund: false },
+  { date: "11 May 17:00", client: "Mike Khumalo · session 22 / 24", status: "paid", statusLabel: "Paid", amount: 1140, currency: "ZAR", refund: false },
+  { date: "11 May 13:00", client: "Pier Botha · refund · 33h notice", status: "refund", statusLabel: "Refunded", amount: -1200, currency: "ZAR", refund: true },
+  { date: "06 May 11:30", client: "Aisha Adams · online monthly", status: "paid", statusLabel: "Paid", amount: 320, currency: "USD", refund: false },
+  { date: "06 May 09:00", client: "Weekly payout · 12 sessions", status: "paid", statusLabel: "Paid · ABSA", amount: 12840, currency: "ZAR", refund: false },
+  { date: "02 May 08:00", client: "Linda Mokoena · 24‑session pack", status: "paid", statusLabel: "Paid", amount: 14400, currency: "ZAR", refund: false },
+  { date: "28 Apr 11:00", client: "Wei Chen · Olympic 12‑pack", status: "paid", statusLabel: "Paid", amount: 14400, currency: "ZAR", refund: false },
+  { date: "22 Apr 15:30", client: "Thandi Nkosi · postnatal 12‑pack", status: "paid", statusLabel: "Paid", amount: 11400, currency: "ZAR", refund: false },
+];
 
 export default function TrainerEarningsPage() {
   return (
@@ -18,33 +41,28 @@ export default function TrainerEarningsPage() {
       <div className="rounded-(--r-3) grid grid-cols-1 sm:grid-cols-3 gap-8 items-center" style={{ background: "var(--ink)", color: "var(--bg)", padding: "28px 32px" }}>
         <div>
           <div className="font-mono text-[11px] uppercase" style={{ letterSpacing: "0.05em", color: "oklch(0.65 0.005 85)" }}>Net to your account · this month</div>
-          <div className="text-[44px] font-medium mt-1.5" style={{ letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>R 38,400.00</div>
+          <div className="text-[44px] font-medium mt-1.5" style={{ letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{formatCurrency(38400, EARNINGS_CURRENCY, "en-ZA")}</div>
           <div className="font-mono text-[11.5px] mt-2 uppercase" style={{ letterSpacing: "0.04em", color: "oklch(0.75 0.005 85)" }}>68 sessions completed · next payout Tue 19 May to ABSA •••• 3914</div>
         </div>
         <div>
           <div className="font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.04em", color: "oklch(0.65 0.005 85)" }}>Pending payout</div>
-          <div className="text-[22px] font-medium mt-1.5" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", lineHeight: 1 }}>R 12,400</div>
+          <div className="text-[22px] font-medium mt-1.5" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", lineHeight: 1 }}>{formatCurrency(12400, EARNINGS_CURRENCY, "en-ZA")}</div>
           <div className="font-mono text-[10.5px] uppercase mt-1" style={{ letterSpacing: "0.05em", color: "var(--signal)" }}>3 days · Tue</div>
         </div>
         <div>
           <div className="font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.04em", color: "oklch(0.65 0.005 85)" }}>YTD net</div>
-          <div className="text-[22px] font-medium mt-1.5" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", lineHeight: 1 }}>R 182k</div>
+          <div className="text-[22px] font-medium mt-1.5" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", lineHeight: 1 }}>{formatCurrency(182000, EARNINGS_CURRENCY, "en-ZA")}</div>
           <div className="font-mono text-[10.5px] uppercase mt-1" style={{ letterSpacing: "0.05em", color: "var(--signal)" }}>↑ 22% vs 2025</div>
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: "Sessions · 30d", value: "68", delta: "88% utilization" },
-          { label: "Avg session", value: "R 1,150", delta: "↑ R 18 MoM" },
-          { label: "Refunds", value: "R 1,200", delta: "1 of 68 · 1.5%", muted: true },
-          { label: "Platform fee", value: "R 4,140", delta: "5% of gross", muted: true },
-        ].map((k) => (
+        {KPI_CARDS.map((k) => (
           <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-            <div className="text-[22px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: k.muted ? "var(--fg-3)" : "var(--signal-ink)" }}>{k.delta}</div>
+            <div className="text-[22px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{"value" in k ? k.value : formatCurrency(k.amount, EARNINGS_CURRENCY, "en-ZA")}</div>
+            <div className="font-mono text-[11px] mt-1" style={{ color: k.muted ? "var(--fg-3)" : "var(--signal-ink)" }}>{k.deltaAmount !== undefined ? `↑ ${formatCurrency(k.deltaAmount, EARNINGS_CURRENCY, "en-ZA")} ${k.deltaLabel}` : k.delta}</div>
           </div>
         ))}
       </div>
@@ -89,18 +107,7 @@ export default function TrainerEarningsPage() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { date: "17 May 09:42", client: "Wei Chen · Olympic 12‑pack renewal", status: "pending", statusLabel: "Pending · Tue", net: "R 12,400.00", refund: false },
-                  { date: "13 May 14:18", client: "Linda Mokoena · session 14 / 24", status: "paid", statusLabel: "Paid", net: "R 1,140.00", refund: false },
-                  { date: "13 May 09:00", client: "Weekly payout · 14 sessions", status: "paid", statusLabel: "Paid · ABSA", net: "R 14,820.00", refund: false },
-                  { date: "11 May 17:00", client: "Mike Khumalo · session 22 / 24", status: "paid", statusLabel: "Paid", net: "R 1,140.00", refund: false },
-                  { date: "11 May 13:00", client: "Pier Botha · refund · 33h notice", status: "refund", statusLabel: "Refunded", net: "− R 1,200.00", refund: true },
-                  { date: "06 May 11:30", client: "Aisha Adams · online monthly", status: "paid", statusLabel: "Paid", net: "$ 320.00", refund: false },
-                  { date: "06 May 09:00", client: "Weekly payout · 12 sessions", status: "paid", statusLabel: "Paid · ABSA", net: "R 12,840.00", refund: false },
-                  { date: "02 May 08:00", client: "Linda Mokoena · 24‑session pack", status: "paid", statusLabel: "Paid", net: "R 14,400.00", refund: false },
-                  { date: "28 Apr 11:00", client: "Wei Chen · Olympic 12‑pack", status: "paid", statusLabel: "Paid", net: "R 14,400.00", refund: false },
-                  { date: "22 Apr 15:30", client: "Thandi Nkosi · postnatal 12‑pack", status: "paid", statusLabel: "Paid", net: "R 11,400.00", refund: false },
-                ].map((row, i) => {
+                {RECENT_EARNINGS.map((row, i) => {
                   const statusStyle = row.status === "paid"
                     ? { color: "var(--signal-ink)", background: "var(--signal-soft)" }
                     : row.status === "pending"
@@ -117,7 +124,7 @@ export default function TrainerEarningsPage() {
                           {row.statusLabel}
                         </span>
                       </td>
-                      <td className="px-4.5 py-3.5 text-right font-mono" style={{ fontVariantNumeric: "tabular-nums", color: row.refund ? "var(--danger)" : "var(--ink)" }}>{row.net}</td>
+                      <td className="px-4.5 py-3.5 text-right font-mono" style={{ fontVariantNumeric: "tabular-nums", color: row.refund ? "var(--danger)" : "var(--ink)" }}>{row.amount < 0 ? formatSignedCurrency(row.amount, row.currency, row.currency === "ZAR" ? "en-ZA" : "en-US") : formatCurrency(row.amount, row.currency, row.currency === "ZAR" ? "en-ZA" : "en-US")}</td>
                     </tr>
                   );
                 })}
@@ -161,7 +168,7 @@ export default function TrainerEarningsPage() {
                 { label: "Bank", value: "ABSA · cheque", mono: false },
                 { label: "Account", value: "•••• •••• 3914", mono: true },
                 { label: "Schedule", value: "Weekly · Tuesdays", mono: false },
-                { label: "Minimum", value: "R 500", mono: true },
+                  { label: "Minimum", value: formatCurrency(500, EARNINGS_CURRENCY, "en-ZA"), mono: true },
               ].map((row) => (
                 <div key={row.label} className="flex justify-between">
                   <span className="font-mono text-[11px] uppercase" style={{ color: "var(--fg-3)", letterSpacing: "0.04em" }}>{row.label}</span>

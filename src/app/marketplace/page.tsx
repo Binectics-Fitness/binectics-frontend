@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { useRegion } from "@/contexts/RegionContext";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { formatCurrency } from "@/utils/format";
 
 /* ─── Types (from API response) ──────────────────────────── */
 
@@ -46,12 +48,6 @@ const ACCOUNT_MAP: Record<string, "gym" | "trainer" | "dietitian"> = {
   personal_trainer: "trainer",
   dietitian: "dietitian",
 };
-
-function formatCurrency(amount: number, currency: string): string {
-  const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", NGN: "₦", KES: "KSh", ZAR: "R", AED: "د.إ", INR: "₹" };
-  const sym = symbols[currency] || currency;
-  return `${sym} ${amount.toLocaleString("en-US")}`;
-}
 
 function listingName(l: Listing): string {
   if (l.organization?.name) return l.organization.name;
@@ -146,6 +142,7 @@ function CheckRow({ label, count, on = false }: { label: string; count: number; 
 /* ═══ PAGE ═══════════════════════════════════════════════════ */
 
 export default function MarketplacePage() {
+  const { formatAmount } = useRegion();
   const [listings, setListings] = useState<Listing[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, total_pages: 0 });
   const [loading, setLoading] = useState(true);
@@ -267,7 +264,7 @@ export default function MarketplacePage() {
               <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-bg border border-ink rounded-full" style={{ left: "18%" }} />
               <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-bg border border-ink rounded-full" style={{ left: "78%" }} />
             </div>
-            <div className="flex justify-between font-mono text-[11px]" style={{ color: "var(--fg-3)" }}><span>₦5,000</span><span>₦200,000+</span></div>
+            <div className="flex justify-between font-mono text-[11px]" style={{ color: "var(--fg-3)" }}><span>{formatAmount(5000)}</span><span>{`${formatAmount(200000)}+`}</span></div>
           </div>
           <div className="p-4.5 border-b border-border">
             <h4 className="font-mono text-[12.5px] uppercase tracking-[0.04em] font-normal mb-3" style={{ color: "var(--fg-3)" }}>Specializations</h4>

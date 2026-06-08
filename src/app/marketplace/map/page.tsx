@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { formatCurrency } from "@/utils/format";
 
 /**
  * Marketplace Map — map view with provider sidebar list.
@@ -11,11 +12,11 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
  */
 
 const LISTINGS = [
-  { name: "Iron Lab Sea Point", type: "gym", price: "R 850/mo", rating: "4.9", hue: 60 },
-  { name: "Sarah Okafor", type: "trainer", price: "R 1,200/session", rating: "4.9", hue: 100 },
-  { name: "Dr Nadia Hassan", type: "dietitian", price: "R 950/consult", rating: "4.8", hue: 140 },
-  { name: "Strathmore Strength", type: "gym", price: "R 720/mo", rating: "4.7", hue: 180 },
-  { name: "Marcus Bell", type: "mobility", price: "R 800/session", rating: "4.9", hue: 220 },
+  { name: "Iron Lab Sea Point", type: "gym", amount: 850, currency: "ZAR", unit: "/mo", rating: "4.9", hue: 60 },
+  { name: "Sarah Okafor", type: "trainer", amount: 1200, currency: "ZAR", unit: "/session", rating: "4.9", hue: 100 },
+  { name: "Dr Nadia Hassan", type: "dietitian", amount: 950, currency: "ZAR", unit: "/consult", rating: "4.8", hue: 140 },
+  { name: "Strathmore Strength", type: "gym", amount: 720, currency: "ZAR", unit: "/mo", rating: "4.7", hue: 180 },
+  { name: "Marcus Bell", type: "mobility", amount: 800, currency: "ZAR", unit: "/session", rating: "4.9", hue: 220 },
 ];
 
 export default function MarketplaceMapPage() {
@@ -91,7 +92,7 @@ export default function MarketplaceMapPage() {
                 <div className="w-10 h-10 rounded-(--r-2) shrink-0" style={{ background: `linear-gradient(135deg, oklch(0.85 0.04 ${l.hue}), oklch(0.75 0.06 ${l.hue - 10}))` }} />
                 <div>
                   <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{l.name}</div>
-                  <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-0.75" style={{ color: "var(--fg-3)" }}>{l.type} · {l.price} · {l.rating}</div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-0.75" style={{ color: "var(--fg-3)" }}>{l.type} · {formatCurrency(l.amount, l.currency)}{l.unit} · {l.rating}</div>
                 </div>
               </Link>
             ))}

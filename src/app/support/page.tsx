@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import type { Metadata } from "next";
+import { formatCurrency } from "@/utils/format";
 
 export const metadata: Metadata = {
   title: "Support",
@@ -35,7 +36,7 @@ const CASES = [
 
 const SUMMARY = [
   { label: "Case ID", value: "DSP-2401" },
-  { label: "Amount disputed", value: "R 1,200.00", sub: "· ZAR" },
+  { label: "Amount disputed", amount: 1200, currency: "ZAR", sub: "· ZAR" },
   { label: "Opened", value: "18 May · 09:14" },
   { label: "Status", value: "Awaiting provider", dot: true },
   { label: "Owner", value: "Andile K." },
@@ -49,8 +50,8 @@ const TABS = [
 ];
 
 const RESOLUTIONS = [
-  { title: "Full refund to member", desc: "R 1,200 returns to Pier’s VISA. Iron Lab absorbs.", amt: "R 1,200", on: true },
-  { title: "Partial refund · 50%", desc: "Split responsibility. Both parties notified.", amt: "R 600" },
+  { title: "Full refund to member", desc: "R 1,200 returns to Pier’s VISA. Iron Lab absorbs.", amount: 1200, currency: "ZAR", on: true },
+  { title: "Partial refund · 50%", desc: "Split responsibility. Both parties notified.", amount: 600, currency: "ZAR" },
   { title: "No refund · uphold provider", desc: "Policy applies. Member notified with explanation." },
   { title: "Escalate to legal", desc: "Case forwarded to compliance. Neither party charged.", danger: true },
 ];
@@ -201,7 +202,7 @@ export default function SupportPage() {
               <div className="font-mono text-[10px] uppercase" style={{ color: "var(--fg-3)", letterSpacing: "0.05em" }}>{s.label}</div>
               <div className="text-[15px] font-medium mt-1 flex items-center gap-1.5" style={{ color: "var(--ink)", letterSpacing: "-0.005em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
                 {s.dot && <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--warn)" }} />}
-                {s.value}
+                {s.amount !== undefined ? formatCurrency(s.amount, s.currency, "en-ZA") : s.value}
                 {s.sub && <small className="font-mono text-[11px] font-normal" style={{ color: "var(--fg-3)" }}>{s.sub}</small>}
               </div>
             </div>
@@ -364,7 +365,7 @@ I’m recommending a full refund here because the original booking notice was we
                     <div className="text-[13px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.005em" }}>{r.title}</div>
                     <div className="text-[11.5px] mt-0.5 leading-[1.45]" style={{ color: "var(--fg-3)" }}>{r.desc}</div>
                   </div>
-                  {r.amt && <span className="font-mono text-[12px] shrink-0 mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{r.amt}</span>}
+                  {r.amount !== undefined && <span className="font-mono text-[12px] shrink-0 mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(r.amount, r.currency, "en-ZA")}</span>}
                 </div>
               ))}
             </div>
@@ -382,12 +383,12 @@ I’m recommending a full refund here because the original booking notice was we
               { k: "Rescheduled to", v: "Mon 18 May 18:00" },
               { k: "Cancelled at", v: "Mon 18 May 09:14" },
               { k: "Provider", v: "Iron Lab Sea Point" },
-              { k: "Amount", v: "R 1,200.00" },
+              { k: "Amount", amount: 1200, currency: "ZAR" },
               { k: "Gateway", v: "Paystack · VISA 4421" },
             ].map((f, i, a) => (
               <div key={f.k} className="flex justify-between text-[12.5px] gap-3" style={{ padding: "10px 14px", borderBottom: i < a.length - 1 ? "1px solid var(--border)" : "none" }}>
                 <span style={{ color: "var(--fg-3)" }}>{f.k}</span>
-                <span className="font-mono text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{f.v}</span>
+                <span className="font-mono text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{f.amount !== undefined ? formatCurrency(f.amount, f.currency, "en-ZA") : f.v}</span>
               </div>
             ))}
           </div>
@@ -417,15 +418,15 @@ I’m recommending a full refund here because the original booking notice was we
           <div className="font-mono text-[10.5px] uppercase mb-2.5" style={{ color: "var(--fg-3)", letterSpacing: "0.06em" }}>Related cases</div>
           <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             {[
-              { title: "Iron Lab · late cancellation", sub: "DSP-2198 · Resolved · 22 Apr", amt: "R 950" },
-              { title: "Pier Botha · card dispute", sub: "DSP-1044 · Resolved · 14 Jan", amt: "R 480" },
+              { title: "Iron Lab · late cancellation", sub: "DSP-2198 · Resolved · 22 Apr", amount: 950, currency: "ZAR" },
+              { title: "Pier Botha · card dispute", sub: "DSP-1044 · Resolved · 14 Jan", amount: 480, currency: "ZAR" },
             ].map((r, i) => (
               <div key={r.title} className="flex justify-between items-center gap-3 cursor-pointer hover:bg-bg-2" style={{ padding: "10px 14px", borderBottom: i < 1 ? "1px solid var(--border)" : "none", fontSize: "12.5px" }}>
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="font-medium" style={{ color: "var(--ink)" }}>{r.title}</span>
                   <span className="font-mono text-[10.5px] uppercase" style={{ color: "var(--fg-3)", letterSpacing: "0.04em" }}>{r.sub}</span>
                 </div>
-                <span className="font-mono text-[12px] shrink-0" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{r.amt}</span>
+                <span className="font-mono text-[12px] shrink-0" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(r.amount, r.currency, "en-ZA")}</span>
               </div>
             ))}
           </div>

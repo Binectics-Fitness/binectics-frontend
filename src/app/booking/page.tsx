@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { formatCurrency } from "@/utils/format";
 
 /**
  * Booking — 3-step wizard from booking.html prototype.
@@ -31,9 +32,17 @@ const CAL_DAYS = [
   [28,29,30,1,2,3,4],[5,6,7,8,9,10,11],[12,13,14,15,16,17,18],[19,20,21,22,23,24,25],[26,27,28,29,30,31,1],
 ];
 
+const BOOKING_CURRENCY = "ZAR";
+const SESSION_PRICE = 1200;
+const ONLINE_SESSION_PRICE = 850;
+const PROGRAM_PRICE = 600;
+const MOVEMENT_SCREEN_PRICE = 200;
+const PLATFORM_FEE = 90;
+const TOTAL_DUE = 1890;
+
 const ADDONS = [
-  { id: "programming", title: "Take‑home program · 4 weeks", desc: "Sarah builds a 4‑week strength block after your session, delivered as a PDF + in‑app.", price: "+ R 600", on: true },
-  { id: "movement", title: "Movement screen · 15 min", desc: "Adds 15 minutes before the session — overhead squat, single‑leg, t‑spine.", price: "+ R 200" },
+  { id: "programming", title: "Take‑home program · 4 weeks", desc: "Sarah builds a 4‑week strength block after your session, delivered as a PDF + in‑app.", amount: PROGRAM_PRICE, on: true },
+  { id: "movement", title: "Movement screen · 15 min", desc: "Adds 15 minutes before the session — overhead squat, single‑leg, t‑spine.", amount: MOVEMENT_SCREEN_PRICE },
   { id: "video", title: "Session recording", desc: "Sarah films your main lifts and shares back via in‑app.", price: "Free", free: true },
 ];
 
@@ -93,8 +102,8 @@ export default function BookingPage() {
                 <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-3.5" style={{ color: "var(--fg-3)" }}>Format</div>
                 <div className="grid grid-cols-2 gap-2.5">
                   {[
-                    { label: "In‑person · Iron Lab Sea Point", sub: "60 min · 1‑on‑1 · barbell + dumbbell focus", price: "R 1,200 / session", on: true },
-                    { label: "Online · video call", sub: "45 min · programming review + form check", price: "R 850 / session" },
+                    { label: "In‑person · Iron Lab Sea Point", sub: "60 min · 1‑on‑1 · barbell + dumbbell focus", price: `${formatCurrency(SESSION_PRICE, BOOKING_CURRENCY)} / session`, on: true },
+                    { label: "Online · video call", sub: "45 min · programming review + form check", price: `${formatCurrency(ONLINE_SESSION_PRICE, BOOKING_CURRENCY)} / session` },
                   ].map((f) => (
                     <div key={f.label} className={`p-4 px-4.5 rounded-(--r-3) cursor-pointer ${f.on ? "bg-bg-2" : "bg-bg"}`} style={{ border: f.on ? "1px solid var(--ink)" : "1px solid var(--border)", transition: "border-color 120ms" }}>
                       <div className="text-[15px] font-medium flex items-center gap-2" style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>
@@ -181,7 +190,7 @@ export default function BookingPage() {
                         <div className="text-[14.5px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>{a.title}</div>
                         <div className="text-[13px] mt-1 leading-relaxed" style={{ color: "var(--fg-3)" }}>{a.desc}</div>
                       </div>
-                      <span className="font-mono text-[13.5px] shrink-0 mt-0.5" style={{ color: a.free ? "var(--signal-ink)" : "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{a.price}</span>
+                      <span className="font-mono text-[13.5px] shrink-0 mt-0.5" style={{ color: a.free ? "var(--signal-ink)" : "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{a.free ? a.price : a.amount !== undefined ? `+ ${formatCurrency(a.amount, BOOKING_CURRENCY)}` : ""}</span>
                     </div>
                   ))}
                 </div>
@@ -295,11 +304,11 @@ export default function BookingPage() {
         <div className="flex flex-col">
           <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
             <span style={{ color: "var(--fg-2)" }}>Session · 60 min</span>
-            <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>R 1,200.00</span>
+            <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(SESSION_PRICE, BOOKING_CURRENCY)}</span>
           </div>
           <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
             <span style={{ color: "var(--fg-2)" }}>Take‑home program</span>
-            <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>R 600.00</span>
+            <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(PROGRAM_PRICE, BOOKING_CURRENCY)}</span>
           </div>
           <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
             <span style={{ color: "var(--fg-2)" }}>Session recording</span>
@@ -307,11 +316,11 @@ export default function BookingPage() {
           </div>
           <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
             <span style={{ color: "var(--fg-2)" }}>Platform fee · 5%</span>
-            <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>R 90.00</span>
+            <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(PLATFORM_FEE, BOOKING_CURRENCY)}</span>
           </div>
           <div className="flex justify-between pt-3.5 font-medium">
             <span className="text-[14px]" style={{ color: "var(--ink)" }}>Due today</span>
-            <span className="text-[17px]" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>R 1,890.00</span>
+            <span className="text-[17px]" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(TOTAL_DUE, BOOKING_CURRENCY)}</span>
           </div>
         </div>
 

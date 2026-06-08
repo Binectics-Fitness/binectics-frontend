@@ -115,12 +115,28 @@ export function formatCurrency(
       maximumFractionDigits: amount >= 1000 ? 0 : 2,
     }).format(amount);
   } catch {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: amount >= 1000 ? 0 : 2,
-    }).format(amount);
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency,
+        maximumFractionDigits: amount >= 1000 ? 0 : 2,
+      }).format(amount);
+    } catch {
+      const upper = currency.toUpperCase();
+      const fixed = amount >= 1000 ? amount.toFixed(0) : amount.toFixed(2);
+      return `${upper} ${fixed}`;
+    }
   }
+}
+
+export function formatSignedCurrency(
+  amount: number,
+  currency: string = "USD",
+  locale: string = "en-US",
+  options?: { showPlus?: boolean },
+): string {
+  const sign = amount < 0 ? "− " : amount > 0 && options?.showPlus ? "+ " : "";
+  return `${sign}${formatCurrency(Math.abs(amount), currency, locale)}`;
 }
 
 /**

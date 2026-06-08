@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import NotificationPreferencesPanel from "./NotificationPreferencesPanel";
 import type { Metadata } from "next";
+import { formatCurrency, formatSignedCurrency } from "@/utils/format";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -91,24 +93,13 @@ const SEC_NAV = [
   },
 ];
 
-const NOTIF_ROWS = [
-  { label: "Booking confirmations", sub: "When a provider accepts", email: true, push: true, sms: false },
-  { label: "Session reminders", sub: "24h and 1h before", email: true, push: true, sms: true },
-  { label: "Messages from providers", sub: "When Sarah, Nadia, or others write", email: false, push: true, sms: false },
-  { label: "Payment receipts", sub: "Charges, refunds, payouts", email: true, push: false, sms: false },
-  { label: "Streaks & milestones", sub: "Day 30, day 100, etc", email: false, push: true, sms: false },
-  { label: "Weekly summary", sub: "Sundays · what you did, what’s next", email: true, push: false, sms: false },
-  { label: "Marketplace recs", sub: "Trending providers near you", email: false, push: false, sms: false },
-  { label: "Security alerts", sub: "New sign-in, password change", email: true, push: true, sms: true, emailLocked: true },
-];
-
 const BILLING_ROWS = [
-  { date: "11 May 14:32", what: "Strength session · Sarah Okafor", sub: "BIN-2026-042841 · Wed 20 May", gw: "VISA •••• 4421", amt: "R 1,890.00" },
-  { date: "04 May 11:08", what: "Nutrition consult · Dr Nadia Hassan", sub: "BIN-2026-041922 · video · 30 min", gw: "Apple Pay", amt: "R 380.00" },
-  { date: "29 Apr 09:42", what: "Strength session · Sarah Okafor", sub: "Completed · 5★ given", gw: "VISA •••• 4421", amt: "R 1,200.00" },
-  { date: "22 Apr 06:14", what: "Day pass · Iron Lab Sea Point", sub: "Drop-in · attended", gw: "VISA •••• 4421", amt: "R 180.00" },
-  { date: "01 Apr 08:30", what: "Refund · cancelled session", sub: "Pier B. refunded fully · 33h notice", gw: "VISA •••• 4421", amt: "+ R 1,200.00", refund: true },
-  { date: "29 Mar 17:14", what: "Strength session · Sarah Okafor", sub: "Completed · 5★ given", gw: "VISA •••• 4421", amt: "R 1,200.00" },
+  { date: "11 May 14:32", what: "Strength session · Sarah Okafor", sub: "BIN-2026-042841 · Wed 20 May", gw: "VISA •••• 4421", amount: 1890, currency: "ZAR" },
+  { date: "04 May 11:08", what: "Nutrition consult · Dr Nadia Hassan", sub: "BIN-2026-041922 · video · 30 min", gw: "Apple Pay", amount: 380, currency: "ZAR" },
+  { date: "29 Apr 09:42", what: "Strength session · Sarah Okafor", sub: "Completed · 5★ given", gw: "VISA •••• 4421", amount: 1200, currency: "ZAR" },
+  { date: "22 Apr 06:14", what: "Day pass · Iron Lab Sea Point", sub: "Drop-in · attended", gw: "VISA •••• 4421", amount: 180, currency: "ZAR" },
+  { date: "01 Apr 08:30", what: "Refund · cancelled session", sub: "Pier B. refunded fully · 33h notice", gw: "VISA •••• 4421", amount: 1200, currency: "ZAR", refund: true },
+  { date: "29 Mar 17:14", what: "Strength session · Sarah Okafor", sub: "Completed · 5★ given", gw: "VISA •••• 4421", amount: 1200, currency: "ZAR" },
 ];
 
 export default function SettingsPage() {
@@ -328,57 +319,7 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            {/* ── NOTIFICATIONS ── */}
-            <section className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }} id="notifications">
-              <div className="px-5.5 pt-4.5 pb-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                <h2 className="text-[16px] font-medium" style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>Notifications</h2>
-                <p className="text-[12.5px] mt-1 max-w-[56ch] leading-normal" style={{ color: "var(--fg-3)" }}>
-                  Pick which channels carry which alerts. Security messages always send by email — that&apos;s not optional.
-                </p>
-              </div>
-              <div className="p-5.5 flex flex-col gap-4">
-                {/* Matrix */}
-                <div className="rounded-(--r-2) overflow-x-auto" style={{ border: "1px solid var(--border)" }}>
-                  {/* Header row */}
-                  <div
-                    className="grid gap-3 px-4.5 py-2.5 font-mono text-[10.5px] uppercase items-center"
-                    style={{ gridTemplateColumns: "1.6fr repeat(3, 64px)", background: "var(--bg-2)", borderBottom: "1px solid var(--border)", letterSpacing: "0.04em", color: "var(--fg-3)" }}
-                  >
-                    <span>Notification</span>
-                    <span className="text-center">Email</span>
-                    <span className="text-center">Push</span>
-                    <span className="text-center">SMS</span>
-                  </div>
-                  {/* Data rows */}
-                  {NOTIF_ROWS.map((r, i) => (
-                    <div
-                      key={r.label}
-                      className="grid gap-3 px-4.5 py-3 items-center"
-                      style={{ gridTemplateColumns: "1.6fr repeat(3, 64px)", borderBottom: i < NOTIF_ROWS.length - 1 ? "1px solid var(--border)" : "none" }}
-                    >
-                      <div>
-                        <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{r.label}</div>
-                        <div className="font-mono text-[10.5px] uppercase mt-0.5" style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}>{r.sub}</div>
-                      </div>
-                      <div className="flex justify-center"><Check on={r.email} disabled={r.emailLocked} /></div>
-                      <div className="flex justify-center"><Check on={r.push} /></div>
-                      <div className="flex justify-center"><Check on={r.sms} /></div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* DND toggle */}
-                <div className="flex justify-between items-start gap-3.5 pt-4.5" style={{ borderTop: "1px solid var(--border)" }}>
-                  <div className="flex-1">
-                    <div className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Do not disturb &middot; between sessions</div>
-                    <div className="text-[12.5px] mt-0.75 max-w-[56ch] leading-normal" style={{ color: "var(--fg-3)" }}>
-                      Hold push notifications during your scheduled training time. Email and SMS still work.
-                    </div>
-                  </div>
-                  <Toggle on={false} />
-                </div>
-              </div>
-            </section>
+            <NotificationPreferencesPanel />
 
             {/* ── PAYMENT METHODS ── */}
             <section className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }} id="payments">
@@ -498,7 +439,7 @@ export default function SettingsPage() {
                         <span className="block font-mono text-[10.5px] uppercase mt-0.5" style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}>{r.sub}</span>
                       </div>
                       <span className="font-mono text-[11.5px] uppercase" style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}>{r.gw}</span>
-                      <span className="font-mono text-right font-medium" style={{ fontVariantNumeric: "tabular-nums", color: r.refund ? "var(--signal-ink)" : "var(--ink)" }}>{r.amt}</span>
+                      <span className="font-mono text-right font-medium" style={{ fontVariantNumeric: "tabular-nums", color: r.refund ? "var(--signal-ink)" : "var(--ink)" }}>{r.refund ? formatSignedCurrency(r.amount, r.currency, "en-ZA", { showPlus: true }) : formatCurrency(r.amount, r.currency, "en-ZA")}</span>
                       <span className="w-5.5 h-5.5 rounded-(--r-1) flex items-center justify-center" style={{ color: "var(--fg-3)" }}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
                       </span>

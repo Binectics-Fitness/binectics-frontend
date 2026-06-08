@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import SearchableSelect from "@/components/SearchableSelect";
+import { formatCurrency } from "@/utils/format";
 
 /**
  * Recurring Booking — set up a recurring session schedule.
@@ -42,11 +43,17 @@ const ENDS_OPTIONS = [
   { label: "No end date", value: "none" },
 ];
 
+const SESSION_PRICE = 1200;
+const SESSION_CURRENCY = "ZAR";
+const SESSION_COUNT = 12;
+
 export default function RecurringBookingPage() {
   const [cadence, setCadence] = useState(0);
   const [day, setDay] = useState("Wednesday");
   const [time, setTime] = useState("08:30");
   const [ends, setEnds] = useState("12");
+  const total = formatCurrency(SESSION_PRICE * SESSION_COUNT, SESSION_CURRENCY);
+  const sessionPrice = formatCurrency(SESSION_PRICE, SESSION_CURRENCY);
 
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh" }}>
@@ -140,7 +147,7 @@ export default function RecurringBookingPage() {
             {/* Total + CTA */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3">
               <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-                Total · <strong className="font-mono font-medium" style={{ color: "var(--ink)" }}>R 14,400</strong> (R 1,200 &times; 12, billed weekly)
+                Total · <strong className="font-mono font-medium" style={{ color: "var(--ink)" }}>{total}</strong> ({sessionPrice} &times; {SESSION_COUNT}, billed weekly)
               </div>
               <button className="btn-primary-v2 lg cursor-pointer">Lock it in</button>
             </div>

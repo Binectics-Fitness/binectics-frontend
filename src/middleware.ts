@@ -24,6 +24,38 @@ function detectCountry(request: NextRequest): string {
   if (netlify && netlify !== "XX") return netlify.toUpperCase();
   const cf = request.headers.get("cf-ipcountry");
   if (cf && cf !== "XX" && cf !== "T1") return cf.toUpperCase();
+
+  const acceptLanguage = request.headers.get("accept-language") || "";
+  const primary = acceptLanguage.split(",")[0]?.trim();
+  if (primary) {
+    const region = primary.split("-")[1]?.toUpperCase();
+    if (region && region.length === 2) return region;
+
+    const language = primary.split("-")[0]?.toLowerCase();
+    const languageFallback: Record<string, string> = {
+      en: "US",
+      de: "DE",
+      fr: "FR",
+      it: "IT",
+      es: "ES",
+      nl: "NL",
+      pt: "PT",
+      el: "GR",
+      fi: "FI",
+      sk: "SK",
+      sl: "SI",
+      lt: "LT",
+      lv: "LV",
+      et: "EE",
+      mt: "MT",
+      hr: "HR",
+      lb: "LU",
+    };
+    if (language && languageFallback[language]) {
+      return languageFallback[language];
+    }
+  }
+
   return "US";
 }
 

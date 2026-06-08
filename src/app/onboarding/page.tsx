@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
+import { onboardingService } from "@/lib/api/onboarding";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import { MEMBER_STEPS } from "./_member";
@@ -52,17 +53,6 @@ export default function OnboardingPage() {
 
 const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 
-function isOnboardingDone(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem("binectics_onboarding_done") === "1";
-}
-
-function markOnboardingDone() {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("binectics_onboarding_done", "1");
-  document.cookie = "onboarding_complete=1; path=/; max-age=31536000; SameSite=Lax";
-}
-
 function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,7 +63,8 @@ function OnboardingContent() {
   const [role, setRole] = useState<RoleId | null>(preselected);
   const [step, setStep] = useState(preselected ? 1 : 0);
   const [data, setData] = useState<Record<string, unknown>>({});
-  const [completed, setCompleted] = useState(isOnboardingDone);
+  const [completed, setCompleted] = useState(Boolean(user?.is_onboarding_complete));
+  const [isFinishing, setIsFinishing] = useState(false);
 
   const roleDef = role ? ROLES.find((r) => r.id === role) : null;
   const steps = roleDef?.steps || GENERIC_STEPS;
@@ -86,6 +77,10 @@ function OnboardingContent() {
     }
   }, [completed, user]);
 
+  useEffect(() => {
+    setCompleted(Boolean(user?.is_onboarding_complete));
+  }, [user?.is_onboarding_complete]);
+
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
   }, []);
@@ -97,13 +92,21 @@ function OnboardingContent() {
     if (step === 0) setStep(1);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (step === 0 && role) {
       setStep(1);
     } else if (step < totalSteps) {
       setStep(step + 1);
     } else if (role) {
-      markOnboardingDone();
+      setIsFinishing(true);
+      try {
+        await onboardingService.dismiss();
+      } catch {
+        // Non-blocking; user state update below ensures deterministic routing.
+      }
+      if (user) {
+        updateUser({ ...user, is_onboarding_complete: true });
+      }
       setCompleted(true);
       const routes: Record<RoleId, string> = {
         member: "/member",
@@ -290,12 +293,16 @@ function OnboardingContent() {
             {step > 0 && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
             <button
               type="button"
-              disabled={step === 0 && !role}
+              disabled={(step === 0 && !role) || isFinishing}
               onClick={handleContinue}
               className="btn-primary-v2 sm"
-              style={{ opacity: step === 0 && !role ? 0.4 : 1 }}
+              style={{ opacity: (step === 0 && !role) || isFinishing ? 0.4 : 1 }}
             >
-              {step >= totalSteps ? "Go to dashboard" : `Continue${step < totalSteps && roleDef ? ` → ${roleDef.steps[step]?.title || ""}` : " →"}`}
+              {step >= totalSteps
+                ? isFinishing
+                  ? "Finishing..."
+                  : "Go to dashboard"
+                : `Continue${step < totalSteps && roleDef ? ` → ${roleDef.steps[step]?.title || ""}` : " →"}`}
             </button>
           </div>
         </div>

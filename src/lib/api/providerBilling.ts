@@ -7,6 +7,7 @@
 
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
+import { formatCurrency } from "@/utils/format";
 
 // ─── Enums (mirror backend) ────────────────────────────────────────────────
 
@@ -170,13 +171,5 @@ export const providerBillingApi = {
 
 export function formatMinorAmount(amountMinor: number, currency: string): string {
   const major = amountMinor / 100;
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: major % 1 === 0 ? 0 : 2,
-    }).format(major);
-  } catch {
-    return `${currency} ${major.toFixed(2)}`;
-  }
+  return formatCurrency(major, currency);
 }

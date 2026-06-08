@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { formatCurrency } from "@/utils/format";
 
 /**
  * Marketplace Search Results — search results grid with search bar.
@@ -11,14 +12,14 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
  */
 
 const RESULTS = [
-  { name: "Thandi Nkosi", desc: "postnatal specialist · Sea Point · R 850", rating: "4.8", hue: 0 },
-  { name: "Sarah Okafor", desc: "strength + postnatal · CBD · R 1,200", rating: "4.9", hue: 45 },
-  { name: "Camilla Lapwing", desc: "postnatal pilates · Camps Bay · R 950", rating: "4.8", hue: 90 },
-  { name: "Iron Lab", desc: "group postnatal class · Wed 10am · R 280", rating: "4.9", hue: 135 },
-  { name: "Dr Nadia Hassan", desc: "postnatal nutrition · online · R 950", rating: "4.8", hue: 180 },
-  { name: "Studio Move", desc: "postnatal yoga · Woodstock · R 200/class", rating: "4.9", hue: 225 },
-  { name: "Marcus Bell", desc: "postnatal mobility · home visits · R 800", rating: "4.8", hue: 270 },
-  { name: "Olive & Oak", desc: "mom & baby classes · Sea Point · R 320", rating: "4.9", hue: 315 },
+  { name: "Thandi Nkosi", desc: "postnatal specialist · Sea Point", amount: 850, currency: "ZAR", unit: "", rating: "4.8", hue: 0 },
+  { name: "Sarah Okafor", desc: "strength + postnatal · CBD", amount: 1200, currency: "ZAR", unit: "", rating: "4.9", hue: 45 },
+  { name: "Camilla Lapwing", desc: "postnatal pilates · Camps Bay", amount: 950, currency: "ZAR", unit: "", rating: "4.8", hue: 90 },
+  { name: "Iron Lab", desc: "group postnatal class · Wed 10am", amount: 280, currency: "ZAR", unit: "", rating: "4.9", hue: 135 },
+  { name: "Dr Nadia Hassan", desc: "postnatal nutrition · online", amount: 950, currency: "ZAR", unit: "", rating: "4.8", hue: 180 },
+  { name: "Studio Move", desc: "postnatal yoga · Woodstock", amount: 200, currency: "ZAR", unit: "/class", rating: "4.9", hue: 225 },
+  { name: "Marcus Bell", desc: "postnatal mobility · home visits", amount: 800, currency: "ZAR", unit: "", rating: "4.8", hue: 270 },
+  { name: "Olive & Oak", desc: "mom & baby classes · Sea Point", amount: 320, currency: "ZAR", unit: "", rating: "4.9", hue: 315 },
 ];
 
 function SearchIcon() {
@@ -68,7 +69,7 @@ export default function MarketplaceSearchPage() {
               <div className="w-16 h-16 rounded-(--r-2) shrink-0" style={{ background: `linear-gradient(135deg, oklch(0.86 0.04 ${r.hue}), oklch(0.74 0.06 ${r.hue + 30}))` }} />
               <div className="flex-1">
                 <div className="text-[15px] font-medium mb-1" style={{ color: "var(--ink)" }}>{r.name}</div>
-                <div className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>{r.desc}</div>
+                <div className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>{r.desc} · {formatCurrency(r.amount, r.currency)}{r.unit}</div>
                 <div className="flex flex-wrap gap-1.5 mt-2.5">
                   <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>&#9733; {r.rating}</span>
                   <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>verified</span>

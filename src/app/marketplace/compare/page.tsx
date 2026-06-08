@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import type { Metadata } from "next";
+import { formatCurrency } from "@/utils/format";
 
 export const metadata: Metadata = {
   title: "Compare Providers",
@@ -20,7 +21,9 @@ const PROVIDERS = [
     type: "Trainer · Cape Town",
     grad: "linear-gradient(135deg, oklch(0.85 0.04 40), oklch(0.72 0.06 90))",
     specialization: "Strength · running",
-    rate: "R 1,200 / 60 min",
+    rateAmount: 1200,
+    rateCurrency: "ZAR",
+    rateUnit: "/ 60 min",
     rating: "4.9 · 312 reviews",
     verified: "Yes · 2027",
     nextAvail: "Tomorrow 08:00",
@@ -34,7 +37,9 @@ const PROVIDERS = [
     type: "Trainer · Cape Town",
     grad: "linear-gradient(135deg, oklch(0.85 0.04 100), oklch(0.72 0.06 150))",
     specialization: "Mobility · recovery",
-    rate: "R 800 / 60 min",
+    rateAmount: 800,
+    rateCurrency: "ZAR",
+    rateUnit: "/ 60 min",
     rating: "4.9 · 142 reviews",
     verified: "Yes · 2027",
     nextAvail: "Today 17:00",
@@ -48,7 +53,9 @@ const PROVIDERS = [
     type: "Trainer · Cape Town",
     grad: "linear-gradient(135deg, oklch(0.85 0.04 160), oklch(0.72 0.06 210))",
     specialization: "Postnatal · strength",
-    rate: "R 850 / 60 min",
+    rateAmount: 850,
+    rateCurrency: "ZAR",
+    rateUnit: "/ 60 min",
     rating: "5.0 · 64 reviews",
     verified: "Yes · 2027",
     nextAvail: "Thursday 09:00",
@@ -61,7 +68,7 @@ const PROVIDERS = [
 
 const ROWS: { label: string; key: keyof (typeof PROVIDERS)[0] }[] = [
   { label: "Specialization", key: "specialization" },
-  { label: "Rate", key: "rate" },
+  { label: "Rate", key: "rateAmount" },
   { label: "Rating", key: "rating" },
   { label: "Verified", key: "verified" },
   { label: "Next availability", key: "nextAvail" },
@@ -72,6 +79,14 @@ const ROWS: { label: string; key: keyof (typeof PROVIDERS)[0] }[] = [
 ];
 
 export default function MarketplaceComparePage() {
+  const renderCell = (provider: (typeof PROVIDERS)[0], key: keyof (typeof PROVIDERS)[0]) => {
+    if (key === "rateAmount") {
+      return `${formatCurrency(provider.rateAmount, provider.rateCurrency)} ${provider.rateUnit}`;
+    }
+
+    return provider[key];
+  };
+
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh" }}>
       {/* Topbar */}
@@ -112,7 +127,7 @@ export default function MarketplaceComparePage() {
                 <tr key={r.label}>
                   <td className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ padding: "14px 20px", color: "var(--fg-3)", borderBottom: "1px solid var(--border)" }}>{r.label}</td>
                   {PROVIDERS.map((p) => (
-                    <td key={p.name} style={{ padding: "14px 20px", color: "var(--ink)", borderBottom: "1px solid var(--border)" }}>{p[r.key]}</td>
+                    <td key={p.name} style={{ padding: "14px 20px", color: "var(--ink)", borderBottom: "1px solid var(--border)" }}>{renderCell(p, r.key)}</td>
                   ))}
                 </tr>
               ))}

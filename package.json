@@ -19,6 +19,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "api:sync": "openapi-typescript ${OPENAPI_SCHEMA_PATH:-../binectics-api/schema/openapi.json} -o src/lib/api/generated/schema.ts",
+    "api:check": "npm run api:sync && git diff --exit-code -- src/lib/api/generated/schema.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -56,6 +58,7 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
+    "openapi-typescript": "^7.10.1",
     "@playwright/test": "1.59.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.7.0",

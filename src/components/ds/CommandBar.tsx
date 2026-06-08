@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCommandBar, closeCommandBar } from "@/hooks/useCommandBar";
+import { UnifiedSearchSection } from "@/lib/api/search";
+import { useUnifiedSearch } from "@/lib/queries/search";
+import { tokenStorage } from "@/lib/utils/storage";
 import { NAVIGATION_COMMANDS, ACTION_COMMANDS, HELP_COMMANDS, type CommandItem } from "@/lib/constants/commands";
 
 const ALL_COMMANDS = [...NAVIGATION_COMMANDS, ...ACTION_COMMANDS, ...HELP_COMMANDS];
@@ -17,6 +20,48 @@ function CmdIcon({ d }: { d: string }) {
   );
 }
 
+function toSearchCommands(
+  prefix: string,
+  items: unknown[],
+  fallbackMeta: string,
+  icon: string,
+): CommandItem[] {
+  return items.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+
+    const candidate = item as {
+      id?: unknown;
+      title?: unknown;
+      subtitle?: unknown;
+      action_url?: unknown;
+    };
+
+    const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
+    const label =
+      typeof candidate.title === "string" ? candidate.title.trim() : "";
+    const href =
+      typeof candidate.action_url === "string"
+        ? candidate.action_url.trim()
+        : "";
+
+    if (!id || !label || !href) return [];
+
+    return [
+      {
+        id: `${prefix}-${id}`,
+        label,
+        section: "navigation",
+        href,
+        meta:
+          typeof candidate.subtitle === "string" && candidate.subtitle.trim()
+            ? candidate.subtitle
+            : fallbackMeta,
+        icon,
+      },
+    ];
+  });
+}
+
 export function CommandBar() {
   const { open, close } = useCommandBar();
   const [query, setQuery] = useState("");
@@ -25,6 +70,21 @@ export function CommandBar() {
   const router = useRouter();
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const normalizedQuery = query.trim();
+  let hasAuthToken = false;
+  try {
+    hasAuthToken = Boolean(tokenStorage.get());
+  } catch {
+    hasAuthToken = false;
+  }
+
+  const unifiedSearch = useUnifiedSearch(
+    {
+      q: normalizedQuery,
+      limit: 5,
+    },
+    hasAuthToken && open && normalizedQuery.length >= 2,
+  );
 
   useEffect(() => {
     if (open) {
@@ -45,9 +105,58 @@ export function CommandBar() {
     }
   }, [open, shouldRender]);
 
-  const filtered = query
+  const staticFiltered = query
     ? ALL_COMMANDS.filter((c) => c.label.toLowerCase().includes(query.toLowerCase()))
     : ALL_COMMANDS;
+
+  const marketplaceItems: CommandItem[] =
+    normalizedQuery.length >= 2
+      ? toSearchCommands(
+          "marketplace",
+          unifiedSearch.data?.sections?.[UnifiedSearchSection.MARKETPLACE] ?? [],
+          "listing",
+          "M3 7h18M3 12h18M3 17h18",
+        )
+      : [];
+
+  const bookingItems: CommandItem[] =
+    normalizedQuery.length >= 2
+      ? toSearchCommands(
+          "booking",
+          unifiedSearch.data?.sections?.[UnifiedSearchSection.BOOKINGS] ?? [],
+          "booking",
+          "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z",
+        )
+      : [];
+
+  const teamItems: CommandItem[] =
+    normalizedQuery.length >= 2
+      ? toSearchCommands(
+          "team",
+          unifiedSearch.data?.sections?.[UnifiedSearchSection.TEAMS] ?? [],
+          "team",
+          "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 7a4 4 0 1 0 0-.01M20 8v6M23 11h-6",
+        )
+      : [];
+
+  const planItems: CommandItem[] =
+    normalizedQuery.length >= 2
+      ? toSearchCommands(
+          "plan",
+          unifiedSearch.data?.sections?.[UnifiedSearchSection.PLANS] ?? [],
+          "plan",
+          "M20 6L9 17l-5-5",
+        )
+      : [];
+
+  const searchItems = [
+    ...marketplaceItems,
+    ...bookingItems,
+    ...teamItems,
+    ...planItems,
+  ];
+
+  const filtered = [...searchItems, ...staticFiltered];
 
   const handleSelect = useCallback(
     (item: CommandItem) => {
@@ -76,7 +185,11 @@ export function CommandBar() {
 
   if (!shouldRender) return null;
 
-  const navItems = filtered.filter((c) => c.section === "navigation");
+  const navItems = filtered.filter(
+    (c) =>
+      c.section === "navigation" &&
+      !/^(marketplace|booking|team|plan)-/.test(c.id),
+  );
   const actionItems = filtered.filter((c) => c.section === "action");
   const helpItems = filtered.filter((c) => c.section === "help");
   let flatIndex = 0;
@@ -177,12 +290,22 @@ export function CommandBar() {
 
         {/* List */}
         <div style={{ overflowY: "auto", padding: "6px 0 10px" }}>
+          {normalizedQuery.length >= 2 && unifiedSearch.isLoading && (
+            <div style={{ padding: "10px 18px", fontSize: "12.5px", color: "var(--fg-3)" }}>
+              Searching...
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <div style={{ padding: "32px 18px", textAlign: "center", fontSize: "13.5px", color: "var(--fg-3)" }}>
               No results for &ldquo;{query}&rdquo;
             </div>
           ) : (
             <>
+              {marketplaceItems.length > 0 && renderGroup("Marketplace", marketplaceItems)}
+              {bookingItems.length > 0 && renderGroup("Bookings", bookingItems)}
+              {teamItems.length > 0 && renderGroup("Teams", teamItems)}
+              {planItems.length > 0 && renderGroup("Plans", planItems)}
               {renderGroup("Navigate", navItems)}
               {renderGroup("Actions", actionItems)}
               {renderGroup("Help", helpItems)}

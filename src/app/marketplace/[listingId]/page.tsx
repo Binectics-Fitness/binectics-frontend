@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { formatCurrency } from "@/utils/format";
 
 /* ─── Icons ──────────────────────────────────────────────── */
 
@@ -33,11 +34,6 @@ const PH_BG: Record<string, string> = {
   personal_trainer: "repeating-linear-gradient(135deg, oklch(0.92 0.012 75) 0 10px, oklch(0.94 0.01 75) 10px 20px)",
   dietitian:        "repeating-linear-gradient(135deg, oklch(0.90 0.018 300) 0 10px, oklch(0.93 0.014 300) 10px 20px)",
 };
-
-function formatCurrency(amount: number, currency: string): string {
-  const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", NGN: "₦", KES: "KSh", ZAR: "R", AED: "د.إ", INR: "₹" };
-  return `${symbols[currency] || currency} ${amount.toLocaleString("en-US")}`;
-}
 
 /* ─── Types ──────────────────────────────────────────────── */
 
