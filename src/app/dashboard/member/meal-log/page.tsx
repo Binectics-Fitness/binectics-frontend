@@ -5,12 +5,6 @@ import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService, MealType } from "@/lib/api/progress";
 import type { ClientProfile, MealFeedback } from "@/lib/api/progress";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Meal Log",
-  description: "Track your daily meals and nutrition intake.",
-};
 
 function formatDate(isoDate: string): string {
   const d = new Date(isoDate);

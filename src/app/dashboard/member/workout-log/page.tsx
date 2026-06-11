@@ -5,12 +5,6 @@ import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, ActivityReport } from "@/lib/api/progress";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Workout Log",
-  description: "Log and review your workout history.",
-};
 
 function formatDate(isoDate: string): string {
   const d = new Date(isoDate);

@@ -5,12 +5,6 @@ import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, WeightLog } from "@/lib/api/progress";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Weight Log",
-  description: "Track your weight over time with charts and trends.",
-};
 
 function formatDate(isoDate: string): string {
   const d = new Date(isoDate);

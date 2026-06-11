@@ -354,6 +354,18 @@ function BookingPageInner() {
                     })}
                   </div>
                 )}
+
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-(--r-2) p-3" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+                  <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>
+                    Need a fixed weekly slot? Set up recurring bookings.
+                  </p>
+                  <Link
+                    href={`/booking/recurring?listingId=${listing._id}&consultationTypeId=${selectedTypeId ?? ""}&date=${selectedDate}`}
+                    className="btn-ghost-v2 sm"
+                  >
+                    Recurring
+                  </Link>
+                </div>
               </div>
             </div>
           )}
