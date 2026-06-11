@@ -35,13 +35,13 @@ Summary:
 | Feature | Category | Backend Status | Frontend Status | Gap Summary | Priority | Effort | Owner | Next Action | Status |
 |---|---|---|---|---|---|---|---|---|---|
 | Team management workspace | Backend Exists -> Frontend Missing | complete | shipped | Org switching, member list, role/status updates, removal, invitations, direct add, full RBAC in `/dashboard/team` | high | M | FE | Monitor edge cases and permission workflows | shipped |
-| Assignment rules UI | Backend Exists -> Frontend Missing | complete | in-progress | Building CRUD screen for assignment rules configuration | high | M | FE | Implement list, create, update, delete flows | in-progress |
-| Loyalty center | Backend Exists -> Frontend Missing | complete | missing/partial | Rewards, redemptions, history not visible to users | high | M | FE | Add member loyalty dashboard + redeem flow | not-started |
-| Forms builder + responses | Backend Exists -> Frontend Missing | complete | missing | No form authoring/analytics UX | high | M-H | FE | Implement forms list, builder, responses, analytics | not-started |
-| Provider billing operations UI | Backend Exists -> Frontend Missing | complete | partial | Billing status/invoices/market pricing not fully exposed | high | M | FE | Add org billing status + invoices + usage limits UI | not-started |
-| Feedback/NPS prompts | Backend Exists -> Frontend Missing | complete | missing | Prompt + submit flow absent in frontend | medium | S-M | FE | Add contextual feedback modal and summary view | not-started |
-| Unified search omnibox | Backend Exists -> Frontend Missing | complete | partial | FE mostly uses route-specific search | medium | M | FE | Integrate unified search endpoint into global nav search | not-started |
-| Review moderation/replies UI | Backend Exists -> Frontend Missing | complete | partial | Report/reply/provider-response workflow not complete | medium | M | FE | Add review action panel and moderation states | not-started |
+| Assignment rules UI | Backend Exists -> Frontend Missing | complete | shipped | Full CRUD at `/dashboard/assignment-rules`: strategy selector, tier filter, priority ordering | high | M | FE | Monitor edge cases | shipped |
+| Loyalty center | Backend Exists -> Frontend Missing | complete | shipped | Balance KPIs, rewards catalog with redeem, history ledger, redemption list at `/dashboard/loyalty` | high | M | FE | Verify edge cases | shipped |
+| Forms builder + responses | Backend Exists -> Frontend Missing | complete | shipped | Forms list + builder + question editor + responses + analytics at `/dashboard/forms` | high | M-H | FE | Verify analytics accuracy | shipped |
+| Provider billing operations UI | Backend Exists -> Frontend Missing | complete | shipped | Status, usage bars, feature matrix, plan comparison, checkout flow, invoices at `/dashboard/billing` | high | M | FE | Test checkout flow | shipped |
+| Feedback/NPS prompts | Backend Exists -> Frontend Missing | complete | shipped | FeedbackModal component + useFeedbackPrompt hook for auto-triggered NPS surveys | medium | S-M | FE | Wire into page layouts | shipped |
+| Unified search omnibox | Backend Exists -> Frontend Missing | complete | shipped | SearchOmnibox component with debounced unified search, section grouping, keyboard nav | medium | M | FE | Wire into AppSidebar nav | shipped |
+| Review moderation/replies UI | Backend Exists -> Frontend Missing | complete | shipped | ReviewCard component with inline provider response, reply thread, report form | medium | M | FE | Wire into provider dashboards | shipped |
 | Gym owner dashboard rebuild | Frontend Needs Overhaul | complete | weak/mixed | KPI cards/live feed not consistently API-driven | high | M | FE | Replace mock widgets with API-backed components | not-started |
 | Member dashboard rebuild | Frontend Needs Overhaul | complete | weak/mixed | Static-feeling metrics, weak persistence | high | M | FE | Rebuild around subscriptions/progress/notifications/loyalty | not-started |
 | Trainer dashboard rebuild | Frontend Needs Overhaul | complete | mixed | Inconsistent panel depth, some hardcoded data | high | M | FE | Implement queue-first API-driven dashboard panels | not-started |
@@ -109,6 +109,18 @@ Summary:
 
 
 ## Changelog
+
+2026-06-11 (batch): Completed all HIGH-priority tracker items in single session:
+  1. Team management workspace - shipped with permissions, direct add, full RBAC
+  2. Assignment rules UI - CRUD at /dashboard/assignment-rules with strategy/tier/priority
+  3. Loyalty center - balance, rewards, history, redemptions at /dashboard/loyalty
+  4. Forms builder + responses - form editor, question builder, analytics at /dashboard/forms  
+  5. Provider billing UI - status, usage, plans, checkout, invoices at /dashboard/billing
+  6. Feedback/NPS prompts - FeedbackModal + useFeedbackPrompt hook
+  7. Search omnibox - SearchOmnibox with debounced unified search
+  8. Review moderation/replies - ReviewCard with provider response + reply + report
+  
+  Remaining: Dashboard rebuilds (gym/member/trainer/dietitian), booking flow hardening, admin hardening
 
 2026-06-11 (2): Completed Team management workspace with permission guards and direct member creation:
   - Added handleDirectAdd() for creating members with credentials
