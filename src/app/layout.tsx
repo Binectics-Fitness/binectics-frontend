@@ -8,6 +8,7 @@ import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { RegionProvider } from "@/contexts/RegionContext";
 import { ToastContainer } from "@/components/Toast";
 import { CommandBar } from "@/components/ds/CommandBar";
+import { NavigationProgress } from "@/components/ds/NavigationProgress";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 export const metadata: Metadata = {
@@ -70,6 +71,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <a href="#main-content" className="skip-link">Skip to main content</a>
+        <NavigationProgress />
         <GoogleAnalytics />
         <QueryProvider>
           <AuthProvider>

@@ -3,6 +3,7 @@
 
 // Async states
 export { AsyncSpinner, EmptySlate } from "./AsyncStates";
+export { NavigationProgress, startNavigationProgress } from "./NavigationProgress";
 
 // Phase 1 — core primitives
 export { Eyebrow } from "./Eyebrow";
