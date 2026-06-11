@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import SearchableSelect from "@/components/SearchableSelect";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import {
   formsService,
   QuestionType,
@@ -383,13 +384,9 @@ export default function FormsPage() {
               </h2>
 
               {isLoading ? (
-                <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
-                  Loading forms...
-                </p>
+                <AsyncSpinner label="Loading forms" />
               ) : forms.length === 0 ? (
-                <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
-                  No forms yet. Create one to start collecting responses.
-                </p>
+                <EmptySlate message="No forms yet. Create one to start collecting responses." />
               ) : (
                 <div className="overflow-x-auto mt-4">
                   <table className="w-full min-w-[700px] border-collapse text-sm">

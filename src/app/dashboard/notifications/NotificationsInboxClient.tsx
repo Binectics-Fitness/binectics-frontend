@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -140,13 +141,9 @@ export default function NotificationsInboxClient() {
 
           <div>
             {listQuery.isLoading ? (
-              <div className="px-6 py-12 text-center text-sm text-fg-3">
-                Loading notifications...
-              </div>
+              <div className="px-6 py-4"><AsyncSpinner label="Loading notifications" /></div>
             ) : notifications.length === 0 ? (
-              <div className="px-6 py-12 text-center text-sm text-fg-3">
-                No notifications in this category.
-              </div>
+              <div className="px-6 py-4"><EmptySlate message="No notifications in this category." /></div>
             ) : (
               notifications.map((item) => (
                 <button

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAssignmentRules } from "@/hooks/useAssignmentRules";
@@ -300,13 +301,9 @@ export default function AssignmentRulesPage() {
           </div>
 
           {isLoading ? (
-            <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
-              Loading rules...
-            </p>
+            <AsyncSpinner label="Loading rules" />
           ) : sortedRules.length === 0 ? (
-            <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
-              No assignment rules yet. Create one to start auto-routing.
-            </p>
+            <EmptySlate message="No assignment rules yet. Create one to start auto-routing." />
           ) : (
             <div className="overflow-x-auto mt-4">
               <table className="w-full min-w-[1000px] border-collapse text-sm">

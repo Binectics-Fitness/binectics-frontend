@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -338,13 +339,9 @@ export default function TeamWorkspacePage() {
               </div>
 
               {isLoading ? (
-                <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
-                  Loading team workspace...
-                </p>
+                <AsyncSpinner label="Loading team workspace" />
               ) : filteredMembers.length === 0 ? (
-                <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
-                  No members found for this filter.
-                </p>
+                <EmptySlate message="No members found for this filter." />
               ) : (
                 <div className="overflow-x-auto mt-4">
                   <table className="w-full min-w-[840px] border-collapse text-sm">

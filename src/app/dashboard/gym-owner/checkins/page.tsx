@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { checkinsService } from "@/lib/api/checkins";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { CheckInHistoryPeriod, type OrgCheckInDashboardStats, type CheckIn } from "@/lib/types";
@@ -219,9 +220,9 @@ export default function GymCheckinsPage() {
         </div>
         <div className="max-h-[460px] overflow-y-auto">
           {(loading && stream.length === 0) ? (
-            <div className="px-4.5 py-10 text-[13px]" style={{ color: "var(--fg-3)" }}>Loading live check-ins...</div>
+            <div className="px-4.5 py-4"><AsyncSpinner label="Loading live check-ins" /></div>
           ) : stream.length === 0 ? (
-            <div className="px-4.5 py-10 text-[13px]" style={{ color: "var(--fg-3)" }}>No check-ins found for this period.</div>
+            <div className="px-4.5 py-4"><EmptySlate message="No check-ins found for this period." mt="mt-0" /></div>
           ) : (
             stream.map((checkIn) => {
               const member = personName(checkIn);

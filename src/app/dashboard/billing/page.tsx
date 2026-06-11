@@ -4,6 +4,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
+import { AsyncSpinner } from "@/components/ds";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
@@ -191,9 +192,7 @@ export default function ProviderBillingPage() {
             </p>
           </div>
         ) : isLoading ? (
-          <p className="text-sm" style={{ color: "var(--fg-3)" }}>
-            Loading billing data...
-          </p>
+          <AsyncSpinner label="Loading billing data" />
         ) : (
           <>
             {billingStatus && (

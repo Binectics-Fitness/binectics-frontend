@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService, MealType } from "@/lib/api/progress";
 import type { ClientProfile, MealFeedback } from "@/lib/api/progress";
 import type { Metadata } from "next";
@@ -206,9 +207,9 @@ export default function MealLogPage() {
         </h3>
 
         {loading ? (
-          <div style={{ color: "var(--fg-3)", fontSize: 13 }}>Loading meals...</div>
+           <AsyncSpinner label="Loading meals" />
         ) : meals.length === 0 ? (
-          <div style={{ color: "var(--fg-3)", fontSize: 13 }}>No meals logged yet.</div>
+           <EmptySlate message="No meals logged yet." mt="mt-0" />
         ) : (
           meals.slice(0, 20).map((meal, i) => (
             <div

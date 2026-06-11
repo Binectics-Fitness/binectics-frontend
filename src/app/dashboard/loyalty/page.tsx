@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { loyaltyService } from "@/lib/api/loyalty";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { AsyncSpinner } from "@/components/ds";
 import {
   LoyaltyEventType,
   LoyaltyRedemptionStatus,
@@ -278,9 +279,7 @@ export default function LoyaltyCenterPage() {
 
           <div className="p-4">
             {isLoading ? (
-              <p className="text-sm" style={{ color: "var(--fg-3)" }}>
-                Loading...
-              </p>
+              <AsyncSpinner label="Loading rewards" />
             ) : (
               <>
                 {activeTab === "rewards" && (

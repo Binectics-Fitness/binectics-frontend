@@ -1,6 +1,9 @@
 // Design System v2 — Primitives
 // All components follow shared.css tokens from the Binectics design prototype
 
+// Async states
+export { AsyncSpinner, EmptySlate } from "./AsyncStates";
+
 // Phase 1 — core primitives
 export { Eyebrow } from "./Eyebrow";
 export { StatusDot } from "./StatusDot";

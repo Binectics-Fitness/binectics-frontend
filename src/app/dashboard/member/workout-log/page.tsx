@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, ActivityReport } from "@/lib/api/progress";
 import type { Metadata } from "next";
@@ -240,11 +241,9 @@ export default function WorkoutLogPage() {
         </h3>
 
         {loading ? (
-          <div style={{ color: "var(--fg-3)", fontSize: 13 }}>
-            Loading workouts...
-          </div>
+          <AsyncSpinner label="Loading workouts" />
         ) : activities.length === 0 ? (
-          <div style={{ color: "var(--fg-3)", fontSize: 13 }}>No workouts logged yet.</div>
+          <EmptySlate message="No workouts logged yet." mt="mt-0" />
         ) : (
           <div className="overflow-x-auto">
             <table

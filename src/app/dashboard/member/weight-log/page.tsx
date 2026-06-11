@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, WeightLog } from "@/lib/api/progress";
 import type { Metadata } from "next";
@@ -258,9 +259,9 @@ export default function WeightLogPage() {
           Recent
         </h3>
         {loading ? (
-          <div style={{ color: "var(--fg-3)", fontSize: 13 }}>Loading logs...</div>
+           <AsyncSpinner label="Loading logs" />
         ) : logs.length === 0 ? (
-          <div style={{ color: "var(--fg-3)", fontSize: 13 }}>No weight logs yet.</div>
+           <EmptySlate message="No weight logs yet." mt="mt-0" />
         ) : (
           <div className="overflow-x-auto">
             <table
