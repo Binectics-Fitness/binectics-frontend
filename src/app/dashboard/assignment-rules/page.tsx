@@ -336,7 +336,7 @@ export default function AssignmentRulesPage() {
                       <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
                         <span
                           className="font-mono"
-                          style={{ tabularNums: "tabular-nums" }}
+                          style={{ fontVariantNumeric: "tabular-nums" }}
                         >
                           {rule.priority}
                         </span>
@@ -347,7 +347,7 @@ export default function AssignmentRulesPage() {
                       <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
                         <span
                           className="font-mono text-xs"
-                          style={{ tabularNums: "tabular-nums" }}
+                          style={{ fontVariantNumeric: "tabular-nums" }}
                         >
                           {rule.staff_user_ids.length} staff
                         </span>

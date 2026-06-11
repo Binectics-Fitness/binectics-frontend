@@ -40,7 +40,8 @@ export function useAssignmentRules(organizationId: string) {
           strategy: data.strategy,
         });
         if (response.success && response.data) {
-          setRules((prev) => [...prev, response.data as AssignmentRule]);
+          const newRule = response.data as AssignmentRule;
+          setRules((prev) => [...prev, newRule]);
           return true;
         }
         setError("Failed to create rule");
@@ -64,8 +65,9 @@ export function useAssignmentRules(organizationId: string) {
           data,
         );
         if (response.success && response.data) {
+          const updatedRule = response.data as AssignmentRule;
           setRules((prev) =>
-            prev.map((r) => (r._id === ruleId ? response.data : r)),
+            prev.map((r) => (r._id === ruleId ? updatedRule : r)),
           );
           return true;
         }

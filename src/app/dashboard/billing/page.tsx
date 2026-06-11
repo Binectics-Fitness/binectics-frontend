@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -16,38 +17,32 @@ import {
   type ProviderPlanOption,
 } from "@/lib/api/providerBilling";
 
-function subscriptionStatusColor(status: ProviderSubscriptionStatus): {
-  bg: string;
-  fg: string;
-} {
+function subscriptionStatusColor(status: ProviderSubscriptionStatus): React.CSSProperties {
   switch (status) {
     case ProviderSubscriptionStatus.ACTIVE:
     case ProviderSubscriptionStatus.TRIALING:
-      return { bg: "var(--signal-soft)", fg: "var(--signal)" };
+      return { background: "var(--signal-soft)", color: "var(--signal)" };
     case ProviderSubscriptionStatus.PAST_DUE:
-      return { bg: "var(--warn-soft, var(--bg-2))", fg: "var(--warn)" };
+      return { background: "var(--bg-2)", color: "var(--warn)" };
     case ProviderSubscriptionStatus.CANCELLED:
     case ProviderSubscriptionStatus.EXPIRED:
-      return { bg: "var(--danger-soft)", fg: "var(--danger)" };
+      return { background: "var(--danger-soft)", color: "var(--danger)" };
     default:
-      return { bg: "var(--bg-2)", fg: "var(--fg-3)" };
+      return { background: "var(--bg-2)", color: "var(--fg-3)" };
   }
 }
 
-function invoiceStatusColor(status: ProviderInvoiceStatus): {
-  bg: string;
-  fg: string;
-} {
+function invoiceStatusColor(status: ProviderInvoiceStatus): React.CSSProperties {
   switch (status) {
     case ProviderInvoiceStatus.PAID:
-      return { bg: "var(--signal-soft)", fg: "var(--signal)" };
+      return { background: "var(--signal-soft)", color: "var(--signal)" };
     case ProviderInvoiceStatus.OPEN:
-      return { bg: "var(--bg-2)", fg: "var(--fg-2)" };
+      return { background: "var(--bg-2)", color: "var(--fg-2)" };
     case ProviderInvoiceStatus.VOID:
     case ProviderInvoiceStatus.UNCOLLECTIBLE:
-      return { bg: "var(--danger-soft)", fg: "var(--danger)" };
+      return { background: "var(--danger-soft)", color: "var(--danger)" };
     default:
-      return { bg: "var(--bg-2)", fg: "var(--fg-3)" };
+      return { background: "var(--bg-2)", color: "var(--fg-3)" };
   }
 }
 
