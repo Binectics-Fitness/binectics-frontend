@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { utilityService } from "@/lib/api/utility";
 import type {
   CreateOrgMembershipPlanRequest,
   UpdateOrgMembershipPlanRequest,
@@ -14,7 +15,7 @@ import { toast } from "@/components/Toast";
 
 type ModalMode = "create" | "edit";
 
-const CURRENCIES = ["USD", "GBP", "EUR", "ZAR", "NGN", "KES", "GHS"];
+const FALLBACK_CURRENCIES = ["USD", "GBP", "EUR", "ZAR", "NGN", "KES", "GHS"];
 const EMPTY_FORM: CreateOrgMembershipPlanRequest = {
   name: "",
   description: "",
@@ -30,11 +31,13 @@ const EMPTY_FORM: CreateOrgMembershipPlanRequest = {
 function PlanModal({
   mode,
   initial,
+  currencies,
   onClose,
   onSave,
 }: {
   mode: ModalMode;
   initial: CreateOrgMembershipPlanRequest;
+  currencies: string[];
   onClose: () => void;
   onSave: (data: CreateOrgMembershipPlanRequest) => Promise<void>;
 }) {
@@ -176,7 +179,7 @@ function PlanModal({
                 className="h-9 rounded-(--r-2) px-3 text-[13.5px]"
                 style={{ background: "var(--bg-2)", border: "1px solid var(--border-2)", color: "var(--ink)" }}
               >
-                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {currencies.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>
@@ -369,8 +372,31 @@ function PlanCard({
 export default function DietitianPlansClient() {
   const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [currencies, setCurrencies] = useState<string[]>(FALLBACK_CURRENCIES);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<{ mode: ModalMode; plan?: MarketplaceMembershipPlan } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadCurrencies = async () => {
+      const configRes = await utilityService.getPlatformConfig();
+      if (!mounted || !configRes.success || !configRes.data) return;
+
+      const supported = configRes.data.currencies
+        .filter((currency) => currency.is_active)
+        .map((currency) => currency.code.toUpperCase());
+
+      if (supported.length > 0 && mounted) {
+        setCurrencies(supported);
+      }
+    };
+
+    void loadCurrencies();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -522,6 +548,7 @@ export default function DietitianPlansClient() {
       {modal && (
         <PlanModal
           mode={modal.mode}
+          currencies={currencies}
           initial={
             modal.plan
               ? {
