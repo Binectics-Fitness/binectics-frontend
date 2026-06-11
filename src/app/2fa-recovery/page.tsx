@@ -2,225 +2,99 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BinecticsMark } from "@/components/BinecticsLogo";
+import { BinecticsLockup } from "@/components/BinecticsLogo";
 
 export default function TwoFactorRecoveryPage() {
   const [code, setCode] = useState("");
 
   return (
-    <div
-      className="min-h-screen grid place-items-center p-8"
-      style={{ background: "var(--bg-2)", fontFamily: "var(--font-sans)" }}
-    >
-      <div
-        className="w-full"
-        style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r-3)",
-          maxWidth: 480,
-          padding: "48px 40px",
-        }}
-      >
-        {/* Brand mark */}
-        <div className="flex justify-center" style={{ marginBottom: 24 }}>
-          <BinecticsMark size={28} className="text-(--ink)" />
-        </div>
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
+      <header className="flex items-center h-14 px-6" style={{ borderBottom: "1px solid var(--border)" }}>
+        <Link href="/"><BinecticsLockup /></Link>
+      </header>
 
-        {/* Eyebrow */}
-        <div
-          className="flex items-center justify-center"
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            color: "var(--fg-3)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: 16,
-            gap: 6,
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              background: "oklch(0.65 0.18 75)",
-              borderRadius: "50%",
-            }}
-          />
-          2FA recovery &middot; lost device
-        </div>
-
-        {/* Heading */}
-        <h1
-          className="text-center"
-          style={{
-            fontSize: 30,
-            letterSpacing: "-0.024em",
-            fontWeight: 500,
-            color: "var(--ink)",
-            lineHeight: 1.15,
-            marginBottom: 14,
-          }}
-        >
-          Lost your{" "}
-          <em
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontStyle: "italic",
-              fontWeight: 400,
-            }}
-          >
-            phone
-          </em>
-          ?
-        </h1>
-
-        {/* Description */}
-        <p
-          className="text-center mx-auto"
-          style={{
-            fontSize: 15,
-            color: "var(--fg-2)",
-            lineHeight: 1.55,
-            marginBottom: 28,
-            maxWidth: "38ch",
-          }}
-        >
-          Enter one of the 8 recovery codes you saved when you set up 2FA. Each
-          code only works once — we&apos;ll regenerate the others.
-        </p>
-
-        {/* Form */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            window.location.href = "/dashboard/settings#security";
-          }}
-        >
-          <div
-            className="flex flex-col"
-            style={{ gap: 6, marginBottom: 14 }}
-          >
-            <label
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 10.5,
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-                color: "var(--fg-3)",
-              }}
-            >
-              Recovery code
-            </label>
-            <input
-              type="text"
-              required
-              minLength={9}
-              maxLength={11}
-              pattern="[A-Z0-9]{4}-[A-Z0-9]{4}"
-              placeholder="XXXX-XXXX"
-              autoFocus
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              style={{
-                background: "var(--bg)",
-                border: "1px solid var(--border-2)",
-                borderRadius: 8,
-                padding: 14,
-                fontFamily: "ui-monospace, monospace",
-                fontSize: 22,
-                letterSpacing: "0.4em",
-                textAlign: "center",
-                color: "var(--ink)",
-                width: "100%",
-                textTransform: "uppercase",
-                outline: "none",
-              }}
-            />
+      <main className="flex-1 flex items-center justify-center px-5 py-12">
+        <div className="w-full max-w-sm">
+          <div className="mb-8">
+            <div className="eyebrow mb-2">2FA recovery</div>
+            <h1 className="text-[28px] font-medium leading-tight" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+              Enter recovery code
+            </h1>
+            <p className="text-[14.5px] mt-2" style={{ color: "var(--fg-3)" }}>
+              Lost your authenticator device? Use one of your saved recovery codes.
+            </p>
           </div>
 
-          <button
-            type="submit"
-            className="btn-primary-v2"
-            style={{
-              width: "100%",
-              height: 42,
-              justifyContent: "center",
-              marginTop: 6,
-            }}
-          >
-            Use recovery code
-          </button>
-        </form>
+          <div className="rounded-(--r-3) p-4 mb-4" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
+            <div className="flex justify-between items-center py-1 text-[12px]">
+              <span className="font-mono uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Account</span>
+              <strong style={{ color: "var(--ink)", fontWeight: 500 }}>t••••@gmail.com</strong>
+            </div>
+            <div className="flex justify-between items-center py-1 text-[12px]">
+              <span className="font-mono uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Codes left</span>
+              <strong style={{ color: "var(--ink)", fontWeight: 500 }}>8 of 8</strong>
+            </div>
+          </div>
 
-        {/* Helper */}
-        <p
-          className="text-center"
-          style={{
-            fontSize: 13,
-            color: "var(--fg-3)",
-            marginTop: 16,
-          }}
-        >
-          Lost all your codes too?{" "}
-          <Link
-            href="/help"
-            style={{
-              color: "var(--ink)",
-              textDecoration: "underline",
-              textUnderlineOffset: 3,
-              textDecorationColor: "var(--border-2)",
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              window.location.href = "/dashboard/settings#security";
             }}
+            className="flex flex-col gap-5"
           >
-            Contact support
-          </Link>{" "}
-          — we&apos;ll verify by another channel (typically 4-6 hours).
-        </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+                Recovery code
+              </label>
+              <input
+                type="text"
+                required
+                minLength={9}
+                maxLength={11}
+                pattern="[A-Z0-9]{4}-[A-Z0-9]{4}"
+                placeholder="XXXX-XXXX"
+                autoFocus
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                className="h-11.5 w-full rounded-(--r-2) px-3 text-center text-[20px]"
+                style={{
+                  background: "var(--bg)",
+                  border: "1px solid var(--border-2)",
+                  color: "var(--ink)",
+                  fontFamily: "ui-monospace, monospace",
+                  letterSpacing: "0.3em",
+                  textTransform: "uppercase",
+                }}
+              />
+            </div>
 
-        {/* Footer detail */}
-        <div
-          className="flex flex-col"
-          style={{
-            marginTop: 28,
-            paddingTop: 20,
-            borderTop: "1px solid var(--border)",
-            gap: 4,
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            color: "var(--fg-3)",
-          }}
-        >
-          <div className="flex justify-between" style={{ padding: "4px 0" }}>
-            <span>Account</span>
-            <strong
+            <button type="submit" className="btn-primary-v2 lg w-full justify-center">
+              Use recovery code
+            </button>
+
+            <Link href="/login" className="btn-ghost-v2 w-full justify-center">
+              Back to sign in
+            </Link>
+          </form>
+
+          <p className="text-center text-[13px] mt-4" style={{ color: "var(--fg-3)" }}>
+            Lost all your codes too?{" "}
+            <Link
+              href="/help"
               style={{
                 color: "var(--ink)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 12.5,
-                fontWeight: 500,
-                letterSpacing: "-0.005em",
+                textDecoration: "underline",
+                textUnderlineOffset: 3,
+                textDecorationColor: "var(--border-2)",
               }}
             >
-              t&bull;&bull;&bull;&bull;@gmail.com
-            </strong>
-          </div>
-          <div className="flex justify-between" style={{ padding: "4px 0" }}>
-            <span>Codes left</span>
-            <strong
-              style={{
-                color: "var(--ink)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 12.5,
-                fontWeight: 500,
-                letterSpacing: "-0.005em",
-              }}
-            >
-              8 of 8 unused
-            </strong>
-          </div>
+              Contact support
+            </Link>{" "}
+            and we&apos;ll verify by another channel.
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
