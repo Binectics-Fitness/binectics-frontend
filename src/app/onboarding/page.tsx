@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { teamsService } from "@/lib/api/teams";
 import { onboardingService } from "@/lib/api/onboarding";
+import { AccountType } from "@/lib/types";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import { MEMBER_STEPS } from "./_member";
@@ -62,42 +65,86 @@ const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
   DIETITIAN: "dietitian",
 };
 
+const ROLE_TO_ACCOUNT_TYPE: Partial<Record<RoleId, AccountType>> = {
+  trainer: AccountType.PERSONAL_TRAINER,
+  gym: AccountType.GYM_OWNER,
+  dietitian: AccountType.DIETITIAN,
+};
+
+function buildDefaultOrganizationName(role: RoleId, firstName?: string, lastName?: string): string {
+  const ownerName = [firstName, lastName].filter(Boolean).join(" ").trim() || "Your";
+  switch (role) {
+    case "gym":
+      return `${ownerName} Gym`;
+    case "trainer":
+      return `${ownerName} Training`;
+    case "dietitian":
+      return `${ownerName} Practice`;
+    default:
+      return `${ownerName} Workspace`;
+  }
+}
+
 function OnboardingContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { user, updateUser } = useAuth();
+  const { organizations, currentOrg, setCurrentOrg, refreshOrganizations, isLoading: orgLoading } = useOrganization();
   const initialRole = searchParams.get("role") as RoleId | null;
   const accountRole = (user?.role && ACCOUNT_ROLE_TO_ID[user.role]) || null;
   const preselected = (initialRole && VALID_ROLES.includes(initialRole) ? initialRole : null) ?? accountRole;
 
-  const [role, setRole] = useState<RoleId | null>(preselected);
+  const [manualRole, setManualRole] = useState<RoleId | null>(preselected);
+  const role = manualRole ?? accountRole;
   const [step, setStep] = useState(preselected ? 1 : 0);
   const [data, setData] = useState<Record<string, unknown>>({});
-  const [completed, setCompleted] = useState(Boolean(user?.is_onboarding_complete));
   const [isFinishing, setIsFinishing] = useState(false);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const creatingWorkspaceRef = useRef(false);
 
+  const workspaceReady = Boolean(currentOrg);
   const roleDef = role ? ROLES.find((r) => r.id === role) : null;
   const steps = roleDef?.steps || GENERIC_STEPS;
   const totalSteps = steps.length;
 
   useEffect(() => {
-    if (completed && user) {
+    if (user?.is_onboarding_complete && user) {
       const routes: Record<string, string> = { USER: "/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
       window.location.replace(routes[user.role] || "/member");
     }
-  }, [completed, user]);
+  }, [user]);
 
   useEffect(() => {
-    setCompleted(Boolean(user?.is_onboarding_complete));
-  }, [user?.is_onboarding_complete]);
-
-  // The user object can resolve after mount — adopt the account role then.
-  useEffect(() => {
-    if (accountRole && role === null && step === 0) {
-      setRole(accountRole);
-      setStep(1);
+    const activeRole = role ?? accountRole;
+    if (!user || orgLoading || creatingWorkspaceRef.current || workspaceReady || organizations.length > 0) {
+      return;
     }
-  }, [accountRole, role, step]);
+
+    const accountType = activeRole ? ROLE_TO_ACCOUNT_TYPE[activeRole] : undefined;
+    if (!accountType) {
+      return;
+    }
+
+    creatingWorkspaceRef.current = true;
+
+    const createWorkspace = async () => {
+      setWorkspaceError(null);
+      const response = await teamsService.createOrganization({
+        name: buildDefaultOrganizationName(activeRole ?? "trainer", user.first_name, user.last_name),
+        account_type: accountType,
+        description: "Auto-created from onboarding",
+      });
+
+      if (response.success && response.data) {
+        setCurrentOrg(response.data);
+        await refreshOrganizations();
+      } else {
+        setWorkspaceError(response.message || "We could not create your workspace yet.");
+        creatingWorkspaceRef.current = false;
+      }
+    };
+
+    void createWorkspace();
+  }, [accountRole, currentOrg, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, user, workspaceReady]);
 
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -106,7 +153,7 @@ function OnboardingContent() {
   const minsLeft = Math.max(1, Math.round(((totalSteps - step) / totalSteps) * 8));
 
   const handleSelectRole = (id: RoleId) => {
-    setRole(id);
+    setManualRole(id);
     if (step === 0) setStep(1);
   };
 
@@ -179,6 +226,11 @@ function OnboardingContent() {
 
   return (
     <>
+    {workspaceError && (
+      <div className="ob-mobile-header" style={{ position: "sticky", top: 0, zIndex: 10, paddingInline: 16, background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ color: "var(--danger)", fontSize: 12 }}>{workspaceError}</div>
+      </div>
+    )}
     <style>{`
       .ob-shell { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr 360px; background: var(--bg); }
       .ob-rail { background: var(--bg-2); border-right: 1px solid var(--border); padding: 28px 24px; display: flex; flex-direction: column; gap: 36px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
@@ -298,6 +350,11 @@ function OnboardingContent() {
       {/* ═══ Center stage ═══ */}
       <main style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="ob-stage-area">
+          {role !== "member" && !workspaceReady ? (
+            <div className="rounded-(--r-3) p-3.5" style={{ border: "1px solid var(--border)", background: "var(--bg-2)", color: "var(--fg-2)" }}>
+              Preparing your workspace...
+            </div>
+          ) : null}
           {renderStage()}
         </div>
 
@@ -311,16 +368,18 @@ function OnboardingContent() {
             {(step > 1 || (step === 1 && !accountRole)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
             <button
               type="button"
-              disabled={(step === 0 && !role) || isFinishing}
+              disabled={(step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member")}
               onClick={handleContinue}
               className="btn-primary-v2 sm"
-              style={{ opacity: (step === 0 && !role) || isFinishing ? 0.4 : 1 }}
+              style={{ opacity: (step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member") ? 0.4 : 1 }}
             >
               {step >= totalSteps
                 ? isFinishing
                   ? "Finishing..."
                   : "Go to dashboard"
-                : `Continue${step < totalSteps && roleDef ? ` → ${roleDef.steps[step]?.title || ""}` : " →"}`}
+                : !workspaceReady && role !== "member"
+                  ? "Preparing workspace..."
+                  : `Continue${step < totalSteps && roleDef ? ` → ${roleDef.steps[step]?.title || ""}` : " →"}`}
             </button>
           </div>
         </div>

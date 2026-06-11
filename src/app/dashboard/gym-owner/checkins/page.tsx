@@ -113,6 +113,8 @@ export default function GymCheckinsPage() {
     <GymDashboardShell
       activeItem="Check‑ins"
       crumb="Check-ins"
+      organizationName={currentOrg?.name}
+      organizationInitials={currentOrg ? initials(currentOrg.name) : "IL"}
       actions={
         <div className="flex gap-2.5 items-center">
           <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.04em] px-2.5 py-1 rounded-full" style={{ color: "var(--signal-ink)", background: "var(--signal-soft)", border: "1px solid oklch(0.88 0.05 148)" }}>

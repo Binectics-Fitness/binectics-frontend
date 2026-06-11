@@ -3,7 +3,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import SearchableSelect from "@/components/SearchableSelect";
+import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
@@ -78,11 +78,6 @@ export default function ProviderBillingPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "plans" | "invoices">("overview");
 
   const [interval, setInterval] = useState<"month" | "year">("month");
-
-  const organizationOptions = organizations.map((org) => ({
-    label: org.name,
-    value: org._id,
-  }));
 
   useEffect(() => {
     const load = async () => {
@@ -169,25 +164,13 @@ export default function ProviderBillingPage() {
           </p>
         </div>
 
-        <div>
-          <label
-            className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-            style={{ color: "var(--fg-3)" }}
-          >
-            Organization
-          </label>
-          <div className="mt-1.5 max-w-xs">
-            <SearchableSelect
-              value={currentOrg?._id ?? ""}
-              onChange={(nextOrgId) => {
-                const selected = organizations.find((o) => o._id === nextOrgId) ?? null;
-                setCurrentOrg(selected);
-              }}
-              options={organizationOptions}
-              placeholder="Select organization"
-            />
-          </div>
-        </div>
+        <OrganizationContextBanner
+          label="Billing organization"
+          helperText="Switch organizations before reviewing plan usage or invoices."
+          organizations={organizations}
+          currentOrg={currentOrg}
+          onChange={setCurrentOrg}
+        />
 
         {error && (
           <div

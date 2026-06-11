@@ -1,12 +1,20 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { UserRole } from "@/lib/types";
+
+function Icon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {children}
+    </svg>
+  );
+}
 
 export default function SettingsLayout({
   children,
@@ -14,10 +22,10 @@ export default function SettingsLayout({
   children: React.ReactNode;
 }) {
   const { user, isLoading } = useAuth();
-  const { organizations } = useOrganization();
+  const { organizations, currentOrg, setCurrentOrg } = useOrganization();
   const router = useRouter();
   const pathname = usePathname();
-  const ownsAnyOrg = organizations.some((o) => o.is_owner);
+  const ownsAnyOrg = organizations.some((organization) => organization.is_owner);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -29,7 +37,7 @@ export default function SettingsLayout({
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-signal mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-signal mx-auto" />
           <p className="mt-4 text-fg-2">Loading settings...</p>
         </div>
       </div>
@@ -41,101 +49,46 @@ export default function SettingsLayout({
       name: "Profile",
       href: "/dashboard/settings/profile",
       icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
+        <Icon>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </Icon>
       ),
     },
     {
       name: "Account",
       href: "/dashboard/settings/account",
       icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-        </svg>
+        <Icon>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </Icon>
       ),
     },
     {
       name: "Notifications",
       href: "/dashboard/settings/notifications",
       icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
+        <Icon>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </Icon>
       ),
     },
     {
       name: "Privacy",
       href: "/dashboard/settings/privacy",
       icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
-        </svg>
+        <Icon>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </Icon>
       ),
     },
     {
       name: "Billing",
       href: "/dashboard/settings/billing",
       icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
+        <Icon>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </Icon>
       ),
     },
     ...(ownsAnyOrg
@@ -144,19 +97,9 @@ export default function SettingsLayout({
             name: "Plan & Usage",
             href: "/dashboard/settings/organization-billing",
             icon: (
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              </svg>
+              <Icon>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </Icon>
             ),
           },
         ]
@@ -165,7 +108,6 @@ export default function SettingsLayout({
 
   return (
     <div className="min-h-screen bg-bg">
-      {/* Header */}
       <header className="bg-bg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
@@ -184,25 +126,13 @@ export default function SettingsLayout({
                 }
                 className="text-sm text-fg-2 hover:text-fg flex items-center gap-2 mb-2"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 Back to Dashboard
               </Link>
               <h1 className="text-3xl font-black text-ink">Settings</h1>
-              <p className="mt-1 text-fg-2">
-                Manage your account and preferences
-              </p>
+              <p className="mt-1 text-fg-2">Manage your account and preferences</p>
             </div>
           </div>
         </div>
@@ -210,7 +140,6 @@ export default function SettingsLayout({
 
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-          {/* Sidebar Navigation */}
           <div className="w-full lg:w-64 lg:shrink-0">
             <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
               {settingsTabs.map((tab) => {
@@ -220,9 +149,7 @@ export default function SettingsLayout({
                     key={tab.href}
                     href={tab.href}
                     className={`flex items-center gap-3 rounded-(--r-2) px-4 py-3 text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-signal text-fg"
-                        : "text-fg-2 hover:bg-bg-2 hover:text-fg"
+                      isActive ? "bg-signal text-fg" : "text-fg-2 hover:bg-bg-2 hover:text-fg"
                     }`}
                   >
                     {tab.icon}
@@ -233,8 +160,18 @@ export default function SettingsLayout({
             </nav>
           </div>
 
-          {/* Main Content */}
-          <div className="min-w-0 flex-1">{children}</div>
+          <div className="min-w-0 flex-1">
+            <div className="mb-6">
+              <OrganizationContextBanner
+                label="Settings organization"
+                helperText="Billing and organization settings are scoped to the active workspace."
+                organizations={organizations}
+                currentOrg={currentOrg}
+                onChange={setCurrentOrg}
+              />
+            </div>
+            <div className="bg-bg border border-border rounded-(--r-3) p-6 lg:p-8">{children}</div>
+          </div>
         </div>
       </div>
     </div>

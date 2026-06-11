@@ -34,18 +34,28 @@ interface GymDashboardShellProps {
   activeItem: string;
   crumb: string;
   actions?: React.ReactNode;
+  organizationName?: string;
+  organizationInitials?: string;
   children: React.ReactNode;
 }
 
-function SidebarContent({ activeItem }: { activeItem: string }) {
+function SidebarContent({
+  activeItem,
+  organizationName = "Iron Lab",
+  organizationInitials = "IL",
+}: {
+  activeItem: string;
+  organizationName?: string;
+  organizationInitials?: string;
+}) {
   return (
     <div className="flex flex-col gap-6 px-3.5 pb-6">
       <Link href="/" className="flex items-center gap-2.5 px-1.5 py-1">
         <BinecticsLockup />
       </Link>
       <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-(--r-2) cursor-pointer" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
-        <span className="w-5.5 h-5.5 rounded-[4px] flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--gym)", color: "oklch(0.98 0 0)" }}>IL</span>
-        <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>Iron Lab</span>
+        <span className="w-5.5 h-5.5 rounded-[4px] flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--gym)", color: "oklch(0.98 0 0)" }}>{organizationInitials}</span>
+        <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>{organizationName}</span>
       </div>
       {SIDEBAR.map((s) => (
         <nav key={s.label} className="flex flex-col gap-0.5" aria-label={s.label}>
@@ -72,26 +82,34 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
   );
 }
 
-export function GymDashboardShell({ activeItem, crumb, actions, children }: GymDashboardShellProps) {
+export function GymDashboardShell({
+  activeItem,
+  crumb,
+  actions,
+  organizationName = "Iron Lab",
+  organizationInitials = "IL",
+  children,
+}: GymDashboardShellProps) {
+
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
       {/* Mobile nav */}
       <DashboardMobileNav>
-        <SidebarContent activeItem={activeItem} />
+        <SidebarContent activeItem={activeItem} organizationName={organizationName} organizationInitials={organizationInitials} />
       </DashboardMobileNav>
 
       {/* Desktop layout */}
       <div className="hidden lg:grid" style={{ gridTemplateColumns: "232px 1fr", minHeight: "100vh" }}>
         {/* Desktop sidebar */}
         <aside className="flex flex-col gap-6 sticky top-0 h-screen overflow-y-auto" style={{ background: "var(--bg)", borderRight: "1px solid var(--border)", padding: "18px 14px" }} aria-label="Sidebar navigation">
-          <SidebarContent activeItem={activeItem} />
+          <SidebarContent activeItem={activeItem} organizationName={organizationName} organizationInitials={organizationInitials} />
         </aside>
 
         {/* Main */}
         <div className="flex flex-col min-w-0">
           <header className="flex items-center justify-between h-14 px-7 sticky top-0 z-10" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
             <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-              <Link href="/dashboard/gym-owner" className="hover:underline" style={{ color: "var(--fg-3)", textDecoration: "none" }}>Iron Lab</Link>
+              <Link href="/dashboard/gym-owner" className="hover:underline" style={{ color: "var(--fg-3)", textDecoration: "none" }}>{organizationName}</Link>
               <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
               <span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
             </div>
@@ -107,7 +125,9 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
       <div className="lg:hidden">
         <header className="flex items-center justify-between h-12 px-5 sticky top-14 z-10" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
           <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-            <span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
+            <span className="font-medium" style={{ color: "var(--ink)" }}>{organizationName}</span>
+            <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
+            <span>{crumb}</span>
           </div>
           {actions && <div className="flex gap-2 flex-wrap">{actions}</div>}
         </header>

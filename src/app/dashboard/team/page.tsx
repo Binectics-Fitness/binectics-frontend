@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import SearchableSelect from "@/components/SearchableSelect";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -264,6 +265,14 @@ export default function TeamWorkspacePage() {
   return (
     <MemberDashboardShell activeLabel="Home">
       <div className="flex flex-col gap-5">
+        <OrganizationContextBanner
+          label="Team organization"
+          helperText="Switch organizations to manage the right staff roster and invitations."
+          organizations={organizations}
+          currentOrg={currentOrg}
+          onChange={setCurrentOrg}
+        />
+
         <div>
           <div
             className="font-mono text-[11px] uppercase tracking-[0.06em]"

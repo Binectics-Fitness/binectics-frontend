@@ -90,10 +90,22 @@ Summary:
 3. Every shipped item must update this table status and date.
 4. Each PR should update one row in this tracker.
 
+## Organization Scoping Guide
+
+Use this as the default decision rule when wiring new screens or API calls:
+
+| Scope | Examples | Org required? |
+|---|---|---|
+| Org-scoped | gym owner check-in analytics, team members, team roles, organization billing, assignment rules | Yes |
+| User-scoped | member dashboard, personal check-in history, consultations, progress tracking, loyalty, forms, reviews | No |
+| Hybrid / context only | onboarding, signup, dashboard shell indicators | Sometimes |
+
+Provider onboarding now auto-creates a starter workspace for gym owners, trainers, and dietitians so the first dashboard render has a valid org context.
+
 ## Weekly Update
 
 - Week of: 2026-06-11
-- Completed (7 shipped):
+- Completed (8 shipped):
   - [x] Dashboard bookings rewrite
   - [x] Member dashboard rewrite
   - [x] Admin users metrics + moderation
@@ -101,6 +113,7 @@ Summary:
   - [x] Marketplace error handling polish
   - [x] Booking wizard API wiring
   - [x] Member self-log flows (weight/meal/workout)
+  - [x] Organization scoping simplification (auto-create provider workspace + org banners)
 - In progress:
   - [x] Check-in ops feed reliability (reads shipped; offline/device health pending)
 - Next:

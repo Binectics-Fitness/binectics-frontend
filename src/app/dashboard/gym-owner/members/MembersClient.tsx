@@ -117,6 +117,8 @@ export default function GymMembersClient() {
     <GymDashboardShell
       activeItem="Members"
       crumb="Members"
+      organizationName={currentOrg?.name}
+      organizationInitials={currentOrg ? getInitials(currentOrg.name) : "IL"}
       actions={
         <>
           <button

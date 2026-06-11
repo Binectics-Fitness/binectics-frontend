@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
+import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAssignmentRules } from "@/hooks/useAssignmentRules";
@@ -23,7 +24,7 @@ function strategyLabel(strategy: AssignmentStrategy): string {
 }
 
 export default function AssignmentRulesPage() {
-  const { currentOrg } = useOrganization();
+  const { organizations, currentOrg } = useOrganization();
   const orgId = currentOrg?._id;
 
   const { rules, isLoading, error, loadRules, createRule, updateRule, deleteRule } =
@@ -206,6 +207,13 @@ export default function AssignmentRulesPage() {
     return (
       <MemberDashboardShell activeLabel="Home">
         <div className="flex flex-col gap-5">
+          <OrganizationContextBanner
+            label="Assignment organization"
+            helperText="Assignment rules are scoped per organization. Select a workspace to continue."
+            organizations={organizations}
+            currentOrg={null}
+            onChange={() => {}}
+          />
           <div
             className="rounded-(--r-3) p-4"
             style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
@@ -222,6 +230,14 @@ export default function AssignmentRulesPage() {
   return (
     <MemberDashboardShell activeLabel="Home">
       <div className="flex flex-col gap-5">
+        <OrganizationContextBanner
+          label="Assignment organization"
+          helperText="Assignment rules are scoped per organization."
+          organizations={organizations}
+          currentOrg={currentOrg}
+          onChange={() => {}}
+        />
+
         <div>
           <div
             className="font-mono text-[11px] uppercase tracking-[0.06em]"
