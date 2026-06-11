@@ -75,7 +75,7 @@ export default function FormResponsesPage({
 
   if (isLoading) {
     return (
-      <MemberDashboardShell activeLabel="Home">
+      <MemberDashboardShell activeLabel="Forms">
         <div className="flex flex-col gap-5">
           <p className="text-sm" style={{ color: "var(--fg-3)" }}>
             Loading responses...
@@ -86,7 +86,7 @@ export default function FormResponsesPage({
   }
 
   return (
-    <MemberDashboardShell activeLabel="Home">
+    <MemberDashboardShell activeLabel="Forms">
       <div className="flex flex-col gap-5">
         <div>
           <div

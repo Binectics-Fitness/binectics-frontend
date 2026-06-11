@@ -206,7 +206,7 @@ export default function AssignmentRulesPage() {
 
   if (!currentOrg) {
     return (
-      <MemberDashboardShell activeLabel="Home">
+      <MemberDashboardShell activeLabel="Assignment rules">
         <div className="flex flex-col gap-5">
           <OrganizationContextBanner
             label="Assignment organization"
@@ -229,7 +229,7 @@ export default function AssignmentRulesPage() {
   }
 
   return (
-    <MemberDashboardShell activeLabel="Home">
+    <MemberDashboardShell activeLabel="Assignment rules">
       <div className="flex flex-col gap-5">
         <OrganizationContextBanner
           label="Assignment organization"

@@ -230,7 +230,7 @@ export default function FormsPage() {
   ].includes(qType);
 
   return (
-    <MemberDashboardShell activeLabel="Home">
+    <MemberDashboardShell activeLabel="Forms">
       <div className="flex flex-col gap-5">
         <div className="flex items-start justify-between gap-3">
           <div>

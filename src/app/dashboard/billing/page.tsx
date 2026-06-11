@@ -145,7 +145,7 @@ export default function ProviderBillingPage() {
   const currentTier = billingStatus?.plan_tier ?? ProviderPlanTier.FREE;
 
   return (
-    <MemberDashboardShell activeLabel="Home">
+    <MemberDashboardShell activeLabel="Billing">
       <div className="flex flex-col gap-5">
         <div>
           <div

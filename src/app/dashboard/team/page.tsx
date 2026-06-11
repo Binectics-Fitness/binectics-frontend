@@ -258,7 +258,7 @@ export default function TeamWorkspacePage() {
   }
 
   return (
-    <MemberDashboardShell activeLabel="Home">
+    <MemberDashboardShell activeLabel="Team">
       <div className="flex flex-col gap-5">
         <OrganizationContextBanner
           label="Team organization"

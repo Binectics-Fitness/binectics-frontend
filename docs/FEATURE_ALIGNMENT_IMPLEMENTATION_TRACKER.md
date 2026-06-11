@@ -52,7 +52,7 @@ Summary:
 | Member self-log flows (workout/meal/weight) | Frontend Exists -> Backend Missing | partial/unclear | shipped | /dashboard/member/{weight,meal,workout}-log now API-backed with real-time data; create flows marked coming soon | medium | M | FE+BE | Wire create endpoints when available; consider client-side caching | shipped |
 | Recurring booking | Frontend Exists -> Backend Missing | partial/unclear | placeholder/partial | Recurrence semantics not implemented end-to-end | medium | M-H | FE+BE | Define recurrence contract and implement flow | not-started |
 | Dashboard shell duplication | Alignment/Refactor Opportunity | n/a | duplicated | Multiple role shells drift in behavior/styling | medium | M | FE | Extract shared dashboard shell primitives | not-started |
-| API client underutilization | Alignment/Refactor Opportunity | complete | underused | Existing services (teams/forms/loyalty) not consumed | medium | S | FE | Add integration coverage map + enforce usage | not-started |
+| API client underutilization | Alignment/Refactor Opportunity | complete | partial | Forms, loyalty, team, assignment-rules, billing were built as routes + API clients but had NO nav entry (unreachable except by URL). Now surfaced via a "Workspace" dropdown in MemberDashboardShell (desktop + mobile) with active-state highlighting. Follow-up: org-scoped features (team/billing/assignment-rules) ideally move to the gym/provider shell — ties into Dashboard shell duplication | medium | S | FE | Move org-scoped features to provider shell; audit remaining orphaned routes (saved-providers) | in-progress |
 | Async states consistency | Technical Debt | n/a | inconsistent | Loading/error/empty UX inconsistent across routes | high | S-M | FE | Introduce shared async-state components | not-started |
 | Route-level error boundaries | Technical Debt | n/a | partial | Not all route groups protected | high | S | FE | Add error boundaries for major app segments | not-started |
 | API contract typing normalization | Technical Debt | complete | inconsistent | Union/shape drift between FE expectations and API responses | medium | M | FE+BE | Generate stricter typed adapters for API responses | not-started |
@@ -178,3 +178,9 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - Manual recovery: explicit Refresh button (header) plus Try-again (error banner) and Refresh (stale banner) actions; offline banner explains paused state
   - Lint/typecheck clean under React Compiler rules (lazy isOnline init, ticker-driven `now` state, setTimeout-kicked initial load to avoid sync setState-in-effect)
   - Device-health states deferred: there is NO devices/device-state API (devices page is still a hardcoded mock); row moved to `blocked` pending a backend contract. Per execution rule #1, did not fabricate mock device data in the live feed.
+
+2026-06-11 (5): Surfaced orphaned-but-shipped features in navigation (API client underutilization):
+  - Root cause: Forms, Loyalty, Team, Assignment rules, and Billing were fully built (routes + API clients) but had NO nav entry — reachable only by typing the URL. Forms in particular was invisible despite being marked "shipped".
+  - Added a "Workspace" dropdown to MemberDashboardShell (desktop via NavDropdown, plus a Workspace group in the mobile menu) linking all five, with active-state highlighting.
+  - Fixed each page's stale activeLabel="Home" → its real label so the nav highlights correctly.
+  - Follow-up noted: org-scoped features (team/billing/assignment-rules) currently render in the member shell; they ideally belong in the gym/provider shell (ties into the Dashboard shell duplication row). saved-providers is also still orphaned.

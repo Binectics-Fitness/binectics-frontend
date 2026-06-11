@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { NavDropdown } from "./NavDropdown";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -20,6 +21,17 @@ const NAV_LINKS = [
   { label: "Bookings",    href: "/dashboard/bookings" },
   { label: "Messages",    href: "/dashboard/messages" },
   { label: "Activity",    href: "/dashboard/member/streaks" },
+];
+
+/* ── Workspace items ── grouped under a dropdown to keep the primary nav lean.
+   These features ship as routes + API clients but were previously unreachable
+   (no nav entry). Pages enforce their own permission/RBAC gating. */
+const WORKSPACE_LINKS = [
+  { label: "Forms",            href: "/dashboard/forms" },
+  { label: "Loyalty",          href: "/dashboard/loyalty" },
+  { label: "Team",             href: "/dashboard/team" },
+  { label: "Assignment rules", href: "/dashboard/assignment-rules" },
+  { label: "Billing",          href: "/dashboard/billing" },
 ];
 
 /* ── Props ── */
@@ -87,6 +99,38 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                 </Link>
               );
             })}
+
+            {/* Workspace — grouped dropdown for features beyond the core flow */}
+            <NavDropdown
+              label="Workspace"
+              active={WORKSPACE_LINKS.some((l) => l.label === activeLabel)}
+            >
+              <div className="py-1.5" style={{ minWidth: 200 }}>
+                {WORKSPACE_LINKS.map((link) => {
+                  const isActive = link.label === activeLabel;
+                  return (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className={`block text-[13.5px] ${isActive ? "font-medium" : ""}`}
+                      style={{
+                        padding: "8px 14px",
+                        color: isActive ? "var(--ink)" : "var(--fg-2)",
+                        background: isActive ? "var(--bg-2)" : undefined,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) e.currentTarget.style.background = "var(--bg-2)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </NavDropdown>
           </nav>
 
           {/* Right — actions */}
@@ -252,6 +296,33 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
             {/* Nav links */}
             <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }} aria-label="Mobile navigation">
               {NAV_LINKS.map((link) => {
+                const isActive = link.label === activeLabel;
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center rounded-(--r-2) text-[16px] ${isActive ? "font-medium" : ""}`}
+                    style={{
+                      height: 48,
+                      padding: "0 12px",
+                      color: isActive ? "var(--ink)" : "var(--fg-2)",
+                      background: isActive ? "var(--bg-3)" : undefined,
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              {/* Workspace group */}
+              <p
+                className="px-3 pt-5 pb-1 font-mono text-[11px] uppercase tracking-[0.06em]"
+                style={{ color: "var(--fg-3)" }}
+              >
+                Workspace
+              </p>
+              {WORKSPACE_LINKS.map((link) => {
                 const isActive = link.label === activeLabel;
                 return (
                   <Link

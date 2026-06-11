@@ -126,7 +126,7 @@ export default function LoyaltyCenterPage() {
   );
 
   return (
-    <MemberDashboardShell activeLabel="Home">
+    <MemberDashboardShell activeLabel="Loyalty">
       <div className="flex flex-col gap-5">
         <div>
           <div
