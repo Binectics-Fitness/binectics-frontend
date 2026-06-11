@@ -172,7 +172,6 @@ function OnboardingContent() {
       if (user) {
         updateUser({ ...user, is_onboarding_complete: true });
       }
-      setCompleted(true);
       const routes: Record<RoleId, string> = {
         member: "/member",
         trainer: "/dashboard/trainer",
@@ -185,7 +184,10 @@ function OnboardingContent() {
 
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
-    else if (step === 1 && !accountRole) { setStep(0); setRole(null); }
+    else if (step === 1 && !accountRole) {
+      setStep(0);
+      setManualRole(null);
+    }
   };
 
   const renderStage = () => {
@@ -197,7 +199,7 @@ function OnboardingContent() {
             {ROLE_CARDS.map((rc) => {
               const on = role === rc.id;
               return (
-                <button key={rc.id} type="button" role="radio" aria-checked={on} onClick={() => { setRole(rc.id); }} style={{
+                <button key={rc.id} type="button" role="radio" aria-checked={on} onClick={() => { handleSelectRole(rc.id); }} style={{
                   background: on ? "var(--bg-2)" : "var(--bg)", border: on ? "1px solid var(--ink)" : "1px solid var(--border)",
                   borderRadius: "var(--r-3)", padding: 22, display: "flex", flexDirection: "column", gap: 10,
                   cursor: "pointer", textAlign: "left", position: "relative", transition: "border-color 120ms, background 120ms",
