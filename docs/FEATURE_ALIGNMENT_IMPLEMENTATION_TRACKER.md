@@ -48,7 +48,7 @@ Summary:
 | Dietitian dashboard rebuild | Frontend Needs Overhaul | complete | shipped | Adherence + consultation panels wired to provider APIs | high | M | FE | Monitor edge cases | shipped |
 | Booking flow hardening | Frontend Needs Overhaul | complete | shipped | /booking wizard wired to getProviderSlots + createBooking with full error/loading states | high | M | FE+BE | Monitor confirmation flow | shipped |
 | Admin users/providers hardening | Frontend Needs Overhaul | complete | shipped | /admin/users metrics + suspend/unsuspend, /admin/listings full moderation with badges | high | M | FE | Monitor edge cases | shipped |
-| Check-in ops feed reliability | Frontend Needs Overhaul | complete | partial | Live org stats + recent check-in feed now API-backed with auto-refresh; offline/device-health states still pending | medium | M | FE | Add offline handling, device health, and manual recovery actions | in-progress |
+| Check-in ops feed reliability | Frontend Needs Overhaul | complete | partial | Live feed API-backed with auto-refresh, offline-aware polling (pause/resume), stale/degraded indicators, manual refresh + retry, and last-known-good preservation on failed polls. Device-health states blocked: no devices API exists (devices page is still mock) | medium | M | FE+BE | BE: define device-state/health endpoint; FE: wire device health once contract lands | blocked |
 | Member self-log flows (workout/meal/weight) | Frontend Exists -> Backend Missing | partial/unclear | shipped | /dashboard/member/{weight,meal,workout}-log now API-backed with real-time data; create flows marked coming soon | medium | M | FE+BE | Wire create endpoints when available; consider client-side caching | shipped |
 | Recurring booking | Frontend Exists -> Backend Missing | partial/unclear | placeholder/partial | Recurrence semantics not implemented end-to-end | medium | M-H | FE+BE | Define recurrence contract and implement flow | not-started |
 | Dashboard shell duplication | Alignment/Refactor Opportunity | n/a | duplicated | Multiple role shells drift in behavior/styling | medium | M | FE | Extract shared dashboard shell primitives | not-started |
@@ -115,7 +115,9 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - [x] Member self-log flows (weight/meal/workout)
   - [x] Organization scoping simplification (auto-create provider workspace + org banners)
 - In progress:
-  - [x] Check-in ops feed reliability (reads shipped; offline/device health pending)
+  - [x] Check-in ops feed reliability — offline handling, degraded/stale states, and manual recovery shipped; device-health blocked on a missing backend devices/device-state endpoint
+- Blocked:
+  - [ ] Check-in device health (needs BE devices/device-state contract; FE devices page still mock)
 - Next:
   - [ ] Recurring booking
   - [ ] Dashboard shell duplication cleanup
@@ -168,3 +170,11 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - /marketplace + /marketplace/[listingId]: added error states with retry; wired activeSort to API param; trimmed unsupported price_asc sort option
   - /booking: rebuilt 3-step wizard around real APIs (listingId query param, getProviderSlots day-by-day picker, getTypes filter by providerRole, createBooking on confirm → router.push to /dashboard/bookings); Suspense wrapper for useSearchParams
   - All HIGH-priority Feature Alignment Tracker items now shipped
+
+2026-06-11 (4): Hardened check-in ops feed reliability (/dashboard/gym-owner/checkins):
+  - Offline-aware polling: listens to window online/offline, pauses the 30s poll while offline, resumes with an immediate refetch on reconnect
+  - Last-known-good preservation: a failed poll no longer blanks the live feed; stats/history are only replaced on success
+  - Degraded-mode indicators: status pill now reflects Live / Stale (poll missed >75s) / Offline; "Recent check-ins" header shows Auto-refreshing / Reconnecting / Paused·offline
+  - Manual recovery: explicit Refresh button (header) plus Try-again (error banner) and Refresh (stale banner) actions; offline banner explains paused state
+  - Lint/typecheck clean under React Compiler rules (lazy isOnline init, ticker-driven `now` state, setTimeout-kicked initial load to avoid sync setState-in-effect)
+  - Device-health states deferred: there is NO devices/device-state API (devices page is still a hardcoded mock); row moved to `blocked` pending a backend contract. Per execution rule #1, did not fabricate mock device data in the live feed.
