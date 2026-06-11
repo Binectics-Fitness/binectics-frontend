@@ -24,6 +24,8 @@ export default function ResetPasswordForm({ token }: { token?: string }) {
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token) {
@@ -38,7 +40,7 @@ export default function ResetPasswordForm({ token }: { token?: string }) {
     try {
       const res = await authService.resetPassword({
         token,
-        password: data.password,
+        newPassword: data.password,
       });
       if (res.success) {
         setSubmitted(true);
@@ -90,38 +92,60 @@ export default function ResetPasswordForm({ token }: { token?: string }) {
                   <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
                     New password <span style={{ color: "var(--danger)" }}>*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Minimum 8 characters"
-                    className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]"
-                    style={{
-                      background: "var(--bg)",
-                      border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)",
-                      color: "var(--ink)",
-                      fontFamily: "inherit",
-                    }}
-                    {...registerField("password")}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      required
+                      placeholder="Minimum 12 characters"
+                      className="h-8.5 w-full rounded-(--r-2) px-3 pr-14 text-[13.5px]"
+                      style={{
+                        background: "var(--bg)",
+                        border: errors.password ? "1px solid var(--danger)" : "1px solid var(--border-2)",
+                        color: "var(--ink)",
+                        fontFamily: "inherit",
+                      }}
+                      {...registerField("password")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[9px] uppercase tracking-[0.05em]"
+                      style={{ color: "var(--fg-3)" }}
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                    >
+                      {showNewPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
                     Confirm password <span style={{ color: "var(--danger)" }}>*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Re-enter your password"
-                    className="h-8.5 w-full rounded-(--r-2) px-3 text-[13.5px]"
-                    style={{
-                      background: "var(--bg)",
-                      border: errors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)",
-                      color: "var(--ink)",
-                      fontFamily: "inherit",
-                    }}
-                    {...registerField("confirmPassword")}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      required
+                      placeholder="Re-enter your password"
+                      className="h-8.5 w-full rounded-(--r-2) px-3 pr-14 text-[13.5px]"
+                      style={{
+                        background: "var(--bg)",
+                        border: errors.confirmPassword ? "1px solid var(--danger)" : "1px solid var(--border-2)",
+                        color: "var(--ink)",
+                        fontFamily: "inherit",
+                      }}
+                      {...registerField("confirmPassword")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[9px] uppercase tracking-[0.05em]"
+                      style={{ color: "var(--fg-3)" }}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
                   {errors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.confirmPassword.message}</p>}
                 </div>
 
