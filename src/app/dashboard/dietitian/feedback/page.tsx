@@ -28,7 +28,7 @@ export default function DietitianFeedbackPage() {
     const load = async () => {
       setLoading(true);
 
-      const clientsRes = await progressService.getMyClientProfiles(20);
+      const clientsRes = await progressService.getMyClientProfiles();
       if (!clientsRes.success || !clientsRes.data || !mounted) {
         setRows([]);
         setLoading(false);
@@ -39,11 +39,15 @@ export default function DietitianFeedbackPage() {
         clientsRes.data.slice(0, 12).map(async (client) => {
           const res = await progressService.getMealFeedbacks(client._id, 8);
           if (!res.success || !res.data) return [];
+
+          const label =
+            typeof client.client_id === "object"
+              ? `${client.client_id.first_name} ${client.client_id.last_name}`
+              : `Client ${client.client_id.slice(-6).toUpperCase()}`;
+
           return res.data.map((entry) => ({
             ...entry,
-            clientLabel: client.user
-              ? `${client.user.first_name} ${client.user.last_name}`
-              : `Client ${client.client_id.slice(-6).toUpperCase()}`,
+            clientLabel: label,
           }));
         }),
       );
@@ -83,7 +87,7 @@ export default function DietitianFeedbackPage() {
       return { status: "danger", text: "needs correction" };
     }
 
-    if (row.rating === MealRating.GOOD || row.rating === MealRating.EXCELLENT) {
+    if (row.rating === MealRating.GOOD || row.rating === MealRating.GREAT) {
       return { status: "ok", text: "on plan" };
     }
 
