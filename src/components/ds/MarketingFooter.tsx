@@ -50,7 +50,7 @@ export function MarketingFooter() {
             </svg>
             <span className="text-[22px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Binectics</span>
           </Link>
-          <p className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-3)", margin: 0 }}>The operating system for fitness. One marketplace, one set of dashboards, one tab. Available in 50+ countries.</p>
+          <p className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-3)", margin: 0 }}>The copilot your fitness business runs on. AI-drafted client reports, payments, and a verified marketplace — supported in 50+ countries.</p>
           <div className="flex gap-3 mt-1">
             <a href="https://x.com/binectics" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" className="hover:text-ink" style={{ color: "var(--fg-3)" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -83,7 +83,7 @@ export function MarketingFooter() {
         <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>© 2026 Binectics, Inc. All rights reserved.</span>
         <div className="flex items-center gap-3">
           <RegionSelector />
-          <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>v 1.0 · 14,200 providers · 52 countries</span>
+          <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>v 1.0 · early access · 50+ countries supported</span>
         </div>
       </div>
     </>

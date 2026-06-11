@@ -86,10 +86,10 @@ const EARNINGS = [
 ];
 
 const KPIS = [
-  { label: "Avg leads/month", value: "8.4" },
-  { label: "Client retention lift", value: "+34%" },
-  { label: "Avg monthly earnings (ZA)", value: "R 38.4K" },
-  { label: "Active trainers", value: "1,241" },
+  { label: "Draft types in the copilot", value: "5" },
+  { label: "Drafts sent without your review", value: "0" },
+  { label: "Currencies for client billing", value: "8" },
+  { label: "Payout settlement", value: "2 days" },
 ];
 
 export default function ForTrainersPage() {
@@ -120,9 +120,10 @@ export default function ForTrainersPage() {
           className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          A profile that ranks in local search. A calendar that never
-          double-books. Payouts in 2 days. Programming tools that save you
-          hours every week.
+          The copilot drafts your check-in summaries, weekly reports, and
+          program tweaks from the data clients already log. A profile that
+          ranks in local search, a calendar that never double-books, payouts
+          in 2 days.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup&role=trainer" className="btn-primary-v2 lg">
@@ -299,16 +300,16 @@ export default function ForTrainersPage() {
             className="text-[17px] sm:text-[19px] leading-[1.5] max-w-[58ch] mb-5"
             style={{ color: "var(--ink)" }}
           >
-            &ldquo;I went from 12 clients managing everything via WhatsApp to
-            42 clients with zero admin overhead. The rebooking nudges alone
-            are worth it — I stopped losing clients to forgetfulness.&rdquo;
+            Monday, 8:04. Four client reports drafted overnight from last
+            week&apos;s logs. You edit two sentences, approve, and send them
+            all before your first session.
           </blockquote>
           <div
             className="text-[14px] leading-[1.5]"
             style={{ color: "var(--fg-3)" }}
           >
-            Sarah Okafor, CSCS &middot; Certified Personal Trainer &middot;
-            Cape Town &middot; 42 active clients
+            The Monday morning &middot; trainer workflow with the copilot
+            &middot; early access
           </div>
         </div>
       </section>

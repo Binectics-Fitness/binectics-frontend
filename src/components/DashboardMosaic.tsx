@@ -38,9 +38,48 @@ const SHAPE_CY = 400;
 const WEIGHT_R = 130;
 const BAR_HALF = 260;
 
+// Integer LCG, not Math.sin: sin is implementation-approximated, so server
+// and client can disagree in the last bits and break hydration.
 function sr(seed: number) {
-  const x = Math.sin(seed + 1) * 10000;
-  return x - Math.floor(x);
+  let s = (seed + 1) * 7919 % 233280;
+  s = (s * 9301 + 49297) % 233280;
+  s = (s * 9301 + 49297) % 233280;
+  return s / 233280;
+}
+
+// Round to 2dp: the browser's CSSOM truncates long floats when it re-serializes
+// inline styles, so full-precision values fail hydration comparison.
+function r2(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+// ─── Breathing wave background (shared across bento tiles) ──────────
+// Wave order is intentional: painted back-to-front (4 → 1 → 3 → 2).
+
+const WAVE_PATHS = [
+  { cls: "r3-wave r3-wave-4", opacity: 0.08, d: "M0 440C200 410,400 390,600 420C800 450,1000 400,1200 430L1200 560L0 560Z" },
+  { cls: "r3-wave r3-wave-1", opacity: 0.1, d: "M0 400C150 360,300 340,450 375C600 410,750 355,900 370C1050 385,1150 350,1200 375L1200 560L0 560Z" },
+  { cls: "r3-wave r3-wave-3", opacity: 0.09, d: "M0 340C80 310,180 290,300 320C420 350,520 290,600 305C680 320,820 280,900 310C980 340,1080 300,1200 325L1200 560L0 560Z" },
+  { cls: "r3-wave r3-wave-2", opacity: 0.12, d: "M0 370C100 330,220 310,350 345C480 380,580 315,700 325C820 335,920 300,1050 335C1130 355,1180 340,1200 350L1200 560L0 560Z" },
+];
+
+function WaveBackground({ id, stops }: { id: string; stops: [string, string][] }) {
+  return (
+    <div className="r3-breath-bg" aria-hidden="true">
+      <svg className="r3-breath-svg" viewBox="0 0 1200 560" preserveAspectRatio="none" fill="none">
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="1" y2="0">
+            {stops.map(([offset, color]) => (
+              <stop key={offset} offset={offset} stopColor={color} />
+            ))}
+          </linearGradient>
+        </defs>
+        {WAVE_PATHS.map((w) => (
+          <path key={w.cls} className={w.cls} d={w.d} fill={`url(#${id})`} opacity={w.opacity} />
+        ))}
+      </svg>
+    </div>
+  );
 }
 
 const PCOLORS = [
@@ -79,33 +118,31 @@ function dumbbellPoint(t: number, jx: number, jy: number): [number, number] {
 }
 
 function blobRadius(seed: number): string {
-  const a = 30 + sr(seed) * 40;
-  const b = 30 + sr(seed + 1) * 40;
-  const c = 30 + sr(seed + 2) * 40;
-  const d = 30 + sr(seed + 3) * 40;
-  const e = 30 + sr(seed + 4) * 40;
-  const f = 30 + sr(seed + 5) * 40;
-  const g = 30 + sr(seed + 6) * 40;
-  const h = 30 + sr(seed + 7) * 40;
-  return `${a}% ${100 - a}% ${b}% ${100 - b}% / ${c}% ${d}% ${100 - d}% ${100 - c}%`;
+  const a = r2(30 + sr(seed) * 40);
+  const b = r2(30 + sr(seed + 1) * 40);
+  const c = r2(30 + sr(seed + 2) * 40);
+  const d = r2(30 + sr(seed + 3) * 40);
+  return `${a}% ${r2(100 - a)}% ${b}% ${r2(100 - b)}% / ${c}% ${d}% ${r2(100 - d)}% ${r2(100 - c)}%`;
 }
 
 const PARTICLES = Array.from({ length: PARTICLE_COUNT }, (_, i) => {
-  const sx = 15 + sr(i * 7 + 1) * 770;
-  const sy = 15 + sr(i * 7 + 2) * 770;
+  const sx = r2(15 + sr(i * 7 + 1) * 770);
+  const sy = r2(15 + sr(i * 7 + 2) * 770);
   const t = i / PARTICLE_COUNT;
   const jx = (sr(i * 7 + 3) - 0.5) * 36;
   const jy = (sr(i * 7 + 9) - 0.5) * 36;
-  const [rx, ry] = dumbbellPoint(t, jx, jy);
+  const [rawRx, rawRy] = dumbbellPoint(t, jx, jy);
+  const rx = r2(rawRx);
+  const ry = r2(rawRy);
   const isBlob = i % 5 === 0;
-  const size = isBlob ? 12 + sr(i * 7 + 4) * 20 : 1 + sr(i * 7 + 4) * 1.5;
-  const delay = sr(i * 7 + 5) * 2;
+  const size = r2(isBlob ? 12 + sr(i * 7 + 4) * 20 : 1 + sr(i * 7 + 4) * 1.5);
+  const delay = r2(sr(i * 7 + 5) * 2);
   const color = isBlob
     ? `oklch(0.14 0.008 80 / ${(0.04 + sr(i * 7 + 10) * 0.05).toFixed(3)})`
     : PCOLORS[i % PCOLORS.length];
-  const dx = (sr(i * 7 + 6) - 0.5) * 40;
-  const dy = (sr(i * 7 + 7) - 0.5) * 40;
-  const driftDur = 8 + sr(i * 7 + 8) * 12;
+  const dx = r2((sr(i * 7 + 6) - 0.5) * 40);
+  const dy = r2((sr(i * 7 + 7) - 0.5) * 40);
+  const driftDur = r2(8 + sr(i * 7 + 8) * 12);
   const radius = isBlob ? blobRadius(i * 11) : "50%";
   return { sx, sy, rx, ry, size, delay, color, dx, dy, driftDur, radius, isBlob };
 });
@@ -775,21 +812,7 @@ function Row1SmallCard() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="r3-breath-bg" aria-hidden="true">
-        <svg className="r3-breath-svg" viewBox="0 0 1200 560" preserveAspectRatio="none" fill="none">
-          <defs>
-            <linearGradient id="sm-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#00d991" />
-              <stop offset="50%" stopColor="#0267f2" />
-              <stop offset="100%" stopColor="#00d991" />
-            </linearGradient>
-          </defs>
-          <path className="r3-wave r3-wave-4" d="M0 440C200 410,400 390,600 420C800 450,1000 400,1200 430L1200 560L0 560Z" fill="url(#sm-grad)" opacity="0.08" />
-          <path className="r3-wave r3-wave-1" d="M0 400C150 360,300 340,450 375C600 410,750 355,900 370C1050 385,1150 350,1200 375L1200 560L0 560Z" fill="url(#sm-grad)" opacity="0.10" />
-          <path className="r3-wave r3-wave-3" d="M0 340C80 310,180 290,300 320C420 350,520 290,600 305C680 320,820 280,900 310C980 340,1080 300,1200 325L1200 560L0 560Z" fill="url(#sm-grad)" opacity="0.09" />
-          <path className="r3-wave r3-wave-2" d="M0 370C100 330,220 310,350 345C480 380,580 315,700 325C820 335,920 300,1050 335C1130 355,1180 340,1200 350L1200 560L0 560Z" fill="url(#sm-grad)" opacity="0.12" />
-        </svg>
-      </div>
+      <WaveBackground id="sm-grad" stops={[["0%", "var(--signal)"], ["50%", "var(--gym)"], ["100%", "var(--signal)"]]} />
       <div className="bento-small-headline">
         <h3>Never miss a day.</h3>
       </div>
@@ -872,11 +895,11 @@ const CIPHER_CHARS = (() => {
   return Array.from({ length: 40 }, (_, i) => ({
     ch: pool[i % pool.length],
     isCheck: pool[i % pool.length] === "✓",
-    x: 5 + sr(i * 13 + 1) * 90,
-    y: 5 + sr(i * 13 + 2) * 90,
-    dur: 12 + sr(i * 13 + 3) * 18,
-    delay: -(sr(i * 13 + 4) * 20),
-    size: 12 + sr(i * 13 + 5) * 8,
+    x: r2(5 + sr(i * 13 + 1) * 90),
+    y: r2(5 + sr(i * 13 + 2) * 90),
+    dur: r2(12 + sr(i * 13 + 3) * 18),
+    delay: r2(-(sr(i * 13 + 4) * 20)),
+    size: r2(12 + sr(i * 13 + 5) * 8),
   }));
 })();
 
@@ -903,13 +926,16 @@ const KIOSK_MEMBERS: KioskMember[] = [
 ];
 
 function KioskFrame({ playing, member, playKey }: { playing: boolean; member: KioskMember; playKey: number }) {
-  const sw = Math.round(KIOSK_W2 * KIOSK_SC);
-  const sh = Math.round(KIOSK_H2 * KIOSK_SC);
+  // bezel wraps the scaled screen — sizing the device to the screen + padding
+  // keeps the scaled content exactly centered instead of clipping right/bottom
+  const pad = Math.round(12 * KIOSK_SC);
+  const sw = Math.round(KIOSK_W2 * KIOSK_SC) + pad * 2;
+  const sh = Math.round(KIOSK_H2 * KIOSK_SC) + pad * 2;
   return (
     <div style={{
       width: sw, height: sh, position: "relative",
       background: "oklch(0.10 0.005 80)", borderRadius: Math.round(32 * KIOSK_SC),
-      padding: Math.round(12 * KIOSK_SC),
+      padding: pad,
       boxShadow: "0 30px 50px -22px oklch(0 0 0 / 0.35), 0 2px 0 0 oklch(0 0 0 / 0.06) inset, 0 -2px 0 0 oklch(1 0 0 / 0.04) inset",
     }}>
       <div style={{ position: "absolute", top: Math.round(24 * KIOSK_SC), left: "50%", transform: "translateX(-50%)", width: 3, height: 3, borderRadius: "50%", background: "oklch(0.20 0.01 240)", zIndex: 3 }} />
@@ -1040,21 +1066,7 @@ function Row2QRCard() {
 
   return (
     <div ref={qrRef} className="bento-card bento-r2 bento-r2-qr" role="img" aria-label="QR check-in kiosk scanning members into the gym" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <div className="r3-breath-bg" aria-hidden="true">
-        <svg className="r3-breath-svg" viewBox="0 0 1200 560" preserveAspectRatio="none" fill="none">
-          <defs>
-            <linearGradient id="qr-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#0267f2" />
-              <stop offset="60%" stopColor="#00d991" />
-              <stop offset="100%" stopColor="#0267f2" />
-            </linearGradient>
-          </defs>
-          <path className="r3-wave r3-wave-4" d="M0 440C200 410,400 390,600 420C800 450,1000 400,1200 430L1200 560L0 560Z" fill="url(#qr-grad)" opacity="0.08" />
-          <path className="r3-wave r3-wave-1" d="M0 400C150 360,300 340,450 375C600 410,750 355,900 370C1050 385,1150 350,1200 375L1200 560L0 560Z" fill="url(#qr-grad)" opacity="0.10" />
-          <path className="r3-wave r3-wave-3" d="M0 340C80 310,180 290,300 320C420 350,520 290,600 305C680 320,820 280,900 310C980 340,1080 300,1200 325L1200 560L0 560Z" fill="url(#qr-grad)" opacity="0.09" />
-          <path className="r3-wave r3-wave-2" d="M0 370C100 330,220 310,350 345C480 380,580 315,700 325C820 335,920 300,1050 335C1130 355,1180 340,1200 350L1200 560L0 560Z" fill="url(#qr-grad)" opacity="0.12" />
-        </svg>
-      </div>
+      <WaveBackground id="qr-grad" stops={[["0%", "var(--gym)"], ["60%", "var(--signal)"], ["100%", "var(--gym)"]]} />
       <div className="radar-bg" aria-hidden="true">
         {[1, 2, 3, 4].map(i => <div key={i} className="radar-circle" style={{ width: 100 + i * 120, height: 100 + i * 120 }} />)}
         <div className="radar-sweep" />
@@ -1076,21 +1088,7 @@ const VERIFY_STEPS = [
 function Row2VerifyCard() {
   return (
     <div className="bento-card bento-r2 bento-r2-verify" role="img" aria-label="Three-step provider verification process">
-      <div className="r3-breath-bg" aria-hidden="true">
-        <svg className="r3-breath-svg" viewBox="0 0 1200 560" preserveAspectRatio="none" fill="none">
-          <defs>
-            <linearGradient id="vr-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#8b5cf6" />
-              <stop offset="50%" stopColor="#0267f2" />
-              <stop offset="100%" stopColor="#8b5cf6" />
-            </linearGradient>
-          </defs>
-          <path className="r3-wave r3-wave-4" d="M0 440C200 410,400 390,600 420C800 450,1000 400,1200 430L1200 560L0 560Z" fill="url(#vr-grad)" opacity="0.08" />
-          <path className="r3-wave r3-wave-1" d="M0 400C150 360,300 340,450 375C600 410,750 355,900 370C1050 385,1150 350,1200 375L1200 560L0 560Z" fill="url(#vr-grad)" opacity="0.10" />
-          <path className="r3-wave r3-wave-3" d="M0 340C80 310,180 290,300 320C420 350,520 290,600 305C680 320,820 280,900 310C980 340,1080 300,1200 325L1200 560L0 560Z" fill="url(#vr-grad)" opacity="0.09" />
-          <path className="r3-wave r3-wave-2" d="M0 370C100 330,220 310,350 345C480 380,580 315,700 325C820 335,920 300,1050 335C1130 355,1180 340,1200 350L1200 560L0 560Z" fill="url(#vr-grad)" opacity="0.12" />
-        </svg>
-      </div>
+      <WaveBackground id="vr-grad" stops={[["0%", "var(--dietitian)"], ["50%", "var(--gym)"], ["100%", "var(--dietitian)"]]} />
       <div className="cipher-bg" aria-hidden="true">
         {CIPHER_CHARS.map((c, i) => (
           <span key={i} className={`cipher-char${c.isCheck ? " cipher-check" : ""}`} style={{
@@ -1136,21 +1134,7 @@ function Row2VerifyCard() {
 function Row2GlobalCard() {
   return (
     <div className="bento-card bento-r2 bento-r2-global" role="img" aria-label="Global reach across 50+ countries with multiple payment rails">
-      <div className="r3-breath-bg" aria-hidden="true">
-        <svg className="r3-breath-svg" viewBox="0 0 1200 560" preserveAspectRatio="none" fill="none">
-          <defs>
-            <linearGradient id="gl-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#fdb90e" />
-              <stop offset="50%" stopColor="#00d991" />
-              <stop offset="100%" stopColor="#fdb90e" />
-            </linearGradient>
-          </defs>
-          <path className="r3-wave r3-wave-4" d="M0 440C200 410,400 390,600 420C800 450,1000 400,1200 430L1200 560L0 560Z" fill="url(#gl-grad)" opacity="0.08" />
-          <path className="r3-wave r3-wave-1" d="M0 400C150 360,300 340,450 375C600 410,750 355,900 370C1050 385,1150 350,1200 375L1200 560L0 560Z" fill="url(#gl-grad)" opacity="0.10" />
-          <path className="r3-wave r3-wave-3" d="M0 340C80 310,180 290,300 320C420 350,520 290,600 305C680 320,820 280,900 310C980 340,1080 300,1200 325L1200 560L0 560Z" fill="url(#gl-grad)" opacity="0.09" />
-          <path className="r3-wave r3-wave-2" d="M0 370C100 330,220 310,350 345C480 380,580 315,700 325C820 335,920 300,1050 335C1130 355,1180 340,1200 350L1200 560L0 560Z" fill="url(#gl-grad)" opacity="0.12" />
-        </svg>
-      </div>
+      <WaveBackground id="gl-grad" stops={[["0%", "var(--trainer)"], ["50%", "var(--signal)"], ["100%", "var(--trainer)"]]} />
       <svg className="meridian-bg" viewBox="0 0 400 600" fill="none" aria-hidden="true">
         {[60, 120, 180, 220, 280, 340].map((x, i) => (
           <path key={i} className="meridian-long" d={`M ${x} 0 Q ${x + (i % 2 ? 25 : -25)} 300 ${x} 600`} stroke="oklch(0.14 0.008 80 / 0.06)" strokeWidth="1" style={{ animationDelay: `${i * 1.2}s` }} />
@@ -1380,23 +1364,8 @@ function Row3DashCard() {
       <div className="r3-mob-headline">
         <h3>Subscribe in seconds.</h3>
       </div>
-      {/* Breathing wave background */}
-      <div className="r3-breath-bg" aria-hidden="true">
-        <svg className="r3-breath-svg" viewBox="0 0 1200 560" preserveAspectRatio="none" fill="none">
-          <defs>
-            <linearGradient id="r3-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#0267f2" />
-              <stop offset="30%" stopColor="#8b5cf6" />
-              <stop offset="60%" stopColor="#00d991" />
-              <stop offset="100%" stopColor="#fdb90e" />
-            </linearGradient>
-          </defs>
-          <path className="r3-wave r3-wave-4" d="M0 440C200 410,400 390,600 420C800 450,1000 400,1200 430L1200 560L0 560Z" fill="url(#r3-grad)" opacity="0.08" />
-          <path className="r3-wave r3-wave-1" d="M0 400C150 360,300 340,450 375C600 410,750 355,900 370C1050 385,1150 350,1200 375L1200 560L0 560Z" fill="url(#r3-grad)" opacity="0.10" />
-          <path className="r3-wave r3-wave-3" d="M0 340C80 310,180 290,300 320C420 350,520 290,600 305C680 320,820 280,900 310C980 340,1080 300,1200 325L1200 560L0 560Z" fill="url(#r3-grad)" opacity="0.09" />
-          <path className="r3-wave r3-wave-2" d="M0 370C100 330,220 310,350 345C480 380,580 315,700 325C820 335,920 300,1050 335C1130 355,1180 340,1200 350L1200 560L0 560Z" fill="url(#r3-grad)" opacity="0.12" />
-        </svg>
-      </div>
+      {/* Breathing wave background — all four role colors: the "four roles, one product" gradient */}
+      <WaveBackground id="r3-grad" stops={[["0%", "var(--gym)"], ["30%", "var(--dietitian)"], ["60%", "var(--signal)"], ["100%", "var(--trainer)"]]} />
       <div className="r3-window">
             <div className="r3-titlebar">
               <div className="r3-dots"><span /><span /><span /></div>
@@ -1578,6 +1547,20 @@ function Row3DashCard() {
 // ─── Main Export ─────────────────────────────────────────────────────
 
 export default function DashboardMosaic() {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Pause the breathing wave layers while the whole mosaic is offscreen —
+  // 20 infinitely-animating SVG paths are the page's priciest ambient motion.
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      el.classList.toggle("mosaic-offscreen", !entry.isIntersecting);
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <>
       <style>{`
@@ -2026,10 +2009,13 @@ export default function DashboardMosaic() {
           transform-origin: center bottom;
           will-change: transform;
         }
+        /* Periods are deliberately near-incommensurate (8/11/14/9s) so the
+           composite of the four layers never visibly repeats. */
         .r3-wave-1 { animation: breath-1 8s ease-in-out infinite; }
         .r3-wave-2 { animation: breath-2 11s ease-in-out infinite; }
         .r3-wave-3 { animation: breath-3 14s ease-in-out infinite; }
         .r3-wave-4 { animation: breath-4 9s ease-in-out infinite; }
+        .mosaic-offscreen .r3-wave { animation-play-state: paused; }
         @keyframes breath-1 {
           0%, 100% { transform: translateY(0) scaleY(1); }
           50%      { transform: translateY(-20px) scaleY(1.10); }
@@ -2346,7 +2332,7 @@ export default function DashboardMosaic() {
           .particle-blob { opacity: 1; }
         }
       `}</style>
-      <div className="bento-grid">
+      <div className="bento-grid" ref={gridRef}>
         <Row1BigCard />
         <Row1SmallCard />
         <Row2QRCard />

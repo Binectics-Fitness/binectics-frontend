@@ -190,7 +190,7 @@ export default function UnifiedNavbar() {
                   (e.currentTarget.style.background = "var(--ink)")
                 }
               >
-                Get started
+                Start free
               </Link>
             </>
           )}

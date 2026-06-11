@@ -15,21 +15,14 @@ export const metadata: Metadata = {
  */
 
 const SERVICES = [
-  { name: "Marketplace · public", uptime: "99.998%", status: "Operational", ok: true },
-  { name: "Booking · payment", uptime: "99.997%", status: "Operational", ok: true },
-  { name: "Dashboards · gym · trainer · dietitian", uptime: "99.99%", status: "Operational", ok: true },
-  { name: "QR check-in kiosks", uptime: "99.95%", status: "Operational", ok: true },
-  { name: "Admin · support", uptime: "100%", status: "Operational", ok: true },
-  { name: "Email notifications · Postmark", uptime: "99.98%", status: "Operational", ok: true },
-  { name: "Push notifications · OneSignal", uptime: "99.92%", status: "Degraded", ok: false },
-  { name: "Audit log · cold storage", uptime: "100%", status: "Operational", ok: true },
-];
-
-const INCIDENTS = [
-  { date: "18 May · 14:32", desc: "M-Pesa Daraja API timeouts", resolution: "Fixed in 38m" },
-  { date: "12 May · 02:14", desc: "Scheduled maintenance · dashboards", resolution: "30 min planned" },
-  { date: "28 Apr · 09:42", desc: "Stripe webhook lag in EU", resolution: "Fixed in 22m" },
-  { date: "12 Apr · 11:18", desc: "Search results ranking drift after deploy", resolution: "Fixed in 14m" },
+  { name: "Marketplace · public", status: "Operational", ok: true },
+  { name: "Booking · payment", status: "Operational", ok: true },
+  { name: "Dashboards · gym · trainer · dietitian", status: "Operational", ok: true },
+  { name: "QR check-in kiosks", status: "Operational", ok: true },
+  { name: "Copilot · drafting", status: "Early access", ok: true },
+  { name: "Admin · support", status: "Operational", ok: true },
+  { name: "Email notifications", status: "Operational", ok: true },
+  { name: "Audit log · cold storage", status: "Operational", ok: true },
 ];
 
 export default function StatusPage() {
@@ -47,7 +40,7 @@ export default function StatusPage() {
           System <em className="font-serif font-normal italic">status</em>.
         </h1>
         <p className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5" style={{ color: "var(--fg-2)" }}>
-          Live status of every Binectics service. Subscribe to incident updates or use the RSS feed.
+          Live status of every Binectics service. Public uptime history and the incident log begin at general launch.
         </p>
       </section>
 
@@ -56,9 +49,8 @@ export default function StatusPage() {
         <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>Services</h2>
         <div className="flex flex-col gap-2">
           {SERVICES.map((s) => (
-            <div key={s.name} className="grid grid-cols-[1fr_auto_auto] gap-4.5 items-center rounded-(--r-3) px-4.5 py-3.5" style={{ background: "var(--bg-2)" }}>
+            <div key={s.name} className="grid grid-cols-[1fr_auto] gap-4.5 items-center rounded-(--r-3) px-4.5 py-3.5" style={{ background: "var(--bg-2)" }}>
               <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{s.name}</span>
-              <span className="font-mono text-[13px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.uptime}</span>
               <span
                 className="font-mono text-[10px] px-2 py-0.75 rounded-full uppercase tracking-[0.04em]"
                 style={{
@@ -75,16 +67,10 @@ export default function StatusPage() {
 
       {/* Incidents */}
       <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
-        <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>Incidents · last 90 days</h2>
-        <div className="flex flex-col gap-2.5">
-          {INCIDENTS.map((inc) => (
-            <div key={inc.date} className="grid grid-cols-1 sm:grid-cols-[140px_1fr_120px_80px] gap-2 sm:gap-4.5 items-center rounded-(--r-3) px-4.5 py-3.5" style={{ background: "var(--bg-2)" }}>
-              <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{inc.date}</span>
-              <span className="text-[13.5px]" style={{ color: "var(--ink)" }}>{inc.desc}</span>
-              <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>{inc.resolution}</span>
-              <span className="font-mono text-[10px] px-2 py-0.75 rounded-full uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>Resolved</span>
-            </div>
-          ))}
+        <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>Incidents</h2>
+        <div className="rounded-(--r-3) px-4.5 py-8 text-center" style={{ background: "var(--bg-2)" }}>
+          <p className="text-[14px] m-0" style={{ color: "var(--fg-2)" }}>No incidents recorded.</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.04em] mt-2 m-0" style={{ color: "var(--fg-3)" }}>Public incident history begins at launch</p>
         </div>
       </section>
 

@@ -71,10 +71,10 @@ const FEATURES = [
 ];
 
 const KPIS = [
-  { label: "Avg setup time", value: "4 days" },
-  { label: "Member churn drop", value: "-28%" },
-  { label: "Admin time saved", value: "12 h/wk" },
-  { label: "Active gyms", value: "684" },
+  { label: "Currencies", value: "8" },
+  { label: "Payment rails", value: "3" },
+  { label: "Card numbers stored", value: "0" },
+  { label: "Countries supported", value: "50+" },
 ];
 
 export default function ForGymsPage() {
@@ -106,11 +106,12 @@ export default function ForGymsPage() {
           style={{ color: "var(--fg-2)" }}
         >
           Members, schedule, check-ins, payouts, payroll, marketing — all in
-          one place. No more Excel + Mindbody + WhatsApp groups.
+          one place, with copilot seats so your staff trainers&apos; report
+          drafts write themselves. No more Excel + Mindbody + WhatsApp groups.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup&role=gym" className="btn-primary-v2 lg">
-            Get started free &rarr;
+            Start free &rarr;
           </Link>
           <Link href="/features/dashboard" className="btn-ghost-v2 lg">
             See the dashboard
@@ -248,16 +249,16 @@ export default function ForGymsPage() {
             className="text-[17px] leading-[1.55] max-w-[58ch]"
             style={{ color: "var(--ink)" }}
           >
-            &ldquo;We replaced Mindbody, a spreadsheet, and three WhatsApp
-            groups with Binectics. Setup took four days. Our front desk staff
-            figured it out without training.&rdquo;
+            Members check in by QR, revenue reconciles itself, and every
+            staff trainer&apos;s report drafts are written for them. You watch
+            the floor, not the spreadsheet.
           </p>
           <div
             className="font-mono text-[11px] uppercase tracking-[0.04em] mt-5"
             style={{ color: "var(--fg-3)" }}
           >
-            David Okafor, Owner &middot; Iron Lab Sea Point &middot; 1,284
-            members &middot; 4 locations
+            The front desk &middot; gym workflow with the copilot &middot;
+            early access
           </div>
         </div>
       </section>

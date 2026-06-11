@@ -12,12 +12,14 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 export const metadata: Metadata = {
   title: {
-    default: "Binectics — the operating system for fitness",
+    default: "Binectics — the copilot your fitness business runs on",
     template: "%s — Binectics",
   },
   description:
-    "One marketplace, one set of dashboards, one tab. Discovery, payments, check-ins, and client health for gyms, trainers, and dietitians in 50+ countries.",
+    "AI-drafted client summaries, weekly reports, and program updates — plus payments in 8 currencies and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
   keywords: [
+    "AI fitness copilot",
+    "AI client reports",
     "fitness marketplace",
     "gym management",
     "personal trainer software",
@@ -31,16 +33,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Binectics",
-    title: "Binectics — the operating system for fitness",
+    title: "Binectics — the copilot your fitness business runs on",
     description:
-      "One marketplace, one set of dashboards, one tab. Gyms, trainers, and dietitians in 50+ countries.",
+      "AI-drafted client reports, payments in 8 currencies, and a verified marketplace — for trainers, dietitians, and gyms in 50+ countries.",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Binectics — the operating system for fitness",
+    title: "Binectics — the copilot your fitness business runs on",
     description:
-      "One marketplace, one set of dashboards, one tab. Gyms, trainers, and dietitians in 50+ countries.",
+      "AI-drafted client reports, payments in 8 currencies, and a verified marketplace — for trainers, dietitians, and gyms in 50+ countries.",
   },
   robots: {
     index: true,

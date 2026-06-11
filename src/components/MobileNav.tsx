@@ -302,7 +302,7 @@ export default function MobileNav() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = "oklch(0.08 0.008 80)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "var(--ink)")}
               >
-                Get started free
+                Start free
               </Link>
             )}
           </div>

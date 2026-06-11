@@ -412,7 +412,7 @@ export function UnifiedMobileNav() {
                     (e.currentTarget.style.background = "var(--ink)")
                   }
                 >
-                  Get started free
+                  Start free
                 </Link>
               </div>
             )}

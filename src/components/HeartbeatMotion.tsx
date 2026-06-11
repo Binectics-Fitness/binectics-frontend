@@ -34,8 +34,8 @@ const HUBS = [
     brand: false,
     tipTranslate: "19, 60",
     tipTitle: "London · GB",
-    stats: ["412 providers", "1,284 sessions today"],
-    live: "14 live now",
+    stats: ["GBP", "Stripe rails"],
+    live: "Apple Pay · Google Pay",
   },
   {
     id: "lagos",
@@ -48,8 +48,8 @@ const HUBS = [
     brand: false,
     tipTranslate: "183, 151",
     tipTitle: "Lagos · NG",
-    stats: ["980 providers", "2,840 sessions today"],
-    live: "42 live now",
+    stats: ["NGN", "Paystack · Flutterwave"],
+    live: "Launch market",
   },
   {
     id: "dubai",
@@ -62,8 +62,8 @@ const HUBS = [
     brand: false,
     tipTranslate: "339, 106",
     tipTitle: "Dubai · AE",
-    stats: ["412 providers", "1,016 sessions today"],
-    live: "28 live now",
+    stats: ["AED", "Stripe rails"],
+    live: "Launch market",
   },
   {
     id: "capetown",
@@ -76,8 +76,8 @@ const HUBS = [
     brand: false,
     tipTranslate: "115, 316",
     tipTitle: "Cape Town · ZA",
-    stats: ["684 providers", "1,920 sessions today"],
-    live: "18 live now",
+    stats: ["ZAR", "Paystack rails"],
+    live: "Launch market",
   },
   {
     id: "nairobi",
@@ -90,8 +90,8 @@ const HUBS = [
     brand: true,
     tipTranslate: "319, 268",
     tipTitle: "Nairobi · KE",
-    stats: ["318 providers", "740 sessions today"],
-    live: "9 live now · M-Pesa",
+    stats: ["KES", "Paystack · Flutterwave"],
+    live: "M-Pesa ready",
   },
 ];
 
@@ -133,12 +133,7 @@ const SECONDARY_EDGES = [
 
 export default function HeartbeatMotion() {
   const pulseLayerRef = useRef<SVGGElement>(null);
-  const counterRef = useRef<HTMLSpanElement>(null);
-  const tickRef = useRef<HTMLSpanElement>(null);
-  const rateRef = useRef<HTMLSpanElement>(null);
   const hubDotsRef = useRef<Map<string, SVGCircleElement>>(new Map());
-  const counterVal = useRef(1431284);
-  const recentPulses = useRef<number[]>([]);
   const timeoutIds = useRef<ReturnType<typeof setTimeout>[]>([]);
   const alive = useRef(true);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -194,32 +189,6 @@ export default function HeartbeatMotion() {
           hub.classList.add("hb-arrived");
           const tid = setTimeout(() => hub.classList.remove("hb-arrived"), 500);
           timeoutIds.current.push(tid);
-        }
-
-        // increment counter
-        counterVal.current += 1;
-        if (counterRef.current) {
-          counterRef.current.textContent =
-            counterVal.current.toLocaleString();
-        }
-        if (tickRef.current) {
-          tickRef.current.classList.add("hb-flash");
-          const tid2 = setTimeout(
-            () => tickRef.current?.classList.remove("hb-flash"),
-            700
-          );
-          timeoutIds.current.push(tid2);
-        }
-
-        // update rolling rate
-        const now = performance.now();
-        recentPulses.current.push(now);
-        recentPulses.current = recentPulses.current.filter(
-          (t) => now - t < 5000
-        );
-        const rate = (recentPulses.current.length / 5).toFixed(1);
-        if (rateRef.current) {
-          rateRef.current.textContent = "~" + rate + "/sec";
         }
       };
 
@@ -547,10 +516,7 @@ export default function HeartbeatMotion() {
       {/* Caption strip */}
       <div className="hb-caption">
         <span>
-          <strong ref={counterRef}>1,431,284</strong> sessions this month
-        </span>
-        <span className="hb-counter-tick" ref={tickRef}>
-          +1
+          <strong>50+ countries</strong> supported at launch
         </span>
       </div>
 
@@ -558,14 +524,13 @@ export default function HeartbeatMotion() {
       <div className="hb-legend">
         <div className="hb-row">
           <span
-            ref={rateRef}
             style={{
               fontFeatureSettings: "'tnum'",
               color: "var(--hb-ink)",
               fontWeight: 600,
             }}
           >
-            ~2.1/sec
+            8 currencies
           </span>
         </div>
       </div>

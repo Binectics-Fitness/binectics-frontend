@@ -65,8 +65,13 @@ export default function CountUp({ value, duration: durationProp, className, styl
             const progress = Math.min(elapsed / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             const current = number * eased;
-            setDisplay(`${prefix}${formatNumber(current, decimals, useCommas)}${suffix}`);
-            if (progress < 1) requestAnimationFrame(animate);
+            // write directly to the DOM — avoids a React re-render per frame
+            el.textContent = `${prefix}${formatNumber(current, decimals, useCommas)}${suffix}`;
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setDisplay(value);
+            }
           };
           requestAnimationFrame(animate);
         }
@@ -76,7 +81,7 @@ export default function CountUp({ value, duration: durationProp, className, styl
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [prefix, number, suffix, decimals, useCommas, duration]);
+  }, [prefix, number, suffix, decimals, useCommas, duration, value]);
 
   return (
     <span ref={ref} className={className} style={style}>

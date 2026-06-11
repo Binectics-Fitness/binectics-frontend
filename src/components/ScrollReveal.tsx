@@ -45,13 +45,13 @@ export default function ScrollReveal({
       kids.forEach((child, i) => {
         child.style.opacity = "0";
         child.style.transform = translate;
-        child.style.transition = `opacity 0.5s ease, transform 0.5s ease`;
+        child.style.transition = `opacity var(--motion-slow) var(--ease-out), transform var(--motion-slow) var(--ease-out)`;
         child.style.transitionDelay = `${delay + i * staggerInterval}ms`;
       });
     } else {
       el.style.opacity = "0";
       el.style.transform = translate;
-      el.style.transition = `opacity 0.55s ease, transform 0.55s ease`;
+      el.style.transition = `opacity var(--motion-slow) var(--ease-out), transform var(--motion-slow) var(--ease-out)`;
       el.style.transitionDelay = `${delay}ms`;
     }
 

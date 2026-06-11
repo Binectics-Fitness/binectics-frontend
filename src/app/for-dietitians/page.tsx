@@ -77,10 +77,10 @@ const REGIONS = [
 ];
 
 const KPIS = [
-  { label: "Avg adherence", value: "76%" },
-  { label: "Client retention lift", value: "+41%" },
-  { label: "Consultations/day", value: "4.2" },
-  { label: "Active dietitians", value: "328" },
+  { label: "Foods in the database", value: "2,400+" },
+  { label: "Draft types in the copilot", value: "5" },
+  { label: "Drafts sent without your review", value: "0" },
+  { label: "Currencies for client billing", value: "8" },
 ];
 
 export default function ForDietitiansPage() {
@@ -112,9 +112,9 @@ export default function ForDietitiansPage() {
           className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          Verified by your professional body. Branded PDF plans. Macro
-          tracking that clients actually use. A food database with West
-          African staples already in it.
+          Intake forms arrive as draft meal plans you refine in one sitting.
+          Verified by your professional body, branded PDF plans, and a food
+          database with West African staples already in it.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup&role=dietitian" className="btn-primary-v2 lg">
@@ -298,17 +298,16 @@ export default function ForDietitiansPage() {
             className="text-[17px] sm:text-[19px] leading-[1.5] max-w-[52ch] mb-5"
             style={{ color: "var(--ink)" }}
           >
-            &ldquo;The protocol library changed how I practise. I built a
-            PCOS protocol once, and now I deploy it to new clients in
-            minutes with personalised macros. My adherence rates went from
-            52% to 76% in three months.&rdquo;
+            An intake form arrives as a draft meal plan built around the
+            foods your client actually eats — shawarma and biryani included.
+            You refine portions and send it the same day.
           </blockquote>
           <div
             className="text-[14px] leading-[1.5]"
             style={{ color: "var(--fg-3)" }}
           >
-            Dr. Priya Iyer, RD &middot; Clinical Dietitian &middot; Lagos
-            &middot; 68 active clients
+            The new client &middot; dietitian workflow with the copilot
+            &middot; early access
           </div>
         </div>
       </section>

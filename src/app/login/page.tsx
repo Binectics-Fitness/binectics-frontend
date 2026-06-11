@@ -485,29 +485,29 @@ function AuthContent() {
           <div />
           <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.05em] px-2.5 py-1.25 rounded-full" style={{ color: "oklch(0.85 0.005 85)", border: "1px solid oklch(0.3 0.005 85)" }}>
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--signal)", boxShadow: "0 0 0 3px oklch(0.68 0.16 148 / 0.2)" }} />
-            2,481 sessions booked today
+            Early access · founding cohort open
           </span>
         </div>
 
         <div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.05em] mb-4.5" style={{ color: "oklch(0.65 0.005 85)" }}>Member · Lagos</div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.05em] mb-4.5" style={{ color: "oklch(0.65 0.005 85)" }}>The promise</div>
           <p className="font-serif italic text-[48px] leading-[1.1] max-w-[18ch]" style={{ letterSpacing: "-0.02em", color: "var(--bg)" }}>
-            Every coach I&apos;ve found here is verified, and the booking actually works the first time.
+            Your Monday reports, already drafted. You review, send, and get back to the floor.
           </p>
           <div className="flex items-center gap-3 mt-8">
-            <span className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold" style={{ background: "var(--signal)", color: "oklch(0.2 0.05 148)" }}>AB</span>
+            <span className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold" style={{ background: "var(--signal)", color: "oklch(0.2 0.05 148)" }}>B</span>
             <div>
-              <div className="text-[14px] font-medium">Adaora Beneteau</div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.05em] mt-0.5" style={{ color: "oklch(0.65 0.005 85)" }}>Booked 47 sessions over 8 months</div>
+              <div className="text-[14px] font-medium">The Binectics copilot</div>
+              <div className="font-mono text-[11px] uppercase tracking-[0.05em] mt-0.5" style={{ color: "oklch(0.65 0.005 85)" }}>Every draft reviewed by you before it sends</div>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-5 pt-8" style={{ borderTop: "1px solid oklch(0.3 0.005 85)" }}>
           {[
-            { v: "14,200+", k: "Verified providers" },
-            { v: "52", k: "Countries · 8 currencies" },
-            { v: "4.82", k: "Average rating · 30d" },
+            { v: "8", k: "Currencies at launch" },
+            { v: "50+", k: "Countries supported" },
+            { v: "0", k: "Drafts sent without review" },
           ].map((s) => (
             <div key={s.k}>
               <div className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{s.v}</div>
