@@ -84,12 +84,12 @@ export default function AdminDashboard() {
   return (
     <AdminDashboardShell activeItem="Overview" crumb="Overview" actions={headerActions}>
           {/* Head */}
-          <div className="flex justify-between items-end">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-end">
             <div>
               <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Platform overview</h1>
               <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>Mon · May 11 · 14:22 SAST — moderation, payments, and country health</div>
             </div>
-            <div className="inline-flex h-8 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+            <div className="hidden sm:inline-flex h-8 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
               {["Global", "Africa", "MEA", "EU", "APAC", "AMER"].map((r, i) => (
                 <span key={r} className={`px-3 flex items-center text-[12.5px] font-mono cursor-pointer ${i < 5 ? "border-r" : ""}`} style={{ color: r === "Global" ? "var(--bg)" : "var(--fg-2)", background: r === "Global" ? "var(--ink)" : "transparent", borderColor: "var(--border)", letterSpacing: "0.02em" }}>{r}</span>
               ))}
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
           {/* Fraud + Countries — 1.5fr 1fr */}
           <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-3 items-start">
             {/* Fraud table */}
-            <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="rounded-(--r-3) overflow-hidden min-w-0" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Fraud &amp; risk signals</h3>
@@ -189,12 +189,12 @@ export default function AdminDashboard() {
                 </div>
                 <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>Open full feed →</span>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-w-full">
               <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr>
                     {["Signal", "Entity", "Country", "Score", "Detected", "Action"].map((h, i) => (
-                      <th key={h} className={`text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em] px-4.5 py-2.5 ${i === 5 ? "text-right pr-4.5" : ""}`} style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
+                      <th key={h} className={`text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em] px-4.5 py-2.5 ${i === 2 ? "hidden md:table-cell" : ""} ${i === 4 ? "hidden lg:table-cell" : ""} ${i === 5 ? "text-right pr-4.5" : ""}`} style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -216,15 +216,15 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4.5 py-3 font-mono text-[11.5px] align-middle" style={{ borderBottom: i < FRAUD.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-3)" }}>{f.country}</td>
+                      <td className="px-4.5 py-3 font-mono text-[11.5px] align-middle hidden md:table-cell" style={{ borderBottom: i < FRAUD.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-3)" }}>{f.country}</td>
                       <td className="px-4.5 py-3 font-mono align-middle" style={{ borderBottom: i < FRAUD.length - 1 ? "1px solid var(--border)" : "none", color: f.scoreColor }}>{f.score}</td>
-                      <td className="px-4.5 py-3 font-mono text-[11.5px] align-middle" style={{ borderBottom: i < FRAUD.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-3)" }}>{f.detected}</td>
+                      <td className="px-4.5 py-3 font-mono text-[11.5px] align-middle hidden lg:table-cell" style={{ borderBottom: i < FRAUD.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-3)" }}>{f.detected}</td>
                       <td className="px-4.5 py-3 text-right align-middle" style={{ borderBottom: i < FRAUD.length - 1 ? "1px solid var(--border)" : "none" }}>
-                        <div className="flex gap-1.5 justify-end">
+                        <div className="flex flex-wrap gap-1.5 justify-end">
                           {f.actions.map((a) => (
                             a.type === "danger"
                               ? <button key={a.label} className="h-7 px-2.5 rounded-(--r-2) text-[12px] font-medium" style={{ background: "var(--danger)", color: "oklch(0.98 0 0)" }}>{a.label}</button>
-                              : <button key={a.label} className="btn-ghost-v2 sm">{a.label}</button>
+                              : <button key={a.label} className="btn-ghost-v2 sm hidden sm:inline-flex">{a.label}</button>
                           ))}
                         </div>
                       </td>
@@ -245,19 +245,17 @@ export default function AdminDashboard() {
                 <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>All →</span>
               </div>
               <div className="overflow-x-auto">
-                <div className="min-w-[520px]">
-                  {COUNTRIES.map((c, i) => (
-                    <div key={c.code} className="grid gap-3 px-4.5 py-2.5 items-center text-[13px]" style={{ gridTemplateColumns: "100px 1fr 80px 60px", borderBottom: i < COUNTRIES.length - 1 ? "1px solid var(--border)" : "none" }}>
-                      <span className="font-mono text-[11px] tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{c.code}</span>
-                      <span style={{ color: "var(--ink)" }}>
-                        {c.name}
-                        <div className="h-1 rounded-sm overflow-hidden mt-1" style={{ background: "var(--bg-3)" }}><div className="h-full" style={{ width: c.w, background: "var(--ink)" }} /></div>
-                      </span>
-                      <span className="font-mono text-[12px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{c.gmv}</span>
-                      <span className="font-mono text-[10.5px] text-right" style={{ color: "var(--fg-3)" }}>{c.gw}</span>
-                    </div>
-                  ))}
-                </div>
+                {COUNTRIES.map((c, i) => (
+                  <div key={c.code} className="grid [grid-template-columns:72px_1fr_68px_44px] sm:[grid-template-columns:100px_1fr_80px_60px] gap-2 sm:gap-3 px-4.5 py-2.5 items-center text-[13px]" style={{ borderBottom: i < COUNTRIES.length - 1 ? "1px solid var(--border)" : "none" }}>
+                    <span className="font-mono text-[11px] tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{c.code}</span>
+                    <span style={{ color: "var(--ink)" }}>
+                      {c.name}
+                      <div className="h-1 rounded-sm overflow-hidden mt-1" style={{ background: "var(--bg-3)" }}><div className="h-full" style={{ width: c.w, background: "var(--ink)" }} /></div>
+                    </span>
+                    <span className="font-mono text-[11px] sm:text-[12px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{c.gmv}</span>
+                    <span className="font-mono text-[10px] sm:text-[10.5px] text-right" style={{ color: "var(--fg-3)" }}>{c.gw}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -277,12 +275,12 @@ export default function AdminDashboard() {
                 ))}
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-w-full">
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
                   {["ID", "Member", "Provider", "Reason", "Amount", "Opened", "Owner", "Status"].map((h, i) => (
-                    <th key={h} className={`text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em] px-4.5 py-2.5 ${i >= 4 ? "text-right" : ""} ${i === 7 ? "pr-4.5" : ""}`} style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
+                    <th key={h} className={`text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em] px-4.5 py-2.5 ${i >= 4 ? "text-right" : ""} ${i === 2 ? "hidden md:table-cell" : ""} ${i === 3 ? "hidden lg:table-cell" : ""} ${i === 5 ? "hidden lg:table-cell" : ""} ${i === 6 ? "hidden sm:table-cell" : ""} ${i === 7 ? "pr-4.5" : ""}`} style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -291,11 +289,11 @@ export default function AdminDashboard() {
                   <tr key={d.id} className="hover:bg-bg-2">
                     <td className="px-4.5 py-3 font-mono text-[11px]" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-3)" }}>{d.id}</td>
                     <td className="px-4.5 py-3" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>{d.member}</td>
-                    <td className="px-4.5 py-3" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>{d.provider}</td>
-                    <td className="px-4.5 py-3" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>{d.reason}</td>
+                    <td className="px-4.5 py-3 hidden md:table-cell" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>{d.provider}</td>
+                    <td className="px-4.5 py-3 hidden lg:table-cell" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>{d.reason}</td>
                     <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{d.amt}</td>
-                    <td className="px-4.5 py-3 font-mono text-[11.5px]" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-3)" }}>{d.opened}</td>
-                    <td className="px-4.5 py-3" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>
+                    <td className="px-4.5 py-3 font-mono text-[11.5px] hidden lg:table-cell" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-3)" }}>{d.opened}</td>
+                    <td className="px-4.5 py-3 hidden sm:table-cell" style={{ borderBottom: i < DISPUTES.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>
                       <div className="flex items-center gap-2.5">
                         <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{d.owner}</span>
                         {d.ownerName}
