@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   NotificationType,
@@ -126,9 +127,9 @@ export default function InboxActivityPanel({ role }: Props) {
           <button className="btn-ghost-v2 sm" onClick={onMarkAllRead}>
             Mark all read
           </button>
-          <a href={quickLink} className="btn-primary-v2 sm">
+          <Link href={quickLink} className="btn-primary-v2 sm">
             Open related work
-          </a>
+          </Link>
         </div>
       </div>
 

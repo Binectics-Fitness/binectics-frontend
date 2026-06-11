@@ -14,7 +14,7 @@ type FeedbackRow = MealFeedback & {
 
 function pillStyle(status: string) {
   if (status === "ok") return { background: "var(--signal-soft)", color: "var(--signal-ink)" };
-  if (status === "warn") return { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" };
+  if (status === "warn") return { background: "var(--trainer-soft)", color: "var(--warn)" };
   return { background: "var(--danger-soft)", color: "var(--danger)" };
 }
 
@@ -104,7 +104,7 @@ export default function DietitianFeedbackPage() {
           return (
           <div key={m._id} className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             {/* Image placeholder */}
-            <div className="aspect-[4/3]" style={{ background: "linear-gradient(135deg, oklch(0.85 0.05 80), oklch(0.72 0.08 60))" }} />
+            <div className="aspect-[4/3]" style={{ background: "linear-gradient(135deg, var(--bg-2), var(--bg-3))" }} />
             <div className="p-5.5 pt-3.5">
               <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{m.clientLabel}</div>
               <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5 mb-2" style={{ color: "var(--fg-3)" }}>{m.meal_type.toLowerCase()} · {new Date(m.meal_date).toLocaleDateString("en-GB")}</div>
