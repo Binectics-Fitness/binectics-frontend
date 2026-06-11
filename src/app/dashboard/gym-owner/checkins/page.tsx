@@ -1,97 +1,113 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { checkinsService } from "@/lib/api/checkins";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { CheckInHistoryPeriod, type OrgCheckInDashboardStats, type CheckIn } from "@/lib/types";
 
-const KPIS = [
-  { label: "Check-ins today", value: "412", delta: "+ 8% vs avg Tue" },
-  { label: "Currently on floor", value: "78", delta: "Sea Point at 92%" },
-  { label: "Avg session", value: "68", unit: "min", delta: "↑ 4 min MoM" },
-  { label: "Streaks broken today", value: "14", delta: "Auto-nudge sent", warn: true },
-];
+const TIME_FILTERS = [
+  { label: "Today", value: CheckInHistoryPeriod.TODAY },
+  { label: "Week", value: CheckInHistoryPeriod.WEEK },
+  { label: "Month", value: CheckInHistoryPeriod.MONTH },
+] as const;
 
-const HOUR_DATA = [
-  { hour: "4am", count: 4, pct: 10 },
-  { hour: "5am", count: 32, pct: 24 },
-  { hour: "6am", count: 68, pct: 62 },
-  { hour: "7am", count: 102, pct: 88 },
-  { hour: "8am", count: 58, pct: 52 },
-  { hour: "9am", count: 32, pct: 32 },
-  { hour: "10am", count: 18, pct: 22 },
-  { hour: "11am", count: 24, pct: 28 },
-  { hour: "12pm", count: 38, pct: 42 },
-  { hour: "1pm", count: 42, pct: 48 },
-  { hour: "2pm", count: 28, pct: 34 },
-  { hour: "3pm", count: 22, pct: 38, now: true },
-  { hour: "4pm", count: 0, pct: 0 },
-  { hour: "5pm", count: 0, pct: 0 },
-  { hour: "6pm", count: 0, pct: 0 },
-  { hour: "7pm", count: 0, pct: 0 },
-];
-
-const LOCATIONS = [
-  { name: "Sea Point", capacity: 60, current: 55, level: "over", pct: 92 },
-  { name: "Foreshore", capacity: 80, current: 61, level: "warn", pct: 76 },
-  { name: "Camps Bay", capacity: 40, current: 17, level: "high", pct: 42 },
-  { name: "Woodstock", capacity: 50, current: 16, level: "", pct: 32 },
-];
-
-const STREAM = [
-  { time: "14:42:18", initials: "LM", name: "Linda Mokoena", meta: "Sea Point · day 32 streak · pro plan", pill: "ok", pillText: "✓ in", avaClass: "streak" },
-  { time: "14:41:02", initials: "WC", name: "Wei Chen", meta: "Foreshore · studio plan", pill: "ok", pillText: "✓ in", avaClass: "" },
-  { time: "14:40:44", initials: "JS", name: "Jamal Sutherland", meta: "Sea Point · first session · pro monthly", pill: "new", pillText: "★ first", avaClass: "new" },
-  { time: "14:39:18", initials: "AA", name: "Aisha Adams", meta: "Sea Point · annual", pill: "ok", pillText: "✓ in", avaClass: "" },
-  { time: "14:38:42", initials: "MK", name: "Mike Khumalo", meta: "Foreshore · past-due plan", pill: "warn", pillText: "⚠ pay", avaClass: "" },
-  { time: "14:37:18", initials: "TN", name: "Thandi Nkosi", meta: "Camps Bay · studio plan", pill: "ok", pillText: "✓ in", avaClass: "" },
-  { time: "14:36:02", initials: "RJ", name: "Rashid Jansen", meta: "Woodstock · 24-pack · 18 / 24 used", pill: "ok", pillText: "✓ in", avaClass: "" },
-  { time: "14:35:18", initials: "FA", name: "Folake Adebayo", meta: "Foreshore · day 88 streak · pro monthly", pill: "ok", pillText: "✓ in", avaClass: "streak" },
-  { time: "14:34:08", initials: "PB", name: "Pier Botha", meta: "Woodstock · day pass", pill: "ok", pillText: "✓ in", avaClass: "" },
-  { time: "14:32:48", initials: "SO", name: "Sofia Almeida", meta: "Sea Point · annual · returning after 3 weeks", pill: "ok", pillText: "✓ in", avaClass: "" },
-];
-
-const DEVICES = [
-  { name: "Sea Point kiosk", meta: "Online · last scan 14:42:18", color: "var(--signal)" },
-  { name: "Foreshore kiosk", meta: "Online · last scan 14:41:02", color: "var(--signal)" },
-  { name: "Camps Bay kiosk", meta: "Online · battery 18%", color: "oklch(0.65 0.18 75)" },
-  { name: "Foreshore floor scanner", meta: "Offline · 4h 12m", color: "var(--danger)", danger: true },
-];
-
-const BROKEN = [
-  { name: "Adaora T.", meta: "Day 92 → broken · nudge sent" },
-  { name: "Kemi Eze", meta: "Day 64 → broken · checked into Cape Town airport instead" },
-  { name: "Marcus B.", meta: "Day 38 → broken · plan paused 3 days ago" },
-];
-
-const MILESTONES = [
-  { name: "★ Folake A. · day 88", meta: "Personal best · auto-celebrated" },
-  { name: "★ Linda M. · day 32", meta: "Half-marathon prep streak" },
-  { name: "★ Pier B. · 100 visits", meta: "Lifetime · Woodstock day pass" },
-];
-
-const TIME_FILTERS = ["Now", "Today", "7D", "30D"];
-
-function pillColor(pill: string) {
-  if (pill === "ok") return { background: "var(--signal-soft)", color: "var(--signal-ink)" };
-  if (pill === "new") return { background: "var(--gym-soft)", color: "var(--gym)" };
-  if (pill === "warn") return { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" };
-  return {};
+function personName(checkIn: CheckIn): string {
+  if (typeof checkIn.member_user_id === "string") return checkIn.member_user_id.slice(-8);
+  return `${checkIn.member_user_id.first_name} ${checkIn.member_user_id.last_name}`;
 }
 
-function avaColor(cls: string) {
-  if (cls === "new") return { background: "var(--gym-soft)", color: "var(--gym)" };
-  if (cls === "streak") return { background: "var(--signal-soft)", color: "var(--signal-ink)" };
-  return { background: "var(--bg-3)", color: "var(--fg-2)" };
+function listingLabel(checkIn: CheckIn): string {
+  if (typeof checkIn.listing_id === "string") return checkIn.listing_id.slice(-8);
+  return checkIn.listing_id.headline;
 }
 
-function fillClass(level: string) {
-  if (level === "over") return "var(--danger)";
-  if (level === "warn") return "oklch(0.65 0.18 75)";
-  if (level === "high") return "var(--signal)";
-  return "var(--ink)";
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+}
+
+function hourLabel(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function dayLabel(iso: string): string {
+  return new Date(iso).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
 }
 
 export default function GymCheckinsPage() {
-  const [activeFilter, setActiveFilter] = useState("Today");
+  const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const [activeFilter, setActiveFilter] = useState<CheckInHistoryPeriod>(CheckInHistoryPeriod.TODAY);
+  const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
+  const [history, setHistory] = useState<CheckIn[]>([]);
+  const [loading, setLoading] = useState<boolean>(() => true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (orgLoading || !currentOrg) return;
+
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const [statsRes, historyRes] = await Promise.all([
+          checkinsService.getOrgDashboardStats(currentOrg._id),
+          checkinsService.getOrgCheckIns(currentOrg._id, activeFilter),
+        ]);
+
+        if (!isMounted) return;
+        setStats(statsRes.success && statsRes.data ? statsRes.data : null);
+        setHistory(historyRes.success && historyRes.data ? historyRes.data : []);
+        setError(
+          statsRes.success && historyRes.success
+            ? null
+            : statsRes.message || historyRes.message || "Failed to load check-ins",
+        );
+        setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      } catch (err) {
+        if (!isMounted) return;
+        setError(err instanceof Error ? err.message : "Failed to load check-ins");
+        setStats(null);
+        setHistory([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    void load();
+    const timer = window.setInterval(() => {
+      void load();
+    }, 30_000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(timer);
+    };
+  }, [activeFilter, currentOrg, orgLoading]);
+
+  const hourlyBars = useMemo(() => {
+    const buckets = new Map<number, number>();
+    for (const item of history) {
+      const hour = new Date(item.checked_in_at).getHours();
+      buckets.set(hour, (buckets.get(hour) ?? 0) + 1);
+    }
+    const maxCount = Math.max(...Array.from(buckets.values()), 1);
+    return Array.from({ length: 24 }, (_, hour) => ({ hour, count: buckets.get(hour) ?? 0, pct: ((buckets.get(hour) ?? 0) / maxCount) * 100 }));
+  }, [history]);
+
+  const topRow = [
+    { label: "Check-ins today", value: stats?.today_check_ins ?? 0, delta: `${stats?.week_check_ins ?? 0} this week` },
+    { label: "Active members", value: stats?.active_members ?? 0, delta: `${stats?.month_check_ins ?? 0} this month` },
+    { label: "Avg rating", value: (stats?.average_rating ?? 0).toFixed(1), delta: `${stats?.review_count ?? 0} reviews` },
+    { label: "Revenue today", value: `R ${(stats?.revenue_today ?? 0).toLocaleString()}`, delta: lastUpdated ? `Updated ${lastUpdated}` : "Waiting for refresh" },
+  ];
+
+  const stream = stats?.recent_check_ins ?? history;
+  const headline = currentOrg ? `${currentOrg.name} check-ins` : "Check-ins";
 
   return (
     <GymDashboardShell
@@ -99,179 +115,140 @@ export default function GymCheckinsPage() {
       crumb="Check-ins"
       actions={
         <div className="flex gap-2.5 items-center">
-          <span
-            className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.04em] px-2.5 py-1 rounded-full"
-            style={{ color: "var(--signal-ink)", background: "var(--signal-soft)", border: "1px solid oklch(0.88 0.05 148)" }}
-          >
+          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.04em] px-2.5 py-1 rounded-full" style={{ color: "var(--signal-ink)", background: "var(--signal-soft)", border: "1px solid oklch(0.88 0.05 148)" }}>
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--signal)" }} />
-            Live &middot; 4 locations
+            Live · {currentOrg ? currentOrg.name : "no org selected"}
           </span>
           <div className="inline-flex rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
             {TIME_FILTERS.map((f) => (
               <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
+                key={f.value}
+                onClick={() => setActiveFilter(f.value)}
                 className="px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer"
                 style={{
-                  background: activeFilter === f ? "var(--ink)" : "var(--bg)",
-                  color: activeFilter === f ? "var(--bg)" : "var(--fg-2)",
+                  background: activeFilter === f.value ? "var(--ink)" : "var(--bg)",
+                  color: activeFilter === f.value ? "var(--bg)" : "var(--fg-2)",
                   border: "none",
-                  borderRight: "1px solid var(--border)",
+                  borderRight: f.value === TIME_FILTERS[TIME_FILTERS.length - 1].value ? "none" : "1px solid var(--border)",
                 }}
               >
-                {f}
+                {f.label}
               </button>
             ))}
           </div>
         </div>
       }
     >
-      {/* Page head */}
       <div>
-        <h1 className="text-[30px] font-medium tracking-[-0.022em]" style={{ color: "var(--ink)" }}>Check-ins</h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>Today &middot; 412 check-ins so far across 4 locations &middot; peak hour was 7am</p>
+        <h1 className="text-[30px] font-medium tracking-[-0.022em]" style={{ color: "var(--ink)" }}>{headline}</h1>
+        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+          {stats ? `${stats.today_check_ins} today · ${stats.week_check_ins} this week · ${stats.month_check_ins} this month` : "Live feed and occupancy metrics refresh every 30 seconds."}
+        </p>
       </div>
 
-      {/* KPIs */}
+      {!currentOrg && !orgLoading ? (
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
+          Select an organization to view its check-ins.
+        </div>
+      ) : error ? (
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+          <div className="font-medium">Couldn&apos;t load check-ins</div>
+          <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {KPIS.map((k) => (
+        {topRow.map((k) => (
           <div key={k.label} className="rounded-(--r-3) p-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-            <div className="text-[26px] font-medium tracking-[-0.02em] tabular-nums leading-none mt-1.5" style={{ color: k.warn ? "oklch(0.45 0.16 75)" : "var(--ink)" }}>
-              {k.value}
-              {k.unit && <span className="font-mono text-[13px] font-normal ml-0.5" style={{ color: "var(--fg-3)" }}>{k.unit}</span>}
-            </div>
-            <div className="font-mono text-[11.5px] mt-1" style={{ color: k.warn ? "var(--fg-3)" : "var(--signal-ink)" }}>{k.delta}</div>
+            <div className="text-[26px] font-medium tracking-[-0.02em] tabular-nums leading-none mt-1.5" style={{ color: "var(--ink)" }}>{k.value}</div>
+            <div className="font-mono text-[11.5px] mt-1" style={{ color: "var(--signal-ink)" }}>{k.delta}</div>
           </div>
         ))}
       </div>
 
-      {/* Chart + Floor occupancy */}
       <div className="grid lg:grid-cols-[2fr_1fr] gap-3.5">
-        {/* Hour chart */}
         <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
             <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
-              Check-ins by hour <span className="font-mono text-[11px] font-normal uppercase tracking-[0.04em] ml-2" style={{ color: "var(--fg-3)" }}>today</span>
+              Check-ins by hour <span className="font-mono text-[11px] font-normal uppercase tracking-[0.04em] ml-2" style={{ color: "var(--fg-3)" }}>{activeFilter}</span>
             </h3>
-            <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>All locations</span>
+            <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Real data</span>
           </div>
           <div className="flex items-end gap-1 px-5.5 h-[200px] pt-4.5">
-            {HOUR_DATA.map((h) => (
-              <div
-                key={h.hour}
-                className="flex-1 rounded-t-[3px] relative group cursor-pointer"
-                style={{
-                  height: `${Math.max(h.pct, 2)}%`,
-                  background: h.now ? "var(--brand, oklch(0.62 0.13 47))" : "var(--ink)",
-                  minHeight: h.pct > 0 ? 4 : 0,
-                }}
-              >
+            {hourlyBars.map((h) => (
+              <div key={h.hour} className="flex-1 rounded-t-[3px] relative group cursor-pointer" style={{ height: `${Math.max(h.pct, 2)}%`, background: "var(--ink)", minHeight: h.count > 0 ? 4 : 0 }}>
                 <span className="absolute -top-[18px] left-1/2 -translate-x-1/2 font-mono text-[9.5px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--ink)" }}>
-                  {h.hour} &middot; {h.count}{h.now ? " · now" : ""}
+                  {String(h.hour).padStart(2, "0")} :00 · {h.count}
                 </span>
               </div>
             ))}
           </div>
           <div className="flex px-5.5 py-1.5 pb-4 font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-            <span className="flex-1 text-center">4am</span>
-            <span className="flex-1 text-center">8am</span>
-            <span className="flex-1 text-center">12pm</span>
-            <span className="flex-1 text-center">4pm</span>
-            <span className="flex-1 text-center">8pm</span>
+            <span className="flex-1 text-center">00</span>
+            <span className="flex-1 text-center">06</span>
+            <span className="flex-1 text-center">12</span>
+            <span className="flex-1 text-center">18</span>
+            <span className="flex-1 text-center">23</span>
           </div>
         </div>
 
-        {/* Floor occupancy */}
         <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Floor occupancy</h3>
+            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Summary</h3>
             <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Live</span>
           </div>
           <div>
-            {LOCATIONS.map((l) => (
-              <div key={l.name} className="flex gap-3 items-center px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                <div className="flex-1">
-                  <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{l.name}</div>
-                  <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>Capacity {l.capacity}</div>
-                  <div className="h-1.5 rounded-[3px] mt-1.5 overflow-hidden" style={{ background: "var(--bg-3)" }}>
-                    <div className="h-full rounded-[3px]" style={{ width: `${l.pct}%`, background: fillClass(l.level) }} />
-                  </div>
-                </div>
-                <div className="font-mono text-[14px] tabular-nums" style={{ color: "var(--ink)" }}>
-                  {l.current} <span className="font-mono text-[11px] font-normal" style={{ color: "var(--fg-3)" }}>/ {l.capacity}</span>
-                </div>
-              </div>
-            ))}
+            <SummaryRow label="Tracked check-ins" value={String(stream.length)} />
+            <SummaryRow label="Location" value={stats?.city && stats?.country_code ? `${stats.city}, ${stats.country_code}` : "Current org"} />
+            <SummaryRow label="Reviews" value={String(stats?.review_count ?? 0)} />
+            <SummaryRow label="Revenue week" value={`R ${(stats?.revenue_week ?? 0).toLocaleString()}`} />
           </div>
         </div>
       </div>
 
-      {/* Live stream */}
       <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
         <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
           <h3 className="text-[14px] font-medium flex items-center gap-2.5" style={{ color: "var(--ink)" }}>
-            Live stream
+            Recent check-ins
             <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--signal)" }} />
           </h3>
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>412 today &middot; streaming</span>
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Auto-refreshing</span>
         </div>
         <div className="max-h-[460px] overflow-y-auto">
-          {STREAM.map((s, i) => (
-            <div key={i} className="grid items-center gap-3 px-4.5 py-3" style={{ gridTemplateColumns: "60px 30px 1fr auto", borderBottom: "1px solid var(--border)" }}>
-              <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{s.time}</span>
-              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold" style={avaColor(s.avaClass)}>{s.initials}</span>
-              <div>
-                <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{s.name}</div>
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>{s.meta}</div>
-              </div>
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={pillColor(s.pill)}>{s.pillText}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Side info: devices, broken streaks, milestones */}
-      <div className="grid lg:grid-cols-3 gap-3.5">
-        <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2.5" style={{ color: "var(--fg-3)" }}>Device health</div>
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            {DEVICES.map((d) => (
-              <div key={d.name} className="flex gap-3 items-center px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                <div className="flex-1">
-                  <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{d.name}</div>
-                  <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: d.danger ? "var(--danger)" : "var(--fg-3)" }}>{d.meta}</div>
+          {(loading && stream.length === 0) ? (
+            <div className="px-4.5 py-10 text-[13px]" style={{ color: "var(--fg-3)" }}>Loading live check-ins...</div>
+          ) : stream.length === 0 ? (
+            <div className="px-4.5 py-10 text-[13px]" style={{ color: "var(--fg-3)" }}>No check-ins found for this period.</div>
+          ) : (
+            stream.map((checkIn) => {
+              const member = personName(checkIn);
+              const listing = listingLabel(checkIn);
+              return (
+                <div key={checkIn._id} className="grid items-center gap-3 px-4.5 py-3" style={{ gridTemplateColumns: "72px 30px 1fr", borderBottom: "1px solid var(--border)" }}>
+                  <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{hourLabel(checkIn.checked_in_at)}</span>
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(member)}</span>
+                  <div>
+                    <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{member}</div>
+                    <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                      {listing} · {dayLabel(checkIn.checked_in_at)}
+                    </div>
+                  </div>
                 </div>
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2.5" style={{ color: "var(--fg-3)" }}>Recently broken streaks</div>
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            {BROKEN.map((b) => (
-              <div key={b.name} className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{b.name}</div>
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>{b.meta}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2.5" style={{ color: "var(--fg-3)" }}>Today&apos;s milestones</div>
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            {MILESTONES.map((m) => (
-              <div key={m.name} className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{m.name}</div>
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>{m.meta}</div>
-              </div>
-            ))}
-          </div>
+              );
+            })
+          )}
         </div>
       </div>
     </GymDashboardShell>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+      <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>{label}</span>
+      <span className="font-mono text-[13px]" style={{ color: "var(--ink)" }}>{value}</span>
+    </div>
   );
 }

@@ -48,7 +48,7 @@ Summary:
 | Dietitian dashboard rebuild | Frontend Needs Overhaul | complete | shipped | Adherence + consultation panels wired to provider APIs | high | M | FE | Monitor edge cases | shipped |
 | Booking flow hardening | Frontend Needs Overhaul | complete | shipped | /booking wizard wired to getProviderSlots + createBooking with full error/loading states | high | M | FE+BE | Monitor confirmation flow | shipped |
 | Admin users/providers hardening | Frontend Needs Overhaul | complete | shipped | /admin/users metrics + suspend/unsuspend, /admin/listings full moderation with badges | high | M | FE | Monitor edge cases | shipped |
-| Check-in ops feed reliability | Frontend Needs Overhaul | complete | partial | Real-time and offline/error states incomplete | medium | M | FE | Add polling/websocket strategy + device health states | not-started |
+| Check-in ops feed reliability | Frontend Needs Overhaul | complete | partial | Live org stats + recent check-in feed now API-backed with auto-refresh; offline/device-health states still pending | medium | M | FE | Add offline handling, device health, and manual recovery actions | in-progress |
 | Member self-log flows (workout/meal/weight) | Frontend Exists -> Backend Missing | partial/unclear | placeholder | UI placeholders need verified contracts + implementation | medium | M | FE+BE | Confirm API contracts; implement missing endpoints if needed | not-started |
 | Recurring booking | Frontend Exists -> Backend Missing | partial/unclear | placeholder/partial | Recurrence semantics not implemented end-to-end | medium | M-H | FE+BE | Define recurrence contract and implement flow | not-started |
 | Dashboard shell duplication | Alignment/Refactor Opportunity | n/a | duplicated | Multiple role shells drift in behavior/styling | medium | M | FE | Extract shared dashboard shell primitives | not-started |
@@ -89,6 +89,24 @@ Summary:
 2. Every feature ticket must include API contract references.
 3. Every shipped item must update this table status and date.
 4. Each PR should update one row in this tracker.
+
+## Weekly Update
+
+- Week of: 2026-06-11
+- Completed:
+  - [x] Dashboard bookings rewrite
+  - [x] Member dashboard rewrite
+  - [x] Admin users metrics + moderation
+  - [x] Admin listings moderation
+  - [x] Marketplace error handling polish
+  - [x] Booking wizard API wiring
+- In progress:
+  - [x] Check-in ops feed reliability
+- Next:
+  - [ ] Member self-log flows
+  - [ ] Recurring booking
+  - [ ] Dashboard shell duplication cleanup
+  - [ ] Async states consistency
 
 ## Weekly Update Template
 
