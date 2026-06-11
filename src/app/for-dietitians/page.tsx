@@ -117,7 +117,7 @@ export default function ForDietitiansPage() {
           African staples already in it.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup&role=dietitian" className="btn-primary-v2 lg">
             Apply to list &rarr;
           </Link>
           <Link href="/features/dashboard" className="btn-ghost-v2 lg">
@@ -387,7 +387,7 @@ export default function ForDietitiansPage() {
           Apply to list your practice. Verification takes 36 hours on
           average. Start seeing clients on Binectics this week.
         </p>
-        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup&role=dietitian" className="btn-primary-v2 lg">
           Apply to list &rarr;
         </Link>
       </section>

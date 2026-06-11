@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useRegion } from "@/contexts/RegionContext";
@@ -164,7 +165,12 @@ export default function MarketplacePage() {
     setLoading(false);
   }, [activeTab, currentPage]);
 
-  useEffect(() => { fetchListings(); }, [fetchListings]);
+  useEffect(() => {
+    const id = setTimeout(() => {
+      void fetchListings();
+    }, 0);
+    return () => clearTimeout(id);
+  }, [fetchListings]);
 
   const total = pagination.total;
   const totalPages = pagination.total_pages;
@@ -202,7 +208,7 @@ export default function MarketplacePage() {
           <div className="flex items-center gap-2">
             <button className="lg:hidden w-10 h-10 sm:w-8 sm:h-8 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><Search /></button>
             <Link href="/login" className="btn-ghost-v2 sm hidden sm:inline-flex">Log in</Link>
-            <Link href="/login?mode=signup" className="btn-primary-v2 sm">Sign up</Link>
+            <Link href="/login?mode=signup&role=member" className="btn-primary-v2 sm">Sign up</Link>
           </div>
         </div>
       </header>
@@ -355,10 +361,12 @@ export default function MarketplacePage() {
                       }}
                     >
                       {photoUrl && (
-                        <img
+                        <Image
                           src={photoUrl}
                           alt={name}
-                          className="absolute inset-0 w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes={isFeatured ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 100vw, 33vw"}
                         />
                       )}
                       <div className="absolute top-2.5 left-2.5 flex gap-1.5">

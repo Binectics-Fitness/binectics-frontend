@@ -159,7 +159,7 @@ export default function ProviderPage() {
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/login" className="btn-ghost-v2 sm hidden sm:inline-flex">Log in</Link>
-            <Link href="/login?mode=signup" className="btn-primary-v2 sm">Sign up</Link>
+            <Link href="/login?mode=signup&role=member" className="btn-primary-v2 sm">Sign up</Link>
           </div>
         </div>
       </header>

@@ -174,13 +174,15 @@ function Toggle({
   );
 }
 
-const AUTH_PREFIXES = ["/dashboard", "/member", "/admin", "/onboarding", "/checkout", "/check-in"];
+const FAB_HIDDEN_PREFIXES = ["/dashboard", "/member", "/admin", "/onboarding", "/checkout", "/check-in"];
+const AUTH_FLOW_PREFIXES = ["/login", "/reset-password", "/forgot-password", "/register"];
 
 export default function CookieConsent() {
   const pathname = usePathname();
-  const isAuthPage = AUTH_PREFIXES.some((p) => pathname?.startsWith(p));
+  const hideFab = FAB_HIDDEN_PREFIXES.some((p) => pathname?.startsWith(p));
+  const isAuthFlowPage = AUTH_FLOW_PREFIXES.some((p) => pathname?.startsWith(p));
 
-  const [isGDPR, setIsGDPR] = useState(false);
+  const [isGDPR] = useState(() => detectGDPR());
   const [showBanner, setShowBanner] = useState(false);
   const [bannerIn, setBannerIn] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -195,32 +197,26 @@ export default function CookieConsent() {
   const categories = getCategories(isGDPR);
 
   useEffect(() => {
-    const gdpr = detectGDPR();
-    setIsGDPR(gdpr);
-
     const existing = loadConsent();
     if (!existing || existing.version !== VERSION || isStale(existing)) {
-      setTimeout(() => {
-        setShowBanner(true);
-        setShowFab(true);
-        requestAnimationFrame(() => requestAnimationFrame(() => setBannerIn(true)));
-      }, 400);
+      if (isAuthFlowPage) {
+        setTimeout(() => {
+          setShowFab(true);
+        }, 0);
+      } else {
+        setTimeout(() => {
+          setShowBanner(true);
+          setShowFab(true);
+          requestAnimationFrame(() => requestAnimationFrame(() => setBannerIn(true)));
+        }, 400);
+      }
     } else {
-      setShowFab(true);
+      setTimeout(() => {
+        setShowFab(true);
+      }, 0);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).CookieConsent = {
-      open: () => openModal(gdpr),
-      get: loadConsent,
-      reset: () => {
-        localStorage.removeItem(STORAGE_KEY);
-        location.reload();
-      },
-      isGDPR: () => gdpr,
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthFlowPage]);
 
   const hideBanner = useCallback(() => {
     setBannerIn(false);
@@ -257,26 +253,51 @@ export default function CookieConsent() {
     [hideBanner],
   );
 
-  const openModal = useCallback(
-    (gdpr?: boolean) => {
-      const g = gdpr ?? isGDPR;
-      const existing = loadConsent();
-      const cats = getCategories(g);
-      const t: Record<CategoryId, boolean> = {
-        required: true,
-        functional: false,
-        analytics: false,
-        marketing: false,
-      };
-      cats.forEach((c) => {
-        t[c.id] = c.locked ? true : (existing?.[c.id] ?? c.defaultOn ?? false);
-      });
-      setToggles(t);
-      hideBanner();
-      setShowModal(true);
-    },
-    [isGDPR, hideBanner],
-  );
+  const openModal = (gdpr?: boolean) => {
+    const g = gdpr ?? isGDPR;
+    const existing = loadConsent();
+    const cats = getCategories(g);
+    const t: Record<CategoryId, boolean> = {
+      required: true,
+      functional: false,
+      analytics: false,
+      marketing: false,
+    };
+    cats.forEach((c) => {
+      t[c.id] = c.locked ? true : (existing?.[c.id] ?? c.defaultOn ?? false);
+    });
+    setToggles(t);
+    hideBanner();
+    setShowModal(true);
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).CookieConsent = {
+      open: () => {
+        const existing = loadConsent();
+        const cats = getCategories(isGDPR);
+        const t: Record<CategoryId, boolean> = {
+          required: true,
+          functional: false,
+          analytics: false,
+          marketing: false,
+        };
+        cats.forEach((c) => {
+          t[c.id] = c.locked ? true : (existing?.[c.id] ?? c.defaultOn ?? false);
+        });
+        setToggles(t);
+        hideBanner();
+        setShowModal(true);
+      },
+      get: loadConsent,
+      reset: () => {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      },
+      isGDPR: () => isGDPR,
+    };
+  }, [isGDPR, hideBanner]);
 
   const closeModal = useCallback(() => setShowModal(false), []);
 
@@ -625,7 +646,7 @@ export default function CookieConsent() {
       )}
 
       {/* FAB — hidden on authenticated pages */}
-      {showFab && !showBanner && !showModal && !isAuthPage && (
+      {showFab && !showBanner && !showModal && !hideFab && (
         <button
           aria-label="Manage cookies"
           title="Manage cookies"

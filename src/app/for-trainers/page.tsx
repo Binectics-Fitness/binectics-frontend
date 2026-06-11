@@ -125,7 +125,7 @@ export default function ForTrainersPage() {
           hours every week.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup&role=trainer" className="btn-primary-v2 lg">
             List your practice — free
           </Link>
           <Link href="/features/dashboard" className="btn-ghost-v2 lg">
@@ -386,7 +386,7 @@ export default function ForTrainersPage() {
           Create your profile in under 10 minutes. Start showing up in
           marketplace results today.
         </p>
-        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup&role=trainer" className="btn-primary-v2 lg">
           List your practice — free
         </Link>
       </section>

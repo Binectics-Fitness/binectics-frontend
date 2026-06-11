@@ -2,12 +2,11 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
-import { getDashboardRoute } from "@/lib/constants/routes";
 import { authService } from "@/lib/api/auth";
 import { loginSchema, registerSchema, type LoginFormData, type RegisterFormData } from "@/lib/schemas/auth";
 import { AccountType } from "@/lib/types";
@@ -20,6 +19,61 @@ import { AccountType } from "@/lib/types";
 
 type Panel = "login" | "2fa" | "signup" | "reset" | "reset-sent";
 
+const SIGNUP_ROLE_OPTIONS: Array<{
+  value: AccountType;
+  label: string;
+  hint: string;
+  color: string;
+  soft: string;
+}> = [
+  {
+    value: AccountType.FITNESS_MEMBER,
+    label: "Member",
+    hint: "Book and train",
+    color: "var(--consumer)",
+    soft: "var(--consumer-soft)",
+  },
+  {
+    value: AccountType.PERSONAL_TRAINER,
+    label: "Trainer",
+    hint: "Coach clients",
+    color: "var(--trainer)",
+    soft: "var(--trainer-soft)",
+  },
+  {
+    value: AccountType.DIETITIAN,
+    label: "Dietitian",
+    hint: "Nutrition plans",
+    color: "var(--dietitian)",
+    soft: "var(--dietitian-soft)",
+  },
+  {
+    value: AccountType.GYM_OWNER,
+    label: "Gym owner",
+    hint: "Manage locations",
+    color: "var(--gym)",
+    soft: "var(--gym-soft)",
+  },
+];
+
+function parseSignupRole(rawRole: string | null): AccountType {
+  switch ((rawRole ?? "").toLowerCase()) {
+    case "trainer":
+    case "personal_trainer":
+      return AccountType.PERSONAL_TRAINER;
+    case "dietitian":
+      return AccountType.DIETITIAN;
+    case "gym":
+    case "gym_owner":
+      return AccountType.GYM_OWNER;
+    case "member":
+    case "fitness_member":
+      return AccountType.FITNESS_MEMBER;
+    default:
+      return AccountType.FITNESS_MEMBER;
+  }
+}
+
 export default function AuthPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}><div className="w-10 h-10 rounded-full border-[3px] border-border-2 border-t-ink animate-spin" /></div>}>
@@ -29,10 +83,10 @@ export default function AuthPage() {
 }
 
 function AuthContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { login, register: authRegister, isLoading: authLoading } = useAuth();
   const initialMode = searchParams.get("mode");
+  const initialSignupRole = parseSignupRole(searchParams.get("role"));
   const [panel, setPanel] = useState<Panel>(initialMode === "signup" ? "signup" : "login");
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -47,9 +101,16 @@ function AuthContent() {
     defaultValues: { email: "", password: "" },
   });
 
-  const { register: signupField, handleSubmit: handleSignup, watch: watchSignup, setValue: setSignupValue, formState: { errors: signupErrors } } = useForm<RegisterFormData>({
+  const { register: signupField, control: signupControl, handleSubmit: handleSignup, setValue: setSignupValue, formState: { errors: signupErrors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", acceptTos: false },
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", role: initialSignupRole, acceptTos: false },
+  });
+
+  const signupRole = useWatch({ control: signupControl, name: "role" });
+  const signupAcceptTos = useWatch({
+    control: signupControl,
+    name: "acceptTos",
+    defaultValue: false,
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -76,7 +137,7 @@ function AuthContent() {
         last_name: data.lastName,
         email: data.email,
         password: data.password,
-        role: AccountType.FITNESS_MEMBER,
+        role: data.role,
         accept_tos: data.acceptTos,
       });
       if (!result.success) {
@@ -263,6 +324,43 @@ function AuthContent() {
                       <p className="text-[13px]" style={{ color: "var(--danger)" }}>{apiError}</p>
                     </div>
                   )}
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+                      Account type
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {SIGNUP_ROLE_OPTIONS.map((opt) => {
+                        const selected = signupRole === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setSignupValue("role", opt.value, { shouldValidate: true })}
+                            className="rounded-(--r-2) px-3 py-2.5 text-left min-h-11"
+                            style={{
+                              border: selected ? `1px solid ${opt.color}` : "1px solid var(--border)",
+                              background: selected ? opt.soft : "var(--bg)",
+                              color: "var(--ink)",
+                            }}
+                          >
+                            <div className="text-[13px] font-medium" style={{ letterSpacing: "-0.01em" }}>
+                              {opt.label}
+                            </div>
+                            <div className="font-mono text-[10px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                              {opt.hint}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {signupErrors.role && (
+                      <p className="text-[12px]" style={{ color: "var(--danger)" }}>
+                        {signupErrors.role.message}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3.5">
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name</label>
@@ -300,9 +398,9 @@ function AuthContent() {
                     </div>
                     {signupErrors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.confirmPassword.message}</p>}
                   </div>
-                  <button type="button" className="flex items-center gap-2 cursor-pointer text-left" onClick={() => setSignupValue("acceptTos", !watchSignup("acceptTos"), { shouldValidate: true })}>
-                    <span className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 ${watchSignup("acceptTos") ? "bg-ink border-ink" : ""}`} style={{ background: watchSignup("acceptTos") ? "var(--ink)" : "var(--bg)", borderColor: signupErrors.acceptTos ? "var(--danger)" : watchSignup("acceptTos") ? "var(--ink)" : "var(--border-2)" }}>
-                      {watchSignup("acceptTos") && <span className="w-1.75 h-1 border-l-[1.5px] border-b-[1.5px] -rotate-45 -translate-y-px" style={{ borderColor: "var(--bg)" }} />}
+                  <button type="button" className="flex items-center gap-2 cursor-pointer text-left" onClick={() => setSignupValue("acceptTos", !signupAcceptTos, { shouldValidate: true })}>
+                    <span className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 ${signupAcceptTos ? "bg-ink border-ink" : ""}`} style={{ background: signupAcceptTos ? "var(--ink)" : "var(--bg)", borderColor: signupErrors.acceptTos ? "var(--danger)" : signupAcceptTos ? "var(--ink)" : "var(--border-2)" }}>
+                      {signupAcceptTos && <span className="w-1.75 h-1 border-l-[1.5px] border-b-[1.5px] -rotate-45 -translate-y-px" style={{ borderColor: "var(--bg)" }} />}
                     </span>
                     <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>I agree to the <Link href="/terms" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Terms</Link> and <Link href="/privacy" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Privacy</Link></span>
                   </button>

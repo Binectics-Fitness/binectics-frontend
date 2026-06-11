@@ -109,7 +109,7 @@ export default function ForGymsPage() {
           one place. No more Excel + Mindbody + WhatsApp groups.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
-          <Link href="/login?mode=signup" className="btn-primary-v2 lg">
+          <Link href="/login?mode=signup&role=gym" className="btn-primary-v2 lg">
             Get started free &rarr;
           </Link>
           <Link href="/features/dashboard" className="btn-ghost-v2 lg">
@@ -341,7 +341,7 @@ export default function ForGymsPage() {
           Create a free account and see the dashboard in under 10 minutes.
           No credit card required.
         </p>
-        <Link href="/login?mode=signup" className="btn-primary-v2 lg">
+        <Link href="/login?mode=signup&role=gym" className="btn-primary-v2 lg">
           Get started free &rarr;
         </Link>
       </section>
