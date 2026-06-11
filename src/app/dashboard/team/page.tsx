@@ -79,7 +79,6 @@ export default function TeamWorkspacePage() {
 
   const orgId = currentOrg?._id;
   const {
-    organization,
     members,
     roles,
     invitations,
@@ -132,11 +131,6 @@ export default function TeamWorkspacePage() {
   const canManageOrg = userPermissions.includes("team:manage_organization");
 
   const selectedInviteRoleId = inviteRoleId || roles[0]?._id || "";
-
-  const organizationOptions = useMemo(
-    () => organizations.map((org) => ({ label: org.name, value: org._id })),
-    [organizations],
-  );
 
   const statusOptions = [
     { label: "Pending", value: MemberStatus.PENDING },
@@ -308,49 +302,6 @@ export default function TeamWorkspacePage() {
           </div>
         ) : (
           <>
-            <div
-              className="rounded-(--r-3) p-4"
-              style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                <div>
-                  <label
-                    className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                    style={{ color: "var(--fg-3)" }}
-                  >
-                    Active organization
-                  </label>
-                  <div className="mt-1.5">
-                    <SearchableSelect
-                      value={currentOrg?._id ?? ""}
-                      onChange={(nextOrgId) => {
-                        const selectedOrg =
-                          organizations.find((org) => org._id === nextOrgId) ??
-                          null;
-                        setCurrentOrg(selectedOrg);
-                      }}
-                      options={organizationOptions}
-                      placeholder="Select organization"
-                    />
-                  </div>
-                </div>
-                <div className="text-sm" style={{ color: "var(--fg-2)" }}>
-                  {organization ? (
-                    <>
-                      <div>
-                        <strong>{organization.name}</strong>
-                      </div>
-                      <div style={{ color: "var(--fg-3)" }}>
-                        {members.length} members · {invitations.length} pending invites
-                      </div>
-                    </>
-                  ) : (
-                    "Select an organization to continue."
-                  )}
-                </div>
-              </div>
-            </div>
-
             {error && (
               <div
                 className="rounded-(--r-3) p-3 text-sm"
