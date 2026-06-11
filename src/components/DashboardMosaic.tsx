@@ -2016,21 +2016,25 @@ export default function DashboardMosaic() {
         .r3-wave-3 { animation: breath-3 14s ease-in-out infinite; }
         .r3-wave-4 { animation: breath-4 9s ease-in-out infinite; }
         .mosaic-offscreen .r3-wave { animation-play-state: paused; }
+        /* scaleY only, anchored at the bottom: a translateY here lifts the
+           wave's bottom edge off the card and flashes background under the
+           gradient mid-breath. Amplitudes are larger to compensate, so the
+           crests travel the same distance as before. */
         @keyframes breath-1 {
-          0%, 100% { transform: translateY(0) scaleY(1); }
-          50%      { transform: translateY(-20px) scaleY(1.10); }
+          0%, 100% { transform: scaleY(1); }
+          50%      { transform: scaleY(1.20); }
         }
         @keyframes breath-2 {
-          0%, 100% { transform: translateY(0) scaleY(1); }
-          50%      { transform: translateY(-30px) scaleY(1.16); }
+          0%, 100% { transform: scaleY(1); }
+          50%      { transform: scaleY(1.30); }
         }
         @keyframes breath-3 {
-          0%, 100% { transform: translateY(0) scaleY(1); }
-          50%      { transform: translateY(-14px) scaleY(1.06); }
+          0%, 100% { transform: scaleY(1); }
+          50%      { transform: scaleY(1.12); }
         }
         @keyframes breath-4 {
-          0%, 100% { transform: translateY(0) scaleY(1); }
-          50%      { transform: translateY(-24px) scaleY(1.12); }
+          0%, 100% { transform: scaleY(1); }
+          50%      { transform: scaleY(1.23); }
         }
 
         /* ── Row 3: Gym Dashboard ──────────────── */

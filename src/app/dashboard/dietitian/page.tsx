@@ -1,4 +1,5 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import OnboardingBanner from "@/components/OnboardingBanner";
 import { NewPlanButton } from "./_actions";
 import type { Metadata } from "next";
 
@@ -88,6 +89,8 @@ export default function DietitianDashboard() {
       crumb="Today"
       actions={<><button className="btn-ghost-v2 sm">View public profile →</button><NewPlanButton /></>}
     >
+          <OnboardingBanner />
+
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
             <div>
               <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Today, Nadia</h1>

@@ -56,7 +56,10 @@ const SIGNUP_ROLE_OPTIONS: Array<{
   },
 ];
 
-function parseSignupRole(rawRole: string | null): AccountType {
+// No default on purpose: the role determines what the account is, so a
+// signup without funnel context must choose explicitly rather than be
+// silently filed as a member.
+function parseSignupRole(rawRole: string | null): AccountType | undefined {
   switch ((rawRole ?? "").toLowerCase()) {
     case "trainer":
     case "personal_trainer":
@@ -70,7 +73,7 @@ function parseSignupRole(rawRole: string | null): AccountType {
     case "fitness_member":
       return AccountType.FITNESS_MEMBER;
     default:
-      return AccountType.FITNESS_MEMBER;
+      return undefined;
   }
 }
 

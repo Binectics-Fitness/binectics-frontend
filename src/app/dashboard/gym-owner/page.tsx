@@ -1,4 +1,5 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import OnboardingBanner from "@/components/OnboardingBanner";
 import { NewPlanButton } from "./_actions";
 import type { Metadata } from "next";
 
@@ -91,6 +92,8 @@ export default function GymOwnerDashboard() {
       crumb="Overview"
       actions={<NewPlanButton />}
     >
+
+          <OnboardingBanner />
 
           {/* Page head */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 pb-1">

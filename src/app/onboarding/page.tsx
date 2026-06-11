@@ -53,12 +53,22 @@ export default function OnboardingPage() {
 
 const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 
+// Role is chosen once, at registration. When the account already carries it,
+// onboarding skips its role-selection step instead of asking again.
+const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
+  USER: "member",
+  TRAINER: "trainer",
+  GYM_OWNER: "gym",
+  DIETITIAN: "dietitian",
+};
+
 function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, updateUser } = useAuth();
   const initialRole = searchParams.get("role") as RoleId | null;
-  const preselected = initialRole && VALID_ROLES.includes(initialRole) ? initialRole : null;
+  const accountRole = (user?.role && ACCOUNT_ROLE_TO_ID[user.role]) || null;
+  const preselected = (initialRole && VALID_ROLES.includes(initialRole) ? initialRole : null) ?? accountRole;
 
   const [role, setRole] = useState<RoleId | null>(preselected);
   const [step, setStep] = useState(preselected ? 1 : 0);
@@ -80,6 +90,14 @@ function OnboardingContent() {
   useEffect(() => {
     setCompleted(Boolean(user?.is_onboarding_complete));
   }, [user?.is_onboarding_complete]);
+
+  // The user object can resolve after mount — adopt the account role then.
+  useEffect(() => {
+    if (accountRole && role === null && step === 0) {
+      setRole(accountRole);
+      setStep(1);
+    }
+  }, [accountRole, role, step]);
 
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -120,7 +138,7 @@ function OnboardingContent() {
 
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
-    else if (step === 1) { setStep(0); setRole(null); }
+    else if (step === 1 && !accountRole) { setStep(0); setRole(null); }
   };
 
   const renderStage = () => {
@@ -290,7 +308,7 @@ function OnboardingContent() {
           </div>
           <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
             <button type="button" className="btn-ghost-v2 sm">Save & finish later</button>
-            {step > 0 && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
+            {(step > 1 || (step === 1 && !accountRole)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
             <button
               type="button"
               disabled={(step === 0 && !role) || isFinishing}

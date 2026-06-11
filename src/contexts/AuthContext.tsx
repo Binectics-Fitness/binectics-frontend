@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/api/auth";
-import { getDashboardRoute, getLoginRoute } from "@/lib/constants/routes";
+import { getDashboardRoute, getLoginRoute, getOnboardingRoute } from "@/lib/constants/routes";
 import { tokenStorage } from "@/lib/utils/storage";
 import { apiClient } from "@/lib/api/client";
 import SessionModal from "@/components/SessionModal";
@@ -184,7 +184,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
           const redirect = params?.get("redirect");
-          router.push(redirect || getDashboardRoute(u.role));
+          // First login picks up in onboarding. Gate on an explicit false so
+          // accounts from a backend that omits the flag still reach their
+          // dashboard instead of looping through onboarding forever.
+          const needsOnboarding = u.is_onboarding_complete === false;
+          router.push(redirect || (needsOnboarding ? getOnboardingRoute(u.role) : getDashboardRoute(u.role)));
         }
         return { success: true };
       }
