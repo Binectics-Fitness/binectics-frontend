@@ -1,4 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { progressService, MealType } from "@/lib/api/progress";
+import type { ClientProfile, MealFeedback } from "@/lib/api/progress";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,23 +11,78 @@ export const metadata: Metadata = {
   description: "Track your daily meals and nutrition intake.",
 };
 
-const MEALS = [
-  { time: "07:42", name: "Breakfast", desc: "Oats + banana + whey", macros: "420 kcal · 32P 58C 8F", planned: false },
-  { time: "11:18", name: "Mid-morning snack", desc: "Greek yogurt + almonds", macros: "220 kcal · 18P 12C 14F", planned: false },
-  { time: "13:30", name: "Lunch", desc: "Jollof rice (low-oil) + grilled chicken", macros: "480 kcal · 38P 52C 14F", planned: false },
-  { time: "16:00", name: "Snack", desc: "Apple + handful of cashews", macros: "180 kcal · 4P 22C 8F", planned: false },
-  { time: "—", name: "Dinner · planned", desc: "Egusi soup + brown rice", macros: "520 kcal · 20P 56C 18F", planned: true },
-];
+function formatDate(isoDate: string): string {
+  const d = new Date(isoDate);
+  const today = new Date();
+  const isToday =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+
+  if (isToday) return "Today";
+  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+}
+
+function getMealIcon(mealType: string): string {
+  switch (mealType) {
+    case MealType.BREAKFAST:
+      return "🍳";
+    case MealType.LUNCH:
+      return "🍽️";
+    case MealType.DINNER:
+      return "🍜";
+    case MealType.SNACK:
+      return "🍎";
+    default:
+      return "🍽️";
+  }
+}
 
 export default function MealLogPage() {
+  const [profile, setProfile] = useState<ClientProfile | null>(null);
+  const [meals, setMeals] = useState<MealFeedback[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const profileRes = await progressService.getMyOwnProfiles();
+        if (!profileRes.success || !profileRes.data?.length) {
+          setError("No profile found. Please create one first.");
+          setLoading(false);
+          return;
+        }
+
+        const myProfile = profileRes.data[0];
+        setProfile(myProfile);
+
+        const mealsRes = await progressService.getMealFeedbacks(myProfile._id, 50);
+        setMeals(mealsRes.success && mealsRes.data ? mealsRes.data : []);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load meal log");
+        setMeals([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const todayMeals = meals.filter(
+    (m) =>
+      new Date(m.meal_date).toDateString() ===
+      new Date().toDateString()
+  );
+  const totalCalories = todayMeals.reduce((sum, m) => sum + (m.calories ?? 0), 0);
+
   return (
     <MemberDashboardShell activeLabel="Activity">
-      {/* Header */}
       <div
         className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3"
-        style={{
-          marginBottom: 18,
-        }}
+        style={{ marginBottom: 18 }}
       >
         <div>
           <h1
@@ -33,13 +93,14 @@ export default function MealLogPage() {
               color: "var(--ink)",
             }}
           >
-            Meals &middot; today
+            Meals
           </h1>
           <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            Day 12 of PCOS protocol &middot; Dr Nadia Hassan
+            {profile ? `${profile.name} · ${meals.length} meals logged` : "Loading..."}
           </p>
         </div>
         <button
+          disabled
           style={{
             background: "var(--ink)",
             color: "var(--bg)",
@@ -48,20 +109,44 @@ export default function MealLogPage() {
             border: 0,
             fontSize: 13,
             fontWeight: 500,
-            cursor: "pointer",
+            cursor: "not-allowed",
+            opacity: 0.5,
           }}
         >
-          + Log meal
+          + Log meal (coming soon)
         </button>
       </div>
 
-      {/* KPI row */}
+      {error && (
+        <div
+          style={{
+            background: "var(--danger-soft)",
+            border: "1px solid oklch(0.92 0.05 25)",
+            borderRadius: 10,
+            padding: 14,
+            color: "var(--danger)",
+            fontSize: 13,
+            marginBottom: 14,
+          }}
+        >
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 14 }}>
         {[
-          { label: "Kcal · today", value: "1,420 / 1,650", delta: "86%" },
-          { label: "Protein", value: "112 / 142g", delta: "79%" },
-          { label: "Carbs", value: "138 / 160g", delta: "86%" },
-          { label: "Fat", value: "44 / 52g", delta: "85%" },
+          {
+            label: "Kcal · today",
+            value: `${totalCalories} / 2000`,
+            delta: `${((totalCalories / 2000) * 100).toFixed(0)}%`,
+          },
+          { label: "Meals logged", value: meals.length.toString(), delta: "Total" },
+          {
+            label: "Today",
+            value: todayMeals.length.toString(),
+            delta: todayMeals.length > 0 ? "Synced" : "—",
+          },
+          { label: "Status", value: loading ? "..." : "Active", delta: "Tracking" },
         ].map((kpi) => (
           <div
             key={kpi.label}
@@ -106,7 +191,6 @@ export default function MealLogPage() {
         ))}
       </div>
 
-      {/* Today's log card */}
       <div
         style={{
           background: "var(--bg)",
@@ -118,60 +202,65 @@ export default function MealLogPage() {
         <h3
           style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}
         >
-          Today&apos;s log
+          Recent meals
         </h3>
 
-        {MEALS.map((meal, i) => (
-          <div
-            key={meal.name}
-            className="grid grid-cols-[1fr] sm:grid-cols-[60px_1fr_180px] gap-3.5"
-            style={{
-              padding: "12px 0",
-              borderBottom:
-                i < MEALS.length - 1 ? "1px solid var(--border)" : "0",
-              opacity: meal.planned ? 0.5 : 1,
-            }}
-          >
-            <span
-              className="font-mono"
+        {loading ? (
+          <div style={{ color: "var(--fg-3)", fontSize: 13 }}>Loading meals...</div>
+        ) : meals.length === 0 ? (
+          <div style={{ color: "var(--fg-3)", fontSize: 13 }}>No meals logged yet.</div>
+        ) : (
+          meals.slice(0, 20).map((meal, i) => (
+            <div
+              key={meal._id}
+              className="grid grid-cols-[1fr] sm:grid-cols-[60px_1fr_180px] gap-3.5"
               style={{
-                fontSize: 11,
-                color: "var(--fg-3)",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
+                padding: "12px 0",
+                borderBottom:
+                  i < Math.min(meals.length - 1, 19) ? "1px solid var(--border)" : "0",
               }}
             >
-              {meal.time}
-            </span>
-            <div>
-              <strong
-                style={{ fontSize: 13.5, color: "var(--ink)" }}
-              >
-                {meal.name}
-              </strong>
-              <div
+              <span
+                className="font-mono"
                 style={{
-                  fontSize: 13,
-                  color: "var(--fg-2)",
-                  marginTop: 2,
+                  fontSize: 11,
+                  color: "var(--fg-3)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
                 }}
               >
-                {meal.desc}
+                {formatDate(meal.meal_date)}
+              </span>
+              <div>
+                <strong
+                  style={{ fontSize: 13.5, color: "var(--ink)" }}
+                >
+                  {getMealIcon(meal.meal_type)} {meal.meal_type}
+                </strong>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "var(--fg-2)",
+                    marginTop: 2,
+                  }}
+                >
+                  {meal.description}
+                </div>
+              </div>
+              <div
+                className="font-mono"
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--fg-3)",
+                  textAlign: "right",
+                  alignSelf: "center",
+                }}
+              >
+                {meal.calories ? `${meal.calories} kcal` : "—"} · {meal.rating || "unrated"}
               </div>
             </div>
-            <div
-              className="font-mono"
-              style={{
-                fontSize: 11.5,
-                color: "var(--fg-3)",
-                textAlign: "right",
-                alignSelf: "center",
-              }}
-            >
-              {meal.macros}
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </MemberDashboardShell>
   );
