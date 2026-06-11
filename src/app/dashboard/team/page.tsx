@@ -69,6 +69,12 @@ export default function TeamWorkspacePage() {
   const [inviteRoleId, setInviteRoleId] = useState("");
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
   const [submittingInvite, setSubmittingInvite] = useState(false);
+  const [directFirstName, setDirectFirstName] = useState("");
+  const [directLastName, setDirectLastName] = useState("");
+  const [directEmail, setDirectEmail] = useState("");
+  const [directRoleId, setDirectRoleId] = useState("");
+  const [directPassword, setDirectPassword] = useState("");
+  const [submittingDirect, setSubmittingDirect] = useState(false);
 
   const orgId = currentOrg?._id;
   const {
@@ -80,6 +86,7 @@ export default function TeamWorkspacePage() {
     error,
     loadOrgData,
     inviteMember,
+    addMemberDirect,
     updateMember,
     removeMember,
     cancelInvitation,
@@ -94,6 +101,34 @@ export default function TeamWorkspacePage() {
     () => roles.map((role) => ({ label: role.name, value: role._id })),
     [roles],
   );
+
+
+  const selectedDirectRoleId = directRoleId || roles[0]?._id || "";
+
+  // Get current user's permissions from their role in the active organization
+  const userPermissions = useMemo(() => {
+    if (!currentOrg) return [];
+    const isOwner = currentOrg.is_owner ?? false;
+    const canManage = currentOrg.can_manage_organization ?? false;
+    if (isOwner || canManage) {
+      return [
+        "team:view_members",
+        "team:invite_member",
+        "team:remove_member",
+        "team:update_member_role",
+        "team:manage_organization",
+        "team:cancel_invitation",
+        "team:view_invitations",
+      ];
+    }
+    return ["team:view_members", "team:view_invitations"];
+  }, [currentOrg]);
+
+  // Check if current user can perform actions
+  const canInvite = userPermissions.includes("team:invite_member");
+  const canRemove = userPermissions.includes("team:remove_member");
+  const canUpdateRole = userPermissions.includes("team:update_member_role");
+  const canManageOrg = userPermissions.includes("team:manage_organization");
 
   const selectedInviteRoleId = inviteRoleId || roles[0]?._id || "";
 
@@ -124,6 +159,10 @@ export default function TeamWorkspacePage() {
 
   async function handleInviteSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canInvite) {
+      setGlobalMessage("You don&apos;t have permission to invite members.");
+      return;
+    }
     if (!inviteEmail || !selectedInviteRoleId || !orgId) return;
 
     setSubmittingInvite(true);
@@ -142,7 +181,40 @@ export default function TeamWorkspacePage() {
     setSubmittingInvite(false);
   }
 
+
+
+  async function handleDirectAdd(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!directFirstName || !directLastName || !directEmail || !directPassword || !selectedDirectRoleId || !orgId) return;
+
+    setSubmittingDirect(true);
+    setGlobalMessage(null);
+    const added = await addMemberDirect({
+      first_name: directFirstName,
+      last_name: directLastName,
+      email: directEmail.trim(),
+      password: directPassword,
+      team_role_id: selectedDirectRoleId,
+    });
+
+    if (added) {
+      setDirectFirstName("");
+      setDirectLastName("");
+      setDirectEmail("");
+      setDirectPassword("");
+      setGlobalMessage("Member added and invited successfully.");
+    } else {
+      setGlobalMessage("Unable to add member. Please try again.");
+    }
+    setSubmittingDirect(false);
+  }
+
+
   async function handleRoleChange(memberId: string, newRoleId: string) {
+    if (!canUpdateRole) {
+      setGlobalMessage("You don&apos;t have permission to update member roles.");
+      return;
+    }
     setGlobalMessage(null);
     const updated = await updateMember(memberId, { team_role_id: newRoleId });
     if (!updated) {
@@ -154,6 +226,10 @@ export default function TeamWorkspacePage() {
     memberId: string,
     newStatus: MemberStatus,
   ) {
+    if (!canManageOrg) {
+      setGlobalMessage("You don&apos;t have permission to update member status.");
+      return;
+    }
     setGlobalMessage(null);
     const updated = await updateMember(memberId, { status: newStatus });
     if (!updated) {
@@ -162,6 +238,10 @@ export default function TeamWorkspacePage() {
   }
 
   async function handleRemove(memberId: string) {
+    if (!canRemove) {
+      setGlobalMessage("You don&apos;t have permission to remove members.");
+      return;
+    }
     setGlobalMessage(null);
     const ok = await removeMember(memberId);
     if (!ok) {
@@ -170,6 +250,10 @@ export default function TeamWorkspacePage() {
   }
 
   async function handleCancelInvite(invitationId: string) {
+    if (!canManageOrg) {
+      setGlobalMessage("You don&apos;t have permission to cancel invitations.");
+      return;
+    }
     setGlobalMessage(null);
     const ok = await cancelInvitation(invitationId);
     if (!ok) {
@@ -378,15 +462,20 @@ export default function TeamWorkspacePage() {
               )}
             </section>
 
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div
                 className="rounded-(--r-3) p-4"
                 style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
               >
                 <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
-                  Invite member
+                  Invite member by email
                 </h2>
-                <form className="mt-4 flex flex-col gap-3" onSubmit={handleInviteSubmit}>
+                {!canInvite ? (
+                  <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
+                    You don&apos;t have permission to invite members.
+                  </p>
+                ) : (
+                  <form className="mt-4 flex flex-col gap-3" onSubmit={handleInviteSubmit}>
                   <div>
                     <label
                       className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
@@ -430,9 +519,135 @@ export default function TeamWorkspacePage() {
                       cursor: submittingInvite || !selectedInviteRoleId ? "not-allowed" : "pointer",
                     }}
                   >
-                    {submittingInvite ? "Sending invitation..." : "Send invitation"}
+                    {submittingInvite ? "Sending..." : "Send invitation"}
                   </button>
-                </form>
+                  </form>
+                )}
+              </div>
+
+
+              <div
+                className="rounded-(--r-3) p-4"
+                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+              >
+                <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
+                  Add member directly
+                </h2>
+                {!canManageOrg ? (
+                  <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
+                    You don&apos;t have permission to add members directly.
+                  </p>
+                ) : (
+                  <form className="mt-4 flex flex-col gap-3" onSubmit={handleDirectAdd}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label
+                          className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                          style={{ color: "var(--fg-3)" }}
+                        >
+                          First name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={directFirstName}
+                          onChange={(event) => setDirectFirstName(event.target.value)}
+                          placeholder="John"
+                          className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                          style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                          style={{ color: "var(--fg-3)" }}
+                        >
+                          Last name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={directLastName}
+                          onChange={(event) => setDirectLastName(event.target.value)}
+                          placeholder="Doe"
+                          className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                          style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                        style={{ color: "var(--fg-3)" }}
+                      >
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={directEmail}
+                        onChange={(event) => setDirectEmail(event.target.value)}
+                        placeholder="john@example.com"
+                        className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                        style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                        style={{ color: "var(--fg-3)" }}
+                      >
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={directPassword}
+                        onChange={(event) => setDirectPassword(event.target.value)}
+                        placeholder="••••••••"
+                        className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                        style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                        style={{ color: "var(--fg-3)" }}
+                      >
+                        Team role
+                      </label>
+                      <div className="mt-1.5">
+                        <SearchableSelect
+                          value={selectedDirectRoleId}
+                          onChange={setDirectRoleId}
+                          options={roleOptions}
+                          placeholder="Select role"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={submittingDirect || !selectedDirectRoleId}
+                      className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
+                      style={{
+                        background:
+                          submittingDirect || !selectedDirectRoleId
+                            ? "var(--bg-3)"
+                            : "var(--ink)",
+                        color:
+                          submittingDirect || !selectedDirectRoleId
+                            ? "var(--fg-4)"
+                            : "var(--bg)",
+                        cursor:
+                          submittingDirect || !selectedDirectRoleId
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {submittingDirect ? "Adding..." : "Add member"}
+                    </button>
+                  </form>
+                )}
               </div>
 
               <div
@@ -468,7 +683,15 @@ export default function TeamWorkspacePage() {
                             void handleCancelInvite(invitation._id);
                           }}
                           className="rounded-(--r-2) border px-3 py-1.5 text-sm"
-                          style={{ borderColor: "var(--border-2)", color: "var(--fg-2)", background: "var(--bg)" }}
+                          style={{
+                            borderColor: canManageOrg
+                              ? "var(--border-2)"
+                              : "var(--border)",
+                            color: canManageOrg ? "var(--fg-2)" : "var(--fg-4)",
+                            background: "var(--bg)",
+                            opacity: canManageOrg ? 1 : 0.5,
+                            cursor: canManageOrg ? "pointer" : "not-allowed",
+                          }}
                         >
                           Cancel
                         </button>
