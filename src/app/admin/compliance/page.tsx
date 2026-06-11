@@ -12,7 +12,7 @@ export default function AdminCompliancePage() {
       activeItem="Compliance"
       crumb="Compliance"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button className="btn-ghost-v2">Audit log</button>
           <button className="btn-primary-v2">+ Add filing</button>
         </div>
@@ -86,45 +86,49 @@ export default function AdminCompliancePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         <div className="rounded-[12px] p-[22px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h3 className="text-[14px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>KYC stats · provider</h3>
-          <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
-            <tbody>
-              {[
-                { label: "Approved · 30d", val: "1,284 · 76%", bold: true },
-                { label: "Rejected", val: "218 · 13%", bold: false },
-                { label: "Pending", val: "186 · 11%", bold: false },
-                { label: "Avg time to decision", val: "38 hours", bold: true },
-                { label: "Re-submission accepted", val: "82%", bold: false },
-              ].map((r) => (
-                <tr key={r.label}>
-                  <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: r.bold ? 600 : 400 }}>{r.label}</td>
-                  <td className="py-[11px] px-[14px] font-mono" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px] text-[13px]" style={{ borderCollapse: "collapse" }}>
+              <tbody>
+                {[
+                  { label: "Approved · 30d", val: "1,284 · 76%", bold: true },
+                  { label: "Rejected", val: "218 · 13%", bold: false },
+                  { label: "Pending", val: "186 · 11%", bold: false },
+                  { label: "Avg time to decision", val: "38 hours", bold: true },
+                  { label: "Re-submission accepted", val: "82%", bold: false },
+                ].map((r) => (
+                  <tr key={r.label}>
+                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: r.bold ? 600 : 400 }}>{r.label}</td>
+                    <td className="py-[11px] px-[14px] font-mono" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="rounded-[12px] p-[22px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h3 className="text-[14px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Regulatory bodies</h3>
-          <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
-            <tbody>
-              {[
-                { body: "SARS · ZA", status: "Clean", pill: "ok" },
-                { body: "POPIA · ZA", status: "Compliant", pill: "ok" },
-                { body: "FIRS · NG", status: "Clean", pill: "ok" },
-                { body: "BaFin · DE", status: "Under review", pill: "warn" },
-                { body: "FCA · GB", status: "Compliant", pill: "ok" },
-                { body: "DSGVO · EU", status: "Compliant", pill: "ok" },
-              ].map((r) => (
-                <tr key={r.body}>
-                  <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.body}</td>
-                  <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <Pill variant={r.pill as "ok" | "warn"}>{r.status}</Pill>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px] text-[13px]" style={{ borderCollapse: "collapse" }}>
+              <tbody>
+                {[
+                  { body: "SARS · ZA", status: "Clean", pill: "ok" },
+                  { body: "POPIA · ZA", status: "Compliant", pill: "ok" },
+                  { body: "FIRS · NG", status: "Clean", pill: "ok" },
+                  { body: "BaFin · DE", status: "Under review", pill: "warn" },
+                  { body: "FCA · GB", status: "Compliant", pill: "ok" },
+                  { body: "DSGVO · EU", status: "Compliant", pill: "ok" },
+                ].map((r) => (
+                  <tr key={r.body}>
+                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.body}</td>
+                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <Pill variant={r.pill as "ok" | "warn"}>{r.status}</Pill>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </AdminDashboardShell>

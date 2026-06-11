@@ -20,7 +20,7 @@ export default function AdminUserDetailPage({
       activeItem="Users"
       crumb="USR-2026-008412"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
           <button className="btn-ghost-v2">Impersonate</button>
           <button className="btn-ghost-v2">Send DM</button>
           <button className="btn-primary-v2" style={{ background: "var(--danger)", borderColor: "var(--danger)", color: "oklch(0.98 0 0)" }}>
@@ -32,7 +32,7 @@ export default function AdminUserDetailPage({
       {/* Header with avatar */}
       <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
         <div
-          className="w-[72px] h-[72px] rounded-[12px] shrink-0"
+          className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-[12px] shrink-0"
           style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 120), oklch(0.72 0.06 100))" }}
         />
         <div className="flex-1">

@@ -21,7 +21,7 @@ export default function AdminSingleDisputePage({
       activeItem="Disputes"
       crumb="DSP-2401"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
           <button className="btn-ghost-v2">Escalate</button>
           <Link href="/admin/disputes/DSP-2401/resolve" className="btn-primary-v2 no-underline">
             Open resolve flow
@@ -54,7 +54,7 @@ export default function AdminSingleDisputePage({
                 { time: "18 May 14:02", text: "Admin (Andile) found UI showed wrong notice value · reschedule timing issue" },
                 { time: "18 May 14:08", text: "Admin proposed 50/50 split + UI fix · awaiting both parties (4h window)" },
               ].map((evt) => (
-                <div key={evt.time} className="grid gap-3.5" style={{ gridTemplateColumns: "120px 1fr" }}>
+                <div key={evt.time} className="grid grid-cols-1 sm:[grid-template-columns:120px_1fr] gap-2 sm:gap-3.5">
                   <span className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
                     {evt.time}
                   </span>
@@ -104,22 +104,24 @@ export default function AdminSingleDisputePage({
           </Card>
 
           <Card title="Risk signals">
-            <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
-              <tbody>
-                {[
-                  { label: "Pier · refund pattern", status: "Low · 1st dispute" },
-                  { label: "Iron Lab · dispute history", status: "Clean · 2 in 12mo" },
-                  { label: "Amount", status: "Standard" },
-                ].map((r) => (
-                  <tr key={r.label}>
-                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.label}</td>
-                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <Pill variant="ok">{r.status}</Pill>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] text-[13px]" style={{ borderCollapse: "collapse" }}>
+                <tbody>
+                  {[
+                    { label: "Pier · refund pattern", status: "Low · 1st dispute" },
+                    { label: "Iron Lab · dispute history", status: "Clean · 2 in 12mo" },
+                    { label: "Amount", status: "Standard" },
+                  ].map((r) => (
+                    <tr key={r.label}>
+                      <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.label}</td>
+                      <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <Pill variant="ok">{r.status}</Pill>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </div>
       </div>

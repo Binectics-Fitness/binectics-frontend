@@ -20,7 +20,7 @@ export default function AdminSinglePaymentPage({
       activeItem="Payments"
       crumb="PI_3OqL08"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
           <button className="btn-ghost-v2">Refund manually</button>
           <button className="btn-primary-v2">Defend chargeback</button>
         </div>
@@ -96,26 +96,28 @@ export default function AdminSinglePaymentPage({
             ]} />
           </Card>
           <Card title="Chargeback">
-            <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
-              <tbody>
-                {[
-                  { label: "Reason code", val: "4855" },
-                  { label: "Claim", val: "\"Service not as described\"" },
-                  { label: "Evidence due", val: "26 May · 36h left" },
-                ].map((r) => (
-                  <tr key={r.label}>
-                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
-                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] text-[13px]" style={{ borderCollapse: "collapse" }}>
+                <tbody>
+                  {[
+                    { label: "Reason code", val: "4855" },
+                    { label: "Claim", val: "\"Service not as described\"" },
+                    { label: "Evidence due", val: "26 May · 36h left" },
+                  ].map((r) => (
+                    <tr key={r.label}>
+                      <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
+                      <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>Likelihood</td>
+                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <Pill variant="ok">High win · QR attended</Pill>
+                    </td>
                   </tr>
-                ))}
-                <tr>
-                  <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>Likelihood</td>
-                  <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <Pill variant="ok">High win · QR attended</Pill>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </Card>
         </div>
       </div>
@@ -134,16 +136,18 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function InfoTable({ rows }: { rows: { label: string; val: string }[] }) {
   return (
-    <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
-      <tbody>
-        {rows.map((r) => (
-          <tr key={r.label}>
-            <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
-            <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[420px] text-[13px]" style={{ borderCollapse: "collapse" }}>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.label}>
+              <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
+              <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

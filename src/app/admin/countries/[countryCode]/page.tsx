@@ -20,7 +20,7 @@ export default function AdminSingleCountryPage({
     <AdminDashboardShell
       activeItem="Countries"
       crumb="South Africa"
-      actions={<button className="btn-ghost-v2">Country health</button>}
+      actions={<div className="flex flex-wrap items-center gap-2"><button className="btn-ghost-v2">Country health</button></div>}
     >
       {/* Header with flag */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3.5">
@@ -131,16 +131,18 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function InfoTable({ rows }: { rows: { label: string; val: string }[] }) {
   return (
-    <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
-      <tbody>
-        {rows.map((r) => (
-          <tr key={r.label}>
-            <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
-            <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[420px] text-[13px]" style={{ borderCollapse: "collapse" }}>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.label}>
+              <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
+              <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

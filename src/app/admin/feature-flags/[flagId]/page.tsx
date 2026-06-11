@@ -20,7 +20,7 @@ export default function AdminFeatureFlagDetailPage({
       activeItem="Feature flags"
       crumb="video_check_ins"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
           <button className="btn-ghost-v2">Edit targeting</button>
           <button className="btn-primary-v2" style={{ background: "var(--danger)", borderColor: "var(--danger)", color: "oklch(0.98 0 0)" }}>
             Kill
@@ -90,42 +90,46 @@ export default function AdminFeatureFlagDetailPage({
 
         <div className="flex flex-col gap-3.5">
           <Card title="Metrics">
-            <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
-              <tbody>
-                {[
-                  { label: "Check-in success rate", val: "92.4%", delta: "+ 3.2%", variant: "ok" as const },
-                  { label: "Fraud rate", val: "0.08%", delta: "- 0.4%", variant: "ok" as const },
-                  { label: "Provider satisfaction", val: "4.6 / 5", delta: "+ 0.4", variant: "ok" as const },
-                  { label: "Session drop-off", val: "2.1%", delta: "+ 0.3%", variant: "warn" as const },
-                ].map((r) => (
-                  <tr key={r.label}>
-                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.label}</td>
-                    <td className="py-[11px] px-[14px] font-mono" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
-                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <Pill variant={r.variant}>{r.delta}</Pill>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] text-[13px]" style={{ borderCollapse: "collapse" }}>
+                <tbody>
+                  {[
+                    { label: "Check-in success rate", val: "92.4%", delta: "+ 3.2%", variant: "ok" as const },
+                    { label: "Fraud rate", val: "0.08%", delta: "- 0.4%", variant: "ok" as const },
+                    { label: "Provider satisfaction", val: "4.6 / 5", delta: "+ 0.4", variant: "ok" as const },
+                    { label: "Session drop-off", val: "2.1%", delta: "+ 0.3%", variant: "warn" as const },
+                  ].map((r) => (
+                    <tr key={r.label}>
+                      <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.label}</td>
+                      <td className="py-[11px] px-[14px] font-mono" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
+                      <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <Pill variant={r.variant}>{r.delta}</Pill>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
 
           <Card title="Targeting">
-            <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
-              <tbody>
-                {[
-                  { label: "Countries", val: "ZA · NG" },
-                  { label: "Role", val: "Provider · trainer + dietitian" },
-                  { label: "% rollout", val: "25% of eligible" },
-                  { label: "Excluded", val: "Iron Lab (legacy contract)" },
-                ].map((r) => (
-                  <tr key={r.label}>
-                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
-                    <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] text-[13px]" style={{ borderCollapse: "collapse" }}>
+                <tbody>
+                  {[
+                    { label: "Countries", val: "ZA · NG" },
+                    { label: "Role", val: "Provider · trainer + dietitian" },
+                    { label: "% rollout", val: "25% of eligible" },
+                    { label: "Excluded", val: "Iron Lab (legacy contract)" },
+                  ].map((r) => (
+                    <tr key={r.label}>
+                      <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{r.label}</td>
+                      <td className="py-[11px] px-[14px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.val}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </div>
       </div>

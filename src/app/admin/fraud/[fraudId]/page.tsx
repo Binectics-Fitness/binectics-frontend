@@ -20,7 +20,7 @@ export default function AdminSingleFraudPage({
       activeItem="Fraud"
       crumb="FRD-2026-04841"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
           <button className="btn-ghost-v2">Watch · no action</button>
           <button className="btn-primary-v2" style={{ background: "var(--danger)", borderColor: "var(--danger)", color: "oklch(0.98 0 0)" }}>
             Freeze account

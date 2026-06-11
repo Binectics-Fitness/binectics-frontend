@@ -78,7 +78,7 @@ export default function AdminReviewsPage() {
       activeItem="Reviews"
       crumb="Reviews"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button className="btn-ghost-v2">Export</button>
           <button className="btn-primary-v2">Bulk resolve</button>
         </div>
@@ -107,7 +107,7 @@ export default function AdminReviewsPage() {
 
       {/* Toolbar */}
       <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <div className="flex-1 min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+        <div className="flex-1 min-w-0 sm:min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search by reviewer, provider, or RVW_ID..." style={{ color: "var(--ink)" }} readOnly />
         </div>

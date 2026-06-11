@@ -12,10 +12,6 @@ export const metadata: Metadata = {
  * Uses AdminDashboardShell for the dark sidebar chrome.
  */
 
-function I({ d, children }: { d?: string; children?: React.ReactNode }) {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{d ? <path d={d} /> : children}</svg>;
-}
-
 const STATS = [
   { l: "GMV · 30d", v: "$ 4.82M", d: "↑ 18.2%" },
   { l: "Active providers", v: "12,408", d: "+ 312 net" },
@@ -136,7 +132,7 @@ export default function AdminDashboard() {
                   {c.label} <span className="font-mono text-[10.5px]" style={{ color: c.on ? "oklch(0.85 0.005 85)" : "var(--fg-4)" }}>{c.count}</span>
                 </span>
               ))}
-              <div className="ml-auto flex gap-1.5">
+              <div className="ml-0 sm:ml-auto flex w-full sm:w-auto flex-wrap sm:flex-nowrap gap-1.5 justify-start sm:justify-end">
                 <span className="inline-flex items-center h-6.5 px-2.5 rounded-full text-[12px]" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}>Region: Global</span>
                 <span className="inline-flex items-center h-6.5 px-2.5 rounded-full text-[12px]" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}>Sort: Oldest</span>
               </div>
@@ -248,17 +244,21 @@ export default function AdminDashboard() {
                 </div>
                 <span className="text-[12.5px] cursor-pointer" style={{ color: "var(--fg-2)" }}>All →</span>
               </div>
-              {COUNTRIES.map((c, i) => (
-                <div key={c.code} className="grid gap-3 px-4.5 py-2.5 items-center text-[13px]" style={{ gridTemplateColumns: "100px 1fr 80px 60px", borderBottom: i < COUNTRIES.length - 1 ? "1px solid var(--border)" : "none" }}>
-                  <span className="font-mono text-[11px] tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{c.code}</span>
-                  <span style={{ color: "var(--ink)" }}>
-                    {c.name}
-                    <div className="h-1 rounded-sm overflow-hidden mt-1" style={{ background: "var(--bg-3)" }}><div className="h-full" style={{ width: c.w, background: "var(--ink)" }} /></div>
-                  </span>
-                  <span className="font-mono text-[12px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{c.gmv}</span>
-                  <span className="font-mono text-[10.5px] text-right" style={{ color: "var(--fg-3)" }}>{c.gw}</span>
+              <div className="overflow-x-auto">
+                <div className="min-w-[520px]">
+                  {COUNTRIES.map((c, i) => (
+                    <div key={c.code} className="grid gap-3 px-4.5 py-2.5 items-center text-[13px]" style={{ gridTemplateColumns: "100px 1fr 80px 60px", borderBottom: i < COUNTRIES.length - 1 ? "1px solid var(--border)" : "none" }}>
+                      <span className="font-mono text-[11px] tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{c.code}</span>
+                      <span style={{ color: "var(--ink)" }}>
+                        {c.name}
+                        <div className="h-1 rounded-sm overflow-hidden mt-1" style={{ background: "var(--bg-3)" }}><div className="h-full" style={{ width: c.w, background: "var(--ink)" }} /></div>
+                      </span>
+                      <span className="font-mono text-[12px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{c.gmv}</span>
+                      <span className="font-mono text-[10.5px] text-right" style={{ color: "var(--fg-3)" }}>{c.gw}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
 
