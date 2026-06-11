@@ -17,13 +17,13 @@ export default function DietitianPdfPreviewPage() {
           <div className="flex justify-between items-center mb-3">
             <strong className="text-[14px]" style={{ color: "var(--ink)" }}>PDF preview &middot; 4 pages</strong>
             <div className="flex gap-2">
-              <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Edit plan</button>
-              <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Send to Folake</button>
+              <button className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Edit plan</button>
+              <button className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Send to Folake</button>
             </div>
           </div>
 
           {/* PDF mock */}
-          <div className="rounded-(--r-2) p-8 px-10" style={{ background: "oklch(0.97 0.005 75)", boxShadow: "0 1px 3px oklch(0 0 0 / 0.04)" }}>
+          <div className="rounded-(--r-2) p-4 sm:p-8 sm:px-10" style={{ background: "var(--bg-2)", boxShadow: "0 1px 3px color-mix(in oklch, var(--ink) 6%, transparent)" }}>
             {/* Header */}
             <div className="flex justify-between items-end pb-3.5 mb-6" style={{ borderBottom: "2px solid var(--ink)" }}>
               <div>
@@ -40,28 +40,30 @@ export default function DietitianPdfPreviewPage() {
             {/* Daily targets */}
             <div className="mb-6">
               <h3 className="text-[14px] font-medium uppercase tracking-[0.06em] mb-3" style={{ color: "var(--fg-3)" }}>Daily targets</h3>
-              <table className="w-full text-[14px]">
-                <tbody>
-                  <tr>
-                    <td className="py-2 pr-3"><strong>Kcal</strong></td>
-                    <td className="py-2 pr-6">1,650</td>
-                    <td className="py-2 pr-3"><strong>Carbs</strong></td>
-                    <td className="py-2">160 g &middot; 39%</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-3"><strong>Protein</strong></td>
-                    <td className="py-2 pr-6">142 g &middot; 34%</td>
-                    <td className="py-2 pr-3"><strong>Fat</strong></td>
-                    <td className="py-2">52 g &middot; 27%</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-3"><strong>Fibre</strong></td>
-                    <td className="py-2 pr-6">&ge; 35 g</td>
-                    <td className="py-2 pr-3"><strong>Water</strong></td>
-                    <td className="py-2">3 L</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[520px] text-[14px]">
+                  <tbody>
+                    <tr>
+                      <td className="py-2 pr-3"><strong>Kcal</strong></td>
+                      <td className="py-2 pr-6">1,650</td>
+                      <td className="py-2 pr-3"><strong>Carbs</strong></td>
+                      <td className="py-2">160 g &middot; 39%</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 pr-3"><strong>Protein</strong></td>
+                      <td className="py-2 pr-6">142 g &middot; 34%</td>
+                      <td className="py-2 pr-3"><strong>Fat</strong></td>
+                      <td className="py-2">52 g &middot; 27%</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 pr-3"><strong>Fibre</strong></td>
+                      <td className="py-2 pr-6">&ge; 35 g</td>
+                      <td className="py-2 pr-3"><strong>Water</strong></td>
+                      <td className="py-2">3 L</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Day 1 sample */}

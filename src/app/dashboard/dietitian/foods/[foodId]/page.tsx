@@ -39,8 +39,8 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Duplicate</button>
-          <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Save changes</button>
+          <button className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Duplicate</button>
+          <button className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Save changes</button>
         </div>
       </div>
 
@@ -49,35 +49,37 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
         {/* Per 100g */}
         <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Per 100 g &middot; cooked</h3>
-          <table className="w-full border-collapse text-[13.5px]">
-            <tbody>
-              {NUTRITION.map((n) => (
-                <tr key={n.label}>
-                  <td
-                    className="px-3.5 py-3"
-                    style={{
-                      borderBottom: "1px solid var(--border)",
-                      paddingLeft: n.indent ? 22 : undefined,
-                      color: n.indent ? "var(--fg-3)" : undefined,
-                      fontWeight: n.bold ? 600 : 400,
-                    }}
-                  >
-                    {n.label}
-                  </td>
-                  <td
-                    className="px-3.5 py-3 text-right font-mono"
-                    style={{
-                      borderBottom: "1px solid var(--border)",
-                      color: n.indent ? "var(--fg-3)" : undefined,
-                      fontWeight: n.bold ? 500 : 400,
-                    }}
-                  >
-                    {n.value}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px] border-collapse text-[13.5px]">
+              <tbody>
+                {NUTRITION.map((n) => (
+                  <tr key={n.label}>
+                    <td
+                      className="px-3.5 py-3"
+                      style={{
+                        borderBottom: "1px solid var(--border)",
+                        paddingLeft: n.indent ? 22 : undefined,
+                        color: n.indent ? "var(--fg-3)" : undefined,
+                        fontWeight: n.bold ? 600 : 400,
+                      }}
+                    >
+                      {n.label}
+                    </td>
+                    <td
+                      className="px-3.5 py-3 text-right font-mono"
+                      style={{
+                        borderBottom: "1px solid var(--border)",
+                        color: n.indent ? "var(--fg-3)" : undefined,
+                        fontWeight: n.bold ? 500 : 400,
+                      }}
+                    >
+                      {n.value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3.5">

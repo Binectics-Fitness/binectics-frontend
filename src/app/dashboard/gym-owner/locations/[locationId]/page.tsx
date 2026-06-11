@@ -88,16 +88,18 @@ export default function SingleLocationPage({ params }: { params: Promise<{ locat
         {/* Opening hours */}
         <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Opening hours</h3>
-          <table className="w-full border-collapse text-[13.5px]">
-            <tbody>
-              {HOURS.map((h) => (
-                <tr key={h.day} className="hover:bg-bg-2">
-                  <td className="py-3 px-3.5" style={{ borderBottom: "1px solid var(--border)" }}><strong className="font-medium" style={{ color: "var(--ink)" }}>{h.day}</strong></td>
-                  <td className="py-3 px-3.5 text-right font-mono" style={{ borderBottom: "1px solid var(--border)", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{h.time}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px] border-collapse text-[13.5px]">
+              <tbody>
+                {HOURS.map((h) => (
+                  <tr key={h.day} className="hover:bg-bg-2">
+                    <td className="py-3 px-3.5" style={{ borderBottom: "1px solid var(--border)" }}><strong className="font-medium" style={{ color: "var(--ink)" }}>{h.day}</strong></td>
+                    <td className="py-3 px-3.5 text-right font-mono" style={{ borderBottom: "1px solid var(--border)", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{h.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <p className="text-[12px] mt-3.5" style={{ color: "var(--fg-3)" }}>Members with 24/7 plan access any time via QR. Standard plans honor these hours.</p>
         </div>
       </div>

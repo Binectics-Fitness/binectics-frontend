@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 
 const KPIS = [
@@ -37,14 +36,14 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     <GymDashboardShell activeItem="Members" crumb="Linda Mokoena">
       {/* Profile header */}
       <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
-        <div className="w-[72px] h-[72px] rounded-(--r-3) flex-shrink-0" style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 80), oklch(0.72 0.06 60))" }} />
+        <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-(--r-3) flex-shrink-0" style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 80), oklch(0.72 0.06 60))" }} />
         <div className="flex-1">
           <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Linda Mokoena</h1>
           <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>linda@email.com &middot; joined 18 Mar 2025 &middot; Cape Town</p>
         </div>
         <div className="flex gap-2">
-          <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Message</button>
-          <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Edit plan</button>
+          <button className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Message</button>
+          <button className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Edit plan</button>
         </div>
       </div>
 
@@ -66,38 +65,42 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Activity &middot; last 30 days</h3>
 
           {/* Activity grid */}
-          <div className="grid gap-[3px] mb-3.5" style={{ gridTemplateColumns: "repeat(30, 1fr)" }}>
-            {ACTIVITY_COLORS.map((c, i) => {
-              const chroma = c < 0.6 ? 0.18 : c < 0.75 ? 0.12 : c < 0.85 ? 0.6 : 0.2;
-              return (
-                <div
-                  key={i}
-                  className="aspect-square rounded-[2px]"
-                  title={`Day ${i + 1}`}
-                  style={{ background: `oklch(${c} ${chroma} 148)` }}
-                />
-              );
-            })}
+          <div className="overflow-x-auto mb-3.5">
+            <div className="grid gap-[3px] min-w-[560px]" style={{ gridTemplateColumns: "repeat(30, 1fr)" }}>
+              {ACTIVITY_COLORS.map((c, i) => {
+                const chroma = c < 0.6 ? 0.18 : c < 0.75 ? 0.12 : c < 0.85 ? 0.6 : 0.2;
+                return (
+                  <div
+                    key={i}
+                    className="aspect-square rounded-[2px]"
+                    title={`Day ${i + 1}`}
+                    style={{ background: `oklch(${c} ${chroma} 148)` }}
+                  />
+                );
+              })}
+            </div>
           </div>
 
-          <table className="w-full border-collapse text-[13.5px]">
-            <thead>
-              <tr>
-                {["Date", "What", "Location"].map((h) => (
-                  <th key={h} className="text-left px-3.5 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {RECENT_ACTIVITY.map((a, i) => (
-                <tr key={i} className="hover:bg-[var(--bg-2)]">
-                  <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>{a.date}</td>
-                  <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>{a.what}</td>
-                  <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>{a.location}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] border-collapse text-[13.5px]">
+              <thead>
+                <tr>
+                  {["Date", "What", "Location"].map((h) => (
+                    <th key={h} className="text-left px-3.5 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {RECENT_ACTIVITY.map((a, i) => (
+                  <tr key={i} className="hover:bg-[var(--bg-2)]">
+                    <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>{a.date}</td>
+                    <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>{a.what}</td>
+                    <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>{a.location}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Notes */}
