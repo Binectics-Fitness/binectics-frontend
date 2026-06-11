@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import SearchableSelect from "@/components/SearchableSelect";
+import {
+  consultationsService,
+  ConsultationBookingStatus,
+  type ConsultationBooking,
+  type ConsultationType,
+} from "@/lib/api/consultations";
 
 const TIME_RANGE_OPTIONS = [
   { label: "This month", value: "This month" },
@@ -10,26 +16,114 @@ const TIME_RANGE_OPTIONS = [
   { label: "All time", value: "All time" },
 ];
 
-const CLIENT_FILTER_OPTIONS = [
-  { label: "All clients", value: "All clients" },
-  { label: "Linda Mokoena", value: "Linda Mokoena" },
-  { label: "Wei Chen", value: "Wei Chen" },
-];
+function formatDate(value: string) {
+  return new Date(value).toLocaleString("en-GB", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
-const SESSIONS = [
-  { date: "Wed 21 May 18:00", client: "Linda Mokoena", type: "1-on-1 strength", duration: "62 min", topSet: "92.5 × 3 squat · PR", status: "completed" as const },
-  { date: "Wed 21 May 06:00", client: "Wei Chen", type: "1-on-1 olympic", duration: "55 min", topSet: "75 × 1 snatch", status: "completed" as const },
-  { date: "Tue 20 May 17:30", client: "Camilla Lapwing", type: "1-on-1 postnatal", duration: "45 min", topSet: "24 × 10 DB row", status: "completed" as const },
-  { date: "Mon 19 May 18:30", client: "Mike Khumalo", type: "1-on-1 strength", duration: "60 min", topSet: "120 × 5 deadlift", status: "no-show" as const },
-  { date: "Mon 19 May 06:00", client: "Linda Mokoena", type: "1-on-1 strength", duration: "60 min", topSet: "90 × 5 squat", status: "completed" as const },
-  { date: "Sat 17 May 09:00", client: "Folake Adebayo", type: "1-on-1 hybrid", duration: "45 min", topSet: "BW × 8 chin-up", status: "completed" as const },
-  { date: "Fri 16 May 17:00", client: "Wei Chen", type: "1-on-1 olympic", duration: "60 min", topSet: "60 × 1 clean", status: "completed" as const },
-  { date: "Thu 15 May 18:00", client: "Linda Mokoena", type: "1-on-1 strength", duration: "60 min", topSet: "85 × 5 squat", status: "completed" as const },
-];
+function clientLabel(booking: ConsultationBooking) {
+  return `Client ${booking.clientUserId.slice(-6).toUpperCase()}`;
+}
 
 export default function TrainerSessionsListPage() {
+  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
+  const [typesById, setTypesById] = useState<Record<string, string>>({});
+  const [query, setQuery] = useState("");
   const [timeRange, setTimeRange] = useState("This month");
   const [clientFilter, setClientFilter] = useState("All clients");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      setLoading(true);
+      const now = new Date();
+      const params: { from?: string } = {};
+
+      if (timeRange === "This month") {
+        params.from = new Date(now.getFullYear(), now.getMonth(), 1)
+          .toISOString()
+          .slice(0, 10);
+      } else if (timeRange === "Last 3 months") {
+        params.from = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+          .toISOString()
+          .slice(0, 10);
+      }
+
+      const [bookingRes, typesRes] = await Promise.all([
+        consultationsService.getProviderBookings(params),
+        consultationsService.getTypes({ includeInactive: true }),
+      ]);
+
+      if (!mounted) return;
+
+      if (bookingRes.success && bookingRes.data) {
+        setBookings(
+          bookingRes.data.filter(
+            (b) =>
+              b.status === ConsultationBookingStatus.COMPLETED ||
+              b.status === ConsultationBookingStatus.NO_SHOW,
+          ),
+        );
+      } else {
+        setBookings([]);
+      }
+
+      if (typesRes.success && typesRes.data) {
+        const map = typesRes.data.reduce<Record<string, string>>(
+          (acc, item: ConsultationType) => {
+            acc[item.id] = item.name;
+            return acc;
+          },
+          {},
+        );
+        setTypesById(map);
+      } else {
+        setTypesById({});
+      }
+
+      setLoading(false);
+    };
+
+    void load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [timeRange]);
+
+  const clientOptions = useMemo(() => {
+    const unique = new Set(bookings.map((b) => clientLabel(b)));
+    return [
+      { label: "All clients", value: "All clients" },
+      ...Array.from(unique).map((label) => ({ label, value: label })),
+    ];
+  }, [bookings]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return bookings.filter((b) => {
+      const label = clientLabel(b);
+      const type = typesById[b.consultationTypeId] ?? "Consultation";
+
+      if (clientFilter !== "All clients" && label !== clientFilter) {
+        return false;
+      }
+
+      if (!q) return true;
+      return (
+        label.toLowerCase().includes(q) ||
+        type.toLowerCase().includes(q) ||
+        (b.notes ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [bookings, clientFilter, query, typesById]);
 
   return (
     <TrainerDashboardShell
@@ -40,7 +134,7 @@ export default function TrainerSessionsListPage() {
       {/* Page header */}
       <div>
         <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>Sessions log</h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>1,284 sessions all-time · searchable · sortable · exportable</p>
+        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>{loading ? "Loading sessions..." : `${filtered.length} sessions found`}</p>
       </div>
 
       {/* Card with filters + table */}
@@ -49,6 +143,8 @@ export default function TrainerSessionsListPage() {
         <div className="flex flex-col sm:flex-row gap-2 p-5 pb-3.5">
           <input
             placeholder="Search by client name or note…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             className="flex-1 h-9 px-3.5 rounded-(--r-2) text-[13.5px]"
             style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)", fontFamily: "inherit", outline: "none" }}
           />
@@ -56,7 +152,7 @@ export default function TrainerSessionsListPage() {
             <SearchableSelect value={timeRange} onChange={setTimeRange} options={TIME_RANGE_OPTIONS} placeholder="Time range" />
           </div>
           <div className="w-full sm:w-40">
-            <SearchableSelect value={clientFilter} onChange={setClientFilter} options={CLIENT_FILTER_OPTIONS} placeholder="Filter client" />
+            <SearchableSelect value={clientFilter} onChange={setClientFilter} options={clientOptions} placeholder="Filter client" />
           </div>
         </div>
 
@@ -71,27 +167,42 @@ export default function TrainerSessionsListPage() {
               </tr>
             </thead>
             <tbody>
-              {SESSIONS.map((s, i) => (
-                <tr key={i} className="cursor-pointer" style={{ borderBottom: i < SESSIONS.length - 1 ? "1px solid var(--border)" : "none" }}>
-                  <td className="px-3.5 py-3 font-mono" style={{ color: "var(--fg-2)" }}>{s.date}</td>
-                  <td className="px-3.5 py-3 font-medium" style={{ color: "var(--ink)" }}>{s.client}</td>
-                  <td className="px-3.5 py-3" style={{ color: "var(--ink)" }}>{s.type}</td>
-                  <td className="px-3.5 py-3 font-mono" style={{ color: "var(--ink)" }}>{s.duration}</td>
-                  <td className="px-3.5 py-3 font-mono text-[12.5px]" style={{ color: "var(--ink)" }}>{s.topSet}</td>
+              {filtered.map((s, i) => {
+                const duration = Math.max(
+                  0,
+                  Math.round(
+                    (new Date(s.endsAt).getTime() -
+                      new Date(s.startsAt).getTime()) /
+                      60000,
+                  ),
+                );
+                const label = clientLabel(s);
+                const typeLabel =
+                  typesById[s.consultationTypeId] ?? "Consultation";
+                const topSet = s.notes?.trim() || "No notes";
+
+                return (
+                <tr key={s.id} className="cursor-pointer" style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}>
+                  <td className="px-3.5 py-3 font-mono" style={{ color: "var(--fg-2)" }}>{formatDate(s.startsAt)}</td>
+                  <td className="px-3.5 py-3 font-medium" style={{ color: "var(--ink)" }}>{label}</td>
+                  <td className="px-3.5 py-3" style={{ color: "var(--ink)" }}>{typeLabel}</td>
+                  <td className="px-3.5 py-3 font-mono" style={{ color: "var(--ink)" }}>{duration} min</td>
+                  <td className="px-3.5 py-3 font-mono text-[12.5px]" style={{ color: "var(--ink)" }}>{topSet}</td>
                   <td className="px-3.5 py-3">
                     <span
                       className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full"
                       style={
-                        s.status === "completed"
+                        s.status === ConsultationBookingStatus.COMPLETED
                           ? { background: "var(--signal-soft)", color: "var(--signal-ink)" }
                           : { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" }
                       }
                     >
-                      {s.status}
+                      {s.status.toLowerCase().replace("_", " ")}
                     </span>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

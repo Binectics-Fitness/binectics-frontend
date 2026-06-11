@@ -1,19 +1,16 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import type { Metadata } from "next";
+import {
+  MealRating,
+  progressService,
+  type MealFeedback,
+} from "@/lib/api/progress";
 
-export const metadata: Metadata = {
-  title: "Client Feedback",
-  description: "Review client meal logs and provide nutrition feedback.",
+type FeedbackRow = MealFeedback & {
+  clientLabel: string;
 };
-
-const MEALS = [
-  { name: "Folake A.", day: "Day 12 · breakfast", meal: "High protein oats", status: "ok", statusText: "✓ on plan", time: "Today 07:42" },
-  { name: "Adaora T.", day: "Day 8 · lunch", meal: "Jollof + chicken", status: "ok", statusText: "✓ on plan", time: "Today 13:18" },
-  { name: "Bisi O.", day: "Day 22 · dinner", meal: "Egusi (homemade)", status: "warn", statusText: "? check macros", time: "Yesterday 19:42" },
-  { name: "Kemi E.", day: "Day 4 · snack", meal: "Banana + nut butter", status: "ok", statusText: "✓ on plan", time: "Yesterday 15:12" },
-  { name: "Samuel A.", day: "Day 1 · breakfast", meal: "Pap with milk + boiled egg", status: "ok", statusText: "✓ on plan", time: "2 days ago" },
-  { name: "Chinedu O.", day: "Day 18 · dinner", meal: "Fish + plantain (deep fried)", status: "danger", statusText: "! not on plan", time: "2 days ago" },
-];
 
 function pillStyle(status: string) {
   if (status === "ok") return { background: "var(--signal-soft)", color: "var(--signal-ink)" };
@@ -22,26 +19,105 @@ function pillStyle(status: string) {
 }
 
 export default function DietitianFeedbackPage() {
+  const [rows, setRows] = useState<FeedbackRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      setLoading(true);
+
+      const clientsRes = await progressService.getMyClientProfiles(20);
+      if (!clientsRes.success || !clientsRes.data || !mounted) {
+        setRows([]);
+        setLoading(false);
+        return;
+      }
+
+      const mealsByClient = await Promise.all(
+        clientsRes.data.slice(0, 12).map(async (client) => {
+          const res = await progressService.getMealFeedbacks(client._id, 8);
+          if (!res.success || !res.data) return [];
+          return res.data.map((entry) => ({
+            ...entry,
+            clientLabel: client.user
+              ? `${client.user.first_name} ${client.user.last_name}`
+              : `Client ${client.client_id.slice(-6).toUpperCase()}`,
+          }));
+        }),
+      );
+
+      if (!mounted) return;
+
+      const merged = mealsByClient
+        .flat()
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )
+        .slice(0, 30);
+
+      setRows(merged);
+      setLoading(false);
+    };
+
+    void load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const awaitingReview = useMemo(
+    () => rows.filter((r) => !r.feedback || !r.feedback.trim()).length,
+    [rows],
+  );
+
+  const renderStatus = (row: FeedbackRow) => {
+    if (!row.feedback?.trim()) {
+      return { status: "warn", text: "pending review" };
+    }
+
+    if (row.rating === MealRating.POOR) {
+      return { status: "danger", text: "needs correction" };
+    }
+
+    if (row.rating === MealRating.GOOD || row.rating === MealRating.EXCELLENT) {
+      return { status: "ok", text: "on plan" };
+    }
+
+    return { status: "warn", text: "reviewed" };
+  };
+
   return (
     <DietitianDashboardShell activeItem="Settings" crumb="Meal feedback">
-      <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Meal feedback &middot; 22 awaiting review</h1>
+      <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Meal feedback &middot; {loading ? "loading..." : `${awaitingReview} awaiting review`}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-        {MEALS.map((m, i) => (
-          <div key={i} className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        {rows.map((m) => {
+          const state = renderStatus(m);
+          return (
+          <div key={m._id} className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             {/* Image placeholder */}
             <div className="aspect-[4/3]" style={{ background: "linear-gradient(135deg, oklch(0.85 0.05 80), oklch(0.72 0.08 60))" }} />
             <div className="p-5.5 pt-3.5">
-              <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{m.name}</div>
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5 mb-2" style={{ color: "var(--fg-3)" }}>{m.day}</div>
-              <div className="text-[13px] mb-3" style={{ color: "var(--fg-2)" }}>{m.meal}</div>
+              <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{m.clientLabel}</div>
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5 mb-2" style={{ color: "var(--fg-3)" }}>{m.meal_type.toLowerCase()} · {new Date(m.meal_date).toLocaleDateString("en-GB")}</div>
+              <div className="text-[13px] mb-3" style={{ color: "var(--fg-2)" }}>{m.description}</div>
               <div className="flex justify-between items-center">
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={pillStyle(m.status)}>{m.statusText}</span>
-                <span className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{m.time}</span>
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={pillStyle(state.status)}>{state.text}</span>
+                <span className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{new Date(m.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
+        {!loading && rows.length === 0 && (
+          <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-3)" }}>
+            No meal feedback entries yet.
+          </div>
+        )}
       </div>
     </DietitianDashboardShell>
   );

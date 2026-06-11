@@ -1,31 +1,43 @@
-import Link from "next/link";
-import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Client Details",
-  description: "View client profile, progress, and session history.",
-};
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import { progressService } from "@/lib/api/progress";
+import type { ClientProfile, ClientJournalEntry } from "@/lib/api/progress";
 
 /**
  * Client detail — client.html prototype.
  * Hero with avatar + badges + KPIs, sticky tab nav, coaching notes, right-rail signals.
  */
 
-const KPIS = [
-  { label: "Sessions complete", value: "14", suffix: "/ 24", delta: "58% through · 10 left" },
-  { label: "Attendance", value: "100", suffix: "%", delta: "14 / 14 on time" },
-  { label: "Weight · 30d", value: "−1.4", suffix: "kg", delta: "Trending down · target met" },
-  { label: "Squat 1RM", value: "92.5", suffix: "kg", delta: "+22 kg since Mar" },
-  { label: "LTV · this client", value: "R 16.8k", delta: "14 sessions · 12 months" },
-];
+function clientName(profile: ClientProfile): string {
+  if (typeof profile.client_id === "object") {
+    return `${profile.client_id.first_name} ${profile.client_id.last_name}`;
+  }
+  return profile.client_id;
+}
 
-const NOTES = [
-  { type: "After session", date: "Mon · 18 May 08:30", text: "Squatted 90kg × 3 × 4 — smooth. Added 2.5kg vs last week. Hip shift is almost gone. Cue 'spread the floor' is working. Next session: test 92.5kg for a double." },
-  { type: "Programming", date: "Sun · 17 May", text: "Updated block 3 — shifted to 3×5 on bench, added rack pulls. Linda's deadlift groove is improving but she's still losing position at the knee. Film next session." },
-  { type: "Health flag", date: "Wed · 14 May 10:00", text: "Mentioned left shoulder clicking on overhead press — no pain but she's aware. Monitor. If it persists 2+ weeks, refer to Dr. Ngcobo for imaging.", warn: true },
-  { type: "After session", date: "Mon · 12 May 08:30", text: "Deload week — 80% of working weights. Felt strong. Bodyweight stable at 76.2kg. Sleep improving since cutting caffeine after 2pm." },
-];
+function clientInitials(profile: ClientProfile): string {
+  const name = clientName(profile);
+  const parts = name.trim().split(" ");
+  return parts.length >= 2
+    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+}
+
+function formatDate(value?: string): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-GB", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 const SIGNALS = [
   { color: "var(--signal)", title: "Streak momentum", desc: "32 consecutive days. Longest since joining. Worth acknowledging — it sustains itself after 30." },
@@ -41,36 +53,108 @@ const TYPE_COLORS: Record<string, { bg: string; color: string }> = {
 };
 
 export default function ClientDetailPage() {
+  const params = useParams<{ clientId: string }>();
+  const clientId = params?.clientId;
+
+  const [profile, setProfile] = useState<ClientProfile | null>(null);
+  const [journals, setJournals] = useState<ClientJournalEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clientId) return;
+
+    Promise.all([
+      progressService.getClientProfile(clientId),
+      progressService.getClientJournalEntries(clientId, 20),
+    ])
+      .then(([profileRes, journalsRes]) => {
+        if (profileRes.success && profileRes.data) {
+          setProfile(profileRes.data);
+        } else {
+          setError("Failed to load client profile");
+        }
+
+        if (journalsRes.success && journalsRes.data) {
+          setJournals(journalsRes.data ?? []);
+        }
+      })
+      .catch(() => setError("Failed to load client profile"))
+      .finally(() => setLoading(false));
+  }, [clientId]);
+
+  const kpis = useMemo(() => {
+    const latestWeight = journals.find((j) => typeof j.weight_kg === "number")
+      ?.weight_kg;
+    return [
+      {
+        label: "Journal entries",
+        value: String(journals.length),
+        delta: journals.length > 0 ? "Recent logs available" : "No entries yet",
+      },
+      {
+        label: "Goals",
+        value: String(profile?.goals.length ?? 0),
+        delta:
+          profile && profile.goals.length > 0
+            ? profile.goals.slice(0, 1)[0]
+            : "No goals set",
+      },
+      {
+        label: "Latest weight",
+        value: latestWeight !== undefined ? String(latestWeight) : "—",
+        suffix: latestWeight !== undefined ? "kg" : undefined,
+        delta: latestWeight !== undefined ? "From journal log" : "No weight logs",
+      },
+    ];
+  }, [journals, profile]);
+
+  if (loading) {
+    return (
+      <TrainerDashboardShell activeItem="Clients" crumb="Client">
+        <div className="rounded-(--r-3) p-6 text-[14px]" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-3)" }}>
+          Loading client details…
+        </div>
+      </TrainerDashboardShell>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <TrainerDashboardShell activeItem="Clients" crumb="Client">
+        <div className="rounded-(--r-3) p-6 text-[14px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}>
+          {error ?? "Client not found"}
+        </div>
+      </TrainerDashboardShell>
+    );
+  }
+
   return (
-    <TrainerDashboardShell activeItem="Clients" crumb="Linda Mokoena">
+    <TrainerDashboardShell activeItem="Clients" crumb={clientName(profile)}>
       {/* Hero */}
       <div className="flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-6">
         <div className="flex items-start gap-4">
-          <span className="w-18 h-18 rounded-full flex items-center justify-center text-[18px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>LM</span>
+          <span className="w-18 h-18 rounded-full flex items-center justify-center text-[18px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
+            {clientInitials(profile)}
+          </span>
           <div>
             <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
-              Linda Mokoena <span className="text-[14px] font-normal ml-2" style={{ color: "var(--fg-3)" }}>she / her</span>
+              {clientName(profile)}
             </h1>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {[
-                { label: "Active client", signal: true },
-                { label: "Studio · 24‑pack" },
-                { label: "14 / 24 sessions" },
-                { label: "In‑person · Sea Point" },
-                { label: "Streak 32 days", dot: "var(--signal)" },
+                { label: profile.is_active ? "Active client" : "Paused client", signal: true },
+                { label: `Created ${new Date(profile.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` },
+                { label: `${profile.goals.length} goals` },
               ].map((b) => (
                 <span key={b.label} className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full" style={{ color: b.signal ? "var(--signal-ink)" : "var(--fg-2)", background: b.signal ? "var(--signal-soft)" : "var(--bg-3)", border: "1px solid var(--border)" }}>
-                  {(b.signal || b.dot) && <span className="w-1.25 h-1.25 rounded-full" style={{ background: b.dot || "currentColor" }} />}
+                  {b.signal && <span className="w-1.25 h-1.25 rounded-full" style={{ background: "currentColor" }} />}
                   {b.label}
                 </span>
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[13px]" style={{ color: "var(--fg-3)" }}>
-              <span><strong style={{ color: "var(--ink)" }}>Joined</strong> 18 Mar 2025</span>
-              <span>·</span>
-              <span><strong style={{ color: "var(--ink)" }}>Age</strong> 38</span>
-              <span>·</span>
-              <span><strong style={{ color: "var(--ink)" }}>Goals</strong> Build strength · feel strong at 40</span>
+              <span><strong style={{ color: "var(--ink)" }}>Goals</strong> {profile.goals.length > 0 ? profile.goals.join(" · ") : "No goals set"}</span>
             </div>
           </div>
         </div>
@@ -82,8 +166,8 @@ export default function ClientDetailPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {KPIS.map((k) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {kpis.map((k) => (
           <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
             <div className="text-[24px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
@@ -106,24 +190,29 @@ export default function ClientDetailPage() {
         {/* Notes */}
         <div>
           <div className="flex flex-col gap-0">
-            {NOTES.map((n, i) => {
-              const tc = TYPE_COLORS[n.type] || TYPE_COLORS["Personal"];
+            {journals.map((n, i) => {
+              const tc = TYPE_COLORS["Personal"];
               return (
-                <div key={i} className="flex gap-4 py-4" style={{ borderBottom: i < NOTES.length - 1 ? "1px solid var(--border)" : "none" }}>
+                <div key={n._id} className="flex gap-4 py-4" style={{ borderBottom: i < journals.length - 1 ? "1px solid var(--border)" : "none" }}>
                   <div className="w-10 flex flex-col items-center gap-1 shrink-0 pt-0.5">
-                    <span className="w-2 h-2 rounded-full" style={{ background: n.warn ? "var(--danger)" : "var(--ink)" }} />
-                    {i < NOTES.length - 1 && <div className="w-px flex-1" style={{ background: "var(--border)" }} />}
+                    <span className="w-2 h-2 rounded-full" style={{ background: "var(--ink)" }} />
+                    {i < journals.length - 1 && <div className="w-px flex-1" style={{ background: "var(--border)" }} />}
                   </div>
                   <div className="flex-1 pb-1">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-(--r-1)" style={{ color: tc.color, background: tc.bg }}>{n.type}</span>
-                      <span className="font-mono text-[11px]" style={{ color: "var(--fg-4)" }}>{n.date}</span>
+                      <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-(--r-1)" style={{ color: tc.color, background: tc.bg }}>Journal</span>
+                      <span className="font-mono text-[11px]" style={{ color: "var(--fg-4)" }}>{formatDate(n.entry_date)}</span>
                     </div>
-                    <p className="text-[14px] leading-relaxed" style={{ color: "var(--fg-2)" }}>{n.text}</p>
+                    <p className="text-[14px] leading-relaxed" style={{ color: "var(--fg-2)" }}>{n.notes || "No note"}</p>
                   </div>
                 </div>
               );
             })}
+            {journals.length === 0 && (
+              <div className="py-6 text-center font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>
+                No journal entries yet.
+              </div>
+            )}
           </div>
 
           {/* Compose */}

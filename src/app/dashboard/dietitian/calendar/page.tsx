@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import {
+  consultationsService,
+  ConsultationBookingStatus,
+  type ConsultationBooking,
+} from "@/lib/api/consultations";
 
 const DAYS = [
   { dow: "Mon", d: "18", count: "5 sessions", today: false },
@@ -14,13 +19,6 @@ const DAYS = [
 ];
 
 const HOURS = ["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
-
-const STATS = [
-  { label: "Sessions", value: "26", unit: "/ 32", delta: "81% booked" },
-  { label: "Forecast", value: "R 31.2k", delta: "+ R 4.8k vs avg" },
-  { label: "First sessions", value: "2", delta: "Nthabiseng · Olu" },
-  { label: "Hours coached", value: "29.5", delta: "+ 4h admin block" },
-];
 
 const WORKING_HOURS = [
   { day: "Mon", hours: "06:30 – 12:30 · 15:00 – 18:30", on: true },
@@ -57,7 +55,85 @@ const SYNCED = [
 type ViewMode = "Day" | "Week" | "Month";
 
 export default function DietitianCalendarPage() {
+  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
   const [view, setView] = useState<ViewMode>("Week");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      setLoadingBookings(true);
+      const now = new Date();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay() + 1);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+
+      const res = await consultationsService.getProviderBookings({
+        from: weekStart.toISOString().slice(0, 10),
+        to: weekEnd.toISOString().slice(0, 10),
+      });
+
+      if (!mounted) return;
+      if (res.success && res.data) {
+        setBookings(res.data);
+      } else {
+        setBookings([]);
+      }
+      setLoadingBookings(false);
+    };
+
+    void load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const stats = useMemo(() => {
+    const upcoming = bookings.filter(
+      (b) =>
+        b.status === ConsultationBookingStatus.PENDING ||
+        b.status === ConsultationBookingStatus.CONFIRMED,
+    );
+    const completed = bookings.filter(
+      (b) => b.status === ConsultationBookingStatus.COMPLETED,
+    );
+    const totalMinutes = completed.reduce((sum, b) => {
+      return (
+        sum +
+        Math.max(
+          0,
+          Math.round(
+            (new Date(b.endsAt).getTime() - new Date(b.startsAt).getTime()) /
+              60000,
+          ),
+        )
+      );
+    }, 0);
+    const noShows = bookings.filter(
+      (b) => b.status === ConsultationBookingStatus.NO_SHOW,
+    ).length;
+
+    return [
+      { label: "Sessions", value: String(bookings.length), unit: "", delta: `${upcoming.length} upcoming` },
+      { label: "Completed", value: String(completed.length), delta: "This week" },
+      { label: "No-shows", value: String(noShows), delta: "Follow up needed" },
+      { label: "Hours coached", value: (totalMinutes / 60).toFixed(1), delta: "Completed sessions" },
+    ];
+  }, [bookings]);
+
+  const upcomingToday = useMemo(() => {
+    const today = new Date().toDateString();
+    return bookings
+      .filter((b) => new Date(b.startsAt).toDateString() === today)
+      .sort(
+        (a, b) =>
+          new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+      )
+      .slice(0, 4);
+  }, [bookings]);
 
   return (
     <DietitianDashboardShell activeItem="Consultations" crumb="Calendar">
@@ -97,6 +173,32 @@ export default function DietitianCalendarPage() {
           </div>
           <button className="px-3.5 py-1.5 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Block off</button>
           <button className="px-3.5 py-1.5 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>+ New session</button>
+        </div>
+      </div>
+
+      <div className="rounded-(--r-3) p-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+          {loadingBookings ? "Loading today's bookings..." : "Today's bookings"}
+        </div>
+        <div className="mt-2.5 grid gap-2">
+          {upcomingToday.map((booking) => (
+            <div key={booking.id} className="flex items-center justify-between rounded-(--r-2) px-3 py-2" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
+              <span className="font-mono text-[12px]" style={{ color: "var(--ink)" }}>
+                {new Date(booking.startsAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+              <span className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
+                Client {booking.clientUserId.slice(-6).toUpperCase()}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--signal-ink)" }}>
+                {booking.status.toLowerCase().replace("_", " ")}
+              </span>
+            </div>
+          ))}
+          {!loadingBookings && upcomingToday.length === 0 && (
+            <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+              No bookings scheduled for today.
+            </div>
+          )}
         </div>
       </div>
 
@@ -147,7 +249,7 @@ export default function DietitianCalendarPage() {
         <div>
           <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2.5" style={{ color: "var(--fg-3)" }}>This week</div>
           <div className="rounded-(--r-3) overflow-hidden grid grid-cols-2" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            {STATS.map((s, i) => (
+            {stats.map((s, i) => (
               <div key={s.label} className="p-3 px-3.5 flex flex-col gap-0.5" style={{ borderRight: i % 2 === 0 ? "1px solid var(--border)" : "none", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
                 <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.label}</div>
                 <div className="text-[18px] font-medium tracking-[-0.018em] tabular-nums leading-none mt-0.5" style={{ color: "var(--ink)" }}>

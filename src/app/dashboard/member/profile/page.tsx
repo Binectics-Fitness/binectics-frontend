@@ -1,22 +1,54 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Profile",
-  description: "View and edit your member profile information.",
-};
-
-const GOALS = [
-  { label: "Primary", value: "Two Oceans half-marathon · 25 Oct" },
-  { label: "Strength", value: "100 kg back squat by August" },
-  { label: "Body comp", value: "Lose 5 kg · maintain muscle" },
-];
+import { authService } from "@/lib/api/auth";
 
 export default function MemberPublicProfilePage() {
+  const current = authService.getCurrentUser();
+
+  const [form, setForm] = useState({
+    first_name: current?.first_name ?? "",
+    last_name: current?.last_name ?? "",
+    other_name: current?.other_name ?? "",
+    phone_number: current?.phone_number ?? "",
+    country_code: current?.country_code ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const fullName = useMemo(() => {
+    const base = `${form.first_name} ${form.last_name}`.trim();
+    return base || "Unnamed member";
+  }, [form.first_name, form.last_name]);
+
+  const onSave = async () => {
+    setSaving(true);
+    setMessage(null);
+    setError(null);
+
+    const res = await authService.updateProfile({
+      first_name: form.first_name.trim(),
+      last_name: form.last_name.trim(),
+      other_name: form.other_name.trim() || undefined,
+      phone_number: form.phone_number.trim() || undefined,
+      country_code: form.country_code.trim() || undefined,
+    });
+
+    if (res.success && res.data) {
+      authService.updateUser(res.data);
+      setMessage("Profile updated successfully.");
+    } else {
+      setError(res.message ?? "Failed to update profile.");
+    }
+
+    setSaving(false);
+  };
+
   return (
     <MemberDashboardShell activeLabel="Home">
-      {/* Info banner */}
       <div
         style={{
           background: "oklch(0.96 0.06 75)",
@@ -42,7 +74,7 @@ export default function MemberPublicProfilePage() {
           <circle cx="12" cy="12" r="9" />
           <path d="M12 8v4M12 16h.01" />
         </svg>
-        This is what providers see when you book them.{" "}
+        Keep profile details up to date so providers can contact you.
         <Link
           href="/dashboard/settings"
           style={{
@@ -51,13 +83,11 @@ export default function MemberPublicProfilePage() {
             textDecoration: "underline",
           }}
         >
-          Edit what&apos;s shared
+          Open settings
         </Link>
       </div>
 
-      {/* Profile header */}
       <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-8">
-        {/* Avatar placeholder */}
         <div
           style={{
             width: 160,
@@ -77,117 +107,14 @@ export default function MemberPublicProfilePage() {
               color: "var(--ink)",
             }}
           >
-            Tunde Adebayo
+            {fullName}
           </h1>
           <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            Cape Town &middot; she/her &middot; joined Jan 2025
-          </p>
-
-          {/* Badges */}
-          <div
-            style={{
-              display: "flex",
-              gap: 6,
-              marginTop: 14,
-              flexWrap: "wrap",
-            }}
-          >
-            {[
-              "Verified email",
-              "No-show free · 18 months",
-              "5★ avg given",
-            ].map((badge) => (
-              <span
-                key={badge}
-                className="font-mono"
-                style={{
-                  fontSize: 10,
-                  padding: "2px 7px",
-                  borderRadius: 999,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                  background: "var(--signal-soft)",
-                  color: "var(--signal-ink)",
-                }}
-              >
-                {badge}
-              </span>
-            ))}
-          </div>
-
-          {/* Bio */}
-          <p
-            style={{
-              fontSize: 14,
-              color: "var(--fg-2)",
-              lineHeight: 1.55,
-              marginTop: 18,
-              maxWidth: "56ch",
-            }}
-          >
-            &ldquo;Training for the Two Oceans half-marathon in October.
-            Strength work with Sarah, dietitian-led nutrition. I&apos;ll always
-            tell you in advance if I can&apos;t make it.&rdquo;
+            {current?.email ?? "No email on file"}
           </p>
         </div>
       </div>
 
-      {/* KPI row */}
-      <div
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-        style={{
-          marginTop: 28,
-        }}
-      >
-        {[
-          { label: "Sessions completed", value: "412", delta: "98% attendance" },
-          { label: "Active streak", value: "32 days", delta: "PB" },
-          { label: "Reviews given", value: "28", delta: "4.9 avg given" },
-          { label: "Cancellations", value: "3", delta: "All > 48h notice" },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            style={{
-              background: "var(--bg)",
-              border: "1px solid var(--border)",
-              borderRadius: 10,
-              padding: "14px 16px",
-            }}
-          >
-            <div
-              className="font-mono"
-              style={{
-                fontSize: 10.5,
-                color: "var(--fg-3)",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {kpi.label}
-            </div>
-            <div
-              style={{
-                fontSize: 24,
-                fontWeight: 500,
-                color: "var(--ink)",
-                letterSpacing: "-0.02em",
-                marginTop: 4,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {kpi.value}
-            </div>
-            <div
-              className="font-mono"
-              style={{ fontSize: 11, color: "var(--signal-ink)", marginTop: 4 }}
-            >
-              {kpi.delta}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Goals card */}
       <div
         style={{
           background: "var(--bg)",
@@ -198,36 +125,66 @@ export default function MemberPublicProfilePage() {
         }}
       >
         <h3
-          style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}
+          style={{
+            fontSize: 14,
+            fontWeight: 500,
+            marginBottom: 14,
+            color: "var(--ink)",
+          }}
         >
-          Goals (shared with providers)
+          Profile details
         </h3>
-        <table
-          style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}
-        >
-          <tbody>
-            {GOALS.map((g) => (
-              <tr key={g.label}>
-                <td
-                  style={{
-                    padding: "11px 14px",
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  <strong>{g.label}</strong>
-                </td>
-                <td
-                  style={{
-                    padding: "11px 14px",
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  {g.value}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { key: "first_name", label: "First name" },
+            { key: "last_name", label: "Last name" },
+            { key: "other_name", label: "Other name" },
+            { key: "phone_number", label: "Phone number" },
+            { key: "country_code", label: "Country" },
+          ].map((field) => (
+            <label key={field.key} className="flex flex-col gap-1">
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+                {field.label}
+              </span>
+              <input
+                value={form[field.key as keyof typeof form]}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    [field.key]: e.target.value,
+                  }))
+                }
+                className="h-10 rounded-(--r-2) px-3 text-[13px]"
+                style={{
+                  background: "var(--bg-2)",
+                  border: "1px solid var(--border)",
+                  color: "var(--ink)",
+                }}
+              />
+            </label>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 mt-4">
+          <button
+            className="btn-primary-v2 sm"
+            onClick={onSave}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save profile"}
+          </button>
+          {message && (
+            <span className="text-[12px]" style={{ color: "var(--signal-ink)" }}>
+              {message}
+            </span>
+          )}
+          {error && (
+            <span className="text-[12px]" style={{ color: "var(--danger)" }}>
+              {error}
+            </span>
+          )}
+        </div>
       </div>
     </MemberDashboardShell>
   );
