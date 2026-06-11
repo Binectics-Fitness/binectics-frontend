@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
-import { DashboardMobileNav } from "./MobileNav";
+import { ProviderDashboardShell } from "./ProviderDashboardShell";
 
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d ? <path d={d} /> : children}</svg>;
@@ -26,9 +26,14 @@ const SIDEBAR = [
   ]},
 ];
 
-interface Props { activeItem: string; crumb: string; actions?: React.ReactNode; children: React.ReactNode; }
+export interface DietitianDashboardShellProps {
+  activeItem: string;
+  crumb: string;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+}
 
-function SidebarContent({ activeItem }: { activeItem: string }) {
+function DietitianSidebarContent({ activeItem }: { activeItem: string }) {
   return (
     <div className="flex flex-col gap-6 px-3.5 pb-6">
       <Link href="/" className="flex items-center gap-2.5 px-1.5 py-1"><BinecticsLockup /></Link>
@@ -61,27 +66,15 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
   );
 }
 
-export function DietitianDashboardShell({ activeItem, crumb, actions, children }: Props) {
+export function DietitianDashboardShell({ activeItem, crumb, actions, children }: DietitianDashboardShellProps) {
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
-      <DashboardMobileNav><SidebarContent activeItem={activeItem} /></DashboardMobileNav>
-      <div className="hidden lg:grid" style={{ gridTemplateColumns: "232px 1fr", minHeight: "100vh" }}>
-        <aside className="flex flex-col gap-6 sticky top-0 h-screen overflow-y-auto" style={{ background: "var(--bg)", borderRight: "1px solid var(--border)", padding: "18px 14px" }} aria-label="Sidebar navigation"><SidebarContent activeItem={activeItem} /></aside>
-        <div className="flex flex-col min-w-0">
-          <header className="flex items-center justify-between h-14 px-7 sticky top-0 z-10" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
-            <div className="text-[13px]" style={{ color: "var(--fg-3)" }}><Link href="/dashboard/dietitian" className="hover:underline" style={{ color: "var(--fg-3)", textDecoration: "none" }}>Dr. Priya Iyer</Link><span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span><span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span></div>
-            {actions && <div className="flex gap-2">{actions}</div>}
-          </header>
-          <main className="flex flex-col gap-5 p-4 sm:p-7 flex-1">{children}</main>
-        </div>
-      </div>
-      <div className="lg:hidden">
-        <header className="flex items-center justify-between h-12 px-5 sticky top-14 z-10" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
-          <span className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
-          {actions && <div className="flex gap-2">{actions}</div>}
-        </header>
-        <main className="flex flex-col gap-5 p-4 flex-1">{children}</main>
-      </div>
-    </div>
+    <ProviderDashboardShell
+      sidebarSlot={<DietitianSidebarContent activeItem={activeItem} />}
+      crumb={crumb}
+      breadcrumbRoot={{ label: "Dr. Priya Iyer", href: "/dashboard/dietitian" }}
+      actions={actions}
+    >
+      {children}
+    </ProviderDashboardShell>
   );
 }

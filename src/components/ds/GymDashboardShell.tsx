@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
-import { DashboardMobileNav } from "./MobileNav";
+import { ProviderDashboardShell } from "./ProviderDashboardShell";
 
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
   return (
@@ -30,7 +30,7 @@ const SIDEBAR = [
   ]},
 ];
 
-interface GymDashboardShellProps {
+export interface GymDashboardShellProps {
   activeItem: string;
   crumb: string;
   actions?: React.ReactNode;
@@ -39,7 +39,7 @@ interface GymDashboardShellProps {
   children: React.ReactNode;
 }
 
-function SidebarContent({
+function GymSidebarContent({
   activeItem,
   organizationName = "Iron Lab",
   organizationInitials = "IL",
@@ -90,51 +90,20 @@ export function GymDashboardShell({
   organizationInitials = "IL",
   children,
 }: GymDashboardShellProps) {
-
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
-      {/* Mobile nav */}
-      <DashboardMobileNav>
-        <SidebarContent activeItem={activeItem} organizationName={organizationName} organizationInitials={organizationInitials} />
-      </DashboardMobileNav>
-
-      {/* Desktop layout */}
-      <div className="hidden lg:grid" style={{ gridTemplateColumns: "232px 1fr", minHeight: "100vh" }}>
-        {/* Desktop sidebar */}
-        <aside className="flex flex-col gap-6 sticky top-0 h-screen overflow-y-auto" style={{ background: "var(--bg)", borderRight: "1px solid var(--border)", padding: "18px 14px" }} aria-label="Sidebar navigation">
-          <SidebarContent activeItem={activeItem} organizationName={organizationName} organizationInitials={organizationInitials} />
-        </aside>
-
-        {/* Main */}
-        <div className="flex flex-col min-w-0">
-          <header className="flex items-center justify-between h-14 px-7 sticky top-0 z-10" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
-            <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-              <Link href="/dashboard/gym-owner" className="hover:underline" style={{ color: "var(--fg-3)", textDecoration: "none" }}>{organizationName}</Link>
-              <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
-              <span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
-            </div>
-            {actions && <div className="flex gap-2">{actions}</div>}
-          </header>
-          <main className="flex flex-col gap-5 p-4 sm:p-7 flex-1">
-            {children}
-          </main>
-        </div>
-      </div>
-
-      {/* Mobile content (no sidebar grid) */}
-      <div className="lg:hidden">
-        <header className="flex items-center justify-between h-12 px-5 sticky top-14 z-10" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
-          <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-            <span className="font-medium" style={{ color: "var(--ink)" }}>{organizationName}</span>
-            <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
-            <span>{crumb}</span>
-          </div>
-          {actions && <div className="flex gap-2 flex-wrap">{actions}</div>}
-        </header>
-        <main className="flex flex-col gap-5 p-4 flex-1">
-          {children}
-        </main>
-      </div>
-    </div>
+    <ProviderDashboardShell
+      sidebarSlot={
+        <GymSidebarContent
+          activeItem={activeItem}
+          organizationName={organizationName}
+          organizationInitials={organizationInitials}
+        />
+      }
+      crumb={crumb}
+      breadcrumbRoot={{ label: organizationName, href: "/dashboard/gym-owner" }}
+      actions={actions}
+    >
+      {children}
+    </ProviderDashboardShell>
   );
 }
