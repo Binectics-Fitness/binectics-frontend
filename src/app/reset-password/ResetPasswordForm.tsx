@@ -11,6 +11,31 @@ import {
   type ResetPasswordFormData,
 } from "@/lib/schemas/auth";
 
+function formatResetPasswordError(message?: string): string {
+  const fallback = "Reset failed. Please check your link and try again.";
+  if (!message) return fallback;
+
+  const lowered = message.toLowerCase();
+
+  if (
+    lowered.includes("new password does not meet strength requirements") ||
+    lowered.includes("newpassword must be a string") ||
+    lowered.includes("property password should not exist")
+  ) {
+    return "Your new password must be at least 12 characters and include uppercase, lowercase, number, and symbol.";
+  }
+
+  if (lowered.includes("token") && lowered.includes("expired")) {
+    return "This reset link has expired. Please request a new password reset email.";
+  }
+
+  if (lowered.includes("token") && lowered.includes("invalid")) {
+    return "This reset link is invalid. Please request a new password reset email.";
+  }
+
+  return message;
+}
+
 export default function ResetPasswordForm({ token }: { token?: string }) {
   const {
     register: registerField,
@@ -46,7 +71,7 @@ export default function ResetPasswordForm({ token }: { token?: string }) {
         setSubmitted(true);
       } else {
         setError("password", {
-          message: res.message || "Reset failed. The link may have expired.",
+          message: formatResetPasswordError(res.message),
         });
       }
     } catch {
