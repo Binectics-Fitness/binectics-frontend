@@ -93,17 +93,17 @@ Summary:
 ## Weekly Update
 
 - Week of: 2026-06-11
-- Completed:
+- Completed (7 shipped):
   - [x] Dashboard bookings rewrite
   - [x] Member dashboard rewrite
   - [x] Admin users metrics + moderation
   - [x] Admin listings moderation
   - [x] Marketplace error handling polish
   - [x] Booking wizard API wiring
+  - [x] Member self-log flows (weight/meal/workout)
 - In progress:
-  - [x] Check-in ops feed reliability
+  - [x] Check-in ops feed reliability (reads shipped; offline/device health pending)
 - Next:
-  - [ ] Member self-log flows
   - [ ] Recurring booking
   - [ ] Dashboard shell duplication cleanup
   - [ ] Async states consistency
