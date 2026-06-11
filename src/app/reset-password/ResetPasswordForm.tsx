@@ -65,7 +65,7 @@ export default function ResetPasswordForm({ token }: { token?: string }) {
     try {
       const res = await authService.resetPassword({
         token,
-        newPassword: data.password,
+        new_password: data.password,
       });
       if (res.success) {
         setSubmitted(true);
