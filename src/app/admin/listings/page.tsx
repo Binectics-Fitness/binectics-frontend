@@ -1,57 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { ApproveListingModal } from "@/components/ds/modals/ApproveListingModal";
-import { RejectListingModal } from "@/components/ds/modals/RejectListingModal";
+import { ActionModal } from "@/components/ds/ActionModal";
+import { toast } from "@/components/Toast";
+import { marketplaceService } from "@/lib/api/marketplace";
+import {
+  MarketplaceVerificationBadge,
+  type MarketplaceListing,
+} from "@/lib/types";
 
-/* ─── Data ──────────────────────────────────────────────── */
+type Filter = "All" | "Verified" | "Pending" | "Suspended";
 
-const KPIS = [
-  { label: "Pending review", value: "38", delta: "12 high priority", valueColor: "var(--danger)", deltaColor: "var(--danger)" },
-  { label: "Approved today", value: "14", delta: "↑ 6% vs yesterday" },
-  { label: "Rejected", value: "7", delta: "Last 7 days", deltaColor: "var(--fg-3)" },
-  { label: "Avg review time", value: "2.4", unit: "hrs", delta: "Within SLA" },
-];
+function listingTypeLabel(type: string): "Gym" | "Trainer" | "Dietitian" {
+  if (type === "personal_trainer") return "Trainer";
+  if (type === "dietitian") return "Dietitian";
+  return "Gym";
+}
 
-type Filter = "All" | "Pending" | "Approved" | "Rejected" | "Flagged";
+function listingProviderName(listing: MarketplaceListing): string {
+  if (typeof listing.organization_id === "object" && listing.organization_id?.name) {
+    return listing.organization_id.name;
+  }
+  if (typeof listing.professional_id === "object") {
+    return `${listing.professional_id.first_name} ${listing.professional_id.last_name}`;
+  }
+  return listing.headline;
+}
 
-const LISTINGS = [
-  { id: "LST_001", provider: "Iron Lab", initials: "IL", type: "Gym" as const, submitted: "May 24", country: "ZA", status: "Pending" as const },
-  { id: "LST_002", provider: "Sarah Okafor", initials: "SO", type: "Trainer" as const, submitted: "May 24", country: "ZA", status: "Pending" as const },
-  { id: "LST_003", provider: "FitZone Lagos", initials: "FZ", type: "Gym" as const, submitted: "May 23", country: "NG", status: "Approved" as const },
-  { id: "LST_004", provider: "Dr. Nadia Hassan", initials: "NH", type: "Dietitian" as const, submitted: "May 23", country: "NG", status: "Pending" as const },
-  { id: "LST_005", provider: "Peak Performance", initials: "PP", type: "Gym" as const, submitted: "May 22", country: "GB", status: "Flagged" as const },
-  { id: "LST_006", provider: "Reza Mahmoud", initials: "RM", type: "Trainer" as const, submitted: "May 22", country: "AE", status: "Rejected" as const },
-  { id: "LST_007", provider: "Wellness Hub", initials: "WH", type: "Gym" as const, submitted: "May 21", country: "IN", status: "Approved" as const },
-  { id: "LST_008", provider: "Aisha Diallo", initials: "AD", type: "Dietitian" as const, submitted: "May 21", country: "GH", status: "Pending" as const },
-];
+function initialsFor(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+}
 
-const FILTERS: { label: Filter; count: string }[] = [
-  { label: "All", count: "38" },
-  { label: "Pending", count: "22" },
-  { label: "Approved", count: "8" },
-  { label: "Rejected", count: "5" },
-  { label: "Flagged", count: "3" },
-];
-
-/* ─── Helpers ────────────────────────────────────────────── */
-
-function StatusBadge({ status }: { status: "Pending" | "Approved" | "Rejected" | "Flagged" }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Pending: { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)" },
-    Approved: { bg: "var(--signal-soft)", color: "var(--signal-ink)" },
-    Rejected: { bg: "var(--danger-soft)", color: "var(--danger)" },
-    Flagged: { bg: "var(--danger-soft)", color: "var(--danger)" },
-  };
-  const s = map[status];
+function StatusBadge({ listing }: { listing: MarketplaceListing }) {
+  let label: string;
+  let bg: string;
+  let color: string;
+  if (listing.is_suspended) {
+    label = "Suspended";
+    bg = "var(--danger-soft)";
+    color = "var(--danger)";
+  } else if (listing.verification_badge === MarketplaceVerificationBadge.NONE) {
+    label = "Pending";
+    bg = "var(--trainer-soft)";
+    color = "oklch(0.42 0.13 75)";
+  } else if (listing.verification_badge === MarketplaceVerificationBadge.FEATURED) {
+    label = "Featured";
+    bg = "var(--signal-soft)";
+    color = "var(--signal-ink)";
+  } else if (listing.verification_badge === MarketplaceVerificationBadge.PREMIUM_VERIFIED) {
+    label = "Premium";
+    bg = "var(--signal-soft)";
+    color = "var(--signal-ink)";
+  } else {
+    label = "Verified";
+    bg = "var(--signal-soft)";
+    color = "var(--signal-ink)";
+  }
   return (
     <span
       className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px]"
-      style={{ background: s.bg, color: s.color }}
+      style={{ background: bg, color }}
     >
       <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
-      {status}
+      {label}
     </span>
   );
 }
@@ -73,16 +90,119 @@ function TypePill({ type }: { type: "Gym" | "Trainer" | "Dietitian" }) {
   );
 }
 
-/* ─── Page ───────────────────────────────────────────────── */
-
 export default function AdminListingsPage() {
+  const [listings, setListings] = useState<MarketplaceListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
-  const [approveTarget, setApproveTarget] = useState<{ id: string; name: string } | null>(null);
-  const [rejectTarget, setRejectTarget] = useState<{ id: string; name: string } | null>(null);
+  const [query, setQuery] = useState("");
+  const [suspendTarget, setSuspendTarget] = useState<MarketplaceListing | null>(null);
+  const [unsuspendTarget, setUnsuspendTarget] = useState<MarketplaceListing | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [suspendReason, setSuspendReason] = useState("");
 
-  const filtered = activeFilter === "All"
-    ? LISTINGS
-    : LISTINGS.filter((l) => l.status === activeFilter);
+  const loadListings = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await marketplaceService.getAdminGymListings();
+      setListings(res.data ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load listings");
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    void (async () => {
+      try {
+        const res = await marketplaceService.getAdminGymListings();
+        if (!isMounted) return;
+        setListings(res.data ?? []);
+      } catch (err) {
+        if (!isMounted) return;
+        setError(err instanceof Error ? err.message : "Failed to load listings");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const counts = useMemo(() => {
+    const all = listings.length;
+    const verified = listings.filter(
+      (l) => !l.is_suspended && l.verification_badge !== MarketplaceVerificationBadge.NONE,
+    ).length;
+    const pending = listings.filter(
+      (l) => !l.is_suspended && l.verification_badge === MarketplaceVerificationBadge.NONE,
+    ).length;
+    const suspended = listings.filter((l) => l.is_suspended).length;
+    return { all, verified, pending, suspended };
+  }, [listings]);
+
+  const filtered = useMemo(() => {
+    const base = listings.filter((l) => {
+      if (activeFilter === "Verified") {
+        return !l.is_suspended && l.verification_badge !== MarketplaceVerificationBadge.NONE;
+      }
+      if (activeFilter === "Pending") {
+        return !l.is_suspended && l.verification_badge === MarketplaceVerificationBadge.NONE;
+      }
+      if (activeFilter === "Suspended") return l.is_suspended;
+      return true;
+    });
+    if (!query.trim()) return base;
+    const q = query.toLowerCase();
+    return base.filter(
+      (l) =>
+        l.headline.toLowerCase().includes(q) ||
+        listingProviderName(l).toLowerCase().includes(q) ||
+        l._id.toLowerCase().includes(q),
+    );
+  }, [listings, activeFilter, query]);
+
+  const kpis = [
+    {
+      label: "Total listings",
+      value: loading ? "—" : counts.all.toString(),
+      delta: `${counts.verified} verified`,
+    },
+    {
+      label: "Pending review",
+      value: loading ? "—" : counts.pending.toString(),
+      delta: "no badge yet",
+      valueColor: counts.pending > 0 ? "var(--danger)" : "var(--ink)",
+    },
+    {
+      label: "Suspended",
+      value: loading ? "—" : counts.suspended.toString(),
+      delta: "needs review",
+      deltaColor: "var(--fg-3)",
+    },
+    {
+      label: "Avg rating",
+      value:
+        loading || listings.length === 0
+          ? "—"
+          : (
+              listings.reduce((acc, l) => acc + (l.average_rating ?? 0), 0) / listings.length
+            ).toFixed(2),
+      delta: `${listings.reduce((acc, l) => acc + (l.review_count ?? 0), 0)} reviews`,
+    },
+  ];
+
+  const filters: { label: Filter; count: number }[] = [
+    { label: "All", count: counts.all },
+    { label: "Verified", count: counts.verified },
+    { label: "Pending", count: counts.pending },
+    { label: "Suspended", count: counts.suspended },
+  ];
 
   return (
     <AdminDashboardShell
@@ -90,44 +210,101 @@ export default function AdminListingsPage() {
       crumb="Listings"
       actions={
         <div className="flex items-center gap-2">
-          <button className="btn-ghost-v2">Export</button>
-          <button className="btn-primary-v2">Review next</button>
+          <button
+            type="button"
+            onClick={loadListings}
+            disabled={loading}
+            className="btn-ghost-v2"
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
         </div>
       }
     >
-      {/* Heading */}
       <div>
         <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
           Listings
         </h1>
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          Moderation queue for new and updated provider listings
+          Moderation queue for gym listings from /admin/gyms.
         </p>
       </div>
 
-      {/* KPIs */}
+      {error && (
+        <div
+          className="rounded-(--r-3) p-4 text-[13px]"
+          style={{
+            background: "var(--danger-soft)",
+            border: "1px solid oklch(0.92 0.05 25)",
+            color: "var(--danger)",
+          }}
+        >
+          <div className="font-medium">Couldn&apos;t load listings</div>
+          <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
+          <button type="button" onClick={loadListings} className="btn-ghost-v2 sm mt-2">
+            Try again
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {KPIS.map((kpi) => (
-          <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
-            <div className="text-[22px] font-medium mt-1" style={{ color: kpi.valueColor || "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}>
-              {kpi.value}{kpi.unit && <span className="font-mono text-[12px] font-normal ml-1" style={{ color: "var(--fg-3)" }}>{kpi.unit}</span>}
+        {kpis.map((kpi) => (
+          <div
+            key={kpi.label}
+            className="rounded-(--r-3) p-[14px_16px]"
+            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+          >
+            <div
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
+              style={{ color: "var(--fg-3)" }}
+            >
+              {kpi.label}
             </div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: kpi.deltaColor || "var(--signal-ink)" }}>{kpi.delta}</div>
+            <div
+              className="text-[22px] font-medium mt-1"
+              style={{
+                color: kpi.valueColor || "var(--ink)",
+                letterSpacing: "-0.018em",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {kpi.value}
+            </div>
+            <div
+              className="font-mono text-[11px] mt-1"
+              style={{ color: kpi.deltaColor || "var(--fg-3)" }}
+            >
+              {kpi.delta}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Toolbar */}
-      <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <div className="flex-1 min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-          <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search by provider name or LST_ID..." style={{ color: "var(--ink)" }} readOnly />
+      <div
+        className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap"
+        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+      >
+        <div
+          className="flex-1 min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)"
+          style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            className="flex-1 border-0 bg-transparent text-[13px] outline-none"
+            placeholder="Search headline, provider, or listing ID..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{ color: "var(--ink)" }}
+          />
         </div>
         <div className="flex gap-1 flex-wrap">
-          {FILTERS.map((f) => (
+          {filters.map((f) => (
             <button
               key={f.label}
+              type="button"
               onClick={() => setActiveFilter(f.label)}
               className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
               style={{
@@ -136,23 +313,39 @@ export default function AdminListingsPage() {
                 border: activeFilter === f.label ? "1px solid var(--ink)" : "1px solid var(--border)",
               }}
             >
-              {f.label} <span style={{ color: activeFilter === f.label ? "oklch(0.75 0.005 85)" : "var(--fg-4)", marginLeft: 4 }}>{f.count}</span>
+              {f.label}{" "}
+              <span
+                style={{
+                  color: activeFilter === f.label ? "oklch(0.75 0.005 85)" : "var(--fg-4)",
+                  marginLeft: 4,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {f.count}
+              </span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <div
+        className="rounded-(--r-3) overflow-hidden"
+        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                {["Provider", "Type", "Submitted", "Country", "Status", "Actions"].map((h) => (
+                {["Provider", "Type", "Country", "Rating", "Status", "Actions"].map((h) => (
                   <th
                     key={h}
                     className="font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 text-left"
-                    style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)", fontWeight: 500 }}
+                    style={{
+                      color: "var(--fg-3)",
+                      borderBottom: "1px solid var(--border)",
+                      background: "var(--bg-2)",
+                      fontWeight: 500,
+                    }}
                   >
                     {h}
                   </th>
@@ -160,53 +353,258 @@ export default function AdminListingsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((l) => (
-                <tr key={l.id} className="hover:bg-[var(--bg-2)] cursor-pointer">
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <div className="flex gap-2.5 items-center">
-                      <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
-                        {l.initials}
-                      </span>
-                      <div>
-                        <div className="font-medium" style={{ color: "var(--ink)" }}>{l.provider}</div>
-                        <div className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{l.id}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <TypePill type={l.type} />
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{l.submitted}</span>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[11.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{l.country}</span>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <StatusBadge status={l.status} />
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <div className="flex gap-1.5">
-                      <button onClick={() => setApproveTarget({ id: l.id, name: l.provider })} className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)", border: "none" }}>Approve</button>
-                      <button onClick={() => setRejectTarget({ id: l.id, name: l.provider })} className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "none" }}>Reject</button>
-                    </div>
+              {loading && (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-[13px]" style={{ color: "var(--fg-3)" }}>
+                    Loading listings...
                   </td>
                 </tr>
-              ))}
+              )}
+              {!loading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-[13px]" style={{ color: "var(--fg-3)" }}>
+                    No listings match this view.
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                filtered.map((l) => {
+                  const provider = listingProviderName(l);
+                  return (
+                    <tr key={l._id} className="hover:bg-[var(--bg-2)]">
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <div className="flex gap-2.5 items-center">
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0"
+                            style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}
+                          >
+                            {initialsFor(provider)}
+                          </span>
+                          <div>
+                            <div className="font-medium" style={{ color: "var(--ink)" }}>
+                              {provider}
+                            </div>
+                            <div
+                              className="font-mono text-[10.5px]"
+                              style={{ color: "var(--fg-3)" }}
+                            >
+                              {l._id.slice(-12)}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <TypePill type={listingTypeLabel(l.account_type)} />
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <span
+                          className="font-mono text-[11.5px] uppercase tracking-[0.04em]"
+                          style={{ color: "var(--fg-3)" }}
+                        >
+                          {l.country_code ?? "—"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <span
+                          className="font-mono"
+                          style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
+                        >
+                          {l.average_rating?.toFixed(1) ?? "—"}
+                          <span
+                            className="ml-1.5 text-[11px]"
+                            style={{ color: "var(--fg-3)" }}
+                          >
+                            ({l.review_count ?? 0})
+                          </span>
+                        </span>
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <StatusBadge listing={l} />
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <div className="flex gap-1.5">
+                          {l.is_suspended ? (
+                            <button
+                              type="button"
+                              onClick={() => setUnsuspendTarget(l)}
+                              className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer"
+                              style={{
+                                background: "var(--signal-soft)",
+                                color: "var(--signal-ink)",
+                                border: "none",
+                              }}
+                            >
+                              Unsuspend
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSuspendReason("");
+                                setSuspendTarget(l);
+                              }}
+                              className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer"
+                              style={{
+                                background: "var(--danger-soft)",
+                                color: "var(--danger)",
+                                border: "none",
+                              }}
+                            >
+                              Suspend
+                            </button>
+                          )}
+                          {!l.is_suspended &&
+                            l.verification_badge === MarketplaceVerificationBadge.NONE && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setActionLoading(true);
+                                  try {
+                                    await marketplaceService.awardGymBadge(l._id, {
+                                      verification_badge:
+                                        MarketplaceVerificationBadge.VERIFIED,
+                                    });
+                                    toast.success("Verification badge awarded");
+                                    await loadListings();
+                                  } catch (err) {
+                                    toast.error(
+                                      err instanceof Error ? err.message : "Failed to award badge",
+                                    );
+                                  } finally {
+                                    setActionLoading(false);
+                                  }
+                                }}
+                                disabled={actionLoading}
+                                className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer"
+                                style={{
+                                  background: "var(--signal-soft)",
+                                  color: "var(--signal-ink)",
+                                  border: "none",
+                                }}
+                              >
+                                Verify
+                              </button>
+                            )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>
       </div>
-      <ApproveListingModal
-        open={approveTarget !== null}
-        onClose={() => setApproveTarget(null)}
-        listingName={approveTarget?.name}
-      />
-      <RejectListingModal
-        open={rejectTarget !== null}
-        onClose={() => setRejectTarget(null)}
-        listingName={rejectTarget?.name}
-      />
+
+      <ActionModal
+        key={`suspend-${suspendTarget?._id ?? "none"}`}
+        open={suspendTarget !== null}
+        onClose={() => setSuspendTarget(null)}
+        title="Suspend listing"
+        description={
+          suspendTarget
+            ? `Suspending ${listingProviderName(suspendTarget)} hides it from the marketplace.`
+            : undefined
+        }
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setSuspendTarget(null)}
+              className="btn-ghost-v2"
+              disabled={actionLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!suspendTarget) return;
+                setActionLoading(true);
+                try {
+                  await marketplaceService.suspendGym(
+                    suspendTarget._id,
+                    suspendReason.trim() ? { reason: suspendReason.trim() } : undefined,
+                  );
+                  toast.success("Listing suspended");
+                  setSuspendTarget(null);
+                  await loadListings();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to suspend");
+                } finally {
+                  setActionLoading(false);
+                }
+              }}
+              disabled={actionLoading}
+              className="btn-primary-v2 disabled:opacity-40"
+              style={{ background: "var(--danger)", color: "white" }}
+            >
+              {actionLoading ? "Suspending..." : "Confirm suspend"}
+            </button>
+          </>
+        }
+      >
+        <div>
+          <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
+            Reason (optional)
+          </label>
+          <textarea
+            value={suspendReason}
+            onChange={(e) => setSuspendReason(e.target.value)}
+            rows={3}
+            className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
+            placeholder="Visible in the provider's record."
+          />
+        </div>
+      </ActionModal>
+
+      <ActionModal
+        key={`unsuspend-${unsuspendTarget?._id ?? "none"}`}
+        open={unsuspendTarget !== null}
+        onClose={() => setUnsuspendTarget(null)}
+        title="Unsuspend listing"
+        description={
+          unsuspendTarget
+            ? `Restoring ${listingProviderName(unsuspendTarget)} makes it visible again.`
+            : undefined
+        }
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setUnsuspendTarget(null)}
+              className="btn-ghost-v2"
+              disabled={actionLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!unsuspendTarget) return;
+                setActionLoading(true);
+                try {
+                  await marketplaceService.unsuspendGym(unsuspendTarget._id);
+                  toast.success("Listing unsuspended");
+                  setUnsuspendTarget(null);
+                  await loadListings();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to unsuspend");
+                } finally {
+                  setActionLoading(false);
+                }
+              }}
+              disabled={actionLoading}
+              className="btn-primary-v2 disabled:opacity-40"
+            >
+              {actionLoading ? "Restoring..." : "Confirm unsuspend"}
+            </button>
+          </>
+        }
+      >
+        <div className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>
+          The provider will be able to receive new clients immediately.
+        </div>
+      </ActionModal>
     </AdminDashboardShell>
   );
 }

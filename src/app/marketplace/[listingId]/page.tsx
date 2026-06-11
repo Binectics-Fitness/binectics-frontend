@@ -96,30 +96,55 @@ export default function ProviderPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!listingId) return;
+    let isMounted = true;
     (async () => {
-      setLoading(true);
-      const [listRes, planRes, revRes] = await Promise.all([
-        marketplaceService.getListingById(listingId),
-        marketplaceService.getPublicListingPlans(listingId),
-        marketplaceService.getListingReviews(listingId),
-      ]);
-      if (listRes.success && listRes.data) setListing(listRes.data as unknown as Listing);
-      if (planRes.success && planRes.data) setPlans((planRes.data as unknown as Plan[]) || []);
-      if (revRes.success && revRes.data) {
-        const rd = revRes.data as unknown as { reviews?: Review[] };
-        setReviews(rd.reviews || []);
+      try {
+        const [listRes, planRes, revRes] = await Promise.all([
+          marketplaceService.getListingById(listingId),
+          marketplaceService.getPublicListingPlans(listingId),
+          marketplaceService.getListingReviews(listingId),
+        ]);
+        if (!isMounted) return;
+        if (listRes.success && listRes.data) {
+          setListing(listRes.data as unknown as Listing);
+        } else {
+          setError(listRes.message || "Couldn't load listing");
+        }
+        if (planRes.success && planRes.data) setPlans((planRes.data as unknown as Plan[]) || []);
+        if (revRes.success && revRes.data) {
+          const rd = revRes.data as unknown as { reviews?: Review[] };
+          setReviews(rd.reviews || []);
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        setError(err instanceof Error ? err.message : "Couldn't load listing");
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     })();
+    return () => {
+      isMounted = false;
+    };
   }, [listingId]);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg)" }}>
         <div className="h-6 w-6 border-2 border-solid border-t-transparent animate-spin rounded-full" style={{ borderColor: "var(--border-2)", borderTopColor: "transparent" }} />
+      </div>
+    );
+  }
+
+  if (error && !listing) {
+    return (
+      <div className="flex flex-col min-h-screen items-center justify-center gap-3" style={{ background: "var(--bg)" }}>
+        <p className="text-[15px] font-medium" style={{ color: "var(--danger)" }}>Couldn&apos;t load listing</p>
+        <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>{error}</p>
+        <Link href="/marketplace" className="btn-ghost-v2 sm">Back to marketplace</Link>
       </div>
     );
   }

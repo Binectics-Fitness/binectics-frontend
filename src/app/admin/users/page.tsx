@@ -1,184 +1,514 @@
-import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import Link from "next/link";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Users",
-  description: "Search, view, and manage all platform user accounts.",
-};
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import { ActionModal } from "@/components/ds/ActionModal";
+import { toast } from "@/components/Toast";
+import { adminService, type PlatformMetricsOverview, type AdminUserSuspensionResult } from "@/lib/api/admin";
+
+interface SuspendActionState {
+  userId: string;
+  reason: string;
+}
 
 export default function AdminUsersPage() {
+  const [metrics, setMetrics] = useState<PlatformMetricsOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lookupUserId, setLookupUserId] = useState("");
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [unsuspendOpen, setUnsuspendOpen] = useState(false);
+  const [suspendState, setSuspendState] = useState<SuspendActionState>({ userId: "", reason: "" });
+  const [actionLoading, setActionLoading] = useState(false);
+  const [lastResult, setLastResult] = useState<AdminUserSuspensionResult | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    void (async () => {
+      try {
+        const res = await adminService.getPlatformMetrics();
+        if (!isMounted) return;
+        setMetrics(res.data ?? null);
+      } catch (err) {
+        if (!isMounted) return;
+        setError(err instanceof Error ? err.message : "Failed to load metrics");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const reloadMetrics = async () => {
+    setLoading(true);
+    try {
+      const res = await adminService.getPlatformMetrics();
+      setMetrics(res.data ?? null);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load metrics");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSuspend = async () => {
+    if (!suspendState.userId.trim()) return;
+    setActionLoading(true);
+    try {
+      const res = await adminService.suspendUser(
+        suspendState.userId.trim(),
+        suspendState.reason.trim() || undefined,
+      );
+      toast.success(`Suspended ${res.data?.user.email ?? suspendState.userId}`);
+      setLastResult(res.data ?? null);
+      setSuspendOpen(false);
+      setSuspendState({ userId: "", reason: "" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to suspend user");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUnsuspend = async () => {
+    if (!lookupUserId.trim()) return;
+    setActionLoading(true);
+    try {
+      await adminService.unsuspendUser(lookupUserId.trim());
+      toast.success(`Reinstated ${lookupUserId}`);
+      setUnsuspendOpen(false);
+      setLookupUserId("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to unsuspend user");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <AdminDashboardShell
       activeItem="Users"
       crumb="Users"
       actions={
         <div className="flex flex-wrap items-center gap-2">
-          <button className="btn-ghost-v2">Export</button>
-          <button className="btn-primary-v2">Impersonate user</button>
+          <button
+            type="button"
+            onClick={() => {
+              setSuspendState({ userId: lookupUserId, reason: "" });
+              setSuspendOpen(true);
+            }}
+            className="btn-ghost-v2"
+          >
+            Suspend user
+          </button>
+          <button
+            type="button"
+            onClick={() => setUnsuspendOpen(true)}
+            className="btn-primary-v2"
+            disabled={!lookupUserId.trim()}
+          >
+            Unsuspend user
+          </button>
         </div>
       }
     >
-      {/* Heading */}
       <div>
         <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
           Users
         </h1>
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          418,260 active across 52 countries · search any handle, email, ID, or phone
+          Lookup, suspend, and reinstate user accounts. Metrics from /admin/metrics/overview.
         </p>
       </div>
 
+      {error && (
+        <div
+          className="rounded-(--r-3) p-4 text-[13px]"
+          style={{
+            background: "var(--danger-soft)",
+            border: "1px solid oklch(0.92 0.05 25)",
+            color: "var(--danger)",
+          }}
+        >
+          <div className="font-medium">Couldn&apos;t load metrics</div>
+          <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
+          <button type="button" onClick={reloadMetrics} className="btn-ghost-v2 sm mt-2">
+            Try again
+          </button>
+        </div>
+      )}
+
       {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total active", value: "418k", delta: "+ 6.4% MoM" },
-          { label: "New · 30d", value: "28,142", delta: "↑ 12%" },
-          { label: "Providers", value: "14.2k", delta: "+ 312 net" },
-          { label: "Flagged", value: "42", delta: "8 priority", valueColor: "var(--danger)", deltaColor: "var(--danger)" },
-          { label: "Suspended", value: "118", delta: "last 30d", deltaColor: "var(--fg-3)" },
+          {
+            label: "Total users",
+            value: loading ? "—" : (metrics?.conversion.totalUsers.toLocaleString() ?? "0"),
+            delta: "all platform members",
+          },
+          {
+            label: "Paying users",
+            value: loading ? "—" : (metrics?.conversion.payingUsers.toLocaleString() ?? "0"),
+            delta:
+              metrics?.conversion.conversionRate != null
+                ? `${(metrics.conversion.conversionRate * 100).toFixed(1)}% conversion`
+                : "—",
+          },
+          {
+            label: "Verified providers",
+            value: loading ? "—" : (metrics?.verifiedProviders.total.toLocaleString() ?? "0"),
+            delta: `${metrics?.verifiedProviders.distinctCountries ?? 0} countries`,
+          },
+          {
+            label: "Active subscriptions",
+            value: loading ? "—" : (metrics?.subscriptions.activeCount.toLocaleString() ?? "0"),
+            delta:
+              metrics?.subscriptions.totalRevenueUsd != null
+                ? `$${metrics.subscriptions.totalRevenueUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })} total`
+                : "—",
+          },
         ].map((kpi) => (
-          <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
-            <div className="text-[22px] font-medium mt-1" style={{ color: kpi.valueColor || "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}>{kpi.value}</div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: kpi.deltaColor || "var(--signal-ink)" }}>{kpi.delta}</div>
+          <div
+            key={kpi.label}
+            className="rounded-(--r-3) p-[14px_16px]"
+            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+          >
+            <div
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
+              style={{ color: "var(--fg-3)" }}
+            >
+              {kpi.label}
+            </div>
+            <div
+              className="text-[22px] font-medium mt-1"
+              style={{
+                color: "var(--ink)",
+                letterSpacing: "-0.018em",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {kpi.value}
+            </div>
+            <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>
+              {kpi.delta}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Toolbar */}
-      <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <div className="flex-1 min-w-0 sm:min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-          <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search by name · email · phone · USR_ID..." style={{ color: "var(--ink)" }} readOnly />
+      {/* Lookup */}
+      <div
+        className="rounded-(--r-3) p-5"
+        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+      >
+        <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+          User lookup
         </div>
-        <div className="flex gap-1 flex-wrap">
-          {[
-            { label: "All", count: "418k", active: true },
-            { label: "Members", count: "404k", active: false },
-            { label: "Trainers", count: "9.2k", active: false },
-            { label: "Gyms", count: "684", active: false },
-            { label: "Dietitians", count: "412", active: false },
-            { label: "Flagged", count: "42", active: false },
-          ].map((f) => (
-            <span
-              key={f.label}
-              className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
-              style={{
-                background: f.active ? "var(--ink)" : "var(--bg)",
-                color: f.active ? "var(--bg)" : "var(--fg-3)",
-                border: f.active ? "1px solid var(--ink)" : "1px solid var(--border)",
-              }}
-            >
-              {f.label} <span style={{ color: f.active ? "oklch(0.75 0.005 85)" : "var(--fg-4)", marginLeft: 4 }}>{f.count}</span>
+        <div className="text-[14px] mt-1 mb-3.5" style={{ color: "var(--ink)" }}>
+          Enter a user ID to suspend or reinstate. Open the user&apos;s profile to view their full record.
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="text"
+            value={lookupUserId}
+            onChange={(e) => setLookupUserId(e.target.value)}
+            placeholder="USR_xxxxxxx"
+            className="h-10 px-3 rounded-(--r-2) text-[13.5px] flex-1 min-w-[260px]"
+            style={{
+              border: "1px solid var(--border)",
+              background: "var(--bg-2)",
+              color: "var(--ink)",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          />
+          <Link
+            href={lookupUserId.trim() ? `/admin/users/${lookupUserId.trim()}` : "#"}
+            className="btn-ghost-v2 sm"
+            aria-disabled={!lookupUserId.trim()}
+            style={{ opacity: lookupUserId.trim() ? 1 : 0.4, pointerEvents: lookupUserId.trim() ? "auto" : "none" }}
+          >
+            Open profile
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setSuspendState({ userId: lookupUserId, reason: "" });
+              setSuspendOpen(true);
+            }}
+            disabled={!lookupUserId.trim()}
+            className="btn-ghost-v2 sm"
+            style={{ color: "var(--danger)", opacity: lookupUserId.trim() ? 1 : 0.4 }}
+          >
+            Suspend
+          </button>
+          <button
+            type="button"
+            onClick={() => setUnsuspendOpen(true)}
+            disabled={!lookupUserId.trim()}
+            className="btn-ghost-v2 sm"
+            style={{ opacity: lookupUserId.trim() ? 1 : 0.4 }}
+          >
+            Unsuspend
+          </button>
+        </div>
+      </div>
+
+      {/* Last action */}
+      {lastResult && (
+        <div
+          className="rounded-(--r-3) p-5"
+          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+        >
+          <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+            Last suspension
+          </div>
+          <div className="text-[14px] mt-1" style={{ color: "var(--ink)" }}>
+            <span className="font-medium">
+              {lastResult.user.first_name} {lastResult.user.last_name}
             </span>
-          ))}
+            <span className="font-mono text-[12px] ml-2" style={{ color: "var(--fg-3)" }}>
+              {lastResult.user.email}
+            </span>
+          </div>
+          {lastResult.user.suspension_reason && (
+            <div className="text-[13px] mt-2" style={{ color: "var(--fg-2)" }}>
+              Reason: {lastResult.user.suspension_reason}
+            </div>
+          )}
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            {[
+              { label: "Listings suspended", value: lastResult.cascaded.listingsSuspended },
+              { label: "Subscriptions cancelled", value: lastResult.cascaded.subscriptionsCancelled },
+              { label: "Bookings cancelled", value: lastResult.cascaded.bookingsCancelled },
+            ].map((c) => (
+              <div
+                key={c.label}
+                className="rounded-(--r-2) p-3"
+                style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}
+              >
+                <div
+                  className="font-mono text-[10px] uppercase tracking-[0.04em]"
+                  style={{ color: "var(--fg-3)" }}
+                >
+                  {c.label}
+                </div>
+                <div
+                  className="text-[18px] font-medium mt-0.5"
+                  style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
+                >
+                  {c.value}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Users table */}
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                {["User", "ID", "Role", "Country", "Joined", "Status", "LTV"].map((h, i) => (
-                  <th
-                    key={h}
-                    className={`font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 ${i === 6 ? "text-right" : "text-left"}`}
-                    style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)", fontWeight: 500 }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {USERS.map((u) => (
-                <tr key={u.id} className="hover:bg-[var(--bg-2)] cursor-pointer">
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <Link href={`/admin/users/${u.id}`} className="flex gap-2.5 items-center no-underline" style={{ color: "inherit" }}>
-                      <span
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0`}
-                        style={{ background: u.avaBg, color: u.avaColor }}
-                      >
-                        {u.initials}
-                      </span>
-                      <div>
-                        <div className="font-medium" style={{ color: "var(--ink)" }}>{u.name}</div>
-                        <div className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{u.email}</div>
-                      </div>
-                    </Link>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{u.id}</span>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <RolePill role={u.role} />
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[11.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{u.country}</span>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{u.joined}</span>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <StatusBadge status={u.status} statusText={u.statusText} />
-                  </td>
-                  <td className="py-3 px-4.5 text-right font-mono" style={{ borderBottom: "1px solid var(--border)", fontVariantNumeric: "tabular-nums" }}>
-                    {u.ltv}
-                  </td>
+      {/* Country breakdown */}
+      {metrics?.verifiedProviders.byCountry && metrics.verifiedProviders.byCountry.length > 0 && (
+        <div
+          className="rounded-(--r-3) overflow-hidden"
+          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+        >
+          <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+              Verified providers by country
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  {["Country", "Verified providers"].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 ${i === 1 ? "text-right" : "text-left"}`}
+                      style={{
+                        color: "var(--fg-3)",
+                        borderBottom: "1px solid var(--border)",
+                        background: "var(--bg-2)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {metrics.verifiedProviders.byCountry.map((row) => (
+                  <tr key={row.country_code}>
+                    <td className="py-2.5 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <span
+                        className="font-mono text-[11.5px] uppercase tracking-[0.04em]"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        {row.country_code}
+                      </span>
+                    </td>
+                    <td
+                      className="py-2.5 px-4.5 text-right font-mono"
+                      style={{
+                        borderBottom: "1px solid var(--border)",
+                        color: "var(--ink)",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {row.count}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Revenue by currency */}
+      {metrics?.subscriptions.byCurrency && metrics.subscriptions.byCurrency.length > 0 && (
+        <div
+          className="rounded-(--r-3) overflow-hidden"
+          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+        >
+          <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+              Subscription revenue by currency
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  {["Currency", "Count", "Total", "Average"].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 ${i === 0 ? "text-left" : "text-right"}`}
+                      style={{
+                        color: "var(--fg-3)",
+                        borderBottom: "1px solid var(--border)",
+                        background: "var(--bg-2)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {metrics.subscriptions.byCurrency.map((row) => (
+                  <tr key={row.currency}>
+                    <td className="py-2.5 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <span
+                        className="font-mono text-[11.5px] uppercase tracking-[0.04em]"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        {row.currency}
+                      </span>
+                    </td>
+                    {[row.count, row.total, row.average].map((v, i) => (
+                      <td
+                        key={i}
+                        className="py-2.5 px-4.5 text-right font-mono"
+                        style={{
+                          borderBottom: "1px solid var(--border)",
+                          color: "var(--ink)",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {typeof v === "number" ? v.toLocaleString(undefined, { maximumFractionDigits: 2 }) : v}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <ActionModal
+        key={`suspend-${suspendOpen}`}
+        open={suspendOpen}
+        onClose={() => setSuspendOpen(false)}
+        title="Suspend user"
+        description="Suspending cascades to listings, subscriptions, and bookings."
+        footer={
+          <>
+            <button type="button" onClick={() => setSuspendOpen(false)} className="btn-ghost-v2" disabled={actionLoading}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSuspend}
+              disabled={actionLoading || !suspendState.userId.trim()}
+              className="btn-primary-v2 disabled:opacity-40"
+              style={{ background: "var(--danger)", color: "white" }}
+            >
+              {actionLoading ? "Suspending..." : "Confirm suspension"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
+              User ID
+            </label>
+            <input
+              type="text"
+              value={suspendState.userId}
+              onChange={(e) => setSuspendState((s) => ({ ...s, userId: e.target.value }))}
+              className="h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
+              placeholder="USR_xxxxxxx"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
+              Reason (optional)
+            </label>
+            <textarea
+              value={suspendState.reason}
+              onChange={(e) => setSuspendState((s) => ({ ...s, reason: e.target.value }))}
+              rows={3}
+              className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
+              placeholder="Logged for the user record."
+            />
+          </div>
+        </div>
+      </ActionModal>
+
+      <ActionModal
+        key={`unsuspend-${unsuspendOpen}`}
+        open={unsuspendOpen}
+        onClose={() => setUnsuspendOpen(false)}
+        title="Reinstate user"
+        description={`This will lift the suspension on ${lookupUserId || "the selected user"}.`}
+        footer={
+          <>
+            <button type="button" onClick={() => setUnsuspendOpen(false)} className="btn-ghost-v2" disabled={actionLoading}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleUnsuspend}
+              disabled={actionLoading || !lookupUserId.trim()}
+              className="btn-primary-v2 disabled:opacity-40"
+            >
+              {actionLoading ? "Reinstating..." : "Confirm reinstate"}
+            </button>
+          </>
+        }
+      >
+        <div className="text-[13.5px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
+          Reinstating restores the user&apos;s account but does not automatically restore their listings or subscriptions.
+        </div>
+      </ActionModal>
     </AdminDashboardShell>
-  );
-}
-
-/* ─── Data ──────────────────────────────────────────────────── */
-const USERS = [
-  { initials: "TA", name: "Tunde Adebayo", email: "tunde@gmail.com", id: "USR_412884", role: "member" as const, country: "ZA", joined: "Jan 2025", status: "active" as const, statusText: "Active", ltv: "R 18,400", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
-  { initials: "SO", name: "Sarah Okafor", email: "sarah@binectics.com", id: "USR_018421", role: "trainer" as const, country: "ZA", joined: "Mar 2024", status: "active" as const, statusText: "Active", ltv: "R 182k", avaBg: "var(--trainer)", avaColor: "oklch(0.2 0.05 75)" },
-  { initials: "IL", name: "Iron Lab (Lerato M.)", email: "lerato@ironlab.co.za", id: "USR_001182", role: "gym" as const, country: "ZA", joined: "Mar 2024", status: "active" as const, statusText: "Active", ltv: "R 14.2M", avaBg: "var(--gym)", avaColor: "oklch(0.95 0 0)" },
-  { initials: "NH", name: "Dr Nadia Hassan", email: "nadia@binectics.com", id: "USR_022941", role: "diet" as const, country: "NG", joined: "Feb 2025", status: "active" as const, statusText: "Active", ltv: "₦ 8.62M", avaBg: "var(--dietitian)", avaColor: "oklch(0.95 0 0)" },
-  { initials: "RM", name: "Reza M.", email: "reza.m@example.ae", id: "USR_412884", role: "member" as const, country: "AE", joined: "Aug 2025", status: "flagged" as const, statusText: "Refund abuse · 11 / 30d", ltv: "د.إ 12,400", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
-  { initials: "DK", name: "\"Daniel Kane\"", email: "d.kane@protonmail.com", id: "USR_008198", role: "trainer" as const, country: "GB", joined: "May 2026", status: "flagged" as const, statusText: "ID mismatch · priority", ltv: "£ 0", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
-  { initials: "PB", name: "Pier Botha", email: "pierb@uct.ac.za", id: "USR_322118", role: "member" as const, country: "ZA", joined: "Mar 2026", status: "active" as const, statusText: "Active · open dispute", ltv: "R 1,680", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
-  { initials: "FR", name: "\"Fitness Republic\"", email: "contact@fitnessrepublic.in", id: "USR_008242", role: "gym" as const, country: "IN", joined: "May 2026", status: "suspended" as const, statusText: "Frozen · stolen card", ltv: "₹ 0", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
-  { initials: "AK", name: "Andile K.", email: "andile@binectics.com", id: "USR_000003", role: "admin" as const, country: "ZA", joined: "Founder", status: "active" as const, statusText: "Active", ltv: "-", avaBg: "var(--bg-3)", avaColor: "var(--fg-2)" },
-];
-
-/* ─── Helpers ──────────────────────────────────────────────── */
-function RolePill({ role }: { role: "member" | "trainer" | "gym" | "diet" | "admin" }) {
-  const map: Record<string, { bg: string; color: string; border?: string; label: string }> = {
-    member: { bg: "var(--gym-soft)", color: "var(--gym)", label: "Member" },
-    trainer: { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)", label: "Trainer" },
-    gym: { bg: "var(--bg-2)", color: "var(--fg-2)", border: "1px solid var(--border)", label: "Gym owner" },
-    diet: { bg: "var(--dietitian-soft)", color: "var(--dietitian)", label: "Dietitian" },
-    admin: { bg: "var(--ink)", color: "var(--bg)", label: "Super admin" },
-  };
-  const s = map[role];
-  return (
-    <span className="font-mono text-[9.5px] px-1.5 py-[2px] rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: s.bg, color: s.color, border: s.border }}>
-      {s.label}
-    </span>
-  );
-}
-
-function StatusBadge({ status, statusText }: { status: "active" | "flagged" | "suspended"; statusText: string }) {
-  const map: Record<string, { bg: string; color: string; border?: string }> = {
-    active: { bg: "var(--signal-soft)", color: "var(--signal-ink)" },
-    flagged: { bg: "var(--danger-soft)", color: "var(--danger)" },
-    suspended: { bg: "var(--bg-2)", color: "var(--fg-3)", border: "1px solid var(--border)" },
-  };
-  const s = map[status];
-  return (
-    <span className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px]" style={{ background: s.bg, color: s.color, border: s.border }}>
-      <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
-      {statusText}
-    </span>
   );
 }

@@ -99,11 +99,10 @@ const TABS = [
   { label: "Dietitians", value: "dietitian" },
 ];
 
-const SORT_OPTIONS = [
+const SORT_OPTIONS: { label: string; value: "rating" | "newest" | "nearest" }[] = [
   { label: "Top rated", value: "rating" },
   { label: "Newest", value: "newest" },
   { label: "Nearest", value: "nearest" },
-  { label: "Price · low", value: "price_asc" },
 ];
 
 /* ─── Icons ──────────────────────────────────────────────── */
@@ -147,23 +146,36 @@ export default function MarketplacePage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, total_pages: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("");
   const [activeSort, setActiveSort] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
+    setError(null);
+    const sort = SORT_OPTIONS[activeSort]?.value;
     const params: Record<string, string | number> = { page: currentPage, limit: 20 };
     if (activeTab) params.account_type = activeTab;
+    if (sort) params.sort = sort;
 
-    const res = await marketplaceService.searchListings(params);
-    if (res.success && res.data) {
-      const data = res.data as unknown as { listings: Listing[]; pagination: Pagination };
-      setListings(data.listings || []);
-      setPagination(data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 });
+    try {
+      const res = await marketplaceService.searchListings(params);
+      if (res.success && res.data) {
+        const data = res.data as unknown as { listings: Listing[]; pagination: Pagination };
+        setListings(data.listings || []);
+        setPagination(data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 });
+      } else {
+        setError(res.message || "Couldn't load listings");
+        setListings([]);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't load listings");
+      setListings([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [activeTab, currentPage]);
+  }, [activeTab, activeSort, currentPage]);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -245,7 +257,7 @@ export default function MarketplacePage() {
           <span className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Sort</span>
           <div className="inline-flex border border-border rounded-(--r-2) overflow-hidden">
             {SORT_OPTIONS.map((s, i) => (
-              <button key={s.value} onClick={() => setActiveSort(i)} className={`px-3 py-1.5 text-[12.5px] cursor-pointer ${i < 3 ? "border-r border-border" : ""} ${activeSort === i ? "bg-bg-3" : ""}`} style={{ color: activeSort === i ? "var(--ink)" : "var(--fg-2)" }}>{s.label}</button>
+              <button key={s.value} onClick={() => setActiveSort(i)} className={`px-3 py-1.5 text-[12.5px] cursor-pointer ${i < SORT_OPTIONS.length - 1 ? "border-r border-border" : ""} ${activeSort === i ? "bg-bg-3" : ""}`} style={{ color: activeSort === i ? "var(--ink)" : "var(--fg-2)" }}>{s.label}</button>
             ))}
           </div>
         </div>
@@ -320,6 +332,12 @@ export default function MarketplacePage() {
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="h-6 w-6 border-2 border-solid border-t-transparent animate-spin rounded-full" style={{ borderColor: "var(--border-2)", borderTopColor: "transparent" }} />
+            </div>
+          ) : error ? (
+            <div className="text-center py-20 rounded-(--r-3)" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)" }}>
+              <p className="text-[15px] font-medium" style={{ color: "var(--danger)" }}>Couldn&apos;t load listings</p>
+              <p className="text-[13.5px] mt-1" style={{ color: "var(--ink)" }}>{error}</p>
+              <button type="button" onClick={() => void fetchListings()} className="btn-ghost-v2 sm mt-3">Try again</button>
             </div>
           ) : listings.length === 0 ? (
             <div className="text-center py-20">

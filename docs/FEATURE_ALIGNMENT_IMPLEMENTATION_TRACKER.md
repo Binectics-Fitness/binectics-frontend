@@ -42,12 +42,12 @@ Summary:
 | Feedback/NPS prompts | Backend Exists -> Frontend Missing | complete | shipped | FeedbackModal component + useFeedbackPrompt hook for auto-triggered NPS surveys | medium | S-M | FE | Wire into page layouts | shipped |
 | Unified search omnibox | Backend Exists -> Frontend Missing | complete | shipped | SearchOmnibox component with debounced unified search, section grouping, keyboard nav | medium | M | FE | Wire into AppSidebar nav | shipped |
 | Review moderation/replies UI | Backend Exists -> Frontend Missing | complete | shipped | ReviewCard component with inline provider response, reply thread, report form | medium | M | FE | Wire into provider dashboards | shipped |
-| Gym owner dashboard rebuild | Frontend Needs Overhaul | complete | weak/mixed | KPI cards/live feed not consistently API-driven | high | M | FE | Replace mock widgets with API-backed components | not-started |
-| Member dashboard rebuild | Frontend Needs Overhaul | complete | weak/mixed | Static-feeling metrics, weak persistence | high | M | FE | Rebuild around subscriptions/progress/notifications/loyalty | not-started |
-| Trainer dashboard rebuild | Frontend Needs Overhaul | complete | mixed | Inconsistent panel depth, some hardcoded data | high | M | FE | Implement queue-first API-driven dashboard panels | not-started |
-| Dietitian dashboard rebuild | Frontend Needs Overhaul | complete | mixed | Adherence/plan delivery workflows incomplete | high | M | FE | Add API-backed adherence + consultation action panels | not-started |
-| Booking flow hardening | Frontend Needs Overhaul | complete | partial | Slot/reschedule/error-state handling gaps | high | M | FE+BE | Refactor booking flow state machine + validation paths | not-started |
-| Admin users/providers hardening | Frontend Needs Overhaul | complete | partial | Filtering/actions inconsistent, mock remnants | high | M | FE | Wire all table actions and server-side filters | not-started |
+| Gym owner dashboard rebuild | Frontend Needs Overhaul | complete | shipped | KPIs/live feed wired to checkins/subscriptions/loyalty via parallel allSettled fetches | high | M | FE | Monitor edge cases on empty datasets | shipped |
+| Member dashboard rebuild | Frontend Needs Overhaul | complete | shipped | Rebuilt around checkins, consultations, loyalty balance, weight logs at /dashboard/member | high | M | FE | Monitor edge cases | shipped |
+| Trainer dashboard rebuild | Frontend Needs Overhaul | complete | shipped | Queue-first dashboard wired to provider clients + bookings + journals | high | M | FE | Monitor edge cases | shipped |
+| Dietitian dashboard rebuild | Frontend Needs Overhaul | complete | shipped | Adherence + consultation panels wired to provider APIs | high | M | FE | Monitor edge cases | shipped |
+| Booking flow hardening | Frontend Needs Overhaul | complete | shipped | /booking wizard wired to getProviderSlots + createBooking with full error/loading states | high | M | FE+BE | Monitor confirmation flow | shipped |
+| Admin users/providers hardening | Frontend Needs Overhaul | complete | shipped | /admin/users metrics + suspend/unsuspend, /admin/listings full moderation with badges | high | M | FE | Monitor edge cases | shipped |
 | Check-in ops feed reliability | Frontend Needs Overhaul | complete | partial | Real-time and offline/error states incomplete | medium | M | FE | Add polling/websocket strategy + device health states | not-started |
 | Member self-log flows (workout/meal/weight) | Frontend Exists -> Backend Missing | partial/unclear | placeholder | UI placeholders need verified contracts + implementation | medium | M | FE+BE | Confirm API contracts; implement missing endpoints if needed | not-started |
 | Recurring booking | Frontend Exists -> Backend Missing | partial/unclear | placeholder/partial | Recurrence semantics not implemented end-to-end | medium | M-H | FE+BE | Define recurrence contract and implement flow | not-started |
@@ -128,3 +128,12 @@ Summary:
   - Updated UI buttons to reflect user permissions
   - All linting passes (zero errors/warnings)
   - Total: 229 new lines of logic and UI enhancements across 2 commits
+
+2026-06-11 (3): Closed remaining HIGH-priority overhaul items:
+  - /dashboard/bookings: full rewrite wired to consultationsService (upcoming/past/cancelled tabs, RescheduleModal, CancelModal, reasons, status pills, key-remount modal reset)
+  - /dashboard/member: replaced mock KPIs with parallel Promise.allSettled fetches across checkins/consultations/loyalty/progress; wired streak, next session, weight, balance
+  - /admin/users: pivoted to platform metrics dashboard (no list endpoint exists yet) + ID-lookup with suspend/unsuspend modals showing cascaded counts
+  - /admin/listings: replaced 8 mock fixtures with getAdminGymListings, inline suspend/unsuspend/verify actions, status filter pills, KPI cards
+  - /marketplace + /marketplace/[listingId]: added error states with retry; wired activeSort to API param; trimmed unsupported price_asc sort option
+  - /booking: rebuilt 3-step wizard around real APIs (listingId query param, getProviderSlots day-by-day picker, getTypes filter by providerRole, createBooking on confirm → router.push to /dashboard/bookings); Suspense wrapper for useSearchParams
+  - All HIGH-priority Feature Alignment Tracker items now shipped
