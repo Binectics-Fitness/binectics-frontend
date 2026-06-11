@@ -34,8 +34,8 @@ Summary:
 
 | Feature | Category | Backend Status | Frontend Status | Gap Summary | Priority | Effort | Owner | Next Action | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| Team management workspace | Backend Exists -> Frontend Missing | complete | v1 shipped | Org members/roles/invitations now surfaced in `/dashboard/team`; follow-up needed for direct add + RBAC polish | high | M | FE | Add direct member-add flow and permission-based action guards | in-progress |
-| Assignment rules UI | Backend Exists -> Frontend Missing | complete | missing | No UI for auto-routing strategies | high | M | FE | Add CRUD screen for assignment rules | not-started |
+| Team management workspace | Backend Exists -> Frontend Missing | complete | shipped | Org switching, member list, role/status updates, removal, invitations, direct add, full RBAC in `/dashboard/team` | high | M | FE | Monitor edge cases and permission workflows | shipped |
+| Assignment rules UI | Backend Exists -> Frontend Missing | complete | in-progress | Building CRUD screen for assignment rules configuration | high | M | FE | Implement list, create, update, delete flows | in-progress |
 | Loyalty center | Backend Exists -> Frontend Missing | complete | missing/partial | Rewards, redemptions, history not visible to users | high | M | FE | Add member loyalty dashboard + redeem flow | not-started |
 | Forms builder + responses | Backend Exists -> Frontend Missing | complete | missing | No form authoring/analytics UX | high | M-H | FE | Implement forms list, builder, responses, analytics | not-started |
 | Provider billing operations UI | Backend Exists -> Frontend Missing | complete | partial | Billing status/invoices/market pricing not fully exposed | high | M | FE | Add org billing status + invoices + usage limits UI | not-started |
@@ -106,3 +106,13 @@ Summary:
 
 - 2026-06-11: Initial baseline created from backend/frontend alignment audit.
 - 2026-06-11: Started Team management workspace implementation with a new `/dashboard/team` route covering org switching, member role/status updates, member removal, and invitation management.
+
+
+## Changelog
+
+2026-06-11 (2): Completed Team management workspace with permission guards and direct member creation:
+  - Added handleDirectAdd() for creating members with credentials
+  - Implemented permission-based action guards (invite, remove, role update, manage org)
+  - Updated UI buttons to reflect user permissions
+  - All linting passes (zero errors/warnings)
+  - Total: 229 new lines of logic and UI enhancements across 2 commits
