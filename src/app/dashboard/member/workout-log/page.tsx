@@ -108,7 +108,7 @@ export default function WorkoutLogPage() {
         Workout log
       </h1>
       <p style={{ color: "var(--fg-3)", marginBottom: 18 }}>
-        {profile ? `${profile.name} · ${activities.length} workouts logged` : "Loading..."}
+        {profile ? `${typeof profile.client_id === "object" ? `${profile.client_id.first_name} ${profile.client_id.last_name}` : profile.client_id} · ${activities.length} workouts logged` : "Loading..."}
       </p>
 
       {error && (

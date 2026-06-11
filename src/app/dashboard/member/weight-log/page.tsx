@@ -58,10 +58,11 @@ export default function WeightLogPage() {
 
   const latestLog = logs.length > 0 ? logs[0] : null;
   const oldestLog = logs.length > 0 ? logs[logs.length - 1] : null;
-  const changeKg =
+  const changeKgValue =
     latestLog && oldestLog
-      ? (latestLog.weight_kg - oldestLog.weight_kg).toFixed(1)
+      ? latestLog.weight_kg - oldestLog.weight_kg
       : null;
+  const changeKg = changeKgValue !== null ? changeKgValue.toFixed(1) : null;
 
   return (
     <MemberDashboardShell activeLabel="Activity">
@@ -81,7 +82,7 @@ export default function WeightLogPage() {
             Weight
           </h1>
           <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            {profile ? `${profile.name} · ${logs.length} logs recorded` : "Loading..."}
+            {profile ? `${typeof profile.client_id === "object" ? `${profile.client_id.first_name} ${profile.client_id.last_name}` : profile.client_id} · ${logs.length} logs recorded` : "Loading..."}
           </p>
         </div>
         <button
@@ -127,8 +128,8 @@ export default function WeightLogPage() {
           },
           {
             label: "Change",
-            value: changeKg ? `${changeKg > 0 ? "+" : ""}${changeKg}` : "—",
-            delta: changeKg ? (changeKg < 0 ? "↓ Loss" : "↑ Gain") : "—",
+            value: changeKgValue ? `${changeKgValue > 0 ? "+" : ""}${changeKg}` : "—",
+            delta: changeKgValue ? (changeKgValue < 0 ? "↓ Loss" : "↑ Gain") : "—",
           },
           {
             label: "Logs",

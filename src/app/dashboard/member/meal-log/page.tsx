@@ -96,7 +96,7 @@ export default function MealLogPage() {
             Meals
           </h1>
           <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            {profile ? `${profile.name} · ${meals.length} meals logged` : "Loading..."}
+            {profile ? `${typeof profile.client_id === "object" ? `${profile.client_id.first_name} ${profile.client_id.last_name}` : profile.client_id} · ${meals.length} meals logged` : "Loading.."}
           </p>
         </div>
         <button
