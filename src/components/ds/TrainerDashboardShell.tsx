@@ -1,18 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { BinecticsLockup } from "@/components/BinecticsLogo";
-import { ProviderDashboardShell } from "./ProviderDashboardShell";
-import { useAuth } from "@/contexts/AuthContext";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
+import type { ReactNode } from "react";
 import { UserRole } from "@/lib/types";
-import { ROLE_LABEL, fullName, personInitials, shortName } from "@/lib/identity";
+import { ProviderShell, SidebarIcon as I, type NavSection } from "./ProviderShell";
 
-function I({ children, d }: { children?: React.ReactNode; d?: string }) {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d ? <path d={d} /> : children}</svg>;
-}
-
-const SIDEBAR = [
+const SIDEBAR: NavSection[] = [
   { label: "Work", items: [
     { name: "Today", href: "/dashboard/trainer", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
     { name: "Calendar", href: "/dashboard/trainer/sessions", icon: <I><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></I> },
@@ -31,57 +23,27 @@ const SIDEBAR = [
 export interface TrainerDashboardShellProps {
   activeItem: string;
   crumb: string;
-  actions?: React.ReactNode;
-  children: React.ReactNode;
-}
-
-function TrainerSidebarContent({ activeItem }: { activeItem: string }) {
-  const { user } = useAuth();
-  const name = fullName(user) || "Your account";
-  const initials = personInitials(user) || "··";
-  return (
-    <div className="flex flex-col gap-6 px-3.5 pb-6">
-      <Link href="/" className="flex items-center gap-2.5 px-1.5 py-1"><BinecticsLockup /></Link>
-      <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
-        <span className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--trainer-soft)", color: "var(--trainer)" }}>{initials}</span>
-        <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>{name}</span>
-      </div>
-      {SIDEBAR.map((s) => (
-        <nav key={s.label} className="flex flex-col gap-0.5" aria-label={s.label}>
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] px-2 py-1 mb-1" style={{ color: "var(--fg-4)" }}>{s.label}</div>
-          {s.items.map((item) => {
-            const isActive = item.name === activeItem;
-            return (
-              <Link key={item.name} href={item.href} className={`flex items-center gap-2.5 py-1.75 px-2 rounded-(--r-2) text-[13.5px] ${isActive ? "bg-bg-3 font-medium" : "hover:bg-bg-2"}`} style={{ color: isActive ? "var(--ink)" : "var(--fg-2)" }}>
-                {item.icon}<span className="flex-1">{item.name}</span>
-                {item.badge && <span className="ml-auto font-mono text-[11px] px-1.5 py-px rounded-full bg-bg-2" style={{ color: "var(--fg-3)" }}>{item.badge}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-      ))}
-      <Link href="/dashboard/trainer/settings" className="mt-auto flex items-center gap-2.5 pt-3.5" style={{ borderTop: "1px solid var(--border)" }}>
-        <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--trainer-soft)", color: "var(--trainer)" }}>{initials}</span>
-        <div className="flex-1">
-          <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{shortName(user) || name}</div>
-          <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{user ? (ROLE_LABEL[user.role] ?? user.role) : ""}</div>
-        </div>
-      </Link>
-    </div>
-  );
+  actions?: ReactNode;
+  children: ReactNode;
 }
 
 export function TrainerDashboardShell({ activeItem, crumb, actions, children }: TrainerDashboardShellProps) {
-  const { user, isAuthorized, isLoading } = useRoleGuard(UserRole.TRAINER);
-  if (!isLoading && !isAuthorized) return null;
   return (
-    <ProviderDashboardShell
-      sidebarSlot={<TrainerSidebarContent activeItem={activeItem} />}
+    <ProviderShell
+      activeItem={activeItem}
       crumb={crumb}
-      breadcrumbRoot={{ label: fullName(user) || "Trainer", href: "/dashboard/trainer" }}
       actions={actions}
+      config={{
+        role: UserRole.TRAINER,
+        sections: SIDEBAR,
+        identity: "user",
+        tone: { avatarBg: "var(--trainer-soft)", avatarColor: "var(--trainer)" },
+        settingsHref: "/dashboard/trainer/settings",
+        homeHref: "/dashboard/trainer",
+        fallbackLabel: "Trainer",
+      }}
     >
       {children}
-    </ProviderDashboardShell>
+    </ProviderShell>
   );
 }
