@@ -218,3 +218,11 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - DROPPED (no backend endpoint — were fabricated): 30-day revenue history chart, churn KPI + sparklines, today's classes/schedule, upcoming payouts table, revenue-mix breakdown, action queue, the time-range filter. Per execution rule #1, did not keep fabricated numbers. These return when their APIs exist (schedule, payouts, revenue timeseries, churn).
   - lint + tsc + build clean.
   Remaining mock pages: trainer/page, dietitian/page, gym-owner {staff, revenue, payouts, devices(BLOCKED)}, dietitian/clients/[clientId], admin/dashboard.
+
+2026-06-12 (5): Converted the trainer dashboard (/dashboard/trainer) — 2 of 9.
+  - Split page.tsx (metadata) + TrainerTodayClient.tsx (client).
+  - Real data: Active clients list + count from progressService.getMyClientProfiles(); upcoming sessions + KPIs (sessions today, upcoming, next session) from consultationsService.getProviderBookings() (filtered client-side to CONFIRMED/PENDING and future). Loading/error/empty states.
+  - DROPPED (no backend endpoint): earnings panel (no earnings service), inbox/messages (no messages service), mini-calendar. The fake session/client streaks and forecast numbers are gone.
+  - LIMITATION: ConsultationBooking carries only clientUserId (no embedded client name), so the schedule shows time/duration/status/notes but not the client's name. Enhance when the bookings API embeds client info.
+  - lint + tsc + build clean.
+  Remaining mock pages: dietitian/page, gym-owner {staff, revenue, payouts, devices(BLOCKED)}, dietitian/clients/[clientId], admin/dashboard.
