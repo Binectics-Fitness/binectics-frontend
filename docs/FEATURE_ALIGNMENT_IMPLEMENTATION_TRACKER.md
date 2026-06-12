@@ -240,3 +240,10 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - dietitian/clients/[clientId]: real client detail via progressService.getMyClientSummaries() (find by profile _id). Real KPIs (current weight, weight change vs starting, journal entries/meals, diet/workout plan counts), goals chips, height, and the profile notes field. DROPPED fabricated macro-adherence table, 14-day adherence bars, HOMA-IR.
   - lint + tsc + build clean.
   Remaining mock pages: gym-owner {revenue, payouts, devices(BLOCKED)}, admin/dashboard. revenue+payouts likely largely backend-blocked (only providerBilling.getStatus exists).
+
+2026-06-12 (8): Converted admin/dashboard — 6 of 9.
+  - Split page.tsx (metadata) + AdminOverviewClient.tsx (client).
+  - Real data from adminService.getPlatformMetrics() (KPIs: subscription revenue USD, verified providers, active subscriptions, total/paying users, conversion rate, countries live; providers-by-country bars; revenue-by-currency) + adminService.getFeedbackSummary() (member feedback card). Loading/error/empty states.
+  - DROPPED (no backend endpoint): GMV/take-rate KPIs, provider-listings approval queue with verification checks, fraud/risk signals table, open-disputes table, fake uptime/health pill. Moderation already lives on the real /admin/listings + /admin/users pages.
+  - lint + tsc + build clean.
+  Remaining mock pages: gym-owner {revenue, payouts, devices(BLOCKED)}.
