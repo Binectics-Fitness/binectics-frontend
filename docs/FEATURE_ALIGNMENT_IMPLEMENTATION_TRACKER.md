@@ -234,3 +234,9 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - Same booking limitation as trainer (no client name on bookings).
   - lint + tsc + build clean.
   Remaining mock pages: gym-owner {staff, revenue, payouts, devices(BLOCKED)}, dietitian/clients/[clientId], admin/dashboard.
+
+2026-06-12 (7): Converted gym-owner/staff and dietitian/clients/[clientId] — 5 of 9.
+  - gym-owner/staff: now lists real org members from teamsService.getMembers(orgId) — name, role, email, status, joined. Kept AddStaffModal. DROPPED fabricated per-staff metrics (sessions/rating/cert renewal) and location tags. Loading/error/empty states.
+  - dietitian/clients/[clientId]: real client detail via progressService.getMyClientSummaries() (find by profile _id). Real KPIs (current weight, weight change vs starting, journal entries/meals, diet/workout plan counts), goals chips, height, and the profile notes field. DROPPED fabricated macro-adherence table, 14-day adherence bars, HOMA-IR.
+  - lint + tsc + build clean.
+  Remaining mock pages: gym-owner {revenue, payouts, devices(BLOCKED)}, admin/dashboard. revenue+payouts likely largely backend-blocked (only providerBilling.getStatus exists).

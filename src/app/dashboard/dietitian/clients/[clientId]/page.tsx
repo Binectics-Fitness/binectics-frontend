@@ -1,119 +1,139 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { format } from "date-fns";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { progressService, type ClientProfileWithSummary } from "@/lib/api/progress";
 
-const KPIS = [
-  { label: "Adherence · 30d", value: "88%", delta: "↑ 6 pts" },
-  { label: "Weight · since start", value: "−4.2 kg", delta: "From 78 → 73.8 kg" },
-  { label: "HOMA-IR", value: "2.1", delta: "↓ from 3.4 baseline" },
-  { label: "Logs · this week", value: "19/21", delta: "3 photo uploads" },
-];
+function clientName(c: ClientProfileWithSummary): string {
+  if (typeof c.client_id === "object" && c.client_id !== null) {
+    return `${c.client_id.first_name} ${c.client_id.last_name}`.trim();
+  }
+  return "Client";
+}
 
-const MACROS = [
-  { macro: "Kcal", target: "1,650", avg: "1,684 · +2%", trend: "on target", ok: true },
-  { macro: "Protein", target: "142 g", avg: "138 g · −3%", trend: "on target", ok: true },
-  { macro: "Carbs", target: "160 g", avg: "182 g · +14%", trend: "slightly over", ok: false },
-  { macro: "Fat", target: "52 g", avg: "48 g · −8%", trend: "on target", ok: true },
-];
-
-const ADHERENCE_BARS = [54,65,59,37,42,49,36,50,72,79,73,51,49,37];
-
-const NOTES = [
-  { text: "Carbs creeping up -- likely jollof portions. Will discuss Friday.", time: "Today" },
-  { text: "Cycle returned · 32-day length · first time in 14 months.", time: "Week 8" },
-  { text: "Bloods retest scheduled wk 16.", time: "Week 4" },
-];
-
-function barColor(pct: number) {
-  if (pct >= 70) return "var(--signal)";
-  if (pct >= 50) return "oklch(0.65 0.18 75)";
-  return "var(--danger)";
+function initials(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("") || "?"
+  );
 }
 
 export default function DietitianSingleClientPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = React.use(params);
-  void clientId;
+  const [client, setClient] = useState<ClientProfileWithSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      setLoading(true);
+      try {
+        const res = await progressService.getMyClientSummaries();
+        if (!active) return;
+        if (res.success && res.data) {
+          const found = res.data.find((c) => c._id === clientId) ?? null;
+          setClient(found);
+          setError(found ? null : "This client could not be found.");
+        } else {
+          setError(res.message || "We couldn't load this client.");
+        }
+      } catch {
+        if (active) setError("We couldn't load this client. Try again shortly.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    const kick = window.setTimeout(() => void run(), 0);
+    return () => {
+      active = false;
+      window.clearTimeout(kick);
+    };
+  }, [clientId]);
+
+  const name = client ? clientName(client) : "Client";
+  const summary = client?.summary;
+  const latestWeight = summary?.latest_weight?.weight_kg ?? null;
+  const startWeight = client?.starting_weight_kg ?? null;
+  const weightDelta = latestWeight != null && startWeight != null ? latestWeight - startWeight : null;
+
+  const kpis = client
+    ? [
+        { label: "Current weight", value: latestWeight != null ? `${latestWeight} kg` : "—", delta: startWeight != null ? `from ${startWeight} kg` : "No baseline" },
+        { label: "Weight change", value: weightDelta != null ? `${weightDelta > 0 ? "+" : ""}${weightDelta.toFixed(1)} kg` : "—", delta: client.target_weight_kg != null ? `target ${client.target_weight_kg} kg` : "No target set" },
+        { label: "Journal entries", value: String(summary?.journal_count ?? 0), delta: `${summary?.meal_count ?? 0} meals logged` },
+        { label: "Diet plans", value: String(summary?.diet_plan_count ?? 0), delta: `${summary?.workout_plan_count ?? 0} workout plans` },
+      ]
+    : [];
 
   return (
-    <DietitianDashboardShell activeItem="Clients" crumb="Folake Adebayo">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
-        <div className="w-[72px] h-[72px] rounded-(--r-3) flex-shrink-0" style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 300), oklch(0.72 0.06 280))" }} />
-        <div className="flex-1">
-          <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Folake Adebayo</h1>
-          <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>PCOS protocol &middot; week 12 of 16 &middot; Lagos &middot; joined 18 Feb 2026</p>
+    <DietitianDashboardShell activeItem="Clients" crumb={client ? name : "Client"}>
+      {loading && !client ? (
+        <AsyncSpinner size="page" label="Loading client" />
+      ) : error || !client ? (
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+          <div className="font-medium">Couldn&apos;t load client</div>
+          <div className="mt-1" style={{ color: "var(--ink)" }}>{error ?? "Client not found."}</div>
         </div>
-        <div className="flex gap-2">
-          <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Send plan</button>
-          <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Start consult</button>
-        </div>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        {KPIS.map((k) => (
-          <div key={k.label} className="rounded-(--r-3) p-3.5 px-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-            <div className="text-[24px] font-medium tracking-[-0.02em] tabular-nums mt-1" style={{ color: "var(--ink)" }}>{k.value}</div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: "var(--signal-ink)" }}>{k.delta}</div>
+      ) : (
+        <>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
+            <span className="w-[64px] h-[64px] rounded-(--r-3) flex-shrink-0 flex items-center justify-center text-[20px] font-semibold" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>{initials(name)}</span>
+            <div className="flex-1">
+              <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>{name}</h1>
+              <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
+                {client.is_active ? "Active client" : "Paused"} &middot; joined {format(new Date(client.created_at), "d MMM yyyy")}
+              </p>
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Macro adherence + Notes */}
-      <div className="grid lg:grid-cols-[2fr_1fr] gap-3.5">
-        <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Macro adherence &middot; last 14 days</h3>
-
-          {/* Adherence bars */}
-          <div className="grid gap-1 mb-3.5 h-[80px]" style={{ gridTemplateColumns: "repeat(14, 1fr)" }}>
-            {ADHERENCE_BARS.map((pct, i) => (
-              <div
-                key={i}
-                className="rounded-[2px] self-end"
-                title={`Day ${i + 1}: ${pct}%`}
-                style={{ height: `${pct}%`, background: barColor(pct) }}
-              />
+          {/* KPIs */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+            {kpis.map((k) => (
+              <div key={k.label} className="rounded-(--r-3) p-3.5 px-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
+                <div className="text-[24px] font-medium tracking-[-0.02em] tabular-nums mt-1" style={{ color: "var(--ink)" }}>{k.value}</div>
+                <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>{k.delta}</div>
+              </div>
             ))}
           </div>
 
-          <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[13.5px]">
-            <thead>
-              <tr>
-                {["Macro", "Target", "7-day avg", "Trend"].map((h) => (
-                  <th key={h} className="text-left px-3.5 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {MACROS.map((m) => (
-                <tr key={m.macro} className="hover:bg-[var(--bg-2)]">
-                  <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}><strong style={{ color: "var(--ink)" }}>{m.macro}</strong></td>
-                  <td className="px-3.5 py-3 font-mono" style={{ borderBottom: "1px solid var(--border)" }}>{m.target}</td>
-                  <td className="px-3.5 py-3 font-mono" style={{ borderBottom: "1px solid var(--border)" }}>{m.avg}</td>
-                  <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={m.ok ? { background: "var(--signal-soft)", color: "var(--signal-ink)" } : { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" }}>{m.trend}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </div>
-
-        <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Notes &middot; {NOTES.length}</h3>
-          {NOTES.map((n, i) => (
-            <div key={i} className="text-[13px] leading-[1.55] py-2" style={{ color: "var(--fg-2)", borderBottom: i < NOTES.length - 1 ? "1px solid var(--border)" : "none" }}>
-              &ldquo;{n.text}&rdquo;
-              <br />
-              <span className="font-mono text-[10.5px] uppercase" style={{ color: "var(--fg-3)" }}>{n.time}</span>
+          {/* Goals + Notes */}
+          <div className="grid lg:grid-cols-[1fr_1fr] gap-3.5">
+            <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Goals</h3>
+              {client.goals.length === 0 ? (
+                <EmptySlate message="No goals recorded." mt="mt-0" />
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {client.goals.map((g) => (
+                    <span key={g} className="inline-flex items-center px-2.5 py-1 rounded-(--r-1) text-[12.5px]" style={{ background: "var(--bg-2)", color: "var(--ink)", border: "1px solid var(--border)" }}>{g}</span>
+                  ))}
+                </div>
+              )}
+              {client.height_cm != null && (
+                <div className="mt-4 font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>Height · {client.height_cm} cm</div>
+              )}
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Notes</h3>
+              {client.notes ? (
+                <div className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>{client.notes}</div>
+              ) : (
+                <EmptySlate message="No notes yet." mt="mt-0" />
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </DietitianDashboardShell>
   );
 }
