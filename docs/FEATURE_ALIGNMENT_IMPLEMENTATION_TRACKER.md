@@ -247,3 +247,14 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - DROPPED (no backend endpoint): GMV/take-rate KPIs, provider-listings approval queue with verification checks, fraud/risk signals table, open-disputes table, fake uptime/health pill. Moderation already lives on the real /admin/listings + /admin/users pages.
   - lint + tsc + build clean.
   Remaining mock pages: gym-owner {revenue, payouts, devices(BLOCKED)}.
+
+2026-06-12 (9): Converted gym-owner/revenue and handled gym-owner/payouts — mock-page sweep COMPLETE (8 converted, 1 backend-blocked).
+  - gym-owner/revenue: split page.tsx (metadata) + RevenueClient.tsx. Real KPIs (revenue today/7d/30d, active members, active subscriptions) from checkinsService.getOrgDashboardStats(); real revenue-by-plan breakdown computed from getOrgMembershipSubscriptions() amount_paid grouped by plan. Currency via useRegion().formatAmount(). DROPPED (no API): MRR/ARPU/LTV/refunds KPIs, the SVG revenue timeseries chart, per-location and per-coach breakdowns, time-range filter.
+  - gym-owner/payouts: BACKEND-BLOCKED — there is no payouts API (payment.ts only generates a tx ref; providerBilling.listInvoices is the gym's own SaaS bill, not payouts to them). Replaced the fabricated hero/KPIs/payout-history table with an honest "Payout history coming soon" empty state; kept the Add-bank-account modal so providers can still set up their destination.
+  - lint + tsc + build clean.
+
+  MOCK-PAGE SWEEP SUMMARY (9 pages):
+  - Converted to real data (8): gym-owner overview, trainer, dietitian, gym-owner/staff, dietitian/clients/[clientId], admin/dashboard, gym-owner/revenue, (member dashboard was already real).
+  - Honest empty state pending backend (1): gym-owner/payouts.
+  - Fully backend-blocked, untouched: gym-owner/devices (no devices API).
+  - Recurring backend gaps surfaced for the API team: device state, payouts schedule/history, revenue timeseries + churn, per-location/per-coach revenue, provider earnings, messaging/inbox, class scheduling, client name embedded on ConsultationBooking, single-client-with-summary endpoint.
