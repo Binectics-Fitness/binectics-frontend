@@ -211,3 +211,10 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   Tier 2 (gym ops): gym-owner/staff, gym-owner/revenue, gym-owner/devices (devices is BACKEND-BLOCKED — no devices API), gym-owner/payouts.
   Tier 3: dietitian/clients/[clientId], admin/dashboard.
   member dashboard is already real and is the reference pattern (parallel Promise.allSettled across services).
+
+2026-06-12 (4): Converted the gym-owner dashboard (/dashboard/gym-owner) from mock to real data — 1 of 9 mock pages done.
+  - Split into page.tsx (metadata wrapper) + GymOverviewClient.tsx (client), matching the members/ pattern.
+  - Real data: KPIs (revenue 30d, active members, check-ins today + attendance %, avg rating) and live check-ins from checkinsService.getOrgDashboardStats(); recent members table from marketplaceService.getOrgMembershipSubscriptions(); revenue today/week/month summary. Currency via useRegion().formatAmount(). Loading/error/empty states throughout.
+  - DROPPED (no backend endpoint — were fabricated): 30-day revenue history chart, churn KPI + sparklines, today's classes/schedule, upcoming payouts table, revenue-mix breakdown, action queue, the time-range filter. Per execution rule #1, did not keep fabricated numbers. These return when their APIs exist (schedule, payouts, revenue timeseries, churn).
+  - lint + tsc + build clean.
+  Remaining mock pages: trainer/page, dietitian/page, gym-owner {staff, revenue, payouts, devices(BLOCKED)}, dietitian/clients/[clientId], admin/dashboard.
