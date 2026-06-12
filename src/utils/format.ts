@@ -1,4 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
+import { displayFractionDigits } from "@/lib/constants/regions";
 
 /**
  * Formatting Utilities
@@ -107,24 +108,29 @@ export function formatCurrency(
   currency: string = "USD",
   locale: string = "en-US",
 ): string {
+  // Decimals decided per currency + whether the amount is whole — never by
+  // magnitude (which rendered ₦25,000 next to ₦475.00). Round prices stay clean
+  // ("$1,200"); fractional amounts keep their cents ("$12.50").
+  const digits = displayFractionDigits(amount, currency);
   try {
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       currencyDisplay: "narrowSymbol",
-      maximumFractionDigits: amount >= 1000 ? 0 : 2,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
     }).format(amount);
   } catch {
     try {
       return new Intl.NumberFormat(locale, {
         style: "currency",
         currency,
-        maximumFractionDigits: amount >= 1000 ? 0 : 2,
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
       }).format(amount);
     } catch {
       const upper = currency.toUpperCase();
-      const fixed = amount >= 1000 ? amount.toFixed(0) : amount.toFixed(2);
-      return `${upper} ${fixed}`;
+      return `${upper} ${amount.toFixed(digits)}`;
     }
   }
 }

@@ -33,7 +33,10 @@ function coerceCategory(value: unknown): NotificationCategory {
 
 export function useNotificationCount() {
   const queryClient = useQueryClient();
-  const unreadQuery = useUnreadNotificationCount(true);
+  // Only query/stream when signed in — otherwise every mount on a public page
+  // fires an unauthenticated request that 401s.
+  const hasToken = typeof window !== "undefined" && !!tokenStorage.get();
+  const unreadQuery = useUnreadNotificationCount(hasToken);
   const eventSourceRef = useRef<EventSource | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -52,11 +55,11 @@ export function useNotificationCount() {
   useEffect(() => {
     let mounted = true;
 
-    // Always fetch initial count via REST
-    refresh();
-
     const token = tokenStorage.get();
     if (!token) return;
+
+    // Fetch initial count via REST (only when authenticated)
+    refresh();
 
     // Attempt SSE connection
     const url = `${API_BASE_URL}/notifications/stream?token=${encodeURIComponent(token)}`;
@@ -85,10 +88,11 @@ export function useNotificationCount() {
     };
 
     es.onerror = () => {
-      // SSE failed — fall back to polling
+      // SSE failed — fall back to polling. `onerror` can fire more than once;
+      // guard so we don't leak a second (or third) parallel interval.
       es.close();
       eventSourceRef.current = null;
-      if (!mounted) return;
+      if (!mounted || intervalRef.current) return;
 
       intervalRef.current = setInterval(() => {
         if (mounted) refresh();

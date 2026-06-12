@@ -105,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         apiClient.storeTokens(
           response.data.access_token,
           response.data.refresh_token,
+          response.data.refresh_token_expires_at,
         );
         // Force re-run of this effect by updating user (triggers new timeout)
         const currentUser = authService.getCurrentUser();
@@ -151,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       apiClient.storeTokens(
         response.data.access_token,
         response.data.refresh_token,
+        response.data.refresh_token_expires_at,
       );
       // Re-trigger session monitoring
       const currentUser = authService.getCurrentUser();
@@ -183,7 +185,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           router.push("/admin/change-password");
         } else {
           const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-          const redirect = params?.get("redirect");
+          const rawRedirect = params?.get("redirect");
+          // Only honour same-origin relative paths — reject absolute URLs and
+          // protocol-relative `//host` paths so `?redirect=https://evil.com`
+          // can't turn login into an open redirect.
+          const redirect =
+            rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+              ? rawRedirect
+              : null;
           // First login picks up in onboarding. Gate on an explicit false so
           // accounts from a backend that omits the flag still reach their
           // dashboard instead of looping through onboarding forever.

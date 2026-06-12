@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { REGION_COOKIE, REGION_OVERRIDE_COOKIE } from "@/lib/constants/regions";
+import {
+  REGION_COOKIE,
+  REGION_OVERRIDE_COOKIE,
+  COUNTRY_TO_REGION,
+} from "@/lib/constants/regions";
 
 // Routes that require authentication
 const protectedRoutes = [
   "/dashboard",
   "/member",
-  "/admin/",
+  "/admin",
   "/forms",
   "/check-in",
   "/checkout",
@@ -66,8 +70,12 @@ export function middleware(request: NextRequest) {
     request.cookies.get("must_change_password")?.value === "1";
 
   // ── Region detection (runs in all modes) ──
-  const override = request.cookies.get(REGION_OVERRIDE_COOKIE)?.value;
-  const country = override || detectCountry(request);
+  // The override cookie is client-controlled, so only honour it when it names a
+  // region we actually support — otherwise fall back to geo detection rather
+  // than persisting an arbitrary value into the region cookie.
+  const override = request.cookies.get(REGION_OVERRIDE_COOKIE)?.value?.toUpperCase();
+  const validOverride = override && override in COUNTRY_TO_REGION ? override : undefined;
+  const country = validOverride || detectCountry(request);
   const currentRegion = request.cookies.get(REGION_COOKIE)?.value;
 
   const needsRegionCookie = currentRegion !== country;

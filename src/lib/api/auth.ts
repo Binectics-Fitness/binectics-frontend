@@ -15,6 +15,7 @@ import {
   userStorage,
   refreshTokenStorage,
   clearAuthStorage,
+  expiresAtToMaxAge,
 } from "@/lib/utils/storage";
 
 export interface LoginResponse {
@@ -75,14 +76,10 @@ export const authService = {
       apiClient.storeTokens(response.data.access_token);
       // Store refresh token with appropriate maxAge derived from server expiry
       if (response.data.refresh_token) {
-        const maxAge = response.data.refresh_token_expires_at
-          ? Math.floor(
-              (new Date(response.data.refresh_token_expires_at).getTime() -
-                Date.now()) /
-                1000,
-            )
-          : undefined;
-        refreshTokenStorage.set(response.data.refresh_token, maxAge);
+        refreshTokenStorage.set(
+          response.data.refresh_token,
+          expiresAtToMaxAge(response.data.refresh_token_expires_at),
+        );
       }
       // Store user data
       userStorage.set(response.data.user);
@@ -184,6 +181,7 @@ export const authService = {
       apiClient.storeTokens(
         response.data.access_token,
         response.data.refresh_token,
+        response.data.refresh_token_expires_at,
       );
     }
 

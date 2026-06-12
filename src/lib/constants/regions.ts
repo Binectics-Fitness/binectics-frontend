@@ -91,19 +91,52 @@ export function getMarketPrice(tier: PlanTier, currency: CurrencyCode): number {
   return MARKET_PRICES[tier][currency];
 }
 
+/**
+ * Currencies we display without minor units. Decimal places are decided per
+ * currency rather than per amount, so a single fee table is internally
+ * consistent (e.g. ₦25,000 and ₦475 both render without decimals instead of
+ * ₦25,000 next to ₦475.00).
+ */
+export const ZERO_DECIMAL_CURRENCIES = new Set([
+  "NGN",
+  "KES",
+  "INR",
+  "JPY",
+  "KRW",
+  "VND",
+]);
+
+/** The maximum decimal places a currency ever displays (2, or 0 for whole-unit currencies). */
+export function currencyFractionDigits(currency: string): number {
+  return ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase()) ? 0 : 2;
+}
+
+/**
+ * Decimals to actually render for a specific amount: whole amounts show none
+ * (so round prices stay clean — "$1,200", "₦45,000"), fractional amounts show
+ * the currency's full precision ("$12.50"). Decided per currency, never by
+ * magnitude, so a single table is internally consistent.
+ */
+export function displayFractionDigits(amount: number, currency: string): number {
+  return Number.isInteger(amount) ? 0 : currencyFractionDigits(currency);
+}
+
 export function formatRegionPrice(amount: number, currency: CurrencyCode, locale: string): string {
+  const digits = displayFractionDigits(amount, currency);
   try {
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       currencyDisplay: "narrowSymbol",
-      maximumFractionDigits: amount >= 1000 ? 0 : 2,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
     }).format(amount);
   } catch {
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
-      maximumFractionDigits: amount >= 1000 ? 0 : 2,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
     }).format(amount);
   }
 }
