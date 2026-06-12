@@ -7,9 +7,9 @@ import { ProviderShell, SidebarIcon as I, type NavSection } from "./ProviderShel
 const SIDEBAR: NavSection[] = [
   { label: "Operate", items: [
     { name: "Overview", href: "/dashboard/gym-owner", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
-    { name: "Members", badge: "1,284", href: "/dashboard/gym-owner/members", icon: <I><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></I> },
+    { name: "Members", href: "/dashboard/gym-owner/members", icon: <I><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></I> },
     { name: "Schedule", href: "/dashboard/gym-owner/schedule", icon: <I><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></I> },
-    { name: "Check‑ins", badge: "412", href: "/dashboard/gym-owner/checkins", icon: <I d="M12 22V2M2 7l10 5 10-5M2 17l10 5 10-5" /> },
+    { name: "Check‑ins", href: "/dashboard/gym-owner/checkins", icon: <I d="M12 22V2M2 7l10 5 10-5M2 17l10 5 10-5" /> },
     { name: "Devices", href: "/dashboard/gym-owner/devices", icon: <I d="M8 21h8M12 17v4M3 3h18v14H3z" /> },
   ]},
   { label: "Money", items: [

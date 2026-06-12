@@ -248,6 +248,11 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - lint + tsc + build clean.
   Remaining mock pages: gym-owner {revenue, payouts, devices(BLOCKED)}.
 
+2026-06-12 (10): Removed the last fake data in the UI — hardcoded nav badge counts.
+  - Stripped placeholder counts from all four shells: gym (Members 1,284 / Check-ins 412), trainer (Clients 42 / Inbox 7), dietitian (Clients 68 / Inbox 12), admin (Listings 38 / Reviews 12 / Fraud 4 / Disputes 7 / Tickets 42), plus the orphaned `alert` flags.
+  - Kept the badge-rendering code inert so real counts can be reintroduced later. Chose removal over re-adding data-fetching to the freshly-refactored ProviderShell; wiring real counts (gym members/check-ins via getOrgDashboardStats, trainer/dietitian clients via getMyClientProfiles) is an optional follow-up (inbox/admin badges have no backend source).
+  - lint + tsc + build clean.
+
 2026-06-12 (9): Converted gym-owner/revenue and handled gym-owner/payouts — mock-page sweep COMPLETE (8 converted, 1 backend-blocked).
   - gym-owner/revenue: split page.tsx (metadata) + RevenueClient.tsx. Real KPIs (revenue today/7d/30d, active members, active subscriptions) from checkinsService.getOrgDashboardStats(); real revenue-by-plan breakdown computed from getOrgMembershipSubscriptions() amount_paid grouped by plan. Currency via useRegion().formatAmount(). DROPPED (no API): MRR/ARPU/LTV/refunds KPIs, the SVG revenue timeseries chart, per-location and per-coach breakdowns, time-range filter.
   - gym-owner/payouts: BACKEND-BLOCKED — there is no payouts API (payment.ts only generates a tx ref; providerBilling.listInvoices is the gym's own SaaS bill, not payouts to them). Replaced the fabricated hero/KPIs/payout-history table with an honest "Payout history coming soon" empty state; kept the Add-bank-account modal so providers can still set up their destination.

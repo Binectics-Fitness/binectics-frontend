@@ -31,11 +31,11 @@ interface SideItem {
 const SIDEBAR: { label: string; items: SideItem[] }[] = [
   { label: "Moderate", items: [
     { name: "Overview", href: "/admin/dashboard", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
-    { name: "Listings", badge: "38", alert: true, href: "/admin/listings", icon: <I d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" /> },
-    { name: "Reviews", badge: "12", href: "/admin/reviews", icon: <I d="m13 3 1 7 7 1-7 1-1 7-1-7-7-1 7-1z" /> },
-    { name: "Fraud", badge: "4", alert: true, href: "/admin/fraud", icon: <I><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></I> },
-    { name: "Disputes", badge: "7", href: "/admin/disputes", icon: <I><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M16 8 8 16M8 8l8 8"/></I> },
-    { name: "Tickets", badge: "42", href: "/admin/tickets", icon: <I><path d="M3 21l1.6-4.7A9 9 0 1 1 12 21z"/></I> },
+    { name: "Listings", href: "/admin/listings", icon: <I d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" /> },
+    { name: "Reviews", href: "/admin/reviews", icon: <I d="m13 3 1 7 7 1-7 1-1 7-1-7-7-1 7-1z" /> },
+    { name: "Fraud", href: "/admin/fraud", icon: <I><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></I> },
+    { name: "Disputes", href: "/admin/disputes", icon: <I><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M16 8 8 16M8 8l8 8"/></I> },
+    { name: "Tickets", href: "/admin/tickets", icon: <I><path d="M3 21l1.6-4.7A9 9 0 1 1 12 21z"/></I> },
   ]},
   { label: "Platform", items: [
     { name: "Countries", href: "/admin/countries", icon: <I><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></I> },
