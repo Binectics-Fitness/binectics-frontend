@@ -13,6 +13,7 @@
 
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { PaymentGateway } from "@/lib/types";
+import { formatCurrency as formatMoney } from "@/utils/format";
 
 // ==================== GATEWAY SELECTION ====================
 
@@ -162,16 +163,7 @@ export function generateTxRef(prefix = "BN"): string {
 
 /** Format price for display */
 export function formatPrice(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: currency.toUpperCase(),
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  } catch {
-    return `${currency.toUpperCase()} ${amount.toFixed(2)}`;
-  }
+  return formatMoney(amount, currency.toUpperCase());
 }
 
 /** Get human-readable gateway name */

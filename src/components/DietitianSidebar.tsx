@@ -69,8 +69,8 @@ const navItems: NavItem[] = [
 
 const roleBadge: RoleBadge = {
   label: "Dietitian",
-  bgClass: "bg-accent-purple-50",
-  textClass: "text-accent-purple-700",
+  bgClass: "bg-dietitian-soft",
+  textClass: "text-diet",
 };
 
 export default function DietitianSidebar() {

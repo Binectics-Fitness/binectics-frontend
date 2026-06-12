@@ -116,17 +116,27 @@ export const userStorage = {
       document.cookie =
         "must_change_password=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
+
+    // Mirror onboarding status so middleware can route correctly.
+    if (user.is_onboarding_complete) {
+      document.cookie = `onboarding_complete=1; path=/; max-age=${maxAge}; SameSite=Lax`;
+    } else {
+      document.cookie =
+        "onboarding_complete=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
   },
 
   remove(): void {
     if (!isBrowser()) return;
     localStorage.removeItem(STORAGE_KEYS.USER);
 
-    // Also remove user_role + must_change_password cookies
+    // Also remove user_role + must_change_password + onboarding_complete cookies
     document.cookie =
       "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     document.cookie =
       "must_change_password=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie =
+      "onboarding_complete=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   },
 };
 

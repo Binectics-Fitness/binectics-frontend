@@ -1,289 +1,212 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { useQueryClient } from "@tanstack/react-query";
-import TrainerSidebar from "@/components/TrainerSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import TimezoneHelpBadge from "@/components/TimezoneHelpBadge";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { useProviderBookings } from "@/lib/queries/consultations";
-import { queryKeys } from "@/lib/queries/keys";
+import { useEffect, useMemo, useState } from "react";
+import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import SearchableSelect from "@/components/SearchableSelect";
 import {
   consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
+  type ConsultationType,
 } from "@/lib/api/consultations";
-import { UserRole } from "@/lib/types";
-import { getClientTimezone } from "@/utils/format";
 
-type TabKey = "upcoming" | "past" | "all";
+const TIME_RANGE_OPTIONS = [
+  { label: "This month", value: "This month" },
+  { label: "Last 3 months", value: "Last 3 months" },
+  { label: "All time", value: "All time" },
+];
 
-const STATUS_COLORS: Record<ConsultationBookingStatus, string> = {
-  [ConsultationBookingStatus.PENDING]: "bg-yellow-100 text-yellow-800",
-  [ConsultationBookingStatus.CONFIRMED]: "bg-blue-100 text-blue-800",
-  [ConsultationBookingStatus.COMPLETED]: "bg-green-100 text-green-800",
-  [ConsultationBookingStatus.CANCELLED]: "bg-red-100 text-red-800",
-  [ConsultationBookingStatus.NO_SHOW]: "bg-neutral-100 text-neutral-800",
-};
-
-function formatDateTime(iso: string, tz: string): string {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      timeZone: tz,
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return new Date(iso).toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  }
+function formatDate(value: string) {
+  return new Date(value).toLocaleString("en-GB", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-export default function TrainerSessionsPage() {
-  const { user, isLoading: authLoading } = useRoleGuard(UserRole.TRAINER);
-  const userTimezone = getClientTimezone();
-  const queryClient = useQueryClient();
+function clientLabel(booking: ConsultationBooking) {
+  return `Client ${booking.clientUserId.slice(-6).toUpperCase()}`;
+}
 
-  const [tab, setTab] = useState<TabKey>("upcoming");
-  const [error, setError] = useState("");
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+export default function TrainerSessionsListPage() {
+  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
+  const [typesById, setTypesById] = useState<Record<string, string>>({});
+  const [query, setQuery] = useState("");
+  const [timeRange, setTimeRange] = useState("This month");
+  const [clientFilter, setClientFilter] = useState("All clients");
+  const [loading, setLoading] = useState(true);
 
-  const now = useMemo(() => new Date().toISOString(), []);
-  const bookingParams = useMemo(() => {
-    if (tab === "upcoming") return { from: now };
-    if (tab === "past") return { to: now };
-    return {};
-  }, [tab, now]);
+  useEffect(() => {
+    let mounted = true;
 
-  const { data: rawBookings = [], isLoading } = useProviderBookings(
-    bookingParams,
-    !authLoading && !!user,
-  );
+    const load = async () => {
+      setLoading(true);
+      const now = new Date();
+      const params: { from?: string } = {};
 
-  const bookings = useMemo(() => {
-    const sorted = [...rawBookings].sort((a, b) => {
-      const dateA = new Date(a.startsAt).getTime();
-      const dateB = new Date(b.startsAt).getTime();
-      return tab === "past" ? dateB - dateA : dateA - dateB;
+      if (timeRange === "This month") {
+        params.from = new Date(now.getFullYear(), now.getMonth(), 1)
+          .toISOString()
+          .slice(0, 10);
+      } else if (timeRange === "Last 3 months") {
+        params.from = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+          .toISOString()
+          .slice(0, 10);
+      }
+
+      const [bookingRes, typesRes] = await Promise.all([
+        consultationsService.getProviderBookings(params),
+        consultationsService.getTypes({ includeInactive: true }),
+      ]);
+
+      if (!mounted) return;
+
+      if (bookingRes.success && bookingRes.data) {
+        setBookings(
+          bookingRes.data.filter(
+            (b) =>
+              b.status === ConsultationBookingStatus.COMPLETED ||
+              b.status === ConsultationBookingStatus.NO_SHOW,
+          ),
+        );
+      } else {
+        setBookings([]);
+      }
+
+      if (typesRes.success && typesRes.data) {
+        const map = typesRes.data.reduce<Record<string, string>>(
+          (acc, item: ConsultationType) => {
+            acc[item.id] = item.name;
+            return acc;
+          },
+          {},
+        );
+        setTypesById(map);
+      } else {
+        setTypesById({});
+      }
+
+      setLoading(false);
+    };
+
+    void load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [timeRange]);
+
+  const clientOptions = useMemo(() => {
+    const unique = new Set(bookings.map((b) => clientLabel(b)));
+    return [
+      { label: "All clients", value: "All clients" },
+      ...Array.from(unique).map((label) => ({ label, value: label })),
+    ];
+  }, [bookings]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return bookings.filter((b) => {
+      const label = clientLabel(b);
+      const type = typesById[b.consultationTypeId] ?? "Consultation";
+
+      if (clientFilter !== "All clients" && label !== clientFilter) {
+        return false;
+      }
+
+      if (!q) return true;
+      return (
+        label.toLowerCase().includes(q) ||
+        type.toLowerCase().includes(q) ||
+        (b.notes ?? "").toLowerCase().includes(q)
+      );
     });
-    return sorted;
-  }, [rawBookings, tab]);
-
-  const invalidateBookings = () =>
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.consultations.all,
-    });
-
-  const handleComplete = async (id: string) => {
-    setActionLoadingId(id);
-    const response = await consultationsService.completeBooking(id);
-    if (response.success) {
-      await invalidateBookings();
-    } else {
-      setError(response.message || "Failed to complete session");
-    }
-    setActionLoadingId(null);
-  };
-
-  const handleCancel = async (id: string) => {
-    setActionLoadingId(id);
-    const response = await consultationsService.cancelBooking(id, {
-      reason: "Cancelled by trainer",
-    });
-    if (response.success) {
-      await invalidateBookings();
-    } else {
-      setError(response.message || "Failed to cancel session");
-    }
-    setActionLoadingId(null);
-  };
-
-  if (authLoading) return <DashboardLoading />;
-
-  const tabs: { key: TabKey; label: string }[] = [
-    { key: "upcoming", label: "Upcoming" },
-    { key: "past", label: "Past" },
-    { key: "all", label: "All" },
-  ];
+  }, [bookings, clientFilter, query, typesById]);
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <TrainerSidebar />
+    <TrainerDashboardShell
+      activeItem="Calendar"
+      crumb="Sessions log"
+      actions={<button className="btn-ghost-v2 sm">Export CSV</button>}
+    >
+      {/* Page header */}
+      <div>
+        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>Sessions log</h1>
+        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>{loading ? "Loading sessions..." : `${filtered.length} sessions found`}</p>
+      </div>
 
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        {/* Header with timezone info */}
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-          <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">
-                Sessions & Schedule
-              </h1>
-              <TimezoneHelpBadge
-                message="Session times are shown in your local browser timezone. Availability rules you set in Consultation Availability are automatically converted for clients."
-                label="Scheduling timezone help"
-              />
-            </div>
-            <Link
-              href="/dashboard/trainer/consultations"
-              className="inline-flex items-center rounded-lg bg-accent-yellow-500 px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent-yellow-600"
-            >
-              Manage Availability
-            </Link>
+      {/* Card with filters + table */}
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        {/* Filter bar */}
+        <div className="flex flex-col sm:flex-row gap-2 p-5 pb-3.5">
+          <input
+            placeholder="Search by client name or note…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1 h-9 px-3.5 rounded-(--r-2) text-[13.5px]"
+            style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)", fontFamily: "inherit", outline: "none" }}
+          />
+          <div className="w-full sm:w-40">
+            <SearchableSelect value={timeRange} onChange={setTimeRange} options={TIME_RANGE_OPTIONS} placeholder="Time range" />
           </div>
-
-          <p className="text-sm text-foreground/60">
-            Your current browser timezone is{" "}
-            <span className="font-semibold text-foreground">
-              {userTimezone}
-            </span>
-            . All session times below are displayed in this timezone.
-          </p>
-        </section>
-
-        {/* Tabs */}
-        <div className="mb-6 flex gap-1 rounded-lg bg-white p-1 shadow-[var(--shadow-card)] w-fit">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                tab === t.key
-                  ? "bg-accent-yellow-500 text-foreground"
-                  : "text-foreground/60 hover:text-foreground"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+          <div className="w-full sm:w-40">
+            <SearchableSelect value={clientFilter} onChange={setClientFilter} options={clientOptions} placeholder="Filter client" />
+          </div>
         </div>
 
-        {error && (
-          <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 mb-6">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-[13.5px]">
+            <thead>
+              <tr style={{ background: "var(--bg-2)", borderBottom: "1px solid var(--border)" }}>
+                {["Date", "Client", "Type", "Duration", "Top set", "Status"].map((h) => (
+                  <th key={h} className="px-3.5 py-2.5 text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((s, i) => {
+                const duration = Math.max(
+                  0,
+                  Math.round(
+                    (new Date(s.endsAt).getTime() -
+                      new Date(s.startsAt).getTime()) /
+                      60000,
+                  ),
+                );
+                const label = clientLabel(s);
+                const typeLabel =
+                  typesById[s.consultationTypeId] ?? "Consultation";
+                const topSet = s.notes?.trim() || "No notes";
 
-        {/* Content */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-yellow-500 border-t-transparent" />
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="rounded-2xl bg-white p-12 shadow-[var(--shadow-card)] text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-yellow-100">
-              <svg
-                className="h-8 w-8 text-accent-yellow-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">
-              No {tab === "all" ? "" : tab} sessions
-            </h3>
-            <p className="text-sm text-foreground/60 mb-4">
-              {tab === "upcoming"
-                ? "You don't have any upcoming sessions. Set up your availability so clients can book."
-                : tab === "past"
-                  ? "No past sessions found."
-                  : "No sessions found."}
-            </p>
-            {tab === "upcoming" && (
-              <Link
-                href="/dashboard/trainer/consultations"
-                className="inline-flex items-center rounded-lg bg-accent-yellow-500 px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent-yellow-600"
-              >
-                Set Up Availability
-              </Link>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {bookings.map((booking) => {
-              const isPending =
-                booking.status === ConsultationBookingStatus.PENDING;
-              const isConfirmed =
-                booking.status === ConsultationBookingStatus.CONFIRMED;
-              const canComplete =
-                isConfirmed && new Date(booking.startsAt) <= new Date();
-              const canCancel = isPending || isConfirmed;
-              const isActionLoading = actionLoadingId === booking.id;
-
-              return (
-                <div
-                  key={booking.id}
-                  className="rounded-xl bg-white p-4 sm:p-6 shadow-[var(--shadow-card)]"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[booking.status]}`}
-                        >
-                          {booking.status}
-                        </span>
-                        {booking.consultationTypeId && (
-                          <span className="text-xs text-foreground/50">
-                            Type: {booking.consultationTypeId.slice(-6)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {formatDateTime(booking.startsAt, userTimezone)} –{" "}
-                        {formatDateTime(booking.endsAt, userTimezone)}
-                      </p>
-                      <p className="text-xs text-foreground/50 mt-0.5">
-                        Client: {booking.clientUserId.slice(-8)}
-                      </p>
-                      {booking.notes && (
-                        <p className="text-sm text-foreground/60 mt-1">
-                          {booking.notes}
-                        </p>
-                      )}
-                      {booking.cancelReason && (
-                        <p className="text-xs text-red-600 mt-1">
-                          Cancel reason: {booking.cancelReason}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2 flex-shrink-0">
-                      {canComplete && (
-                        <button
-                          onClick={() => handleComplete(booking.id)}
-                          disabled={isActionLoading}
-                          className="rounded-lg bg-green-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-600 disabled:opacity-50"
-                        >
-                          {isActionLoading ? "..." : "Complete"}
-                        </button>
-                      )}
-                      {canCancel && (
-                        <button
-                          onClick={() => handleCancel(booking.id)}
-                          disabled={isActionLoading}
-                          className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-50"
-                        >
-                          {isActionLoading ? "..." : "Cancel"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
-    </div>
+                return (
+                <tr key={s.id} className="cursor-pointer" style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}>
+                  <td className="px-3.5 py-3 font-mono" style={{ color: "var(--fg-2)" }}>{formatDate(s.startsAt)}</td>
+                  <td className="px-3.5 py-3 font-medium" style={{ color: "var(--ink)" }}>{label}</td>
+                  <td className="px-3.5 py-3" style={{ color: "var(--ink)" }}>{typeLabel}</td>
+                  <td className="px-3.5 py-3 font-mono" style={{ color: "var(--ink)" }}>{duration} min</td>
+                  <td className="px-3.5 py-3 font-mono text-[12.5px]" style={{ color: "var(--ink)" }}>{topSet}</td>
+                  <td className="px-3.5 py-3">
+                    <span
+                      className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full"
+                      style={
+                        s.status === ConsultationBookingStatus.COMPLETED
+                          ? { background: "var(--signal-soft)", color: "var(--signal-ink)" }
+                          : { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" }
+                      }
+                    >
+                      {s.status.toLowerCase().replace("_", " ")}
+                    </span>
+                  </td>
+                </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </TrainerDashboardShell>
   );
 }

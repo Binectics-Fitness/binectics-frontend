@@ -1,29 +1,10 @@
-"use client";
-
-import { usePathname } from "next/navigation";
-import Navbar from "./Navbar";
-import Footer from "./Footer";
-
 export default function ConditionalLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
 
-  // Hide Navbar and Footer for dashboard pages and form submissions
-  const isDashboard = pathname?.startsWith("/dashboard");
-  const isFormSubmit = pathname?.match(/^\/forms\/[^\/]+\/submit$/);
-
-  if (isDashboard || isFormSubmit) {
-    return <>{children}</>;
-  }
-
-  return (
-    <>
-      <Navbar />
-      {children}
-      <Footer />
-    </>
-  );
+  // Every page and not-found handle their own chrome (MarketingTopbar, dashboard shells, etc.)
+  // The legacy Navbar/Footer wrapper is no longer used.
+  return <div id="main-content">{children}</div>;
 }

@@ -1,326 +1,517 @@
 "use client";
 
-import { useState } from "react";
-import DashboardSidebar from "@/components/DashboardSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { EmptyState } from "@/components/EmptyState";
-import { Button } from "@/components/Button";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { loyaltyService } from "@/lib/api/loyalty";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { AsyncSpinner } from "@/components/ds";
 import {
   LoyaltyEventType,
   LoyaltyRedemptionStatus,
-  UserRole,
+  type LoyaltyBalance,
   type LoyaltyPointsTransaction,
   type LoyaltyRedemption,
   type LoyaltyReward,
 } from "@/lib/types";
-import {
-  useLoyaltyBalance,
-  useLoyaltyHistory,
-  useLoyaltyRewards,
-  useMyLoyaltyRedemptions,
-  useRedeemReward,
-} from "@/lib/queries/loyalty";
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+function rewardName(reward: string | LoyaltyReward): string {
+  if (typeof reward === "string") return "Reward";
+  return reward.name;
 }
 
-const EVENT_LABEL: Record<LoyaltyEventType, string> = {
-  [LoyaltyEventType.SUBSCRIPTION_PURCHASE]: "Subscription purchase",
-  [LoyaltyEventType.GYM_CHECK_IN]: "Gym check-in",
-  [LoyaltyEventType.JOURNAL_LOGGED]: "Journal entry",
-  [LoyaltyEventType.REWARD_REDEMPTION]: "Reward redemption",
-  [LoyaltyEventType.ADMIN_ADJUSTMENT]: "Admin adjustment",
-  [LoyaltyEventType.SIGNUP_BONUS]: "Signup bonus",
-};
-
-const REDEMPTION_BADGE: Record<LoyaltyRedemptionStatus, string> = {
-  [LoyaltyRedemptionStatus.PENDING]: "bg-yellow-100 text-yellow-800",
-  [LoyaltyRedemptionStatus.FULFILLED]: "bg-primary-100 text-primary-700",
-  [LoyaltyRedemptionStatus.CANCELLED]: "bg-neutral-100 text-neutral-700",
-};
-
-function getRewardName(redemption: LoyaltyRedemption): string {
-  if (
-    typeof redemption.reward_id === "object" &&
-    redemption.reward_id !== null
-  ) {
-    return (redemption.reward_id as LoyaltyReward).name;
-  }
-  return "Reward";
-}
-
-export default function LoyaltyPage() {
-  const { isLoading, isAuthorized } = useRoleGuard(UserRole.USER);
-  const [redeemError, setRedeemError] = useState<string | null>(null);
-  const [redeemSuccess, setRedeemSuccess] = useState<string | null>(null);
-
-  const { data: balanceData, isLoading: balanceLoading } = useLoyaltyBalance(
-    !isLoading && isAuthorized,
-  );
-  const { data: rewards = [], isLoading: rewardsLoading } = useLoyaltyRewards(
-    undefined,
-    !isLoading && isAuthorized,
-  );
-  const { data: history = [], isLoading: historyLoading } = useLoyaltyHistory(
-    25,
-    0,
-    !isLoading && isAuthorized,
-  );
-  const { data: redemptions = [], isLoading: redemptionsLoading } =
-    useMyLoyaltyRedemptions(!isLoading && isAuthorized);
-
-  const redeem = useRedeemReward();
-  const balance = balanceData?.balance ?? 0;
-
-  const handleRedeem = async (reward: LoyaltyReward) => {
-    setRedeemError(null);
-    setRedeemSuccess(null);
-    if (balance < reward.points_cost) {
-      setRedeemError("You don't have enough points for this reward.");
-      return;
-    }
-    const res = await redeem.mutateAsync(reward._id);
-    if (res.success) {
-      setRedeemSuccess(`Redeemed "${reward.name}" successfully!`);
-    } else {
-      setRedeemError(res.message || "Could not redeem reward. Please try again.");
-    }
+function eventTypeLabel(eventType: LoyaltyEventType): string {
+  const labels: Record<LoyaltyEventType, string> = {
+    [LoyaltyEventType.SUBSCRIPTION_PURCHASE]: "Subscription",
+    [LoyaltyEventType.GYM_CHECK_IN]: "Gym check-in",
+    [LoyaltyEventType.JOURNAL_LOGGED]: "Journal entry",
+    [LoyaltyEventType.REWARD_REDEMPTION]: "Reward redeemed",
+    [LoyaltyEventType.ADMIN_ADJUSTMENT]: "Manual adjustment",
+    [LoyaltyEventType.SIGNUP_BONUS]: "Signup bonus",
   };
+  return labels[eventType] ?? eventType;
+}
 
-  if (isLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
+function formatDate(value: string | null | undefined): string {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+export default function LoyaltyCenterPage() {
+  const [balance, setBalance] = useState<LoyaltyBalance | null>(null);
+  const [history, setHistory] = useState<LoyaltyPointsTransaction[]>([]);
+  const [rewards, setRewards] = useState<LoyaltyReward[]>([]);
+  const [redemptions, setRedemptions] = useState<LoyaltyRedemption[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [redeemMessage, setRedeemMessage] = useState<string | null>(null);
+  const [redeemingId, setRedeemingId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"rewards" | "history" | "redemptions">("rewards");
+
+
+
+  // Load data once on mount and when loadData changes - using isMounted pattern
+  useEffect(() => {
+    let isMounted = true;
+    const run = async () => {
+      if (isMounted) {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const [balanceRes, historyRes, rewardsRes, redemptionsRes] =
+            await Promise.all([
+              loyaltyService.getBalance(),
+              loyaltyService.getHistory(25, 0),
+              loyaltyService.listRewards(),
+              loyaltyService.listMyRedemptions(),
+            ]);
+
+          if (!isMounted) return;
+          if (balanceRes.success && balanceRes.data) setBalance(balanceRes.data);
+          if (historyRes.success && Array.isArray(historyRes.data)) setHistory(historyRes.data);
+          if (rewardsRes.success && Array.isArray(rewardsRes.data)) setRewards(rewardsRes.data);
+          if (redemptionsRes.success && Array.isArray(redemptionsRes.data)) setRedemptions(redemptionsRes.data);
+        } catch (err) {
+          if (isMounted) setError(err instanceof Error ? err.message : "Failed to load loyalty data");
+        } finally {
+          if (isMounted) setIsLoading(false);
+        }
+      }
+    };
+    void run();
+    return () => { isMounted = false; };
+  }, []);
+
+  async function handleRedeem(rewardId: string) {
+    setRedeemingId(rewardId);
+    setRedeemMessage(null);
+    setError(null);
+
+    try {
+      const response = await loyaltyService.redeemReward(rewardId);
+      if (response.success) {
+        setRedeemMessage("Reward redeemed successfully. Check your redemptions tab.");
+        // Refresh balance and redemptions
+        const [balanceRes, redemptionsRes] = await Promise.all([
+          loyaltyService.getBalance(),
+          loyaltyService.listMyRedemptions(),
+        ]);
+        if (balanceRes.success && balanceRes.data) setBalance(balanceRes.data);
+        if (redemptionsRes.success && Array.isArray(redemptionsRes.data)) setRedemptions(redemptionsRes.data);
+      } else {
+        setError("Failed to redeem reward. You may not have enough points.");
+      }
+    } catch {
+      setError("An error occurred while redeeming the reward.");
+    } finally {
+      setRedeemingId(null);
+    }
+  }
+
+  const activeRewards = useMemo(
+    () => rewards.filter((r) => r.is_active),
+    [rewards],
+  );
+
+  const pendingRedemptions = useMemo(
+    () =>
+      redemptions.filter((r) => r.status === LoyaltyRedemptionStatus.PENDING),
+    [redemptions],
+  );
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <DashboardSidebar />
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-black text-foreground mb-2">
-              Loyalty & Rewards
-            </h1>
-            <p className="text-foreground/60">
-              Earn points for subscriptions, check-ins, and journal logs. Redeem
-              them for exclusive rewards.
-            </p>
+    <GymDashboardShell activeItem="Loyalty" crumb="Loyalty">
+      <div className="flex flex-col gap-5">
+        <div>
+          <div
+            className="font-mono text-[11px] uppercase tracking-[0.06em]"
+            style={{ color: "var(--fg-3)" }}
+          >
+            Member
           </div>
-
-          {/* Balance card */}
-          <div className="mb-8 rounded-2xl bg-accent-yellow-500 p-6 sm:p-8 shadow-[var(--shadow-card)]">
-            <p className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
-              Your balance
-            </p>
-            <p className="mt-2 text-5xl font-black text-foreground">
-              {balanceLoading ? "—" : balance.toLocaleString()}
-              <span className="ml-2 text-lg font-semibold text-foreground/70">
-                points
-              </span>
-            </p>
-            <p className="mt-3 text-sm text-foreground/70">
-              Earn 0.1 points per $1 on subscriptions, 10 points per check-in,
-              and 5 points per journal entry.
-            </p>
-          </div>
-
-          {/* Feedback banners */}
-          {redeemError && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-              {redeemError}
-            </div>
-          )}
-          {redeemSuccess && (
-            <div className="mb-4 rounded-lg bg-primary-50 border border-primary-200 px-4 py-3 text-sm text-primary-700">
-              {redeemSuccess}
-            </div>
-          )}
-
-          {/* Rewards */}
-          <section className="mb-10">
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              Available rewards
-            </h2>
-            {rewardsLoading ? (
-              <p className="text-sm text-foreground/60">Loading rewards…</p>
-            ) : rewards.length === 0 ? (
-              <EmptyState
-                accent="yellow"
-                compact
-                title="No rewards yet"
-                description="Check back soon — new rewards are added regularly."
-              />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {rewards.map((reward) => {
-                  const canAfford = balance >= reward.points_cost;
-                  const soldOut =
-                    reward.max_redemptions != null &&
-                    reward.redemption_count >= reward.max_redemptions;
-                  return (
-                    <div
-                      key={reward._id}
-                      className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden flex flex-col"
-                    >
-                      {reward.image_url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={reward.image_url}
-                          alt={reward.name}
-                          className="w-full h-32 object-cover"
-                        />
-                      )}
-                      <div className="p-5 flex flex-col flex-1">
-                        <h3 className="font-bold text-foreground">
-                          {reward.name}
-                        </h3>
-                        {reward.description && (
-                          <p className="mt-1 text-sm text-foreground/60 line-clamp-3">
-                            {reward.description}
-                          </p>
-                        )}
-                        <div className="mt-3 flex items-center gap-2">
-                          <span className="text-lg font-black text-accent-yellow-700">
-                            {reward.points_cost.toLocaleString()}
-                          </span>
-                          <span className="text-xs font-medium text-foreground/60">
-                            points
-                          </span>
-                        </div>
-                        <div className="mt-4 mt-auto pt-3">
-                          <Button
-                            variant="accent-yellow"
-                            size="sm"
-                            fullWidth
-                            disabled={
-                              !canAfford ||
-                              soldOut ||
-                              redeem.isPending ||
-                              !reward.is_active
-                            }
-                            isLoading={
-                              redeem.isPending && redeem.variables === reward._id
-                            }
-                            onClick={() => handleRedeem(reward)}
-                          >
-                            {soldOut
-                              ? "Sold out"
-                              : !reward.is_active
-                                ? "Unavailable"
-                                : !canAfford
-                                  ? `Need ${(reward.points_cost - balance).toLocaleString()} more`
-                                  : "Redeem"}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          {/* Redemptions */}
-          <section className="mb-10">
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              My redemptions
-            </h2>
-            {redemptionsLoading ? (
-              <p className="text-sm text-foreground/60">Loading…</p>
-            ) : redemptions.length === 0 ? (
-              <EmptyState
-                accent="purple"
-                compact
-                title="No redemptions yet"
-                description="Once you redeem a reward, it will appear here with a redemption code."
-              />
-            ) : (
-              <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden">
-                <ul className="divide-y divide-neutral-100">
-                  {redemptions.map((r) => (
-                    <li
-                      key={r._id}
-                      className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
-                    >
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {getRewardName(r)}
-                        </p>
-                        <p className="text-xs text-foreground/60 mt-0.5">
-                          {formatDate(r.created_at)} ·{" "}
-                          {r.points_spent.toLocaleString()} points
-                          {r.redemption_code && (
-                            <>
-                              {" · Code: "}
-                              <span className="font-mono text-foreground">
-                                {r.redemption_code}
-                              </span>
-                            </>
-                          )}
-                        </p>
-                      </div>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${REDEMPTION_BADGE[r.status]}`}
-                      >
-                        {r.status}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </section>
-
-          {/* History */}
-          <section>
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              Recent activity
-            </h2>
-            {historyLoading ? (
-              <p className="text-sm text-foreground/60">Loading…</p>
-            ) : history.length === 0 ? (
-              <EmptyState
-                accent="blue"
-                compact
-                title="No activity yet"
-                description="Subscribe to a plan or check into a gym to start earning points."
-              />
-            ) : (
-              <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden">
-                <ul className="divide-y divide-neutral-100">
-                  {history.map((tx: LoyaltyPointsTransaction) => (
-                    <li
-                      key={tx._id}
-                      className="p-4 sm:p-5 flex items-center justify-between gap-3"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {EVENT_LABEL[tx.event_type] ?? tx.event_type}
-                        </p>
-                        <p className="text-xs text-foreground/60 mt-0.5">
-                          {formatDate(tx.created_at)}
-                          {tx.note ? ` · ${tx.note}` : ""}
-                        </p>
-                      </div>
-                      <p
-                        className={`text-sm font-bold ${tx.points >= 0 ? "text-primary-700" : "text-red-600"}`}
-                      >
-                        {tx.points >= 0 ? "+" : ""}
-                        {tx.points.toLocaleString()}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </section>
+          <h1
+            className="text-[30px] font-medium mt-1"
+            style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
+          >
+            Loyalty center
+          </h1>
+          <p className="text-sm mt-2" style={{ color: "var(--fg-3)" }}>
+            Earn points through activity and redeem them for rewards.
+          </p>
         </div>
-      </main>
-    </div>
+
+        {error && (
+          <div
+            className="rounded-(--r-3) p-3 text-sm"
+            style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}
+          >
+            {error}
+          </div>
+        )}
+
+        {redeemMessage && (
+          <div
+            className="rounded-(--r-3) p-3 text-sm"
+            style={{ border: "1px solid var(--signal)", background: "var(--signal-soft)", color: "var(--signal)" }}
+          >
+            {redeemMessage}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            className="rounded-(--r-3) p-4"
+            style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+          >
+            <div
+              className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+              style={{ color: "var(--fg-3)" }}
+            >
+              Current balance
+            </div>
+            <div
+              className="text-[36px] font-medium mt-2 tabular-nums"
+              style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
+            >
+              {balance ? balance.balance.toLocaleString() : "-"}
+            </div>
+            <div className="text-xs mt-1" style={{ color: "var(--fg-3)" }}>
+              points
+            </div>
+          </div>
+
+          <div
+            className="rounded-(--r-3) p-4"
+            style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+          >
+            <div
+              className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+              style={{ color: "var(--fg-3)" }}
+            >
+              Active rewards
+            </div>
+            <div
+              className="text-[36px] font-medium mt-2 tabular-nums"
+              style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
+            >
+              {activeRewards.length}
+            </div>
+            <div className="text-xs mt-1" style={{ color: "var(--fg-3)" }}>
+              available to redeem
+            </div>
+          </div>
+
+          <div
+            className="rounded-(--r-3) p-4"
+            style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+          >
+            <div
+              className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+              style={{ color: "var(--fg-3)" }}
+            >
+              Pending redemptions
+            </div>
+            <div
+              className="text-[36px] font-medium mt-2 tabular-nums"
+              style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
+            >
+              {pendingRedemptions.length}
+            </div>
+            <div className="text-xs mt-1" style={{ color: "var(--fg-3)" }}>
+              awaiting fulfilment
+            </div>
+          </div>
+
+          <div
+            className="rounded-(--r-3) p-4"
+            style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+          >
+            <div
+              className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+              style={{ color: "var(--fg-3)" }}
+            >
+              Total transactions
+            </div>
+            <div
+              className="text-[36px] font-medium mt-2 tabular-nums"
+              style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
+            >
+              {history.length}
+            </div>
+            <div className="text-xs mt-1" style={{ color: "var(--fg-3)" }}>
+              points earned/spent
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="rounded-(--r-3) overflow-hidden"
+          style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+        >
+          <div
+            className="flex gap-1 p-2"
+            style={{ borderBottom: "1px solid var(--border)" }}
+          >
+            {(["rewards", "history", "redemptions"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className="rounded-(--r-2) px-3 py-1.5 text-sm font-medium capitalize"
+                style={{
+                  background:
+                    activeTab === tab ? "var(--ink)" : "transparent",
+                  color:
+                    activeTab === tab ? "var(--bg)" : "var(--fg-2)",
+                  cursor: "pointer",
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="p-4">
+            {isLoading ? (
+              <AsyncSpinner label="Loading rewards" />
+            ) : (
+              <>
+                {activeTab === "rewards" && (
+                  <>
+                    {activeRewards.length === 0 ? (
+                      <p className="text-sm" style={{ color: "var(--fg-3)" }}>
+                        No rewards available at the moment.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {activeRewards.map((reward) => {
+                          const canAfford = balance
+                            ? balance.balance >= reward.points_cost
+                            : false;
+
+                          return (
+                            <div
+                              key={reward._id}
+                              className="rounded-(--r-3) p-4 flex flex-col gap-3"
+                              style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
+                            >
+                              {reward.image_url && (
+                                <div className="relative w-full h-32 rounded-(--r-2) overflow-hidden">
+                                  <Image
+                                    src={reward.image_url}
+                                    alt={reward.name}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                  />
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-medium" style={{ color: "var(--ink)" }}>
+                                  {reward.name}
+                                </div>
+                                {reward.description && (
+                                  <div
+                                    className="text-sm mt-1"
+                                    style={{ color: "var(--fg-3)" }}
+                                  >
+                                    {reward.description}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span
+                                    className="font-mono text-sm font-medium tabular-nums"
+                                    style={{ color: "var(--signal)" }}
+                                  >
+                                    {reward.points_cost.toLocaleString()} pts
+                                  </span>
+                                  {reward.max_redemptions && (
+                                    <span className="text-xs ml-2" style={{ color: "var(--fg-3)" }}>
+                                      {reward.redemption_count}/{reward.max_redemptions} redeemed
+                                    </span>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRedeem(reward._id)}
+                                  disabled={
+                                    !canAfford || redeemingId === reward._id
+                                  }
+                                  className="rounded-(--r-2) px-3 py-1.5 text-sm font-medium"
+                                  style={{
+                                    background: canAfford
+                                      ? "var(--signal)"
+                                      : "var(--bg-3)",
+                                    color: canAfford ? "var(--signal-ink)" : "var(--fg-4)",
+                                    cursor: canAfford ? "pointer" : "not-allowed",
+                                    opacity:
+                                      redeemingId === reward._id ? 0.7 : 1,
+                                  }}
+                                >
+                                  {redeemingId === reward._id
+                                    ? "Redeeming..."
+                                    : canAfford
+                                      ? "Redeem"
+                                      : "Not enough points"}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {activeTab === "history" && (
+                  <>
+                    {history.length === 0 ? (
+                      <p className="text-sm" style={{ color: "var(--fg-3)" }}>
+                        No transaction history yet.
+                      </p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[600px] border-collapse text-sm">
+                          <thead>
+                            <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                              <th className="text-left py-2 pr-4" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                                Event
+                              </th>
+                              <th className="text-left py-2 pr-4" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                                Points
+                              </th>
+                              <th className="text-left py-2 pr-4" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                                Balance after
+                              </th>
+                              <th className="text-left py-2" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                                Date
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {history.map((tx) => (
+                              <tr
+                                key={tx._id}
+                                style={{ borderBottom: "1px solid var(--border)" }}
+                              >
+                                <td className="py-3 pr-4" style={{ color: "var(--ink)" }}>
+                                  <div>{eventTypeLabel(tx.event_type)}</div>
+                                  {tx.note && (
+                                    <div
+                                      className="text-xs"
+                                      style={{ color: "var(--fg-3)" }}
+                                    >
+                                      {tx.note}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="py-3 pr-4">
+                                  <span
+                                    className="font-mono font-medium tabular-nums"
+                                    style={{
+                                      color:
+                                        tx.points >= 0
+                                          ? "var(--signal)"
+                                          : "var(--danger)",
+                                    }}
+                                  >
+                                    {tx.points >= 0 ? "+" : ""}
+                                    {tx.points.toLocaleString()}
+                                  </span>
+                                </td>
+                                <td
+                                  className="py-3 pr-4 font-mono text-sm tabular-nums"
+                                  style={{ color: "var(--fg-2)" }}
+                                >
+                                  {tx.balance_after.toLocaleString()}
+                                </td>
+                                <td className="py-3" style={{ color: "var(--fg-2)" }}>
+                                  {formatDate(tx.created_at)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {activeTab === "redemptions" && (
+                  <>
+                    {redemptions.length === 0 ? (
+                      <p className="text-sm" style={{ color: "var(--fg-3)" }}>
+                        No redemptions yet.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {redemptions.map((redemption) => (
+                          <div
+                            key={redemption._id}
+                            className="rounded-(--r-2) p-4 flex items-center justify-between gap-4"
+                            style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
+                          >
+                            <div>
+                              <div className="font-medium" style={{ color: "var(--ink)" }}>
+                                {rewardName(redemption.reward_id)}
+                              </div>
+                              <div
+                                className="text-sm mt-1"
+                                style={{ color: "var(--fg-3)" }}
+                              >
+                                {redemption.points_spent.toLocaleString()} points spent ·{" "}
+                                {formatDate(redemption.created_at)}
+                              </div>
+                              {redemption.redemption_code && (
+                                <div className="mt-1.5">
+                                  <span
+                                    className="font-mono text-xs px-2 py-1 rounded-(--r-1)"
+                                    style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}
+                                  >
+                                    {redemption.redemption_code}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <span
+                              className="font-mono text-xs uppercase tracking-wider rounded-(--r-2) px-2 py-1 whitespace-nowrap"
+                              style={{
+                                background:
+                                  redemption.status === LoyaltyRedemptionStatus.FULFILLED
+                                    ? "var(--signal-soft)"
+                                    : redemption.status === LoyaltyRedemptionStatus.CANCELLED
+                                      ? "var(--danger-soft)"
+                                      : "var(--bg-3)",
+                                color:
+                                  redemption.status === LoyaltyRedemptionStatus.FULFILLED
+                                    ? "var(--signal)"
+                                    : redemption.status === LoyaltyRedemptionStatus.CANCELLED
+                                      ? "var(--danger)"
+                                      : "var(--fg-3)",
+                              }}
+                            >
+                              {redemption.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </GymDashboardShell>
   );
 }

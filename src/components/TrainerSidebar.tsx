@@ -75,8 +75,8 @@ const navItems: NavItem[] = [
 
 const roleBadge: RoleBadge = {
   label: "Personal Trainer",
-  bgClass: "bg-accent-yellow-50",
-  textClass: "text-accent-yellow-700",
+  bgClass: "bg-trainer-soft",
+  textClass: "text-trainer",
 };
 
 export default function TrainerSidebar() {

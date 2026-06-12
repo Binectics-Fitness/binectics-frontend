@@ -48,65 +48,74 @@ export default function AdminChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-        <h1 className="text-2xl font-black text-foreground">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+      <div
+        className="w-full max-w-md bg-bg rounded-(--r-3) border border-border p-6 sm:p-8"
+        style={{ boxShadow: "var(--shadow-2)" }}
+      >
+        <h1 className="text-2xl font-black text-ink">
           Set a new password
         </h1>
-        <p className="mt-2 text-sm text-foreground/60">
+        <p className="mt-2 text-sm text-fg-2">
           You&rsquo;re signed in with a temporary password. Choose a new one
           before continuing to the admin dashboard.
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">
+            <label className="block text-sm font-medium text-fg-2 mb-1">
               Current password
             </label>
             <input
               type="password"
+              required
+              minLength={8}
               autoComplete="current-password"
               {...register("current")}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
             {errors.current && (
-              <p className="mt-1 text-xs text-red-500">
+              <p className="mt-1 text-xs text-danger">
                 {errors.current.message}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">
+            <label className="block text-sm font-medium text-fg-2 mb-1">
               New password
             </label>
             <input
               type="password"
+              required
+              minLength={8}
               autoComplete="new-password"
               {...register("new")}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
             {errors.new && (
-              <p className="mt-1 text-xs text-red-500">{errors.new.message}</p>
+              <p className="mt-1 text-xs text-danger">{errors.new.message}</p>
             )}
-            <p className="mt-1 text-xs text-foreground/50">
+            <p className="mt-1 text-xs text-fg-3">
               At least 8 characters with a mix of upper, lower, number and
               symbol.
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">
+            <label className="block text-sm font-medium text-fg-2 mb-1">
               Confirm new password
             </label>
             <input
               type="password"
+              required
+              minLength={8}
               autoComplete="new-password"
               {...register("confirm")}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
             {errors.confirm && (
-              <p className="mt-1 text-xs text-red-500">
+              <p className="mt-1 text-xs text-danger">
                 {errors.confirm.message}
               </p>
             )}
@@ -115,7 +124,7 @@ export default function AdminChangePasswordPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-(--r-2) bg-signal px-4 py-2.5 text-sm font-semibold text-bg hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Updating…" : "Update password"}
           </button>

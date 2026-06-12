@@ -129,63 +129,66 @@ export default function CreateSuperAdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-4 sm:p-8">
-        <h1 className="text-3xl font-black text-foreground mb-2">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+      <div
+        className="w-full max-w-2xl bg-bg rounded-(--r-3) border border-border p-4 sm:p-8"
+        style={{ boxShadow: "var(--shadow-2)" }}
+      >
+        <h1 className="text-3xl font-black text-ink mb-2">
           Create Super Admin Account
         </h1>
-        <p className="text-foreground/60 mb-8">
+        <p className="text-fg-2 mb-8">
           This will create 4 supported registration accounts with the same
           credentials but different account types.
         </p>
 
         {/* Account Details */}
-        <div className="bg-neutral-50 rounded-xl p-6 mb-8">
-          <h2 className="text-lg font-bold text-foreground mb-4">
+        <div className="bg-bg-2 rounded-(--r-3) p-6 mb-8">
+          <h2 className="text-lg font-bold text-fg mb-4">
             Account Details (All use same password)
           </h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-foreground/60">
+              <span className="text-fg-2">
                 Password (all accounts):
               </span>
-              <span className="font-semibold text-foreground">
+              <span className="font-semibold text-fg">
                 {formData.password}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground/60">Gym Owner Email:</span>
-              <span className="font-semibold text-foreground">
+              <span className="text-fg-2">Gym Owner Email:</span>
+              <span className="font-semibold text-fg">
                 {getEmailForRole(AccountType.GYM_OWNER)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground/60">Trainer Email:</span>
-              <span className="font-semibold text-foreground">
+              <span className="text-fg-2">Trainer Email:</span>
+              <span className="font-semibold text-fg">
                 {getEmailForRole(AccountType.PERSONAL_TRAINER)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground/60">Dietitian Email:</span>
-              <span className="font-semibold text-foreground">
+              <span className="text-fg-2">Dietitian Email:</span>
+              <span className="font-semibold text-fg">
                 {getEmailForRole(AccountType.DIETITIAN)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground/60">User Email:</span>
-              <span className="font-semibold text-foreground">
+              <span className="text-fg-2">User Email:</span>
+              <span className="font-semibold text-fg">
                 {getEmailForRole(AccountType.FITNESS_MEMBER)}
               </span>
             </div>
-            <div className="flex justify-between pt-3 border-t border-neutral-200">
-              <span className="text-foreground/60">Name:</span>
-              <span className="font-semibold text-foreground">
+            <div className="flex justify-between pt-3 border-t border-border">
+              <span className="text-fg-2">Name:</span>
+              <span className="font-semibold text-fg">
                 {formData.firstName} {formData.lastName}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground/60">Country:</span>
-              <span className="font-semibold text-foreground">
+              <span className="text-fg-2">Country:</span>
+              <span className="font-semibold text-fg">
                 {formData.country}
               </span>
             </div>
@@ -194,39 +197,49 @@ export default function CreateSuperAdminPage() {
 
         {/* Edit Form */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-foreground mb-4">
+          <h2 className="text-lg font-bold text-fg mb-4">
             Edit Details (Optional)
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="text"
+              required
+              minLength={2}
+              maxLength={50}
               placeholder="First Name"
               {...register("firstName")}
-              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-3 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
             <input
               type="text"
+              required
+              minLength={2}
+              maxLength={50}
               placeholder="Last Name"
               {...register("lastName")}
-              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-3 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
             <input
               type="email"
+              required
               placeholder="Email"
               {...register("email")}
-              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
+              className="px-4 py-3 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal col-span-2"
             />
             <input
               type="password"
+              required
+              minLength={8}
               placeholder="Password"
               {...register("password")}
-              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
+              className="px-4 py-3 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal col-span-2"
             />
             <input
               type="text"
+              required
               placeholder="Country"
               {...register("country")}
-              className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 col-span-2"
+              className="px-4 py-3 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal col-span-2"
             />
           </div>
         </div>
@@ -234,10 +247,10 @@ export default function CreateSuperAdminPage() {
         {/* Message Display */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
+            className={`mb-6 p-4 rounded-(--r-2) ${
               message.type === "success"
-                ? "bg-primary-500/10 text-primary-500 border border-primary-500/20"
-                : "bg-red-50 text-red-600 border border-red-200"
+                ? "bg-signal-soft text-signal border border-signal/20"
+                : "bg-danger-soft text-danger border border-danger/20"
             }`}
           >
             {message.text}
@@ -249,7 +262,7 @@ export default function CreateSuperAdminPage() {
           <button
             onClick={createAllAccounts}
             disabled={isLoading}
-            className="w-full h-14 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-500/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-14 bg-signal text-bg font-semibold rounded-(--r-2) hover:bg-signal/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Creating Accounts..." : "Create All 4 Accounts"}
           </button>
@@ -258,28 +271,28 @@ export default function CreateSuperAdminPage() {
             <button
               onClick={() => createAccount(AccountType.GYM_OWNER)}
               disabled={isLoading}
-              className="px-3 py-2 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-500/90 transition-colors disabled:opacity-50 text-sm"
+              className="px-3 py-2 bg-gym text-bg font-semibold rounded-(--r-2) hover:bg-gym/90 transition-colors disabled:opacity-50 text-sm"
             >
               Gym
             </button>
             <button
               onClick={() => createAccount(AccountType.PERSONAL_TRAINER)}
               disabled={isLoading}
-              className="px-3 py-2 bg-accent-yellow-500 text-foreground font-semibold rounded-lg hover:bg-accent-yellow-500/90 transition-colors disabled:opacity-50 text-sm"
+              className="px-3 py-2 bg-trainer text-fg font-semibold rounded-(--r-2) hover:bg-trainer/90 transition-colors disabled:opacity-50 text-sm"
             >
               Trainer
             </button>
             <button
               onClick={() => createAccount(AccountType.DIETITIAN)}
               disabled={isLoading}
-              className="px-3 py-2 bg-accent-purple-500 text-white font-semibold rounded-lg hover:bg-accent-purple-500/90 transition-colors disabled:opacity-50 text-sm"
+              className="px-3 py-2 bg-dietitian text-bg font-semibold rounded-(--r-2) hover:bg-dietitian/90 transition-colors disabled:opacity-50 text-sm"
             >
               Dietitian
             </button>
             <button
               onClick={() => createAccount(AccountType.FITNESS_MEMBER)}
               disabled={isLoading}
-              className="px-3 py-2 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-500/90 transition-colors disabled:opacity-50 text-sm"
+              className="px-3 py-2 bg-signal text-bg font-semibold rounded-(--r-2) hover:bg-signal/90 transition-colors disabled:opacity-50 text-sm"
             >
               User
             </button>
@@ -287,12 +300,12 @@ export default function CreateSuperAdminPage() {
         </div>
 
         {/* Info Box */}
-        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-foreground/70 mb-3">
+        <div className="mt-8 p-4 bg-bg-2 border border-border rounded-(--r-2)">
+          <p className="text-sm text-fg-2 mb-3">
             <strong>Note:</strong> This creates 4 supported registration
             accounts with different emails but the same password.
           </p>
-          <div className="text-xs text-foreground/60 space-y-1 font-mono">
+          <div className="text-xs text-fg-2 space-y-1 font-mono">
             <p>
               • Gym: {getEmailForRole(AccountType.GYM_OWNER)} /{" "}
               {formData.password}
@@ -316,7 +329,7 @@ export default function CreateSuperAdminPage() {
         <div className="mt-6 text-center">
           <a
             href="/"
-            className="text-accent-blue-500 hover:underline font-medium"
+            className="text-signal hover:underline font-medium"
           >
             ← Back to Home
           </a>

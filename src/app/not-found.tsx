@@ -1,50 +1,69 @@
-import Link from 'next/link';
+import Link from "next/link";
+import { BinecticsMark } from "@/components/BinecticsLogo";
+import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-background-secondary flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full text-center">
-        <div className="mb-8">
-          <h1 className="font-display text-9xl font-black text-primary-500">404</h1>
+    <div style={{ background: "var(--bg)" }}>
+      <MarketingTopbar />
+
+      <section
+        className="mx-auto max-w-360 px-5 sm:px-10 flex flex-col items-center justify-center text-center"
+        style={{ minHeight: "calc(100vh - 64px - 200px)", paddingTop: 80, paddingBottom: 80 }}
+      >
+        {/* Brand mark */}
+        <div className="flex justify-center" style={{ marginBottom: 28 }}>
+          <BinecticsMark size={32} className="text-(--ink)" />
         </div>
-        <h2 className="font-display text-3xl font-black text-foreground mb-4 sm:text-4xl">
-          Page Not Found
-        </h2>
-        <p className="text-lg text-foreground-secondary mb-8 leading-relaxed">
-          Oops! The page you're looking for doesn't exist. It might have been moved or deleted.
+
+        {/* Eyebrow */}
+        <div
+          className="eyebrow"
+          style={{ marginBottom: 16 }}
+        >
+          404
+        </div>
+
+        {/* Heading */}
+        <h1
+          style={{
+            fontSize: 44,
+            letterSpacing: "-0.035em",
+            fontWeight: 500,
+            color: "var(--ink)",
+            lineHeight: 1.05,
+            marginBottom: 14,
+          }}
+        >
+          Page not found.
+        </h1>
+
+        {/* Description */}
+        <p
+          style={{
+            fontSize: 16,
+            color: "var(--fg-2)",
+            lineHeight: 1.55,
+            marginBottom: 32,
+            maxWidth: "40ch",
+          }}
+        >
+          The page you&apos;re looking for doesn&apos;t exist, or it may have
+          been moved.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/"
-            className="inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
-          >
-            Go to Homepage
-          </Link>
-          <Link
-            href="/contact"
-            className="inline-flex h-12 items-center justify-center rounded-lg border-2 border-neutral-300 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-neutral-100"
-          >
-            Contact Support
-          </Link>
-        </div>
-        <div className="mt-12">
-          <p className="text-sm text-foreground-tertiary mb-4">Popular pages:</p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <Link href="/how-it-works" className="text-accent-blue-500 hover:underline">
-              How It Works
-            </Link>
-            <Link href="/pricing" className="text-accent-blue-500 hover:underline">
-              Pricing
-            </Link>
-            <Link href="/faq" className="text-accent-blue-500 hover:underline">
-              FAQ
-            </Link>
-            <Link href="/register" className="text-accent-blue-500 hover:underline">
-              Sign Up
-            </Link>
-          </div>
-        </div>
-      </div>
+
+        {/* Actions */}
+        <Link
+          href="/"
+          className="btn-primary-v2"
+          style={{ height: 38, padding: "0 20px" }}
+        >
+          Back to home
+        </Link>
+      </section>
+
+      <MarketingFooter />
     </div>
   );
 }

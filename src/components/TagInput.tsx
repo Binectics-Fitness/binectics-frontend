@@ -79,19 +79,19 @@ export default function TagInput({
   return (
     <div ref={wrapperRef} className="relative">
       <div
-        className="flex flex-wrap items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-2 focus-within:ring-2 focus-within:ring-primary-500"
+        className="flex flex-wrap items-center gap-1.5 rounded-(--r-2) border border-border px-3 py-2 focus-within:ring-2 focus-within:ring-signal"
         onClick={() => inputRef.current?.focus()}
       >
         {value.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800"
+            className="inline-flex items-center gap-1 rounded-full bg-signal-soft px-2.5 py-0.5 text-xs font-medium text-signal-ink"
           >
             {tag}
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className="ml-0.5 text-primary-500 hover:text-primary-700"
+              className="ml-0.5 text-signal hover:text-signal-ink"
             >
               &times;
             </button>
@@ -110,20 +110,23 @@ export default function TagInput({
           onFocus={() => inputValue.trim() && setShowSuggestions(true)}
           onKeyDown={handleKeyDown}
           placeholder={value.length === 0 ? placeholder : "Type to add more…"}
-          className="min-w-[120px] flex-1 border-none bg-transparent py-1 text-sm outline-none placeholder:text-neutral-400"
+          className="min-w-[120px] flex-1 border-none bg-transparent py-1 text-sm outline-none placeholder:text-fg-4"
         />
       </div>
 
       {showSuggestions && filtered.length > 0 && (
-        <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
+        <ul
+          className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-(--r-2) border border-border bg-bg py-1"
+          style={{ boxShadow: "var(--shadow-2)" }}
+        >
           {filtered.map((s, i) => (
             <li
               key={s}
               onMouseDown={() => addTag(s)}
               className={`cursor-pointer px-3 py-2 text-sm ${
                 i === highlightIndex
-                  ? "bg-primary-50 text-primary-700"
-                  : "text-foreground hover:bg-neutral-50"
+                  ? "bg-signal-soft text-signal-ink"
+                  : "text-fg hover:bg-bg-2"
               }`}
             >
               {s}

@@ -1,324 +1,674 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import DashboardSidebar from "@/components/DashboardSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
-import { useAuth } from "@/contexts/AuthContext";
-import { UserRole } from "@/lib/types";
+import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import SearchableSelect from "@/components/SearchableSelect";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrgManagement } from "@/hooks/useTeams";
 import {
-  type Organization,
-  type CreateOrganizationRequest,
-  AccountType,
+  MemberStatus,
+  type OrganizationMember,
+  type TeamInvitation,
 } from "@/lib/api/teams";
-import {
-  createOrganizationSchema,
-  type CreateOrganizationFormData,
-} from "@/lib/schemas/teams";
-import { useMyOrganizations, useCreateOrganization } from "@/lib/queries/teams";
 
-const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
-  [AccountType.GYM_OWNER]: "Gym Owner",
-  [AccountType.PERSONAL_TRAINER]: "Personal Trainer",
-  [AccountType.DIETITIAN]: "Dietitian",
-  [AccountType.FITNESS_MEMBER]: "Fitness Member",
-};
-
-const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
-  [AccountType.GYM_OWNER]: "bg-blue-100 text-blue-700",
-  [AccountType.PERSONAL_TRAINER]: "bg-yellow-100 text-yellow-700",
-  [AccountType.DIETITIAN]: "bg-purple-100 text-purple-700",
-  [AccountType.FITNESS_MEMBER]: "bg-green-100 text-green-700",
-};
-
-const ROLE_TO_ACCOUNT_TYPE: Record<UserRole, AccountType> = {
-  GYM_OWNER: AccountType.GYM_OWNER,
-  TRAINER: AccountType.PERSONAL_TRAINER,
-  DIETITIAN: AccountType.DIETITIAN,
-  USER: AccountType.FITNESS_MEMBER,
-  ADMIN: AccountType.GYM_OWNER,
-};
-
-function getAccountType(role?: UserRole | null): AccountType {
-  return role ? ROLE_TO_ACCOUNT_TYPE[role] : AccountType.FITNESS_MEMBER;
+function roleNameFromMember(member: OrganizationMember): string {
+  return typeof member.team_role_id === "string"
+    ? member.team_role_id
+    : member.team_role_id.name;
 }
 
-export default function TeamPage() {
-  const { isLoading: authLoading, isAuthenticated: isAuthorized } =
-    useRequireAuth();
-  const { user } = useAuth();
-  const {
-    data: organizations = [],
-    isLoading: loading,
-    error: queryError,
-  } = useMyOrganizations(!authLoading && isAuthorized);
-  const error = queryError ? "Failed to load organizations." : null;
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const {
-    register: registerCreate,
-    handleSubmit: handleCreateSubmit,
-    reset: resetCreateForm,
-    formState: { errors: createFormErrors },
-  } = useForm<CreateOrganizationFormData>({
-    resolver: zodResolver(createOrganizationSchema),
-    defaultValues: { name: "", description: "" },
-  });
-  const createOrgMutation = useCreateOrganization();
-  const [createError, setCreateError] = useState<string | null>(null);
+function roleIdFromMember(member: OrganizationMember): string {
+  return typeof member.team_role_id === "string"
+    ? member.team_role_id
+    : member.team_role_id._id;
+}
 
-  const canCreateOrganization =
-    organizations.length === 0 ||
-    user?.role === UserRole.GYM_OWNER ||
-    user?.role === UserRole.ADMIN ||
-    organizations.some((org) => org.is_owner === true);
+function userFullName(member: OrganizationMember): string {
+  if (typeof member.user_id === "string") {
+    return "Member";
+  }
 
-  async function handleCreate(data: CreateOrganizationFormData) {
-    if (!canCreateOrganization) {
-      setCreateError("Only organization owners can create organizations.");
+  const first = member.user_id.first_name ?? "";
+  const last = member.user_id.last_name ?? "";
+  const fullName = `${first} ${last}`.trim();
+  return fullName || "Member";
+}
+
+function userEmail(member: OrganizationMember): string {
+  if (typeof member.user_id === "string") {
+    return "-";
+  }
+
+  return member.user_id.email;
+}
+
+function roleNameFromInvitation(invite: TeamInvitation): string {
+  return typeof invite.team_role_id === "string"
+    ? invite.team_role_id
+    : invite.team_role_id.name;
+}
+
+function formatDate(value: string | null | undefined): string {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+export default function TeamWorkspacePage() {
+  const { organizations, currentOrg, setCurrentOrg, isLoading: orgLoading } =
+    useOrganization();
+  const [search, setSearch] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRoleId, setInviteRoleId] = useState("");
+  const [globalMessage, setGlobalMessage] = useState<string | null>(null);
+  const [submittingInvite, setSubmittingInvite] = useState(false);
+  const [directFirstName, setDirectFirstName] = useState("");
+  const [directLastName, setDirectLastName] = useState("");
+  const [directEmail, setDirectEmail] = useState("");
+  const [directRoleId, setDirectRoleId] = useState("");
+  const [directPassword, setDirectPassword] = useState("");
+  const [submittingDirect, setSubmittingDirect] = useState(false);
+
+  const orgId = currentOrg?._id;
+  const {
+    members,
+    roles,
+    invitations,
+    isLoading,
+    error,
+    loadOrgData,
+    inviteMember,
+    addMemberDirect,
+    updateMember,
+    removeMember,
+    cancelInvitation,
+  } = useOrgManagement(orgId ?? "");
+
+  useEffect(() => {
+    if (!orgId) return;
+    void loadOrgData();
+  }, [orgId, loadOrgData]);
+
+  const roleOptions = useMemo(
+    () => roles.map((role) => ({ label: role.name, value: role._id })),
+    [roles],
+  );
+
+
+  const selectedDirectRoleId = directRoleId || roles[0]?._id || "";
+
+  // Get current user's permissions from their role in the active organization
+  const userPermissions = useMemo(() => {
+    if (!currentOrg) return [];
+    const isOwner = currentOrg.is_owner ?? false;
+    const canManage = currentOrg.can_manage_organization ?? false;
+    if (isOwner || canManage) {
+      return [
+        "team:view_members",
+        "team:invite_member",
+        "team:remove_member",
+        "team:update_member_role",
+        "team:manage_organization",
+        "team:cancel_invitation",
+        "team:view_invitations",
+      ];
+    }
+    return ["team:view_members", "team:view_invitations"];
+  }, [currentOrg]);
+
+  // Check if current user can perform actions
+  const canInvite = userPermissions.includes("team:invite_member");
+  const canRemove = userPermissions.includes("team:remove_member");
+  const canUpdateRole = userPermissions.includes("team:update_member_role");
+  const canManageOrg = userPermissions.includes("team:manage_organization");
+
+  const selectedInviteRoleId = inviteRoleId || roles[0]?._id || "";
+
+  const statusOptions = [
+    { label: "Pending", value: MemberStatus.PENDING },
+    { label: "Active", value: MemberStatus.ACTIVE },
+    { label: "Inactive", value: MemberStatus.INACTIVE },
+  ];
+
+  const filteredMembers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return members;
+
+    return members.filter((member) => {
+      const name = userFullName(member).toLowerCase();
+      const email = userEmail(member).toLowerCase();
+      const roleName = roleNameFromMember(member).toLowerCase();
+      return (
+        name.includes(query) || email.includes(query) || roleName.includes(query)
+      );
+    });
+  }, [members, search]);
+
+  async function handleInviteSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canInvite) {
+      setGlobalMessage("You don&apos;t have permission to invite members.");
       return;
     }
+    if (!inviteEmail || !selectedInviteRoleId || !orgId) return;
 
-    setCreateError(null);
-    try {
-      const payload: CreateOrganizationRequest = {
-        name: data.name,
-        description: data.description,
-        account_type: getAccountType(user?.role),
-      };
-      const res = await createOrgMutation.mutateAsync(payload);
-      if (res.success && res.data) {
-        setShowCreateModal(false);
-        resetCreateForm();
-      } else {
-        setCreateError(res.message ?? "Failed to create organization.");
-      }
-    } catch {
-      setCreateError("Failed to create organization.");
+    setSubmittingInvite(true);
+    setGlobalMessage(null);
+    const invited = await inviteMember({
+      email: inviteEmail.trim(),
+      team_role_id: selectedInviteRoleId,
+    });
+
+    if (invited) {
+      setInviteEmail("");
+      setGlobalMessage("Invitation sent successfully.");
+    } else {
+      setGlobalMessage("Unable to send invitation. Please try again.");
+    }
+    setSubmittingInvite(false);
+  }
+
+
+
+  async function handleDirectAdd(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!directFirstName || !directLastName || !directEmail || !directPassword || !selectedDirectRoleId || !orgId) return;
+
+    setSubmittingDirect(true);
+    setGlobalMessage(null);
+    const added = await addMemberDirect({
+      first_name: directFirstName,
+      last_name: directLastName,
+      email: directEmail.trim(),
+      password: directPassword,
+      team_role_id: selectedDirectRoleId,
+    });
+
+    if (added) {
+      setDirectFirstName("");
+      setDirectLastName("");
+      setDirectEmail("");
+      setDirectPassword("");
+      setGlobalMessage("Member added and invited successfully.");
+    } else {
+      setGlobalMessage("Unable to add member. Please try again.");
+    }
+    setSubmittingDirect(false);
+  }
+
+
+  async function handleRoleChange(memberId: string, newRoleId: string) {
+    if (!canUpdateRole) {
+      setGlobalMessage("You don&apos;t have permission to update member roles.");
+      return;
+    }
+    setGlobalMessage(null);
+    const updated = await updateMember(memberId, { team_role_id: newRoleId });
+    if (!updated) {
+      setGlobalMessage("Could not update member role.");
     }
   }
 
-  if (authLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
+  async function handleStatusChange(
+    memberId: string,
+    newStatus: MemberStatus,
+  ) {
+    if (!canManageOrg) {
+      setGlobalMessage("You don&apos;t have permission to update member status.");
+      return;
+    }
+    setGlobalMessage(null);
+    const updated = await updateMember(memberId, { status: newStatus });
+    if (!updated) {
+      setGlobalMessage("Could not update member status.");
+    }
+  }
+
+  async function handleRemove(memberId: string) {
+    if (!canRemove) {
+      setGlobalMessage("You don&apos;t have permission to remove members.");
+      return;
+    }
+    setGlobalMessage(null);
+    const ok = await removeMember(memberId);
+    if (!ok) {
+      setGlobalMessage("Could not remove member.");
+    }
+  }
+
+  async function handleCancelInvite(invitationId: string) {
+    if (!canManageOrg) {
+      setGlobalMessage("You don&apos;t have permission to cancel invitations.");
+      return;
+    }
+    setGlobalMessage(null);
+    const ok = await cancelInvitation(invitationId);
+    if (!ok) {
+      setGlobalMessage("Could not cancel invitation.");
+    }
+  }
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <DashboardSidebar />
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-foreground">
-              Team Management
-            </h1>
-            <p className="mt-1 text-sm text-foreground-secondary">
-              Manage your organizations, members, and roles.
-            </p>
+    <GymDashboardShell activeItem="Team & roles" crumb="Team">
+      <div className="flex flex-col gap-5">
+        <OrganizationContextBanner
+          label="Team organization"
+          helperText="Switch organizations to manage the right staff roster and invitations."
+          organizations={organizations}
+          currentOrg={currentOrg}
+          onChange={setCurrentOrg}
+        />
+
+        <div>
+          <div
+            className="font-mono text-[11px] uppercase tracking-[0.06em]"
+            style={{ color: "var(--fg-3)" }}
+          >
+            Workspace
           </div>
-          {canCreateOrganization && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 sm:px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors whitespace-nowrap"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              New Organization
-            </button>
-          )}
+          <h1
+            className="text-[30px] font-medium mt-1"
+            style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
+          >
+            Team management
+          </h1>
+          <p className="text-sm mt-2" style={{ color: "var(--fg-3)" }}>
+            Manage organization members, assign roles, and control pending
+            invitations.
+          </p>
         </div>
 
-        {/* Content */}
-        {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-          </div>
-        ) : error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-            {error}
+        {orgLoading ? (
+          <div className="rounded-(--r-3) p-4" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+            Loading organizations...
           </div>
         ) : organizations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-200 py-24 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-              <svg
-                className="h-8 w-8 text-neutral-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-foreground">
-              No organizations yet
-            </h3>
-            <p className="mt-1 text-sm text-foreground-secondary">
-              Create your first organization to start managing your team.
+          <div className="rounded-(--r-3) p-4" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+            <p className="text-sm" style={{ color: "var(--fg-2)" }}>
+              You are not part of an organization yet.
             </p>
-            {canCreateOrganization ? (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="mt-6 rounded-lg bg-primary-500 px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors"
-              >
-                Create Organization
-              </button>
-            ) : (
-              <p className="mt-3 text-sm text-foreground-secondary">
-                You were added to an organization and cannot create a new one.
-              </p>
-            )}
+            <p className="text-sm mt-2" style={{ color: "var(--fg-3)" }}>
+              Create an organization from onboarding or ask an owner/admin to
+              invite you.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {organizations.map((org) => (
-              <Link
-                key={org._id}
-                href={`/dashboard/team/${org._id}`}
-                className="group block rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6 shadow-sm transition-shadow hover:shadow-md h-full"
+          <>
+            {error && (
+              <div
+                className="rounded-(--r-3) p-3 text-sm"
+                style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-500 text-xl font-black text-foreground">
-                    {org.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${ACCOUNT_TYPE_COLORS[org.account_type]}`}
-                  >
-                    {ACCOUNT_TYPE_LABELS[org.account_type]}
-                  </span>
-                </div>
-                <div className="mt-4">
-                  <h3 className="text-base font-bold text-foreground group-hover:text-accent-blue-500 transition-colors">
-                    {org.name}
-                  </h3>
-                  {org.description && (
-                    <p className="mt-1 text-sm text-foreground-secondary line-clamp-2">
-                      {org.description}
-                    </p>
-                  )}
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-4">
-                  <span
-                    className={`inline-flex items-center gap-1.5 text-xs font-medium ${org.is_active ? "text-green-600" : "text-neutral-400"}`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${org.is_active ? "bg-green-500" : "bg-neutral-300"}`}
-                    />
-                    {org.is_active ? "Active" : "Inactive"}
-                  </span>
-                  <span className="text-sm text-foreground-secondary">
-                    View team →
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </main>
+                {error}
+              </div>
+            )}
 
-      {/* Create Organization Modal */}
-      {showCreateModal && canCreateOrganization && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-neutral-100 p-6">
-              <h2 className="text-xl font-bold text-foreground">
-                New Organization
-              </h2>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-400"
+            {globalMessage && (
+              <div
+                className="rounded-(--r-3) p-3 text-sm"
+                style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}
               >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
+                {globalMessage}
+              </div>
+            )}
 
-            <form
-              onSubmit={handleCreateSubmit(handleCreate)}
-              className="p-6 space-y-4"
+            <section
+              className="rounded-(--r-3) p-4"
+              style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
             >
-              {createError && (
-                <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-                  {createError}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
+                  Members
+                </h2>
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search members by name, role, or email"
+                  className="w-full sm:max-w-[320px] rounded-(--r-2) border px-3 py-2 text-sm"
+                  style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                />
+              </div>
+
+              {isLoading ? (
+                <AsyncSpinner label="Loading team workspace" />
+              ) : filteredMembers.length === 0 ? (
+                <EmptySlate message="No members found for this filter." />
+              ) : (
+                <div className="overflow-x-auto mt-4">
+                  <table className="w-full min-w-[840px] border-collapse text-sm">
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                        <th className="text-left py-2 pr-4" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                          Member
+                        </th>
+                        <th className="text-left py-2 pr-4" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                          Email
+                        </th>
+                        <th className="text-left py-2 pr-4" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                          Role
+                        </th>
+                        <th className="text-left py-2 pr-4" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                          Status
+                        </th>
+                        <th className="text-left py-2 pr-4" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                          Joined
+                        </th>
+                        <th className="text-left py-2" style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredMembers.map((member) => (
+                        <tr key={member._id} style={{ borderBottom: "1px solid var(--border)" }}>
+                          <td className="py-3 pr-4" style={{ color: "var(--ink)" }}>
+                            {userFullName(member)}
+                          </td>
+                          <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
+                            {userEmail(member)}
+                          </td>
+                          <td className="py-3 pr-4 w-[220px]">
+                            <SearchableSelect
+                              value={roleIdFromMember(member)}
+                              onChange={(value) => {
+                                void handleRoleChange(member._id, value);
+                              }}
+                              options={roleOptions}
+                              placeholder={roleNameFromMember(member)}
+                            />
+                          </td>
+                          <td className="py-3 pr-4 w-[180px]">
+                            <SearchableSelect
+                              value={member.status}
+                              onChange={(value) => {
+                                void handleStatusChange(member._id, value as MemberStatus);
+                              }}
+                              options={statusOptions}
+                              placeholder="Status"
+                            />
+                          </td>
+                          <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
+                            {formatDate(member.joined_at ?? member.created_at)}
+                          </td>
+                          <td className="py-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void handleRemove(member._id);
+                              }}
+                              className="rounded-(--r-2) border px-3 py-1.5 text-sm"
+                              style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent" }}
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
+            </section>
 
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">
-                  Organization Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  {...registerCreate("name")}
-                  placeholder="e.g. FitZone Gym"
-                  className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
-                />
-                {createFormErrors.name && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {createFormErrors.name.message}
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div
+                className="rounded-(--r-3) p-4"
+                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+              >
+                <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
+                  Invite member by email
+                </h2>
+                {!canInvite ? (
+                  <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
+                    You don&apos;t have permission to invite members.
                   </p>
+                ) : (
+                  <form className="mt-4 flex flex-col gap-3" onSubmit={handleInviteSubmit}>
+                  <div>
+                    <label
+                      className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                      style={{ color: "var(--fg-3)" }}
+                    >
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={inviteEmail}
+                      onChange={(event) => setInviteEmail(event.target.value)}
+                      placeholder="person@domain.com"
+                      className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                      style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                      style={{ color: "var(--fg-3)" }}
+                    >
+                      Team role
+                    </label>
+                    <div className="mt-1.5">
+                      <SearchableSelect
+                        value={selectedInviteRoleId}
+                        onChange={setInviteRoleId}
+                        options={roleOptions}
+                        placeholder="Select role"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={submittingInvite || !selectedInviteRoleId}
+                    className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
+                    style={{
+                      background: submittingInvite || !selectedInviteRoleId ? "var(--bg-3)" : "var(--ink)",
+                      color: submittingInvite || !selectedInviteRoleId ? "var(--fg-4)" : "var(--bg)",
+                      cursor: submittingInvite || !selectedInviteRoleId ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {submittingInvite ? "Sending..." : "Send invitation"}
+                  </button>
+                  </form>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  {...registerCreate("description")}
-                  placeholder="Short description of your organization..."
-                  className="w-full resize-none rounded-lg border border-neutral-200 px-4 py-2.5 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none"
-                />
+
+              <div
+                className="rounded-(--r-3) p-4"
+                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+              >
+                <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
+                  Add member directly
+                </h2>
+                {!canManageOrg ? (
+                  <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
+                    You don&apos;t have permission to add members directly.
+                  </p>
+                ) : (
+                  <form className="mt-4 flex flex-col gap-3" onSubmit={handleDirectAdd}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label
+                          className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                          style={{ color: "var(--fg-3)" }}
+                        >
+                          First name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={directFirstName}
+                          onChange={(event) => setDirectFirstName(event.target.value)}
+                          placeholder="John"
+                          className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                          style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                          style={{ color: "var(--fg-3)" }}
+                        >
+                          Last name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={directLastName}
+                          onChange={(event) => setDirectLastName(event.target.value)}
+                          placeholder="Doe"
+                          className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                          style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                        style={{ color: "var(--fg-3)" }}
+                      >
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={directEmail}
+                        onChange={(event) => setDirectEmail(event.target.value)}
+                        placeholder="john@example.com"
+                        className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                        style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                        style={{ color: "var(--fg-3)" }}
+                      >
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={directPassword}
+                        onChange={(event) => setDirectPassword(event.target.value)}
+                        placeholder="••••••••"
+                        className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
+                        style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
+                        style={{ color: "var(--fg-3)" }}
+                      >
+                        Team role
+                      </label>
+                      <div className="mt-1.5">
+                        <SearchableSelect
+                          value={selectedDirectRoleId}
+                          onChange={setDirectRoleId}
+                          options={roleOptions}
+                          placeholder="Select role"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={submittingDirect || !selectedDirectRoleId}
+                      className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
+                      style={{
+                        background:
+                          submittingDirect || !selectedDirectRoleId
+                            ? "var(--bg-3)"
+                            : "var(--ink)",
+                        color:
+                          submittingDirect || !selectedDirectRoleId
+                            ? "var(--fg-4)"
+                            : "var(--bg)",
+                        cursor:
+                          submittingDirect || !selectedDirectRoleId
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {submittingDirect ? "Adding..." : "Add member"}
+                    </button>
+                  </form>
+                )}
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-neutral-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={createOrgMutation.isPending}
-                  className="flex-1 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-primary-600 transition-colors disabled:opacity-60"
-                >
-                  {createOrgMutation.isPending ? "Creating..." : "Create"}
-                </button>
+              <div
+                className="rounded-(--r-3) p-4"
+                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+              >
+                <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
+                  Pending invitations
+                </h2>
+                {invitations.length === 0 ? (
+                  <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
+                    No pending invitations.
+                  </p>
+                ) : (
+                  <ul className="mt-3 flex flex-col gap-2">
+                    {invitations.map((invitation) => (
+                      <li
+                        key={invitation._id}
+                        className="rounded-(--r-2) p-3 flex items-center justify-between gap-3"
+                        style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
+                      >
+                        <div>
+                          <div className="text-sm" style={{ color: "var(--ink)" }}>
+                            {invitation.email}
+                          </div>
+                          <div className="font-mono text-[11px] uppercase mt-1" style={{ color: "var(--fg-3)", letterSpacing: "0.04em" }}>
+                            {roleNameFromInvitation(invitation)} · expires {formatDate(invitation.expires_at)}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleCancelInvite(invitation._id);
+                          }}
+                          className="rounded-(--r-2) border px-3 py-1.5 text-sm"
+                          style={{
+                            borderColor: canManageOrg
+                              ? "var(--border-2)"
+                              : "var(--border)",
+                            color: canManageOrg ? "var(--fg-2)" : "var(--fg-4)",
+                            background: "var(--bg)",
+                            opacity: canManageOrg ? 1 : 0.5,
+                            cursor: canManageOrg ? "pointer" : "not-allowed",
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="mt-4 text-sm" style={{ color: "var(--fg-3)" }}>
+                  Invite acceptance link is available at{" "}
+                  <Link href="/teams/invite/accept" style={{ color: "var(--ink)", textDecoration: "underline" }}>
+                    /teams/invite/accept
+                  </Link>
+                  .
+                </div>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+            </section>
+          </>
+        )}
+      </div>
+    </GymDashboardShell>
   );
 }

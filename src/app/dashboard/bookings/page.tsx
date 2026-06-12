@@ -1,625 +1,639 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import DashboardSidebar from "@/components/DashboardSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { StatusPill } from "@/components/ds/StatusPill";
+import { AsyncSpinner } from "@/components/ds";
+import { ActionModal } from "@/components/ds/ActionModal";
+import { toast } from "@/components/Toast";
 import {
   consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
-  type ConsultationSlot,
-  type ConsultationType,
 } from "@/lib/api/consultations";
-import { progressService, type ClientProfile } from "@/lib/api/progress";
-import {
-  dualTimezoneLabel,
-  formatLocal,
-  getClientTimezone,
-} from "@/utils/format";
+import { getClientTimezone } from "@/utils/format";
 
-export default function BookingsPage() {
-  const { isAuthenticated, isLoading } = useRequireAuth();
-  const [selectedTab, setSelectedTab] = useState<"upcoming" | "past">(
-    "upcoming",
-  );
-  const [upcomingBookings, setUpcomingBookings] = useState<
-    ConsultationBooking[]
-  >([]);
-  const [pastBookings, setPastBookings] = useState<ConsultationBooking[]>([]);
-  const [types, setTypes] = useState<ConsultationType[]>([]);
-  const [profiles, setProfiles] = useState<ClientProfile[]>([]);
-  const [loadingBookings, setLoadingBookings] = useState(true);
-  const [actioningBookingId, setActioningBookingId] = useState<string | null>(
-    null,
-  );
-  const [error, setError] = useState<string | null>(null);
+type TabKey = "upcoming" | "past" | "cancelled";
 
-  const bookings = selectedTab === "upcoming" ? upcomingBookings : pastBookings;
-  const upcomingCount = upcomingBookings.length;
-  const pastCount = pastBookings.length;
+const TABS: Array<{ key: TabKey; label: string }> = [
+  { key: "upcoming", label: "Upcoming" },
+  { key: "past", label: "Past" },
+  { key: "cancelled", label: "Cancelled" },
+];
 
-  const typeMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const type of types) {
-      map.set(type.id, type.name);
-    }
-    return map;
-  }, [types]);
+function statusVariant(status: ConsultationBookingStatus): "confirmed" | "pending" | "done" | "cancelled" {
+  switch (status) {
+    case ConsultationBookingStatus.CONFIRMED:
+      return "confirmed";
+    case ConsultationBookingStatus.PENDING:
+      return "pending";
+    case ConsultationBookingStatus.COMPLETED:
+      return "done";
+    case ConsultationBookingStatus.CANCELLED:
+    case ConsultationBookingStatus.NO_SHOW:
+      return "cancelled";
+  }
+}
 
-  const providerMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const profile of profiles) {
-      if (typeof profile.professional_id !== "object") continue;
-      const provider = profile.professional_id;
-      map.set(
-        provider._id,
-        `${provider.first_name} ${provider.last_name}`.trim() || provider.email,
-      );
-    }
-    return map;
-  }, [profiles]);
+function statusLabel(status: ConsultationBookingStatus): string {
+  switch (status) {
+    case ConsultationBookingStatus.CONFIRMED:
+      return "Confirmed";
+    case ConsultationBookingStatus.PENDING:
+      return "Pending";
+    case ConsultationBookingStatus.COMPLETED:
+      return "Completed";
+    case ConsultationBookingStatus.CANCELLED:
+      return "Cancelled";
+    case ConsultationBookingStatus.NO_SHOW:
+      return "No show";
+  }
+}
 
-  const loadAllBookings = useCallback(async () => {
-    setLoadingBookings(true);
-    setError(null);
-
-    const [upcomingResponse, pastResponse] = await Promise.all([
-      consultationsService.getMyBookings("upcoming"),
-      consultationsService.getMyBookings("past"),
-    ]);
-
-    setUpcomingBookings(
-      upcomingResponse.success && upcomingResponse.data
-        ? upcomingResponse.data
-        : [],
-    );
-    setPastBookings(
-      pastResponse.success && pastResponse.data ? pastResponse.data : [],
-    );
-
-    if (!upcomingResponse.success && !pastResponse.success) {
-      setError(
-        upcomingResponse.message ||
-          pastResponse.message ||
-          "Failed to load bookings.",
-      );
-    }
-
-    setLoadingBookings(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    let mounted = true;
-    const bookingsLoadTimeout = setTimeout(() => {
-      void loadAllBookings();
-    }, 0);
-
-    async function loadMetadata() {
-      const [typesResponse, profilesResponse] = await Promise.all([
-        consultationsService.getTypes(),
-        progressService.getMyOwnProfiles(),
-      ]);
-
-      if (!mounted) return;
-
-      if (typesResponse.success && typesResponse.data) {
-        setTypes(typesResponse.data);
-      }
-      if (profilesResponse.success && profilesResponse.data) {
-        setProfiles(profilesResponse.data);
-      }
-    }
-
-    loadMetadata();
-
-    return () => {
-      mounted = false;
-      clearTimeout(bookingsLoadTimeout);
-    };
-  }, [isAuthenticated, loadAllBookings]);
-
-  const onCancelBooking = async (bookingId: string) => {
-    setActioningBookingId(bookingId);
-    const response = await consultationsService.cancelBooking(bookingId, {
-      reason: "Cancelled by client from bookings dashboard",
-    });
-
-    if (!response.success) {
-      setError(response.message || "Failed to cancel booking.");
-      setActioningBookingId(null);
-      return;
-    }
-
-    await loadAllBookings();
-    setActioningBookingId(null);
+function formatDateBlock(iso: string) {
+  const d = new Date(iso);
+  return {
+    month: d.toLocaleString(undefined, { month: "short" }),
+    day: d.getDate().toString().padStart(2, "0"),
+    dow: d.toLocaleString(undefined, { weekday: "short" }),
+    time: d.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit" }),
+    full: d.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }),
+    monthYear: d.toLocaleString(undefined, { month: "long", year: "numeric" }),
   };
+}
 
-  // --- Reschedule ---
-  const [rescheduleTarget, setRescheduleTarget] =
-    useState<ConsultationBooking | null>(null);
-  const [rescheduleSlots, setRescheduleSlots] = useState<ConsultationSlot[]>(
-    [],
+function groupByMonth(bookings: ConsultationBooking[]) {
+  const groups = new Map<string, ConsultationBooking[]>();
+  bookings.forEach((b) => {
+    const key = formatDateBlock(b.startsAt).monthYear;
+    const list = groups.get(key) ?? [];
+    list.push(b);
+    groups.set(key, list);
+  });
+  return Array.from(groups.entries());
+}
+
+function BookingRow({
+  booking,
+  isSelected,
+  onSelect,
+}: {
+  booking: ConsultationBooking;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  const date = formatDateBlock(booking.startsAt);
+  const durationMin = Math.round(
+    (new Date(booking.endsAt).getTime() - new Date(booking.startsAt).getTime()) / 60000,
   );
-  const [rescheduleLoadingSlots, setRescheduleLoadingSlots] = useState(false);
-  const [rescheduleSelectedDate, setRescheduleSelectedDate] = useState("");
-  const [rescheduleSelectedSlot, setRescheduleSelectedSlot] =
-    useState<ConsultationSlot | null>(null);
-  const [rescheduleReason, setRescheduleReason] = useState("");
-  const [rescheduling, setRescheduling] = useState(false);
-
-  const openReschedule = async (booking: ConsultationBooking) => {
-    setRescheduleTarget(booking);
-    setRescheduleSelectedSlot(null);
-    setRescheduleSelectedDate("");
-    setRescheduleReason("");
-    setRescheduleSlots([]);
-    setRescheduleLoadingSlots(true);
-    setError(null);
-
-    const dateFrom = new Date().toISOString().slice(0, 10);
-    const dateTo = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10);
-
-    const res = await consultationsService.getProviderSlots(
-      booking.providerId,
-      {
-        consultationTypeId: booking.consultationTypeId,
-        dateFrom,
-        dateTo,
-      },
-    );
-
-    if (res.success && res.data) {
-      const available = res.data.filter((s) => s.isAvailable);
-      setRescheduleSlots(available);
-      const first = available[0];
-      if (first) {
-        setRescheduleSelectedDate(formatLocal(first.startsAt, "yyyy-MM-dd"));
-      }
-    }
-    setRescheduleLoadingSlots(false);
-  };
-
-  const confirmReschedule = async () => {
-    if (!rescheduleTarget || !rescheduleSelectedSlot) return;
-    setRescheduling(true);
-    setError(null);
-
-    const res = await consultationsService.rescheduleBooking(
-      rescheduleTarget.id,
-      {
-        startsAt: rescheduleSelectedSlot.startsAt,
-        reason: rescheduleReason.trim() || undefined,
-      },
-    );
-
-    if (res.success) {
-      setRescheduleTarget(null);
-      setRescheduleReason("");
-      setRescheduleSelectedSlot(null);
-      setRescheduleSelectedDate("");
-      await loadAllBookings();
-    } else {
-      const msg = (
-        res.message ?? "Failed to reschedule booking."
-      ).toLowerCase();
-      const isConflict =
-        msg.includes("conflict") ||
-        msg.includes("taken") ||
-        msg.includes("unavailable") ||
-        msg.includes("already booked") ||
-        msg.includes("no longer available") ||
-        msg.includes("slot");
-      if (isConflict) {
-        setRescheduleSelectedSlot(null);
-        setError("__slot_taken__");
-        // Re-fetch fresh slots for the reschedule target
-        if (rescheduleTarget) {
-          const now = new Date();
-          const twoWeeks = new Date(now.getTime() + 14 * 86400000);
-          const fresh = await consultationsService.getProviderSlots(
-            rescheduleTarget.providerId,
-            {
-              consultationTypeId: rescheduleTarget.consultationTypeId,
-              dateFrom: now.toISOString(),
-              dateTo: twoWeeks.toISOString(),
-            },
-          );
-          if (fresh.success && fresh.data) {
-            setRescheduleSlots(
-              fresh.data.filter((s: ConsultationSlot) => s.isAvailable),
-            );
-          }
-        }
-      } else {
-        setError(res.message ?? "Failed to reschedule booking.");
-      }
-    }
-    setRescheduling(false);
-  };
-
-  const rescheduleSlotDates = useMemo(() => {
-    const dates = new Map<string, { key: string; label: string }>();
-    for (const slot of rescheduleSlots) {
-      const key = formatLocal(slot.startsAt, "yyyy-MM-dd");
-      if (!dates.has(key)) {
-        dates.set(key, {
-          key,
-          label: formatLocal(slot.startsAt, "EEE, MMM d"),
-        });
-      }
-    }
-    return Array.from(dates.values());
-  }, [rescheduleSlots]);
-
-  const rescheduleTimesForDate = useMemo(() => {
-    if (!rescheduleSelectedDate) return [];
-    return rescheduleSlots.filter(
-      (s) => formatLocal(s.startsAt, "yyyy-MM-dd") === rescheduleSelectedDate,
-    );
-  }, [rescheduleSlots, rescheduleSelectedDate]);
-
-  if (isLoading) return <DashboardLoading />;
-  if (!isAuthenticated) return null;
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <DashboardSidebar />
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`text-left w-full grid gap-5 p-4.5 px-5 rounded-(--r-3) mb-3 ${isSelected ? "border-ink" : "hover:border-ink"}`}
+      style={{
+        gridTemplateColumns: "auto 1fr auto",
+        border: `1px solid ${isSelected ? "var(--ink)" : "var(--border)"}`,
+        background: "var(--bg)",
+        transition: "border-color 120ms",
+        alignItems: "center",
+        cursor: "pointer",
+      }}
+    >
+      <div
+        className="flex flex-col items-center gap-0.5 shrink-0"
+        style={{ paddingRight: 20, borderRight: "1px solid var(--border)", minWidth: 56 }}
+      >
+        <span className="font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}>
+          {date.month}
+        </span>
+        <span
+          className="font-medium leading-none text-[28px]"
+          style={{ letterSpacing: "-0.025em", fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}
+        >
+          {date.day}
+        </span>
+        <span className="font-mono text-[10px] uppercase" style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}>
+          {date.dow}
+        </span>
+      </div>
 
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground mb-2">
-            My Bookings
-          </h1>
-          <p className="text-sm text-foreground-secondary">
-            Manage your gym visits, trainer sessions, and consultations
-          </p>
+      <div className="flex flex-col gap-1 min-w-0">
+        <div className="text-[15px] font-medium truncate" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>
+          Consultation &middot; {durationMin} min
         </div>
-
-        {/* Tabs */}
-        <div className="mb-6 sm:mb-8">
-          <div className="border-b border-neutral-200">
-            <div className="flex gap-4 sm:gap-8 overflow-x-auto">
-              <button
-                onClick={() => setSelectedTab("upcoming")}
-                className={`pb-3 sm:pb-4 text-sm font-medium transition-colors whitespace-nowrap ${
-                  selectedTab === "upcoming"
-                    ? "border-b-2 border-foreground text-foreground"
-                    : "text-foreground-secondary hover:text-foreground"
-                }`}
-              >
-                Upcoming ({upcomingCount})
-              </button>
-              <button
-                onClick={() => setSelectedTab("past")}
-                className={`pb-3 sm:pb-4 text-sm font-medium transition-colors whitespace-nowrap ${
-                  selectedTab === "past"
-                    ? "border-b-2 border-foreground text-foreground"
-                    : "text-foreground-secondary hover:text-foreground"
-                }`}
-              >
-                Past ({pastCount})
-              </button>
-            </div>
-          </div>
+        <div
+          className="flex flex-wrap items-center gap-3 font-mono text-[11.5px] uppercase"
+          style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}
+        >
+          <span>{date.time}</span>
+          <span className="w-0.75 h-0.75 rounded-full" style={{ background: "var(--border-2)" }} />
+          <span>{booking.clientTimezone || getClientTimezone()}</span>
         </div>
-
-        {error && (
-          <div
-            className={`mb-6 rounded-lg px-4 py-3 text-sm ${
-              error === "__slot_taken__"
-                ? "bg-amber-50 text-amber-800 border border-amber-200"
-                : "bg-red-50 text-red-700"
-            }`}
-          >
-            {error === "__slot_taken__" ? (
-              <span>
-                That time slot was just taken. The available times have been
-                refreshed — please pick a new slot.
-              </span>
-            ) : (
-              error
-            )}
+        {booking.notes && (
+          <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
+            {booking.notes}
           </div>
         )}
+      </div>
 
-        {/* Bookings List */}
-        <div className="space-y-4">
-          {loadingBookings ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-r-transparent" />
-            </div>
-          ) : (
-            bookings.map((booking) => {
-              const providerName =
-                providerMap.get(booking.providerId) ||
-                `Provider ${booking.providerId.slice(-6)}`;
-              const typeName =
-                typeMap.get(booking.consultationTypeId) || "Consultation";
-              const startsAt = formatLocal(
-                booking.startsAt,
-                "EEE, MMM d • h:mm a",
-              );
-              const endsAt = formatLocal(booking.endsAt, "h:mm a");
-              const durationMinutes = Math.max(
-                0,
-                Math.round(
-                  (new Date(booking.endsAt).getTime() -
-                    new Date(booking.startsAt).getTime()) /
-                    60000,
-                ),
-              );
-              const isCancelable =
-                booking.status === ConsultationBookingStatus.CONFIRMED ||
-                booking.status === ConsultationBookingStatus.PENDING;
+      <div className="flex flex-col items-end gap-1.5">
+        <StatusPill variant={statusVariant(booking.status)} label={statusLabel(booking.status)} />
+        <span
+          className="font-mono text-[11.5px]"
+          style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}
+        >
+          ID {booking.id.slice(-8)}
+        </span>
+      </div>
+    </button>
+  );
+}
 
-              return (
-                <div
-                  key={booking.id}
-                  className="bg-background p-4 sm:p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)]"
-                >
-                  <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
-                        <span className="bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">
-                          {typeName}
-                        </span>
-                        <span
-                          className={`px-3 py-1 text-xs font-semibold ${
-                            booking.status ===
-                            ConsultationBookingStatus.CONFIRMED
-                              ? "bg-green-100 text-green-700"
-                              : booking.status ===
-                                  ConsultationBookingStatus.COMPLETED
-                                ? "bg-blue-100 text-blue-700"
-                                : booking.status ===
-                                      ConsultationBookingStatus.CANCELLED ||
-                                    booking.status ===
-                                      ConsultationBookingStatus.NO_SHOW
-                                  ? "bg-neutral-100 text-foreground-tertiary"
-                                  : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {booking.status.replace("_", " ")}
-                        </span>
-                      </div>
+function EmptyState({ tab }: { tab: TabKey }) {
+  const copy = {
+    upcoming: { title: "No upcoming sessions", sub: "Book a new session from the marketplace." },
+    past: { title: "No past sessions yet", sub: "Once you complete a booking it appears here." },
+    cancelled: { title: "No cancelled sessions", sub: "Your cancellation history will appear here." },
+  };
+  const c = copy[tab];
+  return (
+    <div
+      className="rounded-(--r-3) p-10 text-center"
+      style={{ border: "1px dashed var(--border-2)", background: "var(--bg)" }}
+    >
+      <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+        {c.title}
+      </div>
+      <div className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+        {c.sub}
+      </div>
+      {tab === "upcoming" && (
+        <Link href="/marketplace" className="btn-primary-v2 sm mt-4 inline-flex">
+          Browse marketplace
+        </Link>
+      )}
+    </div>
+  );
+}
 
-                      <h3 className="font-display text-base sm:text-lg font-bold text-foreground mb-2">
-                        {providerName} - {typeName}
-                      </h3>
+export default function MyBookingsPage() {
+  const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
+  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
-                        <div>
-                          <p className="text-foreground-tertiary mb-1">
-                            Date & Time
-                          </p>
-                          <p className="font-medium text-foreground">
-                            {startsAt} - {endsAt}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-foreground-tertiary mb-1">
-                            Location
-                          </p>
-                          <p className="font-medium text-foreground">Virtual</p>
-                        </div>
-                        <div>
-                          <p className="text-foreground-tertiary mb-1">
-                            Duration
-                          </p>
-                          <p className="font-medium text-foreground">
-                            {durationMinutes} min
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+  const loadBookings = async (tab: TabKey) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiStatus = tab === "past" ? "past" : tab === "upcoming" ? "upcoming" : undefined;
+      const response = await consultationsService.getMyBookings(apiStatus);
+      const all = response.data ?? [];
+      const filtered = tab === "cancelled"
+        ? all.filter((b) => b.status === ConsultationBookingStatus.CANCELLED || b.status === ConsultationBookingStatus.NO_SHOW)
+        : all;
+      setBookings(filtered);
+      setSelectedId((prev) => (prev && filtered.some((b) => b.id === prev) ? prev : filtered[0]?.id ?? null));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to load bookings";
+      setError(message);
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    {isCancelable && (
-                      <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto lg:ml-6">
-                        <button
-                          disabled={actioningBookingId === booking.id}
-                          onClick={() => openReschedule(booking)}
-                          className="px-4 py-2 text-sm font-medium text-accent-blue-500 hover:bg-accent-blue-50 transition-colors text-center disabled:opacity-50"
-                        >
-                          Reschedule
-                        </button>
-                        <Link
-                          href={`/dashboard/bookings/consultations?providerId=${encodeURIComponent(booking.providerId)}`}
-                          className="px-4 py-2 text-sm font-medium text-foreground-secondary hover:bg-neutral-100 transition-colors text-center"
-                        >
-                          Book New Time
-                        </Link>
-                        <button
-                          disabled={actioningBookingId === booking.id}
-                          onClick={() => onCancelBooking(booking.id)}
-                          className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 text-center"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
+  useEffect(() => {
+    let isMounted = true;
+    void (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const apiStatus = activeTab === "past" ? "past" : activeTab === "upcoming" ? "upcoming" : undefined;
+        const response = await consultationsService.getMyBookings(apiStatus);
+        if (!isMounted) return;
+        const all = response.data ?? [];
+        const filtered = activeTab === "cancelled"
+          ? all.filter((b) => b.status === ConsultationBookingStatus.CANCELLED || b.status === ConsultationBookingStatus.NO_SHOW)
+          : all;
+        setBookings(filtered);
+        setSelectedId(filtered[0]?.id ?? null);
+      } catch (err) {
+        if (!isMounted) return;
+        const message = err instanceof Error ? err.message : "Failed to load bookings";
+        setError(message);
+        setBookings([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab]);
 
-          {!loadingBookings && bookings.length === 0 && (
-            <div className="bg-background p-12 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-foreground-tertiary mb-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+  const selected = useMemo(() => bookings.find((b) => b.id === selectedId) ?? null, [bookings, selectedId]);
+  const grouped = useMemo(() => groupByMonth(bookings), [bookings]);
+  const counts = useMemo(() => bookings.length, [bookings]);
+
+  return (
+    <div style={{ background: "var(--bg)" }}>
+      <nav
+        className="flex items-center justify-between h-14 sm:h-15 px-5 sm:px-10 sticky top-0 z-10"
+        style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center gap-7">
+          <Link href="/">
+            <BinecticsLockup />
+          </Link>
+          <div className="hidden sm:flex gap-1">
+            {[
+              { href: "/marketplace", label: "Marketplace" },
+              { href: "/dashboard/bookings", label: "My bookings", active: true },
+              { href: "/dashboard/loyalty", label: "Loyalty" },
+              { href: "/dashboard/notifications", label: "Notifications" },
+            ].map((l) => (
+              <Link
+                key={l.label}
+                href={l.href}
+                className={`px-3 py-2 rounded-(--r-2) text-[13.5px] ${l.active ? "bg-bg-3 font-medium" : "hover:bg-bg-2"}`}
+                style={{ color: l.active ? "var(--ink)" : "var(--fg-2)" }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <p className="text-lg font-semibold text-foreground mb-2">
-                No {selectedTab} bookings
-              </p>
-              <p className="text-sm text-foreground-secondary mb-6">
-                {selectedTab === "upcoming"
-                  ? "Book your next consultation from your connected providers."
-                  : "Your past consultations will appear here."}
-              </p>
-              {selectedTab === "upcoming" && (
-                <Link
-                  href="/dashboard/bookings/consultations"
-                  className="inline-flex h-10 items-center justify-center bg-primary-500 px-6 text-sm font-semibold text-foreground transition-colors hover:bg-primary-600"
-                >
-                  Book Consultation
-                </Link>
-              )}
+                {l.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      <div className="mx-auto max-w-360 px-5 sm:px-10 pt-6 sm:pt-8 pb-20">
+        <div
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6 pb-6"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
+          <div>
+            <h1 className="text-[32px] font-medium leading-none" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+              Your bookings
+            </h1>
+            <div className="text-[14px] mt-2" style={{ color: "var(--fg-3)" }}>
+              All your sessions across trainers and dietitians, in one place.
             </div>
-          )}
+          </div>
+          <div className="flex gap-2">
+            <Link href="/marketplace" className="btn-primary-v2 sm">
+              + Book new session
+            </Link>
+          </div>
         </div>
 
-        {/* Reschedule Modal */}
-        {rescheduleTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-[var(--shadow-elevated)] max-h-[90vh] overflow-y-auto">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-display text-xl font-bold text-foreground">
-                  Reschedule Booking
-                </h2>
-                <button
-                  onClick={() => setRescheduleTarget(null)}
-                  className="rounded-lg p-1 text-foreground-tertiary hover:bg-neutral-100"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+        <div className="flex gap-0 mb-6" style={{ borderBottom: "1px solid var(--border)" }}>
+          {TABS.map((t) => {
+            const isActive = activeTab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`px-4.5 py-3 text-[14px] -mb-px cursor-pointer inline-flex items-center gap-2 ${isActive ? "border-b-2 border-ink font-medium" : ""}`}
+                style={{ color: isActive ? "var(--ink)" : "var(--fg-3)" }}
+              >
+                {t.label}
+                {isActive && (
+                  <span
+                    className="font-mono text-[11px] px-1.5 py-px"
+                    style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                    {counts}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] items-start gap-6 lg:gap-8">
+          <div>
+            {loading && (
+              <div className="rounded-(--r-3) px-4.5 py-8" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <AsyncSpinner label="Loading bookings" />
+              </div>
+            )}
+            {!loading && error && (
+              <div
+                className="rounded-(--r-3) p-5"
+                style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}
+              >
+                <div className="text-[14px] font-medium">Couldn&apos;t load bookings</div>
+                <div className="text-[13px] mt-1" style={{ color: "var(--ink)" }}>
+                  {error}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => loadBookings(activeTab)}
+                  className="btn-ghost-v2 sm mt-3"
+                >
+                  Try again
                 </button>
               </div>
-
-              <p className="mb-4 text-sm text-foreground-secondary">
-                Current time:{" "}
-                <span className="font-medium text-foreground">
-                  {formatLocal(
-                    rescheduleTarget.startsAt,
-                    "EEE, MMM d • h:mm a",
-                  )}
-                </span>
-              </p>
-
-              {rescheduleLoadingSlots ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-r-transparent" />
-                </div>
-              ) : rescheduleSlots.length === 0 ? (
-                <p className="py-8 text-center text-sm text-foreground-secondary">
-                  No available slots found in the next 14 days.
-                </p>
-              ) : (
-                <>
-                  <p className="mb-2 text-sm font-semibold text-foreground">
-                    Pick a new date
-                  </p>
-                  <div className="mb-4 flex flex-wrap gap-2">
-                    {rescheduleSlotDates.map((d) => (
-                      <button
-                        key={d.key}
-                        onClick={() => {
-                          setRescheduleSelectedDate(d.key);
-                          setRescheduleSelectedSlot(null);
-                        }}
-                        className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                          rescheduleSelectedDate === d.key
-                            ? "border-primary-500 bg-primary-100 font-semibold text-foreground"
-                            : "border-neutral-300 text-foreground-secondary hover:bg-neutral-50"
-                        }`}
-                      >
-                        {d.label}
-                      </button>
+            )}
+            {!loading && !error && bookings.length === 0 && <EmptyState tab={activeTab} />}
+            {!loading && !error && bookings.length > 0 && (
+              <>
+                {grouped.map(([monthLabel, items]) => (
+                  <div key={monthLabel} className="mb-1">
+                    <div
+                      className="flex justify-between font-mono text-[11px] uppercase pb-1.5"
+                      style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}
+                    >
+                      <span>{monthLabel}</span>
+                      <span style={{ color: "var(--fg-4)" }}>
+                        {items.length} {items.length === 1 ? "session" : "sessions"}
+                      </span>
+                    </div>
+                    {items.map((b) => (
+                      <BookingRow
+                        key={b.id}
+                        booking={b}
+                        isSelected={b.id === selectedId}
+                        onSelect={() => setSelectedId(b.id)}
+                      />
                     ))}
                   </div>
-
-                  {rescheduleTimesForDate.length > 0 && (
-                    <>
-                      <p className="mb-2 text-sm font-semibold text-foreground">
-                        Pick a new time
-                      </p>
-                      <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {rescheduleTimesForDate.map((slot) => {
-                          const selected =
-                            rescheduleSelectedSlot?.startsAt === slot.startsAt;
-                          return (
-                            <button
-                              key={slot.startsAt}
-                              onClick={() => setRescheduleSelectedSlot(slot)}
-                              className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                                selected
-                                  ? "border-primary-500 bg-primary-100"
-                                  : "border-neutral-300 hover:bg-neutral-50"
-                              }`}
-                            >
-                              <p className="font-semibold text-foreground">
-                                {formatLocal(slot.startsAt, "h:mm a")}
-                              </p>
-                              <p className="mt-0.5 text-xs text-foreground-secondary">
-                                {dualTimezoneLabel(
-                                  slot.startsAt,
-                                  slot.endsAt,
-                                  slot.providerTimezone,
-                                )}
-                              </p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-
-                  <input
-                    type="text"
-                    value={rescheduleReason}
-                    onChange={(e) => setRescheduleReason(e.target.value)}
-                    placeholder="Reason for rescheduling (optional)"
-                    className="mb-4 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                  />
-                </>
-              )}
-
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setRescheduleTarget(null)}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-foreground-secondary hover:bg-neutral-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmReschedule}
-                  disabled={!rescheduleSelectedSlot || rescheduling}
-                  className="rounded-lg bg-primary-500 px-5 py-2 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {rescheduling ? "Rescheduling..." : "Confirm Reschedule"}
-                </button>
-              </div>
-            </div>
+                ))}
+              </>
+            )}
           </div>
-        )}
-      </main>
+
+          <div
+            className="hidden lg:block sticky top-20 rounded-(--r-3) overflow-hidden"
+            style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+          >
+            {!selected && (
+              <div className="p-6 text-[13px] text-center" style={{ color: "var(--fg-3)" }}>
+                Select a booking to see details.
+              </div>
+            )}
+            {selected && (
+              <>
+                <div className="px-5 pt-4.5 pb-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+                    Booking {selected.id.slice(-8)}
+                  </div>
+                  <div className="text-[18px] font-medium mt-1.5" style={{ letterSpacing: "-0.012em", color: "var(--ink)" }}>
+                    {formatDateBlock(selected.startsAt).full}
+                  </div>
+                </div>
+
+                <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <StatusPill variant={statusVariant(selected.status)} label={statusLabel(selected.status)} />
+                  {selected.cancelReason && (
+                    <div className="text-[12.5px] mt-2" style={{ color: "var(--fg-3)" }}>
+                      {selected.cancelReason}
+                    </div>
+                  )}
+                </div>
+
+                <div className="px-5 py-4 flex flex-col gap-1.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>
+                    When &amp; where
+                  </div>
+                  {[
+                    { k: "Date", v: formatDateBlock(selected.startsAt).full },
+                    { k: "Time", v: formatDateBlock(selected.startsAt).time },
+                    {
+                      k: "Duration",
+                      v: `${Math.round((new Date(selected.endsAt).getTime() - new Date(selected.startsAt).getTime()) / 60000)} min`,
+                    },
+                    { k: "Timezone", v: selected.providerTimezone || getClientTimezone() },
+                  ].map((r) => (
+                    <div key={r.k} className="flex justify-between text-[13px] py-1.5 gap-3">
+                      <span style={{ color: "var(--fg-3)" }}>{r.k}</span>
+                      <span className="font-mono text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+                        {r.v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {selected.notes && (
+                  <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>
+                      Notes
+                    </div>
+                    <div className="text-[13px] leading-relaxed" style={{ color: "var(--ink)" }}>
+                      {selected.notes}
+                    </div>
+                  </div>
+                )}
+
+                {(selected.status === ConsultationBookingStatus.PENDING ||
+                  selected.status === ConsultationBookingStatus.CONFIRMED) && (
+                  <div className="px-5 py-4 flex flex-col gap-2" style={{ background: "var(--bg-2)" }}>
+                    <button
+                      type="button"
+                      onClick={() => setRescheduleOpen(true)}
+                      className="btn-ghost-v2 sm w-full justify-center"
+                      disabled={actionLoading}
+                    >
+                      Reschedule
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCancelOpen(true)}
+                      className="btn-ghost-v2 sm w-full justify-center"
+                      style={{ color: "var(--danger)" }}
+                      disabled={actionLoading}
+                    >
+                      Cancel booking
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {selected && (
+        <>
+          <RescheduleModal
+            key={`reschedule-${selected.id}-${rescheduleOpen}`}
+            open={rescheduleOpen}
+            booking={selected}
+            loading={actionLoading}
+            onClose={() => setRescheduleOpen(false)}
+            onConfirm={async (startsAt, reason) => {
+              setActionLoading(true);
+              try {
+                await consultationsService.rescheduleBooking(selected.id, { startsAt, reason });
+                toast.success("Booking rescheduled");
+                setRescheduleOpen(false);
+                await loadBookings(activeTab);
+              } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to reschedule";
+                toast.error(message);
+              } finally {
+                setActionLoading(false);
+              }
+            }}
+          />
+          <CancelModal
+            key={`cancel-${selected.id}-${cancelOpen}`}
+            open={cancelOpen}
+            booking={selected}
+            loading={actionLoading}
+            onClose={() => setCancelOpen(false)}
+            onConfirm={async (reason) => {
+              setActionLoading(true);
+              try {
+                await consultationsService.cancelBooking(selected.id, { reason });
+                toast.success("Booking cancelled");
+                setCancelOpen(false);
+                await loadBookings(activeTab);
+              } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to cancel";
+                toast.error(message);
+              } finally {
+                setActionLoading(false);
+              }
+            }}
+          />
+        </>
+      )}
     </div>
+  );
+}
+
+function RescheduleModal({
+  open,
+  booking,
+  loading,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  booking: ConsultationBooking;
+  loading: boolean;
+  onClose: () => void;
+  onConfirm: (startsAt: string, reason?: string) => void;
+}) {
+  const isoLocal = (d: Date) => {
+    const tz = d.getTimezoneOffset();
+    const adj = new Date(d.getTime() - tz * 60000);
+    return adj.toISOString().slice(0, 16);
+  };
+  const [value, setValue] = useState(() => isoLocal(new Date(booking.startsAt)));
+  const [reason, setReason] = useState("");
+
+  return (
+    <ActionModal
+      open={open}
+      onClose={onClose}
+      title="Reschedule booking"
+      description="Pick a new date and time. We'll notify your provider."
+      footer={
+        <>
+          <button type="button" onClick={onClose} className="btn-ghost-v2" disabled={loading}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(new Date(value).toISOString(), reason || undefined)}
+            disabled={loading || !value}
+            className="btn-primary-v2 disabled:opacity-40"
+          >
+            {loading ? "Saving..." : "Confirm reschedule"}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
+            New start time
+          </label>
+          <input
+            type="datetime-local"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
+            Reason (optional)
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
+            placeholder="Anything your provider should know?"
+          />
+        </div>
+      </div>
+    </ActionModal>
+  );
+}
+
+function CancelModal({
+  open,
+  booking,
+  loading,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  booking: ConsultationBooking;
+  loading: boolean;
+  onClose: () => void;
+  onConfirm: (reason?: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+
+  const when = formatDateBlock(booking.startsAt);
+
+  return (
+    <ActionModal
+      open={open}
+      onClose={onClose}
+      title="Cancel booking"
+      description={`This will cancel your session on ${when.full} at ${when.time}.`}
+      footer={
+        <>
+          <button type="button" onClick={onClose} className="btn-ghost-v2" disabled={loading}>
+            Keep booking
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(reason || undefined)}
+            disabled={loading}
+            className="btn-primary-v2 disabled:opacity-40"
+            style={{ background: "var(--danger)", color: "white" }}
+          >
+            {loading ? "Cancelling..." : "Cancel booking"}
+          </button>
+        </>
+      }
+    >
+      <div>
+        <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
+          Reason (optional)
+        </label>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
+          placeholder="Helps your provider improve."
+        />
+      </div>
+    </ActionModal>
   );
 }

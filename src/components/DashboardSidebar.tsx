@@ -13,6 +13,7 @@ import {
   BookOpen,
   Dumbbell,
   Apple,
+  FileText,
   Calendar,
   Ticket,
   QrCode,
@@ -22,18 +23,18 @@ import {
 const ROLE_BADGE_MAP: Partial<Record<UserRole, RoleBadge>> = {
   GYM_OWNER: {
     label: "Gym Owner",
-    bgClass: "bg-accent-blue-50",
-    textClass: "text-accent-blue-700",
+    bgClass: "bg-gym-soft",
+    textClass: "text-gym",
   },
   TRAINER: {
     label: "Personal Trainer",
-    bgClass: "bg-accent-yellow-50",
-    textClass: "text-accent-yellow-700",
+    bgClass: "bg-trainer-soft",
+    textClass: "text-trainer",
   },
   DIETITIAN: {
     label: "Dietitian",
-    bgClass: "bg-accent-purple-50",
-    textClass: "text-accent-purple-700",
+    bgClass: "bg-dietitian-soft",
+    textClass: "text-diet",
   },
 };
 
@@ -82,6 +83,11 @@ const navItems: NavItem[] = [
     icon: <Apple className="h-5 w-5" />,
     label: "Nutrition",
     href: "/dashboard/nutrition",
+  },
+  {
+    icon: <FileText className="h-5 w-5" />,
+    label: "Forms",
+    href: "/forms",
   },
   {
     icon: <Calendar className="h-5 w-5" />,

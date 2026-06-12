@@ -245,23 +245,23 @@ export default function ConsultationBookingsManager({
   const typeMap = new Map(consultationTypes.map((t) => [t.id, t.name]));
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-bg">
       {sidebar}
 
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="mb-6">
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-fg">
             Bookings
           </h1>
-          <p className="mt-2 text-foreground-secondary">{description}</p>
+          <p className="mt-2 text-fg-2">{description}</p>
         </div>
 
         {message && (
           <div
-            className={`mb-6 rounded-lg px-4 py-3 text-sm ${
+            className={`mb-6 rounded-(--r-2) px-4 py-3 text-sm ${
               message.type === "success"
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-700"
+                ? "bg-signal-soft text-signal-ink"
+                : "bg-danger-soft text-danger"
             }`}
           >
             {message.text}
@@ -274,10 +274,10 @@ export default function ConsultationBookingsManager({
               <button
                 key={filter}
                 onClick={() => setBookingsFilter(filter)}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-(--r-2) px-4 py-2 text-sm font-medium transition-colors ${
                   bookingsFilter === filter
-                    ? "bg-foreground text-background"
-                    : "bg-neutral-100 text-foreground-secondary hover:bg-neutral-200"
+                    ? "bg-fg text-bg"
+                    : "bg-bg-2 text-fg-2 hover:bg-bg-3"
                 }`}
               >
                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -287,34 +287,34 @@ export default function ConsultationBookingsManager({
 
           <button
             onClick={() => void loadBookings()}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-neutral-100 px-3 text-sm font-medium text-foreground-secondary hover:bg-neutral-200 transition-colors"
+            className="inline-flex h-9 items-center gap-1.5 rounded-(--r-2) bg-bg-2 px-3 text-sm font-medium text-fg-2 hover:bg-bg-3 transition-colors"
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
           </button>
         </div>
 
-        <section className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
+        <section className="rounded-(--r-3) bg-bg p-6 shadow-(--shadow-card)">
           {loadingBookings ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-r-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-signal border-r-transparent" />
             </div>
           ) : bookings.length === 0 ? (
             <div className="py-12 text-center">
               <CalendarDays
-                className="mx-auto h-12 w-12 text-foreground-tertiary mb-4"
+                className="mx-auto h-12 w-12 text-fg-3 mb-4"
                 aria-hidden="true"
               />
-              <p className="text-lg font-semibold text-foreground mb-2">
+              <p className="text-lg font-semibold text-fg mb-2">
                 No {bookingsFilter === "all" ? "" : bookingsFilter} bookings
               </p>
-              <p className="text-sm text-foreground-secondary">
+              <p className="text-sm text-fg-2">
                 Client bookings will appear here once someone books a
                 consultation with you.
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-neutral-100">
+            <ul className="divide-y divide-border">
               {bookings.map((booking) => {
                 const typeName =
                   typeMap.get(booking.consultationTypeId) || "Consultation";
@@ -337,15 +337,15 @@ export default function ConsultationBookingsManager({
                 const isActioning = actioningBookingId === booking.id;
                 const statusStyles: Record<string, string> = {
                   [ConsultationBookingStatus.CONFIRMED]:
-                    "bg-green-50 text-green-700",
+                    "bg-signal-soft text-signal-ink",
                   [ConsultationBookingStatus.PENDING]:
-                    "bg-yellow-50 text-yellow-700",
+                    "bg-(--warn-soft,oklch(0.96_0.06_75)) text-(--warn)",
                   [ConsultationBookingStatus.COMPLETED]:
-                    "bg-blue-50 text-blue-700",
+                    "bg-bg-2 text-fg-2",
                   [ConsultationBookingStatus.CANCELLED]:
-                    "bg-neutral-100 text-foreground-tertiary",
+                    "bg-bg-2 text-fg-3",
                   [ConsultationBookingStatus.NO_SHOW]:
-                    "bg-red-50 text-red-700",
+                    "bg-danger-soft text-danger",
                 };
 
                 return (
@@ -355,22 +355,22 @@ export default function ConsultationBookingsManager({
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">
+                        <p className="text-sm font-semibold text-fg">
                           {typeName}
                         </p>
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                             statusStyles[booking.status] ??
-                            "bg-neutral-100 text-foreground-tertiary"
+                            "bg-bg-2 text-fg-3"
                           }`}
                         >
                           {booking.status.replace("_", " ")}
                         </span>
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-foreground-tertiary">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-3">
                         <span className="inline-flex items-center gap-1.5">
                           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                          <span className="text-foreground-secondary">
+                          <span className="text-fg-2">
                             {startsAt} – {endsAt}
                           </span>
                           <span>• {durationMinutes} min</span>
@@ -383,7 +383,7 @@ export default function ConsultationBookingsManager({
                         )}
                       </div>
                       {booking.notes && (
-                        <p className="mt-2 text-xs text-foreground-secondary">
+                        <p className="mt-2 text-xs text-fg-2">
                           <span className="font-semibold">Client note:</span>{" "}
                           {booking.notes}
                         </p>
@@ -395,21 +395,21 @@ export default function ConsultationBookingsManager({
                         <button
                           disabled={isActioning}
                           onClick={() => completeBooking(booking.id)}
-                          className="inline-flex h-8 items-center rounded-lg bg-primary-500 px-3 text-xs font-semibold text-foreground hover:bg-primary-600 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-8 items-center rounded-(--r-2) bg-signal px-3 text-xs font-semibold text-fg hover:bg-signal/90 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           Mark complete
                         </button>
                         <button
                           disabled={isActioning}
                           onClick={() => openRescheduleProvider(booking)}
-                          className="inline-flex h-8 items-center rounded-lg border border-neutral-200 px-3 text-xs font-medium text-foreground-secondary hover:bg-neutral-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-8 items-center rounded-(--r-2) border border-border px-3 text-xs font-medium text-fg-2 hover:bg-bg-2 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           Reschedule
                         </button>
                         <button
                           disabled={isActioning}
                           onClick={() => cancelBookingAsProvider(booking.id)}
-                          className="inline-flex h-8 items-center rounded-lg px-3 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-8 items-center rounded-(--r-2) px-3 text-xs font-medium text-danger hover:bg-danger-soft transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           Cancel
                         </button>
@@ -425,13 +425,13 @@ export default function ConsultationBookingsManager({
         {/* Reschedule modal */}
         {rescheduleTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl max-h-[90vh] flex flex-col">
-              <div className="flex items-center justify-between border-b border-neutral-100 p-5">
+            <div className="w-full max-w-2xl rounded-(--r-3) bg-bg shadow-(--shadow-2) max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between border-b border-border p-5">
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">
+                  <h3 className="text-lg font-bold text-fg">
                     Reschedule booking
                   </h3>
-                  <p className="mt-0.5 text-xs text-foreground-tertiary">
+                  <p className="mt-0.5 text-xs text-fg-3">
                     Currently:{" "}
                     {formatLocal(
                       rescheduleTarget.startsAt,
@@ -447,7 +447,7 @@ export default function ConsultationBookingsManager({
                     setRescheduleSelectedDate("");
                   }}
                   aria-label="Close"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-foreground-tertiary hover:bg-neutral-100 transition-colors"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-bg-2 transition-colors"
                 >
                   ×
                 </button>
@@ -456,26 +456,26 @@ export default function ConsultationBookingsManager({
               <div className="flex-1 overflow-y-auto">
                 {rescheduleLoadingSlots ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary-500 border-r-transparent" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-4 border-signal border-r-transparent" />
                   </div>
                 ) : rescheduleSlots.length === 0 ? (
                   <div className="py-12 text-center">
                     <Calendar
-                      className="mx-auto h-10 w-10 text-foreground-tertiary mb-3"
+                      className="mx-auto h-10 w-10 text-fg-3 mb-3"
                       aria-hidden="true"
                     />
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-fg">
                       No available slots
                     </p>
-                    <p className="mt-1 text-xs text-foreground-tertiary">
+                    <p className="mt-1 text-xs text-fg-3">
                       No openings in the next 14 days. Try cancelling instead.
                     </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr]">
                     {/* Day rail */}
-                    <div className="sm:max-h-[400px] sm:overflow-y-auto sm:border-r border-neutral-100 p-3 sm:p-2">
-                      <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wide text-foreground-tertiary">
+                    <div className="sm:max-h-[400px] sm:overflow-y-auto sm:border-r border-border p-3 sm:p-2">
+                      <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wide text-fg-3">
                         Date
                       </p>
                       <div className="flex sm:flex-col gap-1 overflow-x-auto sm:overflow-visible">
@@ -492,18 +492,18 @@ export default function ConsultationBookingsManager({
                                 setRescheduleSelectedDate(d.key);
                                 setRescheduleSelectedSlot(null);
                               }}
-                              className={`flex shrink-0 items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                              className={`flex shrink-0 items-center justify-between rounded-(--r-2) px-3 py-2 text-left text-sm transition-colors ${
                                 isActive
-                                  ? "bg-foreground text-background"
-                                  : "text-foreground-secondary hover:bg-neutral-100"
+                                  ? "bg-fg text-bg"
+                                  : "text-fg-2 hover:bg-bg-2"
                               }`}
                             >
                               <span className="font-medium">{d.label}</span>
                               <span
                                 className={`ml-3 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                   isActive
-                                    ? "bg-white/20 text-background"
-                                    : "bg-neutral-100 text-foreground-tertiary"
+                                    ? "bg-bg/20 text-bg"
+                                    : "bg-bg-2 text-fg-3"
                                 }`}
                               >
                                 {count}
@@ -516,15 +516,15 @@ export default function ConsultationBookingsManager({
 
                     {/* Time grid */}
                     <div className="sm:max-h-[400px] sm:overflow-y-auto p-4">
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-foreground-tertiary">
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-fg-3">
                         Available times
                       </p>
                       {!rescheduleSelectedDate ? (
-                        <p className="py-8 text-center text-sm text-foreground-tertiary">
+                        <p className="py-8 text-center text-sm text-fg-3">
                           Pick a date to see times.
                         </p>
                       ) : rescheduleTimesForDate.length === 0 ? (
-                        <p className="py-8 text-center text-sm text-foreground-tertiary">
+                        <p className="py-8 text-center text-sm text-fg-3">
                           No times available on this day.
                         </p>
                       ) : (
@@ -542,10 +542,10 @@ export default function ConsultationBookingsManager({
                                   s.endsAt,
                                   s.providerTimezone,
                                 )}
-                                className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                                className={`rounded-(--r-2) border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                                   isSelected
-                                    ? "border-foreground bg-foreground text-background"
-                                    : "border-neutral-200 text-foreground-secondary hover:border-foreground"
+                                    ? "border-fg bg-fg text-bg"
+                                    : "border-border text-fg-2 hover:border-fg"
                                 }`}
                               >
                                 {formatLocal(s.startsAt, "h:mm a")}
@@ -559,10 +559,10 @@ export default function ConsultationBookingsManager({
                 )}
               </div>
 
-              <div className="border-t border-neutral-100 p-5">
-                <label className="mb-1 block text-xs font-semibold text-foreground-secondary">
+              <div className="border-t border-border p-5">
+                <label className="mb-1 block text-xs font-semibold text-fg-2">
                   Reason{" "}
-                  <span className="font-normal text-foreground-tertiary">
+                  <span className="font-normal text-fg-3">
                     (optional, shared with client)
                   </span>
                 </label>
@@ -570,12 +570,12 @@ export default function ConsultationBookingsManager({
                   type="text"
                   value={rescheduleReason}
                   onChange={(e) => setRescheduleReason(e.target.value)}
-                  className="mb-4 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-foreground focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                  className="mb-4 w-full rounded-(--r-2) border border-border px-3 py-2 text-sm text-fg focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                   placeholder="e.g. Schedule conflict"
                 />
 
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs text-foreground-tertiary">
+                  <p className="text-xs text-fg-3">
                     {rescheduleSelectedSlot
                       ? `New time: ${formatLocal(
                           rescheduleSelectedSlot.startsAt,
@@ -591,14 +591,14 @@ export default function ConsultationBookingsManager({
                         setRescheduleSelectedSlot(null);
                         setRescheduleSelectedDate("");
                       }}
-                      className="inline-flex h-9 items-center rounded-lg px-4 text-sm font-medium text-foreground-secondary hover:bg-neutral-100 transition-colors"
+                      className="inline-flex h-9 items-center rounded-(--r-2) px-4 text-sm font-medium text-fg-2 hover:bg-bg-2 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       disabled={!rescheduleSelectedSlot || rescheduling}
                       onClick={confirmRescheduleProvider}
-                      className="inline-flex h-9 items-center rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                      className="inline-flex h-9 items-center rounded-(--r-2) bg-signal px-4 text-sm font-semibold text-fg hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                     >
                       {rescheduling ? "Rescheduling…" : "Confirm reschedule"}
                     </button>

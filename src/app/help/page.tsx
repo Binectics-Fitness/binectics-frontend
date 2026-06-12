@@ -1,390 +1,170 @@
 import Link from "next/link";
+import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Help Center - Binectics",
-  description:
-    "Get help with Binectics. Browse our help articles, FAQs, and support resources.",
+export const metadata: Metadata = {
+  title: "Help Centre",
+  description: "Find answers to common questions about using Binectics as a member or provider.",
 };
 
+/**
+ * Help center — help.html prototype. Pixel-perfect rebuild.
+ * Hero: max-w-1080, 88px top padding, 64px h1, r-3 search box at 720px.
+ * Quick cards: bg-2, 22px icon, hover→bg. Categories: 3-col, 32px icon square, 17px title.
+ * Trending: 2-col card grid. Contact: 3-col, 28px padding, ink middle card.
+ */
+
+const QUICK = [
+  { icon: <><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></>, title: "Reschedule a session", desc: "Free until 24 hours before · pick a new slot from your provider's calendar" },
+  { icon: <><path d="M3 10h13a5 5 0 1 1 0 10h-3"/><path d="m7 6-4 4 4 4"/></>, title: "Request a refund", desc: "Open a dispute from your booking page · decision within 24 hours" },
+  { icon: <><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></>, title: "Update payment method", desc: "Add or remove cards · switch primary · use mobile money" },
+  { icon: <><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>, title: "Reset password", desc: "Email link expires in 30 minutes · check spam if you don't see it" },
+];
+
+const CATEGORIES = [
+  { icon: <><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></>, title: "Bookings & sessions", count: 68, articles: ["How a booking gets confirmed", "Reschedule or cancel a session", "Check in with the QR code", "Recurring bookings explained"] },
+  { icon: <><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></>, title: "Payments & refunds", count: 54, articles: ["How the platform fee works", "When refunds arrive on your card", "Failed payments & retries", "Using Apple Pay & mobile money"] },
+  { icon: <><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>, title: "Your account", count: 42, articles: ["Change your email or phone", "Set up two‑factor authentication", "Manage notification settings", "Download a copy of your data"] },
+  { icon: <path d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>, title: "Provider onboarding", count: 71, articles: ["List your gym, studio, or practice", "What documents we need to verify", "Set up your packages & pricing", "Connect your payment gateway"] },
+  { icon: <><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></>, title: "QR check‑in & kiosk", count: 28, articles: ["Set up the kiosk app on an iPad", "Wall‑mount the kiosk · hardware list", "What to do if QR scanning fails", "Streak tracking explained"] },
+  { icon: <><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-7"/></>, title: "Plans & programming", count: 46, articles: ["Build a 12‑week program", "Customize the plan builder library", "Deliver PDF plans to clients", "Adherence & check‑in data"] },
+  { icon: <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>, title: "Earnings & payouts", count: 38, articles: ["When payouts arrive in your account", "Set up your payout schedule", "Tax statements & SARS forms", "Multi‑currency settlements"] },
+  { icon: <path d="M12 22s-8-4-8-12V5l8-3 8 3v5c0 8-8 12-8 12z"/>, title: "Trust & safety", count: 31, articles: ["How verification works", "Reporting a listing or review", "Our refund & protection policy", "Conduct & community guidelines"] },
+  { icon: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8M4.6 9a1.7 1.7 0 0 0-.3-1.8"/></>, title: "Technical issues", count: 34, articles: ["App keeps crashing on Android", "Calendar sync isn't working", "QR scanner is slow at low light", "Browser compatibility notes"] },
+];
+
+const TRENDING = [
+  { cat: "Payments & refunds", title: "When will my refund show up on my card?", desc: "Card refunds take 2–5 business days. Bank transfers usually settle next business day. We send a receipt the moment we issue the refund.", views: "4,128" },
+  { cat: "Bookings & sessions", title: "My provider hasn't confirmed my booking · what now?", desc: "Confirmations usually come within 4 hours. If 12+ have passed with no response, your card is released automatically — no charge to you.", views: "3,402" },
+  { cat: "Account", title: "Two‑factor codes aren't arriving by SMS", desc: "Three things to try, in order: switch to authenticator app, check carrier filters, change your country code. The walkthrough sorts 92% of cases.", views: "2,948" },
+  { cat: "QR check‑in", title: "Streak broke even though I checked in · why?", desc: "Time zones. Streaks are calculated in your home time zone, not the gym's. If you travel, switch your time zone in settings before midnight local.", views: "2,184" },
+  { cat: "Provider onboarding", title: "Why hasn't my listing been approved yet?", desc: "Average approval time is 36 hours. The most common reason for delay is a low‑resolution business document. Re‑upload at 1200×1500 or higher.", views: "1,866" },
+  { cat: "Earnings & payouts", title: "My payout is smaller than I expected", desc: "Three reasons account for nearly all variance: refunds inside the payout window, gateway fees, and exchange rate at settlement time. We show all three in your statement.", views: "1,422" },
+];
+
+const CONTACTS = [
+  { icon: <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.5 8.5 0 1 1 16-4z"/>, title: "In‑app chat", desc: "Open the chat bubble from any page. Replies usually within an hour on weekdays, four hours overnight or weekends.", meta: "3 humans online now · Cape Town & Lagos" },
+  { icon: <><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7 10-7"/></>, title: "Email a real person", desc: <><strong style={{ color: "var(--bg)", fontWeight: 500 }}>help@binectics.com</strong> · best for refunds, billing questions, anything you need a paper trail for. 4‑hour SLA, weekdays SAST.</>, meta: "Avg first reply · 1h 38m this week", ink: true },
+  { icon: <><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></>, title: "WhatsApp", desc: <>For providers in regions where WhatsApp is the preferred channel. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>+27 82 ••• 2024</strong> · expect a reply within 6 hours SAST.</>, meta: "South Africa & Nigeria only", dotColor: "var(--gym)" },
+];
+
 export default function HelpPage() {
-  const helpCategories = [
-    {
-      name: "Getting Started",
-      icon: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 10V3L4 14h7v7l9-11h-7z"
-          />
-        </svg>
-      ),
-      articles: [
-        { title: "How to create an account", href: "/help/create-account" },
-        {
-          title: "Choosing the right membership plan",
-          href: "/help/choose-plan",
-        },
-        { title: "Setting up your profile", href: "/help/setup-profile" },
-        { title: "Downloading the mobile app", href: "/help/mobile-app" },
-      ],
-    },
-    {
-      name: "Membership & Billing",
-      icon: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
-      ),
-      articles: [
-        {
-          title: "Managing your subscription",
-          href: "/help/manage-subscription",
-        },
-        { title: "Payment methods and billing", href: "/help/payment-methods" },
-        { title: "Canceling your membership", href: "/help/cancel-membership" },
-        { title: "Refund policy", href: "/help/refund-policy" },
-      ],
-    },
-    {
-      name: "Using Gyms & Check-in",
-      icon: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-        </svg>
-      ),
-      articles: [
-        { title: "Finding gyms near you", href: "/help/find-gyms" },
-        { title: "QR code check-in guide", href: "/qr-help" },
-        { title: "Gym access and rules", href: "/help/gym-rules" },
-        { title: "Reporting facility issues", href: "/help/report-issues" },
-      ],
-    },
-    {
-      name: "Booking Services",
-      icon: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-      articles: [
-        { title: "Booking a personal trainer", href: "/help/book-trainer" },
-        { title: "Scheduling with a dietitian", href: "/help/book-dietitian" },
-        {
-          title: "Canceling and rescheduling sessions",
-          href: "/help/reschedule",
-        },
-        { title: "Session pricing and credits", href: "/help/session-pricing" },
-      ],
-    },
-    {
-      name: "Account & Security",
-      icon: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
-        </svg>
-      ),
-      articles: [
-        { title: "Resetting your password", href: "/help/reset-password" },
-        { title: "Updating account information", href: "/help/update-account" },
-        { title: "Two-factor authentication", href: "/help/2fa" },
-        { title: "Privacy and data security", href: "/security" },
-      ],
-    },
-    {
-      name: "Mobile App",
-      icon: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-      articles: [
-        { title: "Installing the Binectics app", href: "/help/install-app" },
-        { title: "App features and navigation", href: "/help/app-features" },
-        {
-          title: "Troubleshooting app issues",
-          href: "/help/app-troubleshooting",
-        },
-        { title: "Enabling notifications", href: "/help/notifications" },
-      ],
-    },
-  ];
-
-  const popularArticles = [
-    {
-      title: "How to check in at a gym using QR code",
-      href: "/qr-help",
-      views: "12.5K",
-    },
-    {
-      title: "What is included in my membership?",
-      href: "/help/membership-included",
-      views: "10.2K",
-    },
-    {
-      title: "How to book a personal trainer session",
-      href: "/help/book-trainer",
-      views: "8.7K",
-    },
-    {
-      title: "Canceling or pausing my subscription",
-      href: "/help/cancel-membership",
-      views: "7.3K",
-    },
-    {
-      title: "Finding gyms when traveling abroad",
-      href: "/help/travel-gyms",
-      views: "6.1K",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="bg-background-secondary py-16">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl sm:text-5xl font-black text-foreground mb-4">
-            How can we help you?
-          </h1>
-          <p className="text-lg text-foreground-secondary mb-8">
-            Search our knowledge base or browse categories below
-          </p>
+    <div style={{ background: "var(--bg)" }}>
+      <MarketingTopbar />
 
-          {/* Search Bar */}
-          <div className="relative max-w-2xl mx-auto">
-            <input
-              type="text"
-              placeholder="Search help articles..."
-              className="w-full rounded-lg border-2 border-neutral-300 bg-background px-5 py-4 pl-12 text-foreground placeholder-foreground-secondary focus:border-primary-500 focus:outline-none"
-            />
-            <svg
-              className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground-secondary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
+      {/* Hero — max-w-1080, padding: 88px 40px 64px, h1: 64px */}
+      <section className="mx-auto text-center px-5 sm:px-10" style={{ maxWidth: "1080px", paddingTop: "88px", paddingBottom: "64px" }}>
+        <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Help center · 412 articles · 5 languages</div>
+        <h1 className="text-[36px] sm:text-[48px] lg:text-[64px] font-medium" style={{ lineHeight: 0.96, letterSpacing: "-0.04em", color: "var(--ink)", marginTop: "18px" }}>
+          What can we <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>help</em> with?
+        </h1>
+        <p className="text-[17px] mx-auto max-w-[60ch] leading-[1.55]" style={{ color: "var(--fg-2)", marginTop: "22px" }}>Most answers live below. If they don&apos;t, the contact options at the bottom of this page reach a real human within four hours on weekdays.</p>
+
+        {/* Search box — max-w-720, r-3, padding 14px 18px */}
+        <div className="mx-auto flex items-center gap-3 rounded-(--r-3)" style={{ maxWidth: "720px", marginTop: "36px", padding: "14px 18px", border: "1px solid var(--border)", background: "var(--bg)" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="shrink-0" style={{ color: "var(--fg-3)" }}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span className="flex-1 text-[16px] text-left" style={{ color: "var(--fg-3)" }}>Ask anything · refund a session, change my plan, dispute a charge…</span>
+          <span className="font-mono text-[11px] px-2 py-0.75 rounded-[4px]" style={{ border: "1px solid var(--border)", color: "var(--fg-3)" }}>⌘ K</span>
+        </div>
+        <div className="font-mono text-[11px] uppercase tracking-[0.05em] mt-3" style={{ color: "var(--fg-3)" }}><strong className="text-[13px] font-medium" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", textTransform: "none" as const, letterSpacing: "-0.005em" }}>2,481 searches</strong> answered this week · avg time to article 4 seconds</div>
+      </section>
+
+      {/* Quick links — bg-2 cards, 22px icon */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 pb-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {QUICK.map((q) => (
+            <div key={q.title} className="flex flex-col gap-2 rounded-(--r-3) cursor-pointer hover:border-ink hover:bg-bg" style={{ padding: "18px 20px", border: "1px solid var(--border)", background: "var(--bg-2)", transition: "border-color var(--motion-fast), background var(--motion-fast)" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--ink)" }}>{q.icon}</svg>
+              <div className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>{q.title}</div>
+              <div className="text-[12.5px] leading-[1.45]" style={{ color: "var(--fg-3)" }}>{q.desc}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Popular Articles */}
-      <section className="bg-background py-12 border-b border-neutral-300">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-2xl font-black text-foreground mb-6">
-            🔥 Popular Articles
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {popularArticles.map((article, index) => (
-              <Link
-                key={index}
-                href={article.href}
-                prefetch={false}
-                className="flex items-start justify-between rounded-lg border-2 border-neutral-300 bg-background p-4 transition-all hover:border-primary-500 hover:shadow-md"
-              >
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">
-                    {article.title}
-                  </h3>
-                  <p className="text-sm text-foreground-secondary">
-                    {article.views} views
-                  </p>
-                </div>
-                <svg
-                  className="h-5 w-5 text-foreground-secondary flex-shrink-0 ml-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </Link>
-            ))}
-          </div>
+      {/* Categories — 3-col, 32px icon square, 17px title, article links */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-10 sm:py-16" style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="flex items-baseline gap-3.5 mb-8">
+          <span className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>01</span>
+          <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Browse by topic</h2>
+          <div className="flex-1 border-b border-border mb-1.5" />
+          <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>9 categories · 412 articles</span>
         </div>
-      </section>
-
-      {/* Help Categories */}
-      <section className="bg-background py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-black text-foreground mb-8 text-center">
-            Browse by Category
-          </h2>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {helpCategories.map((category, index) => (
-              <div
-                key={index}
-                className="rounded-lg border-2 border-neutral-300 bg-background p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-500 text-white">
-                    {category.icon}
-                  </div>
-                  <h3 className="font-display text-xl font-bold text-foreground">
-                    {category.name}
-                  </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {CATEGORIES.map((c) => (
+            <div key={c.title} className="flex flex-col gap-3.5 rounded-(--r-3)" style={{ padding: "24px", border: "1px solid var(--border)", background: "var(--bg)" }}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="w-8 h-8 rounded-(--r-2) flex items-center justify-center shrink-0" style={{ background: "var(--bg-2)" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--ink)" }}>{c.icon}</svg>
                 </div>
-                <ul className="space-y-3">
-                  {category.articles.map((article, articleIndex) => (
-                    <li key={articleIndex}>
-                      <Link
-                        href={article.href}
-                        prefetch={false}
-                        className="flex items-center gap-2 text-foreground-secondary hover:text-accent-blue-500 transition-colors group"
-                      >
-                        <svg
-                          className="h-4 w-4 text-foreground-secondary group-hover:text-accent-blue-500 flex-shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                        <span className="text-sm">{article.title}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                <span className="font-mono text-[10.5px] uppercase tracking-[0.05em] text-right" style={{ color: "var(--fg-3)" }}>{c.count} articles</span>
               </div>
-            ))}
-          </div>
+              <div className="text-[17px] font-medium" style={{ letterSpacing: "-0.012em", color: "var(--ink)" }}>{c.title}</div>
+              <div className="flex flex-col gap-px mt-0.5">
+                {c.articles.map((a, i) => (
+                  <span key={a} className="flex justify-between items-center py-2 text-[13.5px] cursor-pointer hover:text-ink" style={{ color: "var(--fg-2)", borderBottom: i < c.articles.length - 1 ? "1px solid var(--border)" : "none", transition: "color var(--motion-fast)" }}>
+                    {a}
+                    <span className="font-mono" style={{ color: "var(--fg-4)" }}>→</span>
+                  </span>
+                ))}
+              </div>
+              <div className="font-mono text-[11px] uppercase tracking-[0.05em] pt-2 cursor-pointer hover:text-ink" style={{ color: "var(--fg-3)", borderTop: "1px solid var(--border)" }}>All {c.count} articles →</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Still Need Help */}
-      <section className="bg-background-secondary py-16">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-display text-3xl font-black text-foreground mb-4">
-            Still need help?
-          </h2>
-          <p className="text-lg text-foreground-secondary mb-8">
-            Can&apos;t find what you&apos;re looking for? Our support team is
-            here to help.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/contact"
-              prefetch={false}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-500 px-6 py-3 text-base font-semibold text-foreground shadow-button transition-colors hover:bg-primary-600"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              Email Support
-            </Link>
-            <Link
-              href="/status"
-              prefetch={false}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-neutral-300 bg-background px-6 py-3 text-base font-semibold text-foreground transition-colors hover:bg-neutral-100"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              System Status
-            </Link>
-          </div>
+      {/* Trending — 2-col card grid */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-10 sm:py-16" style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="flex items-baseline gap-3.5 mb-8">
+          <span className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>02</span>
+          <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Trending this week</h2>
+          <div className="flex-1 border-b border-border mb-1.5" />
+          <span className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>Most opened · last 7 days</span>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+          {TRENDING.map((t) => (
+            <div key={t.title} className="flex justify-between gap-4.5 items-start rounded-(--r-3) cursor-pointer hover:border-ink" style={{ padding: "18px 22px", border: "1px solid var(--border)", background: "var(--bg)", transition: "border-color var(--motion-fast)" }}>
+              <div className="flex-1 min-w-0">
+                <span className="inline-block font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-(--r-1) mb-2" style={{ color: "var(--fg-3)", border: "1px solid var(--border)", background: "var(--bg-2)" }}>{t.cat}</span>
+                <div className="text-[16px] font-medium leading-[1.3]" style={{ letterSpacing: "-0.012em", color: "var(--ink)" }}>{t.title}</div>
+                <div className="text-[13px] mt-1.5 leading-[1.55]" style={{ color: "var(--fg-2)" }}>{t.desc}</div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Opens / week</div>
+                <div className="text-[12.5px] font-medium mt-1" style={{ color: "var(--ink)", letterSpacing: "-0.005em" }}>{t.views}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Contact — 3-col, 28px padding, ink middle card, 28px icon */}
+      <section className="mx-auto max-w-360 px-5 sm:px-10 py-10 sm:py-16" style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="flex items-baseline gap-3.5 mb-8">
+          <span className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>03</span>
+          <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Still need a human?</h2>
+          <div className="flex-1 border-b border-border mb-1.5" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+          {CONTACTS.map((c) => (
+            <div key={c.title} className="flex flex-col gap-3.5 rounded-(--r-3)" style={{ padding: "28px", border: `1px solid ${c.ink ? "var(--ink)" : "var(--border)"}`, background: c.ink ? "var(--ink)" : "var(--bg)", color: c.ink ? "var(--bg)" : undefined }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: c.ink ? "var(--bg)" : "var(--ink)" }}>{c.icon}</svg>
+              <div className="text-[18px] font-medium" style={{ letterSpacing: "-0.012em", color: c.ink ? "var(--bg)" : "var(--ink)" }}>{c.title}</div>
+              <div className="text-[13.5px] leading-[1.55]" style={{ color: c.ink ? "oklch(0.82 0.005 85)" : "var(--fg-2)" }}>{c.desc}</div>
+              <div className="flex items-center gap-1.5 mt-auto font-mono text-[11px] uppercase tracking-[0.05em] pt-3.5" style={{ color: c.ink ? "oklch(0.65 0.005 85)" : "var(--fg-3)", borderTop: `1px solid ${c.ink ? "oklch(0.3 0.008 80)" : "var(--border)"}` }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: c.dotColor || "var(--signal)" }} />
+                {c.meta}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <MarketingFooter />
     </div>
   );
 }

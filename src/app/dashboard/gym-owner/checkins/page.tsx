@@ -1,554 +1,370 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
-import GymOwnerSidebar from "@/components/GymOwnerSidebar";
-import QRCode from "qrcode";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { checkinsService } from "@/lib/api/checkins";
-import { marketplaceService } from "@/lib/api/marketplace";
-import { CheckInHistoryPeriod, type CheckIn } from "@/lib/types";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { CheckInHistoryPeriod, type OrgCheckInDashboardStats, type CheckIn } from "@/lib/types";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────
+const TIME_FILTERS = [
+  { label: "Today", value: CheckInHistoryPeriod.TODAY },
+  { label: "Week", value: CheckInHistoryPeriod.WEEK },
+  { label: "Month", value: CheckInHistoryPeriod.MONTH },
+] as const;
 
-function getMemberName(checkIn: CheckIn): string {
-  if (
-    typeof checkIn.member_user_id === "object" &&
-    checkIn.member_user_id !== null
-  ) {
-    return `${checkIn.member_user_id.first_name} ${checkIn.member_user_id.last_name}`;
-  }
-  return "Unknown Member";
+// A successful poll older than this (slightly above the 30s interval) means a
+// refresh was missed, so we surface a degraded "stale" state.
+const STALE_AFTER_SECONDS = 75;
+
+type Freshness = "live" | "stale" | "offline";
+
+const STATUS_PILL: Record<Freshness, { color: string; bg: string; border: string; pulse: boolean }> = {
+  live: { color: "var(--signal-ink)", bg: "var(--signal-soft)", border: "oklch(0.88 0.05 148)", pulse: true },
+  stale: { color: "oklch(0.45 0.16 75)", bg: "oklch(0.96 0.06 75)", border: "oklch(0.85 0.08 75)", pulse: true },
+  offline: { color: "var(--danger)", bg: "var(--danger-soft)", border: "oklch(0.92 0.05 25)", pulse: false },
+};
+
+function personName(checkIn: CheckIn): string {
+  if (typeof checkIn.member_user_id === "string") return checkIn.member_user_id.slice(-8);
+  return `${checkIn.member_user_id.first_name} ${checkIn.member_user_id.last_name}`;
 }
 
-function getMemberInitials(checkIn: CheckIn): string {
-  if (
-    typeof checkIn.member_user_id === "object" &&
-    checkIn.member_user_id !== null
-  ) {
-    return `${checkIn.member_user_id.first_name.charAt(0)}${checkIn.member_user_id.last_name.charAt(0)}`;
-  }
-  return "?";
+function listingLabel(checkIn: CheckIn): string {
+  if (typeof checkIn.listing_id === "string") return checkIn.listing_id.slice(-8);
+  return checkIn.listing_id.headline;
 }
 
-function getMemberEmail(checkIn: CheckIn): string {
-  if (
-    typeof checkIn.member_user_id === "object" &&
-    checkIn.member_user_id !== null
-  ) {
-    return checkIn.member_user_id.email;
-  }
-  return "";
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "?";
 }
 
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function hourLabel(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+function dayLabel(iso: string): string {
+  return new Date(iso).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
 }
 
-// ─── Component ───────────────────────────────────────────────────────────
+export default function GymCheckinsPage() {
+  const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const [activeFilter, setActiveFilter] = useState<CheckInHistoryPeriod>(CheckInHistoryPeriod.TODAY);
+  const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
+  const [history, setHistory] = useState<CheckIn[]>([]);
+  const [loading, setLoading] = useState<boolean>(() => true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // Ticks forward on an interval so freshness labels recompute without a poll.
+  const [now, setNow] = useState<number>(0);
+  const mountedRef = useRef(true);
 
-export default function GymOwnerCheckInsPage() {
-  const { currentOrg } = useOrganization();
-  const [selectedPeriod, setSelectedPeriod] = useState<
-    "today" | "week" | "month"
-  >("today");
-  const [qrDataUrl, setQrDataUrl] = useState("");
-  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
-  const [stats, setStats] = useState({ today: 0, week: 0, month: 0 });
-  const [isLoading, setIsLoading] = useState(true);
-  const [listingId, setListingId] = useState<string | null>(null);
-  const [listingStatus, setListingStatus] = useState<
-    "loading" | "ready" | "missing"
-  >("loading");
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // Fetch the org's marketplace listing to get the correct listing ID for QR
   useEffect(() => {
-    if (!currentOrg) return;
-    let mounted = true;
-    setListingStatus("loading");
-    setListingId(null);
-    async function fetchListing() {
-      try {
-        const res = await marketplaceService.getOrgListing(currentOrg!._id);
-        if (!mounted) return;
-        if (res.success && res.data?._id) {
-          setListingId(res.data._id);
-          setListingStatus("ready");
-        } else {
-          setListingStatus("missing");
-        }
-      } catch {
-        if (mounted) setListingStatus("missing");
-      }
-    }
-    void fetchListing();
+    mountedRef.current = true;
     return () => {
-      mounted = false;
+      mountedRef.current = false;
     };
-  }, [currentOrg]);
+  }, []);
 
-  // Generate the check-in URL using the listing ID (not org ID)
-  const checkInUrl =
-    typeof window !== "undefined" && listingId
-      ? `${window.location.origin}/check-in/${listingId}`
-      : "";
-
-  // Render QR code whenever the URL is ready
+  // Track browser connectivity so we can pause polling and surface a degraded state.
   useEffect(() => {
-    if (!checkInUrl || !canvasRef.current) return;
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
 
-    QRCode.toCanvas(canvasRef.current, checkInUrl, {
-      width: 256,
-      margin: 2,
-      color: { dark: "#03314B", light: "#FFFFFF" },
-    }).catch((err) => console.error("QR canvas error", err));
+  // Re-evaluate the freshness label even when no successful poll has landed.
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 15_000);
+    return () => window.clearInterval(t);
+  }, []);
 
-    QRCode.toDataURL(checkInUrl, { width: 512 })
-      .then((url) => setQrDataUrl(url))
-      .catch((err) => console.error("QR dataURL error", err));
-  }, [checkInUrl]);
+  const load = useCallback(
+    async () => {
+      if (!currentOrg) return;
+      try {
+        const [statsRes, historyRes] = await Promise.all([
+          checkinsService.getOrgDashboardStats(currentOrg._id),
+          checkinsService.getOrgCheckIns(currentOrg._id, activeFilter),
+        ]);
 
-  const loadCheckIns = useCallback(async () => {
-    if (!currentOrg) return;
-    setIsLoading(true);
-    try {
-      const periodMap = {
-        today: CheckInHistoryPeriod.TODAY,
-        week: CheckInHistoryPeriod.WEEK,
-        month: CheckInHistoryPeriod.MONTH,
-      } as const;
-
-      const res = await checkinsService.getOrgCheckIns(
-        currentOrg._id,
-        periodMap[selectedPeriod],
-      );
-      if (res.success && res.data) {
-        setCheckIns(res.data);
+        if (!mountedRef.current) return;
+        const ok = statsRes.success && historyRes.success;
+        // Keep the last-known-good data on a failed refresh; only replace on
+        // success so a single dropped poll doesn't blank the live feed.
+        if (statsRes.success && statsRes.data) setStats(statsRes.data);
+        if (historyRes.success && historyRes.data) setHistory(historyRes.data);
+        setError(
+          ok ? null : statsRes.message || historyRes.message || "Failed to load check-ins",
+        );
+        if (ok) setLastUpdatedAt(Date.now());
+      } catch (err) {
+        if (!mountedRef.current) return;
+        setError(err instanceof Error ? err.message : "Failed to load check-ins");
+      } finally {
+        if (mountedRef.current) {
+          setLoading(false);
+          setIsRefreshing(false);
+        }
       }
-    } catch {
-      // silently fail — empty state shown
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentOrg, selectedPeriod]);
+    },
+    [currentOrg, activeFilter],
+  );
 
+  // Manual refresh: surface immediate spinner feedback, then reuse the poll.
+  const refresh = useCallback(() => {
+    setIsRefreshing(true);
+    void load();
+  }, [load]);
+
+  // Poll every 30s while online; pause entirely when the browser goes offline
+  // and resume with an immediate refetch when connectivity returns.
   useEffect(() => {
-    window.setTimeout(() => void loadCheckIns(), 0);
-  }, [loadCheckIns]);
+    if (orgLoading || !currentOrg) return;
+    if (!isOnline) return; // paused while offline; resumes on reconnect
+    const kick = window.setTimeout(() => void load(), 0);
+    const timer = window.setInterval(() => {
+      void load();
+    }, 30_000);
+    return () => {
+      window.clearTimeout(kick);
+      window.clearInterval(timer);
+    };
+  }, [load, orgLoading, currentOrg, isOnline]);
 
-  const loadStats = useCallback(async () => {
-    if (!currentOrg) return;
-    try {
-      const [todayRes, weekRes, monthRes] = await Promise.all([
-        checkinsService.getOrgCheckIns(
-          currentOrg._id,
-          CheckInHistoryPeriod.TODAY,
-        ),
-        checkinsService.getOrgCheckIns(
-          currentOrg._id,
-          CheckInHistoryPeriod.WEEK,
-        ),
-        checkinsService.getOrgCheckIns(
-          currentOrg._id,
-          CheckInHistoryPeriod.MONTH,
-        ),
-      ]);
-
-      setStats({
-        today: todayRes.success && todayRes.data ? todayRes.data.length : 0,
-        week: weekRes.success && weekRes.data ? weekRes.data.length : 0,
-        month: monthRes.success && monthRes.data ? monthRes.data.length : 0,
-      });
-    } catch {
-      setStats({ today: 0, week: 0, month: 0 });
+  const freshness = useMemo<{ kind: Freshness; label: string }>(() => {
+    if (!isOnline) return { kind: "offline", label: "Offline" };
+    if (lastUpdatedAt == null) return { kind: "stale", label: "Connecting…" };
+    const secs = Math.floor((now - lastUpdatedAt) / 1000);
+    if (secs > STALE_AFTER_SECONDS) {
+      const mins = Math.floor(secs / 60);
+      return { kind: "stale", label: mins >= 1 ? `Stale · ${mins}m old` : `Stale · ${secs}s old` };
     }
-  }, [currentOrg]);
+    return { kind: "live", label: "Live" };
+  }, [isOnline, lastUpdatedAt, now]);
 
-  useEffect(() => {
-    window.setTimeout(() => void loadStats(), 0);
-  }, [loadStats]);
+  const lastUpdatedLabel = lastUpdatedAt
+    ? new Date(lastUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : null;
+  const pill = STATUS_PILL[freshness.kind];
 
-  const downloadQRCode = () => {
-    if (!qrDataUrl) return;
-    const link = document.createElement("a");
-    link.download = "gym-checkin-qr-code.png";
-    link.href = qrDataUrl;
-    link.click();
-  };
+  const hourlyBars = useMemo(() => {
+    const buckets = new Map<number, number>();
+    for (const item of history) {
+      const hour = new Date(item.checked_in_at).getHours();
+      buckets.set(hour, (buckets.get(hour) ?? 0) + 1);
+    }
+    const maxCount = Math.max(...Array.from(buckets.values()), 1);
+    return Array.from({ length: 24 }, (_, hour) => ({ hour, count: buckets.get(hour) ?? 0, pct: ((buckets.get(hour) ?? 0) / maxCount) * 100 }));
+  }, [history]);
 
-  // Stats derived from loaded data
-  const todayCount = stats.today;
-  const weekCount = stats.week;
-  const monthCount = stats.month;
+  const topRow = [
+    { label: "Check-ins today", value: stats?.today_check_ins ?? 0, delta: `${stats?.week_check_ins ?? 0} this week` },
+    { label: "Active members", value: stats?.active_members ?? 0, delta: `${stats?.month_check_ins ?? 0} this month` },
+    { label: "Avg rating", value: (stats?.average_rating ?? 0).toFixed(1), delta: `${stats?.review_count ?? 0} reviews` },
+    { label: "Revenue today", value: `R ${(stats?.revenue_today ?? 0).toLocaleString()}`, delta: lastUpdatedLabel ? `Updated ${lastUpdatedLabel}` : "Waiting for refresh" },
+  ];
 
-  // Most recent check-in for "Last Check-in" stat
-  const lastCheckIn =
-    checkIns.length > 0 ? formatTime(checkIns[0].checked_in_at) : "—";
-
-  if (!currentOrg) {
-    return (
-      <div className="flex min-h-screen bg-background">
-        <GymOwnerSidebar />
-        <main className="md:ml-64 flex-1 flex items-center justify-center">
-          <p className="text-foreground/60">
-            Select an organisation to continue.
-          </p>
-        </main>
-      </div>
-    );
-  }
+  const stream = stats?.recent_check_ins ?? history;
+  const headline = currentOrg ? `${currentOrg.name} check-ins` : "Check-ins";
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <GymOwnerSidebar />
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-black text-foreground">
-              QR Check-ins
-            </h1>
-            <p className="text-foreground/60 mt-1">
-              Track member attendance and gym traffic
-            </p>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">
-                Today&apos;s Check-ins
-              </p>
-              {isLoading ? (
-                <div className="h-9 w-16 bg-neutral-100 animate-pulse rounded mt-2" />
-              ) : (
-                <p className="text-3xl font-black text-foreground mt-2">
-                  {todayCount}
-                </p>
-              )}
-            </div>
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">
-                This Week
-              </p>
-              {isLoading ? (
-                <div className="h-9 w-16 bg-neutral-100 animate-pulse rounded mt-2" />
-              ) : (
-                <p className="text-3xl font-black text-foreground mt-2">
-                  {weekCount}
-                </p>
-              )}
-            </div>
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">
-                This Month
-              </p>
-              {isLoading ? (
-                <div className="h-9 w-16 bg-neutral-100 animate-pulse rounded mt-2" />
-              ) : (
-                <p className="text-3xl font-black text-foreground mt-2">
-                  {monthCount}
-                </p>
-              )}
-            </div>
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">
-                Last Check-in
-              </p>
-              {isLoading ? (
-                <div className="h-9 w-20 bg-neutral-100 animate-pulse rounded mt-2" />
-              ) : (
-                <p className="text-3xl font-black text-foreground mt-2">
-                  {lastCheckIn}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* QR Code Section + Recent Check-ins */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* QR Card */}
-            <div className="bg-accent-blue-50 border-2 border-accent-blue-200 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4">
-                Your Gym QR Code
-              </h3>
-              <div className="bg-white rounded-lg p-6 flex items-center justify-center mb-4 min-h-[280px]">
-                {listingStatus === "loading" && (
-                  <div className="flex flex-col items-center gap-3 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-blue-500" />
-                    <p className="text-sm text-foreground/60">
-                      Loading your QR code…
-                    </p>
-                  </div>
-                )}
-                {listingStatus === "missing" && (
-                  <div className="flex flex-col items-center gap-3 text-center px-2">
-                    <div className="h-12 w-12 rounded-full bg-accent-blue-50 flex items-center justify-center">
-                      <svg
-                        className="h-6 w-6 text-accent-blue-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
-                        />
-                      </svg>
-                    </div>
-                    <p className="text-sm font-semibold text-foreground">
-                      No marketplace listing yet
-                    </p>
-                    <p className="text-xs text-foreground/60 leading-relaxed">
-                      Your QR code is generated from your marketplace listing.
-                      Create one to start accepting member check-ins.
-                    </p>
-                  </div>
-                )}
-                {listingStatus === "ready" && <canvas ref={canvasRef} />}
-              </div>
-              <p className="text-sm text-foreground/60 text-center mb-4">
-                Members scan this code to check in to your gym
-              </p>
-              {listingStatus === "missing" ? (
-                <Link
-                  href="/dashboard/gym-owner/marketplace"
-                  className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors flex items-center justify-center gap-2"
-                >
-                  Create Marketplace Listing
-                </Link>
-              ) : (
-                <div className="space-y-2">
-                  <button
-                    onClick={downloadQRCode}
-                    disabled={!qrDataUrl}
-                    className="w-full px-4 py-3 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                      />
-                    </svg>
-                    Download QR Code
-                  </button>
-                  <button
-                    onClick={() => window.print()}
-                    disabled={!qrDataUrl}
-                    className="w-full px-4 py-3 border-2 border-accent-blue-500 text-accent-blue-500 font-semibold rounded-lg hover:bg-accent-blue-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                      />
-                    </svg>
-                    Print QR Code
-                  </button>
-                </div>
-              )}
-              {checkInUrl && listingStatus === "ready" && (
-                <div className="mt-4 p-3 bg-white rounded-lg">
-                  <p className="text-xs font-semibold text-foreground/70 mb-1">
-                    Check-in URL:
-                  </p>
-                  <p className="text-xs text-foreground/60 break-all">
-                    {checkInUrl}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Recent Check-ins */}
-            <div className="lg:col-span-2 bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4">
-                Recent Check-ins
-              </h3>
-              {isLoading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg"
-                    >
-                      <div className="w-10 h-10 bg-neutral-200 rounded-full animate-pulse" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-neutral-200 rounded w-32 animate-pulse" />
-                        <div className="h-3 bg-neutral-100 rounded w-20 animate-pulse" />
-                      </div>
-                      <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
-                    </div>
-                  ))}
-                </div>
-              ) : checkIns.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-foreground/30"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-foreground/60 font-medium">
-                    No check-ins yet
-                  </p>
-                  <p className="text-sm text-foreground/40 mt-1">
-                    Share the QR code with your members to get started
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {checkIns.slice(0, 20).map((checkIn) => (
-                    <div
-                      key={checkIn._id}
-                      className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-accent-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                          {getMemberInitials(checkIn)}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground">
-                            {getMemberName(checkIn)}
-                          </p>
-                          <p className="text-sm text-foreground/60">
-                            {getMemberEmail(checkIn)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-foreground">
-                          {formatTime(checkIn.checked_in_at)}
-                        </p>
-                        <p className="text-sm text-foreground/60">
-                          {formatDate(checkIn.checked_in_at)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Check-in History with period filter */}
-          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-              <h3 className="text-lg font-bold text-foreground">
-                Check-in History
-              </h3>
-              <div className="flex gap-2">
-                {(["today", "week", "month"] as const).map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setSelectedPeriod(period)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedPeriod === period
-                        ? "bg-accent-blue-500 text-white"
-                        : "bg-neutral-100 text-foreground hover:bg-neutral-200"
-                    }`}
-                  >
-                    {period.charAt(0).toUpperCase() + period.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-16 bg-neutral-100 rounded-lg animate-pulse"
-                  />
-                ))}
-              </div>
-            ) : checkIns.length === 0 ? (
-              <div className="text-center py-10 text-foreground/50">
-                No check-ins in this period
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-neutral-200">
-                      <th className="text-left py-3 px-4 font-semibold text-foreground/70">
-                        Member
-                      </th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground/70">
-                        Email
-                      </th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground/70">
-                        Date
-                      </th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground/70">
-                        Time
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {checkIns.map((checkIn) => (
-                      <tr
-                        key={checkIn._id}
-                        className="hover:bg-neutral-50 transition-colors"
-                      >
-                        <td className="py-3 px-4 font-medium text-foreground">
-                          {getMemberName(checkIn)}
-                        </td>
-                        <td className="py-3 px-4 text-foreground/60">
-                          {getMemberEmail(checkIn)}
-                        </td>
-                        <td className="py-3 px-4 text-foreground/70">
-                          {formatDate(checkIn.checked_in_at)}
-                        </td>
-                        <td className="py-3 px-4 text-foreground/70">
-                          {formatTime(checkIn.checked_in_at)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+    <GymDashboardShell
+      activeItem="Check‑ins"
+      crumb="Check-ins"
+      organizationName={currentOrg?.name}
+      organizationInitials={currentOrg ? initials(currentOrg.name) : "IL"}
+      actions={
+        <div className="flex gap-2.5 items-center">
+          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.04em] px-2.5 py-1 rounded-full" style={{ color: pill.color, background: pill.bg, border: `1px solid ${pill.border}` }}>
+            <span className={`w-1.5 h-1.5 rounded-full ${pill.pulse ? "animate-pulse" : ""}`} style={{ background: pill.color }} />
+            {freshness.label} · {currentOrg ? currentOrg.name : "no org selected"}
+          </span>
+          <button
+            onClick={refresh}
+            disabled={isRefreshing || !isOnline || !currentOrg}
+            title={isOnline ? "Refresh now" : "Offline — reconnect to refresh"}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}
+          >
+            <span className={isRefreshing ? "inline-block animate-spin" : "inline-block"}>↻</span>
+            {isRefreshing ? "Refreshing" : "Refresh"}
+          </button>
+          <div className="inline-flex rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
+            {TIME_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setActiveFilter(f.value)}
+                className="px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer"
+                style={{
+                  background: activeFilter === f.value ? "var(--ink)" : "var(--bg)",
+                  color: activeFilter === f.value ? "var(--bg)" : "var(--fg-2)",
+                  border: "none",
+                  borderRight: f.value === TIME_FILTERS[TIME_FILTERS.length - 1].value ? "none" : "1px solid var(--border)",
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
         </div>
-      </main>
+      }
+    >
+      <div>
+        <h1 className="text-[30px] font-medium tracking-[-0.022em]" style={{ color: "var(--ink)" }}>{headline}</h1>
+        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+          {stats ? `${stats.today_check_ins} today · ${stats.week_check_ins} this week · ${stats.month_check_ins} this month` : "Live feed and occupancy metrics refresh every 30 seconds."}
+        </p>
+      </div>
+
+      {!currentOrg && !orgLoading ? (
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
+          Select an organization to view its check-ins.
+        </div>
+      ) : !isOnline ? (
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+          <div className="font-medium">You&apos;re offline</div>
+          <div className="mt-1" style={{ color: "var(--ink)" }}>
+            Auto-refresh is paused. Showing the last data loaded{lastUpdatedLabel ? ` at ${lastUpdatedLabel}` : ""}. It will refresh automatically when your connection returns.
+          </div>
+        </div>
+      ) : error ? (
+        <div className="rounded-(--r-3) p-4 text-[13px] flex items-start justify-between gap-3" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+          <div>
+            <div className="font-medium">Couldn&apos;t refresh check-ins</div>
+            <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
+          </div>
+          <button
+            onClick={refresh}
+            disabled={isRefreshing}
+            className="shrink-0 px-3 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ border: "1px solid var(--danger)", background: "var(--bg)", color: "var(--danger)" }}
+          >
+            {isRefreshing ? "Retrying…" : "Try again"}
+          </button>
+        </div>
+      ) : freshness.kind === "stale" && lastUpdatedAt ? (
+        <div className="rounded-(--r-3) p-3 text-[12.5px] flex items-center justify-between gap-3" style={{ background: "oklch(0.96 0.06 75)", border: "1px solid oklch(0.85 0.08 75)", color: "oklch(0.40 0.14 75)" }}>
+          <span>Live feed may be out of date — last updated {lastUpdatedLabel}.</span>
+          <button
+            onClick={refresh}
+            disabled={isRefreshing}
+            className="shrink-0 px-3 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ border: "1px solid oklch(0.80 0.10 75)", background: "var(--bg)", color: "oklch(0.40 0.14 75)" }}
+          >
+            {isRefreshing ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {topRow.map((k) => (
+          <div key={k.label} className="rounded-(--r-3) p-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
+            <div className="text-[26px] font-medium tracking-[-0.02em] tabular-nums leading-none mt-1.5" style={{ color: "var(--ink)" }}>{k.value}</div>
+            <div className="font-mono text-[11.5px] mt-1" style={{ color: "var(--signal-ink)" }}>{k.delta}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-[2fr_1fr] gap-3.5">
+        <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
+              Check-ins by hour <span className="font-mono text-[11px] font-normal uppercase tracking-[0.04em] ml-2" style={{ color: "var(--fg-3)" }}>{activeFilter}</span>
+            </h3>
+            <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Real data</span>
+          </div>
+          <div className="flex items-end gap-1 px-5.5 h-[200px] pt-4.5">
+            {hourlyBars.map((h) => (
+              <div key={h.hour} className="flex-1 rounded-t-[3px] relative group cursor-pointer" style={{ height: `${Math.max(h.pct, 2)}%`, background: "var(--ink)", minHeight: h.count > 0 ? 4 : 0 }}>
+                <span className="absolute -top-[18px] left-1/2 -translate-x-1/2 font-mono text-[9.5px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--ink)" }}>
+                  {String(h.hour).padStart(2, "0")} :00 · {h.count}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="flex px-5.5 py-1.5 pb-4 font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+            <span className="flex-1 text-center">00</span>
+            <span className="flex-1 text-center">06</span>
+            <span className="flex-1 text-center">12</span>
+            <span className="flex-1 text-center">18</span>
+            <span className="flex-1 text-center">23</span>
+          </div>
+        </div>
+
+        <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Summary</h3>
+            <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Live</span>
+          </div>
+          <div>
+            <SummaryRow label="Tracked check-ins" value={String(stream.length)} />
+            <SummaryRow label="Location" value={stats?.city && stats?.country_code ? `${stats.city}, ${stats.country_code}` : "Current org"} />
+            <SummaryRow label="Reviews" value={String(stats?.review_count ?? 0)} />
+            <SummaryRow label="Revenue week" value={`R ${(stats?.revenue_week ?? 0).toLocaleString()}`} />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h3 className="text-[14px] font-medium flex items-center gap-2.5" style={{ color: "var(--ink)" }}>
+            Recent check-ins
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${pill.pulse ? "animate-pulse" : ""}`} style={{ background: pill.color }} />
+          </h3>
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+            {!isOnline ? "Paused · offline" : freshness.kind === "stale" ? "Reconnecting…" : "Auto-refreshing"}
+          </span>
+        </div>
+        <div className="max-h-[460px] overflow-y-auto">
+          {(loading && isOnline && stream.length === 0) ? (
+            <div className="px-4.5 py-4"><AsyncSpinner label="Loading live check-ins" /></div>
+          ) : stream.length === 0 ? (
+            <div className="px-4.5 py-4"><EmptySlate message="No check-ins found for this period." mt="mt-0" /></div>
+          ) : (
+            stream.map((checkIn) => {
+              const member = personName(checkIn);
+              const listing = listingLabel(checkIn);
+              return (
+                <div key={checkIn._id} className="grid items-center gap-3 px-4.5 py-3" style={{ gridTemplateColumns: "72px 30px 1fr", borderBottom: "1px solid var(--border)" }}>
+                  <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{hourLabel(checkIn.checked_in_at)}</span>
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(member)}</span>
+                  <div>
+                    <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{member}</div>
+                    <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                      {listing} · {dayLabel(checkIn.checked_in_at)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </GymDashboardShell>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+      <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>{label}</span>
+      <span className="font-mono text-[13px]" style={{ color: "var(--ink)" }}>{value}</span>
     </div>
   );
 }

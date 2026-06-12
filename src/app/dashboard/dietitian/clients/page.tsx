@@ -1,1062 +1,238 @@
 "use client";
 
-import { Suspense } from "react";
-import { useEffect, useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
-import DietitianSidebar from "@/components/DietitianSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { useOrganization } from "@/contexts/OrganizationContext";
-import { progressService } from "@/lib/api/progress";
-import { toast } from "@/components/Toast";
-import { UserRole } from "@/lib/types";
-import { formatLocal } from "@/utils/format";
-import type {
-  ClientProfile,
-  ProgressSummary,
-  AddClientRequest,
-  ClientRequestItem,
-  ClientInvitation,
-  ClientJournalEntry,
-  CreateClientJournalEntryRequest,
-  ClientSummaryStats,
-} from "@/lib/api/progress";
-import { ClientJournalMood } from "@/lib/api/progress";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  addClientSchema,
-  createJournalSchema,
-  type AddClientFormData,
-  type CreateJournalFormData,
-} from "@/lib/schemas/progress";
+import { useState } from "react";
+import Link from "next/link";
+import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 
-// ─── Helpers ───────────────────────────────────────────────────────
+const KPIS = [
+  { label: "Sessions complete", value: "14", unit: "/ 24", delta: "58% through · 10 left" },
+  { label: "Attendance", value: "100", unit: "%", delta: "14 / 14 on time" },
+  { label: "Weight · 30d", value: "−1.4", unit: "kg", delta: "Trending down · target met" },
+  { label: "Squat 1RM", value: "92.5", unit: "kg", delta: "+22 kg since Mar" },
+  { label: "LTV · this client", value: "R 16.8k", delta: "Studio · monthly renewal", steady: true },
+];
 
-function clientName(profile: ClientProfile): string {
-  if (typeof profile.client_id === "object") {
-    return `${profile.client_id.first_name} ${profile.client_id.last_name}`;
-  }
-  return "Client";
-}
+const PROGRAM = {
+  title: "Strength block II · in progress",
+  sub: "Week 6 of 12 · linear progression with deload at week 9",
+  summary: [
+    { label: "Volume · this week", value: "14,820 kg" },
+    { label: "Avg intensity", value: "82% 1RM" },
+    { label: "Top set today", value: "Squat 87.5 x 5" },
+    { label: "RPE trend", value: "7.2 → 7.8" },
+  ],
+};
 
-function clientEmail(profile: ClientProfile): string {
-  if (typeof profile.client_id === "object") return profile.client_id.email;
-  return "";
-}
+const SESSIONS = [
+  { month: "MAY", day: "13", title: "Strength · Lower body", meta: "60 min · Sea Point · RPE 8 · Top: Squat 87.5 x 5", pr: "+ 2.5 kg PR", big: true },
+  { month: "MAY", day: "06", title: "Strength · Upper body", meta: "60 min · Sea Point · RPE 7 · Top: Bench 52.5 x 5", pr: "No PR", big: false },
+  { month: "APR", day: "29", title: "Strength · Lower body", meta: "60 min · Sea Point · RPE 8 · Top: Squat 85 x 5", pr: "+ 2.5 kg PR", big: true },
+  { month: "APR", day: "22", title: "Strength · Upper body", meta: "60 min · Sea Point · RPE 7 · Top: Bench 50 x 5", pr: "+ 2.5 kg PR", big: true },
+  { month: "APR", day: "15", title: "Strength · Lower body", meta: "60 min · Sea Point · RPE 8 · Top: Squat 82.5 x 5", pr: "No PR", big: false },
+];
 
-function formatDate(iso: string) {
-  return formatLocal(iso, "MMM d, yyyy");
-}
+const NOTES = [
+  { author: "Sarah", date: "MAY 13 · 09:42", label: "After session", text: "Hit the 87.5 x 5 squat clean -- bar speed actually faster than last week's 85. Hips were a touch stiff in the warm-up (deload week 9 should help).", tags: ["After session", "Programming"] },
+  { author: "Sarah", date: "MAY 06 · 17:18", label: "Health flag", text: "Mentioned a flare-up of right knee discomfort from running over the weekend. Not from training. Asked her to skip her solo runs until we reassess at the May 13 session.", tags: ["Health flag", "Follow up · cleared May 13"] },
+  { author: "Sarah", date: "APR 29 · 09:35", label: "After session", text: "First time pulling 85 kg from the floor for a clean rep of 5. Her cue: 'drive the floor away.' Worked. Save the cue.", tags: [] },
+];
 
-// ─── Page ──────────────────────────────────────────────────────────
+const MEMBERSHIP = [
+  { key: "Plan", value: "Studio · 24-session pack" },
+  { key: "Started", value: "18 Mar 2025" },
+  { key: "Sessions used", value: "14 of 24" },
+  { key: "Renews", value: "30 May 2026" },
+  { key: "Total spent", value: "R 16,800.00" },
+];
 
-export default function DietitianClientsPage() {
-  return (
-    <Suspense fallback={<DashboardLoading />}>
-      <DietitianClientsPageContent />
-    </Suspense>
-  );
-}
+const CONTACT = [
+  { icon: "email", key: "Email", value: "linda.m@gmail.com" },
+  { icon: "phone", key: "Phone", value: "+27 82 ••• 3914" },
+  { icon: "location", key: "City", value: "Cape Town · ZA" },
+  { icon: "emergency", key: "Emergency", value: "T. Mokoena · spouse · +27 71 ••• 2284" },
+];
 
-function DietitianClientsPageContent() {
-  const searchParams = useSearchParams();
-  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
-  const { currentOrg, isLoading: orgLoading } = useOrganization();
-
-  const [profiles, setProfiles] = useState<ClientProfile[]>([]);
-  const [summaryStats, setSummaryStats] = useState<
-    Record<string, ClientSummaryStats>
-  >({});
-  const [selectedSummary, setSelectedSummary] =
-    useState<ProgressSummary | null>(null);
-  const [invitations, setInvitations] = useState<ClientInvitation[]>([]);
-  const [sentRequests, setSentRequests] = useState<ClientRequestItem[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // modals
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  // selected client detail
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
-    null,
-  );
-  const [journalEntries, setJournalEntries] = useState<
-    Record<string, ClientJournalEntry[]>
-  >({});
-  const [journalSubmitting, setJournalSubmitting] = useState(false);
-
-  const {
-    register: registerAddClient,
-    handleSubmit: handleAddClientSubmit,
-    reset: resetAddClient,
-    formState: { errors: addClientErrors },
-  } = useForm<AddClientFormData>({
-    resolver: zodResolver(addClientSchema),
-    defaultValues: {
-      email: "",
-      first_name: "",
-      message: "",
-      notes: "",
-      starting_weight_kg: "",
-      target_weight_kg: "",
-      height_cm: "",
-      goals: "",
-    },
-  });
-
-  const {
-    register: registerJournal,
-    handleSubmit: handleJournalSubmit,
-    reset: resetJournal,
-    formState: { errors: journalErrors },
-  } = useForm<CreateJournalFormData>({
-    resolver: zodResolver(createJournalSchema),
-    defaultValues: {
-      notes: "",
-      mood: "",
-      weight_kg: "",
-      adherence_score: "",
-    },
-  });
-
-  // ─── load client profiles ─────────────────────────────────────
-
-  const loadProfiles = useCallback(async () => {
-    setLoadingData(true);
-    setError(null);
-    try {
-      const res = currentOrg
-        ? await progressService.getOrgClientSummaries(currentOrg._id)
-        : await progressService.getMyClientSummaries();
-
-      if (res.success && res.data) {
-        setProfiles(res.data);
-        const stats: Record<string, ClientSummaryStats> = {};
-        for (const p of res.data) {
-          if (p.summary) stats[p._id] = p.summary;
-        }
-        setSummaryStats(stats);
-      } else {
-        setError("Could not load clients.");
-      }
-    } catch {
-      setError("Could not load clients.");
-    } finally {
-      setLoadingData(false);
-    }
-  }, [currentOrg]);
-
-  const loadInvitations = useCallback(async () => {
-    const [invRes, sentRes] = await Promise.allSettled([
-      progressService.getMyClientInvitations(currentOrg?._id),
-      currentOrg
-        ? progressService.getOrgSentClientRequests(currentOrg._id)
-        : progressService.getSentClientRequests(),
-    ]);
-    if (
-      invRes.status === "fulfilled" &&
-      invRes.value.success &&
-      invRes.value.data
-    )
-      setInvitations(invRes.value.data);
-    if (
-      sentRes.status === "fulfilled" &&
-      sentRes.value.success &&
-      sentRes.value.data
-    )
-      setSentRequests(sentRes.value.data);
-  }, [currentOrg]);
-
-  useEffect(() => {
-    if (!isAuthorized || orgLoading) return;
-    loadProfiles();
-    loadInvitations();
-  }, [isAuthorized, orgLoading, loadProfiles, loadInvitations]);
-
-  // Auto-select profile from query param (e.g. from notification link)
-  useEffect(() => {
-    const profileId = searchParams.get("profileId");
-    if (profileId && profiles.length > 0 && !selectedProfileId) {
-      const match = profiles.find((p) => p._id === profileId);
-      if (match) setSelectedProfileId(profileId);
-    }
-  }, [searchParams, profiles, selectedProfileId]);
-
-  // ─── form handlers ────────────────────────────────────────────
-
-  async function handleAddClient(data: AddClientFormData) {
-    setSubmitting(true);
-    setError(null);
-    const payload: AddClientRequest = {
-      email: data.email,
-      first_name: data.first_name || undefined,
-      message: data.message || undefined,
-      notes: data.notes || undefined,
-      starting_weight_kg: data.starting_weight_kg
-        ? Number(data.starting_weight_kg)
-        : undefined,
-      target_weight_kg: data.target_weight_kg
-        ? Number(data.target_weight_kg)
-        : undefined,
-      height_cm: data.height_cm ? Number(data.height_cm) : undefined,
-      goals: data.goals
-        ? data.goals
-            .split(",")
-            .map((g) => g.trim())
-            .filter(Boolean)
-        : undefined,
-    };
-    const res = currentOrg
-      ? await progressService.addClientInOrg(currentOrg._id, payload)
-      : await progressService.addClient(payload);
-    setSubmitting(false);
-    if (res.success && res.data) {
-      setShowAddModal(false);
-      resetAddClient();
-      toast.success(res.data.message || "Client added successfully.");
-      loadProfiles();
-      loadInvitations();
-    } else {
-      setError(res.message || "Failed to add client.");
-    }
-  }
-
-  async function handleCancelRequest(requestId: string) {
-    try {
-      await progressService.cancelClientRequest(requestId);
-      loadInvitations();
-    } catch {
-      setError("Failed to cancel request.");
-    }
-  }
-
-  // ─── load journals (must stay above guard returns) ────────────
-
-  const loadJournals = useCallback(async (profileId: string) => {
-    try {
-      const res = await progressService.getClientJournalEntries(profileId, 20);
-      if (res.success && res.data) {
-        const entries = res.data ?? [];
-        setJournalEntries((prev) => ({ ...prev, [profileId]: entries }));
-      }
-    } catch {
-      // non-critical
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!selectedProfileId) return;
-    loadJournals(selectedProfileId);
-  }, [selectedProfileId, loadJournals]);
-
-  // ─── guards ───────────────────────────────────────────────────
-
-  if (isLoading || orgLoading) return <DashboardLoading />;
-  if (!isAuthorized || !user) return null;
-
-  // ─── selected client detail view ──────────────────────────────
-
-  const selectedProfile = profiles.find((p) => p._id === selectedProfileId);
-  // Lazy-load full progress summary when a client is selected
-  useEffect(() => {
-    if (!selectedProfileId) {
-      setSelectedSummary(null);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      try {
-        const s = await progressService.getProgressSummary(
-          selectedProfileId,
-          30,
-        );
-        if (!cancelled && s.success && s.data) setSelectedSummary(s.data);
-      } catch {
-        // non-critical
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedProfileId]);
-
-  const selectedJournals = selectedProfileId
-    ? (journalEntries[selectedProfileId] ?? [])
-    : [];
-
-  async function handleCreateJournal(data: CreateJournalFormData) {
-    if (!selectedProfileId) return;
-
-    setJournalSubmitting(true);
-    setError(null);
-
-    const payload: CreateClientJournalEntryRequest = {
-      notes: data.notes,
-      mood: (data.mood as ClientJournalMood) || undefined,
-      weight_kg: data.weight_kg ? Number(data.weight_kg) : undefined,
-      adherence_score: data.adherence_score
-        ? Number(data.adherence_score)
-        : undefined,
-    };
-
-    try {
-      const res = await progressService.createClientJournalEntry(
-        selectedProfileId,
-        payload,
-      );
-      if (res.success && res.data) {
-        const newEntry = res.data;
-        setJournalEntries((prev) => ({
-          ...prev,
-          [selectedProfileId]: [newEntry, ...(prev[selectedProfileId] ?? [])],
-        }));
-        resetJournal();
-      } else {
-        setError(res.message || "Failed to add journal entry.");
-      }
-    } catch {
-      setError("Failed to add journal entry.");
-    } finally {
-      setJournalSubmitting(false);
-    }
-  }
-
-  async function handleDeleteJournal(entryId: string) {
-    if (!selectedProfileId) return;
-    try {
-      await progressService.deleteClientJournalEntry(entryId);
-      setJournalEntries((prev) => ({
-        ...prev,
-        [selectedProfileId]: (prev[selectedProfileId] ?? []).filter(
-          (e) => e._id !== entryId,
-        ),
-      }));
-    } catch {
-      setError("Failed to delete journal entry.");
-    }
-  }
-
-  // ─── render ───────────────────────────────────────────────────
+export default function DietitianClientListPage() {
+  const [activeTab, setActiveTab] = useState("Overview");
+  const tabs = ["Overview", "Program", "Sessions", "Logs", "Notes", "Messages", "Billing"];
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <DietitianSidebar />
-
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        {/* ── Header ──────────────────────────────────────── */}
-        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
-              My Clients
-            </h1>
-            <p className="mt-1 text-sm text-foreground-secondary">
-              Manage client profiles and track their progress.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="rounded-lg bg-accent-purple-500 px-3 sm:px-4 py-2 text-sm font-semibold text-white hover:bg-accent-purple-600 whitespace-nowrap"
-          >
-            + Add Client
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {loadingData && (
-          <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-purple-500 border-r-transparent" />
-          </div>
-        )}
-
-        {/* ── Client Detail View ──────────────────────────── */}
-        {selectedProfile && selectedSummary && !loadingData && (
-          <div className="mb-8">
-            <button
-              onClick={() => setSelectedProfileId(null)}
-              className="mb-4 flex items-center gap-1 text-sm font-medium text-accent-purple-600 hover:text-accent-purple-700"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Back to all clients
-            </button>
-
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">
-                    {clientName(selectedProfile)}
-                  </h2>
-                  <p className="text-sm text-foreground-secondary">
-                    {clientEmail(selectedProfile)}
-                  </p>
-                  {selectedProfile.goals.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {selectedProfile.goals.map((g) => (
-                        <span
-                          key={g}
-                          className="rounded-full bg-accent-purple-100 px-2 py-0.5 text-xs font-medium text-accent-purple-700"
-                        >
-                          {g}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedProfile.is_active ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-500"}`}
-                >
-                  {selectedProfile.is_active ? "Active" : "Inactive"}
-                </span>
+    <DietitianDashboardShell activeItem="Clients" crumb="Linda Mokoena">
+      {/* Hero */}
+      <div className="rounded-(--r-3) p-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="flex flex-col lg:flex-row justify-between items-start gap-4.5">
+          <div className="flex gap-4.5 items-center">
+            <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-[22px] font-medium flex-shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>LM</div>
+            <div>
+              <h1 className="text-[26px] font-medium tracking-[-0.022em] leading-tight flex items-center gap-2.5" style={{ color: "var(--ink)" }}>
+                Linda Mokoena
+                <span className="font-mono text-[11px] font-normal uppercase tracking-[0.05em] px-1.5 py-0.5 rounded-full" style={{ border: "1px solid var(--border)", color: "var(--fg-3)" }}>she / her</span>
+              </h1>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {["Active client", "Studio · 24-pack", "14 / 24 sessions", "In-person · Sea Point", "Streak 32 days"].map((b) => (
+                  <span key={b} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[11px] uppercase tracking-[0.04em]" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}>{b}</span>
+                ))}
               </div>
-
-              {/* Summary stats */}
-              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <MiniStat
-                  label="Current Weight"
-                  value={
-                    selectedSummary.weight.latest_kg != null
-                      ? `${selectedSummary.weight.latest_kg} kg`
-                      : "—"
-                  }
-                />
-                <MiniStat
-                  label="Weight Change"
-                  value={
-                    selectedSummary.weight.change_kg != null
-                      ? `${selectedSummary.weight.change_kg > 0 ? "+" : ""}${selectedSummary.weight.change_kg.toFixed(1)} kg`
-                      : "—"
-                  }
-                />
-                <MiniStat
-                  label="Activities (30d)"
-                  value={String(selectedSummary.activities.total_count)}
-                />
-                <MiniStat
-                  label="Meals Logged (30d)"
-                  value={String(selectedSummary.meals.total_count)}
-                />
-              </div>
-
-              {selectedProfile.notes && (
-                <div className="mt-4 rounded-lg bg-neutral-50 p-4">
-                  <p className="text-xs font-medium uppercase text-foreground-tertiary">
-                    Notes
-                  </p>
-                  <p className="mt-1 text-sm text-foreground-secondary">
-                    {selectedProfile.notes}
-                  </p>
-                </div>
-              )}
-
-              {/* Recent weight logs */}
-              {selectedSummary.weight.logs.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-sm font-semibold text-foreground-secondary">
-                    Recent Weight Logs
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedSummary.weight.logs.slice(0, 5).map((log) => (
-                      <div
-                        key={log._id}
-                        className="flex items-center justify-between rounded-lg bg-neutral-50 px-4 py-2"
-                      >
-                        <span className="text-sm font-medium text-foreground">
-                          {log.weight_kg} kg
-                        </span>
-                        <span className="text-sm text-foreground-tertiary">
-                          {formatDate(log.recorded_at)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent activities */}
-              {selectedSummary.activities.reports.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-sm font-semibold text-foreground-secondary">
-                    Recent Activities
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedSummary.activities.reports.slice(0, 5).map((a) => (
-                      <div
-                        key={a._id}
-                        className="flex items-center justify-between rounded-lg bg-neutral-50 px-4 py-2"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-foreground">
-                            {a.title}
-                          </span>
-                          <span className="ml-2 text-sm text-foreground-tertiary">
-                            {a.duration_minutes} min
-                          </span>
-                        </div>
-                        <span className="text-sm text-foreground-tertiary">
-                          {formatDate(a.performed_at)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent meals */}
-              {selectedSummary.meals.feedbacks.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-sm font-semibold text-foreground-secondary">
-                    Recent Meals
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedSummary.meals.feedbacks.slice(0, 5).map((m) => (
-                      <div
-                        key={m._id}
-                        className="flex items-center justify-between rounded-lg bg-neutral-50 px-4 py-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex rounded-full bg-accent-purple-100 px-2 py-0.5 text-xs font-semibold text-accent-purple-700">
-                            {m.meal_type}
-                          </span>
-                          <span className="text-sm font-medium text-foreground">
-                            {m.description}
-                          </span>
-                          {m.calories != null && (
-                            <span className="text-sm text-foreground-tertiary">
-                              {m.calories} cal
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-sm text-foreground-tertiary">
-                          {formatDate(m.meal_date)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Client journals */}
-              <div className="mt-6">
-                <h3 className="mb-3 text-sm font-semibold text-foreground-secondary">
-                  Client Journal
-                </h3>
-
-                <form
-                  onSubmit={handleJournalSubmit(handleCreateJournal)}
-                  className="rounded-lg border border-neutral-200 p-4"
-                >
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <select
-                      {...registerJournal("mood")}
-                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                      defaultValue=""
-                    >
-                      <option value="">Mood (optional)</option>
-                      {Object.values(ClientJournalMood).map((mood) => (
-                        <option key={mood} value={mood}>
-                          {mood.charAt(0).toUpperCase() + mood.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      {...registerJournal("weight_kg")}
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Weight (kg)"
-                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                    />
-                    <input
-                      {...registerJournal("adherence_score")}
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="Adherence %"
-                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <textarea
-                    {...registerJournal("notes")}
-                    rows={3}
-                    placeholder="Write progress notes for this client..."
-                    className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                  />
-                  {journalErrors.notes && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {journalErrors.notes.message}
-                    </p>
-                  )}
-                  <div className="mt-3 flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={journalSubmitting}
-                      className="rounded-lg bg-accent-purple-500 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-purple-600 disabled:opacity-50"
-                    >
-                      {journalSubmitting ? "Saving..." : "Add Journal Entry"}
-                    </button>
-                  </div>
-                </form>
-
-                <div className="mt-4 space-y-2">
-                  {selectedJournals.length === 0 && (
-                    <p className="text-sm text-foreground-tertiary">
-                      No journal entries yet.
-                    </p>
-                  )}
-                  {selectedJournals.map((entry) => (
-                    <div
-                      key={entry._id}
-                      className="rounded-lg bg-neutral-50 px-4 py-3"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm text-foreground">
-                            {entry.notes}
-                          </p>
-                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-foreground-tertiary">
-                            <span>{formatDate(entry.entry_date)}</span>
-                            {entry.mood && (
-                              <span className="rounded-full bg-accent-purple-100 px-2 py-0.5 text-accent-purple-700">
-                                {entry.mood}
-                              </span>
-                            )}
-                            {entry.weight_kg != null && (
-                              <span>Weight: {entry.weight_kg} kg</span>
-                            )}
-                            {entry.adherence_score != null && (
-                              <span>Adherence: {entry.adherence_score}%</span>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteJournal(entry._id)}
-                          className="text-sm font-medium text-red-500 hover:text-red-700"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-4 mt-2.5 font-mono text-[12.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+                <span><strong className="font-medium text-[13px] tracking-[-0.005em] normal-case" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)" }}>Joined</strong> 18 Mar 2025</span>
+                <span>&middot;</span>
+                <span><strong className="font-medium text-[13px] tracking-[-0.005em] normal-case" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)" }}>Age</strong> 38</span>
+                <span>&middot;</span>
+                <span><strong className="font-medium text-[13px] tracking-[-0.005em] normal-case" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)" }}>Goals</strong> Build strength · feel strong at 40</span>
               </div>
             </div>
           </div>
-        )}
-
-        {/* ── Client Cards ────────────────────────────────── */}
-        {!selectedProfileId && !loadingData && (
-          <>
-            {profiles.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <svg
-                  className="mb-4 h-16 w-16 text-neutral-300"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-                <h2 className="text-xl font-bold text-foreground">
-                  No Clients Yet
-                </h2>
-                <p className="mt-2 max-w-md text-foreground-secondary">
-                  Add your first client or send an invite link so they can sign
-                  up on Binectics.
-                </p>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="mt-6 rounded-lg bg-accent-purple-500 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-purple-600"
-                >
-                  + Add Client
-                </button>
-              </div>
-            )}
-
-            {profiles.length > 0 && (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {profiles.map((p) => {
-                  const s = summaryStats[p._id];
-                  return (
-                    <button
-                      key={p._id}
-                      onClick={() => setSelectedProfileId(p._id)}
-                      className="group rounded-2xl bg-white p-5 text-left shadow-sm transition-shadow hover:shadow-md"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-purple-100">
-                            <svg
-                              className="h-5 w-5 text-accent-purple-600"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                              />
-                            </svg>
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-bold text-foreground">
-                              {clientName(p)}
-                            </h3>
-                            <p className="text-sm text-foreground-tertiary">
-                              {clientEmail(p)}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.is_active ? "bg-green-100 text-green-700" : "bg-neutral-100 text-neutral-500"}`}
-                        >
-                          {p.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-
-                      {s && (s.latest_weight?.weight_kg != null || s.activity_count > 0 || s.meal_count > 0) ? (
-                        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-                          <div>
-                            <p className="text-xs text-foreground-tertiary">
-                              Weight
-                            </p>
-                            <p className="text-sm font-semibold text-foreground">
-                              {s.latest_weight?.weight_kg != null ? `${s.latest_weight.weight_kg} kg` : "—"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-foreground-tertiary">
-                              Activities
-                            </p>
-                            <p className="text-sm font-semibold text-foreground">
-                              {s.activity_count}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-foreground-tertiary">
-                              Meals
-                            </p>
-                            <p className="text-sm font-semibold text-foreground">
-                              {s.meal_count}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="mt-3 text-xs italic text-foreground-tertiary">
-                          No data yet — check back after their first session.
-                        </p>
-                      )}
-
-                      {p.goals.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1">
-                          {p.goals.slice(0, 3).map((g) => (
-                            <span
-                              key={g}
-                              className="rounded-full bg-accent-purple-50 px-2 py-0.5 text-xs text-accent-purple-600"
-                            >
-                              {g}
-                            </span>
-                          ))}
-                          {p.goals.length > 3 && (
-                            <span className="text-xs text-foreground-tertiary">
-                              +{p.goals.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="mt-4 flex items-center justify-end border-t border-neutral-100 pt-3">
-                        <span className="text-xs font-semibold text-accent-purple-600 group-hover:text-accent-purple-700">
-                          View progress →
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Pending connection requests */}
-            {sentRequests.filter((r) => r.status.toUpperCase() === "PENDING").length > 0 && (
-              <div className="mt-10">
-                <h2 className="mb-4 text-lg font-bold text-foreground">
-                  Pending Connection Requests
-                </h2>
-                <div className="space-y-3">
-                  {sentRequests.filter((r) => r.status.toUpperCase() === "PENDING").map((req) => {
-                    const clientInfo =
-                      typeof req.client_id === "object" ? req.client_id : null;
-                    return (
-                      <div
-                        key={req._id}
-                        className="flex flex-col gap-3 rounded-xl bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {clientInfo
-                              ? `${clientInfo.first_name} ${clientInfo.last_name}`
-                              : "Client"}
-                          </p>
-                          <p className="text-sm text-foreground-tertiary">
-                            {clientInfo?.email}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3 self-start sm:self-auto">
-                          <span
-                            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              req.status === "PENDING"
-                                ? "bg-accent-yellow-100 text-accent-yellow-700"
-                                : req.status === "ACCEPTED"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-neutral-100 text-neutral-500"
-                            }`}
-                          >
-                            {req.status}
-                          </span>
-                          {req.status === "PENDING" && (
-                            <button
-                              onClick={() => handleCancelRequest(req._id)}
-                              className="text-sm font-medium text-red-500 hover:text-red-700"
-                            >
-                              Cancel
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Pending invitations (signup invites) */}
-            {invitations.length > 0 && (
-              <div className="mt-10">
-                <h2 className="mb-4 text-lg font-bold text-foreground">
-                  Pending Signup Invitations
-                </h2>
-                <div className="space-y-3">
-                  {invitations.map((inv) => (
-                    <div
-                      key={inv._id || inv.id || inv.email}
-                      className="flex flex-col gap-3 rounded-xl bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {inv.email}
-                        </p>
-                        <p className="text-sm text-foreground-tertiary">
-                          Expires {formatDate(inv.expires_at)}
-                        </p>
-                      </div>
-                      <span className="rounded-full bg-accent-yellow-100 px-2.5 py-0.5 text-xs font-medium text-accent-yellow-700">
-                        {inv.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </main>
-
-      {/* ─── Add Client Modal ──────────────────────────────── */}
-      {showAddModal && (
-        <ModalOverlay onClose={() => setShowAddModal(false)} title="Add Client">
-          <form
-            onSubmit={handleAddClientSubmit(handleAddClient)}
-            className="space-y-4"
-          >
-            <p className="text-sm text-foreground-secondary">
-              Enter the client&apos;s email. If they have a Binectics account, a
-              connection request will be sent for their approval. Otherwise,
-              they&apos;ll receive a signup invitation.
-            </p>
-            <label className="block">
-              <span className="text-sm font-medium text-foreground">
-                Email Address <span className="text-red-500">*</span>
-              </span>
-              <input
-                {...registerAddClient("email")}
-                type="email"
-                className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                placeholder="client@example.com"
-              />
-              {addClientErrors.email && (
-                <p className="mt-1 text-xs text-red-500">
-                  {addClientErrors.email.message}
-                </p>
-              )}
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-foreground">
-                First Name
-              </span>
-              <input
-                {...registerAddClient("first_name")}
-                type="text"
-                className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                placeholder="Optional"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-foreground">
-                Message
-              </span>
-              <textarea
-                {...registerAddClient("message")}
-                rows={2}
-                className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                placeholder="Optional message to the client"
-              />
-            </label>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <label className="block">
-                <span className="text-sm font-medium text-foreground">
-                  Starting Weight (kg)
-                </span>
-                <input
-                  {...registerAddClient("starting_weight_kg")}
-                  type="number"
-                  step="0.1"
-                  className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block">
-                <span className="text-sm font-medium text-foreground">
-                  Target Weight (kg)
-                </span>
-                <input
-                  {...registerAddClient("target_weight_kg")}
-                  type="number"
-                  step="0.1"
-                  className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                />
-              </label>
-            </div>
-            <label className="block">
-              <span className="text-sm font-medium text-foreground">
-                Height (cm)
-              </span>
-              <input
-                {...registerAddClient("height_cm")}
-                type="number"
-                className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-foreground">Goals</span>
-              <input
-                {...registerAddClient("goals")}
-                type="text"
-                className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                placeholder="Comma-separated, e.g. Lose weight, Build muscle"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-foreground">Notes</span>
-              <textarea
-                {...registerAddClient("notes")}
-                rows={2}
-                className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                placeholder="Any notes about this client"
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-lg bg-accent-purple-500 py-2.5 text-sm font-semibold text-white hover:bg-accent-purple-600 disabled:opacity-50"
-            >
-              {submitting ? "Sending…" : "Add Client"}
-            </button>
-          </form>
-        </ModalOverlay>
-      )}
-    </div>
-  );
-}
-
-// ─── Mini Stat ──────────────────────────────────────────────────────
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg bg-neutral-50 p-3">
-      <p className="text-sm text-foreground-tertiary">{label}</p>
-      <p className="mt-0.5 text-lg font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-// ─── Modal Overlay ──────────────────────────────────────────────────
-
-function ModalOverlay({
-  onClose,
-  title,
-  children,
-}: {
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-foreground">{title}</h3>
-          <button
-            onClick={onClose}
-            className="text-foreground-tertiary hover:text-foreground"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          <div className="flex gap-2 flex-shrink-0">
+            <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Message</button>
+            <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Book session</button>
+            <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>+ Update program</button>
+          </div>
         </div>
-        {children}
+
+        {/* KPI strip */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 mt-4.5 rounded-(--r-3) overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+          {KPIS.map((k, i) => (
+            <div key={k.label} className="p-3.5 px-4.5 flex flex-col gap-1" style={{ borderRight: i < KPIS.length - 1 ? "1px solid var(--border)" : "none" }}>
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
+              <div className="text-[22px] font-medium tracking-[-0.018em] tabular-nums leading-none mt-0.5" style={{ color: "var(--ink)" }}>
+                {k.value}{k.unit && <span className="font-mono text-[12px] font-normal ml-1" style={{ color: "var(--fg-3)" }}>{k.unit}</span>}
+              </div>
+              <div className="font-mono text-[11px] mt-1" style={{ color: k.steady ? "var(--fg-3)" : "var(--signal-ink)" }}>{k.delta}</div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Tabs */}
+      <div className="flex gap-0 overflow-x-auto" style={{ borderBottom: "1px solid var(--border)" }}>
+        {tabs.map((t) => (
+          <button
+            key={t}
+            onClick={() => setActiveTab(t)}
+            className="px-4 py-3.5 text-[13.5px] cursor-pointer whitespace-nowrap"
+            style={{
+              color: activeTab === t ? "var(--ink)" : "var(--fg-3)",
+              fontWeight: activeTab === t ? 500 : 400,
+              borderBottom: activeTab === t ? "2px solid var(--ink)" : "2px solid transparent",
+              background: "transparent",
+              border: "none",
+              borderBottomWidth: "2px",
+              borderBottomStyle: "solid",
+              borderBottomColor: activeTab === t ? "var(--ink)" : "transparent",
+              marginBottom: "-1px",
+            }}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
+        <div className="flex flex-col gap-4">
+          {/* Program progress */}
+          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="flex justify-between items-center px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+              <div>
+                <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{PROGRAM.title}</h3>
+                <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>{PROGRAM.sub}</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4.5 p-5">
+              {PROGRAM.summary.map((s) => (
+                <div key={s.label}>
+                  <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mb-1" style={{ color: "var(--fg-3)" }}>{s.label}</div>
+                  <div className="text-[16px] font-medium tracking-[-0.005em]" style={{ color: "var(--ink)" }}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+            {/* Progress bar */}
+            <div className="flex h-2 mx-5 mb-1 rounded-[4px] overflow-hidden" style={{ background: "var(--bg-3)" }}>
+              <div style={{ flex: 5, background: "var(--ink)", borderRight: "2px solid var(--bg)" }} />
+              <div style={{ flex: 1, background: "var(--signal)", borderRight: "2px solid var(--bg)" }} />
+              <div style={{ flex: 2, background: "var(--bg-3)", borderRight: "2px solid var(--bg)" }} />
+              <div style={{ flex: 1, background: "oklch(0.92 0.02 75)", borderRight: "2px solid var(--bg)" }} />
+              <div style={{ flex: 3, background: "var(--bg-3)" }} />
+            </div>
+            <div className="grid gap-0.5 px-5 pb-4.5 font-mono text-[10px] uppercase tracking-[0.04em] mt-1" style={{ gridTemplateColumns: "repeat(8, 1fr)", color: "var(--fg-4)" }}>
+              {["W1","W2","W3","W4","W5","W6","W7","W8"].map((w) => (
+                <span key={w} className="text-center pt-1" style={w === "W6" ? { color: "var(--signal-ink)", fontWeight: 500 } : {}}>{w}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent sessions */}
+          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="flex justify-between items-center px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+              <div>
+                <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Recent sessions</h3>
+                <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>Last 5 sessions · all completed on time</div>
+              </div>
+            </div>
+            {SESSIONS.map((s) => (
+              <div key={s.day + s.month} className="grid items-center gap-3.5 px-4.5 py-3 hover:bg-[var(--bg-2)]" style={{ gridTemplateColumns: "56px 1fr auto", borderBottom: "1px solid var(--border)" }}>
+                <div className="text-center flex flex-col">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.month}</span>
+                  <span className="text-[22px] font-medium tracking-[-0.022em] tabular-nums leading-none" style={{ color: "var(--ink)" }}>{s.day}</span>
+                </div>
+                <div>
+                  <div className="text-[14px] font-medium tracking-[-0.005em]" style={{ color: "var(--ink)" }}>{s.title}</div>
+                  <div className="font-mono text-[11.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>{s.meta}</div>
+                </div>
+                <span className="font-mono text-[11px] px-2 py-0.5 rounded-full" style={s.big ? { background: "var(--signal-soft)", color: "var(--signal-ink)" } : { background: "var(--bg-2)", color: "var(--ink)" }}>{s.pr}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right rail */}
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-[124px]">
+          {/* Next session */}
+          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="flex justify-between items-center px-4.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+              <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Next session</h3>
+            </div>
+            <div className="flex gap-3.5 items-center p-4 px-4.5">
+              <div className="text-center pr-3.5" style={{ borderRight: "1px solid var(--border)" }}>
+                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>MAY</div>
+                <div className="text-[28px] font-medium tracking-[-0.025em] leading-none tabular-nums" style={{ color: "var(--ink)" }}>20</div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>Wed</div>
+              </div>
+              <div className="flex-1">
+                <div className="text-[14px] font-medium tracking-[-0.005em]" style={{ color: "var(--ink)" }}>Strength · Lower body</div>
+                <div className="font-mono text-[11.5px] uppercase tracking-[0.04em] mt-1" style={{ color: "var(--fg-3)" }}>08:00 SAST · Sea Point · 60 min</div>
+                <div className="text-[12.5px] mt-1.5 leading-[1.4]" style={{ color: "var(--fg-2)" }}>Squat 90 x 5 if RPE holds · accessory: split squat 3x8/leg</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Membership */}
+          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="px-4.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+              <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Membership</h3>
+            </div>
+            {MEMBERSHIP.map((m) => (
+              <div key={m.key} className="flex justify-between items-center px-4.5 py-2.5 gap-3 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
+                <span style={{ color: "var(--fg-3)" }}>{m.key}</span>
+                <span className="font-mono tabular-nums" style={{ color: "var(--ink)" }}>{m.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Contact */}
+          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="px-4.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+              <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Contact</h3>
+            </div>
+            {CONTACT.map((c) => (
+              <div key={c.key} className="flex items-center gap-2.5 px-4.5 py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
+                <span className="font-mono text-[11.5px] uppercase tracking-[0.04em] w-[90px] flex-shrink-0" style={{ color: "var(--fg-3)" }}>{c.key}</span>
+                <span className="flex-1 break-words" style={{ color: "var(--ink)" }}>{c.value}</span>
+              </div>
+            ))}
+          </div>
+        </aside>
+      </div>
+    </DietitianDashboardShell>
   );
 }

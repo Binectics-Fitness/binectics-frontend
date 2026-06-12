@@ -9,11 +9,11 @@ type TimezoneHelpBadgeProps = {
 export default function TimezoneHelpBadge({
   message,
   label = "Timezone help",
-  className = "text-foreground-secondary",
+  className = "text-fg-2",
 }: TimezoneHelpBadgeProps) {
   return (
     <span
-      className={`inline-flex h-6 w-6 items-center justify-center rounded-full border border-neutral-300 text-xs font-bold ${className}`}
+      className={`inline-flex h-6 w-6 items-center justify-center rounded-full border border-border-2 text-xs font-bold ${className}`}
       title={message}
       aria-label={label}
     >

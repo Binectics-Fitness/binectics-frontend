@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { emailSchema, passwordSchema, nameSchema } from "./shared";
+import { AccountType } from "@/lib/types";
 
 export const loginSchema = z.object({
   email: emailSchema,
@@ -16,10 +17,7 @@ export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 export const resetPasswordSchema = z
   .object({
-    password: z
-      .string()
-      .min(1, "Password is required")
-      .min(8, "Password must be at least 8 characters"),
+    password: passwordSchema,
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -36,6 +34,9 @@ export const registerSchema = z
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string(),
+    role: z.nativeEnum(AccountType, {
+      error: "Please select account type",
+    }),
     acceptTos: z.boolean().refine((val) => val === true, {
       message: "You must accept the terms of service",
     }),

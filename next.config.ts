@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
+import { resolve } from "path";
 
 const nextConfig: NextConfig = {
+  turbopack: { root: resolve(import.meta.dirname ?? ".") },
   // Image optimization
   images: {
     remotePatterns: [
@@ -42,6 +44,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@/components", "@/lib"],
   },
+
 
   // Headers for security
   async headers() {

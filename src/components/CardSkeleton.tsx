@@ -1,3 +1,8 @@
+/**
+ * CardSkeleton — loading placeholder using design system tokens.
+ * No shimmer animation (design system rule). Simple pulse only.
+ */
+
 interface CardSkeletonProps {
   count?: number;
   columns?: "1" | "2" | "3";
@@ -12,12 +17,12 @@ const gridMap = {
 
 function ImageCardSkeleton() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-      <div className="h-48 bg-neutral-200" />
-      <div className="space-y-3 p-6">
-        <div className="h-5 w-3/4 rounded bg-neutral-200" />
-        <div className="h-4 w-1/2 rounded bg-neutral-200" />
-        <div className="h-4 w-2/3 rounded bg-neutral-200" />
+    <div className="animate-pulse overflow-hidden rounded-(--r-3) border border-border bg-bg">
+      <div className="h-48 bg-bg-2" />
+      <div className="space-y-3 p-4.5">
+        <div className="h-4 w-3/4 rounded-(--r-1) bg-bg-3" />
+        <div className="h-3.5 w-1/2 rounded-(--r-1) bg-bg-3" />
+        <div className="h-3.5 w-2/3 rounded-(--r-1) bg-bg-3" />
       </div>
     </div>
   );
@@ -25,16 +30,16 @@ function ImageCardSkeleton() {
 
 function AvatarCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-      <div className="mb-4 flex items-start gap-4">
-        <div className="h-14 w-14 rounded-xl bg-neutral-200" />
+    <div className="animate-pulse rounded-(--r-3) border border-border bg-bg p-4.5">
+      <div className="mb-4 flex items-start gap-3">
+        <div className="h-10 w-10 rounded-full bg-bg-3" />
         <div className="flex-1">
-          <div className="mb-2 h-5 w-3/4 rounded bg-neutral-200" />
-          <div className="h-4 w-1/2 rounded bg-neutral-200" />
+          <div className="mb-2 h-4 w-3/4 rounded-(--r-1) bg-bg-3" />
+          <div className="h-3.5 w-1/2 rounded-(--r-1) bg-bg-3" />
         </div>
       </div>
-      <div className="mb-2 h-4 w-full rounded bg-neutral-200" />
-      <div className="h-4 w-2/3 rounded bg-neutral-200" />
+      <div className="mb-2 h-3.5 w-full rounded-(--r-1) bg-bg-3" />
+      <div className="h-3.5 w-2/3 rounded-(--r-1) bg-bg-3" />
     </div>
   );
 }

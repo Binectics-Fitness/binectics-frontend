@@ -32,27 +32,27 @@ function AccordionItem({
 
   return (
     <div
-      className={`overflow-hidden rounded-xl border bg-white transition-all duration-300 ${
+      className={`overflow-hidden rounded-(--r-3) border bg-bg transition-all duration-300 ${
         isOpen
-          ? "border-primary-500/30 shadow-[var(--shadow-card)]"
-          : "border-neutral-200 hover:border-neutral-300"
+          ? "border-signal/30 shadow-(--shadow-card)"
+          : "border-border hover:border-border-2"
       }`}
     >
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-neutral-50"
+        className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-bg-2"
         aria-expanded={isOpen}
       >
         <span
-          className={`font-medium pr-4 transition-colors duration-200 ${isOpen ? "text-foreground" : "text-foreground"}`}
+          className={`font-medium pr-4 transition-colors duration-200 ${isOpen ? "text-fg" : "text-fg"}`}
         >
           {item.title}
         </span>
         <div
-          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
             isOpen
-              ? "bg-primary-500/10 text-primary-600 rotate-180"
-              : "bg-neutral-100 text-foreground-secondary"
+              ? "bg-signal/10 text-signal rotate-180"
+              : "bg-bg-2 text-fg-2"
           }`}
         >
           <svg
@@ -75,7 +75,7 @@ function AccordionItem({
         className="transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
       >
         <div ref={contentRef}>
-          <div className="border-t border-neutral-100 px-6 py-4 text-sm leading-relaxed text-foreground-secondary">
+          <div className="border-t border-border px-6 py-4 text-sm leading-relaxed text-fg-2">
             {item.content}
           </div>
         </div>

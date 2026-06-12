@@ -1,80 +1,69 @@
 "use client";
 
-import React, { useState } from "react";
-import { Input, InputProps } from "./Input";
+import { useState, forwardRef } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
-export interface PasswordInputProps extends Omit<
-  InputProps,
-  "type" | "rightIcon"
-> {
-  showToggle?: boolean;
+export interface PasswordInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+  label?: string;
+  error?: string;
+  helperText?: string;
 }
 
-export const PasswordInput = React.forwardRef<
-  HTMLInputElement,
-  PasswordInputProps
->(({ showToggle = true, ...props }, ref) => {
-  const [showPassword, setShowPassword] = useState(false);
+export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
+  ({ label, error, helperText, className = "", ...props }, ref) => {
+    const [visible, setVisible] = useState(false);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
-  const eyeIcon = showToggle ? (
-    <button
-      type="button"
-      onClick={togglePasswordVisibility}
-      className="text-foreground-tertiary hover:text-foreground-secondary transition-colors duration-200 focus:outline-none"
-      aria-label={showPassword ? "Hide password" : "Show password"}
-      tabIndex={-1}
-    >
-      {showPassword ? (
-        // Eye Off Icon
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+    return (
+      <div className="flex flex-col gap-1.5">
+        {label && (
+          <label
+            className="font-mono text-[10.5px] uppercase tracking-[0.05em]"
+            style={{ color: "var(--fg-3)" }}
+          >
+            {label}
+          </label>
+        )}
+        <div className="relative">
+          <input
+            ref={ref}
+            type={visible ? "text" : "password"}
+            className={`w-full h-[34px] px-3 text-[13.5px] rounded-[var(--r-2)] outline-none ${className}`}
+            style={{
+              border: `1px solid ${error ? "var(--danger)" : "var(--border-2)"}`,
+              background: "var(--bg)",
+              color: "var(--ink)",
+              transition: "border-color var(--motion-fast) var(--ease)",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = error ? "var(--danger)" : "var(--ink)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = error ? "var(--danger)" : "var(--border-2)";
+            }}
+            {...props}
           />
-        </svg>
-      ) : (
-        // Eye Icon
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-          />
-        </svg>
-      )}
-    </button>
-  ) : undefined;
-
-  return (
-    <Input
-      ref={ref}
-      type={showPassword ? "text" : "password"}
-      rightIcon={eyeIcon}
-      {...props}
-    />
-  );
-});
+          <button
+            type="button"
+            onClick={() => setVisible(!visible)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-7 h-7 rounded-[var(--r-1)]"
+            style={{ color: "var(--fg-3)", transition: "color var(--motion-fast) var(--ease)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--ink)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--fg-3)"; }}
+            tabIndex={-1}
+          >
+            {visible ? <EyeOff size={15} strokeWidth={1.5} /> : <Eye size={15} strokeWidth={1.5} />}
+          </button>
+        </div>
+        {error && (
+          <span className="text-[12px]" style={{ color: "var(--danger)" }}>{error}</span>
+        )}
+        {helperText && !error && (
+          <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>{helperText}</span>
+        )}
+      </div>
+    );
+  }
+);
 
 PasswordInput.displayName = "PasswordInput";

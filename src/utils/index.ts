@@ -3,7 +3,7 @@
  * Canonical barrel export for all pure utility functions.
  */
 
-export { formatDate, formatDateShort, signedChange, formatCurrency, stripHtml } from "./format";
+export { formatDate, formatDateShort, signedChange, formatCurrency, formatSignedCurrency, stripHtml } from "./format";
 export { parseJWT, isTokenExpired, getTokenExpiryMs } from "./jwt";
 export type { JWTPayload } from "./jwt";
 export { pMap } from "./async";

@@ -568,20 +568,20 @@ export default function ConsultationAvailabilityManager({
   if (!isAuthorized) return null;
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-bg">
       {sidebar}
 
       <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
         <div className="mb-6">
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-fg">
             Consultations
           </h1>
-          <p className="mt-2 text-foreground-secondary">{description}</p>
+          <p className="mt-2 text-fg-2">{description}</p>
         </div>
 
         {/* Tabs */}
         <div className="mb-6">
-          <div className="border-b border-neutral-200">
+          <div className="border-b border-border">
             <div className="flex gap-4 sm:gap-8 overflow-x-auto">
               {(
                 [
@@ -597,8 +597,8 @@ export default function ConsultationAvailabilityManager({
                   }}
                   className={`pb-3 sm:pb-4 text-sm font-medium transition-colors whitespace-nowrap ${
                     activeTab === tab.key
-                      ? "border-b-2 border-foreground text-foreground"
-                      : "text-foreground-secondary hover:text-foreground"
+                      ? "border-b-2 border-fg text-fg"
+                      : "text-fg-2 hover:text-fg"
                   }`}
                 >
                   {tab.label}
@@ -610,10 +610,10 @@ export default function ConsultationAvailabilityManager({
 
         {message && (
           <div
-            className={`mb-6 rounded-lg px-4 py-3 text-sm ${
+            className={`mb-6 rounded-(--r-2) px-4 py-3 text-sm ${
               message.type === "success"
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-700"
+                ? "bg-signal-soft text-signal-ink"
+                : "bg-danger-soft text-danger"
             }`}
           >
             {message.text}
@@ -624,13 +624,13 @@ export default function ConsultationAvailabilityManager({
         {activeTab === "availability" && (
           <>
             {/* Weekly Schedule */}
-            <section className="mb-8 rounded-2xl bg-white shadow-[var(--shadow-card)]">
-              <div className="flex flex-col gap-4 border-b border-neutral-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <section className="mb-8 rounded-(--r-3) bg-bg shadow-(--shadow-card)">
+              <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">
+                  <h2 className="text-lg font-bold text-fg">
                     Weekly Schedule
                   </h2>
-                  <p className="mt-0.5 text-xs text-foreground-tertiary">
+                  <p className="mt-0.5 text-xs text-fg-3">
                     {enabledDayCount === 0
                       ? "Toggle days to set when you accept bookings"
                       : `Available on ${enabledDayCount} day${enabledDayCount === 1 ? "" : "s"}`}
@@ -640,14 +640,14 @@ export default function ConsultationAvailabilityManager({
                   <button
                     type="button"
                     onClick={copyToWeekdays}
-                    className="hidden sm:inline-flex h-9 items-center rounded-lg border border-neutral-200 px-3 text-xs font-medium text-foreground-secondary hover:bg-neutral-50 transition-colors"
+                    className="hidden sm:inline-flex h-9 items-center rounded-(--r-2) border border-border px-3 text-xs font-medium text-fg-2 hover:bg-bg-2 transition-colors"
                   >
                     Copy Mon to Tue–Fri
                   </button>
                   <button
                     type="button"
                     onClick={copyToWeekend}
-                    className="hidden sm:inline-flex h-9 items-center rounded-lg border border-neutral-200 px-3 text-xs font-medium text-foreground-secondary hover:bg-neutral-50 transition-colors"
+                    className="hidden sm:inline-flex h-9 items-center rounded-(--r-2) border border-border px-3 text-xs font-medium text-fg-2 hover:bg-bg-2 transition-colors"
                   >
                     Copy Mon to weekend
                   </button>
@@ -655,14 +655,14 @@ export default function ConsultationAvailabilityManager({
                     type="button"
                     onClick={saveAvailability}
                     disabled={isSaving}
-                    className="inline-flex h-9 items-center rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-9 items-center rounded-(--r-2) bg-signal px-4 text-sm font-semibold text-fg transition-colors hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSaving ? "Saving…" : "Save"}
                   </button>
                 </div>
               </div>
 
-              <div className="divide-y divide-neutral-100">
+              <div className="divide-y divide-border">
                 {weekDays.map((dayName, dayIndex) => {
                   const day = schedule[dayIndex];
                   return (
@@ -677,11 +677,11 @@ export default function ConsultationAvailabilityManager({
                           aria-checked={day.enabled}
                           onClick={() => toggleDay(dayIndex)}
                           className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-                            day.enabled ? "bg-primary-500" : "bg-neutral-300"
+                            day.enabled ? "bg-signal" : "bg-border-2"
                           }`}
                         >
                           <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                            className={`inline-block h-4 w-4 transform rounded-full bg-bg shadow-sm transition-transform ${
                               day.enabled ? "translate-x-4" : "translate-x-0.5"
                             }`}
                           />
@@ -689,8 +689,8 @@ export default function ConsultationAvailabilityManager({
                         <span
                           className={`text-sm font-semibold ${
                             day.enabled
-                              ? "text-foreground"
-                              : "text-foreground-tertiary"
+                              ? "text-fg"
+                              : "text-fg-3"
                           }`}
                         >
                           <span className="sm:hidden">{weekDayShort[dayIndex]}</span>
@@ -700,7 +700,7 @@ export default function ConsultationAvailabilityManager({
 
                       <div className="flex-1">
                         {!day.enabled ? (
-                          <span className="text-sm text-foreground-tertiary">
+                          <span className="text-sm text-fg-3">
                             Unavailable
                           </span>
                         ) : (
@@ -721,9 +721,9 @@ export default function ConsultationAvailabilityManager({
                                       e.target.value,
                                     )
                                   }
-                                  className="w-28 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-sm text-foreground focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                                  className="w-28 rounded-(--r-2) border border-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                                 />
-                                <span className="text-foreground-tertiary text-sm">–</span>
+                                <span className="text-fg-3 text-sm">–</span>
                                 <input
                                   type="time"
                                   value={range.endTime}
@@ -735,13 +735,13 @@ export default function ConsultationAvailabilityManager({
                                       e.target.value,
                                     )
                                   }
-                                  className="w-28 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-sm text-foreground focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                                  className="w-28 rounded-(--r-2) border border-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => removeRange(dayIndex, range.id)}
                                   aria-label="Remove time range"
-                                  className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-foreground-tertiary hover:bg-red-50 hover:text-red-600 transition-colors"
+                                  className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-danger-soft hover:text-danger transition-colors"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -750,7 +750,7 @@ export default function ConsultationAvailabilityManager({
                             <button
                               type="button"
                               onClick={() => addRange(dayIndex)}
-                              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-accent-blue-600 hover:bg-accent-blue-50 transition-colors"
+                              className="inline-flex items-center gap-1.5 rounded-(--r-2) px-2 py-1 text-xs font-medium text-fg-2 hover:bg-bg-2 transition-colors"
                             >
                               <Plus className="h-3.5 w-3.5" />
                               Add time range
@@ -763,8 +763,8 @@ export default function ConsultationAvailabilityManager({
                 })}
               </div>
 
-              <div className="border-t border-neutral-100 p-4 sm:p-5">
-                <label className="block text-xs font-semibold text-foreground-secondary mb-2">
+              <div className="border-t border-border p-4 sm:p-5">
+                <label className="block text-xs font-semibold text-fg-2 mb-2">
                   Timezone
                 </label>
                 <div className="max-w-md">
@@ -778,20 +778,20 @@ export default function ConsultationAvailabilityManager({
                     placeholder="Select timezone"
                   />
                 </div>
-                <p className="mt-2 text-xs text-foreground-tertiary">
+                <p className="mt-2 text-xs text-fg-3">
                   Clients see times converted to their own timezone automatically.
                 </p>
               </div>
             </section>
 
             {/* Session Settings */}
-            <section className="rounded-2xl bg-white shadow-[var(--shadow-card)]">
-              <div className="flex items-center justify-between border-b border-neutral-100 p-5">
+            <section className="rounded-(--r-3) bg-bg shadow-(--shadow-card)">
+              <div className="flex items-center justify-between border-b border-border p-5">
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">
+                  <h2 className="text-lg font-bold text-fg">
                     Session Settings
                   </h2>
-                  <p className="mt-0.5 text-xs text-foreground-tertiary">
+                  <p className="mt-0.5 text-xs text-fg-3">
                     Length, buffer time, and minimum booking notice.
                   </p>
                 </div>
@@ -799,19 +799,19 @@ export default function ConsultationAvailabilityManager({
                   type="button"
                   onClick={saveSessionDuration}
                   disabled={isSavingSession}
-                  className="inline-flex h-9 items-center rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                  className="inline-flex h-9 items-center rounded-(--r-2) bg-signal px-4 text-sm font-semibold text-fg hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                 >
                   {isSavingSession ? "Saving…" : "Save"}
                 </button>
               </div>
 
-              <div className="divide-y divide-neutral-100">
+              <div className="divide-y divide-border">
                 <div className="flex flex-col gap-1 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-fg">
                       Session length
                     </p>
-                    <p className="mt-0.5 text-xs text-foreground-tertiary">
+                    <p className="mt-0.5 text-xs text-fg-3">
                       Most providers use 30 or 60 minutes.
                     </p>
                   </div>
@@ -825,9 +825,9 @@ export default function ConsultationAvailabilityManager({
                       onChange={(e) =>
                         setSessionDuration(Number(e.target.value || 0))
                       }
-                      className="w-24 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                      className="w-24 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
-                    <span className="text-sm text-foreground-secondary">
+                    <span className="text-sm text-fg-2">
                       minutes
                     </span>
                   </div>
@@ -835,10 +835,10 @@ export default function ConsultationAvailabilityManager({
 
                 <div className="flex flex-col gap-1 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-fg">
                       Buffer between sessions
                     </p>
-                    <p className="mt-0.5 text-xs text-foreground-tertiary">
+                    <p className="mt-0.5 text-xs text-fg-3">
                       Time held back after each booking before the next slot starts.
                     </p>
                   </div>
@@ -852,9 +852,9 @@ export default function ConsultationAvailabilityManager({
                       onChange={(e) =>
                         setBufferMinutes(Number(e.target.value || 0))
                       }
-                      className="w-24 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                      className="w-24 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
-                    <span className="text-sm text-foreground-secondary">
+                    <span className="text-sm text-fg-2">
                       minutes
                     </span>
                   </div>
@@ -862,10 +862,10 @@ export default function ConsultationAvailabilityManager({
 
                 <div className="flex flex-col gap-1 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-fg">
                       Minimum advance notice
                     </p>
-                    <p className="mt-0.5 text-xs text-foreground-tertiary">
+                    <p className="mt-0.5 text-xs text-fg-3">
                       Clients can&apos;t book sessions starting sooner than this.
                     </p>
                   </div>
@@ -879,9 +879,9 @@ export default function ConsultationAvailabilityManager({
                       onChange={(e) =>
                         setMinAdvanceNoticeHours(Number(e.target.value || 0))
                       }
-                      className="w-24 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                      className="w-24 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
-                    <span className="text-sm text-foreground-secondary">
+                    <span className="text-sm text-fg-2">
                       hours
                     </span>
                   </div>
@@ -893,28 +893,28 @@ export default function ConsultationAvailabilityManager({
 
         {/* ===== BLOCKED DATES (EXCEPTIONS) TAB ===== */}
         {activeTab === "exceptions" && (
-          <section className="rounded-2xl bg-white shadow-[var(--shadow-card)]">
-            <div className="flex items-center justify-between border-b border-neutral-100 p-5">
+          <section className="rounded-(--r-3) bg-bg shadow-(--shadow-card)">
+            <div className="flex items-center justify-between border-b border-border p-5">
               <div>
-                <h2 className="text-lg font-bold text-foreground">
+                <h2 className="text-lg font-bold text-fg">
                   Blocked Dates
                 </h2>
-                <p className="mt-0.5 text-xs text-foreground-tertiary">
+                <p className="mt-0.5 text-xs text-fg-3">
                   Sick days, holidays, or any one-off date you can&apos;t take
                   bookings.
                 </p>
               </div>
               {exceptions.length > 0 && (
-                <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-foreground-secondary">
+                <span className="rounded-full bg-bg-2 px-2.5 py-0.5 text-xs font-semibold text-fg-2">
                   {exceptions.length}
                 </span>
               )}
             </div>
 
             {/* Inline add form */}
-            <div className="border-b border-neutral-100 bg-neutral-50/50 p-5">
+            <div className="border-b border-border bg-bg-2/50 p-5">
               {/* Mode toggle: single date vs range */}
-              <div className="mb-3 inline-flex rounded-lg border border-neutral-200 bg-white p-0.5">
+              <div className="mb-3 inline-flex rounded-(--r-2) border border-border bg-bg p-0.5">
                 {(
                   [
                     { value: "single", label: "Single date" },
@@ -936,8 +936,8 @@ export default function ConsultationAvailabilityManager({
                     }}
                     className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                       exceptionMode === opt.value
-                        ? "bg-foreground text-background"
-                        : "text-foreground-secondary hover:bg-neutral-100"
+                        ? "bg-fg text-bg"
+                        : "text-fg-2 hover:bg-bg-2"
                     }`}
                   >
                     {opt.label}
@@ -948,7 +948,7 @@ export default function ConsultationAvailabilityManager({
               <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
                 <div className={exceptionMode === "range" ? "grid grid-cols-2 gap-2" : ""}>
                   <div>
-                    <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                    <label className="block text-xs font-semibold text-fg-2 mb-1">
                       {exceptionMode === "range" ? "From" : "Date"}
                     </label>
                     <input
@@ -961,12 +961,12 @@ export default function ConsultationAvailabilityManager({
                         }))
                       }
                       min={new Date().toISOString().slice(0, 10)}
-                      className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                      className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
                   </div>
                   {exceptionMode === "range" && (
                     <div>
-                      <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                      <label className="block text-xs font-semibold text-fg-2 mb-1">
                         To
                       </label>
                       <input
@@ -982,7 +982,7 @@ export default function ConsultationAvailabilityManager({
                           newException.date ||
                           new Date().toISOString().slice(0, 10)
                         }
-                        className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                        className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                       />
                     </div>
                   )}
@@ -990,10 +990,10 @@ export default function ConsultationAvailabilityManager({
 
                 {exceptionMode === "single" && (
                   <div>
-                    <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                    <label className="block text-xs font-semibold text-fg-2 mb-1">
                       Type
                     </label>
-                    <div className="inline-flex rounded-lg border border-neutral-200 bg-white p-0.5">
+                    <div className="inline-flex rounded-(--r-2) border border-border bg-bg p-0.5">
                       {(
                         [
                           {
@@ -1017,8 +1017,8 @@ export default function ConsultationAvailabilityManager({
                           }
                           className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                             newException.type === opt.value
-                              ? "bg-foreground text-background"
-                              : "text-foreground-secondary hover:bg-neutral-100"
+                              ? "bg-fg text-bg"
+                              : "text-fg-2 hover:bg-bg-2"
                           }`}
                         >
                           {opt.label}
@@ -1032,7 +1032,7 @@ export default function ConsultationAvailabilityManager({
                   type="button"
                   onClick={createException}
                   disabled={isCreatingException || !newException.date}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary-500 px-4 text-sm font-semibold text-foreground hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-(--r-2) bg-signal px-4 text-sm font-semibold text-fg hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   {isCreatingException
@@ -1048,7 +1048,7 @@ export default function ConsultationAvailabilityManager({
                   AvailabilityExceptionType.CUSTOM_HOURS && (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 sm:max-w-md">
                   <div>
-                    <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                    <label className="block text-xs font-semibold text-fg-2 mb-1">
                       Start
                     </label>
                     <input
@@ -1060,11 +1060,11 @@ export default function ConsultationAvailabilityManager({
                           startTime: e.target.value,
                         }))
                       }
-                      className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                      className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                    <label className="block text-xs font-semibold text-fg-2 mb-1">
                       End
                     </label>
                     <input
@@ -1076,16 +1076,16 @@ export default function ConsultationAvailabilityManager({
                           endTime: e.target.value,
                         }))
                       }
-                      className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                      className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
                   </div>
                 </div>
               )}
 
               <div className="mt-3">
-                <label className="block text-xs font-semibold text-foreground-secondary mb-1">
+                <label className="block text-xs font-semibold text-fg-2 mb-1">
                   Reason{" "}
-                  <span className="font-normal text-foreground-tertiary">
+                  <span className="font-normal text-fg-3">
                     (optional, private)
                   </span>
                 </label>
@@ -1099,7 +1099,7 @@ export default function ConsultationAvailabilityManager({
                     }))
                   }
                   placeholder="e.g. Holiday, Doctor's appointment"
-                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:border-accent-blue-500 focus:outline-none focus:ring-1 focus:ring-accent-blue-500"
+                  className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                 />
               </div>
             </div>
@@ -1108,23 +1108,23 @@ export default function ConsultationAvailabilityManager({
             <div className="p-5">
               {loadingExceptions ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary-500 border-r-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-4 border-signal border-r-transparent" />
                 </div>
               ) : exceptions.length === 0 ? (
                 <div className="py-8 text-center">
                   <CalendarOff
-                    className="mx-auto h-10 w-10 text-foreground-tertiary mb-3"
+                    className="mx-auto h-10 w-10 text-fg-3 mb-3"
                     aria-hidden="true"
                   />
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-semibold text-fg">
                     No blocked dates
                   </p>
-                  <p className="mt-1 text-xs text-foreground-tertiary">
+                  <p className="mt-1 text-xs text-fg-3">
                     Add a date above to block it from your booking calendar.
                   </p>
                 </div>
               ) : (
-                <ul className="divide-y divide-neutral-100">
+                <ul className="divide-y divide-border">
                   {[...exceptions]
                     .sort((a, b) => a.date.localeCompare(b.date))
                     .map((exc) => {
@@ -1147,20 +1147,20 @@ export default function ConsultationAvailabilityManager({
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-sm font-semibold text-foreground">
+                              <p className="text-sm font-semibold text-fg">
                                 {formattedDate}
                               </p>
                               <span
                                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                                   isFullDay
-                                    ? "bg-red-50 text-red-700"
-                                    : "bg-yellow-50 text-yellow-700"
+                                    ? "bg-danger-soft text-danger"
+                                    : "bg-(--warn-soft,oklch(0.96_0.06_75)) text-(--warn)"
                                 }`}
                               >
                                 {isFullDay ? "Day off" : "Custom hours"}
                               </span>
                             </div>
-                            <p className="mt-0.5 text-xs text-foreground-tertiary">
+                            <p className="mt-0.5 text-xs text-fg-3">
                               {!isFullDay && exc.startTime && exc.endTime
                                 ? `${exc.startTime} – ${exc.endTime}`
                                 : "Unavailable all day"}
@@ -1171,7 +1171,7 @@ export default function ConsultationAvailabilityManager({
                             type="button"
                             onClick={() => deleteException(exc.id)}
                             aria-label="Remove blocked date"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-foreground-tertiary hover:bg-red-50 hover:text-red-600 transition-colors"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-danger-soft hover:text-danger transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

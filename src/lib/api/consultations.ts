@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
+import type { CreateBookingDto } from "./generated/types";
 
 export enum ConsultationProviderRole {
   DIETITIAN = "DIETITIAN",
@@ -97,13 +98,12 @@ export interface ConsultationBooking {
   updatedAt: string;
 }
 
-export interface CreateBookingRequest {
-  providerId: string;
-  consultationTypeId: string;
-  startsAt: string;
-  clientTimezone: string;
-  notes?: string;
-}
+/**
+ * Sourced from the generated OpenAPI contract (CreateBookingDto) so it tracks
+ * the API automatically. Template for the typing-normalization migration —
+ * see src/lib/api/generated/types.ts.
+ */
+export type CreateBookingRequest = CreateBookingDto;
 
 export interface RescheduleBookingRequest {
   startsAt: string;

@@ -72,22 +72,22 @@ export default function FeedbackPrompt() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm sm:bottom-6 sm:right-6">
-      <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200 p-5">
+      <div className="bg-bg rounded-(--r-3) shadow-(--shadow-2) border border-border p-5">
         {submitted ? (
           <div className="text-center py-4">
             <p className="text-2xl mb-2">🙏</p>
-            <p className="font-bold text-foreground">Thanks for your feedback!</p>
+            <p className="font-bold text-fg">Thanks for your feedback!</p>
           </div>
         ) : (
           <>
             <div className="flex items-start justify-between mb-3">
-              <h3 className="font-bold text-foreground">
+              <h3 className="font-bold text-fg">
                 How&apos;s your Binectics experience so far?
               </h3>
               <button
                 onClick={dismiss}
                 aria-label="Dismiss"
-                className="text-foreground/40 hover:text-foreground -mt-1 -mr-1 p-1"
+                className="text-fg/40 hover:text-fg -mt-1 -mr-1 p-1"
               >
                 ✕
               </button>
@@ -98,10 +98,10 @@ export default function FeedbackPrompt() {
                 <button
                   key={n}
                   onClick={() => setScore(n)}
-                  className={`flex-1 h-12 rounded-lg text-2xl transition-colors ${
+                  className={`flex-1 h-12 rounded-(--r-2) text-2xl transition-colors ${
                     score === n
-                      ? "bg-primary-500 text-foreground"
-                      : "bg-neutral-100 hover:bg-neutral-200"
+                      ? "bg-signal text-fg"
+                      : "bg-bg-2 hover:bg-bg-3"
                   }`}
                   aria-label={`Score ${n}`}
                 >
@@ -117,21 +117,21 @@ export default function FeedbackPrompt() {
                 placeholder="Anything we should know? (optional)"
                 rows={3}
                 maxLength={1000}
-                className="w-full text-sm border border-neutral-300 rounded-lg p-2 mb-3 focus:outline-none focus:border-primary-500"
+                className="w-full text-sm border border-border-2 rounded-(--r-2) p-2 mb-3 focus:outline-none focus:border-signal"
               />
             )}
 
             <div className="flex gap-2">
               <button
                 onClick={dismiss}
-                className="flex-1 h-10 rounded-lg text-sm font-semibold text-foreground/70 hover:bg-neutral-100"
+                className="flex-1 h-10 rounded-(--r-2) text-sm font-semibold text-fg/70 hover:bg-bg-2"
               >
                 Maybe later
               </button>
               <button
                 onClick={submit}
                 disabled={score === null || submitting}
-                className="flex-1 h-10 rounded-lg text-sm font-semibold bg-foreground text-white disabled:opacity-40"
+                className="flex-1 h-10 rounded-(--r-2) text-sm font-semibold bg-fg text-bg disabled:opacity-40"
               >
                 {submitting ? "Sending…" : "Send"}
               </button>

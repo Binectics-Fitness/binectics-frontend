@@ -1,193 +1,121 @@
-import type { Metadata } from "next";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
+import { MarketingFooter } from "@/components/ds/MarketingFooter";
+
+/**
+ * Blog — listing page with hardcoded post cards.
+ * Hero 56px h1 with serif italic, 3-col card grid.
+ */
 
 export const metadata: Metadata = {
-  title: "Blog",
-  description:
-    "Fitness tips, industry insights, and updates from the Binectics team. Stay informed about workouts, nutrition, and the global fitness community.",
+  title: "Blog | Binectics",
+  description: "Insights on fitness technology, multi-currency payments, and building the operating system for global fitness.",
+};
+
+function slugify(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+const POSTS = [
+  {
+    category: "Engineering",
+    title: "Why we built Binectics on oklch",
+    excerpt: "Perceptual uniformity matters when your brand spans five accent colours and three continents. Here's how oklch changed our token system.",
+    date: "18 May 2026",
+    author: "Tunde Adeyemi",
+    readTime: "6 min read",
+  },
+  {
+    category: "Product",
+    title: "The check-in problem nobody talks about",
+    excerpt: "Gym operators lose 12% of revenue to buddy-scanning and forgotten check-outs. We fixed it with a 3-second QR flow.",
+    date: "11 May 2026",
+    author: "Lara van der Merwe",
+    readTime: "5 min read",
+  },
+  {
+    category: "Industry",
+    title: "Multi-currency payments in African fitness",
+    excerpt: "Stripe doesn't cover Naira. Paystack doesn't do Rand. We built a routing layer that handles both without the operator noticing.",
+    date: "03 May 2026",
+    author: "Kemi Ogunleye",
+    readTime: "8 min read",
+  },
+  {
+    category: "Industry",
+    title: "How gyms in Lagos are going digital",
+    excerpt: "Paper sign-in sheets, WhatsApp groups, and bank transfers are giving way to real software. We spent three months in Lekki finding out why.",
+    date: "24 Apr 2026",
+    author: "Tunde Adeyemi",
+    readTime: "7 min read",
+  },
+  {
+    category: "Product",
+    title: "Trainer burnout is a platform problem",
+    excerpt: "When your scheduling tool makes you do admin for 90 minutes a day, the problem isn't discipline. It's the tool.",
+    date: "15 Apr 2026",
+    author: "Jake Martinez",
+    readTime: "4 min read",
+  },
+  {
+    category: "Product",
+    title: "What dietitians actually need from software",
+    excerpt: "We interviewed 40 registered dietitians across four countries. None of them wanted another meal-plan template library.",
+    date: "07 Apr 2026",
+    author: "Priya Patel",
+    readTime: "6 min read",
+  },
+];
+
+const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
+  Engineering: { bg: "var(--accent-blue-soft, oklch(0.95 0.03 250))", color: "var(--accent-blue, oklch(0.55 0.14 250))" },
+  Product: { bg: "var(--signal-soft)", color: "var(--signal-ink)" },
+  Industry: { bg: "var(--accent-purple-soft, oklch(0.94 0.04 300))", color: "var(--accent-purple, oklch(0.55 0.14 300))" },
 };
 
 export default function BlogPage() {
-  const posts = [
-    {
-      title: "10 Tips for Maintaining Your Fitness Routine While Traveling",
-      excerpt:
-        "Staying fit on the road doesn't have to be complicated. Here are our top tips for keeping up with your workouts while traveling for business or pleasure.",
-      author: "Sarah Chen",
-      date: "November 18, 2024",
-      readTime: "5 min read",
-      category: "Fitness Tips",
-      image: "🏃",
-    },
-    {
-      title: "The Rise of Hybrid Gym Memberships: What You Need to Know",
-      excerpt:
-        "Hybrid gym memberships are changing the fitness industry. Learn how this new model gives you flexibility and value like never before.",
-      author: "Marcus Johnson",
-      date: "November 12, 2024",
-      readTime: "7 min read",
-      category: "Industry Trends",
-      image: "🏋️",
-    },
-    {
-      title: "How to Choose the Right Personal Trainer for Your Goals",
-      excerpt:
-        "Finding the perfect trainer can make or break your fitness journey. Here's everything you need to consider when selecting a personal trainer.",
-      author: "Alex Rodriguez",
-      date: "November 5, 2024",
-      readTime: "6 min read",
-      category: "Training",
-      image: "💪",
-    },
-    {
-      title: "Nutrition Myths Debunked by Professional Dietitians",
-      excerpt:
-        "Our expert dietitians tackle the most common nutrition myths and reveal the truth behind popular diet trends.",
-      author: "Priya Patel",
-      date: "October 28, 2024",
-      readTime: "8 min read",
-      category: "Nutrition",
-      image: "🥗",
-    },
-    {
-      title: "The Future of Fitness Technology: QR Check-ins and Beyond",
-      excerpt:
-        "Contactless technology is revolutionizing gym experiences. Explore how QR check-ins and other innovations are shaping the future of fitness.",
-      author: "David Kim",
-      date: "October 20, 2024",
-      readTime: "5 min read",
-      category: "Technology",
-      image: "📱",
-    },
-    {
-      title: "Building a Sustainable Workout Routine: A Beginner's Guide",
-      excerpt:
-        "Starting a new fitness routine? Learn how to create sustainable habits that will keep you motivated for the long haul.",
-      author: "Emma Thompson",
-      date: "October 15, 2024",
-      readTime: "6 min read",
-      category: "Fitness Tips",
-      image: "✨",
-    },
-  ];
-
-  const categories = [
-    "All Posts",
-    "Fitness Tips",
-    "Nutrition",
-    "Training",
-    "Industry Trends",
-    "Technology",
-  ];
-
   return (
-    <div className="min-h-screen bg-background-secondary">
-      {/* Hero Section */}
-      <section className="bg-background py-16 sm:py-24">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl font-black text-foreground sm:text-5xl lg:text-6xl">
-            Binectics Blog
-          </h1>
-          <p className="mt-6 text-lg sm:text-xl text-foreground-secondary leading-relaxed">
-            Fitness tips, nutrition advice, industry insights, and stories from
-            our global community
-          </p>
-        </div>
+    <div style={{ background: "var(--bg)" }}>
+      <MarketingTopbar />
+
+      {/* Hero */}
+      <section className="mx-auto max-w-280 px-5 sm:px-8 pt-16 sm:pt-20 pb-10 sm:pb-12">
+        <div className="font-mono text-[11px] uppercase tracking-[0.06em] mb-3.5" style={{ color: "var(--fg-3)" }}>Blog</div>
+        <h1 className="text-[36px] sm:text-[48px] lg:text-[56px] font-medium max-w-[18ch]" style={{ lineHeight: 1.04, letterSpacing: "-0.032em", color: "var(--ink)" }}>
+          From the <em className="font-serif font-normal italic">team</em>.
+        </h1>
+        <p className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5" style={{ color: "var(--fg-2)" }}>
+          Fitness industry insights, engineering deep-dives, and lessons from building a global platform one city at a time.
+        </p>
       </section>
 
-      {/* Categories */}
-      <section className="bg-neutral-100 py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap justify-center gap-3">
-            {categories.map((category, index) => (
-              <button
-                key={index}
-                className={`rounded-full px-6 py-2 text-sm font-semibold transition-colors ${
-                  index === 0
-                    ? "bg-primary-500 text-white"
-                    : "bg-background text-foreground-secondary hover:bg-neutral-200"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Blog Posts */}
-      <section className="bg-background py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post, index) => (
-              <article
-                key={index}
-                className="group rounded-2xl bg-neutral-100 overflow-hidden shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
-              >
-                <div className="flex h-48 items-center justify-center bg-gradient-to-br from-primary-500 to-accent-blue-500 text-6xl">
-                  {post.image}
+      {/* Posts grid */}
+      <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {POSTS.map((post) => {
+            const cat = CATEGORY_COLORS[post.category] ?? { bg: "var(--bg-2)", color: "var(--fg-3)" };
+            return (
+              <Link key={post.title} href={`/blog/${slugify(post.title)}`} className="block rounded-(--r-3) p-6 hover:border-ink" style={{ background: "var(--bg-2)", textDecoration: "none", color: "inherit" }}>
+                <span
+                  className="inline-block font-mono text-[10px] px-2 py-0.75 rounded-full uppercase tracking-[0.04em] mb-4"
+                  style={{ background: cat.bg, color: cat.color }}
+                >
+                  {post.category}
+                </span>
+                <h3 className="text-[17px] font-medium leading-[1.3] mb-2" style={{ color: "var(--ink)" }}>{post.title}</h3>
+                <p className="text-[13.5px] leading-[1.55] mb-4" style={{ color: "var(--fg-2)" }}>{post.excerpt}</p>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{post.author}</span>
+                  <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{post.date} &middot; {post.readTime}</span>
                 </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-600">
-                      {post.category}
-                    </span>
-                    <span className="text-xs text-foreground-tertiary">
-                      {post.readTime}
-                    </span>
-                  </div>
-                  <h3 className="font-display text-xl font-bold text-foreground mb-3 group-hover:text-accent-blue-500 transition-colors">
-                    {post.title}
-                  </h3>
-                  <p className="text-sm text-foreground-secondary leading-relaxed mb-4">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground-tertiary">
-                      {post.author}
-                    </span>
-                    <span className="text-foreground-tertiary">
-                      {post.date}
-                    </span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {/* Load More */}
-          <div className="mt-12 text-center">
-            <button className="inline-flex h-12 items-center justify-center rounded-lg border-2 border-neutral-300 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-neutral-100">
-              Load More Articles
-            </button>
-          </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section className="bg-primary-500 py-16 sm:py-20">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-display text-3xl font-black text-foreground sm:text-4xl">
-            Subscribe to Our Newsletter
-          </h2>
-          <p className="mt-4 text-lg text-foreground-secondary">
-            Get weekly fitness tips, nutrition advice, and exclusive content
-            delivered to your inbox
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="flex-1 h-12 rounded-lg border-2 border-transparent bg-background px-4 text-base focus:outline-none focus:border-accent-blue-500"
-            />
-            <button className="h-12 rounded-lg bg-background px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-neutral-50">
-              Subscribe
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
+      <MarketingFooter />
     </div>
   );
 }

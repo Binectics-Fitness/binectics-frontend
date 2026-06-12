@@ -46,10 +46,10 @@ export default function AdminClientShell({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-foreground/60">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-danger mx-auto"></div>
+          <p className="mt-4 text-fg-2">Loading...</p>
         </div>
       </div>
     );

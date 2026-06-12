@@ -1,241 +1,114 @@
-"use client";
+import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import type { Metadata } from "next";
 
-import { useOrgMembershipSubscriptions } from "@/lib/queries/marketplace";
-import DietitianSidebar from "@/components/DietitianSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { EmptyState } from "@/components/EmptyState";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { useOrganization } from "@/contexts/OrganizationContext";
-import { UserRole, MembershipSubscriptionStatus } from "@/lib/types";
-import type { MembershipSubscription } from "@/lib/types";
-import { formatLocal } from "@/utils/format";
-
-function getMemberName(sub: MembershipSubscription): string {
-  if (typeof sub.member_user_id === "object" && sub.member_user_id) {
-    return `${sub.member_user_id.first_name} ${sub.member_user_id.last_name}`;
-  }
-  return "Member";
-}
-
-function getPlanName(sub: MembershipSubscription): string {
-  if (typeof sub.plan_id === "object" && sub.plan_id) {
-    return sub.plan_id.name;
-  }
-  return "Plan";
-}
+export const metadata: Metadata = {
+  title: "Earnings",
+  description: "Track your dietitian earnings, payouts, and revenue.",
+};
 
 export default function DietitianEarningsPage() {
-  const { user, isLoading, isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
-  const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const { data: subscriptions = [], isLoading: loadingData } =
-    useOrgMembershipSubscriptions(currentOrg?._id, !!user && !orgLoading);
-
-  if (isLoading || orgLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
-
-  const activeSubs = subscriptions.filter(
-    (s) => s.status === MembershipSubscriptionStatus.ACTIVE,
-  );
-  const totalRevenue = subscriptions
-    .filter(
-      (s) =>
-        s.status === MembershipSubscriptionStatus.ACTIVE ||
-        s.status === MembershipSubscriptionStatus.EXPIRED,
-    )
-    .reduce((sum, s) => sum + s.amount_paid, 0);
-  const activeRevenue = activeSubs.reduce((sum, s) => sum + s.amount_paid, 0);
-  const currency = subscriptions[0]?.currency || currentOrg?.currency || "USD";
-
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <DietitianSidebar />
+    <DietitianDashboardShell activeItem="Earnings" crumb="Earnings" actions={<><button className="btn-ghost-v2 sm">Tax docs</button><button className="btn-ghost-v2 sm">Export</button></>}>
+      <div>
+        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Earnings</h1>
+        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>Dr Nadia Hassan · ZAR equivalent · routes through Paystack to Lagos GTBank · NGN</div>
+      </div>
 
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <div className="mb-6">
-          <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl">
-            Earnings
-          </h1>
-          <p className="mt-1 text-sm text-foreground-secondary">
-            Track your revenue from service plan subscriptions
-          </p>
+      {/* Hero */}
+      <div className="rounded-(--r-3) grid grid-cols-1 sm:grid-cols-3 gap-8 items-center" style={{ background: "var(--ink)", color: "var(--bg)", padding: "28px 32px" }}>
+        <div>
+          <div className="font-mono text-[11px] uppercase" style={{ letterSpacing: "0.05em", color: "oklch(0.65 0.005 85)" }}>Net this month</div>
+          <div className="text-[44px] font-medium mt-1.5" style={{ letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{"₦"} 1.84M</div>
+          <div className="font-mono text-[11.5px] mt-2 uppercase" style={{ letterSpacing: "0.04em", color: "oklch(0.75 0.005 85)" }}>22 consults completed · 5 plans delivered · next payout Thu</div>
         </div>
+        <div>
+          <div className="font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.04em", color: "oklch(0.65 0.005 85)" }}>Pending payout</div>
+          <div className="text-[22px] font-medium mt-1.5" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", lineHeight: 1 }}>{"₦"} 412k</div>
+        </div>
+        <div>
+          <div className="font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.04em", color: "oklch(0.65 0.005 85)" }}>YTD net</div>
+          <div className="text-[22px] font-medium mt-1.5" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", lineHeight: 1 }}>{"₦"} 8.62M</div>
+        </div>
+      </div>
 
-        {!currentOrg ? (
-          <div className="rounded-2xl bg-white p-8 shadow-[var(--shadow-card)] text-center">
-            <EmptyState
-              title="No Organization"
-              description="Create or join an organization to start tracking earnings."
-              actionLabel="Go to Dashboard"
-              actionHref="/dashboard/dietitian"
-            />
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: "Consults · 30d", value: "22", delta: "↑ 12% MoM" },
+          { label: "Plans delivered", value: "14", delta: "5 new this week" },
+          { label: "Avg consult", value: "₦ 38k", delta: "↑ ₦ 2k" },
+          { label: "Platform fee", value: "₦ 92k", delta: "5% of gross", muted: true },
+        ].map((k) => (
+          <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
+            <div className="text-[24px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</div>
+            <div className="font-mono text-[11.5px] mt-1" style={{ color: k.muted ? "var(--fg-3)" : "var(--signal-ink)" }}>{k.delta}</div>
           </div>
-        ) : loadingData ? (
-          <DashboardLoading />
-        ) : (
-          <>
-            <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                    <svg
-                      className="h-6 w-6 text-primary-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground-secondary">
-                      Total Revenue
-                    </p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {currency} {totalRevenue.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
+        ))}
+      </div>
 
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-purple-100">
-                    <svg
-                      className="h-6 w-6 text-accent-purple-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground-secondary">
-                      Active Subscriptions
-                    </p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {activeSubs.length}
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {/* Chart */}
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Earnings over time</h3>
+        </div>
+        <div className="p-5">
+          <svg viewBox="0 0 600 220" preserveAspectRatio="none" className="w-full" style={{ height: "220px" }}>
+            <defs><linearGradient id="d-grad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="oklch(0.58 0.14 300)" stopOpacity="0.18"/><stop offset="1" stopColor="oklch(0.58 0.14 300)" stopOpacity="0"/></linearGradient></defs>
+            <g stroke="oklch(0.91 0.006 85)" strokeWidth="1"><line x1="0" y1="50" x2="600" y2="50"/><line x1="0" y1="100" x2="600" y2="100"/><line x1="0" y1="150" x2="600" y2="150"/></g>
+            <path d="M 0 170 L 30 150 L 60 156 L 90 130 L 120 138 L 150 116 L 180 124 L 210 104 L 240 112 L 270 92 L 300 98 L 330 80 L 360 86 L 390 68 L 420 76 L 450 56 L 480 62 L 510 44 L 540 50 L 570 30 L 600 38 L 600 220 L 0 220 Z" fill="url(#d-grad)"/>
+            <path d="M 0 170 L 30 150 L 60 156 L 90 130 L 120 138 L 150 116 L 180 124 L 210 104 L 240 112 L 270 92 L 300 98 L 330 80 L 360 86 L 390 68 L 420 76 L 450 56 L 480 62 L 510 44 L 540 50 L 570 30 L 600 38" fill="none" stroke="oklch(0.58 0.14 300)" strokeWidth="2"/>
+            <circle cx="600" cy="38" r="4" fill="oklch(0.58 0.14 300)"/>
+          </svg>
+        </div>
+      </div>
 
-              <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-yellow-100">
-                    <svg
-                      className="h-6 w-6 text-accent-yellow-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground-secondary">
-                      Active Revenue
-                    </p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {currency} {activeRevenue.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Recent earnings table */}
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Recent earnings</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-[13.5px]">
+            <thead>
+              <tr style={{ background: "var(--bg-2)", borderBottom: "1px solid var(--border)" }}>
+                <th className="px-4.5 py-2.5 text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Date</th>
+                <th className="px-4.5 py-2.5 text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Client / item</th>
+                <th className="px-4.5 py-2.5 text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Status</th>
+                <th className="px-4.5 py-2.5 text-right font-medium font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { date: "17 May 11:30", client: "Kemi Eze · maintenance · 16wk renewal", status: "pending", statusLabel: "Pending", net: "₦ 412,000" },
+                { date: "11 May 14:18", client: "Bisi Okonkwo · wk 6 review", status: "paid", statusLabel: "Paid", net: "₦ 38,000" },
+                { date: "11 May 09:00", client: "Weekly payout · 6 consults", status: "paid", statusLabel: "Paid · GTBank", net: "₦ 228,000" },
+                { date: "06 May 16:30", client: "Folake Adebayo · intake", status: "paid", statusLabel: "Paid", net: "₦ 75,000" },
+                { date: "04 May 11:08", client: "Kemi Eze · PCOS plan delivery", status: "paid", statusLabel: "Paid", net: "₦ 360,000" },
+                { date: "28 Apr 14:00", client: "Adaora Tunde · PCOS protocol", status: "paid", statusLabel: "Paid", net: "₦ 360,000" },
+                { date: "22 Apr 10:00", client: "Chinedu Okoro · sport perf · 8wk", status: "paid", statusLabel: "Paid", net: "₦ 280,000" },
+              ].map((row, i) => {
+                const statusStyle = row.status === "paid"
+                  ? { color: "var(--signal-ink)", background: "var(--signal-soft)" }
+                  : { color: "var(--fg-3)", background: "var(--bg-2)", border: "1px solid var(--border)" };
 
-            <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)]">
-              <h2 className="mb-4 text-lg font-bold text-foreground">
-                Recent Subscriptions
-              </h2>
-
-              {subscriptions.length === 0 ? (
-                <EmptyState
-                  title="No Subscriptions Yet"
-                  description="When clients subscribe to your plans, their subscriptions will appear here."
-                  actionLabel="Manage Plans"
-                  actionHref="/dashboard/dietitian/plans"
-                />
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-neutral-200 text-left">
-                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">
-                          Member
-                        </th>
-                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">
-                          Plan
-                        </th>
-                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">
-                          Amount
-                        </th>
-                        <th className="pb-3 pr-4 font-semibold text-foreground-secondary">
-                          Status
-                        </th>
-                        <th className="pb-3 font-semibold text-foreground-secondary">
-                          Date
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-100">
-                      {subscriptions.slice(0, 20).map((sub) => (
-                        <tr key={sub._id}>
-                          <td className="py-3 pr-4 font-medium text-foreground">
-                            {getMemberName(sub)}
-                          </td>
-                          <td className="py-3 pr-4 text-foreground-secondary">
-                            {getPlanName(sub)}
-                          </td>
-                          <td className="py-3 pr-4 font-medium text-foreground">
-                            {sub.currency} {sub.amount_paid.toLocaleString()}
-                          </td>
-                          <td className="py-3 pr-4">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                sub.status ===
-                                MembershipSubscriptionStatus.ACTIVE
-                                  ? "bg-primary-100 text-primary-700"
-                                  : sub.status ===
-                                      MembershipSubscriptionStatus.PENDING_PAYMENT
-                                    ? "bg-accent-yellow-100 text-accent-yellow-700"
-                                    : sub.status ===
-                                        MembershipSubscriptionStatus.EXPIRED
-                                      ? "bg-neutral-100 text-neutral-600"
-                                      : "bg-red-100 text-red-700"
-                              }`}
-                            >
-                              {sub.status.replace("_", " ")}
-                            </span>
-                          </td>
-                          <td className="py-3 text-foreground-secondary">
-                            {formatLocal(sub.created_at, "MMM d, yyyy")}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+                return (
+                  <tr key={i} style={{ borderBottom: i < 6 ? "1px solid var(--border)" : "none" }}>
+                    <td className="px-4.5 py-3.5 font-mono" style={{ color: "var(--fg-2)" }}>{row.date}</td>
+                    <td className="px-4.5 py-3.5" style={{ color: "var(--ink)" }}>{row.client}</td>
+                    <td className="px-4.5 py-3.5">
+                      <span className="font-mono text-[10.5px] uppercase" style={{ ...statusStyle, padding: "3px 8px", borderRadius: "999px", letterSpacing: "0.05em" }}>
+                        {row.statusLabel}
+                      </span>
+                    </td>
+                    <td className="px-4.5 py-3.5 text-right font-mono" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>{row.net}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </DietitianDashboardShell>
   );
 }

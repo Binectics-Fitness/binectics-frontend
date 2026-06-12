@@ -22,12 +22,13 @@ export default function SessionModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0"
+        style={{ background: "oklch(0.14 0.008 80 / 0.3)" }}
         onClick={sessionEnded ? undefined : onLogout}
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8">
+      <div className="relative bg-bg rounded-(--r-3) max-w-md w-full mx-4 p-8" style={{ boxShadow: "var(--shadow-2)" }}>
         <div className="text-center">
           {/* Icon */}
           <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-4">
@@ -47,10 +48,10 @@ export default function SessionModal({
           </div>
 
           {/* Content */}
-          <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+          <h3 className="font-display text-2xl font-bold text-ink mb-2">
             {sessionEnded ? "Session Expired" : "Session Ending Soon"}
           </h3>
-          <p className="text-foreground-secondary mb-6">
+          <p className="text-fg-2 mb-6">
             {sessionEnded
               ? "Your session has expired due to inactivity. Please log in again to continue."
               : "Your session is about to expire due to inactivity. Would you like to continue?"}
@@ -66,7 +67,7 @@ export default function SessionModal({
               <>
                 <Button
                   onClick={onLogout}
-                  variant="secondary"
+                  variant="ghost"
                   className="flex-1"
                 >
                   Log Out

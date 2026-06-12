@@ -9,7 +9,7 @@ import { UserRole } from "@/lib/types";
  */
 export const AUTH_ROUTES = {
   LOGIN: "/login",
-  REGISTER: "/register",
+  REGISTER: "/login?mode=signup",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   VERIFICATION: "/verification",
@@ -20,7 +20,7 @@ export const AUTH_ROUTES = {
  * Dashboard routes by user role
  */
 export const DASHBOARD_ROUTES: Readonly<Record<UserRole, string>> = {
-  USER: "/dashboard",
+  USER: "/member",
   GYM_OWNER: "/dashboard/gym-owner",
   TRAINER: "/dashboard/trainer",
   DIETITIAN: "/dashboard/dietitian",
@@ -32,6 +32,24 @@ export const DASHBOARD_ROUTES: Readonly<Record<UserRole, string>> = {
  */
 export function getDashboardRoute(role: UserRole): string {
   return DASHBOARD_ROUTES[role] || DASHBOARD_ROUTES.USER;
+}
+
+/**
+ * Onboarding routes by user role
+ */
+export const ONBOARDING_ROUTES: Readonly<Record<UserRole, string>> = {
+  USER: "/onboarding",
+  GYM_OWNER: "/onboarding/gym-owner",
+  TRAINER: "/onboarding/trainer",
+  DIETITIAN: "/onboarding/dietitian",
+  ADMIN: "/admin/dashboard",
+};
+
+/**
+ * Get onboarding route for user role
+ */
+export function getOnboardingRoute(role: UserRole): string {
+  return ONBOARDING_ROUTES[role] || ONBOARDING_ROUTES.USER;
 }
 
 /**

@@ -53,7 +53,7 @@ export default function RichTextDisplay({
 
   return (
     <div
-      className={`prose prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground-secondary prose-a:text-accent-blue-500 ${className}`}
+      className={`prose prose-sm max-w-none prose-headings:text-ink prose-p:text-fg-2 prose-a:text-signal ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitised }}
     />
   );

@@ -1,12 +1,35 @@
-import type { Metadata } from "next";
-import { ReactNode } from "react";
-import DashboardClientShell from "@/components/DashboardClientShell";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Dashboard",
-  robots: { index: false, follow: false },
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
-  return <DashboardClientShell>{children}</DashboardClientShell>;
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    const prev = document.body.style.background;
+    document.body.style.background = "var(--bg-2)";
+    return () => { document.body.style.background = prev; };
+  }, []);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) {
+      router.replace("/login");
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-2)" }}>
+        <div className="w-10 h-10 rounded-full border-[3px] border-border-2 border-t-ink animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  return <>{children}</>;
 }

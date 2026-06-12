@@ -99,8 +99,8 @@ const navItems: NavItem[] = [
 
 const roleBadge: RoleBadge = {
   label: "Gym Owner",
-  bgClass: "bg-accent-blue-50",
-  textClass: "text-accent-blue-700",
+  bgClass: "bg-gym-soft",
+  textClass: "text-gym",
 };
 
 export default function GymOwnerSidebar() {

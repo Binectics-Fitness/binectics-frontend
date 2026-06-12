@@ -15,6 +15,16 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1";
 
+/** The loosely-typed envelope every API response is parsed into before it is
+ *  narrowed to a concrete ApiResponse<T>. Replaces an untyped `any`. */
+interface RawResponseBody {
+  data?: unknown;
+  message?: unknown;
+  error?: unknown;
+  errors?: Record<string, string[]>;
+  details?: unknown;
+}
+
 class ApiClient {
   private baseUrl: string;
   private isRefreshing: boolean = false;
@@ -72,12 +82,9 @@ class ApiClient {
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
 
-    let data: any;
-    if (isJson) {
-      data = await response.json();
-    } else {
-      data = await response.text();
-    }
+    const parsed: unknown = isJson ? await response.json() : await response.text();
+    const body: RawResponseBody =
+      parsed && typeof parsed === "object" ? (parsed as RawResponseBody) : {};
 
     if (!response.ok) {
       // Handle 401 - Unauthorized (token expired)
@@ -110,23 +117,29 @@ class ApiClient {
         }
       }
 
+      const rawMsg = body.message || body.error || "An error occurred";
+      const message = Array.isArray(rawMsg) ? rawMsg.join(". ") : String(rawMsg);
+
       return {
         success: false,
-        message: data.message || data.error || "An error occurred",
-        errors: data.errors,
-        code: typeof data.error === "string" ? data.error : undefined,
+        message,
+        errors: body.errors,
+        code: typeof body.error === "string" ? body.error : undefined,
         details:
-          data.details && typeof data.details === "object"
-            ? (data.details as Record<string, unknown>)
+          body.details && typeof body.details === "object"
+            ? (body.details as Record<string, unknown>)
             : undefined,
         status: response.status,
       };
     }
 
+    // Unwrap a `{ data }` envelope when present, else return the payload as-is
+    // (preserves the previous `data.data || data` behaviour).
+    const dataField = parsed && typeof parsed === "object" ? body.data : undefined;
     return {
       success: true,
-      data: data.data || data,
-      message: data.message,
+      data: (dataField || parsed) as T,
+      message: typeof body.message === "string" ? body.message : undefined,
     };
   }
 
@@ -162,7 +175,7 @@ class ApiClient {
    */
   async post<T>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     includeAuth: boolean = true,
   ): Promise<ApiResponse<T>> {
     try {
@@ -191,7 +204,7 @@ class ApiClient {
    */
   async put<T>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     includeAuth: boolean = true,
   ): Promise<ApiResponse<T>> {
     try {
@@ -220,7 +233,7 @@ class ApiClient {
    */
   async patch<T>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     includeAuth: boolean = true,
   ): Promise<ApiResponse<T>> {
     try {

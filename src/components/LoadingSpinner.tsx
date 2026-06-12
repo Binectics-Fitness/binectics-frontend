@@ -1,3 +1,8 @@
+/**
+ * LoadingSpinner — simple, no glow, no gradient backgrounds.
+ * Ink-colored spinner with subtle opacity. No celebration.
+ */
+
 interface LoadingSpinnerProps {
   label?: string;
   size?: "sm" | "md" | "lg";
@@ -5,30 +10,24 @@ interface LoadingSpinnerProps {
 }
 
 const sizeMap = {
-  sm: "h-6 w-6 border-2",
-  md: "h-10 w-10 border-3",
-  lg: "h-12 w-12 border-4",
+  sm: "h-5 w-5 border-[1.5px]",
+  md: "h-7 w-7 border-2",
+  lg: "h-9 w-9 border-2",
 } as const;
 
 export function LoadingSpinner({
-  label = "Loading...",
+  label = "Loading…",
   size = "lg",
   fullScreen = true,
 }: LoadingSpinnerProps) {
   const spinner = (
-    <div className="text-center animate-fade-in">
-      <div className="relative inline-flex">
-        <div
-          className={`${sizeMap[size]} animate-spin rounded-full border-solid border-primary-500 border-r-transparent`}
-        />
-        {/* Subtle glow behind spinner */}
-        <div
-          className={`absolute inset-0 ${sizeMap[size]} rounded-full opacity-20 blur-md`}
-          style={{ background: "#00d991" }}
-        />
-      </div>
+    <div className="text-center">
+      <div
+        className={`${sizeMap[size]} animate-spin rounded-full border-solid border-t-transparent mx-auto`}
+        style={{ borderColor: "var(--border-2)", borderTopColor: "transparent" }}
+      />
       {label && (
-        <p className="mt-4 text-sm font-medium text-foreground-secondary">
+        <p className="mt-3 text-[13px] font-medium" style={{ color: "var(--fg-3)" }}>
           {label}
         </p>
       )}
@@ -38,7 +37,7 @@ export function LoadingSpinner({
   if (!fullScreen) return spinner;
 
   return (
-    <div className="flex min-h-screen items-center justify-center gradient-section-green">
+    <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg)" }}>
       {spinner}
     </div>
   );

@@ -88,7 +88,7 @@ export function ContactProvider({
         <a
           href={telUrl}
           aria-label={`Call ${providerName ?? "provider"}`}
-          className={`${baseBtn} ${sizing} bg-accent-blue-500 text-white hover:bg-accent-blue-600`}
+          className={`${baseBtn} ${sizing} bg-signal text-bg hover:bg-signal/90`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -110,7 +110,7 @@ export function ContactProvider({
         <a
           href={mailUrl}
           aria-label={`Email ${providerName ?? "provider"}`}
-          className={`${baseBtn} ${sizing} border-2 border-neutral-300 bg-white text-foreground hover:border-foreground`}
+          className={`${baseBtn} ${sizing} border-2 border-border-2 bg-bg text-fg hover:border-fg`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

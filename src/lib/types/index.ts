@@ -276,7 +276,6 @@ export interface MarketplaceListing {
         profile_picture?: string;
       };
   account_type: MarketplaceAccountType;
-  slug?: string;
   headline: string;
   bio: string;
   specialties: string[];

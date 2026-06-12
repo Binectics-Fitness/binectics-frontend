@@ -77,7 +77,14 @@ export const queryKeys = {
     all: ["notifications"] as const,
     list: (params?: Record<string, unknown>) =>
       [...queryKeys.notifications.all, "list", params] as const,
+    unreadCount: () => [...queryKeys.notifications.all, "unreadCount"] as const,
     preferences: () => [...queryKeys.notifications.all, "preferences"] as const,
+  },
+
+  search: {
+    all: ["search"] as const,
+    unified: (params?: Record<string, unknown>) =>
+      [...queryKeys.search.all, "unified", params] as const,
   },
 
   reviews: {

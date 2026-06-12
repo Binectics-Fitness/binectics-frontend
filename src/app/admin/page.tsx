@@ -56,14 +56,14 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
       {/* Inactivity Notification */}
       <InactivityNotification />
 
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="icon-glow-green inline-flex items-center justify-center w-16 h-16 rounded-2xl text-foreground mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-(--r-3) bg-signal-soft text-fg mb-4">
             <svg
               className="w-8 h-8"
               fill="none"
@@ -78,10 +78,10 @@ export default function AdminLoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-black text-foreground mb-2">
+          <h1 className="text-3xl font-black text-ink mb-2">
             Admin Login
           </h1>
-          <p className="text-foreground/60">
+          <p className="text-fg-2">
             Sign in to access the admin dashboard
           </p>
         </div>
@@ -89,14 +89,15 @@ export default function AdminLoginPage() {
         {/* Login Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-8"
+          className="bg-bg rounded-(--r-3) border border-border p-8"
+          style={{ boxShadow: "var(--shadow-2)" }}
         >
           {/* API Error Message */}
           {apiError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-300 rounded-xl">
+            <div className="mb-6 p-4 bg-danger-soft border border-danger rounded-(--r-3)">
               <div className="flex gap-3">
                 <svg
-                  className="h-5 w-5 shrink-0 text-red-600 mt-0.5"
+                  className="h-5 w-5 shrink-0 text-danger mt-0.5"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -106,7 +107,7 @@ export default function AdminLoginPage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <p className="text-sm text-red-700 font-medium">{apiError}</p>
+                <p className="text-sm text-danger font-medium">{apiError}</p>
               </div>
             </div>
           )}
@@ -116,22 +117,23 @@ export default function AdminLoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-semibold text-foreground mb-2"
+                className="block text-sm font-semibold text-fg mb-2"
               >
                 Admin Email
-                <span className="text-red-500 ml-1">*</span>
+                <span className="text-danger ml-1">*</span>
               </label>
               <input
                 type="email"
                 id="email"
+                required
                 {...registerField("email")}
                 placeholder="admin@binectics.com"
                 className={`w-full h-12 border ${
-                  errors.email ? "border-red-500" : "border-neutral-200"
-                } rounded-lg px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary-500 transition-colors`}
+                  errors.email ? "border-danger" : "border-border"
+                } rounded-(--r-2) px-4 text-fg placeholder:text-fg-4 focus:outline-none focus:border-signal transition-colors`}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-500">
+                <p className="mt-1 text-sm text-danger">
                   {errors.email.message}
                 </p>
               )}
@@ -141,22 +143,24 @@ export default function AdminLoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-semibold text-foreground mb-2"
+                className="block text-sm font-semibold text-fg mb-2"
               >
                 Password
-                <span className="text-red-500 ml-1">*</span>
+                <span className="text-danger ml-1">*</span>
               </label>
               <input
                 type="password"
                 id="password"
+                required
+                minLength={8}
                 {...registerField("password")}
                 placeholder="••••••••"
                 className={`w-full h-12 border ${
-                  errors.password ? "border-red-500" : "border-neutral-200"
-                } rounded-lg px-4 text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary-500 transition-colors`}
+                  errors.password ? "border-danger" : "border-border"
+                } rounded-(--r-2) px-4 text-fg placeholder:text-fg-4 focus:outline-none focus:border-signal transition-colors`}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-500">
+                <p className="mt-1 text-sm text-danger">
                   {errors.password.message}
                 </p>
               )}
@@ -167,22 +171,22 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={isLoading || authLoading}
-            className="w-full h-12 bg-primary-500 text-foreground font-semibold rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            className="w-full h-12 bg-signal text-bg font-semibold rounded-(--r-2) hover:bg-signal/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
             {isLoading || authLoading ? "Signing in..." : "Sign In as Admin"}
           </button>
 
           {/* Info */}
-          <div className="mt-6 p-4 bg-neutral-50 border border-neutral-200 rounded-xl">
-            <p className="text-xs text-foreground/60 mb-2">
+          <div className="mt-6 p-4 bg-bg-2 border border-border rounded-(--r-3)">
+            <p className="text-xs text-fg-2 mb-2">
               <strong>Admin Access Only</strong>
             </p>
-            <p className="text-xs text-foreground/60">
+            <p className="text-xs text-fg-2">
               This login is for administrators only. For regular user access,
               please use the{" "}
               <Link
                 href="/login"
-                className="text-primary-500 hover:text-primary-600 font-semibold"
+                className="text-signal hover:text-signal/80 font-semibold"
               >
                 user login page
               </Link>
@@ -191,18 +195,18 @@ export default function AdminLoginPage() {
           </div>
 
           {/* Demo Account Info */}
-          <div className="mt-4 p-4 bg-accent-blue-50 border border-accent-blue-200 rounded-xl">
-            <p className="text-xs text-foreground/70">
+          <div className="mt-4 p-4 bg-bg-2 border border-border rounded-(--r-3)">
+            <p className="text-xs text-fg-2">
               <strong>Demo Account:</strong>
             </p>
-            <p className="text-xs text-foreground/60 mt-1 font-mono">
+            <p className="text-xs text-fg-2 mt-1 font-mono">
               admin@binectics.com / Admin@123456
             </p>
-            <p className="text-xs text-foreground/60 mt-2">
+            <p className="text-xs text-fg-2 mt-2">
               Create demo accounts at{" "}
               <Link
                 href="/admin/create-super-admin"
-                className="text-accent-blue-500 hover:underline"
+                className="text-signal hover:underline"
               >
                 /admin/create-super-admin
               </Link>
@@ -214,7 +218,7 @@ export default function AdminLoginPage() {
         <div className="mt-6 text-center">
           <Link
             href="/"
-            className="text-sm text-foreground/60 hover:text-foreground"
+            className="text-sm text-fg-2 hover:text-fg"
           >
             ← Back to Home
           </Link>

@@ -1,264 +1,148 @@
-"use client";
-
-import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
-import { useOrganization } from "@/contexts/OrganizationContext";
-import GymOwnerSidebar from "@/components/GymOwnerSidebar";
-import DashboardLoading from "@/components/DashboardLoading";
-import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import { marketplaceService } from "@/lib/api/marketplace";
-import type { MarketplaceMembershipPlan } from "@/lib/types";
-import { MembershipPlanType } from "@/lib/types";
-import { formatCurrency } from "@/utils/format";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import type { Metadata } from "next";
 
-export default function GymOwnerPlansPage() {
-  const { user, isLoading: authLoading } = useAuth();
-  const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const { requestConfirmation, confirmationModal } = useConfirmationModal();
+export const metadata: Metadata = {
+  title: "Plans",
+  description: "Create and manage membership plans for your gym.",
+};
 
-  const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMutatingPlanId, setIsMutatingPlanId] = useState<string | null>(null);
-  const [pageError, setPageError] = useState("");
+/**
+ * Plans & pricing — gym-plans.html prototype.
+ * KPI strip, plan table with grip handles, toggle visibility, promo codes.
+ */
 
-  const organizationId = currentOrg?._id;
+const KPIS = [
+  { label: "Active subscribers", value: "1,243", delta: "+ 38 this month" },
+  { label: "Most picked", value: "Studio · monthly", small: true, delta: "562 members" },
+  { label: "Highest LTV", value: "Pro · annual", small: true, delta: "R 14.2k avg" },
+  { label: "Promo redemptions", value: "182", delta: "↑ 28% MoM" },
+];
 
-  const refreshPlans = useCallback(async () => {
-    if (!organizationId) {
-      setPlans([]);
-      setIsLoading(false);
-      return;
-    }
+const PLANS = [
+  { name: "Studio · monthly", pill: "Most picked", desc: "Unlimited 5am–10pm · 1 location · group classes included · auto‑renew", price: "R 850", per: "/ month", members: "562 active", on: true },
+  { name: "Pro · monthly", desc: "24/7 access · all 4 locations · 1 free PT session / month · guest passes × 2", price: "R 1,200", per: "/ month", members: "214 active", on: true },
+  { name: "Pro · annual", desc: "10 months for 12 · 24/7 access · 1 free PT session / month · 6 guest passes", price: "R 12,000", per: "/ year", members: "142 active", on: true },
+  { name: "Studio · 24‑pack", desc: "24 session block · 4‑month window · no auto‑renew · group classes included", price: "R 18,400", per: "/ pack", members: "86 active", on: true },
+  { name: "Day pass", desc: "Single visit · all amenities · 24/7 access · no commitment", price: "R 180", per: "once", members: "214 / mo", on: true },
+  { name: "Student · monthly", desc: "5am–10pm · 1 location · proof of enrolment required · ID at check‑in", price: "R 480", per: "/ month", members: "182 active", on: true },
+  { name: "Corporate · 10‑seat", desc: "Discounted rate for teams of 10+ · invoiced quarterly · paused since Feb", price: "R 6,800", per: "/ month", members: "0 active", on: false },
+];
 
-    setPageError("");
-    setIsLoading(true);
+const PROMOS = [
+  { name: "First month free", code: "WELCOME01", meta: "82 redeemed · unlimited · new members only" },
+  { name: "Bring a friend · 50% off", code: "REFER50", meta: "48 redeemed · 1 per member · 30‑day window" },
+  { name: "Student summer", code: "SUMMER25", meta: "38 redeemed · expires 31 Aug 2026 · student plan only" },
+  { name: "Comeback offer", code: "MISSEDU", meta: "14 redeemed · 6+ months churned · 90 days at R 480/mo" },
+];
 
-    const response = await marketplaceService.getOrgMembershipPlans(organizationId);
-    if (response.success && response.data) {
-      setPlans(response.data);
-    } else {
-      setPageError(response.message || "Failed to load membership plans");
-    }
-
-    setIsLoading(false);
-  }, [organizationId]);
-
-  useEffect(() => {
-    if (authLoading || orgLoading || !user) return;
-
-    const timerId = window.setTimeout(() => {
-      void refreshPlans();
-    }, 0);
-
-    return () => window.clearTimeout(timerId);
-  }, [authLoading, orgLoading, user, refreshPlans]);
-
-  const handleToggleStatus = async (plan: MarketplaceMembershipPlan) => {
-    if (!organizationId) return;
-
-    setIsMutatingPlanId(plan._id);
-    setPageError("");
-
-    const response = plan.is_active
-      ? await marketplaceService.deactivateOrgMembershipPlan(organizationId, plan._id)
-      : await marketplaceService.activateOrgMembershipPlan(organizationId, plan._id);
-
-    if (response.success) {
-      await refreshPlans();
-    } else {
-      setPageError(response.message || "Failed to update plan status");
-    }
-
-    setIsMutatingPlanId(null);
-  };
-
-  const handleDeletePlan = (plan: MarketplaceMembershipPlan) => {
-    if (!organizationId) return;
-
-    requestConfirmation({
-      title: "Delete plan?",
-      description: `Delete \"${plan.name}\" permanently? This action cannot be undone.`,
-      confirmLabel: "Delete Plan",
-      onConfirm: async () => {
-        setIsMutatingPlanId(plan._id);
-        const response = await marketplaceService.deleteOrgMembershipPlan(
-          organizationId,
-          plan._id,
-        );
-
-        if (response.success) {
-          await refreshPlans();
-        } else {
-          setPageError(response.message || "Failed to delete plan");
-        }
-
-        setIsMutatingPlanId(null);
-      },
-    });
-  };
-
-  const stats = useMemo(() => {
-    const activePlans = plans.filter((plan) => plan.is_active).length;
-    const activeMembers = plans.reduce((sum, plan) => sum + plan.active_members, 0);
-    const averagePrice =
-      plans.length > 0
-        ? Math.round(plans.reduce((sum, plan) => sum + plan.price, 0) / plans.length)
-        : 0;
-
-    return { totalPlans: plans.length, activePlans, activeMembers, averagePrice };
-  }, [plans]);
-
-  if (authLoading || orgLoading || isLoading) {
-    return <DashboardLoading />;
-  }
-
+function Grip() {
   return (
-    <div className="flex min-h-screen bg-background">
-      <GymOwnerSidebar />
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-black text-foreground">Membership Plans</h1>
-              <p className="text-foreground/60 mt-1">
-                Create and manage your gym&apos;s membership pricing plans
-              </p>
-            </div>
-            <Link
-              href="/dashboard/gym-owner/plans/create"
-              className="h-12 px-6 bg-accent-blue-500 text-white font-semibold rounded-lg hover:bg-accent-blue-600 transition-colors inline-flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Create Plan
-            </Link>
+    <span className="flex flex-col gap-0.5 cursor-grab" style={{ color: "var(--fg-4)" }}>
+      <span className="w-2.5 h-0.5 rounded-sm bg-current" />
+      <span className="w-2.5 h-0.5 rounded-sm bg-current" />
+    </span>
+  );
+}
+
+function More() {
+  return (
+    <span className="w-6 h-6 rounded-(--r-1) flex items-center justify-center cursor-pointer hover:bg-bg-2" style={{ color: "var(--fg-3)" }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
+    </span>
+  );
+}
+
+export default function GymPlansPage() {
+  return (
+    <GymDashboardShell
+      activeItem="Plans & pricing"
+      crumb="Plans & pricing"
+      actions={
+        <>
+          <button className="btn-ghost-v2 sm">Promo codes</button>
+          <Link href="/dashboard/gym-owner/plans/create" className="btn-primary-v2 sm">+ New plan</Link>
+        </>
+      }
+    >
+      {/* Page head */}
+      <div>
+        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Plans & pricing</h1>
+        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>7 active plans · 4 promo codes running · drag to reorder how members see them on your profile</div>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {KPIS.map((k) => (
+          <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
+            <div className={`font-medium mt-1.5 ${k.small ? "text-[18px]" : "text-[24px]"}`} style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</div>
+            <div className="font-mono text-[11.5px] mt-1" style={{ color: "var(--signal-ink)" }}>{k.delta}</div>
           </div>
+        ))}
+      </div>
 
-          {pageError && (
-            <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 mb-6">
-              <p className="text-sm text-red-800">{pageError}</p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">Total Plans</p>
-              <p className="text-3xl font-black text-foreground mt-2">{stats.totalPlans}</p>
-            </div>
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">Active Plans</p>
-              <p className="text-3xl font-black text-foreground mt-2">{stats.activePlans}</p>
-            </div>
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">Active Members</p>
-              <p className="text-3xl font-black text-foreground mt-2">{stats.activeMembers}</p>
-            </div>
-            <div className="bg-white rounded-xl shadow-[var(--shadow-card)] p-6">
-              <p className="text-sm font-medium text-foreground/60">Avg Plan Price</p>
-              <p className="text-3xl font-black text-foreground mt-2">
-                {formatCurrency(
-                  stats.averagePrice,
-                  plans[0]?.currency || currentOrg?.currency || "USD",
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-neutral-50 border-b border-neutral-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Plan</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Type</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Price</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Duration</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Members</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {plans.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-10 text-center text-foreground/60">
-                        No membership plans yet. Create your first plan to get started.
-                      </td>
-                    </tr>
-                  ) : (
-                    plans.map((plan) => (
-                      <tr key={plan._id} className="hover:bg-neutral-50">
-                        <td className="px-6 py-4">
-                          <p className="font-semibold text-foreground">{plan.name}</p>
-                          {plan.description && (
-                            <p className="text-xs text-foreground/60 line-clamp-1 mt-1">{plan.description}</p>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                              plan.plan_type === MembershipPlanType.SUBSCRIPTION
-                                ? "bg-accent-blue-100 text-accent-blue-700"
-                                : "bg-primary-100 text-primary-700"
-                            }`}
-                          >
-                            {plan.plan_type === MembershipPlanType.SUBSCRIPTION
-                              ? "Subscription"
-                              : "One-time"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-foreground">
-                          {formatCurrency(plan.price, plan.currency)}
-                        </td>
-                        <td className="px-6 py-4 text-foreground/70">{plan.duration_days} days</td>
-                        <td className="px-6 py-4 text-foreground/70">{plan.active_members}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                              plan.is_active
-                                ? "bg-primary-100 text-primary-700"
-                                : "bg-neutral-100 text-neutral-700"
-                            }`}
-                          >
-                            {plan.is_active ? "Active" : "Inactive"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap items-center gap-3 text-sm">
-                            <Link
-                              href={`/dashboard/gym-owner/plans/${plan._id}`}
-                              className="text-accent-blue-500 hover:text-accent-blue-700 font-medium"
-                            >
-                              View
-                            </Link>
-                            <button
-                              onClick={() => handleToggleStatus(plan)}
-                              disabled={isMutatingPlanId === plan._id}
-                              className="text-foreground/70 hover:text-foreground font-medium disabled:opacity-50"
-                            >
-                              {plan.is_active ? "Deactivate" : "Activate"}
-                            </button>
-                            <button
-                              onClick={() => handleDeletePlan(plan)}
-                              disabled={isMutatingPlanId === plan._id}
-                              className="text-red-500 hover:text-red-700 font-medium disabled:opacity-50"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+      {/* Plans table */}
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+          <div>
+            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Membership plans</h3>
+            <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Toggle off to hide from your profile · existing members keep their plan</div>
           </div>
         </div>
-      </main>
-      {confirmationModal}
-    </div>
+        <div className="overflow-x-auto">
+          {/* Header */}
+          <div className="grid gap-4.5 px-5.5 py-2.75 font-mono text-[10.5px] uppercase tracking-[0.04em] min-w-[800px]" style={{ gridTemplateColumns: "20px 1fr 200px 130px 100px 90px", background: "var(--bg-2)", color: "var(--fg-3)", borderBottom: "1px solid var(--border)" }}>
+            <span /><span>Plan</span><span>Price</span><span>Members</span><span>Visible</span><span />
+          </div>
+
+          {/* Rows */}
+          {PLANS.map((p, i) => (
+            <div
+              key={p.name}
+              className={`grid gap-4.5 px-5.5 py-4 items-center hover:bg-bg-2 min-w-[800px] ${!p.on ? "opacity-55" : ""}`}
+              style={{ gridTemplateColumns: "20px 1fr 200px 130px 100px 90px", borderBottom: i < PLANS.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}
+            >
+              <Grip />
+              <div>
+                <div className="text-[14.5px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>
+                  {p.name}
+                  {p.pill && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-(--r-1) ml-1.5 align-[1px]" style={{ background: "var(--ink)", color: "var(--bg)" }}>{p.pill}</span>}
+                </div>
+                <div className="text-[12.5px] mt-0.75" style={{ color: "var(--fg-3)" }}>{p.desc}</div>
+              </div>
+              <div className="font-mono text-[16px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+                {p.price} <small className="font-mono text-[11px] font-normal" style={{ color: "var(--fg-3)" }}>{p.per}</small>
+              </div>
+              <div className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{p.members}</div>
+              <span className="w-[30px] h-[18px] rounded-full relative cursor-pointer" style={{ background: p.on ? "var(--ink)" : "var(--border-2)" }}>
+                <span className="absolute w-3.5 h-3.5 rounded-full top-0.5" style={{ background: "var(--bg)", left: p.on ? "14px" : "2px", transition: "left var(--motion-fast) var(--ease)" }} />
+              </span>
+              <More />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Promo codes */}
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+          <div>
+            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Promo codes</h3>
+            <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>4 active · auto‑expire after redemption limit hits</div>
+          </div>
+          <button className="btn-ghost-v2 sm">+ New code</button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4.5">
+          {PROMOS.map((pr) => (
+            <div key={pr.name} className="p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+              <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{pr.name}</div>
+              <span className="inline-block font-mono text-[12px] px-2 py-0.5 rounded-(--r-1) mt-1.5" style={{ color: "var(--ink)", background: "var(--bg-2)" }}>{pr.code}</span>
+              <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-2" style={{ color: "var(--fg-3)" }}>{pr.meta}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </GymDashboardShell>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import BinecticsLogo from "@/components/BinecticsLogo";
 import NotificationBell from "@/components/NotificationBell";
 import type { ReactNode } from "react";
 import {
@@ -13,7 +14,6 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronLeft,
 } from "lucide-react";
 
 export interface NavItem {
@@ -24,17 +24,13 @@ export interface NavItem {
 
 export interface RoleBadge {
   label: string;
-  /** Tailwind bg class, e.g. "bg-accent-purple-50" */
   bgClass: string;
-  /** Tailwind text class, e.g. "text-accent-purple-700" */
   textClass: string;
 }
 
 interface AppSidebarProps {
   navItems: NavItem[];
-  /** Role-specific settings page. Defaults to /dashboard/settings */
   settingsHref?: string;
-  /** Optional role badge shown below the logo when expanded */
   roleBadge?: RoleBadge;
 }
 
@@ -44,284 +40,177 @@ export default function AppSidebar({
   roleBadge,
 }: AppSidebarProps) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { logout } = useAuth();
 
   useEffect(() => {
-    document.body.classList.add("dashboard-sidebar-mobile-offset");
-
-    return () => {
-      document.body.classList.remove("dashboard-sidebar-mobile-offset");
-    };
-  }, []);
-
-  useEffect(() => {
     if (!isMobileMenuOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return () => { document.body.style.overflow = prev; };
   }, [isMobileMenuOpen]);
 
   const bottomNavItems = [
-    {
-      icon: <Settings className="h-5 w-5" />,
-      label: "Settings",
-      href: settingsHref,
-      isLink: true as const,
-    },
-    {
-      icon: <Users className="h-5 w-5" />,
-      label: "Team",
-      href: "/dashboard/team",
-      isLink: true as const,
-    },
-    {
-      icon: <HelpCircle className="h-5 w-5" />,
-      label: "Help & Support",
-      href: "/help",
-      isLink: true as const,
-    },
-    {
-      icon: <LogOut className="h-5 w-5" />,
-      label: "Logout",
-      href: undefined,
-      isLink: false as const,
-    },
+    { icon: <Settings size={16} strokeWidth={1.5} />, label: "Settings", href: settingsHref, isLink: true as const },
+    { icon: <Users size={16} strokeWidth={1.5} />, label: "Team", href: "/dashboard/team", isLink: true as const },
+    { icon: <HelpCircle size={16} strokeWidth={1.5} />, label: "Help", href: "/help", isLink: true as const },
+    { icon: <LogOut size={16} strokeWidth={1.5} />, label: "Logout", href: undefined, isLink: false as const },
   ];
 
-  const mobileTitle = roleBadge?.label ?? "Member Dashboard";
+  const renderNavItem = (item: { icon: ReactNode; label: string; href?: string; isLink?: boolean }, mobile = false) => {
+    const isActive = item.href ? pathname === item.href : false;
+    const cls = `flex items-center gap-2.5 px-2.5 h-[30px] rounded-[var(--r-2)] text-[13.5px] ${
+      isActive
+        ? "font-medium"
+        : ""
+    }`;
+    const style: React.CSSProperties = {
+      background: isActive ? "var(--bg-3)" : "transparent",
+      color: isActive ? "var(--ink)" : "var(--fg-2)",
+      transition: "background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease)",
+    };
+    const hoverHandlers = {
+      onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+        if (!isActive) {
+          e.currentTarget.style.background = "var(--bg-2)";
+          e.currentTarget.style.color = "var(--ink)";
+        }
+      },
+      onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+        if (!isActive) {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = "var(--fg-2)";
+        }
+      },
+    };
 
-  const renderTopNav = (collapsed: boolean, mobile = false) => (
-    <ul className="space-y-1">
-      {navItems.map((item) => {
-        const isActive = pathname === item.href;
+    if (item.isLink === false) {
+      return (
+        <button
+          onClick={() => { logout(); if (mobile) setIsMobileMenuOpen(false); }}
+          className={`w-full ${cls}`}
+          style={style}
+          {...hoverHandlers}
+        >
+          <span className="shrink-0" style={{ color: isActive ? "var(--ink)" : "var(--fg-3)" }}>{item.icon}</span>
+          {item.label}
+        </button>
+      );
+    }
 
-        return (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? "bg-neutral-200 text-foreground"
-                  : "text-foreground-secondary hover:bg-neutral-200 hover:text-foreground"
-              } ${collapsed ? "justify-center" : ""}`}
-              title={collapsed ? item.label : ""}
-              onClick={mobile ? () => setIsMobileMenuOpen(false) : undefined}
-            >
-              <span
-                className={`flex-shrink-0 ${
-                  isActive ? "text-foreground" : "text-foreground-tertiary"
-                }`}
-              >
-                {item.icon}
-              </span>
-              {!collapsed && item.label}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
-  );
-
-  const renderBottomNav = (collapsed: boolean, mobile = false) => (
-    <ul className="space-y-1">
-      {bottomNavItems.map((item) => {
-        const isActive = item.isLink ? pathname === item.href : false;
-
-        return (
-          <li key={item.label}>
-            {item.isLink ? (
-              <Link
-                href={item.href!}
-                prefetch={false}
-                className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? "bg-neutral-200 text-foreground"
-                    : "text-foreground-secondary hover:bg-neutral-200 hover:text-foreground"
-                } ${collapsed ? "justify-center" : ""}`}
-                title={collapsed ? item.label : ""}
-                onClick={mobile ? () => setIsMobileMenuOpen(false) : undefined}
-              >
-                <span
-                  className={`flex-shrink-0 ${
-                    isActive ? "text-foreground" : "text-foreground-tertiary"
-                  }`}
-                >
-                  {item.icon}
-                </span>
-                {!collapsed && item.label}
-              </Link>
-            ) : (
-              <button
-                onClick={() => {
-                  logout();
-                  if (mobile) setIsMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-all duration-200 hover:bg-neutral-200 hover:text-foreground ${
-                  collapsed ? "justify-center" : ""
-                }`}
-                title={collapsed ? item.label : ""}
-              >
-                <span className="text-foreground-tertiary flex-shrink-0">
-                  {item.icon}
-                </span>
-                {!collapsed && item.label}
-              </button>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
+    return (
+      <Link
+        href={item.href!}
+        className={cls}
+        style={style}
+        onClick={mobile ? () => setIsMobileMenuOpen(false) : undefined}
+        {...hoverHandlers}
+      >
+        <span className="shrink-0" style={{ color: isActive ? "var(--ink)" : "var(--fg-3)" }}>{item.icon}</span>
+        {item.label}
+      </Link>
+    );
+  };
 
   return (
     <>
-      <div className="fixed inset-x-0 top-0 z-40 border-b border-neutral-200 bg-background/95 backdrop-blur md:hidden">
-        <div className="flex h-16 items-center justify-between px-4">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground-tertiary">
-              Dashboard
-            </p>
-            <p className="truncate text-sm font-bold text-foreground">
-              {mobileTitle}
-            </p>
-          </div>
-
-          <button
-            onClick={() => setIsMobileMenuOpen((current) => !current)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-neutral-300 bg-white text-foreground shadow-sm"
-            aria-label={
-              isMobileMenuOpen
-                ? "Close navigation menu"
-                : "Open navigation menu"
-            }
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </button>
+      {/* Mobile topbar */}
+      <div
+        className="fixed inset-x-0 top-0 z-40 md:hidden flex items-center justify-between h-14 px-4"
+        style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center gap-2">
+          <BinecticsLogo markSize={18} />
+          <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Binectics</span>
         </div>
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="w-9 h-9 flex items-center justify-center rounded-[var(--r-2)]"
+          style={{ border: "1px solid var(--border)", color: "var(--fg-2)" }}
+          aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+        >
+          {isMobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
+        </button>
       </div>
 
+      {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 md:hidden"
+          style={{ background: "oklch(0.14 0.008 80 / 0.3)" }}
           onClick={() => setIsMobileMenuOpen(false)}
-          aria-hidden="true"
         />
       )}
 
+      {/* Mobile slide-out */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 flex w-[88vw] max-w-sm flex-col border-r border-neutral-200 bg-background shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col md:hidden ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{
+          background: "var(--bg)",
+          borderRight: "1px solid var(--border)",
+          transition: "transform var(--motion-slow) var(--ease-out)",
+        }}
       >
-        <div className="border-b border-neutral-200 px-4 py-5">
-          <div className="flex items-center justify-between gap-3">
-            <Link
-              href="/"
-              className="flex items-center gap-3"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <div className="flex h-10 w-10 items-center justify-center bg-primary-500 flex-shrink-0">
-                <span className="text-xl font-bold text-white">B</span>
-              </div>
-              <div>
-                <span className="block font-display text-xl font-bold text-foreground">
-                  Binectics
-                </span>
-                {roleBadge && (
-                  <span
-                    className={`mt-1 inline-flex px-2.5 py-1 text-xs font-semibold ${roleBadge.bgClass} ${roleBadge.textClass}`}
-                  >
-                    {roleBadge.label}
-                  </span>
-                )}
-              </div>
-            </Link>
-
+        <div className="px-5 py-5" style={{ borderBottom: "1px solid var(--border)" }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BinecticsLogo markSize={18} />
+              <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Binectics</span>
+            </div>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 bg-white text-foreground"
-              aria-label="Close navigation menu"
+              className="w-8 h-8 flex items-center justify-center rounded-[var(--r-2)]"
+              style={{ border: "1px solid var(--border)", color: "var(--fg-2)" }}
+              aria-label="Close navigation"
             >
-              <X className="h-5 w-5" />
+              <X size={14} />
             </button>
           </div>
         </div>
-
-        <nav className="flex-1 overflow-y-auto px-3 py-6">
-          {renderTopNav(false, true)}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-0.5" aria-label="Sidebar navigation">
+          {navItems.map((item) => (
+            <div key={item.href}>{renderNavItem(item, true)}</div>
+          ))}
         </nav>
-
-        <div className="border-t border-neutral-200 px-3 py-4">
-          <div className="mb-1">
-            <NotificationBell />
-          </div>
-          {renderBottomNav(false, true)}
+        <div className="px-3 py-4 flex flex-col gap-0.5" style={{ borderTop: "1px solid var(--border)" }}>
+          <NotificationBell />
+          {bottomNavItems.map((item) => (
+            <div key={item.label}>{renderNavItem(item, true)}</div>
+          ))}
         </div>
       </div>
 
+      {/* Desktop sidebar — 232px, design system tokens */}
       <aside
-        className={`fixed left-0 top-0 hidden h-screen border-r border-neutral-200 bg-background md:flex md:flex-col transition-all duration-300 ${
-          isCollapsed ? "w-20" : "w-64"
-        }`}
+        className="fixed left-0 top-0 hidden h-screen w-[232px] md:flex md:flex-col"
+        style={{ background: "var(--bg)", borderRight: "1px solid var(--border)" }}
       >
-        {/* Logo */}
-        <div className="p-6 border-b border-neutral-200">
+        <div className="px-5 py-5" style={{ borderBottom: "1px solid var(--border)" }}>
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center bg-primary-500 flex-shrink-0">
-              <span className="text-xl font-bold text-white">B</span>
-            </div>
-            {!isCollapsed && (
-              <span className="font-display text-xl font-bold text-foreground whitespace-nowrap">
-                Binectics
-              </span>
-            )}
+            <BinecticsLogo markSize={18} />
+            <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Binectics</span>
           </Link>
-          {!isCollapsed && roleBadge && (
-            <div className={`mt-3 ${roleBadge.bgClass} px-3 py-1.5`}>
-              <p className={`text-xs font-semibold ${roleBadge.textClass}`}>
-                {roleBadge.label}
-              </p>
+          {roleBadge && (
+            <div className={`mt-3 px-2.5 py-1 rounded-[var(--r-1)] text-[11px] font-medium inline-block ${roleBadge.bgClass} ${roleBadge.textClass}`}>
+              {roleBadge.label}
             </div>
           )}
         </div>
 
-        {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto py-6 px-3">
-          {renderTopNav(isCollapsed)}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-0.5" aria-label="Sidebar navigation">
+          {navItems.map((item) => (
+            <div key={item.href}>{renderNavItem(item)}</div>
+          ))}
         </nav>
 
-        {/* Bottom Navigation */}
-        <div className="border-t border-neutral-200 py-4 px-3">
-          <div className="mb-1">
-            <NotificationBell collapsed={isCollapsed} />
-          </div>
-          {renderBottomNav(isCollapsed)}
+        <div className="px-3 py-4 flex flex-col gap-0.5" style={{ borderTop: "1px solid var(--border)" }}>
+          <NotificationBell />
+          {bottomNavItems.map((item) => (
+            <div key={item.label}>{renderNavItem(item)}</div>
+          ))}
         </div>
-
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`fixed z-50 hidden h-8 w-8 items-center justify-center rounded-full border-2 border-neutral-200 bg-white shadow-lg transition-all duration-300 hover:border-primary-500 md:flex ${
-            isCollapsed ? "left-[60px]" : "left-[240px]"
-          }`}
-          style={{ top: roleBadge ? "148px" : "100px" }}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <ChevronLeft
-            className={`w-4 h-4 text-foreground transition-transform duration-300 ${isCollapsed ? "rotate-180" : "rotate-0"}`}
-          />
-        </button>
       </aside>
     </>
   );

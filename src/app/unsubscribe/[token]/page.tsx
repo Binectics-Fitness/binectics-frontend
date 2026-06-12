@@ -29,34 +29,34 @@ export default function UnsubscribePage() {
 
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-background-secondary flex items-center justify-center px-4">
+      <div className="min-h-screen bg-bg-2 flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center">
-          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-primary-500">
-            <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-signal">
+            <svg className="h-10 w-10 text-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="font-display text-3xl font-black text-foreground mb-4">
-            Preferences Updated
+          <h2 className="text-3xl font-black text-ink mb-4">
+            Preferences updated
           </h2>
-          <p className="text-lg text-foreground-secondary mb-8">
+          <p className="text-lg text-fg-2 mb-8">
             Your email preferences have been successfully updated. You won't receive the types of emails you've unsubscribed from.
           </p>
-          <p className="text-sm text-foreground-tertiary mb-8">
+          <p className="text-sm text-fg-3 mb-8">
             Note: You'll still receive important account-related emails, such as security alerts and password resets.
           </p>
           <div className="flex flex-col gap-4">
             <Link
               href="/"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
+              className="inline-flex h-12 items-center justify-center rounded-(--r-2) bg-signal px-8 text-base font-semibold text-bg transition-colors duration-200 hover:bg-signal/90"
             >
-              Back to Homepage
+              Back to homepage
             </Link>
             <button
               onClick={() => setStatus('confirming')}
-              className="inline-flex h-12 items-center justify-center rounded-lg border-2 border-neutral-300 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-neutral-100"
+              className="inline-flex h-12 items-center justify-center rounded-(--r-2) border-2 border-border-2 px-8 text-base font-semibold text-fg transition-colors duration-200 hover:bg-bg-2"
             >
-              Change Preferences
+              Change preferences
             </button>
           </div>
         </div>
@@ -66,31 +66,31 @@ export default function UnsubscribePage() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-background-secondary flex items-center justify-center px-4">
+      <div className="min-h-screen bg-bg-2 flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center">
-          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-            <svg className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-danger-soft">
+            <svg className="h-10 w-10 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h2 className="font-display text-3xl font-black text-foreground mb-4">
-            Something Went Wrong
+          <h2 className="text-3xl font-black text-ink mb-4">
+            Something went wrong
           </h2>
-          <p className="text-lg text-foreground-secondary mb-8">
+          <p className="text-lg text-fg-2 mb-8">
             We couldn't process your request. The link may be invalid or expired.
           </p>
           <div className="flex flex-col gap-4">
             <Link
               href="/contact"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
+              className="inline-flex h-12 items-center justify-center rounded-(--r-2) bg-signal px-8 text-base font-semibold text-bg transition-colors duration-200 hover:bg-signal/90"
             >
-              Contact Support
+              Contact support
             </Link>
             <Link
               href="/"
-              className="inline-flex h-12 items-center justify-center rounded-lg border-2 border-neutral-300 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-neutral-100"
+              className="inline-flex h-12 items-center justify-center rounded-(--r-2) border-2 border-border-2 px-8 text-base font-semibold text-fg transition-colors duration-200 hover:bg-bg-2"
             >
-              Back to Homepage
+              Back to homepage
             </Link>
           </div>
         </div>
@@ -99,81 +99,81 @@ export default function UnsubscribePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background-secondary py-16 px-4">
+    <div className="min-h-screen bg-bg-2 py-16 px-4">
       <div className="mx-auto max-w-2xl">
         {/* Header */}
         <div className="text-center mb-12">
           <Link href="/" className="inline-flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500">
-              <span className="text-xl font-bold text-white">B</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-(--r-3) bg-signal">
+              <span className="text-xl font-bold text-bg">B</span>
             </div>
-            <span className="font-display text-xl font-bold text-foreground">
+            <span className="text-xl font-bold text-ink">
               Binectics
             </span>
           </Link>
-          <h1 className="font-display text-3xl font-black text-foreground mb-4 sm:text-4xl">
-            Manage Email Preferences
+          <h1 className="text-3xl font-black text-ink mb-4 sm:text-4xl">
+            Manage email preferences
           </h1>
-          <p className="text-lg text-foreground-secondary">
+          <p className="text-lg text-fg-2">
             We're sorry to see you go. Customize what emails you'd like to receive from us.
           </p>
         </div>
 
         {/* Preference Options */}
-        <div className="rounded-2xl bg-background p-8 shadow-[var(--shadow-card)] mb-8">
-          <h2 className="font-bold text-xl text-foreground mb-6">
+        <div className="rounded-(--r-3) bg-bg p-8 mb-8" style={{ boxShadow: "var(--shadow-2)" }}>
+          <h2 className="font-bold text-xl text-ink mb-6">
             Choose what you want to receive
           </h2>
           <div className="space-y-4">
-            <label className="flex items-start gap-4 p-4 rounded-lg border-2 border-neutral-200 cursor-pointer hover:border-primary-500 transition-colors">
+            <label className="flex items-start gap-4 p-4 rounded-(--r-2) border-2 border-border cursor-pointer hover:border-signal transition-colors">
               <input
                 type="checkbox"
                 checked={preferences.marketing}
                 onChange={(e) => setPreferences({ ...preferences, marketing: e.target.checked })}
-                className="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                className="mt-1 h-5 w-5 rounded border-border-2 text-signal focus-visible:ring-signal"
               />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Marketing & Promotions</h3>
-                <p className="text-sm text-foreground-secondary">Special offers, discounts, and new gym partnerships</p>
+                <h3 className="font-semibold text-ink mb-1">Marketing & promotions</h3>
+                <p className="text-sm text-fg-2">Special offers, discounts, and new gym partnerships</p>
               </div>
             </label>
 
-            <label className="flex items-start gap-4 p-4 rounded-lg border-2 border-neutral-200 cursor-pointer hover:border-primary-500 transition-colors">
+            <label className="flex items-start gap-4 p-4 rounded-(--r-2) border-2 border-border cursor-pointer hover:border-signal transition-colors">
               <input
                 type="checkbox"
                 checked={preferences.productUpdates}
                 onChange={(e) => setPreferences({ ...preferences, productUpdates: e.target.checked })}
-                className="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                className="mt-1 h-5 w-5 rounded border-border-2 text-signal focus-visible:ring-signal"
               />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Product Updates</h3>
-                <p className="text-sm text-foreground-secondary">New features, improvements, and platform updates</p>
+                <h3 className="font-semibold text-ink mb-1">Product updates</h3>
+                <p className="text-sm text-fg-2">New features, improvements, and platform updates</p>
               </div>
             </label>
 
-            <label className="flex items-start gap-4 p-4 rounded-lg border-2 border-neutral-200 cursor-pointer hover:border-primary-500 transition-colors">
+            <label className="flex items-start gap-4 p-4 rounded-(--r-2) border-2 border-border cursor-pointer hover:border-signal transition-colors">
               <input
                 type="checkbox"
                 checked={preferences.newsletter}
                 onChange={(e) => setPreferences({ ...preferences, newsletter: e.target.checked })}
-                className="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                className="mt-1 h-5 w-5 rounded border-border-2 text-signal focus-visible:ring-signal"
               />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Newsletter</h3>
-                <p className="text-sm text-foreground-secondary">Fitness tips, success stories, and health insights</p>
+                <h3 className="font-semibold text-ink mb-1">Newsletter</h3>
+                <p className="text-sm text-fg-2">Fitness tips, success stories, and health insights</p>
               </div>
             </label>
 
-            <label className="flex items-start gap-4 p-4 rounded-lg border-2 border-neutral-200 cursor-pointer hover:border-primary-500 transition-colors">
+            <label className="flex items-start gap-4 p-4 rounded-(--r-2) border-2 border-border cursor-pointer hover:border-signal transition-colors">
               <input
                 type="checkbox"
                 checked={preferences.partnerOffers}
                 onChange={(e) => setPreferences({ ...preferences, partnerOffers: e.target.checked })}
-                className="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                className="mt-1 h-5 w-5 rounded border-border-2 text-signal focus-visible:ring-signal"
               />
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Partner Offers</h3>
-                <p className="text-sm text-foreground-secondary">Exclusive deals from our gym and fitness partners</p>
+                <h3 className="font-semibold text-ink mb-1">Partner offers</h3>
+                <p className="text-sm text-fg-2">Exclusive deals from our gym and fitness partners</p>
               </div>
             </label>
           </div>
@@ -181,28 +181,28 @@ export default function UnsubscribePage() {
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleUpdatePreferences}
-              className="flex-1 inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
+              className="flex-1 inline-flex h-12 items-center justify-center rounded-(--r-2) bg-signal px-8 text-base font-semibold text-bg transition-colors duration-200 hover:bg-signal/90"
             >
-              Save Preferences
+              Save preferences
             </button>
             <button
               onClick={handleUnsubscribeAll}
-              className="flex-1 inline-flex h-12 items-center justify-center rounded-lg border-2 border-neutral-300 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-neutral-100"
+              className="flex-1 inline-flex h-12 items-center justify-center rounded-(--r-2) border-2 border-border-2 px-8 text-base font-semibold text-fg transition-colors duration-200 hover:bg-bg-2"
             >
-              Unsubscribe from All
+              Unsubscribe from all
             </button>
           </div>
         </div>
 
         {/* Important Notice */}
-        <div className="rounded-2xl bg-accent-blue-100 p-6">
+        <div className="rounded-(--r-3) bg-signal-soft p-6">
           <div className="flex items-start gap-3">
-            <svg className="h-6 w-6 flex-shrink-0 text-accent-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-6 w-6 shrink-0 text-signal-ink mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h3 className="font-bold text-accent-blue-900 mb-2">Important Account Emails</h3>
-              <p className="text-sm text-accent-blue-800 leading-relaxed">
+              <h3 className="font-bold text-signal-ink mb-2">Important account emails</h3>
+              <p className="text-sm text-signal-ink leading-relaxed">
                 Even if you unsubscribe from all marketing emails, you'll still receive critical account notifications such as:
                 security alerts, password resets, payment confirmations, and membership status updates.
               </p>
@@ -212,15 +212,15 @@ export default function UnsubscribePage() {
 
         {/* Footer */}
         <div className="mt-12 text-center">
-          <p className="text-sm text-foreground-secondary mb-4">
+          <p className="text-sm text-fg-2 mb-4">
             Changed your mind?{' '}
-            <Link href="/" className="text-accent-blue-500 hover:underline">
+            <Link href="/" className="text-signal hover:underline">
               Return to Binectics
             </Link>
           </p>
-          <p className="text-xs text-foreground-tertiary">
+          <p className="text-xs text-fg-3">
             If you have questions, please{' '}
-            <Link href="/contact" className="text-accent-blue-500 hover:underline">
+            <Link href="/contact" className="text-signal hover:underline">
               contact our support team
             </Link>
           </p>

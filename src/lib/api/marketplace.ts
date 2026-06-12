@@ -215,15 +215,6 @@ export const marketplaceService = {
     );
   },
 
-  async getListingBySlug(
-    slug: string,
-  ): Promise<ApiResponse<MarketplaceListing>> {
-    return await apiClient.get<MarketplaceListing>(
-      `/marketplace/listings/by-slug/${encodeURIComponent(slug)}`,
-      false,
-    );
-  },
-
   async getListingReviews(
     id: string,
     page = 1,
@@ -903,16 +894,6 @@ export const marketplaceService = {
     return await apiClient.patch(
       `/marketplace/my-listings/${listingId}/amenities`,
       { amenities },
-    );
-  },
-
-  async updateMyListingSlug(
-    listingId: string,
-    slug: string,
-  ): Promise<ApiResponse<{ slug: string }>> {
-    return await apiClient.patch(
-      `/marketplace/my-listings/${listingId}/slug`,
-      { slug },
     );
   },
 };

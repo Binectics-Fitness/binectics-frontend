@@ -5,40 +5,45 @@ import CookieConsent from "@/components/CookieConsent";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
+import { RegionProvider } from "@/contexts/RegionContext";
 import { ToastContainer } from "@/components/Toast";
+import { CommandBar } from "@/components/ds/CommandBar";
+import { NavigationProgress } from "@/components/ds/NavigationProgress";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 export const metadata: Metadata = {
   title: {
-    default: "Binectics - Your Global Fitness Ecosystem",
-    template: "%s | Binectics",
+    default: "Binectics — the copilot your fitness business runs on",
+    template: "%s — Binectics",
   },
   description:
-    "Connect with verified gyms, personal trainers, and dietitians in 50+ countries. Subscribe to fitness plans, book consultations, and track your progress.",
+    "AI-drafted client summaries, weekly reports, and program updates — plus payments in 8 currencies and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
   keywords: [
-    "fitness",
-    "gym",
-    "personal trainer",
-    "dietitian",
-    "workout",
-    "nutrition",
+    "AI fitness copilot",
+    "AI client reports",
     "fitness marketplace",
-    "gym membership",
-    "online training",
-    "fitness ecosystem",
+    "gym management",
+    "personal trainer software",
+    "dietitian platform",
+    "QR check-in",
+    "fitness payments",
+    "client management",
+    "workout plans",
+    "multi-currency fitness",
   ],
   openGraph: {
     type: "website",
     siteName: "Binectics",
-    title: "Binectics - Your Global Fitness Ecosystem",
+    title: "Binectics — the copilot your fitness business runs on",
     description:
-      "Connect with verified gyms, personal trainers, and dietitians in 50+ countries.",
+      "AI-drafted client reports, payments in 8 currencies, and a verified marketplace — for trainers, dietitians, and gyms in 50+ countries.",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Binectics - Your Global Fitness Ecosystem",
+    title: "Binectics — the copilot your fitness business runs on",
     description:
-      "Connect with verified gyms, personal trainers, and dietitians in 50+ countries.",
+      "AI-drafted client reports, payments in 8 currencies, and a verified marketplace — for trainers, dietitians, and gyms in 50+ countries.",
   },
   robots: {
     index: true,
@@ -56,13 +61,27 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="antialiased" suppressHydrationWarning>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
+        <NavigationProgress />
+        <GoogleAnalytics />
         <QueryProvider>
           <AuthProvider>
             <OrganizationProvider>
-              <ConditionalLayout>{children}</ConditionalLayout>
-              <CookieConsent />
-              <ToastContainer />
+              <RegionProvider>
+                <ConditionalLayout>{children}</ConditionalLayout>
+                <CookieConsent />
+                <ToastContainer />
+                <CommandBar />
+              </RegionProvider>
             </OrganizationProvider>
           </AuthProvider>
         </QueryProvider>

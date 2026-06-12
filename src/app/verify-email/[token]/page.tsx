@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { BinecticsMark } from "@/components/BinecticsLogo";
+import { authService } from "@/lib/api/auth";
 import { showAlert } from "@/lib/ui/dialogs";
 
 export default function VerifyEmailPage() {
@@ -14,25 +16,21 @@ export default function VerifyEmailPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Simulate email verification API call
     const verifyEmail = async () => {
       try {
-        // In production, this would be an API call to verify the token
-        // await fetch(`/api/verify-email/${token}`, { method: 'POST' });
-
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Simulate different outcomes based on token format for demo
-        if (token === "expired") {
-          setStatus("expired");
-        } else if (token === "invalid") {
-          setStatus("error");
-          setErrorMessage("Invalid verification link");
-        } else {
+        const res = await authService.verifyEmail({ token });
+        if (res.success) {
           setStatus("success");
+        } else {
+          const msg = (res.message || "").toLowerCase();
+          if (msg.includes("expired") || msg.includes("expire")) {
+            setStatus("expired");
+          } else {
+            setStatus("error");
+            setErrorMessage(res.message || "Verification failed");
+          }
         }
-      } catch (error) {
+      } catch {
         setStatus("error");
         setErrorMessage("An unexpected error occurred. Please try again.");
       }
@@ -41,35 +39,23 @@ export default function VerifyEmailPage() {
     verifyEmail();
   }, [token]);
 
+  /* ── Verifying ─────────────────────────────────────── */
+
   if (status === "verifying") {
     return (
-      <div className="min-h-screen bg-background-secondary flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 animate-pulse">
-            <svg
-              className="h-10 w-10 text-primary-600 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
+      <div className="min-h-screen flex items-center justify-center px-5" style={{ background: "var(--bg)" }}>
+        <div className="w-full max-w-sm text-center">
+          <div className="mb-5 w-12 h-12 mx-auto rounded-full flex items-center justify-center animate-pulse" style={{ background: "var(--signal-soft)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="animate-spin" style={{ color: "var(--signal-ink)" }}>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
           </div>
-          <h2 className="font-display text-2xl font-black text-foreground mb-4">
-            Verifying your email...
+          <div className="eyebrow mb-2">Email verification</div>
+          <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
+            Verifying your email
           </h2>
-          <p className="text-foreground-secondary">
+          <p className="text-[14px] mt-3" style={{ color: "var(--fg-3)" }}>
             Please wait while we verify your email address.
           </p>
         </div>
@@ -77,90 +63,51 @@ export default function VerifyEmailPage() {
     );
   }
 
+  /* ── Success ───────────────────────────────────────── */
+
   if (status === "success") {
     return (
-      <div className="min-h-screen bg-background-secondary flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-primary-500">
-            <svg
-              className="h-10 w-10 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+      <div className="min-h-screen flex items-center justify-center px-5" style={{ background: "var(--bg)" }}>
+        <div className="w-full max-w-sm text-center">
+          <div className="mb-5 w-12 h-12 mx-auto rounded-full flex items-center justify-center" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>
           </div>
-          <h2 className="font-display text-3xl font-black text-foreground mb-4">
-            Email Verified!
+          <div className="eyebrow mb-2">Email verification</div>
+          <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
+            Email verified
           </h2>
-          <p className="text-lg text-foreground-secondary mb-8">
-            Your email has been successfully verified. You can now access all
-            features of your Binectics account.
+          <p className="text-[14px] mt-3" style={{ color: "var(--fg-3)" }}>
+            Your email has been successfully verified. You can now access all features of your Binectics account.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/login"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
-            >
-              Sign In to Your Account
-            </Link>
-          </div>
-          <div className="mt-8 rounded-2xl bg-background p-6 shadow-[var(--shadow-card)] text-left">
-            <h3 className="font-bold text-foreground mb-3">What's Next?</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <svg
-                  className="h-5 w-5 shrink-0 text-primary-500 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
+
+          <Link
+            href="/login"
+            className="btn-signal-v2 inline-flex items-center justify-center mt-8"
+            style={{ height: "38px", padding: "0 24px" }}
+          >
+            Sign in to your account
+          </Link>
+
+          <div className="mt-8 rounded-(--r-3) p-5 text-left" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+            <p className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-3" style={{ color: "var(--fg-3)" }}>What&apos;s next</p>
+            <ul className="flex flex-col gap-3">
+              <li className="flex items-start gap-2.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--signal)" }}>
+                  <circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>
                 </svg>
-                <span className="text-sm text-foreground-secondary">
-                  Complete your profile with fitness goals and preferences
-                </span>
+                <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>Complete your profile with fitness goals and preferences</span>
               </li>
-              <li className="flex items-start gap-3">
-                <svg
-                  className="h-5 w-5 shrink-0 text-primary-500 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
+              <li className="flex items-start gap-2.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--signal)" }}>
+                  <circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>
                 </svg>
-                <span className="text-sm text-foreground-secondary">
-                  Browse gyms near you and start your fitness journey
-                </span>
+                <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>Browse gyms near you and start your fitness journey</span>
               </li>
-              <li className="flex items-start gap-3">
-                <svg
-                  className="h-5 w-5 shrink-0 text-primary-500 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
+              <li className="flex items-start gap-2.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--signal)" }}>
+                  <circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>
                 </svg>
-                <span className="text-sm text-foreground-secondary">
-                  Download the mobile app for easy QR check-ins
-                </span>
+                <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>Download the mobile app for easy QR check-ins</span>
               </li>
             </ul>
           </div>
@@ -169,49 +116,42 @@ export default function VerifyEmailPage() {
     );
   }
 
+  /* ── Expired ───────────────────────────────────────── */
+
   if (status === "expired") {
     return (
-      <div className="min-h-screen bg-background-secondary flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-accent-yellow-100">
-            <svg
-              className="h-10 w-10 text-accent-yellow-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+      <div className="min-h-screen flex items-center justify-center px-5" style={{ background: "var(--bg)" }}>
+        <div className="w-full max-w-sm text-center">
+          <div className="mb-5 w-12 h-12 mx-auto rounded-full flex items-center justify-center" style={{ background: "oklch(0.96 0.06 75)", color: "var(--warn)" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
             </svg>
           </div>
-          <h2 className="font-display text-3xl font-black text-foreground mb-4">
-            Link Expired
+          <div className="eyebrow mb-2">Email verification</div>
+          <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
+            Link expired
           </h2>
-          <p className="text-lg text-foreground-secondary mb-8">
-            This verification link has expired. Verification links are valid for
-            24 hours.
+          <p className="text-[14px] mt-3" style={{ color: "var(--fg-3)" }}>
+            This verification link has expired. Verification links are valid for 24 hours.
           </p>
-          <div className="flex flex-col gap-4 justify-center">
+          <div className="flex flex-col gap-3 mt-8">
             <button
               onClick={async () => {
-                // In production, this would trigger a resend API call
                 await showAlert(
                   "A new verification email has been sent to your inbox.",
                 );
               }}
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
+              className="btn-signal-v2 w-full"
+              style={{ height: "38px" }}
             >
-              Resend Verification Email
+              Resend verification email
             </button>
             <Link
               href="/contact"
-              className="inline-flex h-12 items-center justify-center rounded-lg border-2 border-neutral-300 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-neutral-100"
+              className="btn-ghost-v2 w-full inline-flex items-center justify-center"
+              style={{ height: "38px" }}
             >
-              Contact Support
+              Contact support
             </Link>
           </div>
         </div>
@@ -219,49 +159,42 @@ export default function VerifyEmailPage() {
     );
   }
 
-  // Error state
+  /* ── Error ─────────────────────────────────────────── */
+
   return (
-    <div className="min-h-screen bg-background-secondary flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center">
-        <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-          <svg
-            className="h-10 w-10 text-red-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
+    <div className="min-h-screen flex items-center justify-center px-5" style={{ background: "var(--bg)" }}>
+      <div className="w-full max-w-sm text-center">
+        <div className="mb-5 w-12 h-12 mx-auto rounded-full flex items-center justify-center" style={{ background: "var(--danger-soft)", color: "var(--danger)" }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>
           </svg>
         </div>
-        <h2 className="font-display text-3xl font-black text-foreground mb-4">
-          Verification Failed
+        <div className="eyebrow mb-2">Email verification</div>
+        <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
+          Verification failed
         </h2>
-        <p className="text-lg text-foreground-secondary mb-8">
+        <p className="text-[14px] mt-3" style={{ color: "var(--fg-3)" }}>
           {errorMessage ||
             "We couldn't verify your email address. The link may be invalid or already used."}
         </p>
-        <div className="flex flex-col gap-4 justify-center">
+        <div className="flex flex-col gap-3 mt-8">
           <button
             onClick={async () => {
-              // In production, this would trigger a resend API call
               await showAlert(
                 "A new verification email has been sent to your inbox.",
               );
             }}
-            className="inline-flex h-12 items-center justify-center rounded-lg bg-primary-500 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-primary-600"
+            className="btn-signal-v2 w-full"
+            style={{ height: "38px" }}
           >
-            Send New Verification Link
+            Send new verification link
           </button>
           <Link
             href="/contact"
-            className="inline-flex h-12 items-center justify-center rounded-lg border-2 border-neutral-300 px-8 text-base font-semibold text-foreground transition-colors duration-200 hover:bg-neutral-100"
+            className="btn-ghost-v2 w-full inline-flex items-center justify-center"
+            style={{ height: "38px" }}
           >
-            Contact Support
+            Contact support
           </Link>
         </div>
       </div>
