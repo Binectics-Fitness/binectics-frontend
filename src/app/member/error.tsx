@@ -2,7 +2,7 @@
 
 import { RouteError } from "@/components/ds/RouteError";
 
-export default function LoginError({
+export default function MemberError({
   error,
   reset,
 }: {
@@ -13,11 +13,11 @@ export default function LoginError({
     <RouteError
       error={error}
       reset={reset}
-      eyebrow="Sign-in error"
+      eyebrow="Member area error"
       title="Something went wrong."
-      description="We were unable to complete sign-in. Try again, or head back to the sign-in page."
-      homeHref="/login"
-      homeLabel="Back to sign in"
+      description="An error occurred loading your member area. Try again, or head back to your dashboard."
+      homeHref="/dashboard/member"
+      homeLabel="Back to dashboard"
     />
   );
 }

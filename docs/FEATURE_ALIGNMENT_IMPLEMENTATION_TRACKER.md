@@ -54,7 +54,7 @@ Summary:
 | Dashboard shell duplication | Alignment/Refactor Opportunity | n/a | duplicated | Multiple role shells drift in behavior/styling | medium | M | FE | Extract shared dashboard shell primitives | not-started |
 | API client underutilization | Alignment/Refactor Opportunity | complete | partial | Forms, loyalty, team, assignment-rules, billing were built as routes + API clients but had NO nav entry (unreachable except by URL). Now surfaced via a "Workspace" dropdown in MemberDashboardShell (desktop + mobile) with active-state highlighting. Follow-up: org-scoped features (team/billing/assignment-rules) ideally move to the gym/provider shell — ties into Dashboard shell duplication | medium | S | FE | Move org-scoped features to provider shell; audit remaining orphaned routes (saved-providers) | in-progress |
 | Async states consistency | Technical Debt | n/a | inconsistent | Loading/error/empty UX inconsistent across routes | high | S-M | FE | Introduce shared async-state components | not-started |
-| Route-level error boundaries | Technical Debt | n/a | partial | Not all route groups protected | high | S | FE | Add error boundaries for major app segments | not-started |
+| Route-level error boundaries | Technical Debt | n/a | shipped | Extracted a shared DS RouteError component; collapsed 15 drifted/duplicated error.tsx boundaries into thin wrappers and added boundaries for booking, onboarding, member, review. global-error.tsx kept standalone (renders when the root layout itself fails) | high | S | FE | Monitor; add boundaries to new interactive segments as they land | shipped |
 | API contract typing normalization | Technical Debt | complete | inconsistent | Union/shape drift between FE expectations and API responses | medium | M | FE+BE | Generate stricter typed adapters for API responses | not-started |
 
 ## Prioritized Delivery Plan
@@ -184,3 +184,10 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - Added a "Workspace" dropdown to MemberDashboardShell (desktop via NavDropdown, plus a Workspace group in the mobile menu) linking all five, with active-state highlighting.
   - Fixed each page's stale activeLabel="Home" → its real label so the nav highlights correctly.
   - Follow-up noted: org-scoped features (team/billing/assignment-rules) currently render in the member shell; they ideally belong in the gym/provider shell (ties into the Dashboard shell duplication row). saved-providers is also still orphaned.
+
+2026-06-12: Standardized route-level error boundaries (Technical Debt → shipped):
+  - Extracted a shared DS component, RouteError (components/ds), covering brand mark, eyebrow, heading, description, Try-again (reset) + contextual back link, and the error digest.
+  - Collapsed 15 existing error.tsx boundaries (which had drifted into ~3 visual variants) into thin wrappers around RouteError — net -1,386 lines.
+  - Added boundaries to previously-unprotected interactive segments: booking, onboarding, member, review. Static marketing pages continue to rely on the root boundary.
+  - Left global-error.tsx standalone by design: it renders when the root layout itself throws, so it cannot depend on app CSS/providers.
+  - lint + tsc + production build all clean.
