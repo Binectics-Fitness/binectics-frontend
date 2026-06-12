@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile } from "@/lib/api/progress";
 
@@ -167,9 +168,9 @@ export default function TrainerClientsPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} className="py-8 text-center font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>Loading clients…</td></tr>
+                <tr><td colSpan={4} className="px-4.5 py-6"><AsyncSpinner label="Loading clients" /></td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={4} className="py-8 text-center font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>No clients found</td></tr>
+                <tr><td colSpan={4} className="px-4.5 py-6"><EmptySlate message="No clients found." mt="mt-0" /></td></tr>
               ) : (
                 filtered.map((c) => (
                   <tr key={c._id} className="hover:bg-[var(--bg-2)] cursor-pointer">

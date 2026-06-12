@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService, type DietPlan } from "@/lib/api/progress";
 
 type FoodSource = "Diet plans" | "Client meal logs";
@@ -177,11 +178,14 @@ export default function DietitianFoodsPage() {
                   <td className="px-4.5 py-3 text-right font-mono" style={{ color: "var(--ink)" }}>{f.totalMentions}</td>
                 </tr>
               ))}
+              {loading && filteredFoods.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4.5 py-4"><AsyncSpinner label="Loading foods" /></td>
+                </tr>
+              )}
               {!loading && filteredFoods.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4.5 py-6 text-center text-[13px]" style={{ color: "var(--fg-3)" }}>
-                    No foods found for the current filter.
-                  </td>
+                  <td colSpan={4} className="px-4.5 py-4"><EmptySlate message="No foods found for the current filter." mt="mt-0" /></td>
                 </tr>
               )}
             </tbody>

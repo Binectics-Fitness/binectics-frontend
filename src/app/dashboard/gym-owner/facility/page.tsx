@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { AddLocationButton } from "./_actions";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
@@ -114,9 +115,14 @@ export default function GymLocationsPage() {
             </div>
           </div>
         ))}
+        {loading && locations.length === 0 && (
+          <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <AsyncSpinner label="Loading locations" />
+          </div>
+        )}
         {!loading && locations.length === 0 && (
-          <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-3)" }}>
-            No listings found. Add a location to get started.
+          <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <EmptySlate message="No listings found." hint="Add a location to get started." mt="mt-0" />
           </div>
         )}
       </div>
