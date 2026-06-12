@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import {
   MealRating,
   progressService,
@@ -117,9 +118,14 @@ export default function DietitianFeedbackPage() {
           </div>
           );
         })}
+        {loading && rows.length === 0 && (
+          <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <AsyncSpinner label="Loading meal feedback" />
+          </div>
+        )}
         {!loading && rows.length === 0 && (
-          <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-3)" }}>
-            No meal feedback entries yet.
+          <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <EmptySlate message="No meal feedback entries yet." mt="mt-0" />
           </div>
         )}
       </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -355,16 +356,12 @@ export default function AdminListingsPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-[13px]" style={{ color: "var(--fg-3)" }}>
-                    Loading listings...
-                  </td>
+                  <td colSpan={6} className="px-4.5 py-6"><AsyncSpinner label="Loading listings" /></td>
                 </tr>
               )}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-[13px]" style={{ color: "var(--fg-3)" }}>
-                    No listings match this view.
-                  </td>
+                  <td colSpan={6} className="px-4.5 py-6"><EmptySlate message="No listings match this view." mt="mt-0" /></td>
                 </tr>
               )}
               {!loading &&

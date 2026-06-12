@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatCurrency } from "@/utils/format";
 
 /* ─── Icons ──────────────────────────────────────────────── */
@@ -134,7 +135,7 @@ export default function ProviderPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg)" }}>
-        <div className="h-6 w-6 border-2 border-solid border-t-transparent animate-spin rounded-full" style={{ borderColor: "var(--border-2)", borderTopColor: "transparent" }} />
+        <AsyncSpinner size="page" label="Loading listing" />
       </div>
     );
   }
@@ -366,7 +367,7 @@ export default function ProviderPage() {
                 })}
               </div>
             ) : (
-              <p className="text-[14px] mt-2" style={{ color: "var(--fg-3)" }}>No reviews yet.</p>
+              <EmptySlate message="No reviews yet." mt="mt-2" />
             )}
           </section>
         </div>

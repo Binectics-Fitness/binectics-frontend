@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from "react";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useRegion } from "@/contexts/RegionContext";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatCurrency } from "@/utils/format";
 
 /* ─── Types (from API response) ──────────────────────────── */
@@ -330,9 +331,7 @@ export default function MarketplacePage() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="h-6 w-6 border-2 border-solid border-t-transparent animate-spin rounded-full" style={{ borderColor: "var(--border-2)", borderTopColor: "transparent" }} />
-            </div>
+            <AsyncSpinner size="page" label="Loading listings" />
           ) : error ? (
             <div className="text-center py-20 rounded-(--r-3)" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)" }}>
               <p className="text-[15px] font-medium" style={{ color: "var(--danger)" }}>Couldn&apos;t load listings</p>
@@ -340,8 +339,8 @@ export default function MarketplacePage() {
               <button type="button" onClick={() => void fetchListings()} className="btn-ghost-v2 sm mt-3">Try again</button>
             </div>
           ) : listings.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-[15px]" style={{ color: "var(--fg-3)" }}>No listings found. Try changing your filters.</p>
+            <div className="py-16">
+              <EmptySlate message="No listings found." hint="Try changing your filters." mt="mt-0" />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

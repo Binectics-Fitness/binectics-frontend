@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { StatusPill } from "@/components/ds/StatusPill";
+import { AsyncSpinner } from "@/components/ds";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import {
@@ -319,8 +320,8 @@ export default function MyBookingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] items-start gap-6 lg:gap-8">
           <div>
             {loading && (
-              <div className="rounded-(--r-3) p-10 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-3)" }}>
-                Loading bookings...
+              <div className="rounded-(--r-3) px-4.5 py-8" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <AsyncSpinner label="Loading bookings" />
               </div>
             )}
             {!loading && error && (
