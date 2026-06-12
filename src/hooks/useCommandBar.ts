@@ -26,7 +26,9 @@ export function toggleCommandBar() {
 }
 
 export function useCommandBar() {
-  const [open, setOpen] = useState(false);
+  // Seed from the module-level state so a consumer that mounts while the bar is
+  // already open renders in sync instead of waiting for the next notify().
+  const [open, setOpen] = useState(() => _open);
 
   useEffect(() => {
     const listener: CommandBarListener = (o) => setOpen(o);

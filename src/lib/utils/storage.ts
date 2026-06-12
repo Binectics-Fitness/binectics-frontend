@@ -22,6 +22,25 @@ function isBrowser(): boolean {
 }
 
 /**
+ * `; Secure` on HTTPS so auth cookies are never sent over plain HTTP.
+ * Skipped on http://localhost so local development still works.
+ */
+function secureFlag(): string {
+  return isBrowser() && window.location.protocol === "https:" ? "; Secure" : "";
+}
+
+/**
+ * Convert a server-issued `expires_at` ISO timestamp into a cookie max-age in
+ * seconds. Returns undefined for missing/invalid/past timestamps so callers can
+ * fall back to their own default.
+ */
+export function expiresAtToMaxAge(expiresAt?: string): number | undefined {
+  if (!expiresAt) return undefined;
+  const seconds = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined;
+}
+
+/**
  * Token Storage
  */
 export const tokenStorage = {
@@ -37,7 +56,7 @@ export const tokenStorage = {
     // Also set as httpOnly cookie for middleware access
     // Note: We set it as a regular cookie since httpOnly can only be set server-side
     const maxAge = 60 * 60; // 1 hour (matches JWT expiration)
-    document.cookie = `access_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    document.cookie = `access_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag()}`;
   },
 
   remove(): void {
@@ -66,7 +85,7 @@ export const refreshTokenStorage = {
     // Also set as cookie for middleware access
     // maxAge is provided by the caller based on server-issued expiry (30d or 24h)
     const cookieMaxAge = maxAge ?? 7 * 24 * 60 * 60; // default 7 days
-    document.cookie = `refresh_token=${token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax`;
+    document.cookie = `refresh_token=${token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax${secureFlag()}`;
   },
 
   remove(): void {
@@ -105,13 +124,13 @@ export const userStorage = {
 
     // Set user_role cookie so middleware can redirect to the correct dashboard
     if (user.role) {
-      document.cookie = `user_role=${user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `user_role=${user.role}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag()}`;
     }
 
     // Mirror must_change_password to a cookie so middleware can gate
     // /admin/* server-side without waiting for the client shell.
     if (user.must_change_password) {
-      document.cookie = `must_change_password=1; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `must_change_password=1; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag()}`;
     } else {
       document.cookie =
         "must_change_password=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
@@ -119,7 +138,7 @@ export const userStorage = {
 
     // Mirror onboarding status so middleware can route correctly.
     if (user.is_onboarding_complete) {
-      document.cookie = `onboarding_complete=1; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `onboarding_complete=1; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag()}`;
     } else {
       document.cookie =
         "onboarding_complete=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";

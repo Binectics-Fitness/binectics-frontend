@@ -12,34 +12,7 @@ import {
   getMarketPrice,
   formatRegionPrice,
 } from "@/lib/constants/regions";
-import { PaymentGateway } from "@/lib/types";
 import { utilityService } from "@/lib/api/utility";
-
-const CURRENCY_GATEWAY: Record<CurrencyCode, PaymentGateway> = {
-  USD: PaymentGateway.STRIPE,
-  EUR: PaymentGateway.STRIPE,
-  GBP: PaymentGateway.STRIPE,
-  NGN: PaymentGateway.PAYSTACK,
-  KES: PaymentGateway.FLUTTERWAVE,
-  ZAR: PaymentGateway.PAYSTACK,
-  AED: PaymentGateway.STRIPE,
-  INR: PaymentGateway.STRIPE,
-};
-
-const CURRENCY_SYMBOL: Record<CurrencyCode, string> = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  NGN: "₦",
-  KES: "KSh",
-  ZAR: "R",
-  AED: "AED",
-  INR: "₹",
-};
-
-function isSupportedCurrency(value: string): value is CurrencyCode {
-  return value in CURRENCY_GATEWAY;
-}
 
 interface RegionContextValue {
   country: string;
@@ -86,16 +59,11 @@ export function RegionProvider({ children }: { children: ReactNode }) {
         const response = await utilityService.resolveGeo();
         if (response.success && response.data?.country) {
           const code = response.data.country.toUpperCase();
-          const maybeCurrency = (response.data.currency || "").toUpperCase();
-          const region = isSupportedCurrency(maybeCurrency)
-            ? {
-                currencyCode: maybeCurrency,
-                locale: response.data.locale || DEFAULT_REGION.locale,
-                gateway: CURRENCY_GATEWAY[maybeCurrency],
-                symbol: CURRENCY_SYMBOL[maybeCurrency],
-                regionName: response.data.region_name || DEFAULT_REGION.regionName,
-              }
-            : getRegionForCountry(code);
+          // Derive currency/gateway/locale canonically from the resolved
+          // country. The server `currency` field is informational only — using
+          // it directly risks showing a currency (and payment gateway) that
+          // doesn't match the user's actual country.
+          const region = getRegionForCountry(code);
           setConfig(region);
           setCountry(code);
           setCookie(REGION_COOKIE, code, 30);

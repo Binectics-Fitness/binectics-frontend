@@ -83,6 +83,24 @@ function nextOrSameWeekday(base: Date, targetWeekday: number): Date {
   return date;
 }
 
+/**
+ * Advance one calendar month, clamping to the last valid day so month-end
+ * dates don't overflow (e.g. Jan 31 -> Feb 28, not Mar 3).
+ */
+function addCalendarMonth(date: Date): Date {
+  const day = date.getDate();
+  const next = new Date(date);
+  next.setDate(1);
+  next.setMonth(next.getMonth() + 1);
+  const daysInTargetMonth = new Date(
+    next.getFullYear(),
+    next.getMonth() + 1,
+    0,
+  ).getDate();
+  next.setDate(Math.min(day, daysInTargetMonth));
+  return next;
+}
+
 function addByCadence(date: Date, cadence: RecurrenceCadence): Date {
   const next = new Date(date);
   if (cadence === RecurrenceCadence.WEEKLY) {
@@ -93,8 +111,7 @@ function addByCadence(date: Date, cadence: RecurrenceCadence): Date {
     next.setDate(next.getDate() + 14);
     return next;
   }
-  next.setMonth(next.getMonth() + 1);
-  return next;
+  return addCalendarMonth(next);
 }
 
 function formatOccurrenceLabel(date: Date, hour: number, minute: number): string {
@@ -127,7 +144,10 @@ function RecurringBookingInner() {
   );
 
   const [startDate, setStartDate] = useState(initialDate);
-  const [weekday, setWeekday] = useState<string>(() => String(new Date(initialDate).getDay()));
+  // Parse as local midnight to match occurrence generation (`${date}T00:00:00`).
+  // `new Date("YYYY-MM-DD")` parses as UTC, which reads back as the previous day
+  // for users west of UTC and disagrees with the generated occurrences.
+  const [weekday, setWeekday] = useState<string>(() => String(new Date(`${initialDate}T00:00:00`).getDay()));
   const [cadence, setCadence] = useState<RecurrenceCadence>(RecurrenceCadence.WEEKLY);
   const [endMode] = useState<RecurrenceEndMode>(RecurrenceEndMode.AFTER_COUNT);
   const [sessionCount, setSessionCount] = useState("12");
@@ -184,7 +204,13 @@ function RecurringBookingInner() {
     const count = Number.parseInt(sessionCount, 10);
     if (!Number.isFinite(count) || count <= 0) return [] as Date[];
 
-    const start = nextOrSameWeekday(new Date(`${startDate}T00:00:00`), Number(weekday));
+    // Monthly recurs on the selected calendar date; weekly/biweekly snap to the
+    // chosen day of week.
+    const base = new Date(`${startDate}T00:00:00`);
+    const start =
+      cadence === RecurrenceCadence.MONTHLY
+        ? base
+        : nextOrSameWeekday(base, Number(weekday));
     const list: Date[] = [];
 
     let current = new Date(start);
@@ -342,15 +368,17 @@ function RecurringBookingInner() {
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Day of week</label>
-              <SearchableSelect
-                value={weekday}
-                onChange={setWeekday}
-                options={DAY_OPTIONS}
-                placeholder="Select day"
-              />
-            </div>
+            {cadence !== RecurrenceCadence.MONTHLY && (
+              <div className="flex flex-col gap-1.5">
+                <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Day of week</label>
+                <SearchableSelect
+                  value={weekday}
+                  onChange={setWeekday}
+                  options={DAY_OPTIONS}
+                  placeholder="Select day"
+                />
+              </div>
+            )}
 
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Time</label>

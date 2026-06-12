@@ -15,6 +15,7 @@ import {
   userStorage,
   refreshTokenStorage,
   clearAuthStorage,
+  expiresAtToMaxAge,
 } from "@/lib/utils/storage";
 
 export interface LoginResponse {
@@ -75,14 +76,10 @@ export const authService = {
       apiClient.storeTokens(response.data.access_token);
       // Store refresh token with appropriate maxAge derived from server expiry
       if (response.data.refresh_token) {
-        const maxAge = response.data.refresh_token_expires_at
-          ? Math.floor(
-              (new Date(response.data.refresh_token_expires_at).getTime() -
-                Date.now()) /
-                1000,
-            )
-          : undefined;
-        refreshTokenStorage.set(response.data.refresh_token, maxAge);
+        refreshTokenStorage.set(
+          response.data.refresh_token,
+          expiresAtToMaxAge(response.data.refresh_token_expires_at),
+        );
       }
       // Store user data
       userStorage.set(response.data.user);
@@ -103,9 +100,18 @@ export const authService = {
   },
 
   /**
-   * Logout current user
+   * Logout current user.
+   *
+   * Best-effort server-side revoke of the refresh token, then clear local
+   * state regardless of the result. `includeAuth: false` because the refresh
+   * token in the body authenticates the call and the access token may already
+   * be expired (this also avoids the client's 401 refresh/redirect path).
    */
   async logout(): Promise<void> {
+    const refreshToken = refreshTokenStorage.get();
+    if (refreshToken) {
+      await apiClient.post("/auth/logout", { refreshToken }, false);
+    }
     clearAuthStorage();
   },
 
@@ -184,6 +190,7 @@ export const authService = {
       apiClient.storeTokens(
         response.data.access_token,
         response.data.refresh_token,
+        response.data.refresh_token_expires_at,
       );
     }
 

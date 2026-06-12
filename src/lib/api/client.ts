@@ -8,6 +8,7 @@ import {
   tokenStorage,
   refreshTokenStorage,
   clearAuthStorage,
+  expiresAtToMaxAge,
 } from "@/lib/utils/storage";
 import { isAuthRoute } from "@/lib/constants/routes";
 
@@ -82,7 +83,16 @@ class ApiClient {
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
 
-    const parsed: unknown = isJson ? await response.json() : await response.text();
+    // Guard the parse: a non-2xx response that advertises JSON but sends an
+    // empty/truncated/HTML body (gateway 502/504 pages, 204s) would otherwise
+    // throw here and be reported as a misleading "Network error" — dropping the
+    // real HTTP status that 401-refresh handling depends on.
+    let parsed: unknown = undefined;
+    try {
+      parsed = isJson ? await response.json() : await response.text();
+    } catch {
+      parsed = undefined;
+    }
     const body: RawResponseBody =
       parsed && typeof parsed === "object" ? (parsed as RawResponseBody) : {};
 
@@ -133,12 +143,15 @@ class ApiClient {
       };
     }
 
-    // Unwrap a `{ data }` envelope when present, else return the payload as-is
-    // (preserves the previous `data.data || data` behaviour).
-    const dataField = parsed && typeof parsed === "object" ? body.data : undefined;
+    // Unwrap a `{ data }` envelope when the `data` key is present, else return
+    // the payload as-is. Uses a key-presence check (not truthiness) so a
+    // legitimately falsy payload (`0`, `false`, `""`, `null`) isn't discarded
+    // in favour of the whole envelope.
+    const hasDataKey =
+      parsed !== null && typeof parsed === "object" && "data" in parsed;
     return {
       success: true,
-      data: (dataField || parsed) as T,
+      data: (hasDataKey ? body.data : parsed) as T,
       message: typeof body.message === "string" ? body.message : undefined,
     };
   }
@@ -359,20 +372,24 @@ class ApiClient {
 
         if (!response.ok) return false;
 
-        const result = await response.json();
-        const data = result.data || result;
+        const result = (await response.json()) as RawResponseBody;
+        const data = (result.data ?? result) as {
+          access_token?: unknown;
+          refresh_token?: unknown;
+          refresh_token_expires_at?: unknown;
+        };
 
-        if (data.access_token) {
+        if (typeof data.access_token === "string") {
           tokenStorage.set(data.access_token);
-          if (data.refresh_token) {
-            const maxAge = data.refresh_token_expires_at
-              ? Math.floor(
-                  (new Date(data.refresh_token_expires_at).getTime() -
-                    Date.now()) /
-                    1000,
-                )
-              : undefined;
-            refreshTokenStorage.set(data.refresh_token, maxAge);
+          if (typeof data.refresh_token === "string") {
+            const expiresAt =
+              typeof data.refresh_token_expires_at === "string"
+                ? data.refresh_token_expires_at
+                : undefined;
+            refreshTokenStorage.set(
+              data.refresh_token,
+              expiresAtToMaxAge(expiresAt),
+            );
           }
           return true;
         }
@@ -389,12 +406,23 @@ class ApiClient {
   }
 
   /**
-   * Store tokens after successful authentication
+   * Store tokens after successful authentication.
+   *
+   * `refreshTokenExpiresAt` is the server-issued ISO expiry; when provided the
+   * refresh-token cookie inherits the real lifetime instead of silently
+   * falling back to the 7-day default.
    */
-  storeTokens(accessToken: string, refreshToken?: string): void {
+  storeTokens(
+    accessToken: string,
+    refreshToken?: string,
+    refreshTokenExpiresAt?: string,
+  ): void {
     tokenStorage.set(accessToken);
     if (refreshToken) {
-      refreshTokenStorage.set(refreshToken);
+      refreshTokenStorage.set(
+        refreshToken,
+        expiresAtToMaxAge(refreshTokenExpiresAt),
+      );
     }
   }
 

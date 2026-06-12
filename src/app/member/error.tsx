@@ -16,8 +16,8 @@ export default function MemberError({
       eyebrow="Member area error"
       title="Something went wrong."
       description="An error occurred loading your member area. Try again, or head back to your dashboard."
-      homeHref="/dashboard/member"
-      homeLabel="Back to dashboard"
+      homeHref="/member"
+      homeLabel="Back to home"
     />
   );
 }
