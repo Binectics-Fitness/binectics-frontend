@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
-import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAssignmentRules } from "@/hooks/useAssignmentRules";
 import {
@@ -206,7 +206,7 @@ export default function AssignmentRulesPage() {
 
   if (!currentOrg) {
     return (
-      <MemberDashboardShell activeLabel="Assignment rules">
+      <GymDashboardShell activeItem="Assignment rules" crumb="Assignment rules">
         <div className="flex flex-col gap-5">
           <OrganizationContextBanner
             label="Assignment organization"
@@ -224,12 +224,12 @@ export default function AssignmentRulesPage() {
             </p>
           </div>
         </div>
-      </MemberDashboardShell>
+      </GymDashboardShell>
     );
   }
 
   return (
-    <MemberDashboardShell activeLabel="Assignment rules">
+    <GymDashboardShell activeItem="Assignment rules" crumb="Assignment rules">
       <div className="flex flex-col gap-5">
         <OrganizationContextBanner
           label="Assignment organization"
@@ -661,6 +661,6 @@ export default function AssignmentRulesPage() {
           </section>
         )}
       </div>
-    </MemberDashboardShell>
+    </GymDashboardShell>
   );
 }

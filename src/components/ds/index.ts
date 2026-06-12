@@ -5,6 +5,7 @@
 export { AsyncSpinner, EmptySlate } from "./AsyncStates";
 export { NavigationProgress, startNavigationProgress } from "./NavigationProgress";
 export { RouteError } from "./RouteError";
+export { WorkspaceShell } from "./WorkspaceShell";
 
 // Phase 1 — core primitives
 export { Eyebrow } from "./Eyebrow";

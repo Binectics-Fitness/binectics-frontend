@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
-import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
 import {
   formsService,
   type Form,
@@ -75,18 +75,18 @@ export default function FormResponsesPage({
 
   if (isLoading) {
     return (
-      <MemberDashboardShell activeLabel="Forms">
+      <WorkspaceShell activeItem="Forms" crumb="Forms">
         <div className="flex flex-col gap-5">
           <p className="text-sm" style={{ color: "var(--fg-3)" }}>
             Loading responses...
           </p>
         </div>
-      </MemberDashboardShell>
+      </WorkspaceShell>
     );
   }
 
   return (
-    <MemberDashboardShell activeLabel="Forms">
+    <WorkspaceShell activeItem="Forms" crumb="Forms">
       <div className="flex flex-col gap-5">
         <div>
           <div
@@ -401,6 +401,6 @@ export default function FormResponsesPage({
           </div>
         </div>
       </div>
-    </MemberDashboardShell>
+    </WorkspaceShell>
   );
 }

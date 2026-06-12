@@ -40,6 +40,7 @@ const SIDEBAR: { label: string; items: SideItem[] }[] = [
     { name: "Analytics", href: "/admin/analytics", icon: <I d="M3 3v18h18M7 14l4-4 3 3 5-7" /> },
   ]},
   { label: "Operate", items: [
+    { name: "Forms", href: "/dashboard/forms", icon: <I><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></I> },
     { name: "Feature flags", href: "/admin/feature-flags", icon: <I><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8M4.6 9a1.7 1.7 0 0 0-.3-1.8"/></I> },
     { name: "Audit log", href: "/admin/audit-log", icon: <I d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5" /> },
     { name: "Team & roles", href: "/admin/team-roles", icon: <I><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M19 8v6M16 11h6"/></I> },

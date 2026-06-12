@@ -5,7 +5,7 @@ import Link from "next/link";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
-import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgManagement } from "@/hooks/useTeams";
 import {
@@ -258,7 +258,7 @@ export default function TeamWorkspacePage() {
   }
 
   return (
-    <MemberDashboardShell activeLabel="Team">
+    <GymDashboardShell activeItem="Team & roles" crumb="Team">
       <div className="flex flex-col gap-5">
         <OrganizationContextBanner
           label="Team organization"
@@ -669,6 +669,6 @@ export default function TeamWorkspacePage() {
           </>
         )}
       </div>
-    </MemberDashboardShell>
+    </GymDashboardShell>
   );
 }

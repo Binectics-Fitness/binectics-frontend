@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { AsyncSpinner } from "@/components/ds";
-import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   providerBillingApi,
@@ -145,7 +145,7 @@ export default function ProviderBillingPage() {
   const currentTier = billingStatus?.plan_tier ?? ProviderPlanTier.FREE;
 
   return (
-    <MemberDashboardShell activeLabel="Billing">
+    <GymDashboardShell activeItem="Billing" crumb="Billing">
       <div className="flex flex-col gap-5">
         <div>
           <div
@@ -544,6 +544,6 @@ export default function ProviderBillingPage() {
           </>
         )}
       </div>
-    </MemberDashboardShell>
+    </GymDashboardShell>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { loyaltyService } from "@/lib/api/loyalty";
-import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner } from "@/components/ds";
 import {
   LoyaltyEventType,
@@ -126,7 +126,7 @@ export default function LoyaltyCenterPage() {
   );
 
   return (
-    <MemberDashboardShell activeLabel="Loyalty">
+    <GymDashboardShell activeItem="Loyalty" crumb="Loyalty">
       <div className="flex flex-col gap-5">
         <div>
           <div
@@ -512,6 +512,6 @@ export default function LoyaltyCenterPage() {
           </div>
         </div>
       </div>
-    </MemberDashboardShell>
+    </GymDashboardShell>
   );
 }

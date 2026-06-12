@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SearchableSelect from "@/components/SearchableSelect";
-import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import {
   formsService,
@@ -230,7 +230,7 @@ export default function FormsPage() {
   ].includes(qType);
 
   return (
-    <MemberDashboardShell activeLabel="Forms">
+    <WorkspaceShell activeItem="Forms" crumb="Forms">
       <div className="flex flex-col gap-5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -707,6 +707,6 @@ export default function FormsPage() {
           </>
         )}
       </div>
-    </MemberDashboardShell>
+    </WorkspaceShell>
   );
 }
