@@ -28,8 +28,11 @@ interface WorkspaceShellProps {
 }
 
 export function WorkspaceShell({ activeItem, crumb, actions, children }: WorkspaceShellProps) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const common = { activeItem, crumb, actions };
+
+  // Avoid briefly rendering the wrong role's chrome before auth resolves.
+  if (isLoading) return null;
 
   switch (user?.role) {
     case UserRole.TRAINER:

@@ -198,3 +198,16 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - Forms now uses WorkspaceShell and appears as a "Forms" nav item in all four provider shells.
   - Loyalty, Team & roles, Assignment rules, Billing moved to a new "Workspace" section in the gym-owner sidebar; those pages now render in GymDashboardShell.
   - Build/lint/tsc clean. Follow-ups: role-based route guards for direct-URL access; wire real org data into the gym shell (still shows demo Iron Lab / Lerato M.).
+
+2026-06-12 (3): Real identity + role guards across all provider shells (closes both follow-ups above):
+  - Added src/lib/identity.ts (fullName/shortName/personInitials/nameInitials/ROLE_LABEL).
+  - Gym/Trainer/Dietitian/Admin shells now render the REAL signed-in user (name, initials, role) from useAuth(), and the gym shell shows the REAL current organization (name + initials) from useOrganization(). Removed hardcoded demo chrome (Iron Lab, Lerato M., Sarah Okafor, Dr. Priya Iyer, Andile K.). Sidebar footers now link to the relevant settings page.
+  - Each provider shell now self-guards via useRoleGuard(role): a wrong-role user (e.g. a member hitting /dashboard/forms or /dashboard/team by URL) is redirected to their own dashboard and the shell renders nothing. WorkspaceShell selects the shell by role, so the guard and chrome stay consistent automatically.
+  - Build/lint/tsc clean.
+  - NOTE: client-side guards are UX-level; server-side enforcement (middleware role check / API authz) is the source of truth and a separate hardening task.
+
+  Still open — the larger "build their functionalities" task (mock → real data). Audit found 9 hardcoded pages:
+  Tier 1 (entry dashboards): dashboard/gym-owner/page, dashboard/trainer/page, dashboard/dietitian/page.
+  Tier 2 (gym ops): gym-owner/staff, gym-owner/revenue, gym-owner/devices (devices is BACKEND-BLOCKED — no devices API), gym-owner/payouts.
+  Tier 3: dietitian/clients/[clientId], admin/dashboard.
+  member dashboard is already real and is the reference pattern (parallel Promise.allSettled across services).

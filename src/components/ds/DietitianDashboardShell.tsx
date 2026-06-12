@@ -1,6 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { ProviderDashboardShell } from "./ProviderDashboardShell";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
+import { ROLE_LABEL, fullName, personInitials, shortName } from "@/lib/identity";
 
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d ? <path d={d} /> : children}</svg>;
@@ -35,12 +41,15 @@ export interface DietitianDashboardShellProps {
 }
 
 function DietitianSidebarContent({ activeItem }: { activeItem: string }) {
+  const { user } = useAuth();
+  const name = fullName(user) || "Your account";
+  const initials = personInitials(user) || "··";
   return (
     <div className="flex flex-col gap-6 px-3.5 pb-6">
       <Link href="/" className="flex items-center gap-2.5 px-1.5 py-1"><BinecticsLockup /></Link>
       <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
-        <span className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>PI</span>
-        <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>Dr. Priya Iyer</span>
+        <span className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>{initials}</span>
+        <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>{name}</span>
       </div>
       {SIDEBAR.map((s) => (
         <nav key={s.label} className="flex flex-col gap-0.5" aria-label={s.label}>
@@ -56,23 +65,25 @@ function DietitianSidebarContent({ activeItem }: { activeItem: string }) {
           })}
         </nav>
       ))}
-      <div className="mt-auto flex items-center gap-2.5 pt-3.5" style={{ borderTop: "1px solid var(--border)" }}>
-        <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>PI</span>
+      <Link href="/dashboard/dietitian/settings" className="mt-auto flex items-center gap-2.5 pt-3.5" style={{ borderTop: "1px solid var(--border)" }}>
+        <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>{initials}</span>
         <div className="flex-1">
-          <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>Dr. Priya I.</div>
-          <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>DIETITIAN · RD</div>
+          <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{shortName(user) || name}</div>
+          <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{user ? (ROLE_LABEL[user.role] ?? user.role) : ""}</div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }
 
 export function DietitianDashboardShell({ activeItem, crumb, actions, children }: DietitianDashboardShellProps) {
+  const { user, isAuthorized, isLoading } = useRoleGuard(UserRole.DIETITIAN);
+  if (!isLoading && !isAuthorized) return null;
   return (
     <ProviderDashboardShell
       sidebarSlot={<DietitianSidebarContent activeItem={activeItem} />}
       crumb={crumb}
-      breadcrumbRoot={{ label: "Dr. Priya Iyer", href: "/dashboard/dietitian" }}
+      breadcrumbRoot={{ label: fullName(user) || "Dietitian", href: "/dashboard/dietitian" }}
       actions={actions}
     >
       {children}

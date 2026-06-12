@@ -3,6 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
+import { ROLE_LABEL, personInitials, shortName } from "@/lib/identity";
 
 /* ─── Icon helper ──────────────────────────────────────────── */
 
@@ -60,6 +64,10 @@ interface AdminDashboardShellProps {
 /* ─── Sidebar content (shared between desktop + mobile) ───── */
 
 function SidebarContent({ activeItem }: { activeItem: string }) {
+  const { user } = useAuth();
+  const name = shortName(user) || "Your account";
+  const initials = personInitials(user) || "··";
+  const roleLabel = user ? (ROLE_LABEL[user.role] ?? user.role) : "";
   return (
     <div className="flex flex-col gap-5.5 px-3.5 pb-6">
       {/* Brand */}
@@ -124,11 +132,11 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
           className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold"
           style={{ background: "oklch(0.30 0.01 80)", color: "var(--bg)" }}
         >
-          AK
+          {initials}
         </span>
         <div className="flex-1">
-          <div className="text-[13px] font-medium" style={{ color: "var(--bg)" }}>Andile K.</div>
-          <div className="font-mono text-[11px]" style={{ color: "oklch(0.65 0.008 80)" }}>SUPER ADMIN</div>
+          <div className="text-[13px] font-medium" style={{ color: "var(--bg)" }}>{name}</div>
+          <div className="font-mono text-[11px]" style={{ color: "oklch(0.65 0.008 80)" }}>{roleLabel}</div>
         </div>
       </div>
     </div>
@@ -206,6 +214,8 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
 /* ═══ Shell ═══ */
 
 export function AdminDashboardShell({ activeItem, crumb, actions, children }: AdminDashboardShellProps) {
+  const { isAuthorized, isLoading } = useRoleGuard(UserRole.ADMIN);
+  if (!isLoading && !isAuthorized) return null;
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
       {/* Mobile nav — dark variant */}

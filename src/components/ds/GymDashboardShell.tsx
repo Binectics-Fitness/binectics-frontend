@@ -1,6 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { ProviderDashboardShell } from "./ProviderDashboardShell";
+import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
+import { ROLE_LABEL, nameInitials, personInitials, shortName } from "@/lib/identity";
 
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
   return (
@@ -46,23 +53,23 @@ export interface GymDashboardShellProps {
   children: React.ReactNode;
 }
 
-function GymSidebarContent({
-  activeItem,
-  organizationName = "Iron Lab",
-  organizationInitials = "IL",
-}: {
-  activeItem: string;
-  organizationName?: string;
-  organizationInitials?: string;
-}) {
+function GymSidebarContent({ activeItem }: { activeItem: string }) {
+  const { user } = useAuth();
+  const { currentOrg } = useOrganization();
+  const orgName = currentOrg?.name ?? "Your workspace";
+  const orgInitials = nameInitials(currentOrg?.name) || "··";
+  const userName = shortName(user) || "Your account";
+  const userInitials = personInitials(user) || "··";
+  const roleLabel = user ? (ROLE_LABEL[user.role] ?? user.role) : "";
+
   return (
     <div className="flex flex-col gap-6 px-3.5 pb-6">
       <Link href="/" className="flex items-center gap-2.5 px-1.5 py-1">
         <BinecticsLockup />
       </Link>
       <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-(--r-2) cursor-pointer" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
-        <span className="w-5.5 h-5.5 rounded-[4px] flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--gym)", color: "oklch(0.98 0 0)" }}>{organizationInitials}</span>
-        <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>{organizationName}</span>
+        <span className="w-5.5 h-5.5 rounded-[4px] flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--gym)", color: "oklch(0.98 0 0)" }}>{orgInitials}</span>
+        <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>{orgName}</span>
       </div>
       {SIDEBAR.map((s) => (
         <nav key={s.label} className="flex flex-col gap-0.5" aria-label={s.label}>
@@ -78,13 +85,13 @@ function GymSidebarContent({
           })}
         </nav>
       ))}
-      <div className="mt-auto flex items-center gap-2.5 pt-3.5" style={{ borderTop: "1px solid var(--border)" }}>
-        <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--gym)", color: "oklch(0.98 0 0)" }}>LM</span>
+      <Link href="/dashboard/settings" className="mt-auto flex items-center gap-2.5 pt-3.5" style={{ borderTop: "1px solid var(--border)" }}>
+        <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: "var(--gym)", color: "oklch(0.98 0 0)" }}>{userInitials}</span>
         <div className="flex-1">
-          <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>Lerato M.</div>
-          <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>OWNER</div>
+          <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{userName}</div>
+          <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{roleLabel}</div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }
@@ -93,21 +100,19 @@ export function GymDashboardShell({
   activeItem,
   crumb,
   actions,
-  organizationName = "Iron Lab",
-  organizationInitials = "IL",
   children,
 }: GymDashboardShellProps) {
+  const { isAuthorized, isLoading } = useRoleGuard(UserRole.GYM_OWNER);
+  const { currentOrg } = useOrganization();
+
+  // Wrong role: useRoleGuard redirects; render nothing to avoid a flash.
+  if (!isLoading && !isAuthorized) return null;
+
   return (
     <ProviderDashboardShell
-      sidebarSlot={
-        <GymSidebarContent
-          activeItem={activeItem}
-          organizationName={organizationName}
-          organizationInitials={organizationInitials}
-        />
-      }
+      sidebarSlot={<GymSidebarContent activeItem={activeItem} />}
       crumb={crumb}
-      breadcrumbRoot={{ label: organizationName, href: "/dashboard/gym-owner" }}
+      breadcrumbRoot={{ label: currentOrg?.name ?? "Workspace", href: "/dashboard/gym-owner" }}
       actions={actions}
     >
       {children}
