@@ -100,9 +100,18 @@ export const authService = {
   },
 
   /**
-   * Logout current user
+   * Logout current user.
+   *
+   * Best-effort server-side revoke of the refresh token, then clear local
+   * state regardless of the result. `includeAuth: false` because the refresh
+   * token in the body authenticates the call and the access token may already
+   * be expired (this also avoids the client's 401 refresh/redirect path).
    */
   async logout(): Promise<void> {
+    const refreshToken = refreshTokenStorage.get();
+    if (refreshToken) {
+      await apiClient.post("/auth/logout", { refreshToken }, false);
+    }
     clearAuthStorage();
   },
 
