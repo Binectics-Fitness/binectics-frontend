@@ -226,3 +226,11 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - LIMITATION: ConsultationBooking carries only clientUserId (no embedded client name), so the schedule shows time/duration/status/notes but not the client's name. Enhance when the bookings API embeds client info.
   - lint + tsc + build clean.
   Remaining mock pages: dietitian/page, gym-owner {staff, revenue, payouts, devices(BLOCKED)}, dietitian/clients/[clientId], admin/dashboard.
+
+2026-06-12 (6): Converted the dietitian dashboard (/dashboard/dietitian) — 3 of 9. Same shape as trainer.
+  - Split page.tsx (metadata) + DietitianTodayClient.tsx (client).
+  - Real data: active clients from progressService.getMyClientProfiles(); upcoming consults + KPIs from consultationsService.getProviderBookings(). Loading/error/empty states.
+  - DROPPED (no backend endpoint): adherence sparklines + macro bars + per-client adherence %, plan templates library, action queue, inbox, earnings. These were entirely fabricated.
+  - Same booking limitation as trainer (no client name on bookings).
+  - lint + tsc + build clean.
+  Remaining mock pages: gym-owner {staff, revenue, payouts, devices(BLOCKED)}, dietitian/clients/[clientId], admin/dashboard.
