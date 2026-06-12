@@ -4800,7 +4800,7 @@ export interface components {
             statusCode: number;
             /** @example false */
             success: boolean;
-            /** @example 2026-06-08T05:33:49.202Z */
+            /** @example 2026-01-01T00:00:00.000Z */
             timestamp: string;
         };
         ForgotPasswordDto: Record<string, never>;

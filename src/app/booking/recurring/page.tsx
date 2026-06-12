@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { AsyncSpinner } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { formatCurrency, getClientTimezone } from "@/utils/format";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -267,10 +268,7 @@ function RecurringBookingInner() {
   if (loadingMeta) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg)" }}>
-        <div
-          className="h-6 w-6 border-2 border-solid border-t-transparent animate-spin rounded-full"
-          style={{ borderColor: "var(--border-2)", borderTopColor: "transparent" }}
-        />
+        <AsyncSpinner size="page" label="Loading booking" />
       </div>
     );
   }
@@ -442,10 +440,7 @@ export default function RecurringBookingPage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg)" }}>
-          <div
-            className="h-6 w-6 border-2 border-solid border-t-transparent animate-spin rounded-full"
-            style={{ borderColor: "var(--border-2)", borderTopColor: "transparent" }}
-          />
+          <AsyncSpinner size="page" label="Loading booking" />
         </div>
       }
     >
