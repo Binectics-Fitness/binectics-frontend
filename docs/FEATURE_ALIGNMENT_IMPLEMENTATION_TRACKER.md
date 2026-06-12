@@ -248,6 +248,11 @@ Provider onboarding now auto-creates a starter workspace for gym owners, trainer
   - lint + tsc + build clean.
   Remaining mock pages: gym-owner {revenue, payouts, devices(BLOCKED)}.
 
+2026-06-12 (11): Fixed the orphaned saved-providers page.
+  - Was fully mock (hardcoded provider grid, fake "14 saved") AND used the wrong chrome (a public topnav with a Sign-in button on a logged-in member page).
+  - No saved/favourites API exists anywhere (service layer or OpenAPI contract) → backend-blocked. Rewrote it inside MemberDashboardShell with an honest "coming soon" state (matches the payouts treatment). Did NOT nav-promote it — surfacing a non-functional feature is worse than leaving it unlinked; nav entry waits on the backend.
+  - lint + tsc + build clean.
+
 2026-06-12 (10): Removed the last fake data in the UI — hardcoded nav badge counts.
   - Stripped placeholder counts from all four shells: gym (Members 1,284 / Check-ins 412), trainer (Clients 42 / Inbox 7), dietitian (Clients 68 / Inbox 12), admin (Listings 38 / Reviews 12 / Fraud 4 / Disputes 7 / Tickets 42), plus the orphaned `alert` flags.
   - Kept the badge-rendering code inert so real counts can be reintroduced later. Chose removal over re-adding data-fetching to the freshly-refactored ProviderShell; wiring real counts (gym members/check-ins via getOrgDashboardStats, trainer/dietitian clients via getMyClientProfiles) is an optional follow-up (inbox/admin badges have no backend source).
