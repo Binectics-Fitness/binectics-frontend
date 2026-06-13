@@ -28,6 +28,8 @@ describe("authService.logout", () => {
 
   it("POSTs the refresh token to /auth/logout when one is stored", async () => {
     vi.mocked(storage.refreshTokenStorage.get).mockReturnValue("rt-abc");
+    // Seed an access token so we can verify it is NOT forwarded in the logout request
+    vi.mocked(storage.tokenStorage.get).mockReturnValue("access-token-value");
     const fetchSpy = mockFetch(200, { statusCode: 200, message: ["Logged out successfully"] });
 
     await authService.logout();
@@ -38,6 +40,10 @@ describe("authService.logout", () => {
     expect(JSON.parse((init as RequestInit).body as string)).toMatchObject({
       refreshToken: "rt-abc",
     });
+    // Logout must not attach the Bearer token — the refresh token in the body is the credential
+    expect((init as RequestInit).headers as Record<string, string>).not.toHaveProperty(
+      "Authorization",
+    );
   });
 
   it("clears local auth storage even when the POST succeeds", async () => {
@@ -49,7 +55,7 @@ describe("authService.logout", () => {
     expect(storage.clearAuthStorage).toHaveBeenCalledOnce();
   });
 
-  it("clears local auth storage even when the POST fails (server error)", async () => {
+  it("clears local auth storage even when the server returns an error response", async () => {
     vi.mocked(storage.refreshTokenStorage.get).mockReturnValue("rt-abc");
     mockFetch(500, { statusCode: 500, message: ["Internal server error"] });
 
