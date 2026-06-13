@@ -38,6 +38,11 @@ function durationMins(b: ConsultationBooking): number {
   return Math.max(0, Math.round((new Date(b.endsAt).getTime() - new Date(b.startsAt).getTime()) / 60000));
 }
 
+function bookingClientName(b: ConsultationBooking): string {
+  const name = [b.clientFirstName, b.clientLastName].filter(Boolean).join(" ");
+  return name || "Client";
+}
+
 const BOOKING_STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
   [ConsultationBookingStatus.CONFIRMED]: { color: "var(--signal-ink)", bg: "var(--signal-soft)", label: "Confirmed" },
   [ConsultationBookingStatus.PENDING]: { color: "oklch(0.42 0.13 75)", bg: "var(--trainer-soft)", label: "Pending" },
@@ -175,8 +180,9 @@ export default function TrainerTodayClient() {
                         <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{format(start, "EEE d MMM")}</div>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{durationMins(b)} min session</div>
-                        {b.notes && <div className="text-[12px] truncate" style={{ color: "var(--fg-3)" }}>{b.notes}</div>}
+                        <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{bookingClientName(b)}</div>
+                        <div className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{durationMins(b)} min</div>
+                        {b.notes && <div className="text-[12px] truncate mt-0.5" style={{ color: "var(--fg-3)" }}>{b.notes}</div>}
                       </div>
                       <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st?.color, background: st?.bg, border: `1px solid ${st?.color ?? "var(--border)"}` }}>
                         <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st?.label ?? b.status}

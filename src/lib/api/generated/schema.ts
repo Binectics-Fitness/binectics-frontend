@@ -683,6 +683,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkins/organizations/{organizationId}/revenue-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get 30-day revenue timeseries and member acquisition for an organisation */
+        get: operations["CheckinsController_getOrgRevenueStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkins/scan": {
         parameters: {
             query?: never;
@@ -4926,6 +4943,13 @@ export interface components {
             /** @example https://res.cloudinary.com/.../w_200,h_200/.../image.jpg */
             thumbnail: string;
         };
+        OrgRevenueStatsDto: {
+            /** @example USD */
+            currency: string | null;
+            /** @example 12 */
+            new_members_count: number;
+            timeseries: components["schemas"]["RevenueTimeseriesItemDto"][];
+        };
         QuestionOptionDto: {
             /**
              * @description Option label
@@ -5004,6 +5028,14 @@ export interface components {
         RespondMarketplaceRequestDto: {
             /** @example Looking forward to working with you! */
             response_note?: string;
+        };
+        RevenueTimeseriesItemDto: {
+            /** @example USD */
+            currency: string;
+            /** @example 2026-05-14 */
+            date: string;
+            /** @example 7500 */
+            revenue_minor: number;
         };
         ScanCheckInDto: {
             /** @description Marketplace listing ID to check in to */
@@ -6347,6 +6379,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    CheckinsController_getOrgRevenueStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrgRevenueStatsDto"];
+                };
             };
         };
     };

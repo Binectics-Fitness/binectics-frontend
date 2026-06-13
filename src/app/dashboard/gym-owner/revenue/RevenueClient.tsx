@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
-import { checkinsService } from "@/lib/api/checkins";
+import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useRegion } from "@/contexts/RegionContext";
@@ -24,6 +24,7 @@ export default function RevenueClient() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { formatAmount } = useRegion();
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
+  const [revenueStats, setRevenueStats] = useState<OrgRevenueStats | null>(null);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,9 +34,10 @@ export default function RevenueClient() {
     let active = true;
     const run = async () => {
       setLoading(true);
-      const [statsRes, subsRes] = await Promise.allSettled([
+      const [statsRes, subsRes, revRes] = await Promise.allSettled([
         checkinsService.getOrgDashboardStats(currentOrg._id),
         marketplaceService.getOrgMembershipSubscriptions(currentOrg._id),
+        checkinsService.getOrgRevenueStats(currentOrg._id),
       ]);
       if (!active) return;
       let ok = false;
@@ -45,6 +47,9 @@ export default function RevenueClient() {
       }
       if (subsRes.status === "fulfilled" && subsRes.value.success && subsRes.value.data) {
         setSubs(subsRes.value.data);
+      }
+      if (revRes.status === "fulfilled" && revRes.value.success && revRes.value.data) {
+        setRevenueStats(revRes.value.data);
       }
       setError(ok ? null : "We couldn't load revenue. Try again shortly.");
       setLoading(false);
@@ -68,6 +73,16 @@ export default function RevenueClient() {
     return { rows: rows.slice(0, 6), sum };
   }, [subs]);
 
+  // Timeseries: filter to primary currency, fill sparse days
+  const timeseries = useMemo(() => {
+    if (!revenueStats || !revenueStats.currency) return [];
+    return revenueStats.timeseries
+      .filter((r) => r.currency === revenueStats.currency)
+      .map((r) => ({ date: r.date, value: r.revenue_minor / 100 }));
+  }, [revenueStats]);
+
+  const maxBar = useMemo(() => Math.max(...timeseries.map((r) => r.value), 1), [timeseries]);
+
   const kpis = stats
     ? [
         { label: "Revenue · 30d", value: formatAmount(stats.revenue_month) },
@@ -75,6 +90,7 @@ export default function RevenueClient() {
         { label: "Revenue · today", value: formatAmount(stats.revenue_today) },
         { label: "Active members", value: stats.active_members.toLocaleString() },
         { label: "Active subscriptions", value: activeSubs.length.toLocaleString() },
+        ...(revenueStats ? [{ label: "New members · 30d", value: revenueStats.new_members_count.toLocaleString() }] : []),
       ]
     : [];
 
@@ -110,6 +126,32 @@ export default function RevenueClient() {
               </div>
             ))}
           </div>
+
+          {/* Revenue timeseries */}
+          {timeseries.length > 0 && (
+            <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Daily revenue · 30d</h3>
+                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Settled transactions in {revenueStats?.currency ?? ""}</div>
+              </div>
+              <div className="px-4.5 py-4">
+                <div className="flex items-end gap-[3px] h-20">
+                  {timeseries.map((r) => (
+                    <div
+                      key={r.date}
+                      title={`${r.date}: ${formatAmount(r.value)}`}
+                      className="flex-1 rounded-t-[2px] min-h-[2px]"
+                      style={{ height: `${Math.max(2, (r.value / maxBar) * 80)}px`, background: "var(--signal)" }}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-between mt-1.5 font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>
+                  <span>{timeseries[0]?.date?.slice(5)}</span>
+                  <span>{timeseries[timeseries.length - 1]?.date?.slice(5)}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Revenue by plan */}
           <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>

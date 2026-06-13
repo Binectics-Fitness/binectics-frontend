@@ -1,5 +1,11 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
+import type {
+  CreateReviewDto,
+  CreateReviewReplyDto,
+  CreateReviewReportDto,
+  CreateProviderResponseDto,
+} from "./generated/types";
 
 export enum ReviewTargetType {
   GYM = "GYM",
@@ -66,31 +72,15 @@ export interface GetTargetReviewsResponse {
   };
 }
 
-export interface CreateReviewRequest {
-  targetType: ReviewTargetType;
-  targetId: string;
-  rating: number;
-  comment?: string;
-  sourceBookingId?: string;
-  sourceSubscriptionId?: string;
-}
+// Request types sourced from the generated OpenAPI contract — zero drift.
+export type CreateReviewRequest = CreateReviewDto;
+export type CreateReviewReplyRequest = CreateReviewReplyDto;
+export type CreateReviewReportRequest = CreateReviewReportDto;
+export type CreateProviderResponseRequest = CreateProviderResponseDto;
 
 export interface UpdateReviewRequest {
   rating?: number;
   comment?: string;
-}
-
-export interface CreateReviewReportRequest {
-  reason: string;
-  details?: string;
-}
-
-export interface CreateProviderResponseRequest {
-  message: string;
-}
-
-export interface CreateReviewReplyRequest {
-  message: string;
 }
 
 export const reviewsService = {

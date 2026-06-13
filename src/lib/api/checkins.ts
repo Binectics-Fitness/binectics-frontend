@@ -12,11 +12,11 @@ import type {
   MyCheckInStatus,
   OrgCheckInDashboardStats,
 } from "@/lib/types";
+import type { ScanCheckInDto, OrgRevenueStatsDto } from "./generated/types";
 
-export interface ScanCheckInRequest {
-  listing_id: string;
-  note?: string;
-}
+// Sourced from the generated OpenAPI contract — see src/lib/api/generated/types.ts.
+export type ScanCheckInRequest = ScanCheckInDto;
+export type OrgRevenueStats = OrgRevenueStatsDto;
 
 export const checkinsService = {
   /**
@@ -56,6 +56,13 @@ export const checkinsService = {
   ): Promise<ApiResponse<OrgCheckInDashboardStats>> =>
     apiClient.get<OrgCheckInDashboardStats>(
       `/checkins/organizations/${organizationId}/dashboard-stats`,
+    ),
+
+  getOrgRevenueStats: (
+    organizationId: string,
+  ): Promise<ApiResponse<OrgRevenueStats>> =>
+    apiClient.get<OrgRevenueStats>(
+      `/checkins/organizations/${organizationId}/revenue-stats`,
     ),
 
   /**
