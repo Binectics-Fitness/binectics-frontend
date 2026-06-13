@@ -90,15 +90,20 @@ function OnboardingContent() {
   const { user, updateUser } = useAuth();
   const { organizations, currentOrg, setCurrentOrg, refreshOrganizations, isLoading: orgLoading } = useOrganization();
 
-  // Read and immediately clear any role hint written during registration
-  // (set in login page when ?role=X was present in the signup URL).
-  const pendingRole = (() => {
-    try {
-      const v = sessionStorage.getItem("pendingRole") as RoleId | null;
-      if (v) sessionStorage.removeItem("pendingRole");
-      return v;
-    } catch { return null; }
-  })();
+  // Read the role hint written during registration (login page stores the
+  // ?role= URL param in sessionStorage before the verification redirect).
+  // Use a lazy useState initializer so it only runs once per mount — keeping
+  // the render body free of side effects. The removal is deferred to an effect.
+  const [pendingRole] = useState<RoleId | null>(() => {
+    try { return sessionStorage.getItem("pendingRole") as RoleId | null; }
+    catch { return null; }
+  });
+  useEffect(() => {
+    if (pendingRole) {
+      try { sessionStorage.removeItem("pendingRole"); } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const initialRole = (searchParams.get("role") as RoleId | null) ?? pendingRole;
   // All new users register as FITNESS_MEMBER (USER role). Don't pre-select
