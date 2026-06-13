@@ -3,13 +3,12 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { authService } from "@/lib/api/auth";
 import { loginSchema, registerSchema, type LoginFormData, type RegisterFormData } from "@/lib/schemas/auth";
-import { AccountType } from "@/lib/types";
 
 /**
  * Auth — auth.html prototype.
@@ -18,64 +17,6 @@ import { AccountType } from "@/lib/types";
  */
 
 type Panel = "login" | "2fa" | "signup" | "reset" | "reset-sent";
-
-const SIGNUP_ROLE_OPTIONS: Array<{
-  value: AccountType;
-  label: string;
-  hint: string;
-  color: string;
-  soft: string;
-}> = [
-  {
-    value: AccountType.FITNESS_MEMBER,
-    label: "Member",
-    hint: "Book and train",
-    color: "var(--consumer)",
-    soft: "var(--consumer-soft)",
-  },
-  {
-    value: AccountType.PERSONAL_TRAINER,
-    label: "Trainer",
-    hint: "Coach clients",
-    color: "var(--trainer)",
-    soft: "var(--trainer-soft)",
-  },
-  {
-    value: AccountType.DIETITIAN,
-    label: "Dietitian",
-    hint: "Nutrition plans",
-    color: "var(--dietitian)",
-    soft: "var(--dietitian-soft)",
-  },
-  {
-    value: AccountType.GYM_OWNER,
-    label: "Gym owner",
-    hint: "Manage locations",
-    color: "var(--gym)",
-    soft: "var(--gym-soft)",
-  },
-];
-
-// No default on purpose: the role determines what the account is, so a
-// signup without funnel context must choose explicitly rather than be
-// silently filed as a member.
-function parseSignupRole(rawRole: string | null): AccountType | undefined {
-  switch ((rawRole ?? "").toLowerCase()) {
-    case "trainer":
-    case "personal_trainer":
-      return AccountType.PERSONAL_TRAINER;
-    case "dietitian":
-      return AccountType.DIETITIAN;
-    case "gym":
-    case "gym_owner":
-      return AccountType.GYM_OWNER;
-    case "member":
-    case "fitness_member":
-      return AccountType.FITNESS_MEMBER;
-    default:
-      return undefined;
-  }
-}
 
 export default function AuthPage() {
   return (
@@ -89,7 +30,6 @@ function AuthContent() {
   const searchParams = useSearchParams();
   const { login, register: authRegister, isLoading: authLoading } = useAuth();
   const initialMode = searchParams.get("mode");
-  const initialSignupRole = parseSignupRole(searchParams.get("role"));
   const [panel, setPanel] = useState<Panel>(initialMode === "signup" ? "signup" : "login");
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -106,15 +46,10 @@ function AuthContent() {
 
   const { register: signupField, control: signupControl, handleSubmit: handleSignup, setValue: setSignupValue, formState: { errors: signupErrors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", role: initialSignupRole, acceptTos: false },
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", acceptTos: false },
   });
 
-  const signupRole = useWatch({ control: signupControl, name: "role" });
-  const signupAcceptTos = useWatch({
-    control: signupControl,
-    name: "acceptTos",
-    defaultValue: false,
-  });
+  const [signupAcceptTos, setSignupAcceptTos] = useState(false);
 
   const onSubmit = async (data: LoginFormData) => {
     setApiError("");
@@ -134,13 +69,17 @@ function AuthContent() {
   const onSignup = async (data: RegisterFormData) => {
     setApiError("");
     setIsLoading(true);
+    // Preserve the ?role= URL hint so the onboarding page can pre-select it.
+    const rawRole = searchParams.get("role");
+    if (rawRole) {
+      try { sessionStorage.setItem("pendingRole", rawRole); } catch { /* ignore */ }
+    }
     try {
       const result = await authRegister({
         first_name: data.firstName,
         last_name: data.lastName,
         email: data.email,
         password: data.password,
-        role: data.role,
         accept_tos: data.acceptTos,
       });
       if (!result.success) {
@@ -328,42 +267,6 @@ function AuthContent() {
                     </div>
                   )}
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                      Account type
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {SIGNUP_ROLE_OPTIONS.map((opt) => {
-                        const selected = signupRole === opt.value;
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setSignupValue("role", opt.value, { shouldValidate: true })}
-                            className="rounded-(--r-2) px-3 py-2.5 text-left min-h-11"
-                            style={{
-                              border: selected ? `1px solid ${opt.color}` : "1px solid var(--border)",
-                              background: selected ? opt.soft : "var(--bg)",
-                              color: "var(--ink)",
-                            }}
-                          >
-                            <div className="text-[13px] font-medium" style={{ letterSpacing: "-0.01em" }}>
-                              {opt.label}
-                            </div>
-                            <div className="font-mono text-[10px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>
-                              {opt.hint}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {signupErrors.role && (
-                      <p className="text-[12px]" style={{ color: "var(--danger)" }}>
-                        {signupErrors.role.message}
-                      </p>
-                    )}
-                  </div>
-
                   <div className="grid grid-cols-2 gap-3.5">
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name</label>
@@ -401,7 +304,7 @@ function AuthContent() {
                     </div>
                     {signupErrors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.confirmPassword.message}</p>}
                   </div>
-                  <button type="button" className="flex items-center gap-2 cursor-pointer text-left" onClick={() => setSignupValue("acceptTos", !signupAcceptTos, { shouldValidate: true })}>
+                  <button type="button" className="flex items-center gap-2 cursor-pointer text-left" onClick={() => { const next = !signupAcceptTos; setSignupAcceptTos(next); setSignupValue("acceptTos", next, { shouldValidate: true }); }}>
                     <span className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 ${signupAcceptTos ? "bg-ink border-ink" : ""}`} style={{ background: signupAcceptTos ? "var(--ink)" : "var(--bg)", borderColor: signupErrors.acceptTos ? "var(--danger)" : signupAcceptTos ? "var(--ink)" : "var(--border-2)" }}>
                       {signupAcceptTos && <span className="w-1.75 h-1 border-l-[1.5px] border-b-[1.5px] -rotate-45 -translate-y-px" style={{ borderColor: "var(--bg)" }} />}
                     </span>

@@ -5000,7 +5000,7 @@ export interface components {
              * @example fitness_member
              * @enum {string}
              */
-            role: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
+            role?: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
         };
         ReorderListingGalleryDto: {
             /**
