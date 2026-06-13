@@ -683,6 +683,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkins/organizations/{organizationId}/revenue-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get 30-day revenue timeseries and member acquisition for an organisation */
+        get: operations["CheckinsController_getOrgRevenueStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkins/scan": {
         parameters: {
             query?: never;
@@ -6332,6 +6349,25 @@ export interface operations {
         };
     };
     CheckinsController_getOrgDashboardStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CheckinsController_getOrgRevenueStats: {
         parameters: {
             query?: never;
             header?: never;

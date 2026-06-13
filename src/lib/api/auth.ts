@@ -11,6 +11,7 @@ import type {
   RegisterRequest,
   ApiResponse,
 } from "@/lib/types";
+import type { VerifyOtpDto, ResendOtpDto } from "./generated/types";
 import {
   userStorage,
   refreshTokenStorage,
@@ -43,18 +44,13 @@ export interface VerifyEmailRequest {
   token: string;
 }
 
-export interface VerifyOtpRequest {
-  email: string;
-  otp: string;
-}
+// Sourced from the generated OpenAPI contract — see src/lib/api/generated/types.ts.
+export type VerifyOtpRequest = VerifyOtpDto;
+export type ResendOtpRequest = ResendOtpDto;
 
 export interface ProfilePictureResponse {
   profile_picture: string | null;
   profile_picture_public_id: string | null;
-}
-
-export interface ResendOtpRequest {
-  email: string;
 }
 
 /**

@@ -19,14 +19,27 @@ import type { components } from "./schema";
 
 type Schemas = components["schemas"];
 
-/* ── Request DTOs ──────────────────────────────────────────────────────── */
+/* ── Auth ──────────────────────────────────────────────────────────────── */
 export type LoginDto = Schemas["LoginDto"];
 export type RegisterDto = Schemas["RegisterDto"];
 export type RefreshTokenDto = Schemas["RefreshTokenDto"];
+export type VerifyOtpDto = Schemas["VerifyOtpDto"];
+export type ResendOtpDto = Schemas["ResendOtpDto"];
+
+/* ── Consultations ─────────────────────────────────────────────────────── */
 export type CreateBookingDto = Schemas["CreateBookingDto"];
 export type RescheduleBookingDto = Schemas["RescheduleBookingDto"];
 export type CancelBookingDto = Schemas["CancelBookingDto"];
 export type CompleteBookingDto = Schemas["CompleteBookingDto"];
+
+/* ── Check-ins ─────────────────────────────────────────────────────────── */
+export type ScanCheckInDto = Schemas["ScanCheckInDto"];
+
+/* ── Reviews ───────────────────────────────────────────────────────────── */
+export type CreateReviewDto = Schemas["CreateReviewDto"];
+export type CreateReviewReplyDto = Schemas["CreateReviewReplyDto"];
+export type CreateReviewReportDto = Schemas["CreateReviewReportDto"];
+export type CreateProviderResponseDto = Schemas["CreateProviderResponseDto"];
 
 /* ── Reference data ────────────────────────────────────────────────────── */
 export type CountryDto = Schemas["CountryDto"];
