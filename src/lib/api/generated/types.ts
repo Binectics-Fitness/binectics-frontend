@@ -34,6 +34,8 @@ export type CompleteBookingDto = Schemas["CompleteBookingDto"];
 
 /* ── Check-ins ─────────────────────────────────────────────────────────── */
 export type ScanCheckInDto = Schemas["ScanCheckInDto"];
+export type OrgRevenueStatsDto = Schemas["OrgRevenueStatsDto"];
+export type RevenueTimeseriesItemDto = Schemas["RevenueTimeseriesItemDto"];
 
 /* ── Reviews ───────────────────────────────────────────────────────────── */
 export type CreateReviewDto = Schemas["CreateReviewDto"];

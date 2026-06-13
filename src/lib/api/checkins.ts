@@ -12,16 +12,11 @@ import type {
   MyCheckInStatus,
   OrgCheckInDashboardStats,
 } from "@/lib/types";
-import type { ScanCheckInDto } from "./generated/types";
+import type { ScanCheckInDto, OrgRevenueStatsDto } from "./generated/types";
 
 // Sourced from the generated OpenAPI contract — see src/lib/api/generated/types.ts.
 export type ScanCheckInRequest = ScanCheckInDto;
-
-export interface OrgRevenueStats {
-  timeseries: Array<{ date: string; revenue_minor: number; currency: string }>;
-  new_members_count: number;
-  currency: string | null;
-}
+export type OrgRevenueStats = OrgRevenueStatsDto;
 
 export const checkinsService = {
   /**
