@@ -69,7 +69,7 @@ export interface RegisterRequest {
   password: string;
   first_name: string;
   last_name: string;
-  role: AccountType;
+  role?: AccountType;
   accept_tos: boolean;
   phone?: string;
   phone_number?: string;

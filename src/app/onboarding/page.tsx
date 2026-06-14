@@ -89,8 +89,29 @@ function OnboardingContent() {
   const searchParams = useSearchParams();
   const { user, updateUser } = useAuth();
   const { organizations, currentOrg, setCurrentOrg, refreshOrganizations, isLoading: orgLoading } = useOrganization();
-  const initialRole = searchParams.get("role") as RoleId | null;
-  const accountRole = (user?.role && ACCOUNT_ROLE_TO_ID[user.role]) || null;
+
+  // Read the role hint written during registration (login page stores the
+  // ?role= URL param in sessionStorage before the verification redirect).
+  // Use a lazy useState initializer so it only runs once per mount — keeping
+  // the render body free of side effects. The removal is deferred to an effect.
+  const [pendingRole] = useState<RoleId | null>(() => {
+    try { return sessionStorage.getItem("pendingRole") as RoleId | null; }
+    catch { return null; }
+  });
+  useEffect(() => {
+    if (pendingRole) {
+      try { sessionStorage.removeItem("pendingRole"); } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const initialRole = (searchParams.get("role") as RoleId | null) ?? pendingRole;
+  // All new users register as FITNESS_MEMBER (USER role). Don't pre-select
+  // "member" from accountRole — that would skip step 0 for everyone.
+  // Only pre-select from accountRole if the user already has a non-default role
+  // (i.e. they're mid-onboarding with a role already promoted by createOrganization).
+  const accountRole =
+    user?.role && user.role !== "USER" ? (ACCOUNT_ROLE_TO_ID[user.role] ?? null) : null;
   const preselected = (initialRole && VALID_ROLES.includes(initialRole) ? initialRole : null) ?? accountRole;
 
   const [manualRole, setManualRole] = useState<RoleId | null>(preselected);
@@ -180,6 +201,16 @@ function OnboardingContent() {
       };
       window.location.href = routes[role];
     }
+  };
+
+  const handleSaveAndFinishLater = () => {
+    const routes: Record<RoleId, string> = {
+      member: "/member",
+      trainer: "/dashboard/trainer",
+      gym: "/dashboard/gym-owner",
+      dietitian: "/dashboard/dietitian",
+    };
+    window.location.href = role ? routes[role] : "/member";
   };
 
   const handleBack = () => {
@@ -366,7 +397,7 @@ function OnboardingContent() {
             Progress <strong style={{ color: "var(--ink)", fontWeight: 500 }}>· {progress}%</strong> — about {minsLeft} min left
           </div>
           <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
-            <button type="button" className="btn-ghost-v2 sm">Save & finish later</button>
+            <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveAndFinishLater}>Save & finish later</button>
             {(step > 1 || (step === 1 && !accountRole)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
             <button
               type="button"
