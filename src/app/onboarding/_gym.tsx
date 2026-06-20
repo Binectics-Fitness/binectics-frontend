@@ -52,7 +52,7 @@ export function GymStep3({ data, setField }: StepProps) {
   );
 }
 
-export function GymStep4({ data, setField }: StepProps) {
+export function GymStep4({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 04 of 08 — gym track" title="Verification documents." desc="We'll review within 48h. Most gyms are approved on the first pass." />
@@ -63,6 +63,8 @@ export function GymStep4({ data, setField }: StepProps) {
           folder="gyms/verification"
           value={data.doc_reg as string | undefined}
           onUpload={(r) => setField("doc_reg", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
         <UploadZone
           title="Tax registration"
@@ -70,6 +72,8 @@ export function GymStep4({ data, setField }: StepProps) {
           folder="gyms/verification"
           value={data.doc_tax as string | undefined}
           onUpload={(r) => setField("doc_tax", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
         <UploadZone
           title="Owner ID"
@@ -77,6 +81,8 @@ export function GymStep4({ data, setField }: StepProps) {
           folder="gyms/verification"
           value={data.doc_id as string | undefined}
           onUpload={(r) => setField("doc_id", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
       </div>
     </>

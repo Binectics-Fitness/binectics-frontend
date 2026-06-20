@@ -44,7 +44,7 @@ export function TrainerStep2({ data, setField }: StepProps) {
   );
 }
 
-export function TrainerStep3({ data, setField }: StepProps) {
+export function TrainerStep3({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 03 of 06 — trainer track" title="Upload your certifications." desc="Verified providers convert 3.4x better. We re-check every 24 months." />
@@ -55,6 +55,8 @@ export function TrainerStep3({ data, setField }: StepProps) {
           folder="teams/documents"
           value={data.doc_cert as string | undefined}
           onUpload={(r) => setField("doc_cert", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
         <UploadZone
           title="Public liability insurance"
@@ -62,6 +64,8 @@ export function TrainerStep3({ data, setField }: StepProps) {
           folder="teams/documents"
           value={data.doc_insurance as string | undefined}
           onUpload={(r) => setField("doc_insurance", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
         <UploadZone
           title="ID document"
@@ -69,6 +73,8 @@ export function TrainerStep3({ data, setField }: StepProps) {
           folder="teams/documents"
           value={data.doc_id as string | undefined}
           onUpload={(r) => setField("doc_id", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
       </div>
     </>

@@ -17,7 +17,7 @@ import { TRAINER_STEPS } from "./_trainer";
 import { GYM_STEPS } from "./_gym";
 import { DIETITIAN_STEPS } from "./_dietitian";
 
-const STEP_RENDERERS: Record<RoleId, React.ComponentType<{ data: Record<string, unknown>; setField: (k: string, v: unknown) => void }>[]> = {
+const STEP_RENDERERS: Record<RoleId, React.ComponentType<{ data: Record<string, unknown>; setField: (k: string, v: unknown) => void; onUploadStart?: () => void; onUploadEnd?: () => void }>[]> = {
   member: MEMBER_STEPS,
   trainer: TRAINER_STEPS,
   gym: GYM_STEPS,
@@ -107,6 +107,7 @@ function OnboardingContent() {
   const [data, setData] = useState<Record<string, unknown>>({});
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSavingLater, setIsSavingLater] = useState(false);
+  const [uploadCount, setUploadCount] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const creatingWorkspaceRef = useRef(false);
 
@@ -170,17 +171,17 @@ function OnboardingContent() {
     try {
       if (currentStep === 1) {
         // Business details: patch org name + business fields
-        const patch: Record<string, unknown> = {};
+        const patch: import("@/lib/api/teams").UpdateOrganizationRequest = {};
         if (stepData.bizName) patch.name = stepData.bizName as string;
         if (stepData.entity) patch.legal_entity = stepData.entity as string;
         if (stepData.regNumber) patch.registration_number = stepData.regNumber as string;
         if (Object.keys(patch).length > 0) {
-          await teamsService.updateOrganization(orgId, patch as Parameters<typeof teamsService.updateOrganization>[1]);
+          await teamsService.updateOrganization(orgId, patch);
         }
       } else if (currentStep === 2) {
-        // First location
-        if (stepData.locName) {
-          await teamsService.createLocation(orgId, {
+        // First location — guard against duplicate creation on Back+Continue
+        if (stepData.locName && !stepData.locationId) {
+          const locRes = await teamsService.createLocation(orgId, {
             name: stepData.locName as string,
             street: stepData.street as string | undefined,
             city: stepData.city as string | undefined,
@@ -188,26 +189,39 @@ function OnboardingContent() {
             country: stepData.country as string | undefined,
             is_primary: true,
           });
+          const locId = (locRes.data as { _id?: string; id?: string } | undefined)?._id ?? (locRes.data as { _id?: string; id?: string } | undefined)?.id;
+          if (locRes.success && locId) {
+            setField('locationId', locId);
+          }
+        } else if (stepData.locName && stepData.locationId) {
+          await teamsService.updateLocation(orgId, stepData.locationId as string, {
+            name: stepData.locName as string,
+            street: stepData.street as string | undefined,
+            city: stepData.city as string | undefined,
+            postal_code: stepData.postalCode as string | undefined,
+            country: stepData.country as string | undefined,
+          });
         }
       } else if (currentStep === 3) {
-        // Membership plan template
+        // Membership plan template — guard against re-seeding on Back+Continue
         const template = (stepData.planTemplate as string) || 'standard';
-        if (template !== 'blank') {
+        if (template !== 'blank' && !stepData.planSeeded) {
           await teamsService.seedMembershipPlanTemplate(orgId, template);
+          setField('planSeeded', true);
         }
       } else if (currentStep === 5) {
         // Payout gateway
         if (stepData.payout && stepData.payout !== 'skip') {
           await teamsService.updateOrganization(orgId, {
             preferred_payout_gateway: stepData.payout as string,
-          } as Parameters<typeof teamsService.updateOrganization>[1]);
+          });
         }
       } else if (currentStep === 6) {
         // Kiosk preference
         if (stepData.kiosk) {
           await teamsService.updateOrganization(orgId, {
             kiosk_preference: stepData.kiosk as string,
-          } as Parameters<typeof teamsService.updateOrganization>[1]);
+          });
         }
       } else if (currentStep === 7) {
         // Staff invites
@@ -321,10 +335,14 @@ function OnboardingContent() {
   const handleSaveLater = async () => {
     setIsSavingLater(true);
     try {
-      if (currentOrg && data.bizName) {
-        await teamsService.updateOrganization(currentOrg._id, {
-          name: data.bizName as string,
-        });
+      if (role === 'gym' && currentOrg?._id) {
+        await persistGymStep(step, data, currentOrg._id);
+      } else if (role === 'trainer' && currentOrg?._id) {
+        await persistTrainerStep(step, data, currentOrg._id);
+      } else if (role === 'member') {
+        await persistMemberStep(step, data);
+      } else if (role === 'dietitian') {
+        await persistDietitianStep(step, data, currentOrg?._id ?? '');
       }
     } catch {
       // non-blocking — still redirect
@@ -375,7 +393,14 @@ function OnboardingContent() {
     const renderers = STEP_RENDERERS[role];
     const StepComponent = renderers[step - 1];
     if (!StepComponent) return null;
-    return <StepComponent data={data} setField={setField} />;
+    return (
+      <StepComponent
+        data={data}
+        setField={setField}
+        onUploadStart={() => setUploadCount((c) => c + 1)}
+        onUploadEnd={() => setUploadCount((c) => Math.max(0, c - 1))}
+      />
+    );
   };
 
   return (
@@ -518,16 +543,16 @@ function OnboardingContent() {
             Progress <strong style={{ color: "var(--ink)", fontWeight: 500 }}>· {progress}%</strong> — about {minsLeft} min left
           </div>
           <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
-            <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater}>
+            <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater || uploadCount > 0}>
               {isSavingLater ? "Saving..." : "Save & finish later"}
             </button>
             {(step > 1 || (step === 1 && !accountRole)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
             <button
               type="button"
-              disabled={(step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member")}
+              disabled={(step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member") || uploadCount > 0}
               onClick={handleContinue}
               className="btn-primary-v2 sm"
-              style={{ opacity: (step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member") ? 0.4 : 1 }}
+              style={{ opacity: (step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member") || uploadCount > 0 ? 0.4 : 1 }}
             >
               {step >= totalSteps
                 ? isFinishing

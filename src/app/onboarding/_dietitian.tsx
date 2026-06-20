@@ -26,7 +26,7 @@ export function DietStep1({ data, setField }: StepProps) {
   );
 }
 
-export function DietStep2({ data, setField }: StepProps) {
+export function DietStep2({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 02 of 06 — dietitian track" title="Licensure." desc="Dietitians are licensed practitioners — we verify against the regulatory body." />
@@ -37,6 +37,8 @@ export function DietStep2({ data, setField }: StepProps) {
           folder="teams/documents"
           value={data.doc_license as string | undefined}
           onUpload={(r) => setField("doc_license", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
         <UploadZone
           title="Highest qualification"
@@ -44,6 +46,8 @@ export function DietStep2({ data, setField }: StepProps) {
           folder="teams/documents"
           value={data.doc_qualification as string | undefined}
           onUpload={(r) => setField("doc_qualification", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
         <UploadZone
           title="Professional indemnity"
@@ -51,6 +55,8 @@ export function DietStep2({ data, setField }: StepProps) {
           folder="teams/documents"
           value={data.doc_indemnity as string | undefined}
           onUpload={(r) => setField("doc_indemnity", r.url)}
+          onUploadStart={onUploadStart}
+          onUploadEnd={onUploadEnd}
         />
       </div>
     </>

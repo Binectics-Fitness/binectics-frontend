@@ -2,10 +2,13 @@
 
 import { useId, useState, useRef } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
+import { apiClient } from "@/lib/api/client";
 
 export interface StepProps {
   data: Record<string, unknown>;
   setField: (key: string, value: unknown) => void;
+  onUploadStart?: () => void;
+  onUploadEnd?: () => void;
 }
 
 /* ── Field wrapper ────────────────────────────────────────── */
@@ -186,6 +189,8 @@ export function UploadZone({
   folder,
   onUpload,
   value,
+  onUploadStart,
+  onUploadEnd,
 }: {
   title: string;
   hint: string;
@@ -193,6 +198,8 @@ export function UploadZone({
   folder?: string;
   onUpload?: (result: { url: string; publicId: string }) => void;
   value?: string;
+  onUploadStart?: () => void;
+  onUploadEnd?: () => void;
 }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -208,22 +215,24 @@ export function UploadZone({
     if (!file || !folder || !onUpload) return;
     setUploading(true);
     setError(null);
+    onUploadStart?.();
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", folder);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/upload/document`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json() as { url?: string; publicId?: string; secure_url?: string };
-      onUpload({ url: data.url ?? data.secure_url ?? "", publicId: data.publicId ?? "" });
+      const res = await apiClient.postFormData<{ url?: string; secure_url?: string; publicId?: string }>(
+        "/upload/document",
+        formData,
+      );
+      if (!res.success) throw new Error(res.message ?? "Upload failed");
+      const url = res.data?.url ?? res.data?.secure_url ?? "";
+      const publicId = res.data?.publicId ?? "";
+      onUpload({ url, publicId });
     } catch {
       setError("Upload failed — please try again");
     } finally {
       setUploading(false);
+      onUploadEnd?.();
       if (inputRef.current) inputRef.current.value = "";
     }
   };
