@@ -11,7 +11,7 @@ import type {
   RegisterRequest,
   ApiResponse,
 } from "@/lib/types";
-import { userStorage, clearAuthStorage } from "@/lib/utils/storage";
+import { userStorage, clearAuthStorage, tokenStorage } from "@/lib/utils/storage";
 
 export interface LoginResponse {
   user: User;
@@ -52,6 +52,15 @@ export interface ResendOtpRequest {
   email: string;
 }
 
+function extractJwtExp(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload?.exp === 'number' ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Authentication Service
  */
@@ -69,6 +78,10 @@ export const authService = {
     if (response.success && response.data) {
       // Tokens are now httpOnly cookies set by the server — just store UI state.
       userStorage.set(response.data.user);
+      if (response.data.access_token) {
+        const exp = extractJwtExp(response.data.access_token);
+        if (exp) tokenStorage.setExpiry(exp * 1000);
+      }
     } else {
       clearAuthStorage();
     }
@@ -159,7 +172,12 @@ export const authService = {
    */
   async refreshToken(): Promise<ApiResponse<AuthTokens>> {
     // Refresh token is an httpOnly cookie — send empty body; cookie is included automatically.
-    return apiClient.post<AuthTokens>("/auth/refresh", {}, false);
+    const response = await apiClient.post<AuthTokens>("/auth/refresh", {}, false);
+    if (response.success && response.data?.access_token) {
+      const exp = extractJwtExp(response.data.access_token);
+      if (exp) tokenStorage.setExpiry(exp * 1000);
+    }
+    return response;
   },
 
   /**

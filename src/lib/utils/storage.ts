@@ -43,6 +43,19 @@ export const tokenStorage = {
   remove(): void {
     /* server clears the cookie on logout */
   },
+  getExpiry(): number | null {
+    if (!isBrowser()) return null;
+    const v = localStorage.getItem('access_token_expiry');
+    return v ? parseInt(v, 10) : null;
+  },
+  setExpiry(expiresAtMs: number): void {
+    if (!isBrowser()) return;
+    localStorage.setItem('access_token_expiry', String(expiresAtMs));
+  },
+  removeExpiry(): void {
+    if (!isBrowser()) return;
+    localStorage.removeItem('access_token_expiry');
+  },
 };
 
 /**
@@ -132,6 +145,7 @@ export const userStorage = {
  */
 export function clearAuthStorage(): void {
   tokenStorage.remove();
+  tokenStorage.removeExpiry();
   refreshTokenStorage.remove();
   userStorage.remove();
 }
@@ -140,5 +154,5 @@ export function clearAuthStorage(): void {
  * Check if user is authenticated (has valid token)
  */
 export function isAuthenticated(): boolean {
-  return !!tokenStorage.get();
+  return userStorage.get() !== null;
 }

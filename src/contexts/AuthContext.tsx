@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import { authService } from "@/lib/api/auth";
 import { getDashboardRoute, getLoginRoute, getOnboardingRoute } from "@/lib/constants/routes";
 import { tokenStorage } from "@/lib/utils/storage";
-import { apiClient } from "@/lib/api/client";
 import SessionModal from "@/components/SessionModal";
 import type { User, LoginRequest, RegisterRequest } from "@/lib/types";
 
@@ -35,22 +34,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Parse JWT to get expiration time
-function parseJWT(token: string): { exp?: number } | null {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join(""),
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -83,15 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const token = tokenStorage.get();
-    if (!token) return;
+    const expiresAt = tokenStorage.getExpiry();
+    if (!expiresAt) return;
 
-    const payload = parseJWT(token);
-    if (!payload?.exp) return;
-
-    const expiryTime = payload.exp * 1000; // Convert to milliseconds
     const now = Date.now();
-    const timeUntilExpiry = expiryTime - now;
+    const timeUntilExpiry = expiresAt - now;
 
     // Auto-refresh 5 minutes before expiry
     const autoRefreshTime = timeUntilExpiry - 5 * 60 * 1000;
@@ -102,11 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const attemptAutoRefresh = async () => {
       const response = await authService.refreshToken();
       if (response.success && response.data) {
-        apiClient.storeTokens(
-          response.data.access_token,
-          response.data.refresh_token,
-          response.data.refresh_token_expires_at,
-        );
         // Force re-run of this effect by updating user (triggers new timeout)
         const currentUser = authService.getCurrentUser();
         if (currentUser) setUser(currentUser);
@@ -130,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSessionEnded(true);
       }, timeUntilExpiry);
     } else {
-      // Token already expired — try refreshing before giving up
+      // Expiry already passed — try refreshing before giving up
       attemptAutoRefresh();
     }
 
@@ -148,13 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authService.refreshToken();
 
     if (response.success && response.data) {
-      // Token refreshed successfully - update with new token
-      apiClient.storeTokens(
-        response.data.access_token,
-        response.data.refresh_token,
-        response.data.refresh_token_expires_at,
-      );
-      // Re-trigger session monitoring
+      // Token refreshed successfully - re-trigger session monitoring
       const currentUser = authService.getCurrentUser();
       if (currentUser) setUser(currentUser);
     } else {
