@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { teamsService } from "@/lib/api/teams";
 import { onboardingService } from "@/lib/api/onboarding";
+import { authService } from "@/lib/api/auth";
 import { AccountType } from "@/lib/types";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
 import { StageHead } from "./_components";
@@ -56,6 +57,13 @@ export default function OnboardingPage() {
 
 const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 
+const ROLE_DASHBOARD_ROUTES: Record<RoleId, string> = {
+  member: "/member",
+  trainer: "/dashboard/trainer",
+  gym: "/dashboard/gym-owner",
+  dietitian: "/dashboard/dietitian",
+};
+
 // Role is chosen once, at registration. When the account already carries it,
 // onboarding skips its role-selection step instead of asking again.
 const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
@@ -98,6 +106,7 @@ function OnboardingContent() {
   const [step, setStep] = useState(preselected ? 1 : 0);
   const [data, setData] = useState<Record<string, unknown>>({});
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isSavingLater, setIsSavingLater] = useState(false);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const creatingWorkspaceRef = useRef(false);
 
@@ -157,10 +166,143 @@ function OnboardingContent() {
     if (step === 0) setStep(1);
   };
 
+  const persistGymStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
+    try {
+      if (currentStep === 1) {
+        // Business details: patch org name + business fields
+        const patch: Record<string, unknown> = {};
+        if (stepData.bizName) patch.name = stepData.bizName as string;
+        if (stepData.entity) patch.legal_entity = stepData.entity as string;
+        if (stepData.regNumber) patch.registration_number = stepData.regNumber as string;
+        if (Object.keys(patch).length > 0) {
+          await teamsService.updateOrganization(orgId, patch as Parameters<typeof teamsService.updateOrganization>[1]);
+        }
+      } else if (currentStep === 2) {
+        // First location
+        if (stepData.locName) {
+          await teamsService.createLocation(orgId, {
+            name: stepData.locName as string,
+            street: stepData.street as string | undefined,
+            city: stepData.city as string | undefined,
+            postal_code: stepData.postalCode as string | undefined,
+            country: stepData.country as string | undefined,
+            is_primary: true,
+          });
+        }
+      } else if (currentStep === 3) {
+        // Membership plan template
+        const template = (stepData.planTemplate as string) || 'standard';
+        if (template !== 'blank') {
+          await teamsService.seedMembershipPlanTemplate(orgId, template);
+        }
+      } else if (currentStep === 5) {
+        // Payout gateway
+        if (stepData.payout && stepData.payout !== 'skip') {
+          await teamsService.updateOrganization(orgId, {
+            preferred_payout_gateway: stepData.payout as string,
+          } as Parameters<typeof teamsService.updateOrganization>[1]);
+        }
+      } else if (currentStep === 6) {
+        // Kiosk preference
+        if (stepData.kiosk) {
+          await teamsService.updateOrganization(orgId, {
+            kiosk_preference: stepData.kiosk as string,
+          } as Parameters<typeof teamsService.updateOrganization>[1]);
+        }
+      } else if (currentStep === 7) {
+        // Staff invites
+        const emails = ((stepData.staffEmails as string) || '')
+          .split('\n')
+          .map((e) => e.trim())
+          .filter(Boolean);
+        if (emails.length > 0) {
+          const rolesRes = await teamsService.getRoles(orgId);
+          const roles = rolesRes.data ?? [];
+          // Map chip label to role code: "Coach (manager)" → manager, "Front desk" → assistant, default → consultant
+          const selectedChips = (stepData.staffRoles as string[]) ?? [];
+          const primaryChip = selectedChips[0] ?? '';
+          let targetCode = 'consultant';
+          if (primaryChip.toLowerCase().includes('manager')) targetCode = 'manager';
+          else if (primaryChip.toLowerCase().includes('front desk') || primaryChip.toLowerCase().includes('assistant')) targetCode = 'assistant';
+          const role = roles.find((r) => r.code === targetCode) ?? roles.find((r) => r.code === 'consultant') ?? roles[0];
+          if (role) {
+            await Promise.allSettled(
+              emails.map((email) =>
+                teamsService.inviteMember(orgId, { email, team_role_id: role._id }),
+              ),
+            );
+          }
+        }
+      }
+    } catch {
+      // Non-blocking: step data save failures don't block navigation
+    }
+  }, []);
+
+  const persistTrainerStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
+    try {
+      if (currentStep === 1) {
+        const patch: Record<string, unknown> = {};
+        if (stepData.firstName) patch.first_name = stepData.firstName;
+        if (stepData.lastName) patch.last_name = stepData.lastName;
+        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
+      } else if (currentStep === 5) {
+        if (stepData.payout && orgId) {
+          await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
+        }
+      }
+    } catch { /* non-blocking */ }
+  }, []);
+
+  const persistMemberStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>) => {
+    try {
+      if (currentStep === 1) {
+        const goal = stepData.goal as string;
+        if (goal) await authService.updateProfile({ fitness_goals: [goal] });
+      } else if (currentStep === 2) {
+        const providerTypes = stepData.providerTypes as string[];
+        if (providerTypes?.length) await authService.updateProfile({ preferred_activities: providerTypes });
+      }
+    } catch { /* non-blocking */ }
+  }, []);
+
+  const persistDietitianStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
+    try {
+      if (currentStep === 1) {
+        const fullName = (stepData.fullName as string || "").replace(/^(Dr\.?|Prof\.?)\s*/i, "").trim();
+        const parts = fullName.split(/\s+/).filter(Boolean);
+        const patch: Record<string, unknown> = {};
+        if (parts.length >= 2) {
+          patch.first_name = parts.slice(0, -1).join(" ");
+          patch.last_name = parts[parts.length - 1];
+        } else if (parts.length === 1) {
+          patch.first_name = parts[0];
+        }
+        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
+        if (stepData.practiceName && orgId) {
+          await teamsService.updateOrganization(orgId, { name: stepData.practiceName as string });
+        }
+      } else if (currentStep === 5) {
+        if (stepData.payout && orgId) {
+          await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
+        }
+      }
+    } catch { /* non-blocking */ }
+  }, []);
+
   const handleContinue = async () => {
     if (step === 0 && role) {
       setStep(1);
     } else if (step < totalSteps) {
+      if (role === "gym" && currentOrg) {
+        await persistGymStep(step, data, currentOrg._id);
+      } else if (role === "trainer" && currentOrg) {
+        await persistTrainerStep(step, data, currentOrg._id);
+      } else if (role === "member") {
+        await persistMemberStep(step, data);
+      } else if (role === "dietitian") {
+        await persistDietitianStep(step, data, currentOrg?._id ?? "");
+      }
       setStep(step + 1);
     } else if (role) {
       setIsFinishing(true);
@@ -172,14 +314,24 @@ function OnboardingContent() {
       if (user) {
         updateUser({ ...user, is_onboarding_complete: true });
       }
-      const routes: Record<RoleId, string> = {
-        member: "/member",
-        trainer: "/dashboard/trainer",
-        gym: "/dashboard/gym-owner",
-        dietitian: "/dashboard/dietitian",
-      };
-      window.location.href = routes[role];
+      window.location.href = ROLE_DASHBOARD_ROUTES[role];
     }
+  };
+
+  const handleSaveLater = async () => {
+    setIsSavingLater(true);
+    try {
+      if (currentOrg && data.bizName) {
+        await teamsService.updateOrganization(currentOrg._id, {
+          name: data.bizName as string,
+        });
+      }
+    } catch {
+      // non-blocking — still redirect
+    } finally {
+      setIsSavingLater(false);
+    }
+    window.location.href = role ? ROLE_DASHBOARD_ROUTES[role] : "/member";
   };
 
   const handleBack = () => {
@@ -366,7 +518,9 @@ function OnboardingContent() {
             Progress <strong style={{ color: "var(--ink)", fontWeight: 500 }}>· {progress}%</strong> — about {minsLeft} min left
           </div>
           <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
-            <button type="button" className="btn-ghost-v2 sm">Save & finish later</button>
+            <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater}>
+              {isSavingLater ? "Saving..." : "Save & finish later"}
+            </button>
             {(step > 1 || (step === 1 && !accountRole)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
             <button
               type="button"

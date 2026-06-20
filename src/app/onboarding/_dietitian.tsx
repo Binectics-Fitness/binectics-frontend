@@ -26,14 +26,32 @@ export function DietStep1({ data, setField }: StepProps) {
   );
 }
 
-export function DietStep2() {
+export function DietStep2({ data, setField }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 02 of 06 — dietitian track" title="Licensure." desc="Dietitians are licensed practitioners — we verify against the regulatory body." />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <UploadZone title="Registered Dietitian license" hint="DAN (Nigeria) · HPCSA (SA) · CDR (US) etc." />
-        <UploadZone title="Highest qualification" hint="BSc Dietetics · MSc Clinical Nutrition · PhD etc." />
-        <UploadZone title="Professional indemnity" hint="Minimum cover varies by country" />
+        <UploadZone
+          title="Registered Dietitian license"
+          hint="DAN (Nigeria) · HPCSA (SA) · CDR (US) etc."
+          folder="teams/documents"
+          value={data.doc_license as string | undefined}
+          onUpload={(r) => setField("doc_license", r.url)}
+        />
+        <UploadZone
+          title="Highest qualification"
+          hint="BSc Dietetics · MSc Clinical Nutrition · PhD etc."
+          folder="teams/documents"
+          value={data.doc_qualification as string | undefined}
+          onUpload={(r) => setField("doc_qualification", r.url)}
+        />
+        <UploadZone
+          title="Professional indemnity"
+          hint="Minimum cover varies by country"
+          folder="teams/documents"
+          value={data.doc_indemnity as string | undefined}
+          onUpload={(r) => setField("doc_indemnity", r.url)}
+        />
       </div>
     </>
   );

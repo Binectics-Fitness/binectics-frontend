@@ -52,14 +52,32 @@ export function GymStep3({ data, setField }: StepProps) {
   );
 }
 
-export function GymStep4() {
+export function GymStep4({ data, setField }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 04 of 08 — gym track" title="Verification documents." desc="We'll review within 48h. Most gyms are approved on the first pass." />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <UploadZone title="Business registration certificate" hint="PDF or photo · max 10 MB" />
-        <UploadZone title="Tax registration" hint="VAT number proof if registered" />
-        <UploadZone title="Owner ID" hint="South African ID or passport" />
+        <UploadZone
+          title="Business registration certificate"
+          hint="PDF or photo · max 10 MB"
+          folder="gyms/verification"
+          value={data.doc_reg as string | undefined}
+          onUpload={(r) => setField("doc_reg", r.url)}
+        />
+        <UploadZone
+          title="Tax registration"
+          hint="VAT number proof if registered"
+          folder="gyms/verification"
+          value={data.doc_tax as string | undefined}
+          onUpload={(r) => setField("doc_tax", r.url)}
+        />
+        <UploadZone
+          title="Owner ID"
+          hint="South African ID or passport"
+          folder="gyms/verification"
+          value={data.doc_id as string | undefined}
+          onUpload={(r) => setField("doc_id", r.url)}
+        />
       </div>
     </>
   );
@@ -136,7 +154,7 @@ export function GymStep8({ data }: StepProps) {
     { k: "Business", v: (data.bizName as string) || "—" },
     { k: "First location", v: (data.locName as string) || "—" },
     { k: "Plans", v: PLAN_DISPLAY[planId] || "—" },
-    { k: "Documents", v: "3 uploaded", signal: true },
+    { k: "Documents", v: [data.doc_reg, data.doc_tax, data.doc_id].filter(Boolean).length + " uploaded", signal: true },
     { k: "Payments", v: (data.payout as string) || "—", signal: true },
     { k: "Staff invites", v: ((data.staffEmails as string) || "").split("\n").filter(Boolean).length + " emails" },
   ];

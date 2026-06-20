@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState, useRef } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 
 export interface StepProps {
@@ -183,48 +183,105 @@ export function UploadZone({
   title,
   hint,
   done,
+  folder,
+  onUpload,
+  value,
 }: {
   title: string;
   hint: string;
   done?: boolean;
+  folder?: string;
+  onUpload?: (result: { url: string; publicId: string }) => void;
+  value?: string;
 }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isDone = done || !!value;
+
+  const handleClick = () => {
+    if (folder && onUpload) inputRef.current?.click();
+  };
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !folder || !onUpload) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", folder);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/upload/document`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json() as { url?: string; publicId?: string; secure_url?: string };
+      onUpload({ url: data.url ?? data.secure_url ?? "", publicId: data.publicId ?? "" });
+    } catch {
+      setError("Upload failed — please try again");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
   return (
-    <button
-      type="button"
-      role="button"
-      aria-label={done ? `${title} — uploaded` : `Upload ${title}`}
-      style={{
-        border: done ? "1.5px solid var(--signal)" : "1.5px dashed var(--border-2)",
-        borderRadius: "var(--r-3)",
-        padding: 28,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 6,
-        cursor: "pointer",
-        background: done ? "var(--signal-soft)" : "transparent",
-        transition: "border-color 120ms, background 120ms",
-        width: "100%",
-        minHeight: 44,
-        fontFamily: "inherit",
-      }}
-    >
-      <div style={{ width: 36, height: 36, color: done ? "var(--signal-ink)" : "var(--fg-3)" }}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" width="100%" height="100%">
-          {done ? (
-            <path d="M20 6L9 17l-5-5" />
-          ) : (
-            <>
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </>
-          )}
-        </svg>
-      </div>
-      <div style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>{title}</div>
-      <div style={{ fontSize: "12.5px", color: "var(--fg-3)" }}>{hint}</div>
-    </button>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      {folder && onUpload && (
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+          style={{ display: "none" }}
+          onChange={handleFile}
+        />
+      )}
+      <button
+        type="button"
+        role="button"
+        aria-label={isDone ? `${title} — uploaded` : `Upload ${title}`}
+        disabled={uploading}
+        onClick={handleClick}
+        style={{
+          border: isDone ? "1.5px solid var(--signal)" : "1.5px dashed var(--border-2)",
+          borderRadius: "var(--r-3)",
+          padding: 28,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 6,
+          cursor: folder && onUpload ? "pointer" : "default",
+          background: isDone ? "var(--signal-soft)" : uploading ? "var(--bg-2)" : "transparent",
+          transition: "border-color 120ms, background 120ms",
+          width: "100%",
+          minHeight: 44,
+          fontFamily: "inherit",
+          opacity: uploading ? 0.7 : 1,
+        }}
+      >
+        <div style={{ width: 36, height: 36, color: isDone ? "var(--signal-ink)" : "var(--fg-3)" }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" width="100%" height="100%">
+            {isDone ? (
+              <path d="M20 6L9 17l-5-5" />
+            ) : (
+              <>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </>
+            )}
+          </svg>
+        </div>
+        <div style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>
+          {uploading ? "Uploading…" : isDone ? `${title} ✓` : title}
+        </div>
+        <div style={{ fontSize: "12.5px", color: "var(--fg-3)" }}>{hint}</div>
+      </button>
+      {error && <div style={{ fontSize: 12, color: "var(--danger)" }}>{error}</div>}
+    </div>
   );
 }
 

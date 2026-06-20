@@ -131,6 +131,10 @@ export interface UpdateOrganizationRequest {
   is_active?: boolean;
   custom_domain?: string | null;
   branded_email_sender?: string | null;
+  legal_entity?: string;
+  registration_number?: string;
+  preferred_payout_gateway?: string;
+  kiosk_preference?: string;
 }
 
 export interface BrandedEmailVerificationResult {
@@ -141,6 +145,29 @@ export interface BrandedEmailVerificationResult {
   verified_at: string | null;
   /** True only on the call that flipped the org from unverified → verified. */
   verified_now: boolean;
+}
+
+export interface OrganizationLocation {
+  _id: string;
+  organization_id: string;
+  name: string;
+  street?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
+  is_primary: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateLocationRequest {
+  name: string;
+  street?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
+  is_primary?: boolean;
 }
 
 export interface CreateTeamRoleRequest {
@@ -225,6 +252,49 @@ export const teamsService = {
     return await apiClient.post<BrandedEmailVerificationResult>(
       `/teams/organizations/${organizationId}/branded-email/verify`,
       {},
+    );
+  },
+
+  // ==================== LOCATIONS ====================
+
+  async createLocation(
+    organizationId: string,
+    data: CreateLocationRequest,
+  ): Promise<ApiResponse<OrganizationLocation>> {
+    return await apiClient.post<OrganizationLocation>(
+      `/teams/organizations/${organizationId}/locations`,
+      data,
+    );
+  },
+
+  async getLocations(
+    organizationId: string,
+  ): Promise<ApiResponse<OrganizationLocation[]>> {
+    return await apiClient.get<OrganizationLocation[]>(
+      `/teams/organizations/${organizationId}/locations`,
+    );
+  },
+
+  async updateLocation(
+    organizationId: string,
+    locationId: string,
+    data: Partial<CreateLocationRequest>,
+  ): Promise<ApiResponse<OrganizationLocation>> {
+    return await apiClient.patch<OrganizationLocation>(
+      `/teams/organizations/${organizationId}/locations/${locationId}`,
+      data,
+    );
+  },
+
+  // ==================== PLAN TEMPLATES ====================
+
+  async seedMembershipPlanTemplate(
+    organizationId: string,
+    template: string,
+  ): Promise<ApiResponse<unknown[]>> {
+    return await apiClient.post<unknown[]>(
+      `/teams/organizations/${organizationId}/membership-plans/seed-template`,
+      { template },
     );
   },
 

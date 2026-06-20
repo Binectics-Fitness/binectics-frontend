@@ -44,14 +44,32 @@ export function TrainerStep2({ data, setField }: StepProps) {
   );
 }
 
-export function TrainerStep3() {
+export function TrainerStep3({ data, setField }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 03 of 06 — trainer track" title="Upload your certifications." desc="Verified providers convert 3.4x better. We re-check every 24 months." />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <UploadZone title="Primary certification" hint="NSCA-CSCS · NASM-CPT · ACE · ACSM · etc." />
-        <UploadZone title="Public liability insurance" hint="Minimum cover for in-person (e.g. ₦ 33,000k)" />
-        <UploadZone title="ID document" hint="For payout verification" />
+        <UploadZone
+          title="Primary certification"
+          hint="NSCA-CSCS · NASM-CPT · ACE · ACSM · etc."
+          folder="teams/documents"
+          value={data.doc_cert as string | undefined}
+          onUpload={(r) => setField("doc_cert", r.url)}
+        />
+        <UploadZone
+          title="Public liability insurance"
+          hint="Minimum cover for in-person (e.g. ₦ 33,000k)"
+          folder="teams/documents"
+          value={data.doc_insurance as string | undefined}
+          onUpload={(r) => setField("doc_insurance", r.url)}
+        />
+        <UploadZone
+          title="ID document"
+          hint="For payout verification"
+          folder="teams/documents"
+          value={data.doc_id as string | undefined}
+          onUpload={(r) => setField("doc_id", r.url)}
+        />
       </div>
     </>
   );
