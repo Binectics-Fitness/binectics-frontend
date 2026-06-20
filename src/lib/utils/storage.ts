@@ -5,12 +5,7 @@
 
 import type { User } from "@/lib/types";
 
-/**
- * Storage keys
- */
 const STORAGE_KEYS = {
-  ACCESS_TOKEN: "access_token",
-  REFRESH_TOKEN: "refresh_token",
   USER: "user",
 } as const;
 
@@ -30,71 +25,44 @@ function secureFlag(): string {
 }
 
 /**
- * Convert a server-issued `expires_at` ISO timestamp into a cookie max-age in
- * seconds. Returns undefined for missing/invalid/past timestamps so callers can
- * fall back to their own default.
- */
-export function expiresAtToMaxAge(expiresAt?: string): number | undefined {
-  if (!expiresAt) return undefined;
-  const seconds = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000);
-  return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined;
-}
-
-/**
  * Token Storage
+ *
+ * Tokens are now issued as httpOnly cookies by the server (MF-2).
+ * The browser sends them automatically on every credentialed request —
+ * no JS-accessible storage needed. These stubs are kept so call-sites
+ * don't need to be updated en masse; they are all no-ops.
  */
 export const tokenStorage = {
+  /** Always returns null — token lives in an httpOnly cookie. */
   get(): string | null {
-    if (!isBrowser()) return null;
-    return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    return null;
   },
-
-  set(token: string): void {
-    if (!isBrowser()) return;
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
-
-    // Also set as httpOnly cookie for middleware access
-    // Note: We set it as a regular cookie since httpOnly can only be set server-side
-    const maxAge = 60 * 60; // 1 hour (matches JWT expiration)
-    document.cookie = `access_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag()}`;
+  set(_token: string): void {
+    /* server sets the httpOnly cookie; nothing to do client-side */
   },
-
   remove(): void {
-    if (!isBrowser()) return;
-    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-
-    // Also remove cookie
-    document.cookie =
-      "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    /* server clears the cookie on logout */
   },
 };
 
 /**
  * Refresh Token Storage
+ *
+ * Same rationale as tokenStorage — the refresh token is an httpOnly cookie
+ * set by the server. Client code that previously read or wrote this value
+ * now passes undefined/null, which the ApiClient handles correctly by
+ * omitting the body field and relying on the cookie being sent automatically.
  */
 export const refreshTokenStorage = {
+  /** Always returns null — token lives in an httpOnly cookie. */
   get(): string | null {
-    if (!isBrowser()) return null;
-    return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+    return null;
   },
-
-  set(token: string, maxAge?: number): void {
-    if (!isBrowser()) return;
-    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
-
-    // Also set as cookie for middleware access
-    // maxAge is provided by the caller based on server-issued expiry (30d or 24h)
-    const cookieMaxAge = maxAge ?? 7 * 24 * 60 * 60; // default 7 days
-    document.cookie = `refresh_token=${token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax${secureFlag()}`;
+  set(_token: string, _maxAge?: number): void {
+    /* server sets the httpOnly cookie; nothing to do client-side */
   },
-
   remove(): void {
-    if (!isBrowser()) return;
-    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-
-    // Also remove cookie
-    document.cookie =
-      "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    /* server clears the cookie on logout */
   },
 };
 

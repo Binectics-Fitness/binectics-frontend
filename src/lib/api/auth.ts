@@ -11,12 +11,7 @@ import type {
   RegisterRequest,
   ApiResponse,
 } from "@/lib/types";
-import {
-  userStorage,
-  refreshTokenStorage,
-  clearAuthStorage,
-  expiresAtToMaxAge,
-} from "@/lib/utils/storage";
+import { userStorage, clearAuthStorage } from "@/lib/utils/storage";
 
 export interface LoginResponse {
   user: User;
@@ -72,19 +67,9 @@ export const authService = {
     );
 
     if (response.success && response.data) {
-      // Store access token
-      apiClient.storeTokens(response.data.access_token);
-      // Store refresh token with appropriate maxAge derived from server expiry
-      if (response.data.refresh_token) {
-        refreshTokenStorage.set(
-          response.data.refresh_token,
-          expiresAtToMaxAge(response.data.refresh_token_expires_at),
-        );
-      }
-      // Store user data
+      // Tokens are now httpOnly cookies set by the server — just store UI state.
       userStorage.set(response.data.user);
     } else {
-      // Clear any stale auth data when login fails
       clearAuthStorage();
     }
 
@@ -108,10 +93,8 @@ export const authService = {
    * be expired (this also avoids the client's 401 refresh/redirect path).
    */
   async logout(): Promise<void> {
-    const refreshToken = refreshTokenStorage.get();
-    if (refreshToken) {
-      await apiClient.post("/auth/logout", { refreshToken }, false);
-    }
+    // POST with empty body — the server reads the httpOnly refresh_token cookie.
+    await apiClient.post("/auth/logout", {}, false);
     clearAuthStorage();
   },
 
@@ -175,26 +158,8 @@ export const authService = {
    * Refresh access token
    */
   async refreshToken(): Promise<ApiResponse<AuthTokens>> {
-    const refreshToken = refreshTokenStorage.get();
-    if (!refreshToken) {
-      return { success: false, message: "No refresh token available" };
-    }
-
-    const response = await apiClient.post<AuthTokens>(
-      "/auth/refresh",
-      { refreshToken },
-      false,
-    );
-
-    if (response.success && response.data) {
-      apiClient.storeTokens(
-        response.data.access_token,
-        response.data.refresh_token,
-        response.data.refresh_token_expires_at,
-      );
-    }
-
-    return response;
+    // Refresh token is an httpOnly cookie — send empty body; cookie is included automatically.
+    return apiClient.post<AuthTokens>("/auth/refresh", {}, false);
   },
 
   /**

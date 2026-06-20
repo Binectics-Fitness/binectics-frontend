@@ -4,12 +4,7 @@
  */
 
 import type { ApiResponse } from "@/lib/types";
-import {
-  tokenStorage,
-  refreshTokenStorage,
-  clearAuthStorage,
-  expiresAtToMaxAge,
-} from "@/lib/utils/storage";
+import { clearAuthStorage } from "@/lib/utils/storage";
 import { isAuthRoute } from "@/lib/constants/routes";
 
 export const API_BASE_URL =
@@ -36,41 +31,16 @@ class ApiClient {
   }
 
   /**
-   * Get authentication token
+   * Build JSON headers. Auth is handled by the httpOnly access_token cookie
+   * sent automatically on every credentialed request — no Authorization header needed.
    */
-  private getToken(): string | null {
-    return tokenStorage.get();
+  private getHeaders(): HeadersInit {
+    return { "Content-Type": "application/json" };
   }
 
-  /**
-   * Build headers with authentication
-   */
-  private getHeaders(includeAuth: boolean = true): HeadersInit {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
-
-    if (includeAuth) {
-      const token = this.getToken();
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-    }
-
-    return headers;
-  }
-
-  private getAuthHeaders(includeAuth: boolean = true): HeadersInit {
-    const headers: HeadersInit = {};
-
-    if (includeAuth) {
-      const token = this.getToken();
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-    }
-
-    return headers;
+  /** Headers for multipart/form-data requests (no Content-Type so fetch sets the boundary). */
+  private getAuthHeaders(): HeadersInit {
+    return {};
   }
 
   /**
@@ -156,201 +126,112 @@ class ApiClient {
     };
   }
 
-  /**
-   * GET request
-   */
-  async get<T>(
-    endpoint: string,
-    includeAuth: boolean = true,
-  ): Promise<ApiResponse<T>> {
+  async get<T>(endpoint: string, _includeAuth = true): Promise<ApiResponse<T>> {
     try {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "GET",
-          headers: this.getHeaders(includeAuth),
+          headers: this.getHeaders(),
+          credentials: "include",
         });
-      const response = await makeFetch();
-
-      return this.handleResponse<T>(
-        response,
-        includeAuth ? makeFetch : undefined,
-      );
+      return this.handleResponse<T>(await makeFetch(), makeFetch);
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-      };
+      return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
   }
 
-  /**
-   * POST request
-   */
-  async post<T>(
-    endpoint: string,
-    body?: unknown,
-    includeAuth: boolean = true,
-  ): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, body?: unknown, _includeAuth = true): Promise<ApiResponse<T>> {
     try {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "POST",
-          headers: this.getHeaders(includeAuth),
+          headers: this.getHeaders(),
           body: JSON.stringify(body),
+          credentials: "include",
         });
-      const response = await makeFetch();
-
-      return this.handleResponse<T>(
-        response,
-        includeAuth ? makeFetch : undefined,
-      );
+      return this.handleResponse<T>(await makeFetch(), makeFetch);
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-      };
+      return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
   }
 
-  /**
-   * PUT request
-   */
-  async put<T>(
-    endpoint: string,
-    body?: unknown,
-    includeAuth: boolean = true,
-  ): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, body?: unknown, _includeAuth = true): Promise<ApiResponse<T>> {
     try {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "PUT",
-          headers: this.getHeaders(includeAuth),
+          headers: this.getHeaders(),
           body: JSON.stringify(body),
+          credentials: "include",
         });
-      const response = await makeFetch();
-
-      return this.handleResponse<T>(
-        response,
-        includeAuth ? makeFetch : undefined,
-      );
+      return this.handleResponse<T>(await makeFetch(), makeFetch);
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-      };
+      return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
   }
 
-  /**
-   * PATCH request
-   */
-  async patch<T>(
-    endpoint: string,
-    body?: unknown,
-    includeAuth: boolean = true,
-  ): Promise<ApiResponse<T>> {
+  async patch<T>(endpoint: string, body?: unknown, _includeAuth = true): Promise<ApiResponse<T>> {
     try {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "PATCH",
-          headers: this.getHeaders(includeAuth),
+          headers: this.getHeaders(),
           body: JSON.stringify(body),
+          credentials: "include",
         });
-      const response = await makeFetch();
-
-      return this.handleResponse<T>(
-        response,
-        includeAuth ? makeFetch : undefined,
-      );
+      return this.handleResponse<T>(await makeFetch(), makeFetch);
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-      };
+      return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
   }
 
-  async postFormData<T>(
-    endpoint: string,
-    body: FormData,
-    includeAuth: boolean = true,
-  ): Promise<ApiResponse<T>> {
+  async postFormData<T>(endpoint: string, body: FormData, _includeAuth = true): Promise<ApiResponse<T>> {
     try {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "POST",
-          headers: this.getAuthHeaders(includeAuth),
+          headers: this.getAuthHeaders(),
           body,
+          credentials: "include",
         });
-      const response = await makeFetch();
-
-      return this.handleResponse<T>(
-        response,
-        includeAuth ? makeFetch : undefined,
-      );
+      return this.handleResponse<T>(await makeFetch(), makeFetch);
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-      };
+      return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
   }
 
-  async patchFormData<T>(
-    endpoint: string,
-    body: FormData,
-    includeAuth: boolean = true,
-  ): Promise<ApiResponse<T>> {
+  async patchFormData<T>(endpoint: string, body: FormData, _includeAuth = true): Promise<ApiResponse<T>> {
     try {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "PATCH",
-          headers: this.getAuthHeaders(includeAuth),
+          headers: this.getAuthHeaders(),
           body,
+          credentials: "include",
         });
-      const response = await makeFetch();
-
-      return this.handleResponse<T>(
-        response,
-        includeAuth ? makeFetch : undefined,
-      );
+      return this.handleResponse<T>(await makeFetch(), makeFetch);
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-      };
+      return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
   }
 
-  /**
-   * DELETE request
-   */
-  async delete<T>(
-    endpoint: string,
-    includeAuth: boolean = true,
-  ): Promise<ApiResponse<T>> {
+  async delete<T>(endpoint: string, _includeAuth = true): Promise<ApiResponse<T>> {
     try {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "DELETE",
-          headers: this.getHeaders(includeAuth),
+          headers: this.getHeaders(),
+          credentials: "include",
         });
-      const response = await makeFetch();
-
-      return this.handleResponse<T>(
-        response,
-        includeAuth ? makeFetch : undefined,
-      );
+      return this.handleResponse<T>(await makeFetch(), makeFetch);
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-      };
+      return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
   }
 
   /**
-   * Attempt to refresh the access token using the stored refresh token.
+   * Attempt to refresh the access token.
+   * The httpOnly refresh_token cookie is sent automatically with credentials:"include".
    * De-duplicates concurrent refresh attempts.
    */
   private async tryRefreshToken(): Promise<boolean> {
@@ -358,42 +239,17 @@ class ApiClient {
       return this.refreshPromise;
     }
 
-    const refreshToken = refreshTokenStorage.get();
-    if (!refreshToken) return false;
-
     this.isRefreshing = true;
     this.refreshPromise = (async () => {
       try {
         const response = await fetch(`${this.baseUrl}/auth/refresh`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refreshToken }),
+          body: JSON.stringify({}),
+          credentials: "include",
         });
 
-        if (!response.ok) return false;
-
-        const result = (await response.json()) as RawResponseBody;
-        const data = (result.data ?? result) as {
-          access_token?: unknown;
-          refresh_token?: unknown;
-          refresh_token_expires_at?: unknown;
-        };
-
-        if (typeof data.access_token === "string") {
-          tokenStorage.set(data.access_token);
-          if (typeof data.refresh_token === "string") {
-            const expiresAt =
-              typeof data.refresh_token_expires_at === "string"
-                ? data.refresh_token_expires_at
-                : undefined;
-            refreshTokenStorage.set(
-              data.refresh_token,
-              expiresAtToMaxAge(expiresAt),
-            );
-          }
-          return true;
-        }
-        return false;
+        return response.ok;
       } catch {
         return false;
       } finally {
@@ -405,30 +261,14 @@ class ApiClient {
     return this.refreshPromise;
   }
 
-  /**
-   * Store tokens after successful authentication.
-   *
-   * `refreshTokenExpiresAt` is the server-issued ISO expiry; when provided the
-   * refresh-token cookie inherits the real lifetime instead of silently
-   * falling back to the 7-day default.
-   */
+  /** No-op — tokens are now httpOnly cookies set by the server. */
   storeTokens(
-    accessToken: string,
-    refreshToken?: string,
-    refreshTokenExpiresAt?: string,
-  ): void {
-    tokenStorage.set(accessToken);
-    if (refreshToken) {
-      refreshTokenStorage.set(
-        refreshToken,
-        expiresAtToMaxAge(refreshTokenExpiresAt),
-      );
-    }
-  }
+    _accessToken: string,
+    _refreshToken?: string,
+    _refreshTokenExpiresAt?: string,
+  ): void {}
 
-  /**
-   * Clear all authentication data
-   */
+  /** Clear UI-state auth data (token cookies are cleared server-side on logout). */
   clearAuth(): void {
     clearAuthStorage();
   }
