@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { formatCurrency, formatSignedCurrency } from "@/utils/format";
+import { formatRegionPrice } from "@/lib/constants/regions";
 
 describe("formatCurrency", () => {
   it("uses narrow currency symbols when available", () => {
@@ -38,5 +39,22 @@ describe("formatCurrency", () => {
   it("keeps cents for fractional two-decimal amounts, even above 1000", () => {
     expect(formatCurrency(12.5, "USD", "en-US")).toContain(".50");
     expect(formatCurrency(1234.5, "USD", "en-US")).toContain(".50");
+  });
+});
+
+describe("formatRegionPrice", () => {
+  it("renders whole amounts without decimals", () => {
+    expect(formatRegionPrice(25000, "NGN", "en-NG")).not.toContain(".");
+    expect(formatRegionPrice(1200, "USD", "en-US")).not.toContain(".");
+  });
+
+  it("keeps cents for fractional two-decimal amounts, even above 1000", () => {
+    expect(formatRegionPrice(12.5, "USD", "en-US")).toContain(".50");
+    expect(formatRegionPrice(1234.5, "USD", "en-US")).toContain(".50");
+  });
+
+  it("rounds fractional zero-decimal currency amounts to whole units", () => {
+    expect(formatRegionPrice(475.5, "NGN", "en-NG")).not.toContain(".");
+    expect(formatRegionPrice(250.25, "KES", "en-KE")).not.toContain(".");
   });
 });
