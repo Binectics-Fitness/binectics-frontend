@@ -211,19 +211,19 @@ function OnboardingContent() {
           setField('planSeeded', true);
         }
       } else if (currentStep === 5) {
-        // Payout gateway
-        if (stepData.payout && stepData.payout !== 'skip') {
+        // Payout gateway — use visual default ('paystack') if user never interacted
+        const payout = (stepData.payout as string) || 'paystack';
+        if (payout !== 'skip') {
           await teamsService.updateOrganization(orgId, {
-            preferred_payout_gateway: stepData.payout as string,
+            preferred_payout_gateway: payout,
           });
         }
       } else if (currentStep === 6) {
-        // Kiosk preference
-        if (stepData.kiosk) {
-          await teamsService.updateOrganization(orgId, {
-            kiosk_preference: stepData.kiosk as string,
-          });
-        }
+        // Kiosk preference — use visual default ('existing') if user never interacted
+        const kiosk = (stepData.kiosk as string) || 'existing';
+        await teamsService.updateOrganization(orgId, {
+          kiosk_preference: kiosk,
+        });
       } else if (currentStep === 7) {
         // Staff invites
         const emails = ((stepData.staffEmails as string) || '')
