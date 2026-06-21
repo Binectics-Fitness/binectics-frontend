@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock storage before importing authService so the module picks up the mock
+// Mock only the storage symbols that auth.ts actually imports after the revamp.
+// refreshTokenStorage and expiresAtToMaxAge were removed; including them here
+// would mask import-binding mismatches between the mock and the module.
 vi.mock("@/lib/utils/storage", () => ({
-  refreshTokenStorage: { get: vi.fn(), set: vi.fn() },
   userStorage: { get: vi.fn(), set: vi.fn() },
-  tokenStorage: { get: vi.fn(), set: vi.fn() },
+  tokenStorage: { get: vi.fn(), set: vi.fn(), setExpiry: vi.fn() },
   clearAuthStorage: vi.fn(),
-  expiresAtToMaxAge: vi.fn(),
 }));
 
 import { authService } from "@/lib/api/auth";
@@ -26,10 +26,7 @@ describe("authService.logout", () => {
     vi.restoreAllMocks();
   });
 
-  it("POSTs the refresh token to /auth/logout when one is stored", async () => {
-    vi.mocked(storage.refreshTokenStorage.get).mockReturnValue("rt-abc");
-    // Seed an access token so we can verify it is NOT forwarded in the logout request
-    vi.mocked(storage.tokenStorage.get).mockReturnValue("access-token-value");
+  it("POSTs to /auth/logout with an empty body (refresh token is an httpOnly cookie)", async () => {
     const fetchSpy = mockFetch(200, { statusCode: 200, message: ["Logged out successfully"] });
 
     await authService.logout();
@@ -37,17 +34,21 @@ describe("authService.logout", () => {
     expect(fetchSpy).toHaveBeenCalledOnce();
     const [url, init] = fetchSpy.mock.calls[0];
     expect(String(url)).toMatch(/\/auth\/logout/);
-    expect(JSON.parse((init as RequestInit).body as string)).toMatchObject({
-      refreshToken: "rt-abc",
-    });
-    // Logout must not attach the Bearer token — the refresh token in the body is the credential
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({});
+  });
+
+  it("does not attach a Bearer token to the logout request", async () => {
+    const fetchSpy = mockFetch(200, { statusCode: 200, message: ["Logged out successfully"] });
+
+    await authService.logout();
+
+    const [, init] = fetchSpy.mock.calls[0];
     expect((init as RequestInit).headers as Record<string, string>).not.toHaveProperty(
       "Authorization",
     );
   });
 
-  it("clears local auth storage even when the POST succeeds", async () => {
-    vi.mocked(storage.refreshTokenStorage.get).mockReturnValue("rt-abc");
+  it("clears local auth storage when the server returns 200", async () => {
     mockFetch(200, { statusCode: 200, message: ["Logged out successfully"] });
 
     await authService.logout();
@@ -56,7 +57,6 @@ describe("authService.logout", () => {
   });
 
   it("clears local auth storage even when the server returns an error response", async () => {
-    vi.mocked(storage.refreshTokenStorage.get).mockReturnValue("rt-abc");
     mockFetch(500, { statusCode: 500, message: ["Internal server error"] });
 
     await authService.logout();
@@ -64,13 +64,14 @@ describe("authService.logout", () => {
     expect(storage.clearAuthStorage).toHaveBeenCalledOnce();
   });
 
-  it("skips the POST entirely when no refresh token is stored", async () => {
-    vi.mocked(storage.refreshTokenStorage.get).mockReturnValue(null);
-    const fetchSpy = vi.spyOn(globalThis, "fetch");
+  it("always fires the POST — does not skip when no stored token state exists", async () => {
+    const fetchSpy = mockFetch(200, { statusCode: 200, message: ["Logged out successfully"] });
 
     await authService.logout();
 
-    expect(fetchSpy).not.toHaveBeenCalled();
+    // The server owns revocation via the httpOnly cookie; the client never
+    // checks local token state before sending the logout request.
+    expect(fetchSpy).toHaveBeenCalledOnce();
     expect(storage.clearAuthStorage).toHaveBeenCalledOnce();
   });
 });

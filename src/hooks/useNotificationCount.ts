@@ -7,7 +7,7 @@ import { NotificationCategory } from "@/lib/api/notifications";
 import { API_BASE_URL } from "@/lib/api/client";
 import { useUnreadNotificationCount } from "@/lib/queries/notifications";
 import { queryKeys } from "@/lib/queries/keys";
-import { tokenStorage } from "@/lib/utils/storage";
+import { useAuth } from "@/contexts/AuthContext";
 
 /** Fallback polling interval when SSE is unavailable */
 const POLL_INTERVAL_MS = 60_000;
@@ -33,10 +33,11 @@ function coerceCategory(value: unknown): NotificationCategory {
 
 export function useNotificationCount() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   // Only query/stream when signed in — otherwise every mount on a public page
   // fires an unauthenticated request that 401s.
-  const hasToken = typeof window !== "undefined" && !!tokenStorage.get();
-  const unreadQuery = useUnreadNotificationCount(hasToken);
+  const isAuthenticated = user !== null;
+  const unreadQuery = useUnreadNotificationCount(isAuthenticated);
   const eventSourceRef = useRef<EventSource | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -55,15 +56,13 @@ export function useNotificationCount() {
   useEffect(() => {
     let mounted = true;
 
-    const token = tokenStorage.get();
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     // Fetch initial count via REST (only when authenticated)
     refresh();
 
     // Attempt SSE connection
-    const url = `${API_BASE_URL}/notifications/stream?token=${encodeURIComponent(token)}`;
-    const es = new EventSource(url);
+    const es = new EventSource(`${API_BASE_URL}/notifications/stream`, { withCredentials: true });
     eventSourceRef.current = es;
 
     es.onmessage = (event) => {
@@ -110,7 +109,7 @@ export function useNotificationCount() {
         intervalRef.current = null;
       }
     };
-  }, [queryClient, refresh]);
+  }, [queryClient, refresh, isAuthenticated]);
 
   return {
     count: unreadQuery.data?.count ?? 0,

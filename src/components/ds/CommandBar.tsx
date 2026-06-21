@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCommandBar, closeCommandBar } from "@/hooks/useCommandBar";
 import { UnifiedSearchSection } from "@/lib/api/search";
 import { useUnifiedSearch } from "@/lib/queries/search";
-import { tokenStorage } from "@/lib/utils/storage";
+import { useAuth } from "@/contexts/AuthContext";
 import { NAVIGATION_COMMANDS, ACTION_COMMANDS, HELP_COMMANDS, type CommandItem } from "@/lib/constants/commands";
 
 const ALL_COMMANDS = [...NAVIGATION_COMMANDS, ...ACTION_COMMANDS, ...HELP_COMMANDS];
@@ -64,6 +64,7 @@ function toSearchCommands(
 
 export function CommandBar() {
   const { open, close } = useCommandBar();
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,12 +72,7 @@ export function CommandBar() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const normalizedQuery = query.trim();
-  let hasAuthToken = false;
-  try {
-    hasAuthToken = Boolean(tokenStorage.get());
-  } catch {
-    hasAuthToken = false;
-  }
+  const hasAuthToken = !!user;
 
   const unifiedSearch = useUnifiedSearch(
     {
