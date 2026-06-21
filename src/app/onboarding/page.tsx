@@ -226,7 +226,7 @@ function OnboardingContent() {
       } else if (currentStep === 7) {
         // Staff invites
         const emails = ((stepData.staffEmails as string) || '')
-          .split('\n')
+          .split(/[\n,]/)
           .map((e) => e.trim())
           .filter(Boolean);
         if (emails.length > 0) {
@@ -308,7 +308,7 @@ function OnboardingContent() {
     if (step === 0 && role) {
       setStep(1);
     } else if (step < totalSteps) {
-      if (role === "gym" && currentOrg) {
+      if (role === "gym" && currentOrg?._id) {
         await persistGymStep(step, data, currentOrg._id);
       } else if (role === "trainer" && currentOrg) {
         await persistTrainerStep(step, data, currentOrg._id);

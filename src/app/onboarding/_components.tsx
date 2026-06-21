@@ -243,7 +243,7 @@ export function UploadZone({
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+          accept="image/jpeg,image/png,image/webp,application/pdf"
           style={{ display: "none" }}
           onChange={handleFile}
         />

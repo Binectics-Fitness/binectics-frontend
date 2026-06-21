@@ -261,13 +261,6 @@ class ApiClient {
     return this.refreshPromise;
   }
 
-  /** No-op — tokens are now httpOnly cookies set by the server. */
-  storeTokens(
-    _accessToken: string,
-    _refreshToken?: string,
-    _refreshTokenExpiresAt?: string,
-  ): void {}
-
   /** Clear UI-state auth data (token cookies are cleared server-side on logout). */
   clearAuth(): void {
     clearAuthStorage();
