@@ -101,7 +101,10 @@ export const userStorage = {
     if (!isBrowser()) return;
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
 
-    const maxAge = 60 * 60; // 1 hour (matches access token)
+    // 30 days: the refresh token can keep the session alive this long, so
+    // the middleware cookies must outlive the access token (1 h) or the
+    // middleware will lose the user's role and fall back to /member.
+    const maxAge = 60 * 60 * 24 * 30;
 
     // Set user_role cookie so middleware can redirect to the correct dashboard
     if (user.role) {
