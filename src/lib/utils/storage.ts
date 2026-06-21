@@ -101,20 +101,22 @@ export const userStorage = {
     if (!isBrowser()) return;
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
 
-    // 30 days: the refresh token can keep the session alive this long, so
-    // the middleware cookies must outlive the access token (1 h) or the
-    // middleware will lose the user's role and fall back to /member.
-    const maxAge = 60 * 60 * 24 * 30;
+    // 30 days: matches the max refresh-token lifetime so the middleware keeps
+    // the user's role even across long sessions without re-login.
+    const routingMaxAge = 60 * 60 * 24 * 30;
+    // 1 hour: must_change_password is security-adjacent — keep it short so an
+    // out-of-band admin reset doesn't leave the user blocked for 30 days.
+    const sessionMaxAge = 60 * 60;
 
     // Set user_role cookie so middleware can redirect to the correct dashboard
     if (user.role) {
-      document.cookie = `user_role=${user.role}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag()}`;
+      document.cookie = `user_role=${user.role}; path=/; max-age=${routingMaxAge}; SameSite=Lax${secureFlag()}`;
     }
 
     // Mirror must_change_password to a cookie so middleware can gate
     // /admin/* server-side without waiting for the client shell.
     if (user.must_change_password) {
-      document.cookie = `must_change_password=1; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag()}`;
+      document.cookie = `must_change_password=1; path=/; max-age=${sessionMaxAge}; SameSite=Lax${secureFlag()}`;
     } else {
       document.cookie =
         "must_change_password=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
@@ -122,7 +124,7 @@ export const userStorage = {
 
     // Mirror onboarding status so middleware can route correctly.
     if (user.is_onboarding_complete) {
-      document.cookie = `onboarding_complete=1; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag()}`;
+      document.cookie = `onboarding_complete=1; path=/; max-age=${routingMaxAge}; SameSite=Lax${secureFlag()}`;
     } else {
       document.cookie =
         "onboarding_complete=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
