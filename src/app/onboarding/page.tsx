@@ -109,6 +109,7 @@ function OnboardingContent() {
   const [isSavingLater, setIsSavingLater] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [workspaceRetryKey, setWorkspaceRetryKey] = useState(0);
   const creatingWorkspaceRef = useRef(false);
 
   const workspaceReady = Boolean(currentOrg);
@@ -154,7 +155,7 @@ function OnboardingContent() {
     };
 
     void createWorkspace();
-  }, [accountRole, currentOrg, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, user, workspaceReady]);
+  }, [accountRole, currentOrg, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, user, workspaceReady, workspaceRetryKey]);
 
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -405,11 +406,6 @@ function OnboardingContent() {
 
   return (
     <>
-    {workspaceError && (
-      <div className="ob-mobile-header" style={{ position: "sticky", top: 0, zIndex: 10, paddingInline: 16, background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
-        <div style={{ color: "var(--danger)", fontSize: 12 }}>{workspaceError}</div>
-      </div>
-    )}
     <style>{`
       .ob-shell { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr 360px; background: var(--bg); }
       .ob-rail { background: var(--bg-2); border-right: 1px solid var(--border); padding: 28px 24px; display: flex; flex-direction: column; gap: 36px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
@@ -530,8 +526,17 @@ function OnboardingContent() {
       <main style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="ob-stage-area">
           {role !== "member" && !workspaceReady ? (
-            <div className="rounded-(--r-3) p-3.5" style={{ border: "1px solid var(--border)", background: "var(--bg-2)", color: "var(--fg-2)" }}>
-              Preparing your workspace...
+            <div className="rounded-(--r-3) p-3.5" style={{ border: `1px solid ${workspaceError ? "var(--danger)" : "var(--border)"}`, background: "var(--bg-2)", color: workspaceError ? "var(--danger)" : "var(--fg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <span>{workspaceError ?? "Preparing your workspace…"}</span>
+              {workspaceError && (
+                <button
+                  type="button"
+                  onClick={() => { creatingWorkspaceRef.current = false; setWorkspaceError(null); setWorkspaceRetryKey((k) => k + 1); }}
+                  style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--danger)", flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  Retry
+                </button>
+              )}
             </div>
           ) : null}
           {renderStage()}
