@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AddMemberButton } from "./_actions";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -9,6 +10,7 @@ import {
   type MembershipSubscription,
 } from "@/lib/types";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { toast } from "@/components/Toast";
 import { format } from "date-fns";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -58,11 +60,79 @@ const FILTERS: { label: string; value: MembershipSubscriptionStatus | "all" }[] 
   { label: "Cancelled",value: MembershipSubscriptionStatus.CANCELLED },
 ];
 
-function More() {
+const MORE_ICON = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+    <circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/>
+  </svg>
+);
+
+function RowActions({
+  sub,
+  orgId,
+  onUpdate,
+}: {
+  sub: MembershipSubscription;
+  orgId: string;
+  onUpdate: (updated: MembershipSubscription) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  if (sub.status !== MembershipSubscriptionStatus.PENDING_PAYMENT) {
+    return (
+      <span className="w-5.5 h-5.5 rounded-(--r-1) flex items-center justify-center" style={{ color: "var(--fg-3)" }}>
+        {MORE_ICON}
+      </span>
+    );
+  }
+
+  const handleMarkPaid = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(false);
+    const res = await marketplaceService.markSubscriptionPaid(orgId, sub._id);
+    if (res.success && res.data) {
+      onUpdate(res.data);
+      toast.success("Marked as paid");
+    } else {
+      toast.error(res.message ?? "Failed to mark as paid");
+    }
+  };
+
   return (
-    <span className="w-5.5 h-5.5 rounded-(--r-1) flex items-center justify-center cursor-pointer" style={{ color: "var(--fg-3)" }}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
-    </span>
+    <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-5.5 h-5.5 rounded-(--r-1) flex items-center justify-center cursor-pointer"
+        style={{ color: "var(--fg-3)" }}
+      >
+        {MORE_ICON}
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 z-20 min-w-[150px] rounded-(--r-2) py-1 shadow-md"
+          style={{ background: "var(--bg)", border: "1px solid var(--border)", top: "calc(100% + 4px)" }}
+        >
+          <button
+            type="button"
+            onClick={handleMarkPaid}
+            className="w-full text-left px-3.5 py-2 text-[13px] hover:bg-[var(--bg-2)]"
+            style={{ color: "var(--ink)" }}
+          >
+            Mark as paid
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -70,10 +140,16 @@ function More() {
 
 export default function GymMembersClient() {
   const { currentOrg } = useOrganization();
+  const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<MembershipSubscriptionStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleSubscriptionUpdate = (updated: MembershipSubscription) => {
+    setSubscriptions((subs) => subs.map((s) => s._id === updated._id ? updated : s));
+  };
 
   useEffect(() => {
     if (!currentOrg) return;
@@ -89,7 +165,7 @@ export default function GymMembersClient() {
 
     void load();
     return () => { mounted = false; };
-  }, [currentOrg]);
+  }, [currentOrg, refreshKey]);
 
   const filtered = subscriptions.filter((sub) => {
     if (filter !== "all" && sub.status !== filter) return false;
@@ -149,7 +225,7 @@ export default function GymMembersClient() {
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
           </button>
-          <AddMemberButton />
+          <AddMemberButton onEnrolled={() => setRefreshKey((k) => k + 1)} />
         </>
       }
     >
@@ -241,6 +317,7 @@ export default function GymMembersClient() {
                       key={sub._id}
                       className="cursor-pointer"
                       style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}
+                      onClick={() => router.push(`/dashboard/gym-owner/members/${sub._id}`)}
                     >
                       <td className="px-4.5 py-3">
                         <div className="flex items-center gap-2.5">
@@ -272,7 +349,11 @@ export default function GymMembersClient() {
                       <td className="px-4.5 py-3 text-right font-mono font-medium" style={{ color: "var(--ink)" }}>
                         {sub.currency} {sub.amount_paid.toLocaleString()}
                       </td>
-                      <td className="px-4.5 py-3"><More /></td>
+                      <td className="px-4.5 py-3">
+                        {currentOrg && (
+                          <RowActions sub={sub} orgId={currentOrg._id} onUpdate={handleSubscriptionUpdate} />
+                        )}
+                      </td>
                     </tr>
                   );
                 })
