@@ -155,12 +155,12 @@ const PLAN_DISPLAY: Record<string, string> = {
 };
 
 export function GymStep8({ data }: StepProps) {
-  const planId = (data.planTemplate as string) || "";
+  const planId = (data.planTemplate as string) || "standard";
   const rows = [
     { k: "Business", v: (data.bizName as string) || "—" },
     { k: "First location", v: (data.locName as string) || "—" },
     { k: "Plans", v: PLAN_DISPLAY[planId] || "—" },
-    { k: "Documents", v: [data.doc_reg, data.doc_tax, data.doc_id].filter(Boolean).length + " uploaded", signal: true },
+    { k: "Documents", v: [data.doc_reg, data.doc_tax, data.doc_id].filter(Boolean).length + " uploaded", signal: [data.doc_reg, data.doc_tax, data.doc_id].filter(Boolean).length > 0 },
     { k: "Payments", v: (data.payout as string) || "—", signal: true },
     { k: "Staff invites", v: ((data.staffEmails as string) || "").split("\n").filter(Boolean).length + " emails" },
   ];

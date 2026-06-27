@@ -109,6 +109,7 @@ function OnboardingContent() {
   const [isSavingLater, setIsSavingLater] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [workspaceRetryKey, setWorkspaceRetryKey] = useState(0);
   const creatingWorkspaceRef = useRef(false);
 
   const workspaceReady = Boolean(currentOrg);
@@ -154,7 +155,7 @@ function OnboardingContent() {
     };
 
     void createWorkspace();
-  }, [accountRole, currentOrg, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, user, workspaceReady]);
+  }, [accountRole, currentOrg, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, user, workspaceReady, workspaceRetryKey]);
 
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -209,20 +210,29 @@ function OnboardingContent() {
           await teamsService.seedMembershipPlanTemplate(orgId, template);
           setField('planSeeded', true);
         }
+      } else if (currentStep === 4) {
+        // Verification documents — persist Cloudinary URLs to the org record
+        const patch: import("@/lib/api/teams").UpdateOrganizationRequest = {};
+        if (stepData.doc_reg) patch.doc_registration_url = stepData.doc_reg as string;
+        if (stepData.doc_tax) patch.doc_tax_url = stepData.doc_tax as string;
+        if (stepData.doc_id) patch.doc_owner_id_url = stepData.doc_id as string;
+        if (Object.keys(patch).length > 0) {
+          await teamsService.updateOrganization(orgId, patch);
+        }
       } else if (currentStep === 5) {
-        // Payout gateway
-        if (stepData.payout && stepData.payout !== 'skip') {
+        // Payout gateway — use visual default ('paystack') if user never interacted
+        const payout = (stepData.payout as string) || 'paystack';
+        if (payout !== 'skip') {
           await teamsService.updateOrganization(orgId, {
-            preferred_payout_gateway: stepData.payout as string,
+            preferred_payout_gateway: payout,
           });
         }
       } else if (currentStep === 6) {
-        // Kiosk preference
-        if (stepData.kiosk) {
-          await teamsService.updateOrganization(orgId, {
-            kiosk_preference: stepData.kiosk as string,
-          });
-        }
+        // Kiosk preference — use visual default ('existing') if user never interacted
+        const kiosk = (stepData.kiosk as string) || 'existing';
+        await teamsService.updateOrganization(orgId, {
+          kiosk_preference: kiosk,
+        });
       } else if (currentStep === 7) {
         // Staff invites
         const emails = ((stepData.staffEmails as string) || '')
@@ -323,10 +333,15 @@ function OnboardingContent() {
       try {
         await onboardingService.dismiss();
       } catch {
-        // Non-blocking; user state update below ensures deterministic routing.
+        // non-blocking
       }
-      if (user) {
-        updateUser({ ...user, is_onboarding_complete: true });
+      // Refresh from API so localStorage has the promoted role (e.g. USER→GYM_OWNER)
+      // before navigating — the dashboard's useRoleGuard reads from localStorage.
+      try {
+        const fresh = await authService.refreshUserFromApi();
+        if (fresh) updateUser(fresh);
+      } catch {
+        // best-effort; navigate anyway
       }
       window.location.href = ROLE_DASHBOARD_ROUTES[role];
     }
@@ -405,11 +420,6 @@ function OnboardingContent() {
 
   return (
     <>
-    {workspaceError && (
-      <div className="ob-mobile-header" style={{ position: "sticky", top: 0, zIndex: 10, paddingInline: 16, background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
-        <div style={{ color: "var(--danger)", fontSize: 12 }}>{workspaceError}</div>
-      </div>
-    )}
     <style>{`
       .ob-shell { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr 360px; background: var(--bg); }
       .ob-rail { background: var(--bg-2); border-right: 1px solid var(--border); padding: 28px 24px; display: flex; flex-direction: column; gap: 36px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
@@ -530,8 +540,17 @@ function OnboardingContent() {
       <main style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="ob-stage-area">
           {role !== "member" && !workspaceReady ? (
-            <div className="rounded-(--r-3) p-3.5" style={{ border: "1px solid var(--border)", background: "var(--bg-2)", color: "var(--fg-2)" }}>
-              Preparing your workspace...
+            <div className="rounded-(--r-3) p-3.5" style={{ border: `1px solid ${workspaceError ? "var(--danger)" : "var(--border)"}`, background: "var(--bg-2)", color: workspaceError ? "var(--danger)" : "var(--fg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <span>{workspaceError ?? "Preparing your workspace…"}</span>
+              {workspaceError && (
+                <button
+                  type="button"
+                  onClick={() => { creatingWorkspaceRef.current = false; setWorkspaceError(null); setWorkspaceRetryKey((k) => k + 1); }}
+                  style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--danger)", flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  Retry
+                </button>
+              )}
             </div>
           ) : null}
           {renderStage()}

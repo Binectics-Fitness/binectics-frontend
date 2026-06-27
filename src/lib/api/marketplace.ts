@@ -724,6 +724,15 @@ export const marketplaceService = {
     );
   },
 
+  async getOrgMembershipSubscriptionById(
+    organizationId: string,
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.get<MembershipSubscription>(
+      `/marketplace/organizations/${organizationId}/subscriptions/${subscriptionId}`,
+    );
+  },
+
   async enrollMember(
     organizationId: string,
     data: EnrollMemberRequest,
