@@ -135,6 +135,9 @@ export interface UpdateOrganizationRequest {
   registration_number?: string;
   preferred_payout_gateway?: string;
   kiosk_preference?: string;
+  doc_registration_url?: string;
+  doc_tax_url?: string;
+  doc_owner_id_url?: string;
 }
 
 export interface BrandedEmailVerificationResult {

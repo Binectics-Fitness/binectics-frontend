@@ -210,6 +210,15 @@ function OnboardingContent() {
           await teamsService.seedMembershipPlanTemplate(orgId, template);
           setField('planSeeded', true);
         }
+      } else if (currentStep === 4) {
+        // Verification documents — persist Cloudinary URLs to the org record
+        const patch: import("@/lib/api/teams").UpdateOrganizationRequest = {};
+        if (stepData.doc_reg) patch.doc_registration_url = stepData.doc_reg as string;
+        if (stepData.doc_tax) patch.doc_tax_url = stepData.doc_tax as string;
+        if (stepData.doc_id) patch.doc_owner_id_url = stepData.doc_id as string;
+        if (Object.keys(patch).length > 0) {
+          await teamsService.updateOrganization(orgId, patch);
+        }
       } else if (currentStep === 5) {
         // Payout gateway — use visual default ('paystack') if user never interacted
         const payout = (stepData.payout as string) || 'paystack';

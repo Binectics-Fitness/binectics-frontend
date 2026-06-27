@@ -61,12 +61,10 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
 
     const load = async () => {
       setLoading(true);
-      const res = await marketplaceService.getOrgMembershipSubscriptions(currentOrg._id);
+      const res = await marketplaceService.getOrgMembershipSubscriptionById(currentOrg._id, memberId);
       if (!mounted) return;
       if (res.success && res.data) {
-        const found = res.data.find((s) => s._id === memberId);
-        if (found) setSubscription(found);
-        else setNotFound(true);
+        setSubscription(res.data);
       } else {
         setNotFound(true);
       }

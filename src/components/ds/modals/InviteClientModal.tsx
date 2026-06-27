@@ -83,23 +83,28 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
     if (form.amount_paid !== "") data.amount_paid = Number(form.amount_paid);
     if (form.payment_reference.trim()) data.payment_reference = form.payment_reference.trim();
 
-    const res = await marketplaceService.enrollMember(currentOrg._id, data);
+    try {
+      const res = await marketplaceService.enrollMember(currentOrg._id, data);
 
-    if (cancelledRef.current) return;
-    setSubmitting(false);
+      if (cancelledRef.current) return;
 
-    if (!res.success) {
-      setError(res.message ?? "Failed to enroll member. Please try again.");
-      return;
+      if (!res.success) {
+        setError(res.message ?? "Failed to enroll member. Please try again.");
+        return;
+      }
+
+      const memberName =
+        [form.first_name, form.last_name].filter(Boolean).join(" ") || form.email;
+      toast.success(`${memberName} enrolled successfully`);
+      setForm(EMPTY_FORM);
+      setError(null);
+      onEnrolled?.();
+      onClose();
+    } catch {
+      if (!cancelledRef.current) setError("Failed to enroll member. Please try again.");
+    } finally {
+      if (!cancelledRef.current) setSubmitting(false);
     }
-
-    const memberName =
-      [form.first_name, form.last_name].filter(Boolean).join(" ") || form.email;
-    toast.success(`${memberName} enrolled successfully`);
-    setForm(EMPTY_FORM);
-    setError(null);
-    onEnrolled?.();
-    onClose();
   };
 
   const canSubmit = form.email.trim() && form.plan_id && !submitting;
