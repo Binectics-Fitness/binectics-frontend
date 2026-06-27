@@ -324,10 +324,15 @@ function OnboardingContent() {
       try {
         await onboardingService.dismiss();
       } catch {
-        // Non-blocking; user state update below ensures deterministic routing.
+        // non-blocking
       }
-      if (user) {
-        updateUser({ ...user, is_onboarding_complete: true });
+      // Refresh from API so localStorage has the promoted role (e.g. USER→GYM_OWNER)
+      // before navigating — the dashboard's useRoleGuard reads from localStorage.
+      try {
+        const fresh = await authService.refreshUserFromApi();
+        if (fresh) updateUser(fresh);
+      } catch {
+        // best-effort; navigate anyway
       }
       window.location.href = ROLE_DASHBOARD_ROUTES[role];
     }

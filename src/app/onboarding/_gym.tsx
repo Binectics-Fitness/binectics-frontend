@@ -155,7 +155,7 @@ const PLAN_DISPLAY: Record<string, string> = {
 };
 
 export function GymStep8({ data }: StepProps) {
-  const planId = (data.planTemplate as string) || "";
+  const planId = (data.planTemplate as string) || "standard";
   const rows = [
     { k: "Business", v: (data.bizName as string) || "—" },
     { k: "First location", v: (data.locName as string) || "—" },

@@ -195,6 +195,20 @@ export const authService = {
   },
 
   /**
+   * Fetch fresh profile from API and sync to localStorage.
+   * Use after operations that may promote the user's role (e.g. org creation
+   * during onboarding) so subsequent role guards read the updated role.
+   */
+  async refreshUserFromApi(): Promise<User | null> {
+    const response = await apiClient.get<User>("/auth/profile");
+    if (response.success && response.data) {
+      userStorage.set(response.data);
+      return response.data;
+    }
+    return null;
+  },
+
+  /**
    * Update user profile on the server
    */
   async updateProfile(
