@@ -214,6 +214,29 @@ export default function FormsPage() {
     setAddingQuestion(false);
   }
 
+  function copyShareLink(formId: string) {
+    const url = `${window.location.origin}/forms/${formId}`;
+    void navigator.clipboard
+      .writeText(url)
+      .then(() => showMessage("Share link copied — anyone with it can open the form."))
+      .catch(() => showMessage(url, "error"));
+  }
+
+  async function handleToggleSetting(
+    form: Form,
+    key: "require_authentication" | "allow_multiple_submissions",
+    value: boolean,
+  ) {
+    const res = await formsService.updateForm(form._id, { [key]: value });
+    if (res.success && res.data) {
+      setForms((prev) => prev.map((f) => (f._id === form._id ? (res.data as Form) : f)));
+      if (activeForm?._id === form._id) setActiveForm(res.data as Form);
+      showMessage("Setting saved.");
+    } else {
+      showMessage("Failed to update the setting.", "error");
+    }
+  }
+
   async function handleDeleteQuestion(questionId: string) {
     const res = await formsService.deleteQuestion(questionId);
     if (res.success) {
@@ -293,6 +316,16 @@ export default function FormsPage() {
               >
                 View responses
               </Link>
+              {activeForm.is_published && (
+                <button
+                  type="button"
+                  onClick={() => copyShareLink(activeForm._id)}
+                  className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
+                  style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
+                >
+                  Copy share link
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -476,6 +509,16 @@ export default function FormsPage() {
                             >
                               {form.is_published ? "Unpublish" : "Publish"}
                             </button>
+                            {form.is_published && (
+                              <button
+                                type="button"
+                                onClick={() => copyShareLink(form._id)}
+                                className="rounded-(--r-2) border px-3 py-1.5 text-xs"
+                                style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
+                              >
+                                Copy link
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => handleDeleteForm(form._id)}
@@ -534,6 +577,57 @@ export default function FormsPage() {
                 </div>
               </div>
             </div>
+
+            <section
+              className="rounded-(--r-3) p-4"
+              style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+            >
+              <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
+                Sharing &amp; settings
+              </h2>
+              <p className="text-sm mt-1" style={{ color: "var(--fg-3)" }}>
+                {activeForm.is_published
+                  ? "Anyone with the link can open this form."
+                  : "Publish the form to get a shareable link."}
+              </p>
+              <div className="mt-3 flex flex-col gap-2.5">
+                {activeForm.is_published && (
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs px-2 py-1.5 rounded-(--r-2) overflow-x-auto" style={{ background: "var(--bg-2)", color: "var(--fg-2)", border: "1px solid var(--border)" }}>
+                      {typeof window !== "undefined" ? `${window.location.origin}/forms/${activeForm._id}` : `/forms/${activeForm._id}`}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => copyShareLink(activeForm._id)}
+                      className="rounded-(--r-2) border px-3 py-1.5 text-xs shrink-0"
+                      style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                )}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={activeForm.require_authentication}
+                    onChange={(e) => void handleToggleSetting(activeForm, "require_authentication", e.target.checked)}
+                  />
+                  <span className="text-sm" style={{ color: "var(--fg-2)" }}>
+                    Require sign-in to respond <span style={{ color: "var(--fg-4)" }}>— off allows anonymous responses</span>
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={activeForm.allow_multiple_submissions}
+                    onChange={(e) => void handleToggleSetting(activeForm, "allow_multiple_submissions", e.target.checked)}
+                  />
+                  <span className="text-sm" style={{ color: "var(--fg-2)" }}>
+                    Allow multiple responses from the same person
+                  </span>
+                </label>
+              </div>
+            </section>
 
             <section
               className="rounded-(--r-3) p-4"
