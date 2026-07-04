@@ -52,6 +52,7 @@ export default function GymStaffPage() {
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (orgLoading || !currentOrg) return;
@@ -78,7 +79,7 @@ export default function GymStaffPage() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [currentOrg, orgLoading]);
+  }, [currentOrg, orgLoading, reloadKey]);
 
   const activeCount = useMemo(() => members.filter((m) => m.status === MemberStatus.ACTIVE).length, [members]);
 
@@ -147,7 +148,12 @@ export default function GymStaffPage() {
         </div>
       ) : null}
 
-      <AddStaffModal open={addStaffOpen} onClose={() => setAddStaffOpen(false)} />
+      <AddStaffModal
+        open={addStaffOpen}
+        onClose={() => setAddStaffOpen(false)}
+        organizationId={currentOrg?._id ?? null}
+        onInvited={() => setReloadKey((k) => k + 1)}
+      />
     </GymDashboardShell>
   );
 }

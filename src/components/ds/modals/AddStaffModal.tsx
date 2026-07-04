@@ -1,27 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
+import { teamsService, type TeamRole } from "@/lib/api/teams";
 
 interface AddStaffModalProps {
   open: boolean;
   onClose: () => void;
+  organizationId: string | null;
+  /** Called after an invitation is sent, so the caller can refresh its list. */
+  onInvited?: () => void;
 }
 
-const ROLES = ["Manager", "Front desk", "Trainer", "Cleaner", "Maintenance"];
-
-export function AddStaffModal({ open, onClose }: AddStaffModalProps) {
-  const [name, setName] = useState("");
+export function AddStaffModal({ open, onClose, organizationId, onInvited }: AddStaffModalProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
+  const [roleId, setRoleId] = useState("");
+  const [roles, setRoles] = useState<TeamRole[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const handleAdd = () => {
-    toast.success(`Invitation sent to ${email}`);
-    setName("");
-    setEmail("");
-    setRole("");
-    onClose();
+  // Load the org's real team roles when the modal opens.
+  useEffect(() => {
+    if (!open || !organizationId) return;
+    let active = true;
+    const run = async () => {
+      setRolesLoading(true);
+      try {
+        const res = await teamsService.getRoles(organizationId);
+        if (!active) return;
+        if (res.success && res.data) setRoles(res.data);
+        else toast.error("Couldn't load team roles");
+      } catch {
+        if (active) toast.error("Couldn't load team roles");
+      } finally {
+        if (active) setRolesLoading(false);
+      }
+    };
+    const kick = window.setTimeout(() => void run(), 0);
+    return () => {
+      active = false;
+      window.clearTimeout(kick);
+    };
+  }, [open, organizationId]);
+
+  const handleAdd = async () => {
+    if (!organizationId || sending) return;
+    setSending(true);
+    try {
+      const res = await teamsService.inviteMember(organizationId, {
+        email: email.trim(),
+        team_role_id: roleId,
+      });
+      if (res.success) {
+        toast.success(`Invitation sent to ${email.trim()}`);
+        setEmail("");
+        setRoleId("");
+        onInvited?.();
+        onClose();
+      } else {
+        toast.error(res.message || "Couldn't send the invitation");
+      }
+    } catch {
+      toast.error("Couldn't send the invitation");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -33,28 +77,37 @@ export function AddStaffModal({ open, onClose }: AddStaffModalProps) {
       footer={
         <>
           <button type="button" onClick={onClose} className="btn-ghost-v2">Cancel</button>
-          <button type="button" onClick={handleAdd} disabled={!name.trim() || !email.trim() || !role} className="btn-signal-v2 disabled:opacity-40">Send invite</button>
+          <button
+            type="button"
+            onClick={() => void handleAdd()}
+            disabled={!email.trim() || !roleId || sending || !organizationId}
+            className="btn-signal-v2 disabled:opacity-40"
+          >
+            {sending ? "Sending…" : "Send invite"}
+          </button>
         </>
       }
     >
       <div className="space-y-4">
-        <div>
-          <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">Full name</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Doe" className="h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink placeholder:text-fg-4 focus:border-border-2 focus:outline-none" />
-        </div>
         <div>
           <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">Email</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@gym.com" className="h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink placeholder:text-fg-4 focus:border-border-2 focus:outline-none" />
         </div>
         <div>
           <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">Role</label>
-          <div className="flex flex-wrap gap-1.5">
-            {ROLES.map((r) => (
-              <button key={r} type="button" onClick={() => setRole(r)} className={`rounded-(--r-full) px-3 py-1.5 text-[12.5px] font-medium transition-colors ${role === r ? "bg-ink text-bg" : "bg-bg-2 text-fg-2 hover:bg-bg-3 hover:text-ink"}`} style={{ transitionDuration: "var(--motion-fast)" }}>
-                {r}
-              </button>
-            ))}
-          </div>
+          {rolesLoading ? (
+            <p className="text-[12.5px] text-fg-3">Loading roles…</p>
+          ) : roles.length === 0 ? (
+            <p className="text-[12.5px] text-fg-3">No team roles found. Create roles under Team &amp; roles first.</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {roles.map((r) => (
+                <button key={r._id} type="button" onClick={() => setRoleId(r._id)} className={`rounded-(--r-full) px-3 py-1.5 text-[12.5px] font-medium transition-colors ${roleId === r._id ? "bg-ink text-bg" : "bg-bg-2 text-fg-2 hover:bg-bg-3 hover:text-ink"}`} style={{ transitionDuration: "var(--motion-fast)" }}>
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </ActionModal>
