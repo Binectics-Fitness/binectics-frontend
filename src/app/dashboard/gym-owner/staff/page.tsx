@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { AddStaffModal } from "@/components/ds/modals/AddStaffModal";
-import { teamsService, MemberStatus, type OrganizationMember } from "@/lib/api/teams";
+import { teamsService, MemberStatus, InvitationStatus, type OrganizationMember, type TeamInvitation } from "@/lib/api/teams";
 import { useOrganization } from "@/contexts/OrganizationContext";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -25,6 +25,11 @@ function memberEmail(m: OrganizationMember): string | null {
 function roleName(m: OrganizationMember): string {
   if (typeof m.team_role_id === "object" && m.team_role_id !== null) return m.team_role_id.name;
   return "Member";
+}
+
+function inviteRoleName(inv: TeamInvitation): string | null {
+  if (typeof inv.team_role_id === "object" && inv.team_role_id !== null) return inv.team_role_id.name;
+  return null;
 }
 
 function initials(name: string): string {
@@ -50,8 +55,10 @@ export default function GymStaffPage() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const [addStaffOpen, setAddStaffOpen] = useState(false);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<TeamInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (orgLoading || !currentOrg) return;
@@ -59,13 +66,20 @@ export default function GymStaffPage() {
     const run = async () => {
       setLoading(true);
       try {
-        const res = await teamsService.getMembers(currentOrg._id);
+        // Invitations are additive UI — a failure there shouldn't blank the staff list.
+        const [res, invitesRes] = await Promise.all([
+          teamsService.getMembers(currentOrg._id),
+          teamsService.getInvitations(currentOrg._id).catch(() => null),
+        ]);
         if (!active) return;
         if (res.success && res.data) {
           setMembers(res.data);
           setError(null);
         } else {
           setError(res.message || "We couldn't load your staff.");
+        }
+        if (invitesRes?.success && invitesRes.data) {
+          setPendingInvites(invitesRes.data.filter((i) => i.status === InvitationStatus.PENDING));
         }
       } catch {
         if (active) setError("We couldn't load your staff. Try again shortly.");
@@ -78,7 +92,7 @@ export default function GymStaffPage() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [currentOrg, orgLoading]);
+  }, [currentOrg, orgLoading, reloadKey]);
 
   const activeCount = useMemo(() => members.filter((m) => m.status === MemberStatus.ACTIVE).length, [members]);
 
@@ -147,7 +161,42 @@ export default function GymStaffPage() {
         </div>
       ) : null}
 
-      <AddStaffModal open={addStaffOpen} onClose={() => setAddStaffOpen(false)} />
+      {pendingInvites.length > 0 && (
+        <div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>
+            Pending invitations ({pendingInvites.length})
+          </div>
+          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            {pendingInvites.map((inv, i) => {
+              const role = inviteRoleName(inv);
+              return (
+                <div key={inv._id} className="grid gap-4 px-4.5 py-3.5 items-center" style={{ gridTemplateColumns: "1fr auto auto", borderBottom: i < pendingInvites.length - 1 ? "1px solid var(--border)" : "none" }}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--bg-2)", color: "var(--fg-3)", border: "1px dashed var(--border-2)" }}>{initials(inv.email)}</span>
+                    <div className="min-w-0">
+                      <div className="text-[14px] font-medium truncate" style={{ color: "var(--ink)" }}>{inv.email}</div>
+                      <div className="font-mono text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>{role ?? "Awaiting acceptance"}</div>
+                    </div>
+                  </div>
+                  <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
+                    Expires {format(new Date(inv.expires_at), "dd MMM")}
+                  </span>
+                  <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: "oklch(0.42 0.13 75)", background: "var(--trainer-soft)", border: "1px solid oklch(0.42 0.13 75)" }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />Invited
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <AddStaffModal
+        open={addStaffOpen}
+        onClose={() => setAddStaffOpen(false)}
+        organizationId={currentOrg?._id ?? null}
+        onInvited={() => setReloadKey((k) => k + 1)}
+      />
     </GymDashboardShell>
   );
 }
