@@ -62,7 +62,7 @@ export default function GymLocationsPage() {
 
   return (
     <GymDashboardShell
-      activeItem="Locations · 4"
+      activeItem="Locations"
       crumb="Locations"
       actions={<AddLocationButton />}
     >

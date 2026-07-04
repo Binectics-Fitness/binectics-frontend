@@ -26,14 +26,15 @@ export default function LocationDetailClient() {
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
 
+  const orgId = currentOrg?._id;
   useEffect(() => {
-    if (orgLoading || !currentOrg || !params.locationId) return;
+    if (orgLoading || !orgId || !params.locationId) return;
     let active = true;
     const run = async () => {
       setLoading(true);
       try {
         // No single-location endpoint yet — fetch the org's list and pick.
-        const res = await teamsService.getLocations(currentOrg._id);
+        const res = await teamsService.getLocations(orgId);
         if (!active) return;
         if (res.success && res.data) {
           const found = res.data.find((l) => l._id === params.locationId) ?? null;
@@ -62,7 +63,7 @@ export default function LocationDetailClient() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [currentOrg, orgLoading, params.locationId]);
+  }, [orgId, orgLoading, params.locationId]);
 
   async function handleSave() {
     if (!currentOrg || !location || saving || !name.trim()) return;

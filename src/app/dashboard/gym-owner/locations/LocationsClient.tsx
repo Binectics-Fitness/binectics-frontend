@@ -21,13 +21,14 @@ export default function LocationsClient() {
   const [addOpen, setAddOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
+  const orgId = currentOrg?._id;
   useEffect(() => {
-    if (orgLoading || !currentOrg) return;
+    if (orgLoading || !orgId) return;
     let active = true;
     const run = async () => {
       setLoading(true);
       try {
-        const res = await teamsService.getLocations(currentOrg._id);
+        const res = await teamsService.getLocations(orgId);
         if (!active) return;
         if (res.success && res.data) {
           setLocations(res.data);
@@ -46,7 +47,7 @@ export default function LocationsClient() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [currentOrg, orgLoading, reloadKey]);
+  }, [orgId, orgLoading, reloadKey]);
 
   const activeLocations = locations.filter((l) => l.is_active);
 
