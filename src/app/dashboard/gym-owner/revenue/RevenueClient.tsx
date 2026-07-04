@@ -6,7 +6,7 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { useRegion } from "@/contexts/RegionContext";
+import { formatCurrencyAmount } from "@/lib/constants/regions";
 import {
   MembershipSubscriptionStatus,
   type MembershipSubscription,
@@ -22,9 +22,10 @@ function planName(sub: MembershipSubscription): string {
 
 export default function RevenueClient() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
-  const { formatAmount } = useRegion();
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [revenueStats, setRevenueStats] = useState<OrgRevenueStats | null>(null);
+  // Org money renders in the org's own currency — never the visitor's region.
+  const formatAmount = (n: number) => formatCurrencyAmount(n, revenueStats?.currency ?? currentOrg?.currency);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
