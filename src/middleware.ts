@@ -11,7 +11,9 @@ const protectedRoutes = [
   "/dashboard",
   "/member",
   "/admin",
-  "/forms",
+  // "/forms" is deliberately public: /forms/[formId] is the shareable fill
+  // page (anonymous submissions are a backend feature; forms that require
+  // authentication enforce it in-page and at the API).
   "/check-in",
   "/checkout",
   "/teams",
