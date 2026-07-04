@@ -11,14 +11,19 @@ import { SUPPORTED_CURRENCIES } from "@/lib/constants/regions";
  */
 export function OrgCurrencyField() {
   const { currentOrg, refreshOrganizations } = useOrganization();
-  const [picked, setPicked] = useState<string | null>(null);
+  // Track the pick per org so switching the active organization never shows
+  // another org's selection.
+  const [picked, setPicked] = useState<{ orgId: string; code: string } | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
-  const value = picked ?? currentOrg?.currency ?? "USD";
+  const value =
+    (picked && picked.orgId === currentOrg?._id ? picked.code : null) ??
+    currentOrg?.currency ??
+    "USD";
 
   const onChange = async (code: string) => {
-    setPicked(code);
     if (!currentOrg?._id) return;
+    setPicked({ orgId: currentOrg._id, code });
     setStatus("saving");
     try {
       const res = await teamsService.updateOrganization(currentOrg._id, { currency: code });
@@ -42,7 +47,7 @@ export function OrgCurrencyField() {
         id="org-default-currency"
         value={value}
         onChange={(e) => void onChange(e.target.value)}
-        disabled={!currentOrg}
+        disabled={!currentOrg || status === "saving"}
         className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]"
         style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }}
       >

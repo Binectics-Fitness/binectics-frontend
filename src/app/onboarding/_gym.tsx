@@ -27,7 +27,7 @@ const currencyOption = (code: string) =>
   CURRENCY_OPTIONS.find((o) => o.startsWith(code)) ?? CURRENCY_OPTIONS[0];
 
 export function GymStep1({ data, setField }: StepProps) {
-  const { currentOrg } = useOrganization();
+  const { currentOrg, refreshOrganizations } = useOrganization();
   const country = (data.country as string) || "South Africa";
   // Explicit pick > what the org already has > suggested by country.
   const currency =
@@ -37,22 +37,26 @@ export function GymStep1({ data, setField }: StepProps) {
     "USD";
 
   // Persist the effective currency onto the organization as soon as it's
-  // known (the workspace is auto-created before this step renders). The ref
-  // avoids re-sending the same value; a failed patch clears it for retry.
-  const lastSynced = useRef<string | null>(currentOrg?.currency ?? null);
+  // known (the workspace is auto-created before this step renders). Skips
+  // when the org already holds this value — no write-back on plain loads —
+  // and refreshes the org context on success so later steps see it. The ref
+  // dedupes in-flight sends; a failed patch clears it for retry.
+  const lastSynced = useRef<string | null>(null);
   const orgId = currentOrg?._id;
+  const orgCurrency = currentOrg?.currency;
   useEffect(() => {
-    if (!orgId || lastSynced.current === currency) return;
+    if (!orgId || currency === orgCurrency || lastSynced.current === currency) return;
     lastSynced.current = currency;
     void teamsService
       .updateOrganization(orgId, { currency })
       .then((res) => {
-        if (!res.success) lastSynced.current = null;
+        if (res.success) void refreshOrganizations();
+        else lastSynced.current = null;
       })
       .catch(() => {
         lastSynced.current = null;
       });
-  }, [currency, orgId]);
+  }, [currency, orgId, orgCurrency, refreshOrganizations]);
 
   return (
     <>
