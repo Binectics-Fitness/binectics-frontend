@@ -95,7 +95,7 @@ export function TemplateGallery({ onCreated, onError }: TemplateGalleryProps) {
                   className="font-mono text-[10px] uppercase tracking-wider rounded-(--r-2) px-1.5 py-0.5"
                   style={{ background: "var(--bg)", color: "var(--fg-3)", border: "1px solid var(--border)" }}
                 >
-                  {CATEGORY_LABEL[t.category]}
+                  {CATEGORY_LABEL[t.category] ?? t.category}
                 </span>
                 <span className="font-mono text-xs tabular-nums" style={{ color: "var(--fg-4)" }}>
                   {t.questions.length} questions
