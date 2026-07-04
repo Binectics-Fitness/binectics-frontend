@@ -44,6 +44,14 @@ export function AddStaffModal({ open, onClose, organizationId, onInvited }: AddS
     };
   }, [open, organizationId]);
 
+  const emailValid = /^\S+@\S+\.\S+$/.test(email.trim());
+
+  const handleClose = () => {
+    setEmail("");
+    setRoleId("");
+    onClose();
+  };
+
   const handleAdd = async () => {
     if (!organizationId || sending) return;
     setSending(true);
@@ -54,10 +62,8 @@ export function AddStaffModal({ open, onClose, organizationId, onInvited }: AddS
       });
       if (res.success) {
         toast.success(`Invitation sent to ${email.trim()}`);
-        setEmail("");
-        setRoleId("");
         onInvited?.();
-        onClose();
+        handleClose();
       } else {
         toast.error(res.message || "Couldn't send the invitation");
       }
@@ -71,16 +77,16 @@ export function AddStaffModal({ open, onClose, organizationId, onInvited }: AddS
   return (
     <ActionModal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title="Add staff member"
       description="They will receive an email invitation to join your team."
       footer={
         <>
-          <button type="button" onClick={onClose} className="btn-ghost-v2">Cancel</button>
+          <button type="button" onClick={handleClose} className="btn-ghost-v2">Cancel</button>
           <button
             type="button"
             onClick={() => void handleAdd()}
-            disabled={!email.trim() || !roleId || sending || !organizationId}
+            disabled={!emailValid || !roleId || sending || !organizationId}
             className="btn-signal-v2 disabled:opacity-40"
           >
             {sending ? "Sending…" : "Send invite"}
