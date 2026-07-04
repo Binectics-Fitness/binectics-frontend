@@ -7,9 +7,12 @@ import type { ApiResponse } from "@/lib/types";
 import { clearAuthStorage } from "@/lib/utils/storage";
 import { isAuthRoute } from "@/lib/constants/routes";
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1";
+// Default to the same-origin path served by the netlify.toml proxy. The API
+// must be same-origin in production so the httpOnly auth cookies are
+// first-party; a direct cross-site URL here breaks login in browsers that
+// block third-party cookies. All API consumers run in the browser, so a
+// relative path is safe. Local dev overrides this via NEXT_PUBLIC_API_URL.
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 /** The loosely-typed envelope every API response is parsed into before it is
  *  narrowed to a concrete ApiResponse<T>. Replaces an untyped `any`. */
