@@ -11,3 +11,14 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Proxy the backend API through this site's own domain so the httpOnly auth
+# cookies are FIRST-party: the browser stores and sends them regardless of
+# third-party-cookie policy, and the Next middleware can see access_token.
+# Requires NEXT_PUBLIC_API_URL to point at this site (e.g.
+# https://binectics.netlify.app/api/v1) instead of the Azure host.
+[[redirects]]
+  from = "/api/v1/*"
+  to = "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1/:splat"
+  status = 200
+  force = true
