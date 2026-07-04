@@ -5,6 +5,7 @@ import Link from "next/link";
 import SearchableSelect from "@/components/SearchableSelect";
 import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { TemplateGallery } from "./TemplateGallery";
 import {
   formsService,
   QuestionType,
@@ -311,6 +312,15 @@ export default function FormsPage() {
 
         {view === "list" && (
           <>
+            <TemplateGallery
+              onCreated={(form) => {
+                setForms((prev) => [...prev, form]);
+                showMessage("Form created from template. Review and publish when ready.");
+                void openBuilder(form);
+              }}
+              onError={(text) => showMessage(text, "error")}
+            />
+
             {showCreateForm && (
               <section
                 className="rounded-(--r-3) p-4"
