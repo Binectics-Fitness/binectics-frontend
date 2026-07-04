@@ -289,6 +289,16 @@ export const teamsService = {
     );
   },
 
+  /** Deactivate a location */
+  async deleteLocation(
+    organizationId: string,
+    locationId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(
+      `/teams/organizations/${organizationId}/locations/${locationId}`,
+    );
+  },
+
   // ==================== PLAN TEMPLATES ====================
 
   async seedMembershipPlanTemplate(
