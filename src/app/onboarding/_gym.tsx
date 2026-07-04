@@ -1,21 +1,72 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, TextArea, ChipGrid, UploadZone, RadioCards } from "./_components";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { teamsService } from "@/lib/api/teams";
+import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/constants/regions";
 
 function toggleChip(list: string[], chip: string): string[] {
   return list.includes(chip) ? list.filter((c) => c !== chip) : [...list, chip];
 }
 
+/** Suggested default currency for the onboarding country choices. */
+const COUNTRY_NAME_TO_CURRENCY: Record<string, CurrencyCode> = {
+  "South Africa": "ZAR",
+  Nigeria: "NGN",
+  Kenya: "KES",
+  Ghana: "USD", // GHS not supported yet
+  "United States": "USD",
+  "United Kingdom": "GBP",
+};
+
+const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map(
+  (c) => `${c.currencyCode} · ${c.symbol}`,
+);
+const currencyOption = (code: string) =>
+  CURRENCY_OPTIONS.find((o) => o.startsWith(code)) ?? CURRENCY_OPTIONS[0];
+
 export function GymStep1({ data, setField }: StepProps) {
+  const { currentOrg } = useOrganization();
+  const country = (data.country as string) || "South Africa";
+  // Explicit pick > what the org already has > suggested by country.
+  const currency =
+    (data.currency as string) ??
+    currentOrg?.currency ??
+    COUNTRY_NAME_TO_CURRENCY[country] ??
+    "USD";
+
+  // Persist the effective currency onto the organization as soon as it's
+  // known (the workspace is auto-created before this step renders). The ref
+  // avoids re-sending the same value; a failed patch clears it for retry.
+  const lastSynced = useRef<string | null>(currentOrg?.currency ?? null);
+  const orgId = currentOrg?._id;
+  useEffect(() => {
+    if (!orgId || lastSynced.current === currency) return;
+    lastSynced.current = currency;
+    void teamsService
+      .updateOrganization(orgId, { currency })
+      .then((res) => {
+        if (!res.success) lastSynced.current = null;
+      })
+      .catch(() => {
+        lastSynced.current = null;
+      });
+  }, [currency, orgId]);
+
   return (
     <>
       <StageHead crumb="Step 01 of 08 — gym track" title="Business details." desc="Tell us who you are — we'll use this on receipts and your verified profile." />
       <FormGrid>
         <Field label="Business name"><TextInput value={(data.bizName as string) || ""} onChange={(v) => setField("bizName", v)} placeholder="Iron Lab" /></Field>
         <Field label="Legal entity"><SelectField value={(data.entity as string) || "Pty Ltd"} onChange={(v) => setField("entity", v)} options={["Pty Ltd", "CC", "Sole prop", "LLC", "Inc"]} /></Field>
-        <Field label="Country"><SelectField value={(data.country as string) || "South Africa"} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Country"><SelectField value={country} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
         <Field label="Registration #"><TextInput value={(data.regNumber as string) || ""} onChange={(v) => setField("regNumber", v)} placeholder="2018/123456/07" /></Field>
+        <Field label="Default currency"><SelectField value={currencyOption(currency)} onChange={(v) => setField("currency", v.slice(0, 3))} options={CURRENCY_OPTIONS} /></Field>
       </FormGrid>
+      <p className="text-[12px] mt-2" style={{ color: "var(--fg-3)" }}>
+        New membership plans and listings price in this currency. You can change it any time in Settings.
+      </p>
     </>
   );
 }

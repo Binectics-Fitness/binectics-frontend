@@ -10,7 +10,7 @@ import { checkinsService } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRegion } from "@/contexts/RegionContext";
+import { formatCurrencyAmount } from "@/lib/constants/regions";
 import {
   MembershipSubscriptionStatus,
   type CheckIn,
@@ -88,7 +88,8 @@ function CardHead({ title, sub }: { title: string; sub?: string }) {
 export default function GymOverviewClient() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { user } = useAuth();
-  const { formatAmount } = useRegion();
+  // Org money renders in the org's own currency — never the visitor's region.
+  const formatAmount = (n: number) => formatCurrencyAmount(n, currentOrg?.currency);
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
@@ -277,7 +278,7 @@ export default function GymOverviewClient() {
                             </span>
                           </td>
                           <td className="px-4.5 py-3 font-mono text-[12px]" style={{ borderBottom: border, color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{format(new Date(sub.created_at), "dd MMM yyyy")}</td>
-                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid != null ? formatAmount(sub.amount_paid) : "—"}</td>
+                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid != null ? formatCurrencyAmount(sub.amount_paid, sub.currency ?? currentOrg?.currency) : "—"}</td>
                         </tr>
                       );
                     })}

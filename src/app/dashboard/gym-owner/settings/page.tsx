@@ -1,4 +1,5 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { OrgCurrencyField } from "./OrgCurrencyField";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -127,7 +128,8 @@ export default function GymSettingsPage() {
             <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>How money and dates render across your dashboard and to your members.</p>
             <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                {[{ label: "Default currency", value: "ZAR · R" }, { label: "Time zone", value: "Africa / Johannesburg · UTC+2" }, { label: "First day of week", value: "Monday" }].map((f) => (
+                <OrgCurrencyField />
+                {[{ label: "Time zone", value: "Africa / Johannesburg · UTC+2" }, { label: "First day of week", value: "Monday" }].map((f) => (
                   <div key={f.label} className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>{f.label}</label>
                     <input defaultValue={f.value} className="rounded-(--r-2) px-3.5 py-2.75 text-[14px]" style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} />

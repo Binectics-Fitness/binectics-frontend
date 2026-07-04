@@ -87,6 +87,29 @@ export function getRegionForCountry(countryCode: string): RegionConfig {
   return COUNTRY_TO_REGION[countryCode.toUpperCase()] ?? DEFAULT_REGION;
 }
 
+/**
+ * All currencies an organization can price in (its default currency picker).
+ * Distinct from the visitor-facing region system: an org's money stays in the
+ * org's currency no matter where it is viewed from.
+ */
+export const SUPPORTED_CURRENCIES: RegionConfig[] = [USD, GBP, EUR, NGN, KES, ZAR, AED, INR];
+
+export function getConfigForCurrency(code: string | null | undefined): RegionConfig {
+  const upper = (code ?? "").toUpperCase();
+  return SUPPORTED_CURRENCIES.find((c) => c.currencyCode === upper) ?? DEFAULT_REGION;
+}
+
+/**
+ * Format an amount denominated in a specific currency (org revenue, plan
+ * prices, member subscriptions). Use this — not the region context's
+ * formatAmount — for org-owned money, so a ZAR gym's numbers don't get
+ * re-symbolized into the viewer's region currency.
+ */
+export function formatCurrencyAmount(amount: number, currency: string | null | undefined): string {
+  const config = getConfigForCurrency(currency);
+  return formatRegionPrice(amount, config.currencyCode, config.locale);
+}
+
 export function getMarketPrice(tier: PlanTier, currency: CurrencyCode): number {
   return MARKET_PRICES[tier][currency];
 }
