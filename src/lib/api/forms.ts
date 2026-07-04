@@ -160,6 +160,26 @@ export interface SubmitFormResponseRequest {
   completion_time_seconds?: number;
 }
 
+// ==================== TEMPLATES ====================
+
+export interface FormTemplateQuestion {
+  type: QuestionType;
+  label: string;
+  help_text?: string;
+  is_required?: boolean;
+  options?: { value: string; label: string }[];
+  min_value?: number;
+  max_value?: number;
+}
+
+export interface FormTemplate {
+  key: string;
+  title: string;
+  description: string;
+  category: "gym" | "trainer" | "dietitian";
+  questions: FormTemplateQuestion[];
+}
+
 // ==================== SERVICE ====================
 
 export const formsService = {
@@ -170,6 +190,20 @@ export const formsService = {
    */
   async createForm(data: CreateFormRequest): Promise<ApiResponse<Form>> {
     return await apiClient.post<Form>("/forms", data);
+  },
+
+  /** List the platform's ready-made form templates */
+  async getTemplates(category?: string): Promise<ApiResponse<FormTemplate[]>> {
+    const query = category ? `?category=${encodeURIComponent(category)}` : "";
+    return await apiClient.get<FormTemplate[]>(`/forms/templates${query}`);
+  },
+
+  /** Create a personal draft form from a ready-made template */
+  async createFromTemplate(templateKey: string): Promise<ApiResponse<Form>> {
+    return await apiClient.post<Form>(
+      `/forms/from-template/${encodeURIComponent(templateKey)}`,
+      {},
+    );
   },
 
   /**
