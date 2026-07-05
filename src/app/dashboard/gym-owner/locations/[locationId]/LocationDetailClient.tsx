@@ -167,7 +167,7 @@ export default function LocationDetailClient() {
                 <label className={labelClass}>Street address</label>
                 <input type="text" value={street} onChange={(e) => setStreet(e.target.value)} className={inputClass} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className={labelClass}>City</label>
                   <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
