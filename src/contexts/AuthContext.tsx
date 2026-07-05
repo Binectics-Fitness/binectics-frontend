@@ -136,6 +136,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logout();
   };
 
+  // Dismiss the modal without logging in or out — the user stays on the
+  // current page (e.g. to copy unsaved work before signing back in).
+  const handleModalClose = () => {
+    setShowSessionModal(false);
+    setSessionEnded(false);
+  };
+
   const login = async (
     data: LoginRequest,
   ): Promise<{
@@ -258,6 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionEnded={sessionEnded}
         onContinue={handleContinueSession}
         onLogout={handleModalLogout}
+        onClose={handleModalClose}
       />
     </AuthContext.Provider>
   );
