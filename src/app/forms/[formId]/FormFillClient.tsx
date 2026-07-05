@@ -97,7 +97,9 @@ function QuestionField({
     }
     case QuestionType.RATING: {
       const min = question.min_value ?? 1;
-      const max = question.max_value ?? 5;
+      // Guard against a misconfigured range (max < min) that would otherwise
+      // render zero buttons and make a required rating unanswerable.
+      const max = Math.max(min, question.max_value ?? 5);
       const steps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
       return (
         <div className="flex flex-wrap gap-1.5">
@@ -121,12 +123,12 @@ function QuestionField({
       );
     }
     case QuestionType.NUMBER:
+      // No native min/max — range is validated in handleSubmit so the styled
+      // error panel fires instead of a native browser bubble.
       return (
         <input
           type="number"
           value={(value as number | string) ?? ""}
-          min={question.min_value}
-          max={question.max_value}
           onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
           className={inputClass}
           style={inputStyle}
@@ -185,23 +187,40 @@ export default function FormFillClient() {
     const run = async () => {
       setLoading(true);
       try {
-        const [formRes, questionsRes] = await Promise.all([
-          formsService.getFormById(params.formId),
-          formsService.getFormQuestions(params.formId),
-        ]);
+        const formRes = await formsService.getFormById(params.formId);
         if (!active) return;
-        if (formRes.success && formRes.data) {
-          setForm(formRes.data);
-          setQuestions(
-            (questionsRes.success && questionsRes.data ? questionsRes.data : [])
-              .filter((q) => q.is_active)
-              .sort((a, b) => a.order_index - b.order_index),
-          );
-          setLoadError(null);
-          startedAt.current = performance.now();
-        } else {
+        if (!formRes.success || !formRes.data) {
           setLoadError(formRes.message || "This form could not be loaded.");
+          return;
         }
+        const loadedForm = formRes.data;
+        setForm(loadedForm);
+
+        // Don't fetch the questions of an auth-required form for a viewer who
+        // hasn't signed in — otherwise the question text is exposed over the
+        // wire before the sign-in gate. They load once the user authenticates
+        // (this effect re-runs when `user` changes).
+        if (loadedForm.require_authentication && !user) {
+          setQuestions([]);
+          setLoadError(null);
+          return;
+        }
+
+        const questionsRes = await formsService.getFormQuestions(params.formId);
+        if (!active) return;
+        if (!questionsRes.success || !questionsRes.data) {
+          // A form that loaded but whose questions failed is an error, not an
+          // empty form — surface it instead of "no questions yet".
+          setLoadError("This form's questions could not be loaded. Try again shortly.");
+          return;
+        }
+        setQuestions(
+          questionsRes.data
+            .filter((q) => q.is_active)
+            .sort((a, b) => a.order_index - b.order_index),
+        );
+        setLoadError(null);
+        startedAt.current = performance.now();
       } catch {
         if (active) setLoadError("This form could not be loaded. Try again shortly.");
       } finally {
@@ -213,7 +232,7 @@ export default function FormFillClient() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [params.formId]);
+  }, [params.formId, user]);
 
   const missingRequired = questions.filter(
     (q) => q.is_required && !isAnswered(answers[q._id] ?? null),
@@ -224,6 +243,29 @@ export default function FormFillClient() {
     if (!form || submitting) return;
     if (missingRequired.length > 0) {
       setSubmitError(`Please answer the required question${missingRequired.length === 1 ? "" : "s"}: ${missingRequired.map((q) => `"${q.label}"`).join(", ")}`);
+      return;
+    }
+    // Range-check numbers here (native min/max is dropped) so the styled panel
+    // shows instead of a native bubble.
+    const outOfRange = questions.find((q) => {
+      if (q.type !== QuestionType.NUMBER) return false;
+      const v = answers[q._id];
+      if (typeof v !== "number") return false;
+      return (
+        (q.min_value != null && v < q.min_value) ||
+        (q.max_value != null && v > q.max_value)
+      );
+    });
+    if (outOfRange) {
+      const lo = outOfRange.min_value;
+      const hi = outOfRange.max_value;
+      const bounds =
+        lo != null && hi != null
+          ? `between ${lo} and ${hi}`
+          : lo != null
+          ? `at least ${lo}`
+          : `at most ${hi}`;
+      setSubmitError(`"${outOfRange.label}" must be ${bounds}.`);
       return;
     }
     setSubmitting(true);
@@ -263,7 +305,7 @@ export default function FormFillClient() {
             <h1 className="text-[20px] font-medium" style={{ color: "var(--ink)" }}>Form unavailable</h1>
             <p className="text-[14px] mt-2" style={{ color: "var(--fg-3)" }}>{loadError ?? "This form could not be found."}</p>
           </div>
-        ) : !form.is_published ? (
+        ) : !form.is_published || !form.is_active ? (
           <div className="rounded-(--r-3) p-8" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             <h1 className="text-[20px] font-medium" style={{ color: "var(--ink)" }}>This form isn&apos;t accepting responses</h1>
             <p className="text-[14px] mt-2" style={{ color: "var(--fg-3)" }}>The owner hasn&apos;t published it yet.</p>
