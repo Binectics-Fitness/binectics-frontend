@@ -647,7 +647,7 @@ export default function FormsPage() {
                 </p>
               ) : (
                 <ol className="mt-4 flex flex-col gap-2">
-                  {questions
+                  {[...questions]
                     .sort((a, b) => a.order_index - b.order_index)
                     .map((q, index) => (
                       <li
