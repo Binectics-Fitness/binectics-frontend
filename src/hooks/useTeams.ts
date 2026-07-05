@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { teamsService } from "@/lib/api/teams";
+import type { ApiResponse } from "@/lib/types";
 import type {
   Organization,
   CreateOrganizationRequest,
@@ -103,14 +104,17 @@ export function useOrgManagement(orgId: string) {
     setIsLoading(false);
   }, [orgId]);
 
+  // Invite/direct-add return the full response so callers can surface the
+  // real API error (e.g. a billing 403) instead of a generic message.
   const inviteMember = useCallback(
-    async (data: InviteMemberRequest): Promise<TeamInvitation | null> => {
+    async (
+      data: InviteMemberRequest,
+    ): Promise<ApiResponse<TeamInvitation>> => {
       const response = await teamsService.inviteMember(orgId, data);
       if (response.success && response.data) {
         setInvitations((prev) => [...prev, response.data!]);
-        return response.data;
       }
-      return null;
+      return response;
     },
     [orgId],
   );
@@ -118,13 +122,12 @@ export function useOrgManagement(orgId: string) {
   const addMemberDirect = useCallback(
     async (
       data: AddMemberDirectRequest,
-    ): Promise<OrganizationMember | null> => {
+    ): Promise<ApiResponse<OrganizationMember>> => {
       const response = await teamsService.addMemberDirect(orgId, data);
       if (response.success && response.data) {
         setMembers((prev) => [...prev, response.data!]);
-        return response.data;
       }
-      return null;
+      return response;
     },
     [orgId],
   );

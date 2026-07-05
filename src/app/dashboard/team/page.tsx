@@ -13,6 +13,28 @@ import {
   type OrganizationMember,
   type TeamInvitation,
 } from "@/lib/api/teams";
+import type { ApiResponse } from "@/lib/types";
+import { parseBillingError, billingResourceLabel } from "@/lib/utils/billingErrors";
+
+/**
+ * Turn an API failure into a message the owner can act on — especially the
+ * billing 403 (e.g. Free plan with 0 staff seats), which otherwise looked
+ * like a generic "please try again".
+ */
+function describeTeamError(res: ApiResponse<unknown>, fallback: string): string {
+  const billing = parseBillingError(res);
+  if (billing?.kind === "limit") {
+    const label = billingResourceLabel(billing.resource);
+    const tier = billing.planTier ? `${billing.planTier} ` : "";
+    return billing.limit === 0
+      ? `Your ${tier}plan doesn't include ${label}. Upgrade your plan to add team members.`
+      : `You've used all ${billing.limit} ${label} on your ${tier}plan. Upgrade to add more.`;
+  }
+  if (billing?.kind === "feature") {
+    return `${billingResourceLabel(billing.resource)} isn't included in your ${billing.planTier ?? "current"} plan.`;
+  }
+  return res.message || fallback;
+}
 
 function roleNameFromMember(member: OrganizationMember): string {
   return typeof member.team_role_id === "string"
@@ -163,16 +185,18 @@ export default function TeamWorkspacePage() {
 
     setSubmittingInvite(true);
     setGlobalMessage(null);
-    const invited = await inviteMember({
+    const res = await inviteMember({
       email: inviteEmail.trim(),
       team_role_id: selectedInviteRoleId,
     });
 
-    if (invited) {
+    if (res.success) {
       setInviteEmail("");
       setGlobalMessage("Invitation sent successfully.");
     } else {
-      setGlobalMessage("Unable to send invitation. Please try again.");
+      setGlobalMessage(
+        describeTeamError(res, "Unable to send invitation. Please try again."),
+      );
     }
     setSubmittingInvite(false);
   }
@@ -185,7 +209,7 @@ export default function TeamWorkspacePage() {
 
     setSubmittingDirect(true);
     setGlobalMessage(null);
-    const added = await addMemberDirect({
+    const res = await addMemberDirect({
       first_name: directFirstName,
       last_name: directLastName,
       email: directEmail.trim(),
@@ -193,14 +217,16 @@ export default function TeamWorkspacePage() {
       team_role_id: selectedDirectRoleId,
     });
 
-    if (added) {
+    if (res.success) {
       setDirectFirstName("");
       setDirectLastName("");
       setDirectEmail("");
       setDirectPassword("");
       setGlobalMessage("Member added and invited successfully.");
     } else {
-      setGlobalMessage("Unable to add member. Please try again.");
+      setGlobalMessage(
+        describeTeamError(res, "Unable to add member. Please try again."),
+      );
     }
     setSubmittingDirect(false);
   }
