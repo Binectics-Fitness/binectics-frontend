@@ -8,7 +8,8 @@ import { displayFractionDigits } from "@/lib/constants/regions";
 
 /**
  * Format a date string to a human-readable format.
- * @deprecated Prefer formatLocal() or formatInTz() for explicit timezone-safe output.
+ * @deprecated In org-scoped dashboards prefer useOrgFormat().fmtDate (respects
+ * the org's saved date format & time zone); otherwise formatLocal()/formatInTz().
  * @param dateStr - ISO date string
  * @param options - Intl.DateTimeFormatOptions for customization
  * @returns Formatted date string (e.g., "Mar 15, 2024")
@@ -16,11 +17,12 @@ import { displayFractionDigits } from "@/lib/constants/regions";
 export function formatDate(
   dateStr: string | Date | undefined | null,
   options?: Intl.DateTimeFormatOptions,
+  locale: string = "en-US",
 ): string {
   if (!dateStr) return "N/A";
   const date = typeof dateStr === "string" ? new Date(dateStr) : dateStr;
   if (isNaN(date.getTime())) return "N/A";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: getClientTimezone(),
     ...(options ?? { month: "short", day: "numeric", year: "numeric" }),
   }).format(date);

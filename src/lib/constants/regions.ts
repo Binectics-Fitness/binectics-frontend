@@ -105,9 +105,14 @@ export function getConfigForCurrency(code: string | null | undefined): RegionCon
  * formatAmount — for org-owned money, so a ZAR gym's numbers don't get
  * re-symbolized into the viewer's region currency.
  */
-export function formatCurrencyAmount(amount: number, currency: string | null | undefined): string {
+export function formatCurrencyAmount(
+  amount: number,
+  currency: string | null | undefined,
+  /** Override the grouping locale (e.g. from the org's number_format pref). */
+  localeOverride?: string,
+): string {
   const config = getConfigForCurrency(currency);
-  return formatRegionPrice(amount, config.currencyCode, config.locale);
+  return formatRegionPrice(amount, config.currencyCode, localeOverride ?? config.locale);
 }
 
 export function getMarketPrice(tier: PlanTier, currency: CurrencyCode): number {
