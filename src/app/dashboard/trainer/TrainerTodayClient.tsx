@@ -13,6 +13,7 @@ import {
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ const BOOKING_STATUS_STYLE: Record<string, { color: string; bg: string; label: s
 
 export default function TrainerTodayClient() {
   const { user } = useAuth();
+  const { fmtDate, fmtTime } = useOrgFormat();
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [now, setNow] = useState(0);
@@ -114,8 +116,8 @@ export default function TrainerTodayClient() {
     { label: "Upcoming sessions", value: String(upcoming.length), sub: "Confirmed + pending" },
     {
       label: "Next session",
-      value: upcoming[0] ? format(new Date(upcoming[0].startsAt), "HH:mm") : "—",
-      sub: upcoming[0] ? format(new Date(upcoming[0].startsAt), "EEE d MMM") : "None scheduled",
+      value: upcoming[0] ? fmtTime(upcoming[0].startsAt) : "—",
+      sub: upcoming[0] ? fmtDate(upcoming[0].startsAt) : "None scheduled",
     },
   ];
 
@@ -176,8 +178,8 @@ export default function TrainerTodayClient() {
                   return (
                     <div key={b.id} className="grid gap-3 px-4.5 py-3 items-center" style={{ gridTemplateColumns: "auto 1fr auto", borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
                       <div className="text-center" style={{ minWidth: 56 }}>
-                        <div className="font-mono text-[14px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{format(start, "HH:mm")}</div>
-                        <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{format(start, "EEE d MMM")}</div>
+                        <div className="font-mono text-[14px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fmtTime(start)}</div>
+                        <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{fmtDate(start)}</div>
                       </div>
                       <div className="min-w-0">
                         <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{bookingClientName(b)}</div>

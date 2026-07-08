@@ -8,6 +8,7 @@ import {
   progressService,
   type MealFeedback,
 } from "@/lib/api/progress";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 type FeedbackRow = MealFeedback & {
   clientLabel: string;
@@ -20,6 +21,7 @@ function pillStyle(status: string) {
 }
 
 export default function DietitianFeedbackPage() {
+  const { fmtDate, fmtDateTime } = useOrgFormat();
   const [rows, setRows] = useState<FeedbackRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -108,11 +110,11 @@ export default function DietitianFeedbackPage() {
             <div className="aspect-[4/3]" style={{ background: "linear-gradient(135deg, var(--bg-2), var(--bg-3))" }} />
             <div className="p-5.5 pt-3.5">
               <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{m.clientLabel}</div>
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5 mb-2" style={{ color: "var(--fg-3)" }}>{m.meal_type.toLowerCase()} · {new Date(m.meal_date).toLocaleDateString("en-GB")}</div>
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5 mb-2" style={{ color: "var(--fg-3)" }}>{m.meal_type.toLowerCase()} · {fmtDate(m.meal_date)}</div>
               <div className="text-[13px] mb-3" style={{ color: "var(--fg-2)" }}>{m.description}</div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={pillStyle(state.status)}>{state.text}</span>
-                <span className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{new Date(m.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                <span className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{fmtDateTime(m.created_at)}</span>
               </div>
             </div>
           </div>

@@ -8,6 +8,7 @@ import {
   type ConsultationBooking,
   type ConsultationType,
 } from "@/lib/api/consultations";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 /* ─── Data ──────────────────────────────────────────────── */
 
@@ -28,15 +29,6 @@ function toFilter(status: ConsultationBookingStatus): Filter {
     return "Cancelled";
   }
   return "Past";
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleString("en-GB", {
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 /* ─── Helpers ────────────────────────────────────────────── */
@@ -79,6 +71,7 @@ function TypePill({ type }: { type: "Initial" | "Follow-up" | "Review" }) {
 /* ─── Page ───────────────────────────────────────────────── */
 
 export default function DietitianConsultationsPage() {
+  const { fmtDateTime } = useOrgFormat();
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [typesById, setTypesById] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
@@ -260,7 +253,7 @@ export default function DietitianConsultationsPage() {
                     </div>
                   </td>
                   <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{formatDate(c.startsAt)}</span>
+                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{fmtDateTime(c.startsAt)}</span>
                   </td>
                   <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                     <TypePill type={type.includes("Initial") ? "Initial" : type.includes("Review") ? "Review" : "Follow-up"} />

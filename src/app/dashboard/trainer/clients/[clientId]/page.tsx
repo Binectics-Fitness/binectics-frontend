@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, ClientJournalEntry } from "@/lib/api/progress";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 /**
  * Client detail — client.html prototype.
@@ -26,19 +27,6 @@ function clientInitials(profile: ClientProfile): string {
     : name.slice(0, 2).toUpperCase();
 }
 
-function formatDate(value?: string): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("en-GB", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 const SIGNALS = [
   { color: "var(--signal)", title: "Streak momentum", desc: "32 consecutive days. Longest since joining. Worth acknowledging — it sustains itself after 30." },
   { color: "var(--warn)", title: "Shoulder monitor", desc: "Left shoulder click on OHP noted May 14. 2-week window before referral. Check in Wed." },
@@ -55,6 +43,7 @@ const TYPE_COLORS: Record<string, { bg: string; color: string }> = {
 export default function ClientDetailPage() {
   const params = useParams<{ clientId: string }>();
   const clientId = params?.clientId;
+  const { fmtDate, fmtDateTime } = useOrgFormat();
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [journals, setJournals] = useState<ClientJournalEntry[]>([]);
@@ -144,7 +133,7 @@ export default function ClientDetailPage() {
             <div className="flex flex-wrap gap-1.5 mt-2">
               {[
                 { label: profile.is_active ? "Active client" : "Paused client", signal: true },
-                { label: `Created ${new Date(profile.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` },
+                { label: `Created ${fmtDate(profile.created_at)}` },
                 { label: `${profile.goals.length} goals` },
               ].map((b) => (
                 <span key={b.label} className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full" style={{ color: b.signal ? "var(--signal-ink)" : "var(--fg-2)", background: b.signal ? "var(--signal-soft)" : "var(--bg-3)", border: "1px solid var(--border)" }}>
@@ -201,7 +190,7 @@ export default function ClientDetailPage() {
                   <div className="flex-1 pb-1">
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-(--r-1)" style={{ color: tc.color, background: tc.bg }}>Journal</span>
-                      <span className="font-mono text-[11px]" style={{ color: "var(--fg-4)" }}>{formatDate(n.entry_date)}</span>
+                      <span className="font-mono text-[11px]" style={{ color: "var(--fg-4)" }}>{fmtDateTime(n.entry_date)}</span>
                     </div>
                     <p className="text-[14px] leading-relaxed" style={{ color: "var(--fg-2)" }}>{n.notes || "No note"}</p>
                   </div>

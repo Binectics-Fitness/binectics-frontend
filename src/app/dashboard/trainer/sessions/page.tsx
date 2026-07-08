@@ -9,6 +9,7 @@ import {
   type ConsultationBooking,
   type ConsultationType,
 } from "@/lib/api/consultations";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 const TIME_RANGE_OPTIONS = [
   { label: "This month", value: "This month" },
@@ -16,21 +17,12 @@ const TIME_RANGE_OPTIONS = [
   { label: "All time", value: "All time" },
 ];
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleString("en-GB", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function clientLabel(booking: ConsultationBooking) {
   return `Client ${booking.clientUserId.slice(-6).toUpperCase()}`;
 }
 
 export default function TrainerSessionsListPage() {
+  const { fmtDateTime } = useOrgFormat();
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [typesById, setTypesById] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
@@ -183,7 +175,7 @@ export default function TrainerSessionsListPage() {
 
                 return (
                 <tr key={s.id} className="cursor-pointer" style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}>
-                  <td className="px-3.5 py-3 font-mono" style={{ color: "var(--fg-2)" }}>{formatDate(s.startsAt)}</td>
+                  <td className="px-3.5 py-3 font-mono" style={{ color: "var(--fg-2)" }}>{fmtDateTime(s.startsAt)}</td>
                   <td className="px-3.5 py-3 font-medium" style={{ color: "var(--ink)" }}>{label}</td>
                   <td className="px-3.5 py-3" style={{ color: "var(--ink)" }}>{typeLabel}</td>
                   <td className="px-3.5 py-3 font-mono" style={{ color: "var(--ink)" }}>{duration} min</td>
