@@ -227,3 +227,60 @@ export function useUpdateAmenities(listingId: string) {
     },
   });
 }
+
+// ==================== ORG PAYMENT GATEWAY CONFIG ====================
+
+export interface OrgPaymentConfig {
+  gateway: string;
+  public_key: string;
+  is_active: boolean;
+}
+
+export function useOrgPaymentConfigs(orgId: string | undefined) {
+  return useQuery<OrgPaymentConfig[]>({
+    queryKey: queryKeys.marketplace.orgPaymentConfigs(orgId ?? ""),
+    queryFn: async () => {
+      if (!orgId) return [];
+      const res = await marketplaceService.getPaymentConfigs(orgId);
+      return res.success && res.data ? res.data : [];
+    },
+    enabled: !!orgId,
+  });
+}
+
+export function useUpsertPaymentConfig(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      gateway: string;
+      public_key: string;
+      secret_key: string;
+      is_active?: boolean;
+    }) => {
+      if (!orgId) throw new Error("No organization selected");
+      return marketplaceService.upsertPaymentConfig(orgId, data);
+    },
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.marketplace.orgPaymentConfigs(orgId),
+        });
+    },
+  });
+}
+
+export function useDeletePaymentConfig(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (gateway: string) => {
+      if (!orgId) throw new Error("No organization selected");
+      return marketplaceService.deletePaymentConfig(orgId, gateway);
+    },
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.marketplace.orgPaymentConfigs(orgId),
+        });
+    },
+  });
+}
