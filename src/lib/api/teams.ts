@@ -284,6 +284,56 @@ export interface AcceptInvitationRequest {
   token: string;
 }
 
+
+// ==================== ORG NOTIFICATION SETTINGS ====================
+
+/**
+ * Org-level notification toggles: 7 events x 3 channels, camelCase field
+ * names mirroring the backend response (e.g. emailReminders, smsReminders).
+ */
+export type OrgNotificationSettings = Record<string, boolean | string>;
+
+export const ORG_NOTIFICATION_EVENTS = [
+  { key: "SubscriptionUpdates", label: "Subscription updates", desc: "Member plan sign-ups, changes, and expiries." },
+  { key: "PaymentReceipts", label: "Payment receipts", desc: "Successful and failed member payments." },
+  { key: "BookingConfirmations", label: "Booking confirmations", desc: "New session and class bookings." },
+  { key: "Cancellations", label: "Cancellations", desc: "Cancelled bookings and subscriptions." },
+  { key: "Reminders", label: "Reminders", desc: "Upcoming session and renewal reminders." },
+  { key: "Newsletter", label: "Newsletter", desc: "Your periodic member newsletter." },
+  { key: "Promotions", label: "Promotions", desc: "Offers and campaigns to members." },
+] as const;
+
+export const ORG_NOTIFICATION_CHANNELS = ["email", "sms", "push"] as const;
+export type OrgNotificationChannel = (typeof ORG_NOTIFICATION_CHANNELS)[number];
+
+// ==================== API KEYS ====================
+
+export interface OrgApiKey {
+  _id: string;
+  organization_id: string;
+  name: string;
+  key_prefix: string;
+  scopes: TeamPermission[];
+  created_by_id: string;
+  last_used_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateApiKeyRequest {
+  name: string;
+  scopes: TeamPermission[];
+  expires_at?: string;
+}
+
+/** Reveal-once create response: api_key is never retrievable again. */
+export interface CreatedApiKey {
+  api_key: string;
+  key: OrgApiKey;
+}
+
 // ==================== SERVICE ====================
 
 export const teamsService = {
@@ -514,6 +564,59 @@ export const teamsService = {
     return await apiClient.post<OrganizationMember>(
       "/teams/invitations/accept",
       data,
+    );
+  },
+
+  // ==================== ORG NOTIFICATION SETTINGS ====================
+
+  /** Org-level notification settings (get-or-create server-side). */
+  async getOrgNotificationSettings(
+    organizationId: string,
+  ): Promise<ApiResponse<OrgNotificationSettings>> {
+    return await apiClient.get<OrgNotificationSettings>(
+      `/teams/organizations/${organizationId}/notification-settings`,
+    );
+  },
+
+  /** Partial update — only the toggles provided are changed. */
+  async updateOrgNotificationSettings(
+    organizationId: string,
+    data: Partial<Record<string, boolean>>,
+  ): Promise<ApiResponse<OrgNotificationSettings>> {
+    return await apiClient.patch<OrgNotificationSettings>(
+      `/teams/organizations/${organizationId}/notification-settings`,
+      data,
+    );
+  },
+
+  // ==================== API KEYS ====================
+
+  /** Create an API key — the secret in the response is shown exactly once. */
+  async createApiKey(
+    organizationId: string,
+    data: CreateApiKeyRequest,
+  ): Promise<ApiResponse<CreatedApiKey>> {
+    return await apiClient.post<CreatedApiKey>(
+      `/teams/organizations/${organizationId}/api-keys`,
+      data,
+    );
+  },
+
+  async getApiKeys(
+    organizationId: string,
+  ): Promise<ApiResponse<OrgApiKey[]>> {
+    return await apiClient.get<OrgApiKey[]>(
+      `/teams/organizations/${organizationId}/api-keys`,
+    );
+  },
+
+  /** Revoke (not delete) an API key. */
+  async revokeApiKey(
+    organizationId: string,
+    keyId: string,
+  ): Promise<ApiResponse<OrgApiKey>> {
+    return await apiClient.delete<OrgApiKey>(
+      `/teams/organizations/${organizationId}/api-keys/${keyId}`,
     );
   },
 };

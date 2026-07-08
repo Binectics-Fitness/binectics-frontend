@@ -60,3 +60,93 @@ export function useUpdateOrganization() {
     },
   });
 }
+
+// ==================== ORG NOTIFICATION SETTINGS ====================
+
+export function useOrgNotificationSettings(orgId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.teams.orgNotificationSettings(orgId ?? ""),
+    queryFn: async () => {
+      if (!orgId) return null;
+      const res = await teamsService.getOrgNotificationSettings(orgId);
+      return res.success && res.data ? res.data : null;
+    },
+    enabled: !!orgId,
+  });
+}
+
+export function useUpdateOrgNotificationSettings(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Record<string, boolean>>) => {
+      if (!orgId) throw new Error("No organization selected");
+      return teamsService.updateOrgNotificationSettings(orgId, data);
+    },
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.teams.orgNotificationSettings(orgId),
+        });
+    },
+  });
+}
+
+// ==================== ROLES ====================
+
+export function useOrgRoles(orgId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.teams.roles(orgId ?? ""),
+    queryFn: async () => {
+      if (!orgId) return [];
+      const res = await teamsService.getRoles(orgId);
+      return res.success && res.data ? res.data : [];
+    },
+    enabled: !!orgId,
+  });
+}
+
+// ==================== API KEYS ====================
+
+export function useOrgApiKeys(orgId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.teams.apiKeys(orgId ?? ""),
+    queryFn: async () => {
+      if (!orgId) return [];
+      const res = await teamsService.getApiKeys(orgId);
+      return res.success && res.data ? res.data : [];
+    },
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateApiKey(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof teamsService.createApiKey>[1]) => {
+      if (!orgId) throw new Error("No organization selected");
+      return teamsService.createApiKey(orgId, data);
+    },
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.teams.apiKeys(orgId),
+        });
+    },
+  });
+}
+
+export function useRevokeApiKey(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (keyId: string) => {
+      if (!orgId) throw new Error("No organization selected");
+      return teamsService.revokeApiKey(orgId, keyId);
+    },
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.teams.apiKeys(orgId),
+        });
+    },
+  });
+}

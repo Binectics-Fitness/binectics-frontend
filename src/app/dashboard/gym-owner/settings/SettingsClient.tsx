@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { GatewaysSection } from "./GatewaysSection";
+import { NotificationsSection } from "./NotificationsSection";
+import { RolesSection, ApiKeysSection } from "./TeamAccessSections";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useOrganizationDetails,
@@ -403,6 +405,9 @@ export function SettingsClient() {
             disabled={!form}
           />
 
+          {/* Notifications — per-event channel matrix, saves per toggle */}
+          <NotificationsSection />
+
           {/* Payment gateways — live CRUD against the payment-config API */}
           <GatewaysSection />
 
@@ -435,6 +440,12 @@ export function SettingsClient() {
               <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>Earnings below the minimum roll over to the next run. The hold period applies before earnings become payable.</span>
             </div>
           </section>
+
+          {/* Roles & scopes — read-only summary, managed at /dashboard/team */}
+          <RolesSection />
+
+          {/* API access — issue, list, revoke org API keys */}
+          <ApiKeysSection />
 
           {isLoading && (
             <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your organization…</p>
