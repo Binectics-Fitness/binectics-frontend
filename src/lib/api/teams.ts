@@ -50,6 +50,42 @@ export enum InvitationStatus {
 
 // ==================== TYPES ====================
 
+export type NoShowPolicy = "none" | "fee" | "block_after_3";
+
+/** Org-wide booking defaults — stored/sent as a whole object. */
+export interface BookingRules {
+  auto_confirm: boolean;
+  require_parq: boolean;
+  /** 0–100; 0 disables the cancellation fee. */
+  cancellation_fee_percent: number;
+  cancellation_window_hours: number;
+  allow_video_recording: boolean;
+  public_reviews: boolean;
+  booking_lead_time_hours: number;
+  no_show_policy: NoShowPolicy;
+  waitlist_enabled: boolean;
+}
+
+/** Front-desk kiosk & QR behaviour — stored/sent as a whole object. */
+export interface KioskSettings {
+  qr_checkin_from_phones: boolean;
+  success_animation: boolean;
+  auto_sleep: boolean;
+  idle_seconds: number;
+  voice_announcement: boolean;
+}
+
+export type PayoutFrequency = "daily" | "weekly" | "monthly";
+
+/** Payout cadence preferences — stored/sent as a whole object. */
+export interface PayoutSchedule {
+  frequency: PayoutFrequency;
+  /** Weekly: 0–6 (Sun=0). Monthly: 1–28. Omitted for daily. */
+  payout_day?: number;
+  minimum_payout_amount: number;
+  hold_period_days: number;
+}
+
 export interface Organization {
   _id: string;
   owner_id: string;
@@ -72,6 +108,13 @@ export interface Organization {
   date_format?: DateFormat;
   time_format?: TimeFormat;
   number_format?: NumberFormat;
+  /** Tax & VAT settings (display/receipt metadata). */
+  tax_rate?: number;
+  tax_inclusive?: boolean;
+  tax_label?: string;
+  booking_rules?: BookingRules;
+  kiosk_settings?: KioskSettings;
+  payout_schedule?: PayoutSchedule;
   is_active: boolean;
   is_owner?: boolean;
   can_manage_organization?: boolean;
@@ -167,6 +210,12 @@ export interface UpdateOrganizationRequest {
   date_format?: DateFormat;
   time_format?: TimeFormat;
   number_format?: NumberFormat;
+  tax_rate?: number;
+  tax_inclusive?: boolean;
+  tax_label?: string;
+  booking_rules?: BookingRules;
+  kiosk_settings?: KioskSettings;
+  payout_schedule?: PayoutSchedule;
 }
 
 export interface BrandedEmailVerificationResult {
