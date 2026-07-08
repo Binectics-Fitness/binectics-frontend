@@ -5,6 +5,12 @@
 
 import { apiClient } from "./client";
 import { AccountType, type ApiResponse } from "@/lib/types";
+import type {
+  FirstDayOfWeek,
+  DateFormat,
+  TimeFormat,
+  NumberFormat,
+} from "@/lib/constants/settingsLocale";
 
 // ==================== ENUMS ====================
 export { AccountType };
@@ -52,6 +58,20 @@ export interface Organization {
   logo?: string;
   account_type: AccountType;
   currency?: string;
+  /** Business identity & locale settings (gym-owner Settings page). */
+  legal_entity?: string;
+  registration_number?: string;
+  legal_name?: string;
+  vat_registration_number?: string;
+  /** ISO 3166-1 alpha-2 country code (uppercase). */
+  country?: string;
+  primary_email?: string;
+  /** IANA time zone identifier, e.g. "Africa/Johannesburg". */
+  time_zone?: string;
+  first_day_of_week?: FirstDayOfWeek;
+  date_format?: DateFormat;
+  time_format?: TimeFormat;
+  number_format?: NumberFormat;
   is_active: boolean;
   is_owner?: boolean;
   can_manage_organization?: boolean;
@@ -138,6 +158,15 @@ export interface UpdateOrganizationRequest {
   doc_registration_url?: string;
   doc_tax_url?: string;
   doc_owner_id_url?: string;
+  legal_name?: string;
+  vat_registration_number?: string;
+  country?: string;
+  primary_email?: string;
+  time_zone?: string;
+  first_day_of_week?: FirstDayOfWeek;
+  date_format?: DateFormat;
+  time_format?: TimeFormat;
+  number_format?: NumberFormat;
 }
 
 export interface BrandedEmailVerificationResult {
