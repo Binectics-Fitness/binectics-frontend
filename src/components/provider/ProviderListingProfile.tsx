@@ -154,17 +154,7 @@ export function ProviderListingProfile() {
     if (!res.success) setError(res.message || "Couldn't change publish state.");
   };
 
-  if (!isLoading && !listing) {
-    return (
-      <div className="p-6 rounded-(--r-3) max-w-[640px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>No marketplace profile yet</h2>
-        <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "var(--fg-3)" }}>
-          Your public profile is created when you set up your marketplace listing. Once it exists, you can edit your headline, bio, specializations, and languages here.
-        </p>
-        <Link href="/dashboard" className="btn-ghost-v2 sm inline-block mt-4" style={{ textDecoration: "none" }}>← Back to dashboard</Link>
-      </div>
-    );
-  }
+  const hasListing = !!listing;
 
   return (
     <div className="flex flex-col gap-4 max-w-[760px]">
@@ -178,14 +168,16 @@ export function ProviderListingProfile() {
           {dirty && (
             <button className="btn-primary-v2 sm" disabled={saving} onClick={() => void onSave()}>Save changes</button>
           )}
-          <button className="btn-ghost-v2 sm" disabled={!listing || publish.isPending} onClick={() => void onTogglePublish()}>
-            {publish.isPending ? "…" : listing?.is_published ? "Unpublish" : "Publish"}
-          </button>
+          {hasListing && (
+            <button className="btn-ghost-v2 sm" disabled={publish.isPending} onClick={() => void onTogglePublish()}>
+              {publish.isPending ? "…" : listing?.is_published ? "Unpublish" : "Publish"}
+            </button>
+          )}
         </div>
       </div>
       {error && <p className="text-[12.5px]" style={{ color: "var(--danger, #b00020)" }}>{error}</p>}
 
-      {/* Account */}
+      {/* Account — always editable, listing or not */}
       <Card title="Account" desc="Your name and contact number — used across Binectics, not just the marketplace.">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <Field label="First name" value={account?.first_name ?? ""} onChange={(v) => setAcc("first_name", v)} disabled={!account} />
@@ -194,6 +186,19 @@ export function ProviderListingProfile() {
         </div>
       </Card>
 
+      {/* No listing yet — the marketplace sections below need one */}
+      {!isLoading && !hasListing && (
+        <div className="p-6 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>No marketplace profile yet</h2>
+          <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "var(--fg-3)" }}>
+            Your public profile is created when you set up your marketplace listing. Once it exists, you can edit your headline, bio, specializations, and languages here.
+          </p>
+          <Link href="/dashboard" className="btn-ghost-v2 sm inline-block mt-4" style={{ textDecoration: "none" }}>← Back to dashboard</Link>
+        </div>
+      )}
+
+      {hasListing && (
+      <>
       {/* Basics */}
       <Card title="Basics" desc="How you appear in search and on your profile card.">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -248,6 +253,8 @@ export function ProviderListingProfile() {
           <Link href="/dashboard/settings" className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>Payouts & settings →</Link>
         </div>
       </Card>
+      </>
+      )}
 
       {isLoading && <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your profile…</p>}
     </div>
