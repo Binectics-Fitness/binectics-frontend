@@ -70,7 +70,9 @@ export function NotificationsSection() {
                     role="switch"
                     aria-checked={on}
                     aria-label={`${CHANNEL_LABELS[channel]} for ${ev.label}`}
-                    disabled={isLoading || !settings}
+                    // update.isPending blocks rapid re-flips that would read
+                    // the stale cache and re-send the same value.
+                    disabled={isLoading || !settings || update.isPending}
                     onClick={() => flip(channel, ev.key)}
                     className="w-[30px] h-[18px] rounded-full relative cursor-pointer shrink-0 disabled:cursor-not-allowed disabled:opacity-60"
                     style={{ background: on ? "var(--ink)" : "var(--border-2)", border: "none", padding: 0 }}
