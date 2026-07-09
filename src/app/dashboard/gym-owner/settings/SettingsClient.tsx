@@ -1,0 +1,399 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import {
+  useOrganizationDetails,
+  useUpdateOrganization,
+} from "@/lib/queries/teams";
+import { useCountries } from "@/lib/queries/utility";
+import { utilityService } from "@/lib/api/utility";
+import { SUPPORTED_CURRENCIES } from "@/lib/constants/regions";
+import {
+  FIRST_DAY_OPTIONS,
+  DATE_FORMAT_OPTIONS,
+  TIME_FORMAT_OPTIONS,
+  NUMBER_FORMAT_OPTIONS,
+  LOCALE_DEFAULTS,
+  getTimeZoneOptions,
+  type FirstDayOfWeek,
+  type DateFormat,
+  type TimeFormat,
+  type NumberFormat,
+} from "@/lib/constants/settingsLocale";
+import type { Organization, UpdateOrganizationRequest } from "@/lib/api/teams";
+
+const SECTIONS = [
+  { group: "Business", items: [{ id: "org", label: "Organization" }, { id: "currency", label: "Currency & locale" }, { id: "tax", label: "Tax & VAT" }] },
+  { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
+  { group: "Money", items: [{ id: "gateways", label: "Payment gateways" }, { id: "payouts", label: "Payout schedule" }] },
+  { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }, { id: "api", label: "API access" }] },
+];
+
+const BOOKING_TOGGLES = [
+  { t: "Auto‑confirm bookings", s: "Confirmed instantly when the member taps Book. No manual approval needed.", on: true },
+  { t: "Require PAR‑Q from new members", s: "Standard health history form. Sent automatically before first session.", on: true },
+  { t: "Charge cancellation fee within 24h", s: "50% of session price. Reasonable exceptions waived by support team.", on: true },
+  { t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review.", on: true },
+  { t: "Public reviews on listing", s: "Strongly recommended · drives 3.4× more bookings vs hidden.", on: true },
+];
+
+const KIOSK_TOGGLES = [
+  { t: "Allow QR check‑in from members’ phones", s: "If off, only the kiosk’s camera can scan member codes.", on: true },
+  { t: "Show success animation on check‑in", s: "The 2‑second celebration the system is known for. Off only if you must.", on: true },
+  { t: "Auto‑sleep after 60 seconds idle", s: "Saves screen burn‑in on always‑on iPads.", on: true },
+  { t: "Voice announcement on successful check‑in", s: "“Welcome, Linda.” Useful at busy 6am rushes, can be intrusive at 8pm.", on: false },
+];
+
+const INPUT_STYLE = {
+  border: "1px solid var(--border-2)",
+  color: "var(--ink)",
+  background: "var(--bg)",
+  fontFamily: "inherit",
+} as const;
+const INPUT_CLASS = "rounded-(--r-2) px-3.5 py-2.75 text-[14px]";
+const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
+
+// ─────────────────────────────────────────────────────────────────────────
+// Form model — maps 1:1 to UpdateOrganizationRequest keys. The trading name
+// is the org's `name`; `legal_name` is the registered legal name.
+// ─────────────────────────────────────────────────────────────────────────
+interface SettingsForm {
+  name: string;
+  legal_name: string;
+  registration_number: string;
+  vat_registration_number: string;
+  country: string;
+  primary_email: string;
+  currency: string;
+  time_zone: string;
+  first_day_of_week: FirstDayOfWeek;
+  date_format: DateFormat;
+  time_format: TimeFormat;
+  number_format: NumberFormat;
+}
+
+function seedForm(org: Organization): SettingsForm {
+  return {
+    name: org.name ?? "",
+    legal_name: org.legal_name ?? "",
+    registration_number: org.registration_number ?? "",
+    vat_registration_number: org.vat_registration_number ?? "",
+    country: org.country ?? "",
+    primary_email: org.primary_email ?? "",
+    currency: org.currency ?? "USD",
+    time_zone: org.time_zone ?? "",
+    first_day_of_week: org.first_day_of_week ?? LOCALE_DEFAULTS.first_day_of_week,
+    date_format: org.date_format ?? LOCALE_DEFAULTS.date_format,
+    time_format: org.time_format ?? LOCALE_DEFAULTS.time_format,
+    number_format: org.number_format ?? LOCALE_DEFAULTS.number_format,
+  };
+}
+
+/** Only the keys that differ from the baseline, as an update payload. */
+function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest {
+  const out: UpdateOrganizationRequest = {};
+  (Object.keys(next) as (keyof SettingsForm)[]).forEach((k) => {
+    if (base[k] !== next[k]) (out as Record<string, unknown>)[k] = next[k];
+  });
+  return out;
+}
+
+export function SettingsClient() {
+  const { currentOrg, refreshOrganizations } = useOrganization();
+  const orgId = currentOrg?._id;
+  const { data: org, isLoading } = useOrganizationDetails(orgId);
+  const updateOrg = useUpdateOrganization();
+  const { data: countries = [] } = useCountries();
+
+  const timeZones = useMemo(() => getTimeZoneOptions(), []);
+
+  const [seededOrgId, setSeededOrgId] = useState<string | null>(null);
+  const [baseline, setBaseline] = useState<SettingsForm | null>(null);
+  const [form, setForm] = useState<SettingsForm | null>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const geoAppliedFor = useRef<string | null>(null);
+  const [activeId, setActiveId] = useState("org");
+
+  // Seed the form when the active org's data first arrives (and re-seed only
+  // when the user switches to a different org) — the React-endorsed
+  // "adjust state while rendering" pattern, keyed on org id so a background
+  // refetch never clobbers unsaved edits.
+  if (org && org._id !== seededOrgId) {
+    const seeded = seedForm(org);
+    setSeededOrgId(org._id);
+    setBaseline(seeded);
+    setForm(seeded);
+  }
+
+  // New org with no saved country → suggest one from the caller's IP.
+  useEffect(() => {
+    if (!org || org.country || geoAppliedFor.current === org._id) return;
+    geoAppliedFor.current = org._id;
+    let cancelled = false;
+    void (async () => {
+      const res = await utilityService.resolveGeo();
+      const detected = res.success && res.data?.country ? res.data.country.toUpperCase() : "";
+      if (cancelled || !detected) return;
+      setForm((f) => (f && !f.country ? { ...f, country: detected } : f));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [org]);
+
+  // Scroll-spy: highlight the section currently in view.
+  useEffect(() => {
+    const ids = SECTIONS.flatMap((s) => s.items.map((i) => i.id));
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el);
+    if (!els.length) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActiveId(visible[0].target.id);
+      },
+      { rootMargin: "-96px 0px -60% 0px", threshold: 0 },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [form]);
+
+  const payload = useMemo(
+    () => (baseline && form ? diff(baseline, form) : {}),
+    [baseline, form],
+  );
+  const dirty = Object.keys(payload).length > 0;
+
+  const set = <K extends keyof SettingsForm>(key: K, value: SettingsForm[K]) =>
+    setForm((f) => (f ? { ...f, [key]: value } : f));
+
+  const onSave = async () => {
+    if (!orgId || !dirty || !form) return;
+    setSavedFlash(false);
+    const res = await updateOrg.mutateAsync({ orgId, data: payload });
+    if (res.success) {
+      setBaseline(form);
+      setSavedFlash(true);
+      void refreshOrganizations();
+      window.setTimeout(() => setSavedFlash(false), 2500);
+    }
+  };
+
+  const saveAction = (() => {
+    if (updateOrg.isPending)
+      return <StatusPill tone="muted" dot="var(--fg-3)" label="Saving…" />;
+    if (updateOrg.isError)
+      return (
+        <button className="btn-primary-v2 sm" onClick={() => void onSave()}>
+          Save failed — retry
+        </button>
+      );
+    if (dirty)
+      return (
+        <button className="btn-primary-v2 sm" onClick={() => void onSave()}>
+          Save changes
+        </button>
+      );
+    if (savedFlash)
+      return <StatusPill tone="signal" dot="var(--signal)" label="Saved" />;
+    return <StatusPill tone="signal" dot="var(--signal)" label="All changes saved" />;
+  })();
+
+  return (
+    <GymDashboardShell activeItem="Settings" crumb="Settings" actions={saveAction}>
+      <div className="pb-1">
+        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Settings</h1>
+        <div className="text-[13.5px] mt-1.5 max-w-[60ch]" style={{ color: "var(--fg-3)" }}>Business identity, currencies, integrations, booking rules, and the org-level settings that apply across every location.</div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-10 items-start">
+        {/* Section nav */}
+        <nav className="sticky top-22 flex flex-col sm:flex-row lg:flex-col gap-0.5 overflow-x-auto">
+          {SECTIONS.map((s, si) => (
+            <div key={s.group}>
+              <div className={`font-mono text-[10.5px] uppercase tracking-[0.06em] px-2.5 py-1 ${si > 0 ? "mt-3.5" : ""}`} style={{ color: "var(--fg-3)" }}>{s.group}</div>
+              {s.items.map((item) => {
+                const active = activeId === item.id;
+                return (
+                  <a key={item.id} href={`#${item.id}`} className={`block px-2.5 py-[7px] rounded-(--r-2) text-[13px] ${active ? "bg-bg font-medium" : "hover:bg-bg"}`} style={{ color: active ? "var(--ink)" : "var(--fg-3)", borderLeft: active ? "2px solid var(--ink)" : "2px solid transparent", paddingLeft: active ? "8px" : "10px", textDecoration: "none" }}>
+                    {item.label}
+                  </a>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Sections */}
+        <div className="flex flex-col gap-10">
+          {/* Organization */}
+          <section id="org">
+            <SectionHeading title="Organization" desc="Legal entity, trading name, primary contact. Used on receipts and tax documents." />
+            <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <TextField label="Legal name" value={form?.legal_name ?? ""} onChange={(v) => set("legal_name", v)} disabled={!form} />
+                <TextField label="Trading name" value={form?.name ?? ""} onChange={(v) => set("name", v)} disabled={!form} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <TextField label="Registration #" value={form?.registration_number ?? ""} onChange={(v) => set("registration_number", v)} disabled={!form} />
+                <TextField label="VAT registration #" value={form?.vat_registration_number ?? ""} onChange={(v) => set("vat_registration_number", v)} disabled={!form} />
+                <SelectField label="Country" value={form?.country ?? ""} onChange={(v) => set("country", v)} disabled={!form}>
+                  <option value="">Select country…</option>
+                  {countries.map((c) => (
+                    <option key={c.code} value={c.code}>{c.name} · {c.code}</option>
+                  ))}
+                </SelectField>
+              </div>
+              <TextField label="Primary email" type="email" value={form?.primary_email ?? ""} onChange={(v) => set("primary_email", v)} disabled={!form} />
+            </div>
+          </section>
+
+          {/* Currency & locale */}
+          <section id="currency">
+            <SectionHeading title="Currency & locale" desc="How money and dates render across your dashboard and to your members." />
+            <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <SelectField label="Default currency" value={form?.currency ?? "USD"} onChange={(v) => set("currency", v)} disabled={!form} hint="Used for new membership plans, listings, and revenue display.">
+                  {SUPPORTED_CURRENCIES.map((c) => (
+                    <option key={c.currencyCode} value={c.currencyCode}>{c.currencyCode} · {c.symbol} — {c.regionName}</option>
+                  ))}
+                </SelectField>
+                <SelectField label="Time zone" value={form?.time_zone ?? ""} onChange={(v) => set("time_zone", v)} disabled={!form}>
+                  <option value="">Select time zone…</option>
+                  {timeZones.map((tz) => (
+                    <option key={tz.value} value={tz.value}>{tz.label}</option>
+                  ))}
+                </SelectField>
+                <LocaleSelect label="First day of week" value={form?.first_day_of_week} options={FIRST_DAY_OPTIONS} onChange={(v) => set("first_day_of_week", v)} disabled={!form} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <LocaleSelect label="Date format" value={form?.date_format} options={DATE_FORMAT_OPTIONS} onChange={(v) => set("date_format", v)} disabled={!form} />
+                <LocaleSelect label="Time format" value={form?.time_format} options={TIME_FORMAT_OPTIONS} onChange={(v) => set("time_format", v)} disabled={!form} />
+                <LocaleSelect label="Number format" value={form?.number_format} options={NUMBER_FORMAT_OPTIONS} onChange={(v) => set("number_format", v)} disabled={!form} />
+              </div>
+            </div>
+          </section>
+
+          {/* Booking rules — static (wired in a later PR) */}
+          <ToggleSection title="Booking rules" desc="Defaults that apply to all 4 locations · individual locations can override." toggles={BOOKING_TOGGLES} />
+
+          {/* Kiosk & QR — static (wired in a later PR) */}
+          <ToggleSection title="Kiosk & QR" desc="Hardware and behaviour for the iPads at your front desks." toggles={KIOSK_TOGGLES} />
+
+          {/* Payment gateways — static (wired in a later PR) */}
+          <section id="gateways">
+            <SectionHeading title="Payment gateways" desc="Where your money settles. Multiple gateways for multi-currency members." />
+            <div className="flex flex-col gap-3 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              {[
+                { logo: "Paystack", color: "oklch(0.45 0.18 200)", name: "Paystack · primary", meta: "ZAR · NGN · KES · settles to ABSA •••• 2241" },
+                { logo: "Stripe", color: "oklch(0.42 0.22 280)", name: "Stripe · secondary", meta: "USD · EUR · GBP · settles to USB •••• 8104" },
+              ].map((g) => (
+                <div key={g.logo} className="flex items-center gap-3 p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
+                  <span className="w-10 h-6.5 rounded-(--r-1) flex items-center justify-center text-[9px] font-bold" style={{ background: g.color, color: "var(--bg)", fontFamily: "var(--font-mono)" }}>{g.logo}</span>
+                  <div className="flex-1">
+                    <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{g.name}</div>
+                    <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>{g.meta}</div>
+                  </div>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full" style={{ color: "var(--signal-ink)", background: "var(--signal-soft)" }}>Active</span>
+                </div>
+              ))}
+              <button className="btn-ghost-v2 sm self-start">+ Add gateway</button>
+            </div>
+          </section>
+
+          {isLoading && (
+            <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your organization…</p>
+          )}
+        </div>
+      </div>
+    </GymDashboardShell>
+  );
+}
+
+function StatusPill({ tone, dot, label }: { tone: "signal" | "muted"; dot: string; label: string }) {
+  const signal = tone === "signal";
+  return (
+    <span className="flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2.5 py-1 rounded-full" style={{ color: signal ? "var(--signal-ink)" : "var(--fg-3)", background: signal ? "var(--signal-soft)" : "var(--bg)", border: signal ? "1px solid oklch(0.88 0.05 148)" : "1px solid var(--border)" }}>
+      <span className="w-1.25 h-1.25 rounded-full" style={{ background: dot }} />
+      {label}
+    </span>
+  );
+}
+
+function SectionHeading({ title, desc }: { title: string; desc: string }) {
+  return (
+    <>
+      <h2 className="text-[16px] font-medium" style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>{title}</h2>
+      <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{desc}</p>
+    </>
+  );
+}
+
+function TextField({ label, value, onChange, disabled, type = "text" }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; type?: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
+      <input type={type} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
+    </div>
+  );
+}
+
+function SelectField({ label, value, onChange, disabled, hint, children }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; hint?: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
+      <select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE}>
+        {children}
+      </select>
+      {hint && <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>{hint}</span>}
+    </div>
+  );
+}
+
+/** Select bound to a LocaleOption list, showing the chosen value's preview. */
+function LocaleSelect<T extends string>({ label, value, options, onChange, disabled }: { label: string; value: T | undefined; options: { value: T; label: string; preview: string }[]; onChange: (v: T) => void; disabled?: boolean }) {
+  const preview = options.find((o) => o.value === value)?.preview;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
+      <select value={value ?? ""} disabled={disabled} onChange={(e) => onChange(e.target.value as T)} className={INPUT_CLASS} style={INPUT_STYLE}>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      {preview && <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>Preview · {preview}</span>}
+    </div>
+  );
+}
+
+function Toggle({ on = true }: { on?: boolean }) {
+  return (
+    <span className="w-[30px] h-[18px] rounded-full relative cursor-pointer shrink-0 mt-0.5" style={{ background: on ? "var(--ink)" : "var(--border-2)" }}>
+      <span className="absolute w-3.5 h-3.5 rounded-full top-0.5" style={{ background: "var(--bg)", left: on ? "14px" : "2px", transition: "left var(--motion-fast) var(--ease)" }} />
+    </span>
+  );
+}
+
+function ToggleSection({ title, desc, toggles }: { title: string; desc: string; toggles: { t: string; s: string; on: boolean }[] }) {
+  return (
+    <section>
+      <SectionHeading title={title} desc={desc} />
+      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        {toggles.map((t, i) => (
+          <div key={t.t} className="flex items-start gap-3.5 px-5.5 py-3" style={{ borderBottom: i < toggles.length - 1 ? "1px solid var(--border)" : "none" }}>
+            <div className="flex-1">
+              <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{t.t}</div>
+              <div className="text-[12.5px] mt-0.75 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{t.s}</div>
+            </div>
+            <Toggle on={t.on} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
