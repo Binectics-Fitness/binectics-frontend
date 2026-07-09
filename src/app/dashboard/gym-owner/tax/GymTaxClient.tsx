@@ -44,7 +44,14 @@ export function GymTaxClient() {
     );
   }, [revenue]);
 
-  const estimate = taxRate != null ? (gross * taxRate) / 100 : null;
+  // Tax-inclusive prices already contain the tax: the tax portion of gross
+  // is gross × r/(100+r). Exclusive prices add it on top: gross × r/100.
+  const estimate =
+    taxRate != null
+      ? org?.tax_inclusive
+        ? (gross * taxRate) / (100 + taxRate)
+        : (gross * taxRate) / 100
+      : null;
 
   const rows = [
     { label: "Gross recorded revenue · last 30 days", value: fmtMoney(gross, currency), bold: true },
