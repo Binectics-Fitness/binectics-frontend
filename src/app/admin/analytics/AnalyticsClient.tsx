@@ -24,7 +24,8 @@ export function AnalyticsClient() {
         { label: "Verified providers", value: metrics.verifiedProviders.total.toLocaleString(), delta: `${metrics.verifiedProviders.distinctCountries} countries` },
         { label: "Active subscriptions", value: metrics.subscriptions.activeCount.toLocaleString(), delta: `avg ${formatCurrency(metrics.subscriptions.averageValueUsd, "USD")}` },
         { label: "Subscription revenue", value: formatCurrency(metrics.subscriptions.totalRevenueUsd, "USD"), delta: "USD equivalent" },
-        { label: "Free → paid conversion", value: `${(metrics.conversion.conversionRate * 100).toFixed(1)}%`, delta: `${metrics.conversion.payingUsers.toLocaleString()} of ${metrics.conversion.totalUsers.toLocaleString()} users` },
+        // conversionRate is already a percentage server-side (rounded to 1dp) — no rescaling.
+        { label: "Free → paid conversion", value: `${metrics.conversion.conversionRate.toFixed(1)}%`, delta: `${metrics.conversion.payingUsers.toLocaleString()} of ${metrics.conversion.totalUsers.toLocaleString()} users` },
       ]
     : [];
 
