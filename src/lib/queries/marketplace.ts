@@ -284,3 +284,33 @@ export function useDeletePaymentConfig(orgId: string | undefined) {
     },
   });
 }
+
+// ==================== MY LISTING MUTATIONS ====================
+
+export function useUpdateMyListing() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof marketplaceService.updateMyListing>[0]) =>
+      marketplaceService.updateMyListing(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.myListing(),
+      });
+    },
+  });
+}
+
+export function usePublishMyListing() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (publish: boolean) =>
+      publish
+        ? marketplaceService.publishMyListing()
+        : marketplaceService.unpublishMyListing(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.myListing(),
+      });
+    },
+  });
+}
