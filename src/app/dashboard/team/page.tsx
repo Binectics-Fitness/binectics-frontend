@@ -15,6 +15,7 @@ import {
 } from "@/lib/api/teams";
 import type { ApiResponse } from "@/lib/types";
 import { parseBillingError, billingResourceLabel } from "@/lib/utils/billingErrors";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 /**
  * Turn an API failure into a message the owner can act on — especially the
@@ -73,21 +74,10 @@ function roleNameFromInvitation(invite: TeamInvitation): string {
     : invite.team_role_id.name;
 }
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("en-ZA", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
-
 export default function TeamWorkspacePage() {
   const { organizations, currentOrg, setCurrentOrg, isLoading: orgLoading } =
     useOrganization();
+  const { fmtDate } = useOrgFormat();
   const [search, setSearch] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRoleId, setInviteRoleId] = useState("");
@@ -423,7 +413,7 @@ export default function TeamWorkspacePage() {
                             />
                           </td>
                           <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
-                            {formatDate(member.joined_at ?? member.created_at)}
+                            {fmtDate(member.joined_at ?? member.created_at)}
                           </td>
                           <td className="py-3">
                             <button
@@ -657,7 +647,7 @@ export default function TeamWorkspacePage() {
                             {invitation.email}
                           </div>
                           <div className="font-mono text-[11px] uppercase mt-1" style={{ color: "var(--fg-3)", letterSpacing: "0.04em" }}>
-                            {roleNameFromInvitation(invitation)} · expires {formatDate(invitation.expires_at)}
+                            {roleNameFromInvitation(invitation)} · expires {fmtDate(invitation.expires_at)}
                           </div>
                         </div>
                         <button

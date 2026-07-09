@@ -10,6 +10,7 @@ import type {
 } from "@/lib/api/marketplace";
 import { MembershipPlanType, type MarketplaceMembershipPlan } from "@/lib/types";
 import { toast } from "@/components/Toast";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 // ─── Plan modal ─────────────────────────────────────────────────────────────
 
@@ -281,6 +282,7 @@ function PlanCard({
   onToggle: () => void;
   onDelete: () => void;
 }) {
+  const { fmtMoney } = useOrgFormat();
   return (
     <div
       className="rounded-(--r-3) flex flex-col overflow-hidden"
@@ -303,7 +305,7 @@ function PlanCard({
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[22px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
-            {plan.currency} {plan.price.toLocaleString()}
+            {fmtMoney(plan.price, plan.currency)}
           </div>
           <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
             {plan.duration_days}d

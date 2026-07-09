@@ -5,6 +5,7 @@ import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { checkinsService } from "@/lib/api/checkins";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { CheckInHistoryPeriod, type OrgCheckInDashboardStats, type CheckIn } from "@/lib/types";
 
 const TIME_FILTERS = [
@@ -44,16 +45,9 @@ function initials(name: string): string {
     .join("") || "?";
 }
 
-function hourLabel(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
-function dayLabel(iso: string): string {
-  return new Date(iso).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
-}
-
 export default function GymCheckinsPage() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const { fmtDate, fmtTime, fmtMoney } = useOrgFormat();
   const [activeFilter, setActiveFilter] = useState<CheckInHistoryPeriod>(CheckInHistoryPeriod.TODAY);
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [history, setHistory] = useState<CheckIn[]>([]);
@@ -157,9 +151,7 @@ export default function GymCheckinsPage() {
     return { kind: "live", label: "Live" };
   }, [isOnline, lastUpdatedAt, now]);
 
-  const lastUpdatedLabel = lastUpdatedAt
-    ? new Date(lastUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : null;
+  const lastUpdatedLabel = lastUpdatedAt ? fmtTime(new Date(lastUpdatedAt)) : null;
   const pill = STATUS_PILL[freshness.kind];
 
   const hourlyBars = useMemo(() => {
@@ -176,7 +168,7 @@ export default function GymCheckinsPage() {
     { label: "Check-ins today", value: stats?.today_check_ins ?? 0, delta: `${stats?.week_check_ins ?? 0} this week` },
     { label: "Active members", value: stats?.active_members ?? 0, delta: `${stats?.month_check_ins ?? 0} this month` },
     { label: "Avg rating", value: (stats?.average_rating ?? 0).toFixed(1), delta: `${stats?.review_count ?? 0} reviews` },
-    { label: "Revenue today", value: `R ${(stats?.revenue_today ?? 0).toLocaleString()}`, delta: lastUpdatedLabel ? `Updated ${lastUpdatedLabel}` : "Waiting for refresh" },
+    { label: "Revenue today", value: fmtMoney(stats?.revenue_today ?? 0, currentOrg?.currency), delta: lastUpdatedLabel ? `Updated ${lastUpdatedLabel}` : "Waiting for refresh" },
   ];
 
   const stream = stats?.recent_check_ins ?? history;
@@ -316,7 +308,7 @@ export default function GymCheckinsPage() {
             <SummaryRow label="Tracked check-ins" value={String(stream.length)} />
             <SummaryRow label="Location" value={stats?.city && stats?.country_code ? `${stats.city}, ${stats.country_code}` : "Current org"} />
             <SummaryRow label="Reviews" value={String(stats?.review_count ?? 0)} />
-            <SummaryRow label="Revenue week" value={`R ${(stats?.revenue_week ?? 0).toLocaleString()}`} />
+            <SummaryRow label="Revenue week" value={fmtMoney(stats?.revenue_week ?? 0, currentOrg?.currency)} />
           </div>
         </div>
       </div>
@@ -342,12 +334,12 @@ export default function GymCheckinsPage() {
               const listing = listingLabel(checkIn);
               return (
                 <div key={checkIn._id} className="grid items-center gap-3 px-4.5 py-3" style={{ gridTemplateColumns: "72px 30px 1fr", borderBottom: "1px solid var(--border)" }}>
-                  <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{hourLabel(checkIn.checked_in_at)}</span>
+                  <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{fmtTime(checkIn.checked_in_at)}</span>
                   <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(member)}</span>
                   <div>
                     <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{member}</div>
                     <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>
-                      {listing} · {dayLabel(checkIn.checked_in_at)}
+                      {listing} · {fmtDate(checkIn.checked_in_at)}
                     </div>
                   </div>
                 </div>

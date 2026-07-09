@@ -11,7 +11,7 @@ import {
 } from "@/lib/types";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "@/components/Toast";
-import { format } from "date-fns";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -140,6 +140,7 @@ function RowActions({
 
 export default function GymMembersClient() {
   const { currentOrg } = useOrganization();
+  const { fmtDate, fmtMoney } = useOrgFormat();
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -209,7 +210,7 @@ export default function GymMembersClient() {
                   getMemberEmail(s),
                   getPlanName(s),
                   STATUS_STYLE[s.status]?.label ?? s.status,
-                  format(new Date(s.created_at), "dd MMM yyyy"),
+                  fmtDate(s.created_at),
                   s.amount_paid.toString(),
                   s.currency,
                 ]),
@@ -332,10 +333,10 @@ export default function GymMembersClient() {
                       </td>
                       <td className="px-4.5 py-3" style={{ color: "var(--ink)" }}>{plan}</td>
                       <td className="px-4.5 py-3 hidden md:table-cell" style={{ color: "var(--fg-2)" }}>
-                        {format(new Date(sub.created_at), "dd MMM yyyy")}
+                        {fmtDate(sub.created_at)}
                       </td>
                       <td className="px-4.5 py-3 hidden lg:table-cell" style={{ color: "var(--fg-2)" }}>
-                        {sub.end_date ? format(new Date(sub.end_date), "dd MMM yyyy") : "—"}
+                        {sub.end_date ? fmtDate(sub.end_date) : "—"}
                       </td>
                       <td className="px-4.5 py-3">
                         <span
@@ -347,7 +348,7 @@ export default function GymMembersClient() {
                         </span>
                       </td>
                       <td className="px-4.5 py-3 text-right font-mono font-medium" style={{ color: "var(--ink)" }}>
-                        {sub.currency} {sub.amount_paid.toLocaleString()}
+                        {fmtMoney(sub.amount_paid, sub.currency)}
                       </td>
                       <td className="px-4.5 py-3">
                         {currentOrg && (

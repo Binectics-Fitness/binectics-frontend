@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import OnboardingBanner from "@/components/OnboardingBanner";
@@ -10,7 +9,7 @@ import { checkinsService } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatCurrencyAmount } from "@/lib/constants/regions";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
   MembershipSubscriptionStatus,
   type CheckIn,
@@ -62,10 +61,6 @@ const STATUS_STYLE: Record<MembershipSubscriptionStatus, { color: string; bg: st
   [MembershipSubscriptionStatus.CANCELLED]: { color: "var(--danger)", bg: "var(--danger-soft)", label: "Cancelled" },
 };
 
-function timeLabel(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`rounded-(--r-3) overflow-hidden ${className}`} style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
@@ -88,8 +83,9 @@ function CardHead({ title, sub }: { title: string; sub?: string }) {
 export default function GymOverviewClient() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { user } = useAuth();
+  const { fmtDate, fmtTime, fmtMoney } = useOrgFormat();
   // Org money renders in the org's own currency — never the visitor's region.
-  const formatAmount = (n: number) => formatCurrencyAmount(n, currentOrg?.currency);
+  const formatAmount = (n: number) => fmtMoney(n, currentOrg?.currency);
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
@@ -228,7 +224,7 @@ export default function GymOverviewClient() {
                         <span className="text-[13px] flex-1" style={{ color: "var(--ink)" }}>
                           <strong className="font-medium">{checkInName(c)}</strong> checked in{listing ? ` at ${listing}` : ""}
                         </span>
-                        <span className="font-mono text-[11px] shrink-0" style={{ color: "var(--fg-3)" }}>{timeLabel(c.checked_in_at)}</span>
+                        <span className="font-mono text-[11px] shrink-0" style={{ color: "var(--fg-3)" }}>{fmtTime(c.checked_in_at)}</span>
                       </div>
                     );
                   })
@@ -277,8 +273,8 @@ export default function GymOverviewClient() {
                               <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st?.label ?? sub.status}
                             </span>
                           </td>
-                          <td className="px-4.5 py-3 font-mono text-[12px]" style={{ borderBottom: border, color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{format(new Date(sub.created_at), "dd MMM yyyy")}</td>
-                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid != null ? formatCurrencyAmount(sub.amount_paid, sub.currency ?? currentOrg?.currency) : "—"}</td>
+                          <td className="px-4.5 py-3 font-mono text-[12px]" style={{ borderBottom: border, color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{fmtDate(sub.created_at)}</td>
+                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid != null ? fmtMoney(sub.amount_paid, sub.currency ?? currentOrg?.currency) : "—"}</td>
                         </tr>
                       );
                     })}

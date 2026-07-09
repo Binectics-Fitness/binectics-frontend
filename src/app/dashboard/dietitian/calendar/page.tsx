@@ -7,6 +7,7 @@ import {
   ConsultationBookingStatus,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 const DAYS = [
   { dow: "Mon", d: "18", count: "5 sessions", today: false },
@@ -55,6 +56,7 @@ const SYNCED = [
 type ViewMode = "Day" | "Week" | "Month";
 
 export default function DietitianCalendarPage() {
+  const { fmtTime } = useOrgFormat();
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [view, setView] = useState<ViewMode>("Week");
@@ -184,7 +186,7 @@ export default function DietitianCalendarPage() {
           {upcomingToday.map((booking) => (
             <div key={booking.id} className="flex items-center justify-between rounded-(--r-2) px-3 py-2" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
               <span className="font-mono text-[12px]" style={{ color: "var(--ink)" }}>
-                {new Date(booking.startsAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                {fmtTime(booking.startsAt)}
               </span>
               <span className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
                 Client {booking.clientUserId.slice(-6).toUpperCase()}

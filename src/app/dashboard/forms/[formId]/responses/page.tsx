@@ -11,20 +11,7 @@ import {
   type FormResponse,
   type FormAnalytics,
 } from "@/lib/api/forms";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("en-ZA", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 export default function FormResponsesPage({
   params,
@@ -32,6 +19,7 @@ export default function FormResponsesPage({
   params: Promise<{ formId: string }>;
 }) {
   const { formId } = use(params);
+  const { fmtDateTime, fmtNumber } = useOrgFormat();
   const [form, setForm] = useState<Form | null>(null);
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [responses, setResponses] = useState<FormResponse[]>([]);
@@ -134,7 +122,7 @@ export default function FormResponsesPage({
                 Total responses
               </div>
               <div className="text-[36px] font-medium mt-2 tabular-nums" style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                {analytics.total_responses.toLocaleString()}
+                {fmtNumber(analytics.total_responses)}
               </div>
             </div>
             <div
@@ -304,7 +292,7 @@ export default function FormResponsesPage({
                         {selectedResponse.submitted_by}
                       </div>
                       <div className="text-sm" style={{ color: "var(--fg-3)" }}>
-                        Submitted {formatDate(selectedResponse.submitted_at)}
+                        Submitted {fmtDateTime(selectedResponse.submitted_at)}
                         {selectedResponse.completion_time_seconds && ` · ${selectedResponse.completion_time_seconds}s`}
                       </div>
                     </div>
@@ -365,7 +353,7 @@ export default function FormResponsesPage({
                                   {response.submitted_by}
                                 </td>
                                 <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
-                                  {formatDate(response.submitted_at)}
+                                  {fmtDateTime(response.submitted_at)}
                                 </td>
                                 <td className="py-3 pr-4">
                                   <span

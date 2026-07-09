@@ -12,11 +12,11 @@ import {
   ProviderInvoiceStatus,
   ProviderPlanTier,
   ProviderSubscriptionStatus,
-  formatMinorAmount,
   type ProviderBillingStatus,
   type ProviderInvoice,
   type ProviderPlanOption,
 } from "@/lib/api/providerBilling";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 function subscriptionStatusColor(status: ProviderSubscriptionStatus): React.CSSProperties {
   switch (status) {
@@ -47,18 +47,6 @@ function invoiceStatusColor(status: ProviderInvoiceStatus): React.CSSProperties 
   }
 }
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("en-ZA", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
-
 const TIER_LABELS: Record<ProviderPlanTier, string> = {
   [ProviderPlanTier.FREE]: "Free",
   [ProviderPlanTier.PRO]: "Pro",
@@ -68,6 +56,7 @@ const TIER_LABELS: Record<ProviderPlanTier, string> = {
 export default function ProviderBillingPage() {
   const router = useRouter();
   const { organizations, currentOrg, setCurrentOrg } = useOrganization();
+  const { fmtDate, fmtMoney, fmtNumber } = useOrgFormat();
   const orgId = currentOrg?._id;
 
   const [billingStatus, setBillingStatus] = useState<ProviderBillingStatus | null>(null);
@@ -139,7 +128,7 @@ export default function ProviderBillingPage() {
   }
 
   function renderLimitValue(val: number | null): string {
-    return val === null ? "Unlimited" : val.toLocaleString();
+    return val === null ? "Unlimited" : fmtNumber(val);
   }
 
   const currentTier = billingStatus?.plan_tier ?? ProviderPlanTier.FREE;
@@ -225,11 +214,11 @@ export default function ProviderBillingPage() {
                     Period end
                   </div>
                   <div className="text-[20px] font-medium mt-2" style={{ color: "var(--ink)" }}>
-                    {formatDate(billingStatus.subscription_current_period_end)}
+                    {fmtDate(billingStatus.subscription_current_period_end)}
                   </div>
                   {billingStatus.subscription_trial_end && (
                     <div className="text-xs mt-1" style={{ color: "var(--warn)" }}>
-                      Trial ends {formatDate(billingStatus.subscription_trial_end)}
+                      Trial ends {fmtDate(billingStatus.subscription_trial_end)}
                     </div>
                   )}
                 </div>
@@ -421,7 +410,7 @@ export default function ProviderBillingPage() {
                               {price ? (
                                 <div>
                                   <span className="text-[26px] font-medium" style={{ color: "var(--ink)" }}>
-                                    {formatMinorAmount(price.amount_minor, price.currency)}
+                                    {fmtMoney(price.amount_minor / 100, price.currency)}
                                   </span>
                                   <span className="text-sm" style={{ color: "var(--fg-3)" }}>
                                     /{interval}
@@ -493,10 +482,11 @@ export default function ProviderBillingPage() {
                             {invoices.map((invoice) => (
                               <tr key={invoice._id} style={{ borderBottom: "1px solid var(--border)" }}>
                                 <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
-                                  {formatDate(invoice.period_start)} – {formatDate(invoice.period_end)}
+                                  {fmtDate(invoice.period_start)} – {fmtDate(invoice.period_end)}
                                 </td>
                                 <td className="py-3 pr-4 font-mono tabular-nums" style={{ color: "var(--ink)" }}>
-                                  {formatMinorAmount(invoice.amount_due, invoice.currency)}
+                                  {/* amount_due is in minor units; the invoice's own currency must win */}
+                                  {fmtMoney(invoice.amount_due / 100, invoice.currency)}
                                 </td>
                                 <td className="py-3 pr-4">
                                   <span

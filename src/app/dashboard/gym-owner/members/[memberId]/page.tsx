@@ -6,7 +6,7 @@ import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
-import { format } from "date-fns";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 function getMemberName(sub: MembershipSubscription): string {
   if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
@@ -51,6 +51,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   const { memberId } = React.use(params);
   const router = useRouter();
   const { currentOrg } = useOrganization();
+  const { fmtDate, fmtMoney } = useOrgFormat();
   const [subscription, setSubscription] = useState<MembershipSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -127,13 +128,11 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     },
     {
       label: "Amount paid",
-      value: `${subscription.currency} ${subscription.amount_paid.toLocaleString()}`,
+      value: fmtMoney(subscription.amount_paid, subscription.currency),
     },
     {
       label: "Expires",
-      value: subscription.end_date
-        ? format(new Date(subscription.end_date), "dd MMM yyyy")
-        : "Open-ended",
+      value: subscription.end_date ? fmtDate(subscription.end_date) : "Open-ended",
     },
   ];
 
@@ -142,17 +141,15 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     { label: "Status", value: statusLabel },
     {
       label: "Started",
-      value: format(new Date(subscription.start_date), "dd MMM yyyy"),
+      value: fmtDate(subscription.start_date),
     },
     {
       label: "Expires",
-      value: subscription.end_date
-        ? format(new Date(subscription.end_date), "dd MMM yyyy")
-        : "Open-ended",
+      value: subscription.end_date ? fmtDate(subscription.end_date) : "Open-ended",
     },
     {
       label: "Amount paid",
-      value: `${subscription.currency} ${subscription.amount_paid.toLocaleString()}`,
+      value: fmtMoney(subscription.amount_paid, subscription.currency),
     },
     {
       label: "Payment reference",
@@ -160,7 +157,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     },
     {
       label: "Enrolled",
-      value: format(new Date(subscription.created_at), "dd MMM yyyy"),
+      value: fmtDate(subscription.created_at),
     },
   ];
 
@@ -181,7 +178,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
             {email}
             {" · joined "}
-            {format(new Date(subscription.created_at), "dd MMM yyyy")}
+            {fmtDate(subscription.created_at)}
           </p>
         </div>
         <span

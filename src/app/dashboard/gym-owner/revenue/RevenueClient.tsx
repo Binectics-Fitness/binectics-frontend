@@ -6,7 +6,7 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { formatCurrencyAmount } from "@/lib/constants/regions";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
   MembershipSubscriptionStatus,
   type MembershipSubscription,
@@ -22,10 +22,11 @@ function planName(sub: MembershipSubscription): string {
 
 export default function RevenueClient() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const { fmtNumber, fmtMoney } = useOrgFormat();
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [revenueStats, setRevenueStats] = useState<OrgRevenueStats | null>(null);
   // Org money renders in the org's own currency — never the visitor's region.
-  const formatAmount = (n: number) => formatCurrencyAmount(n, revenueStats?.currency ?? currentOrg?.currency);
+  const formatAmount = (n: number) => fmtMoney(n, revenueStats?.currency ?? currentOrg?.currency);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,9 +90,9 @@ export default function RevenueClient() {
         { label: "Revenue · 30d", value: formatAmount(stats.revenue_month) },
         { label: "Revenue · 7d", value: formatAmount(stats.revenue_week) },
         { label: "Revenue · today", value: formatAmount(stats.revenue_today) },
-        { label: "Active members", value: stats.active_members.toLocaleString() },
-        { label: "Active subscriptions", value: activeSubs.length.toLocaleString() },
-        ...(revenueStats ? [{ label: "New members · 30d", value: revenueStats.new_members_count.toLocaleString() }] : []),
+        { label: "Active members", value: fmtNumber(stats.active_members) },
+        { label: "Active subscriptions", value: fmtNumber(activeSubs.length) },
+        ...(revenueStats ? [{ label: "New members · 30d", value: fmtNumber(revenueStats.new_members_count) }] : []),
       ]
     : [];
 

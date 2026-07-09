@@ -6,6 +6,7 @@ import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile } from "@/lib/api/progress";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 type Filter = "All" | "Active" | "Paused";
 
@@ -44,6 +45,7 @@ function StatusBadge({ status }: { status: "Active" | "Paused" }) {
 /* ─── Page ───────────────────────────────────────────────── */
 
 export default function TrainerClientsPage() {
+  const { fmtDate } = useOrgFormat();
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [search, setSearch] = useState("");
   const [clients, setClients] = useState<ClientProfile[]>([]);
@@ -192,7 +194,7 @@ export default function TrainerClientsPage() {
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                       <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>
-                        {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        {fmtDate(c.created_at)}
                       </span>
                     </td>
                   </tr>

@@ -13,6 +13,7 @@ import {
   type LoyaltyRedemption,
   type LoyaltyReward,
 } from "@/lib/types";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 function rewardName(reward: string | LoyaltyReward): string {
   if (typeof reward === "string") return "Reward";
@@ -31,19 +32,8 @@ function eventTypeLabel(eventType: LoyaltyEventType): string {
   return labels[eventType] ?? eventType;
 }
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("en-ZA", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
-
 export default function LoyaltyCenterPage() {
+  const { fmtDate, fmtNumber } = useOrgFormat();
   const [balance, setBalance] = useState<LoyaltyBalance | null>(null);
   const [history, setHistory] = useState<LoyaltyPointsTransaction[]>([]);
   const [rewards, setRewards] = useState<LoyaltyReward[]>([]);
@@ -179,7 +169,7 @@ export default function LoyaltyCenterPage() {
               className="text-[36px] font-medium mt-2 tabular-nums"
               style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
             >
-              {balance ? balance.balance.toLocaleString() : "-"}
+              {balance ? fmtNumber(balance.balance) : "-"}
             </div>
             <div className="text-xs mt-1" style={{ color: "var(--fg-3)" }}>
               points
@@ -332,7 +322,7 @@ export default function LoyaltyCenterPage() {
                                     className="font-mono text-sm font-medium tabular-nums"
                                     style={{ color: "var(--signal)" }}
                                   >
-                                    {reward.points_cost.toLocaleString()} pts
+                                    {fmtNumber(reward.points_cost)} pts
                                   </span>
                                   {reward.max_redemptions && (
                                     <span className="text-xs ml-2" style={{ color: "var(--fg-3)" }}>
@@ -425,17 +415,17 @@ export default function LoyaltyCenterPage() {
                                     }}
                                   >
                                     {tx.points >= 0 ? "+" : ""}
-                                    {tx.points.toLocaleString()}
+                                    {fmtNumber(tx.points)}
                                   </span>
                                 </td>
                                 <td
                                   className="py-3 pr-4 font-mono text-sm tabular-nums"
                                   style={{ color: "var(--fg-2)" }}
                                 >
-                                  {tx.balance_after.toLocaleString()}
+                                  {fmtNumber(tx.balance_after)}
                                 </td>
                                 <td className="py-3" style={{ color: "var(--fg-2)" }}>
-                                  {formatDate(tx.created_at)}
+                                  {fmtDate(tx.created_at)}
                                 </td>
                               </tr>
                             ))}
@@ -468,8 +458,8 @@ export default function LoyaltyCenterPage() {
                                 className="text-sm mt-1"
                                 style={{ color: "var(--fg-3)" }}
                               >
-                                {redemption.points_spent.toLocaleString()} points spent ·{" "}
-                                {formatDate(redemption.created_at)}
+                                {fmtNumber(redemption.points_spent)} points spent ·{" "}
+                                {fmtDate(redemption.created_at)}
                               </div>
                               {redemption.redemption_code && (
                                 <div className="mt-1.5">

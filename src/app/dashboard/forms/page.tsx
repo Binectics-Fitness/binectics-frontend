@@ -14,18 +14,7 @@ import {
   type CreateFormRequest,
   type CreateQuestionRequest,
 } from "@/lib/api/forms";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("en-ZA", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 const QUESTION_TYPE_OPTIONS = [
   { label: "Short text", value: QuestionType.TEXT },
@@ -41,6 +30,7 @@ const QUESTION_TYPE_OPTIONS = [
 ];
 
 export default function FormsPage() {
+  const { fmtDate } = useOrgFormat();
   const [forms, setForms] = useState<Form[]>([]);
   const [activeForm, setActiveForm] = useState<Form | null>(null);
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
@@ -485,7 +475,7 @@ export default function FormsPage() {
                             {responseCounts[form._id] ?? 0}
                           </td>
                           <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
-                            {formatDate(form.created_at)}
+                            {fmtDate(form.created_at)}
                           </td>
                           <td className="py-3 flex gap-2">
                             <button

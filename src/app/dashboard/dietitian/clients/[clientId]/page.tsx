@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { format } from "date-fns";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService, type ClientProfileWithSummary } from "@/lib/api/progress";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 function clientName(c: ClientProfileWithSummary): string {
   if (typeof c.client_id === "object" && c.client_id !== null) {
@@ -26,6 +26,7 @@ function initials(name: string): string {
 
 export default function DietitianSingleClientPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = React.use(params);
+  const { fmtDate } = useOrgFormat();
   const [client, setClient] = useState<ClientProfileWithSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +90,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
             <div className="flex-1">
               <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>{name}</h1>
               <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-                {client.is_active ? "Active client" : "Paused"} &middot; joined {format(new Date(client.created_at), "d MMM yyyy")}
+                {client.is_active ? "Active client" : "Paused"} &middot; joined {fmtDate(client.created_at)}
               </p>
             </div>
           </div>
