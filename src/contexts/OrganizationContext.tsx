@@ -109,3 +109,11 @@ export function useOrganization() {
   }
   return context;
 }
+
+/**
+ * Non-throwing variant for design-system components that may render outside
+ * the provider (previews, isolated tests). Returns null when unavailable.
+ */
+export function useOptionalOrganization() {
+  return useContext(OrganizationContext) ?? null;
+}

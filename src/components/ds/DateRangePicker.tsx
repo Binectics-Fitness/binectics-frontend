@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 interface DateRange {
   start: Date | null;
@@ -16,7 +17,11 @@ interface DateRangePickerProps {
   value: DateRange;
   onChange: (range: DateRange) => void;
   presets?: Preset[];
+  /** Override the org's first-day-of-week setting (0 Sun / 1 Mon / 6 Sat). */
+  weekStartsOn?: 0 | 1 | 6;
 }
+
+const WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 const DEFAULT_PRESETS: Preset[] = [
   { label: "7D", range: { start: daysAgo(7), end: new Date() } },
@@ -58,7 +63,10 @@ export function DateRangePicker({
   value,
   onChange,
   presets = DEFAULT_PRESETS,
+  weekStartsOn,
 }: DateRangePickerProps) {
+  const { weekStartsOn: orgWeekStart } = useOrgFormat();
+  const weekStart = weekStartsOn ?? orgWeekStart;
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => {
     const d = value.start || new Date();
@@ -115,7 +123,14 @@ export function DateRangePicker({
   };
 
   const daysInMonth = getDaysInMonth(viewMonth.year, viewMonth.month);
-  const firstDay = new Date(viewMonth.year, viewMonth.month, 1).getDay();
+  // Leading blanks: offset of the month's first day from the configured
+  // week start (e.g. a Wednesday the 1st with Monday-start = 2 blanks).
+  const firstDay =
+    (new Date(viewMonth.year, viewMonth.month, 1).getDay() - weekStart + 7) % 7;
+  const weekdayLabels = [
+    ...WEEKDAY_LABELS.slice(weekStart),
+    ...WEEKDAY_LABELS.slice(0, weekStart),
+  ];
   const monthLabel = new Date(viewMonth.year, viewMonth.month).toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
@@ -167,7 +182,7 @@ export function DateRangePicker({
             </button>
           </div>
           <div className="grid grid-cols-7 gap-0 text-center">
-            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+            {weekdayLabels.map((d) => (
               <div key={d} className="py-1 font-mono text-[10px] uppercase tracking-wide text-fg-4">
                 {d}
               </div>
