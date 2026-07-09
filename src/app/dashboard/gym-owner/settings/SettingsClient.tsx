@@ -22,7 +22,20 @@ import {
   type TimeFormat,
   type NumberFormat,
 } from "@/lib/constants/settingsLocale";
-import type { Organization, UpdateOrganizationRequest } from "@/lib/api/teams";
+import type {
+  Organization,
+  UpdateOrganizationRequest,
+  BookingRules,
+  KioskSettings,
+  PayoutSchedule,
+  PayoutFrequency,
+} from "@/lib/api/teams";
+import {
+  DEFAULT_BOOKING_RULES,
+  DEFAULT_KIOSK_SETTINGS,
+  DEFAULT_PAYOUT_SCHEDULE,
+  PAYOUT_WEEKDAYS,
+} from "@/lib/constants/orgSettingsDefaults";
 
 const SECTIONS = [
   { group: "Business", items: [{ id: "org", label: "Organization" }, { id: "currency", label: "Currency & locale" }, { id: "tax", label: "Tax & VAT" }] },
@@ -31,19 +44,20 @@ const SECTIONS = [
   { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }, { id: "api", label: "API access" }] },
 ];
 
-const BOOKING_TOGGLES = [
-  { t: "Auto‑confirm bookings", s: "Confirmed instantly when the member taps Book. No manual approval needed.", on: true },
-  { t: "Require PAR‑Q from new members", s: "Standard health history form. Sent automatically before first session.", on: true },
-  { t: "Charge cancellation fee within 24h", s: "50% of session price. Reasonable exceptions waived by support team.", on: true },
-  { t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review.", on: true },
-  { t: "Public reviews on listing", s: "Strongly recommended · drives 3.4× more bookings vs hidden.", on: true },
+/** Booking toggles — key maps to a boolean on BookingRules (fee is derived). */
+const BOOKING_TOGGLE_DEFS = [
+  { key: "auto_confirm" as const, t: "Auto‑confirm bookings", s: "Confirmed instantly when the member taps Book. No manual approval needed." },
+  { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: "Standard health history form. Sent automatically before first session." },
+  { key: "cancellation_fee" as const, t: "Charge cancellation fee within 24h", s: "50% of session price. Reasonable exceptions waived by support team." },
+  { key: "allow_video_recording" as const, t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review." },
+  { key: "public_reviews" as const, t: "Public reviews on listing", s: "Strongly recommended · drives 3.4× more bookings vs hidden." },
 ];
 
-const KIOSK_TOGGLES = [
-  { t: "Allow QR check‑in from members’ phones", s: "If off, only the kiosk’s camera can scan member codes.", on: true },
-  { t: "Show success animation on check‑in", s: "The 2‑second celebration the system is known for. Off only if you must.", on: true },
-  { t: "Auto‑sleep after 60 seconds idle", s: "Saves screen burn‑in on always‑on iPads.", on: true },
-  { t: "Voice announcement on successful check‑in", s: "“Welcome, Linda.” Useful at busy 6am rushes, can be intrusive at 8pm.", on: false },
+const KIOSK_TOGGLE_DEFS = [
+  { key: "qr_checkin_from_phones" as const, t: "Allow QR check‑in from members’ phones", s: "If off, only the kiosk’s camera can scan member codes." },
+  { key: "success_animation" as const, t: "Show success animation on check‑in", s: "The 2‑second celebration the system is known for. Off only if you must." },
+  { key: "auto_sleep" as const, t: "Auto‑sleep after 60 seconds idle", s: "Saves screen burn‑in on always‑on iPads." },
+  { key: "voice_announcement" as const, t: "Voice announcement on successful check‑in", s: "“Welcome, Linda.” Useful at busy 6am rushes, can be intrusive at 8pm." },
 ];
 
 const INPUT_STYLE = {
@@ -72,6 +86,13 @@ interface SettingsForm {
   date_format: DateFormat;
   time_format: TimeFormat;
   number_format: NumberFormat;
+  /** Kept as the raw input string; converted to a number when saving. */
+  tax_rate: string;
+  tax_inclusive: boolean;
+  tax_label: string;
+  booking_rules: BookingRules;
+  kiosk_settings: KioskSettings;
+  payout_schedule: PayoutSchedule;
 }
 
 function seedForm(org: Organization): SettingsForm {
@@ -88,14 +109,43 @@ function seedForm(org: Organization): SettingsForm {
     date_format: org.date_format ?? LOCALE_DEFAULTS.date_format,
     time_format: org.time_format ?? LOCALE_DEFAULTS.time_format,
     number_format: org.number_format ?? LOCALE_DEFAULTS.number_format,
+    tax_rate: org.tax_rate != null ? String(org.tax_rate) : "",
+    tax_inclusive: org.tax_inclusive ?? true,
+    tax_label: org.tax_label ?? "VAT",
+    booking_rules: { ...DEFAULT_BOOKING_RULES, ...(org.booking_rules ?? {}) },
+    kiosk_settings: { ...DEFAULT_KIOSK_SETTINGS, ...(org.kiosk_settings ?? {}) },
+    payout_schedule: { ...DEFAULT_PAYOUT_SCHEDULE, ...(org.payout_schedule ?? {}) },
   };
 }
 
-/** Only the keys that differ from the baseline, as an update payload. */
+/**
+ * Only the keys that differ from the baseline, as an update payload.
+ * Sub-objects (booking_rules, …) compare deeply and send whole — the API
+ * replaces them atomically. tax_rate converts back to a number; an empty
+ * input means "leave unset" and is skipped.
+ */
 function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest {
   const out: UpdateOrganizationRequest = {};
   (Object.keys(next) as (keyof SettingsForm)[]).forEach((k) => {
-    if (base[k] !== next[k]) (out as Record<string, unknown>)[k] = next[k];
+    const b = base[k];
+    const n = next[k];
+    const changed =
+      typeof n === "object" && n !== null
+        ? JSON.stringify(b) !== JSON.stringify(n)
+        : b !== n;
+    if (!changed) return;
+    if (k === "tax_rate") {
+      const parsed = Number(next.tax_rate);
+      if (next.tax_rate !== "" && !Number.isNaN(parsed)) out.tax_rate = parsed;
+      return;
+    }
+    if (k === "payout_schedule") {
+      const ps = { ...next.payout_schedule };
+      if (ps.frequency === "daily") delete ps.payout_day;
+      out.payout_schedule = ps;
+      return;
+    }
+    (out as Record<string, unknown>)[k] = n;
   });
   return out;
 }
@@ -171,6 +221,37 @@ export function SettingsClient() {
 
   const set = <K extends keyof SettingsForm>(key: K, value: SettingsForm[K]) =>
     setForm((f) => (f ? { ...f, [key]: value } : f));
+
+  const setBooking = (patch: Partial<BookingRules>) =>
+    setForm((f) => (f ? { ...f, booking_rules: { ...f.booking_rules, ...patch } } : f));
+  const setKiosk = (patch: Partial<KioskSettings>) =>
+    setForm((f) => (f ? { ...f, kiosk_settings: { ...f.kiosk_settings, ...patch } } : f));
+  const setPayout = (patch: Partial<PayoutSchedule>) =>
+    setForm((f) => (f ? { ...f, payout_schedule: { ...f.payout_schedule, ...patch } } : f));
+
+  // The "cancellation fee" toggle is derived: on = a non-zero fee percent.
+  // Turning it on restores the standard 50% / 24h; off zeroes the fee.
+  const bookingOn = (key: (typeof BOOKING_TOGGLE_DEFS)[number]["key"]): boolean => {
+    if (!form) return false;
+    if (key === "cancellation_fee") return form.booking_rules.cancellation_fee_percent > 0;
+    return form.booking_rules[key];
+  };
+  const toggleBooking = (key: (typeof BOOKING_TOGGLE_DEFS)[number]["key"]) => {
+    if (!form) return;
+    if (key === "cancellation_fee") {
+      setBooking(
+        form.booking_rules.cancellation_fee_percent > 0
+          ? { cancellation_fee_percent: 0 }
+          : { cancellation_fee_percent: 50, cancellation_window_hours: 24 },
+      );
+    } else {
+      setBooking({ [key]: !form.booking_rules[key] });
+    }
+  };
+  // Switching payout frequency resets payout_day to that frequency's default
+  // (the field's meaning changes: weekday index vs day of month).
+  const onPayoutFrequency = (frequency: PayoutFrequency) =>
+    setPayout({ frequency, payout_day: frequency === "daily" ? undefined : 1 });
 
   const onSave = async () => {
     if (!orgId || !dirty || !form) return;
@@ -279,11 +360,47 @@ export function SettingsClient() {
             </div>
           </section>
 
-          {/* Booking rules — static (wired in a later PR) */}
-          <ToggleSection title="Booking rules" desc="Defaults that apply to all 4 locations · individual locations can override." toggles={BOOKING_TOGGLES} />
+          {/* Tax & VAT */}
+          <section id="tax">
+            <SectionHeading title="Tax & VAT" desc="Shown on receipts and invoices. Nothing is computed platform-side yet — this is what your documents display." />
+            <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />
+                <TextField label="Tax rate %" type="number" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
+                <div className="flex flex-col gap-1.5">
+                  <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Prices include tax</label>
+                  <div className="flex items-center gap-2.5 py-2.75">
+                    <Toggle on={form?.tax_inclusive ?? true} onToggle={() => set("tax_inclusive", !(form?.tax_inclusive ?? true))} />
+                    <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                      {form?.tax_inclusive ?? true ? "Listed prices already include tax" : "Tax is added on top of listed prices"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
-          {/* Kiosk & QR — static (wired in a later PR) */}
-          <ToggleSection title="Kiosk & QR" desc="Hardware and behaviour for the iPads at your front desks." toggles={KIOSK_TOGGLES} />
+          {/* Booking rules */}
+          <WiredToggleSection
+            id="booking"
+            title="Booking rules"
+            desc="Defaults that apply to all locations · individual locations can override."
+            items={BOOKING_TOGGLE_DEFS.map((d) => ({ ...d, on: bookingOn(d.key), onToggle: () => toggleBooking(d.key) }))}
+            disabled={!form}
+          />
+
+          {/* Kiosk & QR */}
+          <WiredToggleSection
+            id="kiosk"
+            title="Kiosk & QR"
+            desc="Hardware and behaviour for the iPads at your front desks."
+            items={KIOSK_TOGGLE_DEFS.map((d) => ({
+              ...d,
+              on: form?.kiosk_settings[d.key] ?? DEFAULT_KIOSK_SETTINGS[d.key],
+              onToggle: () => form && setKiosk({ [d.key]: !form.kiosk_settings[d.key] }),
+            }))}
+            disabled={!form}
+          />
 
           {/* Payment gateways — static (wired in a later PR) */}
           <section id="gateways">
@@ -303,6 +420,36 @@ export function SettingsClient() {
                 </div>
               ))}
               <button className="btn-ghost-v2 sm self-start">+ Add gateway</button>
+            </div>
+          </section>
+
+          {/* Payout schedule */}
+          <section id="payouts">
+            <SectionHeading title="Payout schedule" desc="How often earnings settle to your bank. Execution follows your gateway's capabilities." />
+            <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <SelectField label="Frequency" value={form?.payout_schedule.frequency ?? "weekly"} onChange={(v) => onPayoutFrequency(v as PayoutFrequency)} disabled={!form}>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </SelectField>
+                {form?.payout_schedule.frequency === "weekly" && (
+                  <SelectField label="Payout day" value={String(form.payout_schedule.payout_day ?? 1)} onChange={(v) => setPayout({ payout_day: Number(v) })}>
+                    {PAYOUT_WEEKDAYS.map((d) => (
+                      <option key={d.value} value={String(d.value)}>{d.label}</option>
+                    ))}
+                  </SelectField>
+                )}
+                {form?.payout_schedule.frequency === "monthly" && (
+                  <TextField label="Day of month (1–28)" type="number" value={String(form.payout_schedule.payout_day ?? 1)} onChange={(v) => {
+                    const day = Math.min(28, Math.max(1, Number(v) || 1));
+                    setPayout({ payout_day: day });
+                  }} />
+                )}
+                <TextField label={`Minimum payout${form?.currency ? ` (${form.currency})` : ""}`} type="number" value={String(form?.payout_schedule.minimum_payout_amount ?? 0)} onChange={(v) => setPayout({ minimum_payout_amount: Math.max(0, Number(v) || 0) })} disabled={!form} />
+                <TextField label="Hold period (days, 0–30)" type="number" value={String(form?.payout_schedule.hold_period_days ?? 0)} onChange={(v) => setPayout({ hold_period_days: Math.min(30, Math.max(0, Number(v) || 0)) })} disabled={!form} />
+              </div>
+              <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>Earnings below the minimum roll over to the next run. The hold period applies before earnings become payable.</span>
             </div>
           </section>
 
@@ -371,26 +518,34 @@ function LocaleSelect<T extends string>({ label, value, options, onChange, disab
   );
 }
 
-function Toggle({ on = true }: { on?: boolean }) {
+function Toggle({ on, onToggle, disabled }: { on: boolean; onToggle?: () => void; disabled?: boolean }) {
   return (
-    <span className="w-[30px] h-[18px] rounded-full relative cursor-pointer shrink-0 mt-0.5" style={{ background: on ? "var(--ink)" : "var(--border-2)" }}>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={onToggle}
+      className="w-[30px] h-[18px] rounded-full relative cursor-pointer shrink-0 mt-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+      style={{ background: on ? "var(--ink)" : "var(--border-2)", border: "none", padding: 0 }}
+    >
       <span className="absolute w-3.5 h-3.5 rounded-full top-0.5" style={{ background: "var(--bg)", left: on ? "14px" : "2px", transition: "left var(--motion-fast) var(--ease)" }} />
-    </span>
+    </button>
   );
 }
 
-function ToggleSection({ title, desc, toggles }: { title: string; desc: string; toggles: { t: string; s: string; on: boolean }[] }) {
+function WiredToggleSection({ id, title, desc, items, disabled }: { id: string; title: string; desc: string; items: { key: string; t: string; s: string; on: boolean; onToggle: () => void }[]; disabled?: boolean }) {
   return (
-    <section>
+    <section id={id}>
       <SectionHeading title={title} desc={desc} />
       <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        {toggles.map((t, i) => (
-          <div key={t.t} className="flex items-start gap-3.5 px-5.5 py-3" style={{ borderBottom: i < toggles.length - 1 ? "1px solid var(--border)" : "none" }}>
+        {items.map((t, i) => (
+          <div key={t.key} className="flex items-start gap-3.5 px-5.5 py-3" style={{ borderBottom: i < items.length - 1 ? "1px solid var(--border)" : "none" }}>
             <div className="flex-1">
               <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{t.t}</div>
               <div className="text-[12.5px] mt-0.75 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{t.s}</div>
             </div>
-            <Toggle on={t.on} />
+            <Toggle on={t.on} onToggle={t.onToggle} disabled={disabled} />
           </div>
         ))}
       </div>
