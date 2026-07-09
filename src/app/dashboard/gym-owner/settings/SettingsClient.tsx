@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GatewaysSection } from "./GatewaysSection";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useOrganizationDetails,
@@ -402,26 +403,8 @@ export function SettingsClient() {
             disabled={!form}
           />
 
-          {/* Payment gateways — static (wired in a later PR) */}
-          <section id="gateways">
-            <SectionHeading title="Payment gateways" desc="Where your money settles. Multiple gateways for multi-currency members." />
-            <div className="flex flex-col gap-3 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-              {[
-                { logo: "Paystack", color: "oklch(0.45 0.18 200)", name: "Paystack · primary", meta: "ZAR · NGN · KES · settles to ABSA •••• 2241" },
-                { logo: "Stripe", color: "oklch(0.42 0.22 280)", name: "Stripe · secondary", meta: "USD · EUR · GBP · settles to USB •••• 8104" },
-              ].map((g) => (
-                <div key={g.logo} className="flex items-center gap-3 p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
-                  <span className="w-10 h-6.5 rounded-(--r-1) flex items-center justify-center text-[9px] font-bold" style={{ background: g.color, color: "var(--bg)", fontFamily: "var(--font-mono)" }}>{g.logo}</span>
-                  <div className="flex-1">
-                    <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{g.name}</div>
-                    <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>{g.meta}</div>
-                  </div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full" style={{ color: "var(--signal-ink)", background: "var(--signal-soft)" }}>Active</span>
-                </div>
-              ))}
-              <button className="btn-ghost-v2 sm self-start">+ Add gateway</button>
-            </div>
-          </section>
+          {/* Payment gateways — live CRUD against the payment-config API */}
+          <GatewaysSection />
 
           {/* Payout schedule */}
           <section id="payouts">

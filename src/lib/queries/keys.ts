@@ -71,6 +71,8 @@ export const queryKeys = {
       [...queryKeys.marketplace.all, "orgMembershipSubs", orgId] as const,
     orgMembershipPlans: (orgId: string) =>
       [...queryKeys.marketplace.all, "orgMembershipPlans", orgId] as const,
+    orgPaymentConfigs: (orgId: string) =>
+      [...queryKeys.marketplace.all, "orgPaymentConfigs", orgId] as const,
   },
 
   notifications: {
