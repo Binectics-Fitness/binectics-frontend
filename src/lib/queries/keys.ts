@@ -51,6 +51,10 @@ export const queryKeys = {
     roles: (orgId: string) => [...queryKeys.teams.all, "roles", orgId] as const,
     invitations: (orgId: string) =>
       [...queryKeys.teams.all, "invitations", orgId] as const,
+    orgNotificationSettings: (orgId: string) =>
+      [...queryKeys.teams.all, "orgNotificationSettings", orgId] as const,
+    apiKeys: (orgId: string) =>
+      [...queryKeys.teams.all, "apiKeys", orgId] as const,
   },
 
   marketplace: {
