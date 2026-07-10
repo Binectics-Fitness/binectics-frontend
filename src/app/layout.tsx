@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import QueryProvider from "@/components/QueryProvider";
 import CookieConsent from "@/components/CookieConsent";
+import { PushRegistrar } from "@/components/PushRegistrar";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
@@ -79,6 +80,7 @@ export default function RootLayout({
               <RegionProvider>
                 <ConditionalLayout>{children}</ConditionalLayout>
                 <CookieConsent />
+                <PushRegistrar />
                 <ToastContainer />
                 <CommandBar />
               </RegionProvider>
