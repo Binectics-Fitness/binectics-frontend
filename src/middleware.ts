@@ -97,8 +97,8 @@ export function middleware(request: NextRequest) {
     const onboardingDone = request.cookies.get("onboarding_complete")?.value === "1";
     if (onboardingDone) {
       const role = request.cookies.get("user_role")?.value ?? "";
-      const dashMap: Record<string, string> = { USER: "/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
-      return withRegion(NextResponse.redirect(new URL(dashMap[role] || "/member", request.url)));
+      const dashMap: Record<string, string> = { USER: "/dashboard/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
+      return withRegion(NextResponse.redirect(new URL(dashMap[role] || "/dashboard/member", request.url)));
     }
   }
 
@@ -138,13 +138,13 @@ export function middleware(request: NextRequest) {
     }
     const role = request.cookies.get("user_role")?.value ?? "";
     const roleMapping: Record<string, string> = {
-      USER: "/member",
+      USER: "/dashboard/member",
       GYM_OWNER: "/dashboard/gym-owner",
       TRAINER: "/dashboard/trainer",
       DIETITIAN: "/dashboard/dietitian",
       ADMIN: "/admin/dashboard",
     };
-    const dashboardPath = roleMapping[role] || "/member";
+    const dashboardPath = roleMapping[role] || "/dashboard/member";
     return withRegion(NextResponse.redirect(new URL(dashboardPath, request.url)));
   }
 
