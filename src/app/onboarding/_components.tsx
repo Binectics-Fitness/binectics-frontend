@@ -45,21 +45,26 @@ export function TextInput({
   placeholder,
   type = "text",
   id,
+  suggestions,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
   id?: string;
+  /** Optional datalist entries — free text stays allowed. */
+  suggestions?: string[];
 }) {
   const autoId = useId();
   return (
-    <input
+    <>
+      <input
       id={id || autoId}
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
+      list={suggestions?.length ? `${id || autoId}-suggestions` : undefined}
       style={{
         background: "var(--bg)",
         border: "1px solid var(--border-2)",
@@ -70,7 +75,15 @@ export function TextInput({
         fontFamily: "var(--font-sans)",
         width: "100%",
       }}
-    />
+      />
+      {suggestions && suggestions.length > 0 && (
+        <datalist id={`${id || autoId}-suggestions`}>
+          {suggestions.map((sug) => (
+            <option key={sug} value={sug} />
+          ))}
+        </datalist>
+      )}
+    </>
   );
 }
 
