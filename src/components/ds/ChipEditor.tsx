@@ -24,9 +24,19 @@ export function ChipEditor({
 }) {
   const [draft, setDraft] = useState("");
   const add = () => {
-    const v = draft.trim();
-    if (!v || values.includes(v)) return;
-    onChange([...values, v]);
+    // Comma-separated input (typed or pasted) becomes multiple chips.
+    const parts = draft
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    const fresh = parts.filter(
+      (t, i) => !values.includes(t) && parts.indexOf(t) === i,
+    );
+    if (fresh.length === 0) {
+      setDraft("");
+      return;
+    }
+    onChange([...values, ...fresh]);
     setDraft("");
   };
   return (
