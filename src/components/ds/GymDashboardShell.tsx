@@ -10,7 +10,7 @@ const SIDEBAR: NavSection[] = [
     { name: "Members", href: "/dashboard/gym-owner/members", icon: <I><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></I> },
     { name: "Schedule", href: "/dashboard/gym-owner/schedule", icon: <I><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></I> },
     { name: "Check‑ins", href: "/dashboard/gym-owner/checkins", icon: <I d="M12 22V2M2 7l10 5 10-5M2 17l10 5 10-5" /> },
-    { name: "Devices", href: "/dashboard/gym-owner/devices", icon: <I d="M8 21h8M12 17v4M3 3h18v14H3z" /> },
+    { name: "Check-in kiosk", href: "/dashboard/gym-owner/kiosk", icon: <I><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h.01M20 17v3h-3"/></I> },
   ]},
   { label: "Money", items: [
     { name: "Payouts", href: "/dashboard/gym-owner/payouts", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },

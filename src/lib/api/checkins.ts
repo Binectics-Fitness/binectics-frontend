@@ -18,6 +18,17 @@ import type { ScanCheckInDto, OrgRevenueStatsDto } from "./generated/types";
 export type ScanCheckInRequest = ScanCheckInDto;
 export type OrgRevenueStats = OrgRevenueStatsDto;
 
+export interface CheckInRejection {
+  _id: string;
+  organization_id: string;
+  listing_id: string;
+  member_user_id:
+    | string
+    | { _id: string; first_name: string; last_name: string };
+  reason: "no_subscription" | "already_checked_in";
+  attempted_at: string;
+}
+
 export const checkinsService = {
   /**
    * Record a QR check-in for the authenticated member.
@@ -44,6 +55,16 @@ export const checkinsService = {
       `/checkins/organizations/${organizationId}${query}`,
     );
   },
+
+  /**
+   * Recent bounced check-in attempts for the org's front-desk feed.
+   */
+  getOrgRejections: (
+    organizationId: string,
+  ): Promise<ApiResponse<CheckInRejection[]>> =>
+    apiClient.get<CheckInRejection[]>(
+      `/checkins/organizations/${organizationId}/rejections`,
+    ),
 
   getMyStatus: (): Promise<ApiResponse<MyCheckInStatus>> =>
     apiClient.get<MyCheckInStatus>("/checkins/my-status"),
