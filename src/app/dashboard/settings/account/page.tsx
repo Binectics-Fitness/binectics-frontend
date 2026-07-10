@@ -12,8 +12,30 @@ import {
 } from "@/lib/schemas/settings";
 
 export default function AccountSettingsPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const onDeleteAccount = async () => {
+    if (!deletePassword || isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError("");
+    const res = await authService.deleteAccount(deletePassword);
+    if (!res.success) {
+      setIsDeleting(false);
+      setDeleteError(
+        res.status === 401
+          ? "Password is incorrect."
+          : res.message || "Could not delete your account. Please try again.",
+      );
+      return;
+    }
+    // The server has already killed the session — clear local state too.
+    await logout();
+  };
 
   const {
     register,
@@ -116,6 +138,67 @@ export default function AccountSettingsPage() {
         </form>
       </div>
 
+
+      {/* Danger zone — real deletion via POST /auth/account/delete */}
+      <div className="rounded-xl bg-bg p-4 sm:p-6" style={{ border: "1px solid oklch(0.88 0.05 25)" }}>
+        <h3 className="mb-1 text-lg font-bold sm:text-xl" style={{ color: "var(--danger)" }}>
+          Delete account
+        </h3>
+        <p className="mb-4 max-w-[64ch] text-sm text-fg-2">
+          Permanent. Your name and contact details are removed and you are
+          signed out everywhere, immediately. Past bookings and payments stay
+          in your providers&rsquo; records for tax compliance, without your
+          personal details attached. If you own an organization, transfer or
+          close it first.
+        </p>
+        {!deleteOpen ? (
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="rounded-lg px-5 py-2.5 text-sm font-semibold"
+            style={{ border: "1px solid oklch(0.88 0.05 25)", color: "var(--danger)", background: "var(--danger-soft)" }}
+          >
+            Delete my account&hellip;
+          </button>
+        ) : (
+          <div className="max-w-xl space-y-3">
+            <label className="block text-sm font-medium text-fg-2">
+              Enter your password to confirm
+            </label>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              autoComplete="current-password"
+              className="w-full rounded-lg border border-neutral-200 px-4 py-3 focus:outline-none focus:ring-2"
+              style={{ ["--tw-ring-color" as string]: "var(--danger)" }}
+            />
+            {deleteError && (
+              <p className="text-sm" style={{ color: "var(--danger)" }}>{deleteError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onDeleteAccount}
+                disabled={!deletePassword || isDeleting}
+                className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ background: "var(--danger)" }}
+              >
+                {isDeleting ? "Deleting…" : "Permanently delete my account"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDeleteOpen(false); setDeletePassword(""); setDeleteError(""); }}
+                disabled={isDeleting}
+                className="rounded-lg px-5 py-2.5 text-sm font-semibold text-fg-2"
+                style={{ border: "1px solid var(--border)" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

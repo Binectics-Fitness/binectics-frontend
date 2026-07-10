@@ -234,6 +234,20 @@ export const authService = {
   },
 
   /**
+   * Permanently delete (anonymize + deactivate) the current account.
+   * Requires the current password. The server kills the session; callers
+   * should clear local auth state afterwards regardless of transport
+   * errors, since a success response may race the token dying.
+   */
+  async deleteAccount(
+    currentPassword: string,
+  ): Promise<ApiResponse<{ message: string }>> {
+    return apiClient.post<{ message: string }>("/auth/account/delete", {
+      current_password: currentPassword,
+    });
+  },
+
+  /**
    * Update user profile on the server
    */
   async updateProfile(
