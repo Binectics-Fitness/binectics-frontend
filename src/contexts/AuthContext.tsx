@@ -253,6 +253,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     const userRole = user?.role;
 
+    // Best-effort: stop this browser receiving the account's pushes.
+    void import("@/lib/push/push").then(({ teardownPush }) => teardownPush());
+
     try {
       await authService.logout();
       setUser(null);

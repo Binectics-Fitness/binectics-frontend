@@ -227,13 +227,14 @@ class ApiClient {
     }
   }
 
-  async delete<T>(endpoint: string, _includeAuth = true): Promise<ApiResponse<T>> {
+  async delete<T>(endpoint: string, body?: unknown, _includeAuth = true): Promise<ApiResponse<T>> {
     try {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "DELETE",
           headers: this.getHeaders(),
           credentials: "include",
+          ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
         });
       return this.handleResponse<T>(await makeFetch(), makeFetch);
     } catch (error) {
