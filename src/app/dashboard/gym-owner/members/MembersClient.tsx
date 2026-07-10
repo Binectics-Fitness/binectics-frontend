@@ -281,6 +281,7 @@ export default function GymMembersClient() {
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<MembershipSubscriptionStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -297,7 +298,14 @@ export default function GymMembersClient() {
       setLoading(true);
       const res = await marketplaceService.getOrgMembershipSubscriptions(currentOrg._id);
       if (!mounted) return;
-      if (res.success && res.data) setSubscriptions(res.data);
+      if (res.success && res.data) {
+        setSubscriptions(res.data);
+        setLoadError(null);
+      } else {
+        // Never masquerade as an empty gym — a failed load once rendered
+        // "No members yet" while the API was 500ing (2026-07-10 regression).
+        setLoadError(res.message || "Couldn't load members.");
+      }
       setLoading(false);
     };
 
@@ -438,6 +446,12 @@ export default function GymMembersClient() {
                     ))}
                   </tr>
                 ))
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-[13.5px]" style={{ color: "var(--danger, #b00020)" }}>
+                    Couldn&apos;t load members — {loadError} <button className="btn-ghost-v2 sm ml-2" onClick={() => setRefreshKey((k) => k + 1)}>Retry</button>
+                  </td>
+                </tr>
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-[13.5px]" style={{ color: "var(--fg-3)" }}>
