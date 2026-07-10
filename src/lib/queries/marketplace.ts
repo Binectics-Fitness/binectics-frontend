@@ -314,3 +314,69 @@ export function usePublishMyListing() {
     },
   });
 }
+
+// ==================== ORG MEMBERSHIP PLAN MUTATIONS ====================
+
+function useInvalidateOrgPlans(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return () => {
+    if (orgId)
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.orgMembershipPlans(orgId),
+      });
+  };
+}
+
+export function useCreateOrgMembershipPlan(orgId: string | undefined) {
+  const invalidate = useInvalidateOrgPlans(orgId);
+  return useMutation({
+    mutationFn: (
+      data: Parameters<typeof marketplaceService.createOrgMembershipPlan>[1],
+    ) => {
+      if (!orgId) throw new Error("No organization selected");
+      return marketplaceService.createOrgMembershipPlan(orgId, data);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateOrgMembershipPlan(orgId: string | undefined) {
+  const invalidate = useInvalidateOrgPlans(orgId);
+  return useMutation({
+    mutationFn: ({
+      planId,
+      data,
+    }: {
+      planId: string;
+      data: Parameters<typeof marketplaceService.updateOrgMembershipPlan>[2];
+    }) => {
+      if (!orgId) throw new Error("No organization selected");
+      return marketplaceService.updateOrgMembershipPlan(orgId, planId, data);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useSetOrgMembershipPlanActive(orgId: string | undefined) {
+  const invalidate = useInvalidateOrgPlans(orgId);
+  return useMutation({
+    mutationFn: ({ planId, active }: { planId: string; active: boolean }) => {
+      if (!orgId) throw new Error("No organization selected");
+      return active
+        ? marketplaceService.activateOrgMembershipPlan(orgId, planId)
+        : marketplaceService.deactivateOrgMembershipPlan(orgId, planId);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteOrgMembershipPlan(orgId: string | undefined) {
+  const invalidate = useInvalidateOrgPlans(orgId);
+  return useMutation({
+    mutationFn: (planId: string) => {
+      if (!orgId) throw new Error("No organization selected");
+      return marketplaceService.deleteOrgMembershipPlan(orgId, planId);
+    },
+    onSuccess: invalidate,
+  });
+}
