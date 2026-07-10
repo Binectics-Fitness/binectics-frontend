@@ -62,6 +62,32 @@ export interface FeedbackSummary {
   }>;
 }
 
+/** A provider SaaS plan definition (super-admin editable). */
+export interface AdminPlan {
+  _id: string;
+  code: string; // free | pro | enterprise — immutable
+  name: string;
+  description?: string;
+  is_active: boolean;
+  sort_order: number;
+  // Quotas: null means unlimited.
+  max_active_members: number | null;
+  max_membership_plans: number | null;
+  max_staff_members: number | null;
+  max_listings: number | null;
+  // Feature flags.
+  analytics_enabled: boolean;
+  consultations_enabled: boolean;
+  journals_enabled: boolean;
+  qr_checkin_enabled: boolean;
+  white_label_enabled: boolean;
+  custom_domain_enabled: boolean;
+  branded_email_enabled: boolean;
+}
+
+/** Fields the PATCH endpoint accepts (everything except the immutable code). */
+export type UpdateAdminPlan = Partial<Omit<AdminPlan, "_id" | "code">>;
+
 // ==================== SERVICE ====================
 
 class AdminService {
@@ -98,6 +124,22 @@ class AdminService {
     return apiClient.put<PlatformCurrency[]>("/admin/currencies", {
       currencies,
     });
+  }
+
+  // ─── Provider SaaS plans ───────────────────────────────────────────────
+
+  async listPlans(): Promise<ApiResponse<AdminPlan[]>> {
+    return apiClient.get<AdminPlan[]>("/admin/provider-billing/plans");
+  }
+
+  async updatePlan(
+    planId: string,
+    patch: UpdateAdminPlan,
+  ): Promise<ApiResponse<AdminPlan>> {
+    return apiClient.patch<AdminPlan>(
+      `/admin/provider-billing/plans/${planId}`,
+      patch,
+    );
   }
 }
 
