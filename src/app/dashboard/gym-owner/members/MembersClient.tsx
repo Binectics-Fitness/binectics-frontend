@@ -78,17 +78,37 @@ function RowActions({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  // The menu is position:fixed (the table's overflow-x-auto wrapper clips
+  // absolutely-positioned children — the menu opened invisibly). Fixed
+  // coordinates come from the trigger; scroll/resize close the menu so it
+  // can't drift away from its button.
+  const toggleMenu = () => {
+    if (open) return setOpen(false);
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) setMenuPos({ top: r.bottom + 4, left: Math.max(8, r.right - 210) });
+    setOpen(true);
+  };
 
   useEffect(() => {
     if (!open) return;
+    const close = () => setOpen(false);
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) close();
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
   }, [open]);
 
   const isActive = sub.status === MembershipSubscriptionStatus.ACTIVE;
@@ -151,19 +171,20 @@ function RowActions({
   return (
     <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
       <button
+        ref={btnRef}
         type="button"
         aria-label="Member actions"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleMenu}
         disabled={busy}
         className="w-5.5 h-5.5 rounded-(--r-1) flex items-center justify-center cursor-pointer disabled:opacity-50"
         style={{ color: "var(--fg-3)" }}
       >
         {MORE_ICON}
       </button>
-      {open && (
+      {open && menuPos && (
         <div
-          className="absolute right-0 z-20 min-w-[200px] rounded-(--r-2) py-1 shadow-md"
-          style={{ background: "var(--bg)", border: "1px solid var(--border)", top: "calc(100% + 4px)" }}
+          className="z-50 min-w-[200px] rounded-(--r-2) py-1 shadow-md"
+          style={{ position: "fixed", top: menuPos.top, left: menuPos.left, background: "var(--bg)", border: "1px solid var(--border)" }}
         >
           <button type="button" className={item} style={{ color: "var(--ink)" }}
             onClick={() => { setOpen(false); router.push(`/dashboard/gym-owner/members/${sub._id}`); }}>
