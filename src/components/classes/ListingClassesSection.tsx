@@ -6,8 +6,7 @@ import {
   classBookingsService,
   nextOccurrences,
 } from "@/lib/api/classBookings";
-import { classTime } from "@/app/dashboard/gym-owner/schedule/ScheduleClient";
-import type { GymClass } from "@/lib/api/classes";
+import { classTime, type GymClass } from "@/lib/api/classes";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
