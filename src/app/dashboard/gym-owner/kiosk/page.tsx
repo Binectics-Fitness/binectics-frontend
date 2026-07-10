@@ -8,7 +8,7 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { checkinsService, type CheckInRejection } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
-import type { CheckIn } from "@/lib/types";
+import { CheckInHistoryPeriod, type CheckIn } from "@/lib/types";
 
 const FEED_POLL_MS = 10_000;
 
@@ -70,9 +70,11 @@ export default function CheckInKioskPage() {
   // Live desk feed, polled — a scan should show up within seconds.
   const refreshFeed = useCallback(async () => {
     if (!orgId) return;
-    const today = new Date().toISOString().slice(0, 10);
+    // period=today is a server-local day window — a UTC-sliced date string
+    // here would show yesterday's feed for the first hours after local
+    // midnight in UTC+ timezones.
     const [ins, rej] = await Promise.all([
-      checkinsService.getOrgCheckIns(orgId, undefined, today),
+      checkinsService.getOrgCheckIns(orgId, CheckInHistoryPeriod.TODAY),
       checkinsService.getOrgRejections(orgId),
     ]);
     if (ins.success && ins.data) setCheckIns(ins.data);
@@ -93,8 +95,8 @@ export default function CheckInKioskPage() {
   if (kioskMode && qrDataUrl) {
     return (
       <div
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8"
-        style={{ background: "var(--bg)" }}
+        className="fixed inset-0 flex flex-col items-center justify-center gap-8"
+        style={{ background: "var(--bg)", zIndex: 60 }}
       >
         <div className="text-center">
           <div className="font-mono text-[12px] uppercase tracking-[0.08em]" style={{ color: "var(--fg-3)" }}>
