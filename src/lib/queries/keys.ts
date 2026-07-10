@@ -79,6 +79,9 @@ export const queryKeys = {
       [...queryKeys.marketplace.all, "orgPaymentConfigs", orgId] as const,
   },
 
+  privacy: {
+    preferences: () => ["privacy", "preferences"] as const,
+  },
   notifications: {
     all: ["notifications"] as const,
     list: (params?: Record<string, unknown>) =>
