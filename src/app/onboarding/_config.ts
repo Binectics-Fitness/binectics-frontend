@@ -1,5 +1,46 @@
 export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
+export const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
+
+/** Maps the account's server-side role to the onboarding RoleId, or null
+ *  if the account has no resolvable role yet (or an unrecognized one). */
+export const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
+  USER: "member",
+  TRAINER: "trainer",
+  GYM_OWNER: "gym",
+  DIETITIAN: "dietitian",
+};
+
+/**
+ * Resolves which role, if any, was already decided before the user made
+ * any choice on this page — either an explicit `?role=` link, or the
+ * account's existing server-side role (e.g. an invited gym member's role
+ * IS their membership, never an open choice).
+ *
+ * This single result drives two things that must stay in lockstep: whether
+ * the full-page role picker (step 0) is skipped, and whether the
+ * persistent role rail is locked. Getting them out of sync is exactly how
+ * an invited member ends up able to "change their mind" into a role that
+ * was never theirs to pick — silently spinning up an unrelated org and
+ * overwriting the account's one server-side role.
+ */
+export function resolvePreselectedRole(
+  searchParamRole: string | null,
+  accountUserRole: string | null | undefined,
+): RoleId | null {
+  const fromParam =
+    searchParamRole && VALID_ROLES.includes(searchParamRole as RoleId)
+      ? (searchParamRole as RoleId)
+      : null;
+  const fromAccount =
+    (accountUserRole && ACCOUNT_ROLE_TO_ID[accountUserRole]) || null;
+  // Account role wins when it exists: a `?role=` link is just a marketing
+  // convenience for brand-new signups with no role yet. Letting it override
+  // an already-established account role would let a stray or crafted link
+  // do exactly what this whole function exists to prevent.
+  return fromAccount ?? fromParam;
+}
+
 export interface StepDef {
   label: string;
   title: string;
