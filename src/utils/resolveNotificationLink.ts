@@ -40,9 +40,14 @@ export function resolveNotificationLink(
     if (prefix) return url.replace("/dashboard/clients", `${prefix}/clients`);
   }
 
-  // Reviews
+  // Reviews: only the gym-owner shell has a reviews page. Trainer/
+  // dietitian prefixes and the bare member URL all 404, so fall back to
+  // the notifications list for everyone else.
   if (url.startsWith("/dashboard/reviews")) {
-    if (prefix) return url.replace("/dashboard/reviews", `${prefix}/reviews`);
+    if (userRole === UserRole.GYM_OWNER) {
+      return url.replace("/dashboard/reviews", "/dashboard/gym-owner/reviews");
+    }
+    return "/dashboard/notifications";
   }
 
   // ── Path corrections (backend typos / mismatches) ─────────
