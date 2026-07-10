@@ -16,6 +16,7 @@ import {
   type MarketplaceMembershipPlan,
 } from "@/lib/types";
 import type { CreateOrgMembershipPlanRequest } from "@/lib/api/marketplace";
+import { ChipEditor } from "@/components/ds";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -60,7 +61,7 @@ export function GymPlansClient() {
   const kpis = [
     { label: "Active subscribers", value: fmtNumber(totalMembers), delta: "across all plans" },
     { label: "Active plans", value: String(activePlans.length), delta: `${plans.length} total` },
-    { label: "Most picked", value: mostPicked && (mostPicked.active_members ?? 0) > 0 ? mostPicked.name : "—", small: true, delta: mostPicked && (mostPicked.active_members ?? 0) > 0 ? `${fmtNumber(mostPicked.active_members)} members` : "no subscribers yet" },
+    { label: "Most picked", value: mostPicked && (mostPicked.active_members ?? 0) > 0 ? mostPicked.name : "—", small: true, delta: mostPicked && (mostPicked.active_members ?? 0) > 0 ? `${fmtNumber(mostPicked.active_members)} member${mostPicked.active_members === 1 ? "" : "s"}` : "no subscribers yet" },
   ];
 
   const onCreate = async (data: CreateOrgMembershipPlanRequest) => {
@@ -71,11 +72,6 @@ export function GymPlansClient() {
   };
 
   const onDelete = (plan: MarketplaceMembershipPlan) => {
-    const hasMembers = (plan.active_members ?? 0) > 0;
-    if (hasMembers) {
-      window.alert(`"${plan.name}" has ${plan.active_members} active member${plan.active_members === 1 ? "" : "s"} — deactivate it instead so existing subscriptions keep working.`);
-      return;
-    }
     if (window.confirm(`Delete "${plan.name}"? This can't be undone.`)) {
       void remove.mutateAsync(plan._id);
     }
@@ -160,7 +156,12 @@ export function GymPlansClient() {
                   <button className="btn-ghost-v2 sm" disabled={setActive.isPending} onClick={() => void setActive.mutateAsync({ planId: p._id, active: !p.is_active })}>
                     {p.is_active ? "Deactivate" : "Activate"}
                   </button>
-                  <button className="btn-ghost-v2 sm" disabled={remove.isPending} onClick={() => onDelete(p)}>Delete</button>
+                  <button
+                    className="btn-ghost-v2 sm disabled:opacity-40"
+                    disabled={remove.isPending || (p.active_members ?? 0) > 0}
+                    title={(p.active_members ?? 0) > 0 ? "Has active members — deactivate instead so existing subscriptions keep working" : undefined}
+                    onClick={() => onDelete(p)}
+                  >Delete</button>
                 </div>
               </div>
               {editingId === p._id && (
@@ -197,29 +198,44 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
   onCancel: () => void;
   submitLabel?: string;
 }) {
+  const PERIODS = [
+    { value: "7", label: "Weekly", days: 7 },
+    { value: "30", label: "Monthly", days: 30 },
+    { value: "90", label: "Quarterly", days: 90 },
+    { value: "365", label: "Annual", days: 365 },
+    { value: "custom", label: "Custom…", days: 0 },
+  ];
+  const initialPeriod = initial
+    ? (PERIODS.find((pp) => pp.days === initial.duration_days)?.value ?? "custom")
+    : "30";
+
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [planType, setPlanType] = useState<MembershipPlanType>(initial?.plan_type ?? MembershipPlanType.SUBSCRIPTION);
-  const [duration, setDuration] = useState(initial?.duration_days ?? 30);
+  const [period, setPeriod] = useState(initialPeriod);
+  const [customDays, setCustomDays] = useState(initial?.duration_days ?? 30);
   const [price, setPrice] = useState(initial ? String(initial.price) : "");
-  const [features, setFeatures] = useState((initial?.features ?? []).join(", "));
+  const [features, setFeatures] = useState<string[]>(initial?.features ?? []);
   const [isPublic, setIsPublic] = useState(initial?.is_public ?? true);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  const oneTime = planType === MembershipPlanType.ONE_TIME;
+  const durationDays = period === "custom" ? customDays : Number(period);
 
   const submit = () => {
     const parsedPrice = Number(price);
     if (!name.trim()) return setLocalError("Give the plan a name.");
     if (price === "" || Number.isNaN(parsedPrice) || parsedPrice < 0) return setLocalError("Enter a valid price.");
-    if (!Number.isInteger(duration) || duration < 1) return setLocalError("Duration must be at least 1 day.");
+    if (!Number.isInteger(durationDays) || durationDays < 1) return setLocalError("Duration must be at least 1 day.");
     setLocalError(null);
     onSubmit({
       name: name.trim(),
       description: description.trim() || undefined,
       plan_type: planType,
-      duration_days: duration,
+      duration_days: durationDays,
       price: parsedPrice,
       currency: defaultCurrency,
-      features: features.split(",").map((f) => f.trim()).filter(Boolean),
+      features,
       is_public: isPublic,
     });
   };
@@ -245,12 +261,35 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
           </select>
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Duration (days)</span>
-          <input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value) || 0)} className={INPUT_CLASS} style={INPUT_STYLE} />
+          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>
+            {oneTime ? "Access window" : "Billing period"}
+          </span>
+          <select value={period} onChange={(e) => setPeriod(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE}>
+            {PERIODS.map((pp) => (
+              <option key={pp.value} value={pp.value}>
+                {pp.value === "custom" ? pp.label : oneTime ? `${pp.days} days` : pp.label}
+              </option>
+            ))}
+          </select>
         </label>
+        {period === "custom" && (
+          <label className="flex flex-col gap-1.5">
+            <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Days</span>
+            <input type="number" min={1} value={customDays} onChange={(e) => setCustomDays(Math.max(1, Math.round(Number(e.target.value) || 1)))} className={INPUT_CLASS} style={INPUT_STYLE} />
+          </label>
+        )}
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Price ({defaultCurrency})</span>
-          <input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" className={INPUT_CLASS} style={INPUT_STYLE} />
+          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Price</span>
+          <div className="flex items-center rounded-(--r-2)" style={{ border: "1px solid var(--border-2)", background: "var(--bg)" }}>
+            <span className="pl-3 pr-1.5 text-[13px] shrink-0" style={{ color: "var(--fg-3)" }}>{defaultCurrency}</span>
+            <input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" placeholder="0"
+              className="h-9 flex-1 min-w-0 rounded-(--r-2) pr-3 text-[13.5px] outline-none"
+              style={{ border: "none", color: "var(--ink)", background: "transparent", fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}
+              // The input's own outline is suppressed for the seamless prefix
+              // look, so the wrapper carries the keyboard-focus indicator.
+              onFocus={(e) => { const w = e.currentTarget.parentElement; if (w) w.style.border = "1px solid var(--ink)"; }}
+              onBlur={(e) => { const w = e.currentTarget.parentElement; if (w) w.style.border = "1px solid var(--border-2)"; }} />
+          </div>
         </label>
         <label className="flex flex-col gap-1.5">
           <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Visible on listing</span>
@@ -259,10 +298,7 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
           </div>
         </label>
       </div>
-      <label className="flex flex-col gap-1.5">
-        <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Features (comma-separated)</span>
-        <input value={features} onChange={(e) => setFeatures(e.target.value)} placeholder="24/7 access, group classes, guest passes" className={INPUT_CLASS} style={INPUT_STYLE} />
-      </label>
+      <ChipEditor label="Features" values={features} onChange={setFeatures} placeholder="e.g. 24/7 access" />
       {(localError || error) && <p className="text-[12.5px]" style={{ color: "var(--danger, #b00020)" }}>{localError || error}</p>}
       <div className="flex gap-2">
         <button className="btn-primary-v2 sm" disabled={saving} onClick={submit}>{saving ? "Saving…" : submitLabel}</button>
