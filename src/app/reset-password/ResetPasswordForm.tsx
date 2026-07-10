@@ -39,11 +39,15 @@ function formatResetPasswordError(
   }
 
   if (lowered.includes("token") && lowered.includes("expired")) {
-    return "This reset link has expired. Please request a new password reset email.";
+    return invite
+      ? "This invite link has expired. Ask your gym to resend the invite, or use \u201cForgot password\u201d on the sign-in page with this email."
+      : "This reset link has expired. Please request a new password reset email.";
   }
 
   if (lowered.includes("token") && lowered.includes("invalid")) {
-    return "This reset link is invalid. Please request a new password reset email.";
+    return invite
+      ? "This invite link is no longer valid. Ask your gym to resend the invite, or use \u201cForgot password\u201d on the sign-in page with this email."
+      : "This reset link is invalid. Please request a new password reset email.";
   }
 
   return message;
