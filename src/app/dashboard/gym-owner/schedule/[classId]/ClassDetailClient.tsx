@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
@@ -9,7 +10,71 @@ import {
   useUpdateGymClass,
   useDeleteGymClass,
 } from "@/lib/queries/classes";
+import {
+  classBookingsService,
+  nextOccurrences,
+  type ClassBooking,
+} from "@/lib/api/classBookings";
 import { ClassForm, WEEKDAYS } from "../ClassForm";
+
+function memberName(b: ClassBooking): string {
+  if (typeof b.member_user_id === "object") {
+    return `${b.member_user_id.first_name} ${b.member_user_id.last_name}`;
+  }
+  return "Member";
+}
+
+/** Roster for one occurrence of the class (confirmed + waitlist). */
+function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classId: string; dayOfWeek: number }) {
+  const dates = nextOccurrences(dayOfWeek, 4);
+  const [date, setDate] = useState(dates[0]);
+  const { data: roster = [], isLoading } = useQuery<ClassBooking[]>({
+    queryKey: ["classRoster", orgId, classId, date],
+    queryFn: async () => {
+      const res = await classBookingsService.getRoster(orgId, classId, date);
+      return res.success && res.data ? res.data : [];
+    },
+  });
+
+  const confirmed = roster.filter((b) => b.status === "confirmed");
+  const waitlisted = roster.filter((b) => b.status === "waitlisted");
+
+  return (
+    <section className="rounded-(--r-3) overflow-hidden max-w-[720px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <div className="flex items-center justify-between px-5.5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+        <div>
+          <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Roster</h2>
+          <div className="text-[12.5px] mt-0.5" style={{ color: "var(--fg-3)" }}>
+            {isLoading ? "Loading…" : `${confirmed.length} confirmed${waitlisted.length ? ` · ${waitlisted.length} waitlisted` : ""}`}
+          </div>
+        </div>
+        <select value={date} onChange={(e) => setDate(e.target.value)}
+          className="h-8 rounded-(--r-2) px-2.5 text-[12.5px]"
+          style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }}>
+          {dates.map((d) => (
+            <option key={d} value={d}>
+              {new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
+            </option>
+          ))}
+        </select>
+      </div>
+      {!isLoading && roster.length === 0 && (
+        <p className="px-5.5 py-6 text-[13px]" style={{ color: "var(--fg-3)" }}>No bookings for this occurrence yet.</p>
+      )}
+      {roster.map((b, i) => (
+        <div key={b._id} className="flex items-center gap-3 px-5.5 py-2.5" style={{ borderBottom: i < roster.length - 1 ? "1px solid var(--border)" : "none" }}>
+          <span className="flex-1 text-[13.5px]" style={{ color: "var(--ink)" }}>{memberName(b)}</span>
+          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]"
+            style={b.status === "confirmed"
+              ? { background: "var(--signal-soft)", color: "var(--signal-ink)" }
+              : { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" }}>
+            {b.status === "confirmed" ? "Confirmed" : "Waitlist"}
+          </span>
+        </div>
+      ))}
+    </section>
+  );
+}
 
 /** Edit / deactivate / delete a single weekly class. */
 export function ClassDetailClient() {
@@ -77,6 +142,10 @@ export function ClassDetailClient() {
       {!isLoading && !gymClass && (
         <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Class not found — it may have been deleted.</p>
       )}
+      {gymClass && orgId && (
+        <OccurrenceRoster orgId={orgId} classId={classId} dayOfWeek={gymClass.day_of_week} />
+      )}
+
       {gymClass && (
         <section className="rounded-(--r-3) p-5.5 max-w-[720px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <ClassForm

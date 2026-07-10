@@ -13,6 +13,7 @@ import {
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import { getClientTimezone } from "@/utils/format";
+import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
 
 type TabKey = "upcoming" | "past" | "cancelled";
 
@@ -292,6 +293,9 @@ export default function MyBookingsPage() {
             </Link>
           </div>
         </div>
+
+        {/* Gym class bookings — renders only when the member has some */}
+        <MyClassBookingsCard />
 
         <div className="flex gap-0 mb-6" style={{ borderBottom: "1px solid var(--border)" }}>
           {TABS.map((t) => {

@@ -8,6 +8,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatCurrency } from "@/utils/format";
+import { ListingClassesSection } from "@/components/classes/ListingClassesSection";
 
 /* ─── Icons ──────────────────────────────────────────────── */
 
@@ -332,6 +333,9 @@ export default function ProviderPage() {
               </div>
             </section>
           )}
+
+          {/* Class schedule — real weekly timetable + booking */}
+          <ListingClassesSection listingId={listingId} />
 
           {/* Reviews */}
           <section className="py-8 border-b border-border">
