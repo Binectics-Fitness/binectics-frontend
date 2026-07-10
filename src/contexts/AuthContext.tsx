@@ -82,15 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let refreshTimeout: NodeJS.Timeout;
     let expiryTimeout: NodeJS.Timeout;
+    // Refresh calls are async: without this guard a continuation could show
+    // the modal after this effect was torn down (e.g. right after logout).
+    let cancelled = false;
 
-    const attemptAutoRefresh = async () => {
+    const attemptAutoRefresh = async (expired = false) => {
       const response = await authService.refreshToken();
+      if (cancelled) return;
       if (response.success && response.data) {
         setSessionEpoch((e) => e + 1); // re-arm timers against the new expiry
       } else {
         // Auto-refresh failed — show the session modal as fallback
         setShowSessionModal(true);
-        setSessionEnded(false);
+        setSessionEnded(expired);
       }
     };
 
@@ -113,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         const response = await authService.refreshToken();
+        if (cancelled) return;
         if (response.success && response.data) {
           setSessionEpoch((e) => e + 1);
           return;
@@ -122,10 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }, timeUntilExpiry);
     } else {
       // Expiry already passed — try refreshing before giving up
-      attemptAutoRefresh();
+      attemptAutoRefresh(true);
     }
 
     return () => {
+      cancelled = true;
       if (refreshTimeout) clearTimeout(refreshTimeout);
       if (expiryTimeout) clearTimeout(expiryTimeout);
     };
