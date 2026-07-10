@@ -18,6 +18,12 @@ import type { ScanCheckInDto, OrgRevenueStatsDto } from "./generated/types";
 export type ScanCheckInRequest = ScanCheckInDto;
 export type OrgRevenueStats = OrgRevenueStatsDto;
 
+export interface GymCheckInInfo {
+  name: string;
+  /** Published marketplace listing id, when the gym has a storefront. */
+  listing_id: string | null;
+}
+
 export interface CheckInRejection {
   _id: string;
   organization_id: string;
@@ -36,6 +42,10 @@ export const checkinsService = {
    */
   scan: (data: ScanCheckInRequest): Promise<ApiResponse<CheckIn>> =>
     apiClient.post<CheckIn>("/checkins/scan", data),
+
+  /** Public gym display info for the scan landing (no auth). */
+  getGymInfo: (gymId: string): Promise<ApiResponse<GymCheckInInfo>> =>
+    apiClient.get<GymCheckInInfo>(`/checkins/gym/${gymId}/info`, false),
 
   /**
    * Get check-in history for an organisation (gym owner view).

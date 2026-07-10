@@ -5,14 +5,18 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { checkinsService } from "@/lib/api/checkins";
-import { marketplaceService } from "@/lib/api/marketplace";
 import type { MyCheckInDashboardStats } from "@/lib/types";
 
 type Outcome =
   | { state: "working" }
   | { state: "success"; gymName: string; streak: number | null }
   | { state: "already"; gymName: string }
-  | { state: "no_subscription"; gymName: string }
+  | {
+      state: "no_subscription";
+      gymName: string;
+      /** Published marketplace listing, when the gym has a storefront. */
+      listingId: string | null;
+    }
   | { state: "error"; message: string };
 
 /**
@@ -23,21 +27,25 @@ type Outcome =
  */
 export default function CheckInScanPage() {
   const params = useParams<{ gymId: string }>();
-  const listingId = params.gymId;
+  // Org id on current QRs; legacy printed QRs carry a listing id — the
+  // backend resolves either.
+  const gymId = params.gymId;
   const [outcome, setOutcome] = useState<Outcome>({ state: "working" });
   const firedRef = useRef(false);
 
   useEffect(() => {
-    if (firedRef.current || !listingId) return;
+    if (firedRef.current || !gymId) return;
     firedRef.current = true;
 
     const run = async () => {
-      // Gym name for every outcome screen (public endpoint, no auth).
-      const listingRes = await marketplaceService.getListingById(listingId);
-      const gymName =
-        (listingRes.success && listingRes.data?.headline) || "this gym";
+      // Gym name + optional storefront for every outcome screen (public
+      // endpoint; resolves either an org id or a legacy listing id).
+      const infoRes = await checkinsService.getGymInfo(gymId);
+      const gymName = (infoRes.success && infoRes.data?.name) || "this gym";
+      const storeListingId =
+        (infoRes.success && infoRes.data?.listing_id) || null;
 
-      const res = await checkinsService.scan({ listing_id: listingId });
+      const res = await checkinsService.scan({ gym_id: gymId });
       if (res.success) {
         // Streak is a nice-to-have — never block the success screen on it.
         let streak: number | null = null;
@@ -57,7 +65,7 @@ export default function CheckInScanPage() {
       if (msg.includes("already checked in")) {
         setOutcome({ state: "already", gymName });
       } else if (msg.includes("no active subscription")) {
-        setOutcome({ state: "no_subscription", gymName });
+        setOutcome({ state: "no_subscription", gymName, listingId: storeListingId });
       } else {
         setOutcome({
           state: "error",
@@ -66,7 +74,7 @@ export default function CheckInScanPage() {
       }
     };
     void run();
-  }, [listingId]);
+  }, [gymId]);
 
   return (
     <div
@@ -157,9 +165,11 @@ export default function CheckInScanPage() {
               notified and can help you sort it out.
             </p>
             <div className="mt-8 flex flex-col gap-2">
-              <Link href={`/marketplace/${listingId}`} className="btn-primary-v2" style={{ textDecoration: "none" }}>
-                View membership plans
-              </Link>
+              {outcome.listingId && (
+                <Link href={`/marketplace/${outcome.listingId}`} className="btn-primary-v2" style={{ textDecoration: "none" }}>
+                  View membership plans
+                </Link>
+              )}
               <Link href="/dashboard/member/billing" className="btn-ghost-v2" style={{ textDecoration: "none" }}>
                 My billing
               </Link>

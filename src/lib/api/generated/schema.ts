@@ -393,6 +393,23 @@ export interface paths {
         patch: operations["AdminController_unsuspendUser"];
         trace?: never;
     };
+    "/api/v1/auth/account/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete (anonymize + deactivate) the current account. Password-confirmed; irreversible. */
+        post: operations["AuthController_deleteAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/change-password": {
         parameters: {
             query?: never;
@@ -459,6 +476,24 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/privacy-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current user privacy preferences */
+        get: operations["AuthController_getPrivacyPreferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update current user privacy preferences */
+        patch: operations["AuthController_updatePrivacyPreferences"];
         trace?: never;
     };
     "/api/v1/auth/profile": {
@@ -615,6 +650,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkins/gym/{gymId}/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public gym display info for the scan landing page (name + published listing id if any) */
+        get: operations["CheckinsController_getGymInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkins/my-history": {
         parameters: {
             query?: never;
@@ -675,6 +727,23 @@ export interface paths {
         };
         /** Get dashboard stats for an organisation */
         get: operations["CheckinsController_getOrgDashboardStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkins/organizations/{organizationId}/rejections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent bounced check-in attempts for the front-desk feed */
+        get: operations["CheckinsController_getOrgRejections"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1098,6 +1167,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/forms/from-template/{templateKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a personal form from a ready-made template */
+        post: operations["FormsController_createFormFromTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/forms/my-forms": {
         parameters: {
             query?: never;
@@ -1152,6 +1238,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/forms/organizations/{organizationId}/forms/from-template/{templateKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an org form from a ready-made template */
+        post: operations["FormsController_createOrgFormFromTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/forms/questions/{questionId}": {
         parameters: {
             query?: never;
@@ -1179,6 +1282,23 @@ export interface paths {
         };
         /** Get response counts for all forms owned by the current user (batch) */
         get: operations["FormsController_getFormResponseCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List ready-made form templates */
+        get: operations["FormsController_getFormTemplates"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1304,6 +1424,23 @@ export interface paths {
         /** Send email */
         post: operations["MailController_send"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/class-bookings/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancel my booking (late cancellations record the org’s fee; a waitlisted member is promoted) */
+        delete: operations["ClassBookingsController_cancelBooking"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1446,6 +1583,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/listings/{listingId}/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public weekly class timetable for a listing */
+        get: operations["ClassBookingsController_getListingClasses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/listings/{listingId}/classes/{classId}/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Book a class occurrence (requires active membership) */
+        post: operations["ClassBookingsController_bookClass"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/listings/by-slug/{slug}": {
         parameters: {
             query?: never;
@@ -1455,6 +1626,23 @@ export interface paths {
         };
         /** Get a single marketplace listing by slug */
         get: operations["MarketplaceController_getListingBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-class-bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My upcoming class bookings */
+        get: operations["ClassBookingsController_getMyBookings"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2157,6 +2345,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a single membership subscription by ID */
+        get: operations["MarketplaceOrgController_getOrgSubscriptionById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Cancel a membership subscription (org side) */
+        patch: operations["MarketplaceOrgController_cancelOrgSubscription"];
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/mark-paid": {
         parameters: {
             query?: never;
@@ -2172,6 +2394,40 @@ export interface paths {
         head?: never;
         /** Mark a PENDING_PAYMENT subscription as paid (flips to ACTIVE and updates the ledger) */
         patch: operations["MarketplaceOrgController_markSubscriptionPaid"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/next-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Schedule (plan_id) or clear (null) a plan change applied at renewal; scheduling enables auto-renew */
+        patch: operations["MarketplaceOrgController_setNextPlan"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/resend-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-send the welcome / set-your-password email to an enrolled member */
+        post: operations["MarketplaceOrgController_resendMemberInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions/enroll": {
@@ -2309,6 +2565,24 @@ export interface paths {
         head?: never;
         /** Update notification preferences */
         patch: operations["NotificationsController_updatePreferences"];
+        trace?: never;
+    };
+    "/api/v1/notifications/push-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register (or refresh) an FCM device token for the caller */
+        post: operations["NotificationsController_registerPushToken"];
+        /** Unregister an FCM device token (logout) */
+        delete: operations["NotificationsController_unregisterPushToken"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/notifications/read-all": {
@@ -3018,6 +3292,23 @@ export interface paths {
         get: operations["ProgressController_getMyJournalEntries"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/progress/my-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get-or-create my SELF progress profile (self-tracked weight/meals without a provider) */
+        post: operations["ProgressController_getOrCreateMyProfile"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3798,6 +4089,41 @@ export interface paths {
         patch: operations["TeamsController_updateOrganization"];
         trace?: never;
     };
+    "/api/v1/teams/organizations/{organizationId}/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the organization’s API keys */
+        get: operations["ApiKeysController_listKeys"];
+        put?: never;
+        /** Create an API key (secret returned once, never again) */
+        post: operations["ApiKeysController_createKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/api-keys/{keyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke an API key (kept for audit) */
+        delete: operations["ApiKeysController_revokeKey"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teams/organizations/{organizationId}/branded-email/verify": {
         parameters: {
             query?: never;
@@ -3809,6 +4135,60 @@ export interface paths {
         put?: never;
         /** Verify the branded email sender domain via DNS-TXT (Admin only) */
         post: operations["TeamsController_verifyBrandedEmailSender"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the weekly class timetable */
+        get: operations["ClassesController_listClasses"];
+        put?: never;
+        /** Create a weekly class */
+        post: operations["ClassesController_createClass"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/classes/{classId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a class */
+        get: operations["ClassesController_getClass"];
+        put?: never;
+        post?: never;
+        /** Delete a class */
+        delete: operations["ClassesController_deleteClass"];
+        options?: never;
+        head?: never;
+        /** Update a class */
+        patch: operations["ClassesController_updateClass"];
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/classes/{classId}/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Roster for one class occurrence */
+        get: operations["ClassesController_getRoster"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3850,6 +4230,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teams/organizations/{organizationId}/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List locations for the organization */
+        get: operations["TeamsController_getLocations"];
+        put?: never;
+        /** Add a location to the organization */
+        post: operations["TeamsController_createLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/locations/{locationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Deactivate a location */
+        delete: operations["TeamsController_deleteLocation"];
+        options?: never;
+        head?: never;
+        /** Update a location */
+        patch: operations["TeamsController_updateLocation"];
+        trace?: never;
+    };
     "/api/v1/teams/organizations/{organizationId}/members": {
         parameters: {
             query?: never;
@@ -3886,6 +4302,41 @@ export interface paths {
         patch: operations["TeamsController_updateMember"];
         trace?: never;
     };
+    "/api/v1/teams/organizations/{organizationId}/membership-plans/seed-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seed membership plans from a template (standard/boutique/crossfit/blank) */
+        post: operations["TeamsController_seedMembershipPlanTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/notification-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get organization notification settings (Admin only) */
+        get: operations["OrgNotificationSettingsController_getOrgNotificationSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update organization notification settings (Admin only) */
+        patch: operations["OrgNotificationSettingsController_updateOrgNotificationSettings"];
+        trace?: never;
+    };
     "/api/v1/teams/organizations/{organizationId}/roles": {
         parameters: {
             query?: never;
@@ -3920,6 +4371,26 @@ export interface paths {
         head?: never;
         /** Update a custom role (default roles are immutable) */
         patch: operations["TeamsController_updateRole"];
+        trace?: never;
+    };
+    "/api/v1/upload/document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a document (PDF, image) to Cloudinary
+         * @description Accepts JPEG, PNG, WEBP, GIF, or PDF. Returns URL and metadata.
+         */
+        post: operations["CloudinaryUploadController_uploadDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/upload/image": {
@@ -4087,6 +4558,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/health/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Build stamp of the running process */
+        get: operations["HealthController_build"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health/live": {
         parameters: {
             query?: never;
@@ -4212,6 +4700,38 @@ export interface components {
             /** @enum {string} */
             verification_badge: "none" | "verified" | "premium_verified" | "featured";
         };
+        BookingRulesDto: {
+            /** @example true */
+            allow_video_recording: boolean;
+            /** @example true */
+            auto_confirm: boolean;
+            /**
+             * @description Minimum notice required to book, in hours.
+             * @example 0
+             */
+            booking_lead_time_hours: number;
+            /**
+             * @description 0–100; 0 disables the fee.
+             * @example 50
+             */
+            cancellation_fee_percent: number;
+            /**
+             * @description Cancellations inside this window incur the fee.
+             * @example 24
+             */
+            cancellation_window_hours: number;
+            /**
+             * @example none
+             * @enum {string}
+             */
+            no_show_policy: "none" | "fee" | "block_after_3";
+            /** @example true */
+            public_reviews: boolean;
+            /** @example true */
+            require_parq: boolean;
+            /** @example false */
+            waitlist_enabled: boolean;
+        };
         BroadcastAnnouncementDto: {
             /** @description Announcement message body */
             message: string;
@@ -4261,6 +4781,22 @@ export interface components {
             performed_at: string;
             /** @example Upper body workout */
             title: string;
+        };
+        CreateApiKeyDto: {
+            /**
+             * @description Optional expiry; omit for a non-expiring key.
+             * @example 2027-01-01T00:00:00.000Z
+             */
+            expires_at?: string;
+            /** @example Zapier integration */
+            name: string;
+            /**
+             * @description Team permissions this key may exercise.
+             * @example [
+             *       "form:view"
+             *     ]
+             */
+            scopes: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews")[];
         };
         CreateAssignmentRuleDto: {
             /** @description Match only these client tiers (empty = any tier). */
@@ -4312,6 +4848,13 @@ export interface components {
             startsAt: string;
         };
         CreateCheckoutSessionDto: Record<string, never>;
+        CreateClassBookingDto: {
+            /**
+             * @description The class occurrence day (YYYY-MM-DD, in the gym’s time zone). Must fall on the class’s weekday.
+             * @example 2026-07-13
+             */
+            booking_date: string;
+        };
         CreateClientJournalEntryDto: {
             /** @example 85 */
             adherence_score?: number;
@@ -4452,6 +4995,34 @@ export interface components {
              */
             title: string;
         };
+        CreateGymClassDto: {
+            /** @example 16 */
+            capacity: number;
+            /**
+             * @description 0 = Sunday … 6 = Saturday.
+             * @example 1
+             */
+            day_of_week: number;
+            /** @example Snatch and clean & jerk basics. */
+            description?: string;
+            /** @example 60 */
+            duration_minutes: number;
+            /** @example Themba N. */
+            instructor_name?: string;
+            /** @default true */
+            is_active: boolean;
+            /** @description OrganizationLocation ID */
+            location_id?: string;
+            /** @example Olympic lifting · beginners */
+            name: string;
+            /**
+             * @description HH:mm wall-clock time in the org time zone.
+             * @example 06:30
+             */
+            start_time: string;
+            /** @description Defaults from the org booking_rules.waitlist_enabled when omitted. */
+            waitlist_enabled?: boolean;
+        };
         CreateListingDto: {
             /** @description Whether the provider is accepting new clients */
             accepting_clients?: boolean;
@@ -4539,6 +5110,20 @@ export interface components {
              */
             specialties?: string[];
         };
+        CreateLocationDto: {
+            /** @example Cape Town */
+            city?: string;
+            /** @example South Africa */
+            country?: string;
+            /** @default false */
+            is_primary: boolean;
+            /** @example Sea Point */
+            name: string;
+            /** @example 8005 */
+            postal_code?: string;
+            /** @example 142 Main Road */
+            street?: string;
+        };
         CreateLoyaltyRewardDto: {
             description?: string;
             image_url?: string;
@@ -4599,11 +5184,17 @@ export interface components {
         CreateOrganizationDto: {
             /** @enum {string} */
             account_type: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
+            booking_rules?: components["schemas"]["BookingRulesDto"];
             /**
              * @description Verified sender email. Requires branded_email_enabled on the plan.
              * @example no-reply@fitlife.example
              */
             branded_email_sender?: string;
+            /**
+             * @description ISO 3166-1 alpha-2 country code (uppercase, 2 letters).
+             * @example ZA
+             */
+            country?: string;
             /**
              * @description Default ISO 4217 currency code (uppercase, 3 letters).
              * @example USD
@@ -4614,10 +5205,57 @@ export interface components {
              * @example members.fitlife.example
              */
             custom_domain?: string;
+            /** @enum {string} */
+            date_format?: "DD MMM YYYY" | "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
             description?: string;
+            /** @description Cloudinary URL of the uploaded owner ID document. */
+            doc_owner_id_url?: string;
+            /** @description Cloudinary URL of the uploaded business registration certificate. */
+            doc_registration_url?: string;
+            /** @description Cloudinary URL of the uploaded tax registration document. */
+            doc_tax_url?: string;
+            /** @enum {string} */
+            first_day_of_week?: "sunday" | "monday" | "saturday";
+            /** @example existing */
+            kiosk_preference?: string;
+            kiosk_settings?: components["schemas"]["KioskSettingsDto"];
+            /** @example Pty Ltd */
+            legal_entity?: string;
+            /** @example Iron Lab (Pty) Ltd */
+            legal_name?: string;
             logo?: string;
             /** @example FitLife Nutrition Co. */
             name: string;
+            /** @enum {string} */
+            number_format?: "1,234.56" | "1.234,56" | "1 234,56";
+            payout_schedule?: components["schemas"]["PayoutScheduleDto"];
+            /** @example paystack */
+            preferred_payout_gateway?: string;
+            /** @example owner@ironlab.co.za */
+            primary_email?: string;
+            /** @example 2018/123456/07 */
+            registration_number?: string;
+            /**
+             * @description Whether listed prices already include tax.
+             * @example true
+             */
+            tax_inclusive?: boolean;
+            /** @example VAT */
+            tax_label?: string;
+            /**
+             * @description Tax percentage applied on receipts/invoices (0–100).
+             * @example 15
+             */
+            tax_rate?: number;
+            /** @enum {string} */
+            time_format?: "12h" | "24h";
+            /**
+             * @description IANA time zone identifier.
+             * @example Africa/Johannesburg
+             */
+            time_zone?: string;
+            /** @example 4480281472 */
+            vat_registration_number?: string;
         };
         CreateOrgMembershipPlanDto: {
             /** @example USD */
@@ -4770,6 +5408,10 @@ export interface components {
             /** @example $ */
             symbol: string;
         };
+        DeleteAccountDto: {
+            /** @description Current password, required to confirm */
+            current_password: string;
+        };
         DeleteImageDto: {
             /**
              * @description Cloudinary public ID of image to delete
@@ -4823,7 +5465,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "MAIL_SEND_FAILED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "MAIL_SEND_FAILED";
             /** @example Validation failed */
             message: Record<string, never>;
             /** @example POST */
@@ -4911,6 +5553,21 @@ export interface components {
             /** @description TeamRole _id to assign to the invited member */
             team_role_id: string;
         };
+        KioskSettingsDto: {
+            /** @example true */
+            auto_sleep: boolean;
+            /**
+             * @description Idle seconds before the kiosk sleeps (10–3600).
+             * @example 60
+             */
+            idle_seconds: number;
+            /** @example true */
+            qr_checkin_from_phones: boolean;
+            /** @example true */
+            success_animation: boolean;
+            /** @example false */
+            voice_announcement: boolean;
+        };
         LoginDto: {
             /**
              * @description User email address
@@ -4950,6 +5607,28 @@ export interface components {
             new_members_count: number;
             timeseries: components["schemas"]["RevenueTimeseriesItemDto"][];
         };
+        PayoutScheduleDto: {
+            /**
+             * @example weekly
+             * @enum {string}
+             */
+            frequency: "daily" | "weekly" | "monthly";
+            /**
+             * @description Days earnings are held before becoming payable (0–30).
+             * @example 3
+             */
+            hold_period_days: number;
+            /**
+             * @description Earnings below this stay in balance until the next run.
+             * @example 0
+             */
+            minimum_payout_amount: number;
+            /**
+             * @description Weekly: 0–6 (Sunday=0). Monthly: 1–28. Ignored for daily.
+             * @example 1
+             */
+            payout_day?: number;
+        };
         QuestionOptionDto: {
             /**
              * @description Option label
@@ -4964,10 +5643,10 @@ export interface components {
         };
         RefreshTokenDto: {
             /**
-             * @description Refresh token issued at login
+             * @description Refresh token. When omitted the server reads the httpOnly refresh_token cookie.
              * @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
              */
-            refreshToken: string;
+            refreshToken?: string;
         };
         RegisterDto: {
             /**
@@ -5001,6 +5680,15 @@ export interface components {
              * @enum {string}
              */
             role?: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
+        };
+        RegisterPushTokenDto: {
+            /**
+             * @default web
+             * @enum {string}
+             */
+            platform: "web" | "android" | "ios";
+            /** @description FCM registration token for this device */
+            token: string;
         };
         ReorderListingGalleryDto: {
             /**
@@ -5038,14 +5726,24 @@ export interface components {
             revenue_minor: number;
         };
         ScanCheckInDto: {
-            /** @description Marketplace listing ID to check in to */
-            listing_id: string;
+            /** @description Gym identifier from the scanned QR — an organization id (current QRs) or a marketplace listing id (older printed QRs) */
+            gym_id?: string;
+            /** @description Legacy alias for gym_id (listing-based QRs) */
+            listing_id?: string;
             /** @description Optional note for the check-in */
             note?: string;
         };
+        SeedTemplateDto: Record<string, never>;
         SendMailDto: Record<string, never>;
         SetGymSuspensionDto: {
             reason?: string;
+        };
+        SetNextPlanDto: {
+            /**
+             * @description Plan to switch to at renewal. Send null to clear a scheduled change.
+             * @example 665f1b2c3d4e5f6a7b8c9d0e
+             */
+            plan_id?: string | null;
         };
         SetProviderAvailabilityDto: {
             rules: components["schemas"]["AvailabilityRuleInputDto"][];
@@ -5217,6 +5915,34 @@ export interface components {
              */
             title?: string;
         };
+        UpdateGymClassDto: {
+            /** @example 16 */
+            capacity?: number;
+            /**
+             * @description 0 = Sunday … 6 = Saturday.
+             * @example 1
+             */
+            day_of_week?: number;
+            /** @example Snatch and clean & jerk basics. */
+            description?: string;
+            /** @example 60 */
+            duration_minutes?: number;
+            /** @example Themba N. */
+            instructor_name?: string;
+            /** @default true */
+            is_active: boolean;
+            /** @description OrganizationLocation ID */
+            location_id?: string;
+            /** @example Olympic lifting · beginners */
+            name?: string;
+            /**
+             * @description HH:mm wall-clock time in the org time zone.
+             * @example 06:30
+             */
+            start_time?: string;
+            /** @description Defaults from the org booking_rules.waitlist_enabled when omitted. */
+            waitlist_enabled?: boolean;
+        };
         UpdateListingDto: {
             accepting_clients?: boolean;
             address?: string;
@@ -5252,6 +5978,20 @@ export interface components {
             specialties?: string[];
         };
         UpdateListingSlugDto: Record<string, never>;
+        UpdateLocationDto: {
+            /** @example Cape Town */
+            city?: string;
+            /** @example South Africa */
+            country?: string;
+            /** @default false */
+            is_primary: boolean;
+            /** @example Sea Point */
+            name?: string;
+            /** @example 8005 */
+            postal_code?: string;
+            /** @example 142 Main Road */
+            street?: string;
+        };
         UpdateLoyaltyRewardDto: {
             description?: string;
             image_url?: string;
@@ -5282,6 +6022,82 @@ export interface components {
             inAppPromotions?: boolean;
             inAppReminders?: boolean;
         };
+        UpdateOrganizationDto: {
+            /** @enum {string} */
+            account_type?: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
+            booking_rules?: components["schemas"]["BookingRulesDto"];
+            /**
+             * @description Verified sender email. Requires branded_email_enabled on the plan.
+             * @example no-reply@fitlife.example
+             */
+            branded_email_sender?: string;
+            /**
+             * @description ISO 3166-1 alpha-2 country code (uppercase, 2 letters).
+             * @example ZA
+             */
+            country?: string;
+            /**
+             * @description Default ISO 4217 currency code (uppercase, 3 letters).
+             * @example USD
+             */
+            currency?: string;
+            /**
+             * @description Fully-qualified custom domain (lowercase). Requires custom_domain_enabled on the plan.
+             * @example members.fitlife.example
+             */
+            custom_domain?: string;
+            /** @enum {string} */
+            date_format?: "DD MMM YYYY" | "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
+            description?: string;
+            /** @description Cloudinary URL of the uploaded owner ID document. */
+            doc_owner_id_url?: string;
+            /** @description Cloudinary URL of the uploaded business registration certificate. */
+            doc_registration_url?: string;
+            /** @description Cloudinary URL of the uploaded tax registration document. */
+            doc_tax_url?: string;
+            /** @enum {string} */
+            first_day_of_week?: "sunday" | "monday" | "saturday";
+            /** @example existing */
+            kiosk_preference?: string;
+            kiosk_settings?: components["schemas"]["KioskSettingsDto"];
+            /** @example Pty Ltd */
+            legal_entity?: string;
+            /** @example Iron Lab (Pty) Ltd */
+            legal_name?: string;
+            logo?: string;
+            /** @example FitLife Nutrition Co. */
+            name?: string;
+            /** @enum {string} */
+            number_format?: "1,234.56" | "1.234,56" | "1 234,56";
+            payout_schedule?: components["schemas"]["PayoutScheduleDto"];
+            /** @example paystack */
+            preferred_payout_gateway?: string;
+            /** @example owner@ironlab.co.za */
+            primary_email?: string;
+            /** @example 2018/123456/07 */
+            registration_number?: string;
+            /**
+             * @description Whether listed prices already include tax.
+             * @example true
+             */
+            tax_inclusive?: boolean;
+            /** @example VAT */
+            tax_label?: string;
+            /**
+             * @description Tax percentage applied on receipts/invoices (0–100).
+             * @example 15
+             */
+            tax_rate?: number;
+            /** @enum {string} */
+            time_format?: "12h" | "24h";
+            /**
+             * @description IANA time zone identifier.
+             * @example Africa/Johannesburg
+             */
+            time_zone?: string;
+            /** @example 4480281472 */
+            vat_registration_number?: string;
+        };
         UpdateOrgMembershipPlanDto: {
             currency?: string;
             description?: string;
@@ -5294,7 +6110,39 @@ export interface components {
             plan_type?: "subscription" | "one_time";
             price?: number;
         };
+        UpdateOrgNotificationSettingsDto: {
+            emailBookingConfirmations?: boolean;
+            emailCancellations?: boolean;
+            emailNewsletter?: boolean;
+            emailPaymentReceipts?: boolean;
+            emailPromotions?: boolean;
+            emailReminders?: boolean;
+            emailSubscriptionUpdates?: boolean;
+            pushBookingConfirmations?: boolean;
+            pushCancellations?: boolean;
+            pushNewsletter?: boolean;
+            pushPaymentReceipts?: boolean;
+            pushPromotions?: boolean;
+            pushReminders?: boolean;
+            pushSubscriptionUpdates?: boolean;
+            smsBookingConfirmations?: boolean;
+            smsCancellations?: boolean;
+            smsNewsletter?: boolean;
+            smsPaymentReceipts?: boolean;
+            smsPromotions?: boolean;
+            smsReminders?: boolean;
+            smsSubscriptionUpdates?: boolean;
+        };
+        UpdatePrivacyPreferencesDto: {
+            allowUsageAnalytics?: boolean;
+            /** @enum {string} */
+            profileVisibility?: "public" | "members" | "private";
+            shareProgressWithProviders?: boolean;
+            showRealNameOnReviews?: boolean;
+        };
         UpdateProfileDto: {
+            /** @example Lagos */
+            city?: string;
             /** @example Binectics Fitness Ltd */
             company_name?: string;
             /** @example NG */
@@ -5386,6 +6234,14 @@ export interface components {
         };
         UpdateSupportedCurrenciesDto: {
             currencies: components["schemas"]["CurrencyItemDto"][];
+        };
+        UpdateTeamRoleDto: {
+            /** @example senior_trainer */
+            code?: string;
+            description?: string;
+            /** @example Senior Trainer */
+            name?: string;
+            permissions?: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews")[];
         };
         UpdateWorkoutPlanDto: {
             description?: string;
@@ -6013,6 +6869,27 @@ export interface operations {
             };
         };
     };
+    AuthController_deleteAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccountDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AuthController_changePassword: {
         parameters: {
             query?: never;
@@ -6086,6 +6963,44 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RefreshTokenDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_getPrivacyPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_updatePrivacyPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePrivacyPreferencesDto"];
             };
         };
         responses: {
@@ -6298,6 +7213,25 @@ export interface operations {
             };
         };
     };
+    CheckinsController_getGymInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gymId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CheckinsController_getMyCheckInHistory: {
         parameters: {
             query?: {
@@ -6364,6 +7298,25 @@ export interface operations {
         };
     };
     CheckinsController_getOrgDashboardStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CheckinsController_getOrgRejections: {
         parameters: {
             query?: never;
             header?: never;
@@ -7204,6 +8157,41 @@ export interface operations {
             };
         };
     };
+    FormsController_createFormFromTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Template key */
+                templateKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Draft form created from template */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Template not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     FormsController_getMyForms: {
         parameters: {
             query?: {
@@ -7445,6 +8433,50 @@ export interface operations {
             };
         };
     };
+    FormsController_createOrgFormFromTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+                /** @description Template key */
+                templateKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Draft form created from template */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Template not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     FormsController_updateQuestion: {
         parameters: {
             query?: never;
@@ -7543,6 +8575,34 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Response counts retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FormsController_getFormTemplates: {
+        parameters: {
+            query?: {
+                /** @description Filter by category (gym | trainer | dietitian) */
+                category?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Templates retrieved */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -7689,6 +8749,41 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassBookingsController_cancelBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Booking ID */
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Booking cancelled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking not found or already cancelled */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7900,6 +8995,89 @@ export interface operations {
             };
         };
     };
+    ClassBookingsController_getListingClasses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Marketplace listing ID */
+                listingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Classes retrieved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Gym not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassBookingsController_bookClass: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Marketplace listing ID */
+                listingId: string;
+                /** @description Class ID */
+                classId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateClassBookingDto"];
+            };
+        };
+        responses: {
+            /** @description Booked (confirmed or waitlisted) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid date, inside lead time, duplicate, or class full */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No active membership */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Gym or class not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceController_getListingBySlug: {
         parameters: {
             query?: never;
@@ -7912,6 +9090,33 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassBookingsController_getMyBookings: {
+        parameters: {
+            query?: {
+                include_past?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bookings retrieved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -9058,6 +10263,46 @@ export interface operations {
             };
         };
     };
+    MarketplaceOrgController_getOrgSubscriptionById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_cancelOrgSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceOrgController_markSubscriptionPaid: {
         parameters: {
             query?: never;
@@ -9075,6 +10320,50 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_setNextPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetNextPlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_resendMemberInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -9273,6 +10562,48 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateNotificationPreferencesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationsController_registerPushToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPushTokenDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationsController_unregisterPushToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPushTokenDto"];
             };
         };
         responses: {
@@ -10442,6 +11773,23 @@ export interface operations {
             };
         };
     };
+    ProgressController_getOrCreateMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProgressController_getMyOwnProfiles: {
         parameters: {
             query?: never;
@@ -11565,9 +12913,145 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOrganizationDto"];
+            };
+        };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ApiKeysController_listKeys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description API keys retrieved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ApiKeysController_createKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateApiKeyDto"];
+            };
+        };
+        responses: {
+            /** @description API key created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid payload or key limit reached */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ApiKeysController_revokeKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+                /** @description API key ID */
+                keyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description API key revoked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid key ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Key not found or already revoked */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11587,6 +13071,265 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_listClasses: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Classes retrieved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_createClass: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGymClassDto"];
+            };
+        };
+        responses: {
+            /** @description Class created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_getClass: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+                /** @description Class ID */
+                classId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Class retrieved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Class not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_deleteClass: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+                /** @description Class ID */
+                classId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Class deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Class not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_updateClass: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+                /** @description Class ID */
+                classId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGymClassDto"];
+            };
+        };
+        responses: {
+            /** @description Class updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Class not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_getRoster: {
+        parameters: {
+            query: {
+                /** @description Occurrence day (YYYY-MM-DD) */
+                date: string;
+            };
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+                /** @description Class ID */
+                classId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Roster retrieved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11649,6 +13392,92 @@ export interface operations {
         requestBody?: never;
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_getLocations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_createLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLocationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_deleteLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                locationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_updateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                locationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLocationDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11742,6 +13571,103 @@ export interface operations {
             };
         };
     };
+    TeamsController_seedMembershipPlanTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeedTemplateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgNotificationSettingsController_getOrgNotificationSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings retrieved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgNotificationSettingsController_updateOrgNotificationSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOrgNotificationSettingsDto"];
+            };
+        };
+        responses: {
+            /** @description Settings updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     TeamsController_getRoles: {
         parameters: {
             query?: never;
@@ -11814,9 +13740,57 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTeamRoleDto"];
+            };
+        };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CloudinaryUploadController_uploadDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Document file (JPEG, PNG, WEBP, GIF, PDF, max 10MB)
+                     */
+                    file: string;
+                    /**
+                     * @description Destination folder in Cloudinary
+                     * @enum {string}
+                     */
+                    folder: "users/profiles" | "gyms/profiles" | "gyms/gallery" | "gyms/documents" | "gyms/verification" | "marketplace/listings" | "marketplace/providers" | "store/products" | "teams/documents" | "plans/workouts" | "plans/diet-documents" | "payments/proofs";
+                    /** @description Optional custom public ID */
+                    publicId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Document uploaded successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadImageResponseDto"];
+                };
+            };
+            /** @description Invalid file or parameters */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12194,6 +14168,23 @@ export interface operations {
                         status?: string;
                     };
                 };
+            };
+        };
+    };
+    HealthController_build: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
