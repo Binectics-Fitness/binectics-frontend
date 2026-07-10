@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { useAuth } from "@/contexts/AuthContext";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, WeightLog } from "@/lib/api/progress";
@@ -19,6 +20,7 @@ function formatDate(isoDate: string): string {
 }
 
 export default function WeightLogPage() {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [logs, setLogs] = useState<WeightLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +45,17 @@ export default function WeightLogPage() {
     });
     setLogSaving(false);
     if (res.success && res.data) {
-      setLogs((prev) => [res.data as WeightLog, ...prev]);
+      // The create response carries logged_by as a raw id; the list
+      // endpoint populates it. Stamp the name locally — the logger is
+      // the signed-in user by definition.
+      const stamped = {
+        ...(res.data as WeightLog),
+        logged_by:
+          user && typeof (res.data as WeightLog).logged_by === "string"
+            ? { _id: (res.data as WeightLog).logged_by as string, first_name: user.first_name ?? "", last_name: user.last_name ?? "" }
+            : (res.data as WeightLog).logged_by,
+      } as WeightLog;
+      setLogs((prev) => [stamped, ...prev]);
       setLogWeight("");
       setLogOpen(false);
     } else {
@@ -87,6 +99,15 @@ export default function WeightLogPage() {
     void load();
   }, []);
 
+  // "Logged by" only carries information when a PROVIDER logged an entry
+  // for the member (trainers/dietitians can). When every entry is the
+  // member's own, the column is pure noise — hide it.
+  const loggerId = (log: WeightLog) =>
+    typeof log.logged_by === "string" ? log.logged_by : log.logged_by._id;
+  const hasProviderLogs = logs.some(
+    (log) => user && loggerId(log) !== user.id,
+  );
+
   const latestLog = logs.length > 0 ? logs[0] : null;
   const oldestLog = logs.length > 0 ? logs[logs.length - 1] : null;
   const changeKgValue =
@@ -113,7 +134,13 @@ export default function WeightLogPage() {
             Weight
           </h1>
           <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            {profile ? `${typeof profile.client_id === "object" ? `${profile.client_id.first_name} ${profile.client_id.last_name}` : profile.client_id} · ${logs.length} logs recorded` : "Loading..."}
+            {profile
+              ? `${
+                  typeof profile.client_id === "object"
+                    ? `${profile.client_id.first_name} ${profile.client_id.last_name}`
+                    : `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "My log"
+                } · ${logs.length} ${logs.length === 1 ? "log" : "logs"} recorded`
+              : "Loading..."}
           </p>
         </div>
         {logOpen ? (
@@ -336,7 +363,7 @@ export default function WeightLogPage() {
             >
               <thead>
                 <tr>
-                  {["Date", "Weight", "Note", "Logged by"].map((th) => (
+                  {["Date", "Weight", "Note", ...(hasProviderLogs ? ["Logged by"] : [])].map((th) => (
                     <th
                       key={th}
                       style={{
@@ -358,9 +385,11 @@ export default function WeightLogPage() {
               </thead>
               <tbody>
                 {logs.map((log) => {
-                  const loggedBy =
-                    typeof log.logged_by === "string"
-                      ? log.logged_by
+                  const isOwn = user ? loggerId(log) === user.id : false;
+                  const loggedBy = isOwn
+                    ? "You"
+                    : typeof log.logged_by === "string"
+                      ? "—"
                       : `${log.logged_by.first_name} ${log.logged_by.last_name}`;
                   return (
                     <tr key={log._id}>
@@ -391,16 +420,18 @@ export default function WeightLogPage() {
                       >
                         {log.note || "—"}
                       </td>
-                      <td
-                        style={{
-                          padding: "11px 14px",
-                          borderBottom: "1px solid var(--border)",
-                          fontSize: 12,
-                          color: "var(--fg-3)",
-                        }}
-                      >
-                        {loggedBy}
-                      </td>
+                      {hasProviderLogs && (
+                        <td
+                          style={{
+                            padding: "11px 14px",
+                            borderBottom: "1px solid var(--border)",
+                            fontSize: 12,
+                            color: "var(--fg-3)",
+                          }}
+                        >
+                          {loggedBy}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
