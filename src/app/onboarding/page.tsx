@@ -9,6 +9,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { teamsService } from "@/lib/api/teams";
 import { onboardingService } from "@/lib/api/onboarding";
 import { authService } from "@/lib/api/auth";
+import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
 import { ROLES, GENERIC_STEPS, ROLE_CARDS, resolvePreselectedRole, type RoleId } from "./_config";
 import { StageHead } from "./_components";
@@ -284,8 +285,12 @@ function OnboardingContent() {
         const goal = stepData.goal as string;
         if (goal) await authService.updateProfile({ fitness_goals: [goal] });
       } else if (currentStep === 2) {
+        const patch: Record<string, unknown> = {};
         const providerTypes = stepData.providerTypes as string[];
-        if (providerTypes?.length) await authService.updateProfile({ preferred_activities: providerTypes });
+        if (providerTypes?.length) patch.preferred_activities = providerTypes;
+        const city = (stepData.city as string | undefined)?.trim();
+        if (city) patch.city = city;
+        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
       }
     } catch { /* non-blocking */ }
   }, []);
@@ -330,10 +335,14 @@ function OnboardingContent() {
       setStep(step + 1);
     } else if (role) {
       setIsFinishing(true);
-      try {
-        await onboardingService.dismiss();
-      } catch {
-        // non-blocking
+      // dismiss() is what marks onboarding complete server-side. A silent
+      // failure here re-onboards the user on every fresh device — surface
+      // it instead of swallowing it (a swallowed 404 hid exactly that bug).
+      const dismissed = await onboardingService.dismiss();
+      if (!dismissed.success) {
+        toast.error(
+          "We couldn't save your onboarding progress — you may be asked again next time.",
+        );
       }
       // Refresh from API so localStorage has the promoted role (e.g. USER→GYM_OWNER)
       // before navigating — the dashboard's useRoleGuard reads from localStorage.
