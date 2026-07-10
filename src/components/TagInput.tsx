@@ -41,9 +41,17 @@ export default function TagInput({
   }, []);
 
   function addTag(tag: string) {
-    const trimmed = tag.trim();
-    if (trimmed && !value.includes(trimmed)) {
-      onChange([...value, trimmed]);
+    // Accept comma-separated input — typed or pasted ("a, b, c" is three
+    // tags, not one) — de-duplicating against existing tags.
+    const parts = tag
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    const fresh = parts.filter(
+      (t, i) => !value.includes(t) && parts.indexOf(t) === i,
+    );
+    if (fresh.length > 0) {
+      onChange([...value, ...fresh]);
     }
     setInputValue("");
     setShowSuggestions(false);
