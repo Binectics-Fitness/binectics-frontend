@@ -73,6 +73,23 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // Same-origin API proxy — host-agnostic version of the netlify.toml
+  // redirect. The httpOnly auth cookies must be FIRST-party (set on this
+  // site's own domain) or the Next middleware can't see access_token and
+  // every login bounces back to /login. netlify.toml only applies on
+  // Netlify; this rewrite makes Vercel/preview/any-host deployments work
+  // the same way. Requires NEXT_PUBLIC_API_URL to be UNSET (or relative)
+  // on those hosts so apiClient uses the relative /api/v1 path.
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination:
+          "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1/:path*",
+      },
+    ];
+  },
+
   // Redirects
   async redirects() {
     return [
