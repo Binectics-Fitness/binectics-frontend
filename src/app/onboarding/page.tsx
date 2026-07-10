@@ -92,13 +92,17 @@ function OnboardingContent() {
   const [manualRole, setManualRole] = useState<RoleId | null>(preselected);
   const role = manualRole ?? accountRole;
   const [step, setStep] = useState(preselected ? 1 : 0);
-  // Frozen at mount: if a role was already known (account role, or a
-  // ?role= link) the full-page picker at step 0 never showed — so the
-  // persistent rail below must not offer a live, clickable "change your
-  // mind" either. Otherwise an invited gym member (whose role IS their
-  // membership, not a choice) could misclick "Trainer"/"Gym" and silently
-  // spin up a new org + overwrite their account's role.
-  const [roleLocked] = useState(() => Boolean(preselected));
+  // Deliberately NOT frozen in state: `user` from useAuth() hydrates
+  // asynchronously (starts null, populated a tick after mount), so a
+  // useState-frozen value computed on the very first render could lock in
+  // "false" before the account's real role is known — and never re-lock
+  // once it arrives. Recomputing every render self-heals the instant
+  // accountRole resolves. If a role was already known (account role, or a
+  // ?role= link), the persistent rail must not offer a live, clickable
+  // "change your mind" — an invited gym member's role IS their membership,
+  // not a choice, and clicking "Trainer"/"Gym" would silently spin up a new
+  // org + overwrite the account's role.
+  const roleLocked = Boolean(preselected);
   const [data, setData] = useState<Record<string, unknown>>({});
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSavingLater, setIsSavingLater] = useState(false);
