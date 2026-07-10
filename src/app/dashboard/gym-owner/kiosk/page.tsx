@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import QRCode from "qrcode";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { checkinsService, type CheckInRejection } from "@/lib/api/checkins";
-import { marketplaceService } from "@/lib/api/marketplace";
 import { CheckInHistoryPeriod, type CheckIn } from "@/lib/types";
 
 const FEED_POLL_MS = 10_000;
@@ -34,8 +32,6 @@ export default function CheckInKioskPage() {
   const { currentOrg } = useOrganization();
   const orgId = currentOrg?._id;
 
-  const [listingId, setListingId] = useState<string | null>(null);
-  const [isPublished, setIsPublished] = useState<boolean | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [rejections, setRejections] = useState<CheckInRejection[]>([]);
@@ -43,25 +39,19 @@ export default function CheckInKioskPage() {
   const [kioskMode, setKioskMode] = useState(false);
   const [checkInUrl, setCheckInUrl] = useState<string>("");
 
-  // Listing → QR. The QR encodes this site's own /check-in/<listingId> URL.
+  // The QR encodes this site's own /check-in/<ORGANIZATION id> URL — the
+  // org is the operational entity; no marketplace listing required.
   useEffect(() => {
     const load = async () => {
-      const res = await marketplaceService.getMyListing();
-      if (res.success && res.data?._id) {
-        setListingId(res.data._id);
-        setIsPublished(Boolean(res.data.is_published));
-        const url = `${window.location.origin}/check-in/${res.data._id}`;
-        setCheckInUrl(url);
-        const dataUrl = await QRCode.toDataURL(url, {
-          width: 640,
-          margin: 1,
-          color: { dark: "#03314b", light: "#ffffff" },
-        });
-        setQrDataUrl(dataUrl);
-      } else {
-        setIsPublished(null);
-        setListingId(null);
-      }
+      if (!orgId) return;
+      const url = `${window.location.origin}/check-in/${orgId}`;
+      setCheckInUrl(url);
+      const dataUrl = await QRCode.toDataURL(url, {
+        width: 640,
+        margin: 1,
+        color: { dark: "#03314b", light: "#ffffff" },
+      });
+      setQrDataUrl(dataUrl);
       setLoading(false);
     };
     void load();
@@ -139,7 +129,7 @@ export default function CheckInKioskPage() {
             declined attempts land here live.
           </p>
         </div>
-        {qrDataUrl && isPublished && (
+        {qrDataUrl && (
           <div className="flex gap-2">
             <a href={qrDataUrl} download="binectics-checkin-qr.png" className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>
               Download QR
@@ -153,30 +143,8 @@ export default function CheckInKioskPage() {
 
       {loading ? (
         <AsyncSpinner label="Loading kiosk" />
-      ) : !listingId ? (
-        <div className="rounded-(--r-2) border border-border bg-bg-2 p-5 text-sm" style={{ color: "var(--fg-2)" }}>
-          Your gym doesn&rsquo;t have a marketplace listing yet — the check-in
-          QR is generated from it.{" "}
-          <Link href="/dashboard/profile-edit" className="underline underline-offset-2" style={{ color: "var(--ink)" }}>
-            Create your listing
-          </Link>
-        </div>
       ) : (
         <>
-          {isPublished === false && (
-            <div
-              className="mb-4 rounded-(--r-2) p-4 text-sm"
-              style={{ background: "oklch(0.96 0.06 75)", border: "1px solid oklch(0.88 0.07 75)", color: "oklch(0.32 0.16 75)" }}
-            >
-              Your listing isn&rsquo;t published, so scans of this QR will fail
-              with &ldquo;gym not found.&rdquo;{" "}
-              <Link href="/dashboard/profile-edit" className="underline underline-offset-2">
-                Publish your listing
-              </Link>{" "}
-              to activate check-ins.
-            </div>
-          )}
-
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
             {/* QR card */}
             <div className="rounded-xl border border-border bg-bg p-5 text-center" style={{ alignSelf: "start" }}>
