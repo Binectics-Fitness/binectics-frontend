@@ -58,7 +58,7 @@ export default function OnboardingPage() {
 const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 
 const ROLE_DASHBOARD_ROUTES: Record<RoleId, string> = {
-  member: "/member",
+  member: "/dashboard/member",
   trainer: "/dashboard/trainer",
   gym: "/dashboard/gym-owner",
   dietitian: "/dashboard/dietitian",
@@ -119,8 +119,8 @@ function OnboardingContent() {
 
   useEffect(() => {
     if (user?.is_onboarding_complete && user) {
-      const routes: Record<string, string> = { USER: "/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
-      window.location.replace(routes[user.role] || "/member");
+      const routes: Record<string, string> = { USER: "/dashboard/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
+      window.location.replace(routes[user.role] || "/dashboard/member");
     }
   }, [user]);
 
@@ -364,7 +364,7 @@ function OnboardingContent() {
     } finally {
       setIsSavingLater(false);
     }
-    window.location.href = role ? ROLE_DASHBOARD_ROUTES[role] : "/member";
+    window.location.href = role ? ROLE_DASHBOARD_ROUTES[role] : "/dashboard/member";
   };
 
   const handleBack = () => {
