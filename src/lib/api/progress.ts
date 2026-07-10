@@ -659,6 +659,12 @@ export const progressService = {
     return await apiClient.get<ClientProfile[]>("/progress/my-profiles");
   },
 
+  /** Get-or-create the SELF profile (self-tracked weight/meals without a
+   *  provider). Idempotent. */
+  async getOrCreateMyProfile(): Promise<ApiResponse<ClientProfile>> {
+    return await apiClient.post<ClientProfile>("/progress/my-profile");
+  },
+
   async getMyJournalEntries(
     limit = 20,
     cursor?: string,

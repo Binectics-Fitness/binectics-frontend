@@ -1,6 +1,19 @@
 "use client";
 
 import { StepProps, StageHead, FormGrid, Field, TextInput, ChipGrid, RadioCards } from "./_components";
+import { useRegion } from "@/contexts/RegionContext";
+
+// Suggestions only (datalist) — free text always allowed. Keyed by the
+// geo-detected country so the list starts relevant instead of generic.
+const CITY_SUGGESTIONS: Record<string, string[]> = {
+  NG: ["Lagos", "Abuja", "Port Harcourt", "Ibadan", "Kano", "Benin City", "Enugu"],
+  ZA: ["Cape Town", "Johannesburg", "Durban", "Pretoria", "Gqeberha", "Bloemfontein"],
+  KE: ["Nairobi", "Mombasa", "Kisumu", "Nakuru"],
+  GH: ["Accra", "Kumasi", "Takoradi", "Tamale"],
+  EG: ["Cairo", "Alexandria", "Giza"],
+  GB: ["London", "Manchester", "Birmingham", "Leeds", "Glasgow"],
+  US: ["New York", "Los Angeles", "Chicago", "Houston", "Atlanta", "Miami"],
+};
 
 function toggleChip(list: string[], chip: string): string[] {
   return list.includes(chip) ? list.filter((c) => c !== chip) : [...list, chip];
@@ -27,11 +40,14 @@ export function MemberStep1({ data, setField }: StepProps) {
 
 export function MemberStep2({ data, setField }: StepProps) {
   const providers = (data.providerTypes as string[]) || [];
+  const { country } = useRegion();
+  const citySuggestions = CITY_SUGGESTIONS[country] ?? [];
+  const cityPlaceholder = citySuggestions[0] ?? "Your city";
   return (
     <>
       <StageHead crumb="Step 02 of 04 — member track" title="Where do you train?" desc="We'll show providers near you. You can switch cities later." />
       <FormGrid>
-        <Field label="City"><TextInput value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder="Cape Town" /></Field>
+        <Field label="City"><TextInput value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder={cityPlaceholder} suggestions={citySuggestions} /></Field>
         <Field label="Neighbourhood (optional)"><TextInput value={(data.neighbourhood as string) || ""} onChange={(v) => setField("neighbourhood", v)} placeholder="Sea Point · Camps Bay · Foreshore" /></Field>
       </FormGrid>
       <Field label="What kind of providers?" full>

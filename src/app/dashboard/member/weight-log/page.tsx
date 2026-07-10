@@ -23,18 +23,54 @@ export default function WeightLogPage() {
   const [logs, setLogs] = useState<WeightLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
+  const [logWeight, setLogWeight] = useState("");
+  const [logSaving, setLogSaving] = useState(false);
+  const [logError, setLogError] = useState<string | null>(null);
+
+  const onLogToday = async () => {
+    if (!profile || logSaving) return;
+    const weight = Number(logWeight);
+    if (!Number.isFinite(weight) || weight <= 0 || weight > 500) {
+      setLogError("Enter a weight in kg (e.g. 73.4).");
+      return;
+    }
+    setLogSaving(true);
+    setLogError(null);
+    const res = await progressService.createWeightLog(profile._id, {
+      weight_kg: weight,
+      recorded_at: new Date().toISOString(),
+    });
+    setLogSaving(false);
+    if (res.success && res.data) {
+      setLogs((prev) => [res.data as WeightLog, ...prev]);
+      setLogWeight("");
+      setLogOpen(false);
+    } else {
+      setLogError(res.message || "Could not save the log. Please try again.");
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
       try {
+        // Prefer an existing profile (e.g. trainer-created); otherwise
+        // get-or-create the SELF profile so first-time members can track
+        // without anyone having to add them as a client first.
         const profileRes = await progressService.getMyOwnProfiles();
-        if (!profileRes.success || !profileRes.data?.length) {
-          setError("No profile found. Please create one first.");
+        let myProfile =
+          profileRes.success && profileRes.data?.length
+            ? profileRes.data[0]
+            : null;
+        if (!myProfile) {
+          const created = await progressService.getOrCreateMyProfile();
+          if (created.success && created.data) myProfile = created.data;
+        }
+        if (!myProfile) {
+          setError("Could not set up your progress profile. Please try again.");
           setLoading(false);
           return;
         }
-
-        const myProfile = profileRes.data[0];
         setProfile(myProfile);
 
         const logsRes = await progressService.getWeightLogs(myProfile._id, 50);
@@ -80,22 +116,59 @@ export default function WeightLogPage() {
             {profile ? `${typeof profile.client_id === "object" ? `${profile.client_id.first_name} ${profile.client_id.last_name}` : profile.client_id} · ${logs.length} logs recorded` : "Loading..."}
           </p>
         </div>
-        <button
-          disabled
-          style={{
-            background: "var(--ink)",
-            color: "var(--bg)",
-            padding: "8px 14px",
-            borderRadius: 6,
-            border: 0,
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: "not-allowed",
-            opacity: 0.5,
-          }}
-        >
-          + Log today (coming soon)
-        </button>
+        {logOpen ? (
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div>
+              <input
+                type="number"
+                step="0.1"
+                min="1"
+                inputMode="decimal"
+                placeholder="kg"
+                value={logWeight}
+                autoFocus
+                onChange={(e) => setLogWeight(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") void onLogToday(); }}
+                style={{ width: 110, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-2)", fontSize: 13, background: "var(--bg)", color: "var(--ink)" }}
+              />
+              {logError && (
+                <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 4, maxWidth: 220 }}>{logError}</div>
+              )}
+            </div>
+            <button
+              onClick={() => void onLogToday()}
+              disabled={logSaving || !logWeight}
+              style={{ background: "var(--ink)", color: "var(--bg)", padding: "8px 14px", borderRadius: 6, border: 0, fontSize: 13, fontWeight: 500, cursor: logSaving ? "wait" : "pointer", opacity: logSaving || !logWeight ? 0.6 : 1 }}
+            >
+              {logSaving ? "Saving…" : "Save"}
+            </button>
+            <button
+              onClick={() => { setLogOpen(false); setLogError(null); }}
+              disabled={logSaving}
+              style={{ background: "var(--bg)", color: "var(--fg-2)", padding: "8px 14px", borderRadius: 6, border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setLogOpen(true)}
+            disabled={!profile || loading}
+            style={{
+              background: "var(--ink)",
+              color: "var(--bg)",
+              padding: "8px 14px",
+              borderRadius: 6,
+              border: 0,
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: !profile || loading ? "not-allowed" : "pointer",
+              opacity: !profile || loading ? 0.5 : 1,
+            }}
+          >
+            + Log today
+          </button>
+        )}
       </div>
 
       {error && (

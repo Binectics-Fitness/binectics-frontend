@@ -3,7 +3,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
@@ -72,7 +71,6 @@ const ALLOWED_IMAGE_UPLOAD_TYPES = new Set([
 export default function ProfileSettingsPage() {
   const { user, updateUser } = useAuth();
   const { currentOrg, refreshOrganizations } = useOrganization();
-  const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
   const [isDeletingProfileImage, setIsDeletingProfileImage] = useState(false);
@@ -133,6 +131,7 @@ export default function ProfileSettingsPage() {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<ProfileSettingsFormData>({
     resolver: zodResolver(profileSettingsSchema),
@@ -146,6 +145,23 @@ export default function ProfileSettingsPage() {
       preferences: (user?.preferred_activities || []) as string[],
     },
   });
+
+  // useAuth() hydrates asynchronously — on a hard page load the defaults
+  // above are captured while user is still null, leaving required fields
+  // empty and validation permanently failing. Reseed once the user arrives.
+  useEffect(() => {
+    if (!user) return;
+    reset({
+      firstName: user.first_name || "",
+      lastName: user.last_name || "",
+      email: user.email || "",
+      phone: user.phone_number || "",
+      country: user.country_code || "",
+      fitnessGoals: (user.fitness_goals || []) as string[],
+      preferences: (user.preferred_activities || []) as string[],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const formData = watch();
 
@@ -167,7 +183,6 @@ export default function ProfileSettingsPage() {
       if (res.success && res.data) {
         updateUser(res.data);
         toast.success("Profile saved successfully!");
-        router.push("/dashboard");
       } else {
         toast.error(res.message || "Failed to save profile");
       }
@@ -505,7 +520,7 @@ export default function ProfileSettingsPage() {
       {user.role === UserRole.USER && renderUserFields()}
 
       {/* Save Button */}
-      <div className="flex justify-stretch sm:justify-end">
+      <div className="flex flex-col items-stretch gap-2 sm:items-end">
         <button
           onClick={handleSubmit(onSave)}
           disabled={isSaving}
@@ -513,6 +528,11 @@ export default function ProfileSettingsPage() {
         >
           {isSaving ? "Saving..." : "Save Profile"}
         </button>
+        {Object.keys(errors).length > 0 && (
+          <p className="text-sm" style={{ color: "var(--danger)" }}>
+            Fix the highlighted fields above, then save again.
+          </p>
+        )}
       </div>
 
       <ConfirmationModal

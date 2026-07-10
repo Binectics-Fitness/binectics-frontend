@@ -58,23 +58,16 @@ export type PrivacySettingsFormData = z.infer<typeof privacySettingsSchema>;
 
 // ─── Profile Settings ───────────────────────────────────────────
 
+// Exactly the fields the profile settings page edits — no more. Leftover
+// required fields with no matching input (the old facilities/specialties
+// arrays) made zod fail EVERY submit, so Save silently never fired.
 export const profileSettingsSchema = z.object({
   firstName: z.string().min(1, "First name is required").trim(),
   lastName: z.string().min(1, "Last name is required").trim(),
-  email: z.string().email("Please enter a valid email"),
+  // Display-only on the page (the input is disabled and never submitted).
+  email: z.string().optional(),
   phone: z.string().optional(),
   country: z.string().optional(),
-  businessName: z.string().optional(),
-  businessRegistration: z.string().optional(),
-  gymName: z.string().optional(),
-  gymAddress: z.string().optional(),
-  gymCity: z.string().optional(),
-  gymDescription: z.string().optional(),
-  facilities: z.array(z.string()),
-  bio: z.string().optional(),
-  specialties: z.array(z.string()),
-  certifications: z.array(z.string()),
-  experience: z.string().optional(),
   fitnessGoals: z.array(z.string()),
   preferences: z.array(z.string()),
 });
