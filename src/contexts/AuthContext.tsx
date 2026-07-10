@@ -40,6 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [sessionEnded, setSessionEnded] = useState(false);
+  // Bumped after every successful token refresh so the monitoring effect
+  // re-arms its timers against the NEW expiry. (Keying the effect on
+  // user.id alone left the old expiry timer running after a refresh, which
+  // fired a false "Session Expired" while the session was still valid.)
+  const [sessionEpoch, setSessionEpoch] = useState(0);
   const router = useRouter();
 
   // Load user from localStorage on mount
@@ -77,17 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let refreshTimeout: NodeJS.Timeout;
     let expiryTimeout: NodeJS.Timeout;
+    // Refresh calls are async: without this guard a continuation could show
+    // the modal after this effect was torn down (e.g. right after logout).
+    let cancelled = false;
 
-    const attemptAutoRefresh = async () => {
+    const attemptAutoRefresh = async (expired = false) => {
       const response = await authService.refreshToken();
+      if (cancelled) return;
       if (response.success && response.data) {
-        // Force re-run of this effect by updating user (triggers new timeout)
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) setUser(currentUser);
+        setSessionEpoch((e) => e + 1); // re-arm timers against the new expiry
       } else {
         // Auto-refresh failed — show the session modal as fallback
         setShowSessionModal(true);
-        setSessionEnded(false);
+        setSessionEnded(expired);
       }
     };
 
@@ -99,20 +106,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (timeUntilExpiry > 0) {
-      expiryTimeout = setTimeout(() => {
+      expiryTimeout = setTimeout(async () => {
+        // This timer can outlive its token: a refresh in another tab (or a
+        // race with auto-refresh) moves the stored expiry forward without
+        // cancelling us. Trust storage, then one last refresh attempt,
+        // before declaring the session dead.
+        const currentExpiry = tokenStorage.getExpiry();
+        if (currentExpiry && currentExpiry > Date.now()) {
+          setSessionEpoch((e) => e + 1);
+          return;
+        }
+        const response = await authService.refreshToken();
+        if (cancelled) return;
+        if (response.success && response.data) {
+          setSessionEpoch((e) => e + 1);
+          return;
+        }
         setShowSessionModal(true);
         setSessionEnded(true);
       }, timeUntilExpiry);
     } else {
       // Expiry already passed — try refreshing before giving up
-      attemptAutoRefresh();
+      attemptAutoRefresh(true);
     }
 
     return () => {
+      cancelled = true;
       if (refreshTimeout) clearTimeout(refreshTimeout);
       if (expiryTimeout) clearTimeout(expiryTimeout);
     };
-  }, [user?.id]);
+  }, [user?.id, sessionEpoch]);
 
   const handleContinueSession = async () => {
     setShowSessionModal(false);
@@ -123,8 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (response.success && response.data) {
       // Token refreshed successfully - re-trigger session monitoring
-      const currentUser = authService.getCurrentUser();
-      if (currentUser) setUser(currentUser);
+      setSessionEpoch((e) => e + 1);
     } else {
       // Token refresh failed - force logout
       await logout();
