@@ -29,7 +29,7 @@ function personName(
  * arrivals and bounced attempts. Replaces the old fabricated Devices page.
  */
 export default function CheckInKioskPage() {
-  const { currentOrg } = useOrganization();
+  const { currentOrg, isLoading: orgLoading } = useOrganization();
   const orgId = currentOrg?._id;
 
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -141,7 +141,11 @@ export default function CheckInKioskPage() {
         )}
       </div>
 
-      {loading ? (
+      {!orgId && !orgLoading ? (
+        <div className="rounded-(--r-2) border border-border bg-bg-2 p-5 text-sm" style={{ color: "var(--fg-2)" }}>
+          Select an organization to generate its check-in QR.
+        </div>
+      ) : loading ? (
         <AsyncSpinner label="Loading kiosk" />
       ) : (
         <>

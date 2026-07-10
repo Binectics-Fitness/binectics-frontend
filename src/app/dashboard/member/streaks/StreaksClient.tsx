@@ -98,7 +98,7 @@ export function StreaksClient() {
             <div key={c._id} className="flex items-center gap-3 px-5.5 py-3" style={{ borderBottom: i < Math.min(a.length, 10) - 1 ? "1px solid var(--border)" : "none" }}>
               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--signal)" }} />
               <span className="flex-1 text-[13.5px] truncate" style={{ color: "var(--ink)" }}>
-                {typeof c.listing_id === "object" ? c.listing_id.headline : "Check-in"}
+                {c.listing_id && typeof c.listing_id === "object" ? c.listing_id.headline : "Check-in"}
               </span>
               <span className="font-mono text-[11.5px] shrink-0" style={{ color: "var(--fg-3)" }}>
                 {formatDate(c.checked_in_at)}{" · "}
