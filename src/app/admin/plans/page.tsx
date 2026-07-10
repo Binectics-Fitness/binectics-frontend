@@ -199,7 +199,8 @@ export default function AdminPlansPage() {
                             placeholder="Unlimited"
                             onChange={(e) =>
                               patchDraft(plan._id, {
-                                [q.key]: e.target.value === "" ? null : Math.max(0, Number(e.target.value)),
+                                // Round: the API's @IsInt() rejects decimals.
+                                [q.key]: e.target.value === "" ? null : Math.max(0, Math.round(Number(e.target.value) || 0)),
                               } as Partial<AdminPlan>)
                             }
                             className="rounded-(--r-2) px-3 py-2 text-[14px]"
