@@ -64,6 +64,15 @@ function extractJwtExp(token: string): number | null {
 /**
  * Authentication Service
  */
+export type ProfileVisibility = "public" | "members" | "private";
+
+export interface PrivacyPreferences {
+  profileVisibility: ProfileVisibility;
+  shareProgressWithProviders: boolean;
+  showRealNameOnReviews: boolean;
+  allowUsageAnalytics: boolean;
+}
+
 export const authService = {
   /**
    * Login with email and password
@@ -206,6 +215,22 @@ export const authService = {
       return response.data;
     }
     return null;
+  },
+
+  /**
+   * Privacy preferences (GET returns defaults until first PATCH).
+   */
+  async getPrivacyPreferences(): Promise<ApiResponse<PrivacyPreferences>> {
+    return apiClient.get<PrivacyPreferences>("/auth/privacy-preferences");
+  },
+
+  async updatePrivacyPreferences(
+    data: Partial<PrivacyPreferences>,
+  ): Promise<ApiResponse<PrivacyPreferences>> {
+    return apiClient.patch<PrivacyPreferences>(
+      "/auth/privacy-preferences",
+      data,
+    );
   },
 
   /**
