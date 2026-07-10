@@ -20,6 +20,7 @@ interface RawResponseBody {
   data?: unknown;
   message?: unknown;
   error?: unknown;
+  code?: unknown;
   errors?: Record<string, string[]>;
   details?: unknown;
 }
@@ -107,7 +108,15 @@ class ApiClient {
         success: false,
         message,
         errors: body.errors,
-        code: typeof body.error === "string" ? body.error : undefined,
+        // Two error shapes exist: billing errors carry `error`
+        // ("BILLING_LIMIT_REACHED"), auth errors carry `code`
+        // ("AUTH_TOKEN_USED").
+        code:
+          typeof body.error === "string"
+            ? body.error
+            : typeof body.code === "string"
+              ? body.code
+              : undefined,
         details:
           body.details && typeof body.details === "object"
             ? (body.details as Record<string, unknown>)

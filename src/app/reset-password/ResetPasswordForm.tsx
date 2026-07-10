@@ -11,8 +11,21 @@ import {
   type ResetPasswordFormData,
 } from "@/lib/schemas/auth";
 
-function formatResetPasswordError(message?: string): string {
+function formatResetPasswordError(
+  message?: string,
+  code?: string,
+  invite?: boolean,
+): string {
   const fallback = "Reset failed. Please check your link and try again.";
+
+  // Single-use link already spent — the account HAS a password, so steer
+  // the user to sign in rather than showing a scary "expired" error.
+  if (code === "AUTH_TOKEN_USED") {
+    return invite
+      ? "Your password is already set — it works for every gym and provider on your Binectics account. Just sign in."
+      : "This link was already used. Sign in with your existing password, or request a new reset email if you've forgotten it.";
+  }
+
   if (!message) return fallback;
 
   const lowered = message.toLowerCase();
@@ -26,11 +39,15 @@ function formatResetPasswordError(message?: string): string {
   }
 
   if (lowered.includes("token") && lowered.includes("expired")) {
-    return "This reset link has expired. Please request a new password reset email.";
+    return invite
+      ? "This invite link has expired. Ask your gym to resend the invite, or use \u201cForgot password\u201d on the sign-in page with this email."
+      : "This reset link has expired. Please request a new password reset email.";
   }
 
   if (lowered.includes("token") && lowered.includes("invalid")) {
-    return "This reset link is invalid. Please request a new password reset email.";
+    return invite
+      ? "This invite link is no longer valid. Ask your gym to resend the invite, or use \u201cForgot password\u201d on the sign-in page with this email."
+      : "This reset link is invalid. Please request a new password reset email.";
   }
 
   return message;
@@ -74,7 +91,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
         setSubmitted(true);
       } else {
         setError("password", {
-          message: formatResetPasswordError(res.message),
+          message: formatResetPasswordError(res.message, res.code, invite),
         });
       }
     } catch {
