@@ -165,15 +165,21 @@ export default function SettingsLayout({
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="mb-6">
-              <OrganizationContextBanner
-                label="Settings organization"
-                helperText="Billing and organization settings are scoped to the active workspace."
-                organizations={organizations}
-                currentOrg={currentOrg}
-                onChange={setCurrentOrg}
-              />
-            </div>
+            {/* Workspace scoping only means something to owners/staff — a
+                fitness member has no organizations and everything in their
+                settings is user-scoped, so the banner's "No organization
+                selected · 0 available" empty state is just confusing noise. */}
+            {organizations.length > 0 && (
+              <div className="mb-6">
+                <OrganizationContextBanner
+                  label="Settings organization"
+                  helperText="Billing and organization settings are scoped to the active workspace."
+                  organizations={organizations}
+                  currentOrg={currentOrg}
+                  onChange={setCurrentOrg}
+                />
+              </div>
+            )}
             <div className="bg-bg border border-border rounded-(--r-3) p-6 lg:p-8">{children}</div>
           </div>
         </div>
