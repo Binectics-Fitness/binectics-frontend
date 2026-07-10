@@ -16,7 +16,7 @@ import {
   type MarketplaceMembershipPlan,
 } from "@/lib/types";
 import type { CreateOrgMembershipPlanRequest } from "@/lib/api/marketplace";
-import { ChipEditor } from "@/components/ds/ChipEditor";
+import { ChipEditor } from "@/components/ds";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -284,7 +284,11 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
             <span className="pl-3 pr-1.5 text-[13px] shrink-0" style={{ color: "var(--fg-3)" }}>{defaultCurrency}</span>
             <input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" placeholder="0"
               className="h-9 flex-1 min-w-0 rounded-(--r-2) pr-3 text-[13.5px] outline-none"
-              style={{ border: "none", color: "var(--ink)", background: "transparent", fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }} />
+              style={{ border: "none", color: "var(--ink)", background: "transparent", fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}
+              // The input's own outline is suppressed for the seamless prefix
+              // look, so the wrapper carries the keyboard-focus indicator.
+              onFocus={(e) => { const w = e.currentTarget.parentElement; if (w) w.style.border = "1px solid var(--ink)"; }}
+              onBlur={(e) => { const w = e.currentTarget.parentElement; if (w) w.style.border = "1px solid var(--border-2)"; }} />
           </div>
         </label>
         <label className="flex flex-col gap-1.5">

@@ -12,7 +12,7 @@ import {
 import { useCountries } from "@/lib/queries/utility";
 import type { UpdateListingRequest } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
-import { ChipEditor } from "@/components/ds/ChipEditor";
+import { ChipEditor } from "@/components/ds";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",

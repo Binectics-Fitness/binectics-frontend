@@ -11,6 +11,7 @@ export { WorkspaceShell } from "./WorkspaceShell";
 export { Eyebrow } from "./Eyebrow";
 export { StatusDot } from "./StatusDot";
 export { FilterPill } from "./FilterPill";
+export { ChipEditor } from "./ChipEditor";
 export { DSCard, DSCardHead } from "./DSCard";
 export { DSStatCard } from "./DSStatCard";
 export { DSBadge } from "./DSBadge";
