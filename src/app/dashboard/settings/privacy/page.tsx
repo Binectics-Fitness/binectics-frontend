@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   usePrivacyPreferences,
   useUpdatePrivacyPreferences,
@@ -96,10 +97,16 @@ export default function PrivacySettingsPage() {
   const prefsQuery = usePrivacyPreferences();
   const updatePrefs = useUpdatePrivacyPreferences();
   const prefs = prefsQuery.data;
+  // apiClient never throws — failures come back as { success: false }
+  // envelopes, so the mutation's isError can never fire. Track failures
+  // from the envelope instead, or a failed toggle is a silent no-op.
+  const [saveFailed, setSaveFailed] = useState(false);
 
-  const save = (payload: Partial<PrivacyPreferences>) => {
+  const save = async (payload: Partial<PrivacyPreferences>) => {
     if (updatePrefs.isPending) return;
-    void updatePrefs.mutateAsync(payload);
+    setSaveFailed(false);
+    const res = await updatePrefs.mutateAsync(payload);
+    if (!res.success) setSaveFailed(true);
   };
 
   if (prefsQuery.isLoading) {
@@ -145,7 +152,7 @@ export default function PrivacySettingsPage() {
                 role="radio"
                 aria-checked={on}
                 disabled={updatePrefs.isPending}
-                onClick={() => !on && save({ profileVisibility: opt.value })}
+                onClick={() => !on && void save({ profileVisibility: opt.value })}
                 className="flex w-full items-start gap-3 rounded-(--r-2) p-3.5 text-left"
                 style={{
                   border: on ? "1px solid var(--ink)" : "1px solid var(--border)",
@@ -191,12 +198,12 @@ export default function PrivacySettingsPage() {
             <Toggle
               on={prefs[row.key]}
               disabled={updatePrefs.isPending}
-              onClick={() => save({ [row.key]: !prefs[row.key] })}
+              onClick={() => void save({ [row.key]: !prefs[row.key] })}
               ariaLabel={row.label}
             />
           </div>
         ))}
-        {updatePrefs.isError && (
+        {saveFailed && (
           <p className="mt-3 text-[12.5px]" style={{ color: "var(--danger)" }}>
             Could not save your change. Please try again.
           </p>
