@@ -10,7 +10,7 @@ import { teamsService } from "@/lib/api/teams";
 import { onboardingService } from "@/lib/api/onboarding";
 import { authService } from "@/lib/api/auth";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, resolvePreselectedRole, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import { MEMBER_STEPS } from "./_member";
 import { TRAINER_STEPS } from "./_trainer";
@@ -55,22 +55,11 @@ export default function OnboardingPage() {
   );
 }
 
-const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
-
 const ROLE_DASHBOARD_ROUTES: Record<RoleId, string> = {
   member: "/dashboard/member",
   trainer: "/dashboard/trainer",
   gym: "/dashboard/gym-owner",
   dietitian: "/dashboard/dietitian",
-};
-
-// Role is chosen once, at registration. When the account already carries it,
-// onboarding skips its role-selection step instead of asking again.
-const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
-  USER: "member",
-  TRAINER: "trainer",
-  GYM_OWNER: "gym",
-  DIETITIAN: "dietitian",
 };
 
 const ROLE_TO_ACCOUNT_TYPE: Partial<Record<RoleId, AccountType>> = {
@@ -97,13 +86,19 @@ function OnboardingContent() {
   const searchParams = useSearchParams();
   const { user, updateUser } = useAuth();
   const { organizations, currentOrg, setCurrentOrg, refreshOrganizations, isLoading: orgLoading } = useOrganization();
-  const initialRole = searchParams.get("role") as RoleId | null;
-  const accountRole = (user?.role && ACCOUNT_ROLE_TO_ID[user.role]) || null;
-  const preselected = (initialRole && VALID_ROLES.includes(initialRole) ? initialRole : null) ?? accountRole;
+  const preselected = resolvePreselectedRole(searchParams.get("role"), user?.role);
+  const accountRole = resolvePreselectedRole(null, user?.role);
 
   const [manualRole, setManualRole] = useState<RoleId | null>(preselected);
   const role = manualRole ?? accountRole;
   const [step, setStep] = useState(preselected ? 1 : 0);
+  // Frozen at mount: if a role was already known (account role, or a
+  // ?role= link) the full-page picker at step 0 never showed — so the
+  // persistent rail below must not offer a live, clickable "change your
+  // mind" either. Otherwise an invited gym member (whose role IS their
+  // membership, not a choice) could misclick "Trainer"/"Gym" and silently
+  // spin up a new org + overwrite their account's role.
+  const [roleLocked] = useState(() => Boolean(preselected));
   const [data, setData] = useState<Record<string, unknown>>({});
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSavingLater, setIsSavingLater] = useState(false);
@@ -164,6 +159,7 @@ function OnboardingContent() {
   const minsLeft = Math.max(1, Math.round(((totalSteps - step) / totalSteps) * 8));
 
   const handleSelectRole = (id: RoleId) => {
+    if (roleLocked) return;
     setManualRole(id);
     if (step === 0) setStep(1);
   };
@@ -369,7 +365,9 @@ function OnboardingContent() {
 
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
-    else if (step === 1 && !accountRole) {
+    // Consistent with the rail: only reopen the role picker if nothing
+    // was preselected to begin with (roleLocked mirrors that exact signal).
+    else if (step === 1 && !roleLocked) {
       setStep(0);
       setManualRole(null);
     }
@@ -483,23 +481,34 @@ function OnboardingContent() {
         {/* Role pills */}
         <div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", color: "var(--fg-4)", letterSpacing: "0.06em", marginBottom: 12 }}>Role</div>
-          <div role="radiogroup" aria-label="Select your role" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {ROLES.map((r) => {
-              const on = role === r.id;
-              return (
-                <button key={r.id} type="button" role="radio" aria-checked={on} onClick={() => handleSelectRole(r.id)} style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", minHeight: 44,
-                  border: on ? "1px solid var(--ink)" : "1px solid var(--border)",
-                  borderRadius: "var(--r-2)", background: "var(--bg)", cursor: "pointer", textAlign: "left",
-                  transition: "border-color 120ms",
-                }}>
-                  <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: r.color, flexShrink: 0 }} />
-                  <span style={{ fontSize: 13, color: on ? "var(--ink)" : "var(--fg-2)", fontWeight: 500 }}>{r.label}</span>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", color: on ? "var(--ink)" : "var(--fg-4)", letterSpacing: "0.05em", marginLeft: "auto" }}>{on ? "Active" : r.badge}</span>
-                </button>
-              );
-            })}
-          </div>
+          {roleLocked ? (
+            // Role already established (account role, or a ?role= link) —
+            // no live picker. Switching roles here would silently spin up
+            // an unrelated org and overwrite the account's role.
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", minHeight: 44, border: "1px solid var(--border)", borderRadius: "var(--r-2)", background: "var(--bg)" }}>
+              <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: ROLES.find((r) => r.id === role)?.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>{ROLES.find((r) => r.id === role)?.label}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", color: "var(--fg-4)", letterSpacing: "0.05em", marginLeft: "auto" }}>Active</span>
+            </div>
+          ) : (
+            <div role="radiogroup" aria-label="Select your role" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {ROLES.map((r) => {
+                const on = role === r.id;
+                return (
+                  <button key={r.id} type="button" role="radio" aria-checked={on} onClick={() => handleSelectRole(r.id)} style={{
+                    display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", minHeight: 44,
+                    border: on ? "1px solid var(--ink)" : "1px solid var(--border)",
+                    borderRadius: "var(--r-2)", background: "var(--bg)", cursor: "pointer", textAlign: "left",
+                    transition: "border-color 120ms",
+                  }}>
+                    <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: r.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: on ? "var(--ink)" : "var(--fg-2)", fontWeight: 500 }}>{r.label}</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", color: on ? "var(--ink)" : "var(--fg-4)", letterSpacing: "0.05em", marginLeft: "auto" }}>{on ? "Active" : r.badge}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Step stepper */}
@@ -565,7 +574,7 @@ function OnboardingContent() {
             <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater || uploadCount > 0}>
               {isSavingLater ? "Saving..." : "Save & finish later"}
             </button>
-            {(step > 1 || (step === 1 && !accountRole)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
+            {(step > 1 || (step === 1 && !roleLocked)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
             <button
               type="button"
               disabled={(step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member") || uploadCount > 0}
