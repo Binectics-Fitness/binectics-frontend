@@ -97,9 +97,9 @@ describe("resolveNotificationLink", () => {
     );
   });
 
-  it("corrects /dashboard/billing to /dashboard/settings/billing", () => {
+  it("leaves /dashboard/billing as-is (it's the real, current billing page)", () => {
     expect(resolveNotificationLink("/dashboard/billing?paymentId=p1")).toBe(
-      "/dashboard/settings/billing?paymentId=p1",
+      "/dashboard/billing?paymentId=p1",
     );
   });
 
