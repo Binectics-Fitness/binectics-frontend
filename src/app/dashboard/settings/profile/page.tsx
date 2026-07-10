@@ -142,17 +142,6 @@ export default function ProfileSettingsPage() {
       email: user?.email || "",
       phone: user?.phone_number || "",
       country: user?.country_code || "",
-      businessName: "",
-      businessRegistration: "",
-      gymName: "",
-      gymAddress: "",
-      gymCity: "",
-      gymDescription: "",
-      facilities: [],
-      bio: "",
-      specialties: [],
-      certifications: [],
-      experience: "",
       fitnessGoals: (user?.fitness_goals || []) as string[],
       preferences: (user?.preferred_activities || []) as string[],
     },
@@ -172,9 +161,6 @@ export default function ProfileSettingsPage() {
         fitness_goals: data.fitnessGoals,
         preferred_activities: data.preferences,
       };
-
-      if (data.businessName) payload.company_name = data.businessName;
-      if (data.bio) payload.bio = data.bio;
 
       const res = await authService.updateProfile(payload);
 
@@ -274,222 +260,6 @@ export default function ProfileSettingsPage() {
   };
 
   if (!user) return null;
-
-  const renderGymOwnerFields = () => (
-    <>
-      <div className="mb-6 rounded-xl bg-bg p-4 border border-border sm:p-6">
-        <h3 className="mb-4 text-lg font-bold text-ink sm:text-xl">
-          Business Information
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-fg-2 mb-2">
-              Business Name
-            </label>
-            <input
-              type="text"
-              {...registerField("businessName")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
-              placeholder="Your business name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-fg-2 mb-2">
-              Business Registration Number
-            </label>
-            <input
-              type="text"
-              {...registerField("businessRegistration")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
-              placeholder="Registration number"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-6 rounded-xl bg-bg p-4 border border-border sm:p-6">
-        <h3 className="mb-4 text-lg font-bold text-ink sm:text-xl">
-          Gym Details
-        </h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-fg-2 mb-2">
-              Gym Name
-            </label>
-            <input
-              type="text"
-              {...registerField("gymName")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
-              placeholder="Enter gym name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-fg-2 mb-2">
-              Description
-            </label>
-            <textarea
-              {...registerField("gymDescription")}
-              rows={4}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
-              placeholder="Tell members about your gym..."
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-fg-2 mb-2">
-                Address
-              </label>
-              <input
-                type="text"
-                {...registerField("gymAddress")}
-                className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
-                placeholder="Street address"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-fg-2 mb-2">
-                City
-              </label>
-              <input
-                type="text"
-                {...registerField("gymCity")}
-                className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue-500"
-                placeholder="City"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-
-  const renderTrainerFields = () => (
-    <div className="mb-6 rounded-xl bg-bg p-4 border border-border sm:p-6">
-      <h3 className="mb-4 text-lg font-bold text-ink sm:text-xl">
-        Professional Information
-      </h3>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-fg-2 mb-2">
-            Professional Bio
-          </label>
-          <textarea
-            {...registerField("bio")}
-            rows={4}
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
-            placeholder="Tell clients about your experience and approach..."
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-fg-2 mb-2">
-            Specialties (comma-separated)
-          </label>
-          <input
-            type="text"
-            onChange={(e) => {
-              const specialties = e.target.value
-                .split(",")
-                .map((s) => s.trim());
-              setValue("specialties", specialties);
-            }}
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
-            placeholder="e.g., Strength Training, Weight Loss, Sports Performance"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-fg-2 mb-2">
-            Certifications (comma-separated)
-          </label>
-          <input
-            type="text"
-            onChange={(e) => {
-              const certifications = e.target.value
-                .split(",")
-                .map((s) => s.trim());
-              setValue("certifications", certifications);
-            }}
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
-            placeholder="e.g., NASM-CPT, ACE, CSCS"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-fg-2 mb-2">
-            Years of Experience
-          </label>
-          <input
-            type="text"
-            {...registerField("experience")}
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-yellow-500"
-            placeholder="e.g., 5 years"
-          />
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderDietitianFields = () => (
-    <div className="mb-6 rounded-xl bg-bg p-4 border border-border sm:p-6">
-      <h3 className="mb-4 text-lg font-bold text-ink sm:text-xl">
-        Professional Information
-      </h3>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-fg-2 mb-2">
-            Professional Bio
-          </label>
-          <textarea
-            {...registerField("bio")}
-            rows={4}
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
-            placeholder="Tell clients about your approach to nutrition and wellness..."
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-fg-2 mb-2">
-            Specialties (comma-separated)
-          </label>
-          <input
-            type="text"
-            onChange={(e) => {
-              const specialties = e.target.value
-                .split(",")
-                .map((s) => s.trim());
-              setValue("specialties", specialties);
-            }}
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
-            placeholder="e.g., Weight Management, Sports Nutrition, Clinical Nutrition"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-fg-2 mb-2">
-            Certifications & Licenses (comma-separated)
-          </label>
-          <input
-            type="text"
-            onChange={(e) => {
-              const certifications = e.target.value
-                .split(",")
-                .map((s) => s.trim());
-              setValue("certifications", certifications);
-            }}
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
-            placeholder="e.g., RD, RDN, LD, CDN"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-fg-2 mb-2">
-            Years of Experience
-          </label>
-          <input
-            type="text"
-            {...registerField("experience")}
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple-500"
-            placeholder="e.g., 7 years"
-          />
-        </div>
-      </div>
-    </div>
-  );
 
   const renderUserFields = () => (
     <div className="mb-6 rounded-xl bg-bg p-4 border border-border sm:p-6">
@@ -664,9 +434,9 @@ export default function ProfileSettingsPage() {
       {(user.role === UserRole.GYM_OWNER ||
         user.role === UserRole.TRAINER ||
         user.role === UserRole.DIETITIAN) && (
-        <div className="mb-6 rounded-xl border-2 border-accent-blue-100 bg-bg p-4 border border-border sm:p-6">
+        <div className="mb-6 rounded-xl border-2 border-border bg-bg p-4 border border-border sm:p-6">
           <div className="mb-4 flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-blue-50 text-accent-blue-600">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-signal-soft text-signal-ink">
               <svg
                 className="h-5 w-5"
                 fill="none"
@@ -722,7 +492,7 @@ export default function ProfileSettingsPage() {
                   !orgCurrency ||
                   orgCurrency === (currentOrg.currency || "USD")
                 }
-                className="h-12 rounded-lg bg-accent-blue-500 px-6 text-sm font-semibold text-white transition-colors hover:bg-accent-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-12 rounded-lg bg-signal-soft0 px-6 text-sm font-semibold text-white transition-colors hover:bg-signal/85 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSavingCurrency ? "Saving..." : "Save Currency"}
               </button>
@@ -732,9 +502,6 @@ export default function ProfileSettingsPage() {
       )}
 
       {/* Role-specific fields */}
-      {user.role === UserRole.GYM_OWNER && renderGymOwnerFields()}
-      {user.role === UserRole.TRAINER && renderTrainerFields()}
-      {user.role === UserRole.DIETITIAN && renderDietitianFields()}
       {user.role === UserRole.USER && renderUserFields()}
 
       {/* Save Button */}
