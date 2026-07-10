@@ -12,9 +12,9 @@ const columns = {
     title: "Product",
     links: [
       { name: "Marketplace", href: "/marketplace" },
-      { name: "For gyms", href: "/gyms" },
-      { name: "For trainers", href: "/trainers" },
-      { name: "For dietitians", href: "/dietitians" },
+      { name: "For gyms", href: "/for-gyms" },
+      { name: "For trainers", href: "/for-trainers" },
+      { name: "For dietitians", href: "/for-dietitians" },
       { name: "Members", href: "/login?mode=signup&role=member" },
     ],
   },
@@ -34,7 +34,7 @@ const columns = {
       { name: "Help center", href: "/help" },
       { name: "QR help", href: "/qr-help" },
       { name: "System status", href: "/status" },
-      { name: "FAQ", href: "/faq" },
+      { name: "FAQ", href: "/help" },
     ],
   },
   legal: {
@@ -43,7 +43,6 @@ const columns = {
       { name: "Privacy", href: "/privacy" },
       { name: "Terms", href: "/terms" },
       { name: "Cookies", href: "/cookies" },
-      { name: "Security", href: "/security" },
     ],
   },
 };

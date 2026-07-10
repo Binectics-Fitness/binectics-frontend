@@ -12,7 +12,7 @@ export function resolveNotificationLink(
   if (!actionUrl) return "/dashboard/notifications";
 
   // Strip any leading / trailing whitespace
-  let url = actionUrl.trim();
+  const url = actionUrl.trim();
 
   // ── Role-scoped route prefix ──────────────────────────────
   const rolePrefix: Record<string, string> = {
@@ -30,10 +30,9 @@ export function resolveNotificationLink(
   if (url.startsWith("/dashboard/consultations")) {
     if (prefix)
       return url.replace("/dashboard/consultations", `${prefix}/consultations`);
-    return url.replace(
-      "/dashboard/consultations",
-      "/dashboard/bookings/consultations",
-    );
+    // Members: no /dashboard/bookings/consultations page exists — the
+    // bookings page shows consultations inline.
+    return "/dashboard/bookings";
   }
 
   // Clients
@@ -48,18 +47,17 @@ export function resolveNotificationLink(
 
   // ── Path corrections (backend typos / mismatches) ─────────
 
-  // /dashboard/workout/<id> → /dashboard/workouts/<id>  (plural)
-  if (url.startsWith("/dashboard/workout/")) {
-    return url.replace("/dashboard/workout/", "/dashboard/workouts/");
-  }
-  if (url === "/dashboard/workout") {
-    return "/dashboard/workouts";
+  // Workout notifications: there is no /dashboard/workouts route at all —
+  // the member's workout content lives at the workout log.
+  if (url.startsWith("/dashboard/workout")) {
+    return "/dashboard/member/workout-log";
   }
 
   // /dashboard/teams → /dashboard/team  (singular)
   if (url.startsWith("/dashboard/teams/")) {
-    // /dashboard/teams/<teamId> → /dashboard/team/<orgId>
-    return url.replace("/dashboard/teams/", "/dashboard/team/");
+    // No /dashboard/team/[id] page exists — the team page reads the active
+    // workspace from context, so drop the id.
+    return "/dashboard/team";
   }
   if (url.startsWith("/dashboard/teams")) {
     return url.replace("/dashboard/teams", "/dashboard/team");
@@ -70,9 +68,10 @@ export function resolveNotificationLink(
     return "/verification";
   }
 
-  // /dashboard/professionals → just go to dashboard (no equivalent page yet)
+  // /dashboard/professionals → no equivalent page; /dashboard itself has no
+  // index page either, so fall back to the notifications list.
   if (url.startsWith("/dashboard/professionals")) {
-    return "/dashboard";
+    return "/dashboard/notifications";
   }
 
   return url;
