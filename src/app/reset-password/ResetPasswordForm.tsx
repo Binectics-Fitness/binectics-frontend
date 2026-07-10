@@ -36,7 +36,10 @@ function formatResetPasswordError(message?: string): string {
   return message;
 }
 
-export default function ResetPasswordForm({ token }: { token?: string }) {
+export default function ResetPasswordForm({ token, flow }: { token?: string; flow?: string }) {
+  // Invited members (gym-created accounts) land here from their welcome
+  // email with ?flow=invite — same token mechanics, first-password framing.
+  const invite = flow === "invite";
   const {
     register: registerField,
     handleSubmit,
@@ -94,12 +97,14 @@ export default function ResetPasswordForm({ token }: { token?: string }) {
           {!submitted ? (
             <>
               <div className="mb-8">
-                <div className="eyebrow mb-2">Password reset</div>
+                <div className="eyebrow mb-2">{invite ? "Welcome to Binectics" : "Password reset"}</div>
                 <h1 className="text-[28px] font-medium leading-tight" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
-                  Set new password
+                  {invite ? "Set your password" : "Set new password"}
                 </h1>
                 <p className="text-[14.5px] mt-2" style={{ color: "var(--fg-3)" }}>
-                  Your new password must be different from previously used passwords.
+                  {invite
+                    ? "Choose a password to finish setting up your account — then sign in to check in, book classes, and track your progress."
+                    : "Your new password must be different from previously used passwords."}
                 </p>
               </div>
 
@@ -180,7 +185,9 @@ export default function ResetPasswordForm({ token }: { token?: string }) {
                   className="btn-signal-v2 w-full"
                   style={{ height: "38px" }}
                 >
-                  {isSubmitting ? "Resetting..." : "Reset password"}
+                  {isSubmitting
+                    ? invite ? "Setting up..." : "Resetting..."
+                    : invite ? "Set password" : "Reset password"}
                 </button>
 
                 <Link
@@ -199,10 +206,12 @@ export default function ResetPasswordForm({ token }: { token?: string }) {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>
               </div>
               <h2 className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
-                Password reset successful
+                {invite ? "Your account is ready" : "Password reset successful"}
               </h2>
               <p className="text-[14px] mt-3" style={{ color: "var(--fg-3)" }}>
-                Your password has been successfully reset. You can now sign in with your new password.
+                {invite
+                  ? "Password set. Sign in with your email to get started."
+                  : "Your password has been successfully reset. You can now sign in with your new password."}
               </p>
               <Link
                 href="/login"
