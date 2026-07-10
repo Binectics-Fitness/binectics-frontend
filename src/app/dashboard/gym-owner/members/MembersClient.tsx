@@ -12,6 +12,7 @@ import {
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -75,7 +76,10 @@ function RowActions({
   orgId: string;
   onUpdate: (updated: MembershipSubscription) => void;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [changePlanOpen, setChangePlanOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -87,51 +91,184 @@ function RowActions({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  if (sub.status !== MembershipSubscriptionStatus.PENDING_PAYMENT) {
-    return (
-      <span className="w-5.5 h-5.5 rounded-(--r-1) flex items-center justify-center" style={{ color: "var(--fg-3)" }}>
-        {MORE_ICON}
-      </span>
-    );
-  }
+  const isActive = sub.status === MembershipSubscriptionStatus.ACTIVE;
+  const isPending = sub.status === MembershipSubscriptionStatus.PENDING_PAYMENT;
+  const scheduledPlan =
+    sub.next_plan_id && typeof sub.next_plan_id === "object" ? sub.next_plan_id : null;
 
-  const handleMarkPaid = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const run = async (fn: () => Promise<void>) => {
     setOpen(false);
-    const res = await marketplaceService.markSubscriptionPaid(orgId, sub._id);
-    if (res.success && res.data) {
-      onUpdate(res.data);
-      toast.success("Marked as paid");
-    } else {
-      toast.error(res.message ?? "Failed to mark as paid");
+    setBusy(true);
+    try {
+      await fn();
+    } finally {
+      setBusy(false);
     }
   };
+
+  const handleMarkPaid = () =>
+    run(async () => {
+      const res = await marketplaceService.markSubscriptionPaid(orgId, sub._id);
+      if (res.success && res.data) {
+        onUpdate(res.data);
+        toast.success("Marked as paid");
+      } else toast.error(res.message ?? "Failed to mark as paid");
+    });
+
+  const handleResendInvite = () =>
+    run(async () => {
+      const res = await marketplaceService.resendMemberInvite(orgId, sub._id);
+      if (res.success) toast.success("Invite email sent — the link lasts 7 days");
+      else toast.error(res.message ?? "Couldn't send the invite");
+    });
+
+  const handleClearNextPlan = () =>
+    run(async () => {
+      const res = await marketplaceService.setSubscriptionNextPlan(orgId, sub._id, null);
+      if (res.success && res.data) {
+        onUpdate(res.data);
+        toast.success("Scheduled plan change cleared");
+      } else toast.error(res.message ?? "Couldn't clear the change");
+    });
+
+  const handleCancel = () =>
+    run(async () => {
+      if (
+        !window.confirm(
+          `Cancel ${getMemberName(sub)}'s membership? They lose access and the plan's member count drops.`,
+        )
+      )
+        return;
+      const res = await marketplaceService.cancelOrgSubscription(orgId, sub._id);
+      if (res.success && res.data) {
+        onUpdate(res.data);
+        toast.success("Membership cancelled");
+      } else toast.error(res.message ?? "Couldn't cancel the membership");
+    });
+
+  const item = "w-full text-left px-3.5 py-2 text-[13px] hover:bg-[var(--bg-2)] disabled:opacity-50";
 
   return (
     <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
+        aria-label="Member actions"
         onClick={() => setOpen((v) => !v)}
-        className="w-5.5 h-5.5 rounded-(--r-1) flex items-center justify-center cursor-pointer"
+        disabled={busy}
+        className="w-5.5 h-5.5 rounded-(--r-1) flex items-center justify-center cursor-pointer disabled:opacity-50"
         style={{ color: "var(--fg-3)" }}
       >
         {MORE_ICON}
       </button>
       {open && (
         <div
-          className="absolute right-0 z-20 min-w-[150px] rounded-(--r-2) py-1 shadow-md"
+          className="absolute right-0 z-20 min-w-[200px] rounded-(--r-2) py-1 shadow-md"
           style={{ background: "var(--bg)", border: "1px solid var(--border)", top: "calc(100% + 4px)" }}
         >
-          <button
-            type="button"
-            onClick={handleMarkPaid}
-            className="w-full text-left px-3.5 py-2 text-[13px] hover:bg-[var(--bg-2)]"
-            style={{ color: "var(--ink)" }}
-          >
-            Mark as paid
+          <button type="button" className={item} style={{ color: "var(--ink)" }}
+            onClick={() => { setOpen(false); router.push(`/dashboard/gym-owner/members/${sub._id}`); }}>
+            View details
           </button>
+          {(isActive || isPending) && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleResendInvite}>
+              Resend invite email
+            </button>
+          )}
+          {isPending && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleMarkPaid}>
+              Mark as paid
+            </button>
+          )}
+          {isActive && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }}
+              onClick={() => { setOpen(false); setChangePlanOpen(true); }}>
+              Change plan…
+            </button>
+          )}
+          {isActive && scheduledPlan && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleClearNextPlan}>
+              Clear scheduled change ({scheduledPlan.name})
+            </button>
+          )}
+          {(isActive || isPending) && (
+            <button type="button" className={item} style={{ color: "var(--danger, #b00020)" }} onClick={handleCancel}>
+              Cancel membership
+            </button>
+          )}
         </div>
       )}
+      {changePlanOpen && (
+        <ChangePlanModal
+          sub={sub}
+          orgId={orgId}
+          onClose={() => setChangePlanOpen(false)}
+          onUpdate={onUpdate}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Schedule a plan switch that takes effect when the current period ends. */
+function ChangePlanModal({
+  sub,
+  orgId,
+  onClose,
+  onUpdate,
+}: {
+  sub: MembershipSubscription;
+  orgId: string;
+  onClose: () => void;
+  onUpdate: (updated: MembershipSubscription) => void;
+}) {
+  const { fmtDate } = useOrgFormat();
+  const { data: plans = [] } = useOrgMembershipPlans(orgId);
+  const currentPlanId = typeof sub.plan_id === "object" ? sub.plan_id._id : sub.plan_id;
+  const options = plans.filter((p) => p.is_active && p._id !== currentPlanId);
+  const [planId, setPlanId] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onSave = async () => {
+    if (!planId) return setError("Pick a plan.");
+    setSaving(true);
+    setError(null);
+    const res = await marketplaceService.setSubscriptionNextPlan(orgId, sub._id, planId);
+    setSaving(false);
+    if (res.success && res.data) {
+      onUpdate(res.data);
+      toast.success("Plan change scheduled for the next renewal");
+      onClose();
+    } else setError(res.message ?? "Couldn't schedule the change.");
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "oklch(0.2 0.02 260 / 0.4)" }} onClick={onClose}>
+      <div className="w-full max-w-[440px] rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }} onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Change plan</h2>
+        <p className="text-[13px] mt-1.5 leading-relaxed" style={{ color: "var(--fg-3)" }}>
+          {getMemberName(sub)} stays on <strong style={{ color: "var(--ink)" }}>{getPlanName(sub)}</strong> until the current period ends
+          {sub.end_date ? ` on ${fmtDate(sub.end_date)}` : ""}, then renews onto the new plan. Auto-renew turns on so the switch happens.
+        </p>
+        <select value={planId} onChange={(e) => setPlanId(e.target.value)}
+          className="w-full h-10 rounded-(--r-2) px-3 text-[14px] mt-4"
+          style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }}>
+          <option value="">Choose a plan…</option>
+          {options.map((p) => (
+            <option key={p._id} value={p._id}>{p.name}</option>
+          ))}
+        </select>
+        {options.length === 0 && (
+          <p className="text-[12px] mt-2" style={{ color: "var(--fg-3)" }}>No other active plans — create one on Plans &amp; pricing first.</p>
+        )}
+        {error && <p className="text-[12px] mt-2" style={{ color: "var(--danger, #b00020)" }}>{error}</p>}
+        <div className="flex justify-end gap-2 mt-5">
+          <button className="btn-ghost-v2 sm" disabled={saving} onClick={onClose}>Cancel</button>
+          <button className="btn-primary-v2 sm" disabled={saving || !planId} onClick={() => void onSave()}>
+            {saving ? "Scheduling…" : "Schedule change"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -331,7 +468,14 @@ export default function GymMembersClient() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4.5 py-3" style={{ color: "var(--ink)" }}>{plan}</td>
+                      <td className="px-4.5 py-3" style={{ color: "var(--ink)" }}>
+                        {plan}
+                        {sub.next_plan_id && typeof sub.next_plan_id === "object" && (
+                          <div className="font-mono text-[10.5px] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                            → {sub.next_plan_id.name} at renewal
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4.5 py-3 hidden md:table-cell" style={{ color: "var(--fg-2)" }}>
                         {fmtDate(sub.created_at)}
                       </td>

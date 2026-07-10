@@ -754,6 +754,41 @@ export const marketplaceService = {
     );
   },
 
+  /** Re-send the welcome / set-your-password email to an enrolled member. */
+  async resendMemberInvite(
+    organizationId: string,
+    subscriptionId: string,
+  ): Promise<ApiResponse<null>> {
+    return await apiClient.post<null>(
+      `/marketplace/organizations/${organizationId}/subscriptions/${subscriptionId}/resend-invite`,
+    );
+  },
+
+  /**
+   * Schedule (plan_id) or clear (null) a plan change applied at the end of
+   * the current period. Scheduling turns auto-renew on.
+   */
+  async setSubscriptionNextPlan(
+    organizationId: string,
+    subscriptionId: string,
+    planId: string | null,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/organizations/${organizationId}/subscriptions/${subscriptionId}/next-plan`,
+      { plan_id: planId },
+    );
+  },
+
+  /** Org-side cancellation of a membership subscription. */
+  async cancelOrgSubscription(
+    organizationId: string,
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/organizations/${organizationId}/subscriptions/${subscriptionId}/cancel`,
+    );
+  },
+
   // ==================== PAYMENT CONFIGURATION ====================
 
   async getPaymentConfigs(

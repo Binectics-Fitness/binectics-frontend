@@ -556,6 +556,8 @@ export interface MembershipSubscription {
   currency: string;
   payment_reference?: string;
   auto_renew: boolean;
+  /** Plan change scheduled by the org, applied at renewal (may be populated). */
+  next_plan_id?: string | { _id: string; name: string } | null;
   created_at: string;
   updated_at: string;
 }
