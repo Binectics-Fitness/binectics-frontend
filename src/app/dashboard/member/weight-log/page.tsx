@@ -99,6 +99,15 @@ export default function WeightLogPage() {
     void load();
   }, []);
 
+  // "Logged by" only carries information when a PROVIDER logged an entry
+  // for the member (trainers/dietitians can). When every entry is the
+  // member's own, the column is pure noise — hide it.
+  const loggerId = (log: WeightLog) =>
+    typeof log.logged_by === "string" ? log.logged_by : log.logged_by._id;
+  const hasProviderLogs = logs.some(
+    (log) => user && loggerId(log) !== user.id,
+  );
+
   const latestLog = logs.length > 0 ? logs[0] : null;
   const oldestLog = logs.length > 0 ? logs[logs.length - 1] : null;
   const changeKgValue =
@@ -354,7 +363,7 @@ export default function WeightLogPage() {
             >
               <thead>
                 <tr>
-                  {["Date", "Weight", "Note", "Logged by"].map((th) => (
+                  {["Date", "Weight", "Note", ...(hasProviderLogs ? ["Logged by"] : [])].map((th) => (
                     <th
                       key={th}
                       style={{
@@ -376,8 +385,10 @@ export default function WeightLogPage() {
               </thead>
               <tbody>
                 {logs.map((log) => {
-                  const loggedBy =
-                    typeof log.logged_by === "string"
+                  const isOwn = user ? loggerId(log) === user.id : false;
+                  const loggedBy = isOwn
+                    ? "You"
+                    : typeof log.logged_by === "string"
                       ? "—"
                       : `${log.logged_by.first_name} ${log.logged_by.last_name}`;
                   return (
@@ -409,16 +420,18 @@ export default function WeightLogPage() {
                       >
                         {log.note || "—"}
                       </td>
-                      <td
-                        style={{
-                          padding: "11px 14px",
-                          borderBottom: "1px solid var(--border)",
-                          fontSize: 12,
-                          color: "var(--fg-3)",
-                        }}
-                      >
-                        {loggedBy}
-                      </td>
+                      {hasProviderLogs && (
+                        <td
+                          style={{
+                            padding: "11px 14px",
+                            borderBottom: "1px solid var(--border)",
+                            fontSize: 12,
+                            color: "var(--fg-3)",
+                          }}
+                        >
+                          {loggedBy}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
