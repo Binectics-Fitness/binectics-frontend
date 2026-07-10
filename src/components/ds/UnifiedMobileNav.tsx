@@ -147,7 +147,9 @@ export function UnifiedMobileNav() {
   }, [pathname]);
 
   const close = () => setIsOpen(false);
-  const dashboardHref = user ? getDashboardRoute(user.role) : "/dashboard";
+  // There is no /dashboard index page — logged-out users go to /login,
+  // which routes them to their role dashboard after sign-in.
+  const dashboardHref = user ? getDashboardRoute(user.role) : "/login";
   const fullName = user
     ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email
     : "";

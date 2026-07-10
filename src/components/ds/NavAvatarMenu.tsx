@@ -48,8 +48,11 @@ export function NavAvatarMenu() {
 
   const menuItems = [
     { href: dashboardHref, label: "Dashboard", icon: LayoutDashboard },
-    { href: `${dashboardHref}/profile`, label: "Profile", icon: UserIcon },
-    { href: `${dashboardHref}/settings`, label: "Settings", icon: Settings },
+    // The account-level settings hub is role-generic and real for every
+    // role; `${dashboardHref}/profile|settings` 404'd for USER, GYM_OWNER,
+    // and ADMIN (those role shells have no such child routes).
+    { href: "/dashboard/settings/profile", label: "Profile", icon: UserIcon },
+    { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];
 
   return (

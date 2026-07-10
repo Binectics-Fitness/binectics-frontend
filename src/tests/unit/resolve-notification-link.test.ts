@@ -28,10 +28,12 @@ describe("resolveNotificationLink", () => {
     ).toBe("/dashboard/gym-owner/consultations");
   });
 
-  it("routes /dashboard/consultations to bookings for USER role", () => {
+  it("routes /dashboard/consultations to the bookings page for USER role", () => {
+    // /dashboard/bookings/consultations does not exist; the bookings page
+    // shows consultations inline.
     expect(
-      resolveNotificationLink("/dashboard/consultations", UserRole.USER),
-    ).toBe("/dashboard/bookings/consultations");
+      resolveNotificationLink("/dashboard/consultations/c1", UserRole.USER),
+    ).toBe("/dashboard/bookings");
   });
 
   it("preserves query params on consultations remap", () => {
@@ -60,10 +62,18 @@ describe("resolveNotificationLink", () => {
   });
 
   // ── Role-specific reviews ─────────────────────────────────
-  it("routes /dashboard/reviews to trainer reviews", () => {
+  it("routes review links to the gym-owner reviews page, and to notifications for roles without one", () => {
+    expect(
+      resolveNotificationLink("/dashboard/reviews?id=r1", UserRole.GYM_OWNER),
+    ).toBe("/dashboard/gym-owner/reviews?id=r1");
+    // /dashboard/trainer/reviews and /dashboard/dietitian/reviews do not
+    // exist; neither does a bare member reviews page.
     expect(
       resolveNotificationLink("/dashboard/reviews", UserRole.TRAINER),
-    ).toBe("/dashboard/trainer/reviews");
+    ).toBe("/dashboard/notifications");
+    expect(resolveNotificationLink("/dashboard/reviews", UserRole.USER)).toBe(
+      "/dashboard/notifications",
+    );
   });
 
   it("routes /dashboard/reviews to gym-owner reviews", () => {
@@ -73,15 +83,15 @@ describe("resolveNotificationLink", () => {
   });
 
   // ── Path corrections ──────────────────────────────────────
-  it("corrects /dashboard/workout/<id> to /dashboard/workouts/<id>", () => {
-    expect(resolveNotificationLink("/dashboard/workout/plan123")).toBe(
-      "/dashboard/workouts/plan123",
+  it("routes workout links to the member workout log (no /dashboard/workouts route exists)", () => {
+    expect(resolveNotificationLink("/dashboard/workout/w1")).toBe(
+      "/dashboard/member/workout-log",
     );
   });
 
-  it("corrects /dashboard/workout to /dashboard/workouts", () => {
+  it("routes the bare workout link to the member workout log", () => {
     expect(resolveNotificationLink("/dashboard/workout")).toBe(
-      "/dashboard/workouts",
+      "/dashboard/member/workout-log",
     );
   });
 
@@ -91,9 +101,9 @@ describe("resolveNotificationLink", () => {
     );
   });
 
-  it("corrects /dashboard/teams/<id> to /dashboard/team/<id>", () => {
+  it("drops the id from /dashboard/teams/<id> (no dynamic team page; context provides the org)", () => {
     expect(resolveNotificationLink("/dashboard/teams/org1")).toBe(
-      "/dashboard/team/org1",
+      "/dashboard/team",
     );
   });
 
@@ -109,9 +119,9 @@ describe("resolveNotificationLink", () => {
     );
   });
 
-  it("routes /dashboard/professionals to /dashboard", () => {
+  it("routes /dashboard/professionals to notifications (no /dashboard index page)", () => {
     expect(resolveNotificationLink("/dashboard/professionals")).toBe(
-      "/dashboard",
+      "/dashboard/notifications",
     );
   });
 
