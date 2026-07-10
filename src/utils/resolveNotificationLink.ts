@@ -65,11 +65,6 @@ export function resolveNotificationLink(
     return url.replace("/dashboard/teams", "/dashboard/team");
   }
 
-  // /dashboard/billing → /dashboard/settings/billing
-  if (url.startsWith("/dashboard/billing")) {
-    return url.replace("/dashboard/billing", "/dashboard/settings/billing");
-  }
-
   // /dashboard/verification → /verification
   if (url === "/dashboard/verification") {
     return "/verification";
