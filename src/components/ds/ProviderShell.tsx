@@ -18,6 +18,7 @@ import { ProviderDashboardShell } from "./ProviderDashboardShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import type { UserRole } from "@/lib/types";
 import { ROLE_LABEL, fullName, nameInitials, personInitials, shortName } from "@/lib/identity";
 
@@ -66,7 +67,7 @@ export interface ProviderShellConfig {
 function ProviderSidebar({ activeItem, config }: { activeItem: string; config: ProviderShellConfig }) {
   const { user } = useAuth();
   const { currentOrg } = useOrganization();
-  const { tone, identity, sections, settingsHref, fallbackLabel } = config;
+  const { tone, identity, sections, fallbackLabel } = config;
 
   const userName = shortName(user) || "Your account";
   const userInitials = personInitials(user) || "··";
@@ -103,14 +104,21 @@ function ProviderSidebar({ activeItem, config }: { activeItem: string; config: P
         </nav>
       ))}
 
-      {/* User footer */}
-      <Link href={settingsHref} className="mt-auto flex items-center gap-2.5 pt-3.5" style={{ borderTop: "1px solid var(--border)" }}>
-        <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: tone.avatarBg, color: tone.avatarColor }}>{userInitials}</span>
-        <div className="flex-1">
-          <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{userName}</div>
-          <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{roleLabel}</div>
-        </div>
-      </Link>
+      {/* User footer — opens the account menu (profile / settings / admin / log out) */}
+      <div className="mt-auto pt-3.5" style={{ borderTop: "1px solid var(--border)" }}>
+        <ShellAccountMenu
+          direction="up"
+          trigger={
+            <span className="flex items-center gap-2.5">
+              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: tone.avatarBg, color: tone.avatarColor }}>{userInitials}</span>
+              <span className="flex-1">
+                <span className="block text-[13px] font-medium" style={{ color: "var(--ink)" }}>{userName}</span>
+                <span className="block font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{roleLabel}</span>
+              </span>
+            </span>
+          }
+        />
+      </div>
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 
 /* ── Lucide-style icon wrapper ── */
@@ -31,6 +33,9 @@ interface MemberDashboardShellProps {
 
 /* ── Component ── */
 export function MemberDashboardShell({ activeLabel, children, actions }: MemberDashboardShellProps) {
+  const { user, logout } = useAuth();
+  const memberInitials =
+    `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase() || "··";
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -131,24 +136,26 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
               </I>
             </button>
 
-            {/* Avatar */}
-            <Link
-              href="/dashboard/settings"
-              className="flex items-center justify-center shrink-0"
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: "50%",
-                background: "var(--bg-3)",
-                color: "var(--fg-2)",
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: "pointer",
-                textDecoration: "none",
-              }}
-            >
-              AO
-            </Link>
+            {/* Avatar — opens the account menu (profile / settings / log out) */}
+            <ShellAccountMenu
+              direction="down"
+              trigger={
+                <span
+                  className="flex items-center justify-center shrink-0"
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    background: "var(--bg-3)",
+                    color: "var(--fg-2)",
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {memberInitials}
+                </span>
+              }
+            />
           </div>
         </div>
       </header>
@@ -186,7 +193,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
               textDecoration: "none",
             }}
           >
-            AO
+            {memberInitials}
           </Link>
           <button
             onClick={() => setMobileOpen(true)}
@@ -282,6 +289,17 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
               >
                 Settings
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  void logout();
+                }}
+                className="flex items-center rounded-(--r-2) text-[16px]"
+                style={{ height: 48, padding: "0 12px", color: "var(--danger)", background: "none", border: "none", textAlign: "left" }}
+              >
+                Log out
+              </button>
             </div>
           </div>
         </div>

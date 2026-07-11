@@ -82,7 +82,12 @@ export function useAdminGuard() {
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      router.push("/login");
+      // HARD navigation, not router.push: with a live cookie the
+      // middleware bounces /login straight back here, and a client-side
+      // transition ping-pongs into a blank page. A full load either
+      // renders the login form (no cookie) or reboots the app where the
+      // session-recovery path restores the user (cookie alive).
+      window.location.assign("/login");
       return;
     }
     if (!(user.role === UserRole.ADMIN || user.is_admin === true)) {
@@ -99,9 +104,10 @@ export function useRoleGuard(requiredRole: UserRole) {
 
   useEffect(() => {
     if (!isLoading) {
-      // Not authenticated - redirect to login
+      // Not authenticated — HARD navigation (see useAdminGuard: a client
+      // push can ping-pong with the middleware into a blank page).
       if (!user) {
-        router.push("/login");
+        window.location.assign("/login");
         return;
       }
 
