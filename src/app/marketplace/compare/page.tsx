@@ -136,7 +136,7 @@ export default function MarketplaceComparePage() {
                 <td />
                 {PROVIDERS.map((p) => (
                   <td key={p.name} style={{ padding: "18px 20px" }}>
-                    <Link href="/booking" className="btn-primary-v2 sm">Book &rarr;</Link>
+                    <Link href="/marketplace" className="btn-primary-v2 sm">View &rarr;</Link>
                   </td>
                 ))}
               </tr>

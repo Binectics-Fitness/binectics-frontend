@@ -334,8 +334,25 @@ export default function ProviderPage() {
             </section>
           )}
 
-          {/* Class schedule — real weekly timetable + booking */}
-          <ListingClassesSection listingId={listingId} />
+          {/* Booking: gyms run a class timetable; solo providers take 1:1
+              consultation bookings. */}
+          {listing.account_type === "gym_owner" ? (
+            <ListingClassesSection listingId={listingId} />
+          ) : (
+            <section className="rounded-(--r-3) p-5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>Book a session</h2>
+              <p className="text-[13.5px] mt-1.5 max-w-[52ch]" style={{ color: "var(--fg-3)" }}>
+                Pick a time that works for you from {ownerName.split(" ")[0] || "the provider"}&rsquo;s available slots.
+              </p>
+              <Link
+                href={`/booking?listingId=${listing._id}`}
+                className="btn-primary-v2 sm mt-4 inline-flex"
+                style={{ textDecoration: "none" }}
+              >
+                See available times
+              </Link>
+            </section>
+          )}
 
           {/* Reviews */}
           <section className="py-8 border-b border-border">
