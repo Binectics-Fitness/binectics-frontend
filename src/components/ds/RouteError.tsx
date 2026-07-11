@@ -16,6 +16,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { BinecticsMark } from "@/components/BinecticsLogo";
+import { reloadIfStaleBuildError } from "@/lib/utils/staleBuildReload";
 
 export interface RouteErrorProps {
   /** The error thrown by the segment (Next.js passes this to error.tsx). */
@@ -49,6 +50,10 @@ export function RouteError({
   useEffect(() => {
     // Surface to the console (and any attached error reporter) for diagnostics.
     console.error(error);
+    // A long-lived tab navigating after a redeploy fetches chunks that no
+    // longer exist — one hard reload picks up the current build instead
+    // of stranding the user on this screen.
+    reloadIfStaleBuildError(error);
   }, [error]);
 
   return (

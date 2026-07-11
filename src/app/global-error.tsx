@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { reloadIfStaleBuildError } from "@/lib/utils/staleBuildReload";
+
 export default function GlobalError({
   error,
   reset,
@@ -11,6 +13,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
+    reloadIfStaleBuildError(error);
   }, [error]);
 
   return (
