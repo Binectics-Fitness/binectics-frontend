@@ -126,6 +126,7 @@ export default function AdminPlansPage() {
     interval: "month" | "year";
     currency: string;
     amount_major: string;
+    gateway_plan_code: string;
   } | null>(null);
   const [priceBusy, setPriceBusy] = useState(false);
 
@@ -149,6 +150,10 @@ export default function AdminPlansPage() {
       toast.error("Enter a positive amount.");
       return;
     }
+    if (!/^[A-Za-z]{3}$/.test(priceDraft.currency.trim())) {
+      toast.error("Currency must be a 3-letter code, e.g. NGN.");
+      return;
+    }
     setPriceBusy(true);
     try {
       const res = await adminService.upsertPlanPrice({
@@ -158,6 +163,19 @@ export default function AdminPlansPage() {
         currency: priceDraft.currency.trim().toUpperCase(),
         amount_minor: Math.round(amount * 100),
         is_active: true,
+        // A Paystack plan code makes the charge recurring; omitted =
+        // one-shot payment (tier still activates, but never renews).
+        ...(priceDraft.gateway_plan_code.trim()
+          ? {
+              gateway_prices: [
+                {
+                  gateway: "paystack",
+                  external_price_id: priceDraft.gateway_plan_code.trim(),
+                  is_primary_for_market: true,
+                },
+              ],
+            }
+          : {}),
       });
       if (res.success && res.data) {
         const saved = res.data;
@@ -390,6 +408,9 @@ export default function AdminPlansPage() {
                           {(pr.amount_minor / 100).toLocaleString()} {pr.currency}
                         </span>
                         <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>/ {pr.interval}</span>
+                        <span className="font-mono text-[10px] uppercase" style={{ color: pr.gateway_prices?.length ? "var(--signal-ink)" : "var(--fg-4)" }}>
+                          {pr.gateway_prices?.length ? "recurring" : "one-shot"}
+                        </span>
                         {!pr.is_active && <span className="font-mono text-[10px] uppercase" style={{ color: "var(--danger)" }}>inactive</span>}
                         <button type="button" className="ml-auto text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => void removePrice(pr._id)}>
                           Remove
@@ -416,6 +437,10 @@ export default function AdminPlansPage() {
                         <input value={priceDraft.currency} onChange={(e) => setPriceDraft({ ...priceDraft, currency: e.target.value })} maxLength={3} className="h-8 w-16 rounded-(--r-2) border border-border bg-bg px-2 font-mono text-[12px] uppercase text-ink" />
                       </div>
                       <div>
+                        <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Paystack plan code (optional — enables auto-renewal)</div>
+                        <input value={priceDraft.gateway_plan_code} onChange={(e) => setPriceDraft({ ...priceDraft, gateway_plan_code: e.target.value })} placeholder="PLN_xxxx" className="h-8 w-32 rounded-(--r-2) border border-border bg-bg px-2 font-mono text-[12px] text-ink" />
+                      </div>
+                      <div>
                         <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Interval</div>
                         <select value={priceDraft.interval} onChange={(e) => setPriceDraft({ ...priceDraft, interval: e.target.value as "month" | "year" })} className="h-8 rounded-(--r-2) border border-border bg-bg px-2 text-[13px] text-ink">
                           <option value="month">month</option>
@@ -432,7 +457,7 @@ export default function AdminPlansPage() {
                       <button
                         type="button"
                         className="btn-ghost-v2 sm self-start"
-                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: "NGN", amount_major: "" })}
+                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: "NGN", amount_major: "", gateway_plan_code: "" })}
                       >
                         Add price
                       </button>

@@ -104,6 +104,13 @@ export interface AdminPlanPrice {
   trial_days?: number;
   discount_percent?: number;
   is_active: boolean;
+  /** Gateway-side price/plan refs — a Paystack plan code here makes the
+   * charge RECURRING; without one checkout is a one-shot payment. */
+  gateway_prices?: {
+    gateway: string;
+    external_price_id: string;
+    is_primary_for_market?: boolean;
+  }[];
 }
 
 export type UpsertAdminPlanPrice = Omit<AdminPlanPrice, "_id">;
