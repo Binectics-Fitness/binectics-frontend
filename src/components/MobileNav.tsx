@@ -252,7 +252,7 @@ export default function MobileNav() {
               ) : (
                 <li>
                   <Link
-                    href="/login"
+                    href="/login" prefetch={false}
                     onClick={close}
                     className="flex items-center gap-3 rounded-(--r-2) px-3 py-2.5 text-[15px] font-medium transition-colors"
                     style={{ color: "var(--fg-2)" }}

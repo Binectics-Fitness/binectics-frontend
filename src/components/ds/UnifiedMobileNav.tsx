@@ -382,7 +382,7 @@ export function UnifiedMobileNav() {
             ) : (
               <div className="flex flex-col gap-2">
                 <Link
-                  href="/login"
+                  href="/login" prefetch={false}
                   onClick={close}
                   className="flex w-full items-center justify-center gap-2 rounded-(--r-2) px-4 py-3 text-[14px] font-medium transition-colors"
                   style={{

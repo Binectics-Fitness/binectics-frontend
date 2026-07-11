@@ -96,7 +96,7 @@ export default function SessionExpiredPage() {
         {/* Actions */}
         <div className="flex gap-2 justify-center flex-wrap">
           <Link
-            href="/login"
+            href="/login" prefetch={false}
             className="btn-primary-v2"
             style={{ height: 38, padding: "0 16px" }}
           >

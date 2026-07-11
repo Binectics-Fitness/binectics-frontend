@@ -110,8 +110,18 @@ export function middleware(request: NextRequest) {
   // Check if the current route is an auth route
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
+  // Never cache a redirect into the client router's prefetch cache — on
+  // both sides. Mobile browsers prefetch visible links; a prefetched 307
+  // (auth route with a session, or protected route without one) gets
+  // cached and the subsequent tap renders a blank page. Real navigations
+  // (no prefetch header) still redirect below.
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") !== null ||
+    request.headers.get("purpose") === "prefetch" ||
+    (request.headers.get("sec-purpose") ?? "").includes("prefetch");
+
   // Redirect to login if accessing protected route without token
-  if (isProtectedRoute && !token) {
+  if (isProtectedRoute && !token && !isPrefetch) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return withRegion(NextResponse.redirect(loginUrl));
@@ -130,7 +140,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Redirect to dashboard if accessing auth routes with valid token
-  if (isAuthRoute && token) {
+  if (isAuthRoute && token && !isPrefetch) {
     if (mustChangePassword) {
       return withRegion(
         NextResponse.redirect(new URL("/admin/change-password", request.url)),

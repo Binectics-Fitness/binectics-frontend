@@ -159,7 +159,7 @@ export default function UnifiedNavbar() {
           ) : (
             <>
               <Link
-                href="/login"
+                href="/login" prefetch={false}
                 className="hidden lg:inline-flex h-9 items-center px-3 rounded-(--r-2) text-[14px] font-medium transition-colors"
                 style={{
                   color: "var(--fg-2)",

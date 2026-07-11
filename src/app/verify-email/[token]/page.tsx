@@ -81,7 +81,7 @@ export default function VerifyEmailPage() {
           </p>
 
           <Link
-            href="/login"
+            href="/login" prefetch={false}
             className="btn-signal-v2 inline-flex items-center justify-center mt-8"
             style={{ height: "38px", padding: "0 24px" }}
           >
