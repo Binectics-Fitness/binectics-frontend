@@ -44,7 +44,9 @@ export default function CheckInKioskPage() {
   useEffect(() => {
     const load = async () => {
       if (!orgId) return;
-      const url = `${window.location.origin}/check-in/${orgId}`;
+      // src=qr keeps QR scans on the instant no-confirm path; other entry
+      // points (dashboard button, shared links) get a confirm tap first.
+      const url = `${window.location.origin}/check-in/${orgId}?src=qr`;
       setCheckInUrl(url);
       const dataUrl = await QRCode.toDataURL(url, {
         width: 640,
