@@ -88,6 +88,75 @@ export interface AdminPlan {
 /** Fields the PATCH endpoint accepts (everything except the immutable code). */
 export type UpdateAdminPlan = Partial<Omit<AdminPlan, "_id" | "code">>;
 
+/** One row of the platform-wide money ledger (GET /admin/transactions). */
+export interface AdminTransaction {
+  _id: string;
+  user_id: {
+    _id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  } | null;
+  organization_id: { _id: string; name?: string } | null;
+  type: string;
+  direction: "credit" | "debit";
+  status: "pending" | "succeeded" | "failed" | "reversed";
+  method: string;
+  /** Minor units (kobo, cents). */
+  amount_minor: number;
+  currency: string;
+  occurred_at: string;
+  gateway?: string;
+  gateway_reference?: string;
+}
+
+export interface AdminTransactionFilters {
+  page?: number;
+  limit?: number;
+  status?: string;
+  type?: string;
+  direction?: string;
+  organization_id?: string;
+  from?: string;
+  to?: string;
+}
+
+/** One persisted audit event (GET /admin/audit-log). PII arrives pre-hashed. */
+export interface AdminAuditEvent {
+  _id: string;
+  event: string;
+  level: "log" | "warn" | "error";
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface AdminAuditFilters {
+  page?: number;
+  limit?: number;
+  event?: string;
+  level?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface AdminPaginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+function toQueryString(params: Record<string, unknown>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== "") {
+      search.set(key, String(value));
+    }
+  }
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
+}
+
 // ==================== SERVICE ====================
 
 class AdminService {
@@ -140,6 +209,28 @@ class AdminService {
       `/admin/provider-billing/plans/${planId}`,
       patch,
     );
+  }
+
+  // ─── Platform ledger & audit log ─────────────────────────────────────────
+
+  async listTransactions(
+    filters: AdminTransactionFilters = {},
+  ): Promise<ApiResponse<AdminPaginated<AdminTransaction>>> {
+    return apiClient.get<AdminPaginated<AdminTransaction>>(
+      `/admin/transactions${toQueryString(filters as Record<string, unknown>)}`,
+    );
+  }
+
+  async listAuditEvents(
+    filters: AdminAuditFilters = {},
+  ): Promise<ApiResponse<AdminPaginated<AdminAuditEvent>>> {
+    return apiClient.get<AdminPaginated<AdminAuditEvent>>(
+      `/admin/audit-log${toQueryString(filters as Record<string, unknown>)}`,
+    );
+  }
+
+  async listAuditEventNames(): Promise<ApiResponse<string[]>> {
+    return apiClient.get<string[]>("/admin/audit-log/events");
   }
 }
 
