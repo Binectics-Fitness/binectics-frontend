@@ -31,6 +31,7 @@ function personName(
 export default function CheckInKioskPage() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const orgId = currentOrg?._id;
+  const checkinCode = currentOrg?.checkin_code;
 
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
@@ -44,7 +45,9 @@ export default function CheckInKioskPage() {
   useEffect(() => {
     const load = async () => {
       if (!orgId) return;
-      const url = `${window.location.origin}/check-in/${orgId}`;
+      // src=qr keeps QR scans on the instant no-confirm path; other entry
+      // points (dashboard button, shared links) get a confirm tap first.
+      const url = `${window.location.origin}/check-in/${orgId}?src=qr`;
       setCheckInUrl(url);
       const dataUrl = await QRCode.toDataURL(url, {
         width: 640,
@@ -118,7 +121,62 @@ export default function CheckInKioskPage() {
   }
 
   return (
-    <GymDashboardShell activeItem="Check-in kiosk" crumb="Check-in kiosk">
+    <>
+      {/* Print-only poster. The visibility trick below prints just this block
+          — QR, gym name, and the manual code — leaving the live feed off the
+          page. */}
+      <div className="checkin-print-poster">
+        <div className="cpp-name">{currentOrg?.name ?? "Your gym"}</div>
+        <div className="cpp-sub">Check in with your Binectics app</div>
+        {qrDataUrl && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img className="cpp-qr" src={qrDataUrl} alt="Check-in QR code" />
+        )}
+        <div className="cpp-scan">Scan the QR with your phone camera</div>
+        {checkinCode && (
+          <div className="cpp-code-wrap">
+            <div className="cpp-code-label">Or enter this code in the app</div>
+            <div className="cpp-code">{checkinCode}</div>
+          </div>
+        )}
+      </div>
+      <style>{`
+        .checkin-print-poster { display: none; }
+        @media print {
+          body * { visibility: hidden !important; }
+          .checkin-print-poster, .checkin-print-poster * { visibility: visible !important; }
+          .checkin-print-poster {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            text-align: center;
+            position: fixed;
+            inset: 0;
+            padding: 48px;
+            background: #fff;
+            color: #03314b;
+          }
+          .checkin-print-poster .cpp-name { font-size: 40px; font-weight: 700; }
+          .checkin-print-poster .cpp-sub { font-size: 18px; color: #3b5566; }
+          .checkin-print-poster .cpp-qr { width: 340px; height: 340px; }
+          .checkin-print-poster .cpp-scan { font-size: 16px; color: #3b5566; }
+          .checkin-print-poster .cpp-code-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #3b5566;
+          }
+          .checkin-print-poster .cpp-code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+          }
+        }
+      `}</style>
+      <GymDashboardShell activeItem="Check-in kiosk" crumb="Check-in kiosk">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" style={{ marginBottom: 18 }}>
         <div>
           <h1 style={{ fontSize: 30, letterSpacing: "-0.024em", fontWeight: 500, color: "var(--ink)" }}>
@@ -134,6 +192,9 @@ export default function CheckInKioskPage() {
             <a href={qrDataUrl} download="binectics-checkin-qr.png" className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>
               Download QR
             </a>
+            <button type="button" className="btn-ghost-v2 sm" onClick={() => window.print()}>
+              Print poster
+            </button>
             <button type="button" className="btn-primary-v2 sm" onClick={() => setKioskMode(true)}>
               Open kiosk display
             </button>
@@ -159,6 +220,16 @@ export default function CheckInKioskPage() {
               <div className="mt-3 break-all font-mono text-[10.5px]" style={{ color: "var(--fg-4)" }}>
                 {checkInUrl}
               </div>
+              {checkinCode && (
+                <div className="mt-4 border-t border-border pt-3">
+                  <div className="font-mono text-[11px] uppercase tracking-[0.08em]" style={{ color: "var(--fg-3)" }}>
+                    Or enter code
+                  </div>
+                  <div className="mt-1 font-mono text-[26px] font-semibold tracking-[0.18em]" style={{ color: "var(--ink)" }}>
+                    {checkinCode}
+                  </div>
+                </div>
+              )}
               <p className="mt-3 text-[12.5px] leading-normal" style={{ color: "var(--fg-3)" }}>
                 Print it at the door, or run &ldquo;kiosk display&rdquo; on a
                 front-desk tablet.
@@ -224,6 +295,7 @@ export default function CheckInKioskPage() {
           </div>
         </>
       )}
-    </GymDashboardShell>
+      </GymDashboardShell>
+    </>
   );
 }

@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { checkinsService } from "@/lib/api/checkins";
 import type { MyCheckInDashboardStats } from "@/lib/types";
 
 type Outcome =
   | { state: "working" }
+  | { state: "confirm"; gymName: string }
   | { state: "success"; gymName: string; streak: number | null }
   | { state: "already"; gymName: string }
   | {
@@ -21,17 +22,34 @@ type Outcome =
 
 /**
  * The page a gym's check-in QR opens on the member's phone. The route is
- * middleware-protected, so an anonymous scan goes login → back here — then
- * the check-in fires automatically: the whole point of QR entry is that it
- * takes seconds, so no extra confirm tap.
+ * middleware-protected, so an anonymous scan goes login → back here.
+ *
+ * Entry modes:
+ * - QR scan (kiosk QRs carry ?src=qr): the check-in fires automatically —
+ *   the whole point of QR entry is that it takes seconds.
+ * - Everything else (the dashboard's "Check in" button, typed/shared
+ *   links): an explicit confirm tap first, so nobody logs a gym visit by
+ *   accident from their couch.
  */
 export default function CheckInScanPage() {
+  return (
+    <Suspense fallback={null}>
+      <CheckInScanContent />
+    </Suspense>
+  );
+}
+
+function CheckInScanContent() {
   const params = useParams<{ gymId: string }>();
+  const searchParams = useSearchParams();
   // Org id on current QRs; legacy printed QRs carry a listing id — the
   // backend resolves either.
   const gymId = params.gymId;
+  const fromQr = searchParams.get("src") === "qr";
   const [outcome, setOutcome] = useState<Outcome>({ state: "working" });
   const firedRef = useRef(false);
+  const scanBusyRef = useRef(false);
+  const confirmRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     if (firedRef.current || !gymId) return;
@@ -45,6 +63,14 @@ export default function CheckInScanPage() {
       const storeListingId =
         (infoRes.success && infoRes.data?.listing_id) || null;
 
+      if (!fromQr) {
+        setOutcome({ state: "confirm", gymName });
+        return;
+      }
+      await fireScan(gymName, storeListingId);
+    };
+
+    const fireScan = async (gymName: string, storeListingId: string | null) => {
       const res = await checkinsService.scan({ gym_id: gymId });
       if (res.success) {
         // Streak is a nice-to-have — never block the success screen on it.
@@ -73,8 +99,23 @@ export default function CheckInScanPage() {
         });
       }
     };
+
+    confirmRef.current = async () => {
+      // A fast double-tap must not fire two concurrent scans — the
+      // backend duplicate check is find-then-create, not atomic.
+      if (scanBusyRef.current) return;
+      scanBusyRef.current = true;
+      setOutcome({ state: "working" });
+      const infoRes = await checkinsService.getGymInfo(gymId);
+      const gymName = (infoRes.success && infoRes.data?.name) || "this gym";
+      const storeListingId =
+        (infoRes.success && infoRes.data?.listing_id) || null;
+      await fireScan(gymName, storeListingId);
+    };
+
     void run();
-  }, [gymId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gymId, fromQr]);
 
   return (
     <div
@@ -92,6 +133,30 @@ export default function CheckInScanPage() {
             <h1 className="text-[22px] font-medium" style={{ color: "var(--ink)" }}>
               Checking you in…
             </h1>
+          </>
+        )}
+
+        {outcome.state === "confirm" && (
+          <>
+            <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
+              Check in at {outcome.gymName}?
+            </h1>
+            <p className="mt-2 text-[15px]" style={{ color: "var(--fg-2)" }}>
+              This logs a visit for today and counts toward your streak. At
+              the gym, you can also just scan the QR at the front desk.
+            </p>
+            <div className="mt-8 flex flex-col gap-2">
+              <button
+                type="button"
+                className="btn-primary-v2"
+                onClick={() => void confirmRef.current()}
+              >
+                Yes, check me in
+              </button>
+              <Link href="/dashboard/member" className="btn-ghost-v2" style={{ textDecoration: "none" }}>
+                Cancel
+              </Link>
+            </div>
           </>
         )}
 

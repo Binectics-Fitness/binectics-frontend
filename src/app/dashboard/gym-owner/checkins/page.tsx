@@ -32,8 +32,10 @@ function personName(checkIn: CheckIn): string {
 }
 
 function listingLabel(checkIn: CheckIn): string {
+  // Org-scoped check-ins (the QR/kiosk flow) carry no listing at all.
+  if (!checkIn.listing_id) return "QR check-in";
   if (typeof checkIn.listing_id === "string") return checkIn.listing_id.slice(-8);
-  return checkIn.listing_id.headline;
+  return checkIn.listing_id.headline ?? "QR check-in";
 }
 
 function initials(name: string): string {

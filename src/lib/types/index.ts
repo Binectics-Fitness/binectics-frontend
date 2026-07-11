@@ -471,7 +471,8 @@ export interface ApiResponse<T = unknown> {
 export interface CheckIn {
   _id: string;
   organization_id: string;
-  listing_id: string | { _id: string; headline: string };
+  /** Absent on org-scoped (QR/kiosk) check-ins — the listing is optional advertising. */
+  listing_id?: string | { _id: string; headline: string };
   member_user_id:
     | string
     | { _id: string; first_name: string; last_name: string; email: string };

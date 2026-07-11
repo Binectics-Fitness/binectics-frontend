@@ -116,6 +116,8 @@ export interface Organization {
   kiosk_settings?: KioskSettings;
   payout_schedule?: PayoutSchedule;
   is_active: boolean;
+  /** Short, human-typable code members enter on the manual check-in screen. */
+  checkin_code?: string;
   is_owner?: boolean;
   can_manage_organization?: boolean;
   my_role_code?: string | null;
