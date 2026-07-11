@@ -9,7 +9,7 @@ import type { MyCheckInDashboardStats } from "@/lib/types";
 
 type Outcome =
   | { state: "working" }
-  | { state: "confirm"; gymName: string }
+  | { state: "scan_required"; gymName: string }
   | { state: "success"; gymName: string; streak: number | null }
   | { state: "already"; gymName: string }
   | {
@@ -21,15 +21,13 @@ type Outcome =
   | { state: "error"; message: string };
 
 /**
- * The page a gym's check-in QR opens on the member's phone. The route is
- * middleware-protected, so an anonymous scan goes login → back here.
+ * The page the gym's rotating QR opens on the member's phone. The route
+ * is middleware-protected, so an anonymous scan goes login → back here.
  *
- * Entry modes:
- * - QR scan (kiosk QRs carry ?src=qr): the check-in fires automatically —
- *   the whole point of QR entry is that it takes seconds.
- * - Everything else (the dashboard's "Check in" button, typed/shared
- *   links): an explicit confirm tap first, so nobody logs a gym visit by
- *   accident from their couch.
+ * The ?t= token from the QR is the presence proof: with one, the
+ * check-in fires immediately (the API judges freshness); without one —
+ * bookmarked URL, shared link, typed path — nothing is logged and the
+ * member is pointed at the scanner.
  */
 export default function CheckInScanPage() {
   return (
@@ -45,11 +43,9 @@ function CheckInScanContent() {
   // Org id on current QRs; legacy printed QRs carry a listing id — the
   // backend resolves either.
   const gymId = params.gymId;
-  const fromQr = searchParams.get("src") === "qr";
+  const qrToken = searchParams.get("t");
   const [outcome, setOutcome] = useState<Outcome>({ state: "working" });
   const firedRef = useRef(false);
-  const scanBusyRef = useRef(false);
-  const confirmRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     if (firedRef.current || !gymId) return;
@@ -63,15 +59,18 @@ function CheckInScanContent() {
       const storeListingId =
         (infoRes.success && infoRes.data?.listing_id) || null;
 
-      if (!fromQr) {
-        setOutcome({ state: "confirm", gymName });
+      if (!qrToken) {
+        setOutcome({ state: "scan_required", gymName });
         return;
       }
       await fireScan(gymName, storeListingId);
     };
 
     const fireScan = async (gymName: string, storeListingId: string | null) => {
-      const res = await checkinsService.scan({ gym_id: gymId });
+      const res = await checkinsService.scan({
+        gym_id: gymId,
+        token: qrToken ?? undefined,
+      });
       if (res.success) {
         // Streak is a nice-to-have — never block the success screen on it.
         let streak: number | null = null;
@@ -90,6 +89,10 @@ function CheckInScanContent() {
       const msg = (res.message || "").toLowerCase();
       if (msg.includes("already checked in")) {
         setOutcome({ state: "already", gymName });
+      } else if (msg.includes("expired")) {
+        // Token went stale between scan and check-in (e.g. a slow
+        // first-time login) — same recovery as no token: scan again.
+        setOutcome({ state: "scan_required", gymName });
       } else if (msg.includes("no active subscription")) {
         setOutcome({ state: "no_subscription", gymName, listingId: storeListingId });
       } else {
@@ -100,22 +103,9 @@ function CheckInScanContent() {
       }
     };
 
-    confirmRef.current = async () => {
-      // A fast double-tap must not fire two concurrent scans — the
-      // backend duplicate check is find-then-create, not atomic.
-      if (scanBusyRef.current) return;
-      scanBusyRef.current = true;
-      setOutcome({ state: "working" });
-      const infoRes = await checkinsService.getGymInfo(gymId);
-      const gymName = (infoRes.success && infoRes.data?.name) || "this gym";
-      const storeListingId =
-        (infoRes.success && infoRes.data?.listing_id) || null;
-      await fireScan(gymName, storeListingId);
-    };
-
     void run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gymId, fromQr]);
+  }, [gymId, qrToken]);
 
   return (
     <div
@@ -136,25 +126,22 @@ function CheckInScanContent() {
           </>
         )}
 
-        {outcome.state === "confirm" && (
+        {outcome.state === "scan_required" && (
           <>
             <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
-              Check in at {outcome.gymName}?
+              Scan the QR to check in.
             </h1>
             <p className="mt-2 text-[15px]" style={{ color: "var(--fg-2)" }}>
-              This logs a visit for today and counts toward your streak. At
-              the gym, you can also just scan the QR at the front desk.
+              This link can&rsquo;t check you in at{" "}
+              <strong>{outcome.gymName}</strong> — check-ins need a live scan
+              of the QR at the front desk, which refreshes every minute.
             </p>
             <div className="mt-8 flex flex-col gap-2">
-              <button
-                type="button"
-                className="btn-primary-v2"
-                onClick={() => void confirmRef.current()}
-              >
-                Yes, check me in
-              </button>
+              <Link href="/check-in" className="btn-primary-v2" style={{ textDecoration: "none" }}>
+                Open the scanner
+              </Link>
               <Link href="/dashboard/member" className="btn-ghost-v2" style={{ textDecoration: "none" }}>
-                Cancel
+                Back to my dashboard
               </Link>
             </div>
           </>

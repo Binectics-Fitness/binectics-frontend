@@ -289,12 +289,11 @@ export default function MemberHomePage() {
                         className="text-[12.5px] mt-0.5"
                         style={{ color: "var(--fg-3)" }}
                       >
-                        Active membership · scan the gym QR or check in from
-                        here
+                        Active membership · scan the front-desk QR to check in
                       </div>
                     </div>
                     <Link
-                      href={`/check-in/${gym.orgId}`}
+                      href="/check-in"
                       className="btn-primary-v2 sm"
                       style={{ whiteSpace: "nowrap" }}
                     >

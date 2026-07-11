@@ -123,7 +123,10 @@ export function middleware(request: NextRequest) {
   // Redirect to login if accessing protected route without token
   if (isProtectedRoute && !token && !isPrefetch) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
+    // Keep the query string: a scanned check-in URL carries its rotating
+    // presence token in ?t= — dropping it here forced a second scan after
+    // every first-time login.
+    loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);
     return withRegion(NextResponse.redirect(loginUrl));
   }
 

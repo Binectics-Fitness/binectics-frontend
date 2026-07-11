@@ -39,15 +39,15 @@ const STEPS = [
 const FAQS = [
   {
     q: "What if the QR code won't scan?",
-    a: "Make sure your camera lens is clean and you have adequate lighting. If the printed QR code is damaged, ask the front desk for a fresh one. You can also type in the gym's 6-digit check-in code manually from the Check-in screen.",
+    a: "Make sure your camera lens is clean and you have adequate lighting, and hold the phone steady about 20cm from the screen. If it still won't scan, ask the front desk — they can refresh the kiosk display.",
   },
   {
-    q: "Can I check in without the app?",
-    a: "Yes. Every gym has a 6-digit check-in code posted next to the QR poster. You can enter it at binectics.com/check-in from any browser. You'll need to be signed in.",
+    q: "Can I check in from home, or from a photo of the QR?",
+    a: "No — and that's deliberate. The QR refreshes every minute, so photos, screenshots, bookmarked links and shared codes stop working within minutes. Only a live scan at the gym counts, which keeps streaks and attendance honest.",
   },
   {
-    q: "Does check-in work offline?",
-    a: "The QR scanner works offline and queues your check-in locally. It will sync as soon as your phone reconnects to the internet — usually within seconds.",
+    q: "Do I need the app open to scan?",
+    a: "No. Your phone's regular camera app works — scanning the QR opens the check-in page in your browser. You'll need to be signed in to your Binectics account.",
   },
 ];
 
