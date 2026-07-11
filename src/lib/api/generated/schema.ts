@@ -3383,6 +3383,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/progress/my-received-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List pending trainer/dietitian invitations addressed to me, resolved by my verified email (as fitness member) */
+        get: operations["ProgressController_getMyReceivedInvitations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/progress/my-recommendations": {
         parameters: {
             query?: never;
@@ -5777,10 +5794,13 @@ export interface components {
             revenue_minor: number;
         };
         ScanCheckInDto: {
-            /** @description Gym identifier from the scanned QR — an organization id (current QRs) or a marketplace listing id (older printed QRs) */
+            /**
+             * @description Human-typable check-in code from the gym poster (manual entry). Provide this or `gym_id` — not both.
+             * @example K7P2QM
+             */
+            code?: string;
+            /** @description Organization id from the scanned QR. Provide this or `code` — not both. */
             gym_id?: string;
-            /** @description Legacy alias for gym_id (listing-based QRs) */
-            listing_id?: string;
             /** @description Optional note for the check-in */
             note?: string;
         };
@@ -11915,6 +11935,23 @@ export interface operations {
         };
     };
     ProgressController_getMyOwnProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgressController_getMyReceivedInvitations: {
         parameters: {
             query?: never;
             header?: never;

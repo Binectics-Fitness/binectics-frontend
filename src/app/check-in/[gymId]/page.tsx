@@ -48,6 +48,7 @@ function CheckInScanContent() {
   const fromQr = searchParams.get("src") === "qr";
   const [outcome, setOutcome] = useState<Outcome>({ state: "working" });
   const firedRef = useRef(false);
+  const scanBusyRef = useRef(false);
   const confirmRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
@@ -100,6 +101,10 @@ function CheckInScanContent() {
     };
 
     confirmRef.current = async () => {
+      // A fast double-tap must not fire two concurrent scans — the
+      // backend duplicate check is find-then-create, not atomic.
+      if (scanBusyRef.current) return;
+      scanBusyRef.current = true;
       setOutcome({ state: "working" });
       const infoRes = await checkinsService.getGymInfo(gymId);
       const gymName = (infoRes.success && infoRes.data?.name) || "this gym";
