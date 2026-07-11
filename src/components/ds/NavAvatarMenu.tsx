@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/lib/types";
 import { getDashboardRoute } from "@/lib/constants/routes";
 import {
   LayoutDashboard,
@@ -48,6 +49,11 @@ export function NavAvatarMenu() {
 
   const menuItems = [
     { href: dashboardHref, label: "Dashboard", icon: LayoutDashboard },
+    // Platform admins (is_admin flag — orthogonal to role) get a way into
+    // the admin panel without giving up their own role's dashboard.
+    ...(user?.is_admin && user.role !== UserRole.ADMIN
+      ? [{ href: "/admin/dashboard", label: "Admin panel", icon: LayoutDashboard }]
+      : []),
     // The account-level settings hub is role-generic and real for every
     // role; `${dashboardHref}/profile|settings` 404'd for USER, GYM_OWNER,
     // and ADMIN (those role shells have no such child routes).

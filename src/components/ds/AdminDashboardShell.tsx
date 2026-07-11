@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { useAdminGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
 import { ROLE_LABEL, personInitials, shortName } from "@/lib/identity";
 
@@ -215,7 +215,7 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
 /* ═══ Shell ═══ */
 
 export function AdminDashboardShell({ activeItem, crumb, actions, children }: AdminDashboardShellProps) {
-  const { isAuthorized, isLoading } = useRoleGuard(UserRole.ADMIN);
+  const { isAuthorized, isLoading } = useAdminGuard();
   if (!isLoading && !isAuthorized) return null;
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>

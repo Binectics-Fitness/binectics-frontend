@@ -66,6 +66,33 @@ export function useRequireRole(
  * }
  * ```
  */
+/**
+ * Admin surfaces gate on the is_admin FLAG, not the role — being a
+ * platform admin is orthogonal to running a gym (the same login can be
+ * both). Role ADMIN still passes for dedicated admin accounts.
+ */
+export function useAdminGuard() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const isAuthorized =
+    !isLoading &&
+    user !== null &&
+    (user.role === UserRole.ADMIN || user.is_admin === true);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!(user.role === UserRole.ADMIN || user.is_admin === true)) {
+      router.replace(getDashboardRoute(user.role));
+    }
+  }, [isLoading, user, router]);
+
+  return { user, isLoading, isAuthorized };
+}
+
 export function useRoleGuard(requiredRole: UserRole) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
