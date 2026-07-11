@@ -38,6 +38,8 @@ export interface User {
   updated_at: Date | string;
   country_code?: string;
   is_suspended?: boolean;
+  /** Platform admin flag — orthogonal to role, so a gym owner can also be an admin. */
+  is_admin?: boolean;
   company_name?: string;
   company_logo?: string;
   is_company?: boolean;
