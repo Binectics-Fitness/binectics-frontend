@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner } from "@/components/ds";
 import { toast } from "@/components/Toast";
-import { adminService, type AdminPlan, type UpdateAdminPlan } from "@/lib/api/admin";
+import { adminService, type AdminPlan, type CreateAdminPlan, type UpdateAdminPlan } from "@/lib/api/admin";
 
 type QuotaKey =
   | "max_active_members"
@@ -47,6 +47,31 @@ const EDITABLE_KEYS: (keyof UpdateAdminPlan)[] = [
 
 const labelClass = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
+// The backend's tier enum — plan codes are NOT free-form (the tier threads
+// through checkout, billing status and quota enforcement), so creation is
+// limited to canonical tiers missing from the catalog.
+const CANONICAL_TIERS = ["free", "pro", "enterprise"] as const;
+
+function emptyPlan(code: string, sortOrder: number): CreateAdminPlan {
+  return {
+    code,
+    name: code.charAt(0).toUpperCase() + code.slice(1),
+    is_active: true,
+    sort_order: sortOrder,
+    max_active_members: null,
+    max_membership_plans: null,
+    max_staff_members: null,
+    max_listings: null,
+    analytics_enabled: false,
+    consultations_enabled: false,
+    journals_enabled: false,
+    qr_checkin_enabled: false,
+    white_label_enabled: false,
+    custom_domain_enabled: false,
+    branded_email_enabled: false,
+  };
+}
+
 function isDirty(draft: AdminPlan, original: AdminPlan): boolean {
   return EDITABLE_KEYS.some((k) => draft[k as keyof AdminPlan] !== original[k as keyof AdminPlan]);
 }
@@ -66,6 +91,35 @@ export default function AdminPlansPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState<CreateAdminPlan | null>(null);
+  const [createBusy, setCreateBusy] = useState(false);
+
+  const missingTiers = CANONICAL_TIERS.filter(
+    (t) => !plans.some((p) => p.code === t),
+  );
+
+  async function submitCreate() {
+    if (!creating || createBusy) return;
+    setCreateBusy(true);
+    try {
+      const res = await adminService.createPlan(creating);
+      if (res.success && res.data) {
+        const created = res.data;
+        setPlans((prev) =>
+          [...prev, created].sort((a, b) => a.sort_order - b.sort_order),
+        );
+        setDrafts((prev) => ({ ...prev, [created._id]: { ...created } }));
+        setCreating(null);
+        toast.success(`${created.name} plan created.`);
+      } else {
+        toast.error(res.message || "Couldn't create the plan.");
+      }
+    } catch {
+      toast.error("Couldn't create the plan.");
+    } finally {
+      setCreateBusy(false);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -140,10 +194,6 @@ export default function AdminPlansPage() {
 
       {loading ? (
         <AsyncSpinner size="page" label="Loading plans" />
-      ) : plans.length === 0 && !error ? (
-        <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <EmptySlate message="No plans configured." mt="mt-0" />
-        </div>
       ) : (
         <div className="flex flex-col gap-4">
           {plans.map((plan) => {
@@ -253,6 +303,117 @@ export default function AdminPlansPage() {
               </section>
             );
           })}
+
+          {missingTiers.length > 0 && !creating && (
+            <section
+              className="rounded-(--r-3) p-5 flex flex-wrap items-center justify-between gap-3"
+              style={{ background: "var(--bg)", border: "1px dashed var(--border-2)" }}
+            >
+              <div>
+                <div className="text-[14.5px] font-medium" style={{ color: "var(--ink)" }}>
+                  Missing tier{missingTiers.length === 1 ? "" : "s"}: {missingTiers.join(", ")}
+                </div>
+                <p className="text-[12.5px] mt-1 max-w-[52ch]" style={{ color: "var(--fg-3)" }}>
+                  Plan codes are fixed to the canonical tiers — the tier flows
+                  through checkout and quota enforcement — but a tier missing
+                  from this environment can be created here.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {missingTiers.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className="btn-ghost-v2 sm"
+                    onClick={() => setCreating(emptyPlan(t, plans.length))}
+                  >
+                    Create {t}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {creating && (
+            <section
+              className="rounded-(--r-3) p-5"
+              style={{ background: "var(--bg)", border: "1px solid var(--border-2)" }}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <input
+                    value={creating.name}
+                    aria-label="New plan name"
+                    onChange={(e) => setCreating({ ...creating, name: e.target.value })}
+                    className="text-[18px] font-medium rounded-(--r-2) px-2 py-1"
+                    style={{ color: "var(--ink)", background: "var(--bg)", border: "1px solid var(--border-2)" }}
+                  />
+                  <span className="font-mono text-[10px] uppercase tracking-wider rounded-(--r-1) px-1.5 py-0.5" style={{ background: "var(--bg-2)", color: "var(--fg-3)", border: "1px solid var(--border)" }}>
+                    {creating.code}
+                  </span>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer text-[13px]" style={{ color: "var(--fg-2)" }}>
+                  <input
+                    type="checkbox"
+                    checked={creating.is_active}
+                    onChange={(e) => setCreating({ ...creating, is_active: e.target.checked })}
+                  />
+                  Active (selectable by providers)
+                </label>
+              </div>
+
+              <div className={`${labelClass} mt-5 mb-2`} style={{ color: "var(--fg-3)" }}>Quotas</div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {QUOTAS.map((q) => (
+                  <div key={q.key}>
+                    <div className="text-[12.5px] mb-1" style={{ color: "var(--fg-2)" }}>{q.label}</div>
+                    <input
+                      type="number"
+                      min={0}
+                      value={creating[q.key] ?? ""}
+                      placeholder="Unlimited"
+                      onChange={(e) =>
+                        setCreating({
+                          ...creating,
+                          [q.key]: e.target.value === "" ? null : Number(e.target.value),
+                        })
+                      }
+                      className="h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="text-[11.5px] mt-1.5" style={{ color: "var(--fg-4)" }}>Blank = unlimited.</div>
+
+              <div className={`${labelClass} mt-5 mb-2`} style={{ color: "var(--fg-3)" }}>Features</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {FEATURES.map((f) => (
+                  <label key={f.key} className="flex items-center gap-2 cursor-pointer text-[13.5px]" style={{ color: "var(--fg-2)" }}>
+                    <input
+                      type="checkbox"
+                      checked={creating[f.key]}
+                      onChange={(e) => setCreating({ ...creating, [f.key]: e.target.checked })}
+                    />
+                    {f.label}
+                  </label>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-5">
+                <button type="button" onClick={() => setCreating(null)} className="btn-ghost-v2 sm">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void submitCreate()}
+                  disabled={createBusy || !creating.name.trim()}
+                  className="btn-primary-v2 sm disabled:opacity-40"
+                >
+                  {createBusy ? "Creating…" : `Create ${creating.code} plan`}
+                </button>
+              </div>
+            </section>
+          )}
         </div>
       )}
     </AdminDashboardShell>

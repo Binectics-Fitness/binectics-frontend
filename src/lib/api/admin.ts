@@ -88,6 +88,13 @@ export interface AdminPlan {
 /** Fields the PATCH endpoint accepts (everything except the immutable code). */
 export type UpdateAdminPlan = Partial<Omit<AdminPlan, "_id" | "code">>;
 
+/**
+ * Creation payload. `code` must be one of the canonical tiers — the tier
+ * enum threads through checkout, org billing status and quota
+ * enforcement, so arbitrary new tiers are a backend change, not a form.
+ */
+export type CreateAdminPlan = Omit<AdminPlan, "_id">;
+
 /** One row of the platform-wide money ledger (GET /admin/transactions). */
 export interface AdminTransaction {
   _id: string;
@@ -209,6 +216,10 @@ class AdminService {
       `/admin/provider-billing/plans/${planId}`,
       patch,
     );
+  }
+
+  async createPlan(plan: CreateAdminPlan): Promise<ApiResponse<AdminPlan>> {
+    return apiClient.post<AdminPlan>("/admin/provider-billing/plans", plan);
   }
 
   // ─── Platform ledger & audit log ─────────────────────────────────────────
