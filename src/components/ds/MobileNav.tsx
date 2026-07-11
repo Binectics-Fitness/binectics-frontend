@@ -92,7 +92,7 @@ export function MarketingMobileNav({ links }: MarketingMobileNavProps) {
 
             {/* Bottom actions */}
             <div className="mt-auto px-5 pb-8 flex flex-col gap-3">
-              <Link href="/login" onClick={() => setOpen(false)} className="btn-ghost-v2 lg w-full justify-center">Log in</Link>
+              <Link href="/login" prefetch={false} onClick={() => setOpen(false)} className="btn-ghost-v2 lg w-full justify-center">Log in</Link>
               <Link href="/login?mode=signup" onClick={() => setOpen(false)} className="btn-primary-v2 lg w-full justify-center">Sign up</Link>
             </div>
           </div>

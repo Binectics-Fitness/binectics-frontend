@@ -129,7 +129,7 @@ function VerificationForm() {
                 <div>
                   <p className="text-[13px]" style={{ color: "var(--signal-ink)" }}>{success}</p>
                   <Link
-                    href="/login"
+                    href="/login" prefetch={false}
                     className="text-[12px] font-medium underline mt-1 inline-block"
                     style={{ color: "var(--signal-ink)" }}
                   >

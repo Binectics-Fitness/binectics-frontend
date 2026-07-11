@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { authService } from "@/lib/api/auth";
+import { getDashboardRoute } from "@/lib/constants/routes";
 import { loginSchema, registerSchema, type LoginFormData, type RegisterFormData } from "@/lib/schemas/auth";
 
 /**
@@ -28,7 +29,7 @@ export default function AuthPage() {
 
 function AuthContent() {
   const searchParams = useSearchParams();
-  const { login, register: authRegister, isLoading: authLoading } = useAuth();
+  const { user, login, logout, register: authRegister, isLoading: authLoading } = useAuth();
   const initialMode = searchParams.get("mode");
   const [panel, setPanel] = useState<Panel>(initialMode === "signup" ? "signup" : "login");
   const [isLoading, setIsLoading] = useState(false);
@@ -138,8 +139,34 @@ function AuthContent() {
         <div className="flex-1 flex items-center justify-center py-12">
           <div className="max-w-[380px] w-full">
 
+            {/* ── ALREADY SIGNED IN ── */}
+            {/* A session can already exist here (e.g. logged in from another
+                tab, or a prefetch-cached /login skipped the middleware
+                redirect). Offer the dashboard instead of a dead login form. */}
+            {panel === "login" && user && !isLoading && !authLoading && (
+              <>
+                <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Signed in</div>
+                <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+                  You&apos;re already signed in{user.first_name ? (
+                    <> as <em className="font-serif font-normal italic">{user.first_name}</em></>
+                  ) : null}.
+                </h1>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                  Pick up where you left off, or sign out first to use a different account.
+                </p>
+                <div className="flex flex-col gap-3 mt-8">
+                  <Link href={getDashboardRoute(user.role)} className="btn-primary-v2 w-full justify-center">
+                    Continue to your dashboard
+                  </Link>
+                  <button type="button" onClick={() => void logout()} className="btn-ghost-v2 w-full justify-center">
+                    Sign out
+                  </button>
+                </div>
+              </>
+            )}
+
             {/* ── LOGIN ── */}
-            {panel === "login" && (
+            {panel === "login" && !(user && !isLoading && !authLoading) && (
               <>
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Sign in</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>

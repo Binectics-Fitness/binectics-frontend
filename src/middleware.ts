@@ -129,8 +129,18 @@ export function middleware(request: NextRequest) {
     );
   }
 
+  // Never redirect PREFETCH requests away from auth routes. Mobile
+  // browsers prefetch visible "Log in" links; with a session cookie
+  // present the 307 got cached by the client router, and tapping the
+  // link then rendered a blank page instead of the dashboard. Real
+  // navigations (no prefetch header) still redirect below.
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") !== null ||
+    request.headers.get("purpose") === "prefetch" ||
+    (request.headers.get("sec-purpose") ?? "").includes("prefetch");
+
   // Redirect to dashboard if accessing auth routes with valid token
-  if (isAuthRoute && token) {
+  if (isAuthRoute && token && !isPrefetch) {
     if (mustChangePassword) {
       return withRegion(
         NextResponse.redirect(new URL("/admin/change-password", request.url)),

@@ -95,7 +95,7 @@ export default function MarketplaceComparePage() {
           <Link href="/"><BinecticsLockup /></Link>
           <nav className="flex items-center gap-4 text-[13.5px]">
             <Link href="/marketplace" style={{ color: "var(--fg-2)", textDecoration: "none" }}>Marketplace</Link>
-            <Link href="/login" className="btn-primary-v2 sm">Sign in</Link>
+            <Link href="/login" prefetch={false} className="btn-primary-v2 sm">Sign in</Link>
           </nav>
         </div>
       </header>

@@ -185,7 +185,7 @@ export default function AdminLoginPage() {
               This login is for administrators only. For regular user access,
               please use the{" "}
               <Link
-                href="/login"
+                href="/login" prefetch={false}
                 className="text-signal hover:text-signal/80 font-semibold"
               >
                 user login page

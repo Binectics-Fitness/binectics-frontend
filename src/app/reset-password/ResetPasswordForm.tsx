@@ -208,7 +208,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                 </button>
 
                 <Link
-                  href="/login"
+                  href="/login" prefetch={false}
                   className="flex items-center justify-center gap-2 text-[13px] font-medium mt-1"
                   style={{ color: "var(--fg-2)" }}
                 >
@@ -231,7 +231,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                   : "Your password has been successfully reset. You can now sign in with your new password."}
               </p>
               <Link
-                href="/login"
+                href="/login" prefetch={false}
                 className="btn-signal-v2 inline-flex items-center justify-center mt-8"
                 style={{ height: "38px", padding: "0 24px" }}
               >

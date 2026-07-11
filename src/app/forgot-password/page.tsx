@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
                 </button>
 
                 <Link
-                  href="/login"
+                  href="/login" prefetch={false}
                   className="flex items-center justify-center gap-2 text-[13px] font-medium mt-1"
                   style={{ color: "var(--fg-2)" }}
                 >
@@ -133,7 +133,7 @@ export default function ForgotPasswordPage() {
                 </button>
               </p>
               <Link
-                href="/login"
+                href="/login" prefetch={false}
                 className="inline-flex items-center gap-2 text-[13px] font-medium mt-6"
                 style={{ color: "var(--fg-2)" }}
               >

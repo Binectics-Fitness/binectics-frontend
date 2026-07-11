@@ -73,7 +73,7 @@ export default function TwoFactorRecoveryPage() {
               Use recovery code
             </button>
 
-            <Link href="/login" className="btn-ghost-v2 w-full justify-center">
+            <Link href="/login" prefetch={false} className="btn-ghost-v2 w-full justify-center">
               Back to sign in
             </Link>
           </form>

@@ -138,7 +138,7 @@ export default function InviteContent() {
               Create account
             </Link>
             <Link
-              href="/login"
+              href="/login" prefetch={false}
               className="btn-ghost-v2 w-full inline-flex items-center justify-center"
               style={{ height: "38px" }}
             >

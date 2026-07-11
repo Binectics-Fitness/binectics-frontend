@@ -131,7 +131,7 @@ export default function MagicLinkPage() {
           style={{ fontSize: 13, color: "var(--fg-3)" }}
         >
           <Link
-            href="/login"
+            href="/login" prefetch={false}
             style={{
               color: "var(--ink)",
               textDecoration: "underline",
