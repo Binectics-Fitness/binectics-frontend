@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { localeForDateFormat } from "@/lib/format/orgFormat";
 
 interface DateRange {
   start: Date | null;
@@ -40,9 +41,9 @@ function startOfYear(): Date {
   return new Date(new Date().getFullYear(), 0, 1);
 }
 
-function formatShort(d: Date | null): string {
+function formatShort(d: Date | null, locale: string): string {
   if (!d) return "—";
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 function getDaysInMonth(year: number, month: number): number {
@@ -65,7 +66,8 @@ export function DateRangePicker({
   presets = DEFAULT_PRESETS,
   weekStartsOn,
 }: DateRangePickerProps) {
-  const { weekStartsOn: orgWeekStart } = useOrgFormat();
+  const { weekStartsOn: orgWeekStart, prefs } = useOrgFormat();
+  const dateLocale = localeForDateFormat(prefs);
   const weekStart = weekStartsOn ?? orgWeekStart;
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => {
@@ -131,7 +133,7 @@ export function DateRangePicker({
     ...WEEKDAY_LABELS.slice(weekStart),
     ...WEEKDAY_LABELS.slice(0, weekStart),
   ];
-  const monthLabel = new Date(viewMonth.year, viewMonth.month).toLocaleDateString("en-US", {
+  const monthLabel = new Date(viewMonth.year, viewMonth.month).toLocaleDateString(dateLocale, {
     month: "long",
     year: "numeric",
   });
@@ -149,7 +151,7 @@ export function DateRangePicker({
           <path d="M16 2v4M8 2v4M3 10h18" />
         </svg>
         <span style={{ fontVariantNumeric: "tabular-nums" }}>
-          {formatShort(value.start)} – {formatShort(value.end)}
+          {formatShort(value.start, dateLocale)} – {formatShort(value.end, dateLocale)}
         </span>
       </button>
       {open && (
