@@ -41,6 +41,8 @@ export function PushRegistrar() {
         setShowBanner(false);
         return;
       }
+      // Older WebViews / iOS Safari outside a PWA have no Notification API.
+      if (typeof Notification === "undefined") return;
       if (Notification.permission === "granted") {
         void enablePush(onForeground);
         setShowBanner(false);
@@ -76,7 +78,14 @@ export function PushRegistrar() {
           onClick={() => {
             setShowBanner(false);
             void enablePush(onForeground).then((ok) => {
-              if (ok) toast.success("Notifications on.");
+              if (ok) {
+                toast.success("Notifications on.");
+              } else {
+                // The user dismissed the native prompt (or it failed).
+                // Without a snooze the banner came back on EVERY page
+                // load — treat an unconverted Enable tap as "not now".
+                localStorage.setItem(DISMISS_KEY, String(Date.now()));
+              }
             });
           }}
         >
