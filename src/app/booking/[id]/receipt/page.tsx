@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import type { Metadata } from "next";
+import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 
 export const metadata: Metadata = {
   title: "Booking Receipt",
@@ -45,7 +46,7 @@ export default async function BookingReceiptPage({
           <Link href="/"><BinecticsLockup /></Link>
           <nav className="flex items-center gap-4 text-[13.5px]">
             <Link href="/marketplace" style={{ color: "var(--fg-2)", textDecoration: "none" }}>Marketplace</Link>
-            <Link href="/login" prefetch={false} className="btn-primary-v2 sm">Sign in</Link>
+            <MarketplaceAuthCluster compact />
           </nav>
         </div>
       </header>

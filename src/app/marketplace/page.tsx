@@ -8,6 +8,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatCurrency } from "@/utils/format";
+import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 
 /* ─── Types (from API response) ──────────────────────────── */
 
@@ -220,8 +221,7 @@ export default function MarketplacePage() {
           </div>
           <div className="flex items-center gap-2">
             <button className="lg:hidden w-10 h-10 sm:w-8 sm:h-8 rounded-(--r-2) flex items-center justify-center" style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}><Search /></button>
-            <Link href="/login" prefetch={false} className="btn-ghost-v2 sm hidden sm:inline-flex">Log in</Link>
-            <Link href="/login?mode=signup&role=member" className="btn-primary-v2 sm">Sign up</Link>
+            <MarketplaceAuthCluster signupHref="/login?mode=signup&role=member" />
           </div>
         </div>
       </header>
