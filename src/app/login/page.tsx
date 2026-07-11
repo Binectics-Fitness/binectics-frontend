@@ -143,7 +143,7 @@ function AuthContent() {
             {/* A session can already exist here (e.g. logged in from another
                 tab, or a prefetch-cached /login skipped the middleware
                 redirect). Offer the dashboard instead of a dead login form. */}
-            {panel === "login" && user && !isLoading && !authLoading && (
+            {(panel === "login" || panel === "signup") && user && !isLoading && !authLoading && (
               <>
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Signed in</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
@@ -278,7 +278,7 @@ function AuthContent() {
             )}
 
             {/* ── SIGNUP ── */}
-            {panel === "signup" && (
+            {panel === "signup" && !(user && !isLoading && !authLoading) && (
               <>
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Create an account</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
