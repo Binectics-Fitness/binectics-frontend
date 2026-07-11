@@ -21,6 +21,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted audit events (newest first) */
+        get: operations["AdminAuditController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/audit-log/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Distinct audit event names (filter options) */
+        get: operations["AdminAuditController_listEventNames"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/currencies": {
         parameters: {
             query?: never;
@@ -338,6 +372,23 @@ export interface paths {
         post?: never;
         /** Delete a market price */
         delete: operations["AdminProviderBillingController_deletePrice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List platform transactions (paginated, newest first) */
+        get: operations["AdminTransactionsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6336,6 +6387,50 @@ export interface operations {
             };
         };
     };
+    AdminAuditController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                /** @description Exact event name, e.g. LOGIN_FAILED */
+                event?: string;
+                level?: "log" | "warn" | "error";
+                /** @description ISO date lower bound */
+                from?: string;
+                /** @description ISO date upper bound */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminAuditController_listEventNames: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_getSupportedCurrencies: {
         parameters: {
             query?: never;
@@ -6798,6 +6893,35 @@ export interface operations {
             path: {
                 id: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminTransactionsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                status?: "pending" | "succeeded" | "failed" | "reversed";
+                type?: "subscription" | "consultation" | "marketplace_request" | "tip" | "adjustment" | "refund" | "payout" | "other";
+                direction?: "credit" | "debit";
+                /** @description Filter to one organization */
+                organization_id?: string;
+                /** @description ISO date lower bound on occurred_at */
+                from?: string;
+                /** @description ISO date upper bound on occurred_at */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
