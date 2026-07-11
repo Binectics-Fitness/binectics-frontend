@@ -8,18 +8,45 @@ import { useAuth } from "@/contexts/AuthContext";
 import { checkinsService } from "@/lib/api/checkins";
 import { consultationsService, ConsultationBookingStatus } from "@/lib/api/consultations";
 import { loyaltyService } from "@/lib/api/loyalty";
+import { marketplaceService } from "@/lib/api/marketplace";
 import { progressService } from "@/lib/api/progress";
 import type {
   ConsultationBooking,
 } from "@/lib/api/consultations";
 import type { WeightLog } from "@/lib/api/progress";
-import type { LoyaltyBalance, MyCheckInDashboardStats } from "@/lib/types";
+import type {
+  LoyaltyBalance,
+  MembershipSubscription,
+  MyCheckInDashboardStats,
+} from "@/lib/types";
+import { MembershipSubscriptionStatus } from "@/lib/types";
 
 interface MemberSnapshot {
   checkins: MyCheckInDashboardStats | null;
   nextBooking: ConsultationBooking | null;
   loyalty: LoyaltyBalance | null;
   latestWeight: WeightLog | null;
+  gyms: { orgId: string; name: string }[];
+}
+
+/**
+ * The gyms this member can check in at: one entry per ACTIVE, unexpired
+ * membership whose organization came back populated. Enrolled members have
+ * no listing on their subscription, so the org is the only gym identity.
+ */
+function activeGyms(subs: MembershipSubscription[]): { orgId: string; name: string }[] {
+  const seen = new Set<string>();
+  const gyms: { orgId: string; name: string }[] = [];
+  for (const sub of subs) {
+    if (sub.status !== MembershipSubscriptionStatus.ACTIVE) continue;
+    if (sub.end_date && new Date(sub.end_date).getTime() < Date.now()) continue;
+    const org = sub.organization_id;
+    if (!org || typeof org !== "object" || !org._id) continue;
+    if (seen.has(org._id)) continue;
+    seen.add(org._id);
+    gyms.push({ orgId: org._id, name: org.name || "My gym" });
+  }
+  return gyms;
 }
 
 function formatStartDate(iso: string) {
@@ -53,6 +80,7 @@ export default function MemberHomePage() {
     nextBooking: null,
     loyalty: null,
     latestWeight: null,
+    gyms: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,12 +90,14 @@ export default function MemberHomePage() {
     void (async () => {
       try {
         const profilesPromise = progressService.getMyOwnProfiles();
-        const [checkinsRes, bookingsRes, loyaltyRes, profilesRes] = await Promise.allSettled([
-          checkinsService.getMyDashboardStats(),
-          consultationsService.getMyBookings("upcoming"),
-          loyaltyService.getBalance(),
-          profilesPromise,
-        ]);
+        const [checkinsRes, bookingsRes, loyaltyRes, profilesRes, subsRes] =
+          await Promise.allSettled([
+            checkinsService.getMyDashboardStats(),
+            consultationsService.getMyBookings("upcoming"),
+            loyaltyService.getBalance(),
+            profilesPromise,
+            marketplaceService.getMyMembershipSubscriptions(),
+          ]);
 
         if (!isMounted) return;
 
@@ -77,6 +107,8 @@ export default function MemberHomePage() {
           bookingsRes.status === "fulfilled" ? (bookingsRes.value.data ?? []) : [];
         const loyalty =
           loyaltyRes.status === "fulfilled" ? (loyaltyRes.value.data ?? null) : null;
+        const gyms =
+          subsRes.status === "fulfilled" ? activeGyms(subsRes.value.data ?? []) : [];
 
         let latestWeight: WeightLog | null = null;
         if (profilesRes.status === "fulfilled") {
@@ -101,7 +133,8 @@ export default function MemberHomePage() {
             (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
           )[0] ?? null;
 
-        if (isMounted) setSnapshot({ checkins, nextBooking, loyalty, latestWeight });
+        if (isMounted)
+          setSnapshot({ checkins, nextBooking, loyalty, latestWeight, gyms });
       } catch (err) {
         if (!isMounted) return;
         setError(err instanceof Error ? err.message : "Failed to load dashboard");
@@ -223,6 +256,56 @@ export default function MemberHomePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3.5">
         <div>
+          {!loading && snapshot.gyms.length > 0 && (
+            <div style={{ ...cardStyle, marginBottom: 14 }}>
+              <h3
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  marginBottom: 14,
+                  color: "var(--ink)",
+                }}
+              >
+                {snapshot.gyms.length === 1 ? "My gym" : "My gyms"}
+              </h3>
+              <div className="flex flex-col gap-2">
+                {snapshot.gyms.map((gym) => (
+                  <div
+                    key={gym.orgId}
+                    className="flex items-center justify-between gap-3 p-4 rounded-(--r-2)"
+                    style={{ background: "var(--bg-2)" }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 15,
+                          fontWeight: 500,
+                          color: "var(--ink)",
+                        }}
+                      >
+                        {gym.name}
+                      </div>
+                      <div
+                        className="text-[12.5px] mt-0.5"
+                        style={{ color: "var(--fg-3)" }}
+                      >
+                        Active membership · scan the gym QR or check in from
+                        here
+                      </div>
+                    </div>
+                    <Link
+                      href={`/check-in/${gym.orgId}`}
+                      className="btn-primary-v2 sm"
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      Check in
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ ...cardStyle, marginBottom: 14 }}>
             <h3
               style={{

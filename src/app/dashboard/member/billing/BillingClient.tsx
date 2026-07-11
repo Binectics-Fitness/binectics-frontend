@@ -24,6 +24,14 @@ const planOf = (s: MembershipSubscription) =>
   typeof s.plan_id === "object" ? s.plan_id : null;
 const listingOf = (s: MembershipSubscription) =>
   typeof s.listing_id === "object" ? s.listing_id : null;
+// Enrolled memberships have no listing — the populated org is the gym.
+const gymNameOf = (s: MembershipSubscription) => {
+  const listing = listingOf(s);
+  if (listing?.headline) return listing.headline;
+  return typeof s.organization_id === "object"
+    ? (s.organization_id.name ?? "")
+    : "";
+};
 
 /**
  * Member billing: real membership subscriptions (plans, amounts, renewal
@@ -103,7 +111,7 @@ export function BillingClient() {
                   <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={meta.style}>{meta.label}</span>
                 </div>
                 <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>
-                  {listing?.headline ?? ""}
+                  {gymNameOf(s)}
                   {listing?.city ? ` · ${listing.city}` : ""}
                   {` · started ${formatDate(s.start_date)}`}
                   {s.end_date ? ` · ${s.status === MembershipSubscriptionStatus.ACTIVE ? "renews/ends" : "ended"} ${formatDate(s.end_date)}` : ""}
