@@ -1,16 +1,19 @@
+import { Suspense } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { MessagingCenter } from "@/components/messaging/MessagingCenter";
 import type { Metadata } from "next";
-import InboxActivityPanel from "@/components/dashboard/InboxActivityPanel";
 
 export const metadata: Metadata = {
   title: "Messages",
-  description: "Review your inbox activity and notifications.",
+  description: "Message your gym, trainer and dietitian.",
 };
 
 export default function MessagesPage() {
   return (
     <MemberDashboardShell activeLabel="Messages">
-      <InboxActivityPanel role="member" />
+      <Suspense fallback={null}>
+        <MessagingCenter />
+      </Suspense>
     </MemberDashboardShell>
   );
 }

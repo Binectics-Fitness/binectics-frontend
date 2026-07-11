@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService, type ClientProfileWithSummary } from "@/lib/api/progress";
@@ -93,6 +94,14 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
                 {client.is_active ? "Active client" : "Paused"} &middot; joined {fmtDate(client.created_at)}
               </p>
             </div>
+            {typeof client.client_id === "object" && client.client_id?._id && (
+              <StartConversationButton
+                recipientUserId={client.client_id._id}
+                messagesHref="/dashboard/dietitian/messages"
+                label="Message"
+                className="btn-primary-v2 sm"
+              />
+            )}
           </div>
 
           {/* KPIs */}

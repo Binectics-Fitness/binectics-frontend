@@ -2567,6 +2567,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/messaging/broadcast": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gym announcement to all active members */
+        post: operations["MessagingController_broadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My conversations (direct + gym announcements) */
+        get: operations["MessagingController_listThreads"];
+        put?: never;
+        /** Start or resume a direct conversation */
+        post: operations["MessagingController_startThread"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/threads/{threadId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Messages in a conversation (marks it read) */
+        get: operations["MessagingController_getMessages"];
+        put?: never;
+        /** Send a message */
+        post: operations["MessagingController_sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/threads/{threadId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a conversation read */
+        post: operations["MessagingController_markRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Total unread messages (for the nav badge) */
+        get: operations["MessagingController_unreadCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/metrics": {
         parameters: {
             query?: never;
@@ -4825,6 +4912,11 @@ export interface components {
             /** @description Optional list of user IDs to target. If omitted, broadcasts to ALL users. */
             userIds?: string[];
         };
+        BroadcastDto: {
+            body: string;
+            /** @description The organization broadcasting. */
+            organization_id: string;
+        };
         CancelBookingDto: {
             /** @example Unable to attend */
             reason?: string;
@@ -5822,6 +5914,9 @@ export interface components {
         };
         SeedTemplateDto: Record<string, never>;
         SendMailDto: Record<string, never>;
+        SendMessageDto: {
+            body: string;
+        };
         SetGymSuspensionDto: {
             reason?: string;
         };
@@ -5837,6 +5932,12 @@ export interface components {
         };
         SetUserSuspensionDto: {
             reason?: string;
+        };
+        StartThreadDto: {
+            /** @description The gym to message (member↔gym). */
+            organization_id?: string;
+            /** @description The other user (member↔provider). */
+            recipient_user_id?: string;
         };
         SubmitFeedbackDto: {
             comment?: string;
@@ -6953,7 +7054,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 status?: "pending" | "succeeded" | "failed" | "reversed";
-                type?: "subscription" | "consultation" | "marketplace_request" | "tip" | "adjustment" | "refund" | "payout" | "other";
+                type?: "subscription" | "platform_subscription" | "consultation" | "marketplace_request" | "tip" | "adjustment" | "refund" | "payout" | "other";
                 direction?: "credit" | "debit";
                 /** @description Filter to one organization */
                 organization_id?: string;
@@ -10654,6 +10755,146 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MessagingController_broadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BroadcastDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MessagingController_listThreads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MessagingController_startThread: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartThreadDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MessagingController_getMessages: {
+        parameters: {
+            query: {
+                limit: string;
+                before: string;
+            };
+            header?: never;
+            path: {
+                threadId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MessagingController_sendMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessageDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MessagingController_markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MessagingController_unreadCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

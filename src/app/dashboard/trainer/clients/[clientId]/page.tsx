@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { useParams } from "next/navigation";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { progressService } from "@/lib/api/progress";
@@ -148,7 +149,13 @@ export default function ClientDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button className="btn-ghost-v2 sm">Message</button>
+          {typeof profile.client_id === "object" && profile.client_id?._id && (
+            <StartConversationButton
+              recipientUserId={profile.client_id._id}
+              messagesHref="/dashboard/trainer/messages"
+              label="Message"
+            />
+          )}
           <button className="btn-ghost-v2 sm">Book session</button>
           <button className="btn-primary-v2 sm">+ Update program</button>
         </div>

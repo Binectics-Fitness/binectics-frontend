@@ -1,16 +1,19 @@
+import { Suspense } from "react";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import { MessagingCenter } from "@/components/messaging/MessagingCenter";
 import type { Metadata } from "next";
-import InboxActivityPanel from "@/components/dashboard/InboxActivityPanel";
 
 export const metadata: Metadata = {
   title: "Dietitian Messages",
-  description: "Review dietitian inbox activity and nutrition-related updates.",
+  description: "Message your clients.",
 };
 
 export default function DietitianMessagesPage() {
   return (
     <DietitianDashboardShell activeItem="Inbox" crumb="Messages">
-      <InboxActivityPanel role="dietitian" />
+      <Suspense fallback={null}>
+        <MessagingCenter />
+      </Suspense>
     </DietitianDashboardShell>
   );
 }
