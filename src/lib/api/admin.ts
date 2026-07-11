@@ -83,6 +83,10 @@ export interface AdminPlan {
   white_label_enabled: boolean;
   custom_domain_enabled: boolean;
   branded_email_enabled: boolean;
+  forms_enabled: boolean;
+  classes_enabled: boolean;
+  loyalty_enabled: boolean;
+  api_access_enabled: boolean;
 }
 
 /** Fields the PATCH endpoint accepts (everything except the immutable code). */

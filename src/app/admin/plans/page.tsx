@@ -13,6 +13,10 @@ type QuotaKey =
   | "max_listings";
 
 type FeatureKey =
+  | "forms_enabled"
+  | "classes_enabled"
+  | "loyalty_enabled"
+  | "api_access_enabled"
   | "analytics_enabled"
   | "consultations_enabled"
   | "journals_enabled"
@@ -29,6 +33,10 @@ const QUOTAS: { key: QuotaKey; label: string }[] = [
 ];
 
 const FEATURES: { key: FeatureKey; label: string }[] = [
+  { key: "forms_enabled", label: "Forms (PAR-Q, waivers)" },
+  { key: "classes_enabled", label: "Class schedule" },
+  { key: "loyalty_enabled", label: "Loyalty rewards" },
+  { key: "api_access_enabled", label: "API access" },
   { key: "analytics_enabled", label: "Analytics" },
   { key: "consultations_enabled", label: "Consultations" },
   { key: "journals_enabled", label: "Client journals" },
@@ -69,6 +77,10 @@ function emptyPlan(code: string, sortOrder: number): CreateAdminPlan {
     white_label_enabled: false,
     custom_domain_enabled: false,
     branded_email_enabled: false,
+    forms_enabled: true,
+    classes_enabled: false,
+    loyalty_enabled: false,
+    api_access_enabled: false,
   };
 }
 
