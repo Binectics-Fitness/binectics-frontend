@@ -524,7 +524,8 @@ export enum MembershipSubscriptionStatus {
 
 export interface MembershipSubscription {
   _id: string;
-  organization_id: string;
+  /** Populated ({_id, name}) by /marketplace/my-subscriptions — the member's gym. */
+  organization_id: string | { _id: string; name: string };
   plan_id:
     | string
     | {
