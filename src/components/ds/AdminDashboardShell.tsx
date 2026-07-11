@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminGuard } from "@/hooks/useRequireAuth";
+import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { UserRole } from "@/lib/types";
 import { ROLE_LABEL, personInitials, shortName } from "@/lib/identity";
 
@@ -127,18 +128,25 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
         </nav>
       ))}
 
-      {/* Admin user */}
-      <div className="mt-auto flex items-center gap-2.5 pt-3.5" style={{ borderTop: "1px solid oklch(0.30 0.008 80)" }}>
-        <span
-          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold"
-          style={{ background: "oklch(0.30 0.01 80)", color: "var(--bg)" }}
-        >
-          {initials}
-        </span>
-        <div className="flex-1">
-          <div className="text-[13px] font-medium" style={{ color: "var(--bg)" }}>{name}</div>
-          <div className="font-mono text-[11px]" style={{ color: "oklch(0.65 0.008 80)" }}>{roleLabel}</div>
-        </div>
+      {/* Admin user — opens the account menu (profile / settings / log out) */}
+      <div className="mt-auto pt-3.5" style={{ borderTop: "1px solid oklch(0.30 0.008 80)" }}>
+        <ShellAccountMenu
+          direction="up"
+          trigger={
+            <span className="flex items-center gap-2.5">
+              <span
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold"
+                style={{ background: "oklch(0.30 0.01 80)", color: "var(--bg)" }}
+              >
+                {initials}
+              </span>
+              <span className="flex-1">
+                <span className="block text-[13px] font-medium" style={{ color: "var(--bg)" }}>{name}</span>
+                <span className="block font-mono text-[11px]" style={{ color: "oklch(0.65 0.008 80)" }}>{roleLabel}</span>
+              </span>
+            </span>
+          }
+        />
       </div>
     </div>
   );

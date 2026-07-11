@@ -295,13 +295,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       await authService.logout();
-      setUser(null);
-      router.push(getLoginRoute(userRole));
     } catch {
-      // Still clear local state and redirect even if API call fails
-      setUser(null);
-      router.push(getLoginRoute(userRole));
+      // Best-effort server logout — fall through to the local teardown.
     }
+    setUser(null);
+    // HARD navigation: a client push raced the guards' redirects and could
+    // strand a blank dashboard; a full load lands on a clean login page
+    // (or, if the server logout failed and the cookie survived, reboots
+    // into a recovered session instead of a half-dead one).
+    window.location.assign(getLoginRoute(userRole));
   };
 
   const updateUser = (updatedUser: User) => {
