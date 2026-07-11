@@ -47,20 +47,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const router = useRouter();
 
-  // Load user from localStorage on mount
+  // Load user on mount. localStorage is a cache, not the source of truth
+  // — the httpOnly cookies are. Two failure modes used to strand users:
+  //  - GHOST: stored user whose token expired while the tab slept → the
+  //    app claimed "signed in" but every call 401'd.
+  //  - WIPED: valid cookies but empty storage (cross-tab refresh races
+  //    rotate the refresh token; the losing tab wiped shared storage, or
+  //    the browser evicted it) → middleware routed to a dashboard that
+  //    rendered BLANK because `user` stayed null forever.
+  // In both cases, ask the API. Being on a protected path at all is the
+  // evidence of a cookie session (middleware gates those), so anonymous
+  // marketing visits never fire a wasted request.
   useEffect(() => {
-    const loadUser = () => {
+    let active = true;
+    const loadUser = async () => {
       try {
-        const currentUser = authService.getCurrentUser();
-        setUser(currentUser);
+        const stored = authService.getCurrentUser();
+        const expiry = tokenStorage.getExpiry();
+        const expired = !!expiry && expiry <= Date.now();
+        if (stored && !expired) {
+          setUser(stored);
+          return;
+        }
+
+        const onProtectedPath =
+          typeof window !== "undefined" &&
+          ["/dashboard", "/admin", "/onboarding", "/check-in"].some((p) =>
+            window.location.pathname.startsWith(p),
+          );
+        if (stored || onProtectedPath) {
+          // apiClient transparently refreshes on 401, so a live refresh
+          // cookie revives the session; a dead one clears the ghost.
+          const fresh = await authService.refreshUserFromApi();
+          if (active) setUser(fresh);
+          return;
+        }
+
+        if (active) setUser(null);
       } catch (error) {
         console.error("Error loading user:", error);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
 
-    loadUser();
+    // Deferred a tick — keeps setState out of the synchronous effect body
+    // (project lint rule) and lets storage reads happen post-hydration.
+    const kick = window.setTimeout(() => void loadUser(), 0);
+    return () => {
+      active = false;
+      window.clearTimeout(kick);
+    };
   }, []);
 
   // Session timeout monitoring
