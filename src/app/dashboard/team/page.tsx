@@ -334,6 +334,16 @@ export default function TeamWorkspacePage() {
                 style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}
               >
                 {globalMessage}
+                {/* Plan-cap messages shouldn't dead-end — link the fix. */}
+                {/upgrade/i.test(globalMessage) && (
+                  <Link
+                    href="/dashboard/billing"
+                    className="ml-2 font-medium underline underline-offset-2"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    Upgrade plan →
+                  </Link>
+                )}
               </div>
             )}
 

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { teamsService, type TeamRole } from "@/lib/api/teams";
+import { parseBillingError } from "@/lib/utils/billingErrors";
 
 interface AddStaffModalProps {
   open: boolean;
@@ -14,6 +16,7 @@ interface AddStaffModalProps {
 }
 
 export function AddStaffModal({ open, onClose, organizationId, onInvited }: AddStaffModalProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [roleId, setRoleId] = useState("");
   const [roles, setRoles] = useState<TeamRole[]>([]);
@@ -64,6 +67,12 @@ export function AddStaffModal({ open, onClose, organizationId, onInvited }: AddS
         toast.success(`Invitation sent to ${email.trim()}`);
         onInvited?.();
         handleClose();
+      } else if (parseBillingError(res)?.kind) {
+        // Plan cap — don't dead-end the owner: the fix is one click away.
+        toast.error(res.message || "Your plan doesn't include more staff members.", {
+          label: "Upgrade plan",
+          onClick: () => router.push("/dashboard/billing"),
+        });
       } else {
         toast.error(res.message || "Couldn't send the invitation");
       }
@@ -108,7 +117,21 @@ export function AddStaffModal({ open, onClose, organizationId, onInvited }: AddS
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {roles.map((r) => (
-                <button key={r._id} type="button" onClick={() => setRoleId(r._id)} className={`rounded-(--r-full) px-3 py-1.5 text-[12.5px] font-medium transition-colors ${roleId === r._id ? "bg-ink text-bg" : "bg-bg-2 text-fg-2 hover:bg-bg-3 hover:text-ink"}`} style={{ transitionDuration: "var(--motion-fast)" }}>
+                <button
+                  key={r._id}
+                  type="button"
+                  role="radio"
+                  aria-checked={roleId === r._id}
+                  onClick={() => setRoleId(r._id)}
+                  className={`rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors ${roleId === r._id ? "bg-ink text-bg" : "bg-bg text-fg-2 hover:text-ink"}`}
+                  style={{
+                    border:
+                      roleId === r._id
+                        ? "1px solid var(--ink)"
+                        : "1px solid var(--border-2)",
+                    transitionDuration: "var(--motion-fast)",
+                  }}
+                >
                   {r.name}
                 </button>
               ))}
