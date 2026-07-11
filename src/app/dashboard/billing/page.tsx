@@ -3,6 +3,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "@/components/Toast";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { AsyncSpinner } from "@/components/ds";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
@@ -68,6 +69,50 @@ export default function ProviderBillingPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "plans" | "invoices">("overview");
 
   const [interval, setInterval] = useState<"month" | "year">("month");
+  const [awaitingActivation, setAwaitingActivation] = useState(false);
+
+  // Returning from hosted checkout (?success=1): the tier flips when the
+  // gateway webhook lands, which can trail the redirect by seconds — poll
+  // the status briefly instead of showing a stale plan.
+  useEffect(() => {
+    if (!orgId) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") !== "1") return;
+    window.history.replaceState(null, "", window.location.pathname);
+    // Deferred a tick — keeps setState out of the synchronous effect body
+    // (project lint rule).
+    const kick = window.setTimeout(() => setAwaitingActivation(true), 0);
+
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      void providerBillingApi.getStatus(orgId).then((res) => {
+        const active =
+          res.success &&
+          res.data &&
+          res.data.plan_tier !== "free" &&
+          res.data.subscription_status === "active";
+        if (active || tries >= 15) {
+          window.clearInterval(timer);
+          setAwaitingActivation(false);
+          if (active && res.data) {
+            setBillingStatus(res.data);
+            toast.success(
+              `You're on ${res.data.plan_tier.toUpperCase()} — subscription active.`,
+            );
+          } else {
+            toast.info(
+              "Payment received — activation is taking a moment. Refresh shortly.",
+            );
+          }
+        }
+      });
+    }, 2000);
+    return () => {
+      window.clearTimeout(kick);
+      window.clearInterval(timer);
+    };
+  }, [orgId]);
 
   useEffect(() => {
     const load = async () => {
@@ -195,6 +240,11 @@ export default function ProviderBillingPage() {
                   </div>
                   <div className="text-[26px] font-medium mt-2" style={{ color: "var(--ink)" }}>
                     {TIER_LABELS[billingStatus.plan_tier]}
+                    {awaitingActivation && (
+                      <span className="ml-2 font-mono text-[10.5px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>
+                        activating…
+                      </span>
+                    )}
                   </div>
                   <div className="mt-1">
                     <span
