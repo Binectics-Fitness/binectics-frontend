@@ -48,6 +48,18 @@ export const checkinsService = {
     apiClient.get<GymCheckInInfo>(`/checkins/gym/${gymId}/info`, false),
 
   /**
+   * Fresh rotating QR token for the kiosk (staff only). The QR encodes
+   * /check-in/<orgId>?t=<token>; scans without a fresh token are refused
+   * — that's the presence guarantee.
+   */
+  getKioskToken: (
+    organizationId: string,
+  ): Promise<ApiResponse<{ token: string; expires_at: string }>> =>
+    apiClient.get<{ token: string; expires_at: string }>(
+      `/checkins/organizations/${organizationId}/kiosk-token`,
+    ),
+
+  /**
    * Get check-in history for an organisation (gym owner view).
    * @param organizationId  - Organisation / gym ID
    * @param date            - Optional ISO date string YYYY-MM-DD to filter by day

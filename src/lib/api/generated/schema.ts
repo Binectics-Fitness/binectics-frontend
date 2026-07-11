@@ -786,6 +786,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkins/organizations/{organizationId}/kiosk-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mint a fresh rotating check-in QR token for the kiosk (staff only) */
+        get: operations["CheckinsController_getKioskToken"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkins/organizations/{organizationId}/rejections": {
         parameters: {
             query?: never;
@@ -5794,15 +5811,14 @@ export interface components {
             revenue_minor: number;
         };
         ScanCheckInDto: {
-            /**
-             * @description Human-typable check-in code from the gym poster (manual entry). Provide this or `gym_id` — not both.
-             * @example K7P2QM
-             */
-            code?: string;
-            /** @description Organization id from the scanned QR. Provide this or `code` — not both. */
+            /** @description Gym identifier from the scanned QR — an organization id (current QRs) or a marketplace listing id (older printed QRs) */
             gym_id?: string;
+            /** @description Legacy alias for gym_id (listing-based QRs) */
+            listing_id?: string;
             /** @description Optional note for the check-in */
             note?: string;
+            /** @description Rotating kiosk token from the scanned QR (?t=). Required: proves the member scanned a live QR rather than reusing an old link. */
+            token?: string;
         };
         SeedTemplateDto: Record<string, never>;
         SendMailDto: Record<string, never>;
@@ -6358,9 +6374,15 @@ export interface components {
              * @default true
              */
             is_active: boolean;
-            /** @description The public (publishable) key for this gateway. */
+            /**
+             * @description The public (publishable) key for this gateway, e.g. pk_test_… / pk_live_….
+             * @example pk_test_abc123
+             */
             public_key: string;
-            /** @description The secret key for this gateway. Stored encrypted at rest. */
+            /**
+             * @description The secret key for this gateway (sk_test_… / sk_live_…). Stored encrypted at rest.
+             * @example sk_test_abc123
+             */
             secret_key: string;
         };
         UpsertProviderPlanDto: Record<string, never>;
@@ -7442,6 +7464,25 @@ export interface operations {
         };
     };
     CheckinsController_getOrgDashboardStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CheckinsController_getKioskToken: {
         parameters: {
             query?: never;
             header?: never;
