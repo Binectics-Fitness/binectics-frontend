@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { formatCurrency } from "@/utils/format";
+import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 
 /**
  * Marketplace Search Results — search results grid with search bar.
@@ -35,7 +36,7 @@ export default function MarketplaceSearchPage() {
           <Link href="/"><BinecticsLockup /></Link>
           <nav className="flex items-center gap-4 text-[13.5px]">
             <Link href="/marketplace" style={{ color: "var(--fg-2)", textDecoration: "none" }}>Marketplace</Link>
-            <Link href="/login" prefetch={false} className="btn-primary-v2 sm">Sign in</Link>
+            <MarketplaceAuthCluster compact />
           </nav>
         </div>
       </header>

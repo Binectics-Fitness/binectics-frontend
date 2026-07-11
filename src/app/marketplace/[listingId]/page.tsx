@@ -9,6 +9,7 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatCurrency } from "@/utils/format";
 import { ListingClassesSection } from "@/components/classes/ListingClassesSection";
+import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 
 /* ─── Icons ──────────────────────────────────────────────── */
 
@@ -185,8 +186,7 @@ export default function ProviderPage() {
             <Link href="/pricing" className="px-3 py-2 rounded-(--r-2) text-[13.5px] hover:bg-bg-2" style={{ color: "var(--fg-2)" }}>Pricing</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Link href="/login" prefetch={false} className="btn-ghost-v2 sm hidden sm:inline-flex">Log in</Link>
-            <Link href="/login?mode=signup&role=member" className="btn-primary-v2 sm">Sign up</Link>
+            <MarketplaceAuthCluster signupHref="/login?mode=signup&role=member" />
           </div>
         </div>
       </header>

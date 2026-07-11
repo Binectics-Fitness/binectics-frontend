@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, use } from "react";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 
 /**
  * Review Provider — post-session review form.
@@ -54,7 +55,7 @@ export default function ReviewProviderPage({
           <Link href="/"><BinecticsLockup /></Link>
           <nav className="flex items-center gap-4 text-[13.5px]">
             <Link href="/marketplace" style={{ color: "var(--fg-2)", textDecoration: "none" }}>Marketplace</Link>
-            <Link href="/login" prefetch={false} className="btn-primary-v2 sm">Sign in</Link>
+            <MarketplaceAuthCluster compact />
           </nav>
         </div>
       </header>
