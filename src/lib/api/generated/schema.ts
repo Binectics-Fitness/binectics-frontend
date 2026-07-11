@@ -5794,13 +5794,12 @@ export interface components {
             revenue_minor: number;
         };
         ScanCheckInDto: {
-            /**
-             * @description Human-typable check-in code from the gym poster (manual entry). Provide this or `gym_id` — not both.
-             * @example K7P2QM
-             */
+            /** @description The gym's typed check-in code (manual entry, e.g. off a poster) */
             code?: string;
-            /** @description Organization id from the scanned QR. Provide this or `code` — not both. */
+            /** @description Gym identifier from the scanned QR — an organization id (current QRs) or a marketplace listing id (older printed QRs) */
             gym_id?: string;
+            /** @description Legacy alias for gym_id (listing-based QRs) */
+            listing_id?: string;
             /** @description Optional note for the check-in */
             note?: string;
         };
@@ -6358,9 +6357,15 @@ export interface components {
              * @default true
              */
             is_active: boolean;
-            /** @description The public (publishable) key for this gateway. */
+            /**
+             * @description The public (publishable) key for this gateway, e.g. pk_test_… / pk_live_….
+             * @example pk_test_abc123
+             */
             public_key: string;
-            /** @description The secret key for this gateway. Stored encrypted at rest. */
+            /**
+             * @description The secret key for this gateway (sk_test_… / sk_live_…). Stored encrypted at rest.
+             * @example sk_test_abc123
+             */
             secret_key: string;
         };
         UpsertProviderPlanDto: Record<string, never>;

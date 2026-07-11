@@ -303,6 +303,17 @@ export default function MemberHomePage() {
                   </div>
                 ))}
               </div>
+              <div className="mt-3 text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                At the gym?{" "}
+                <Link
+                  href="/check-in"
+                  className="underline underline-offset-2"
+                  style={{ color: "var(--fg-2)" }}
+                >
+                  Enter the front-desk code
+                </Link>{" "}
+                or scan the QR.
+              </div>
             </div>
           )}
 

@@ -46,6 +46,10 @@ function CheckInScanContent() {
   // backend resolves either.
   const gymId = params.gymId;
   const fromQr = searchParams.get("src") === "qr";
+  // The path segment is an org/listing ObjectId (QR) or a typed check-in
+  // code from /check-in manual entry — the scan API takes them in
+  // different fields, but /gym/:id/info resolves either in the path.
+  const isObjectId = /^[a-f\d]{24}$/i.test(gymId ?? "");
   const [outcome, setOutcome] = useState<Outcome>({ state: "working" });
   const firedRef = useRef(false);
   const scanBusyRef = useRef(false);
@@ -71,7 +75,9 @@ function CheckInScanContent() {
     };
 
     const fireScan = async (gymName: string, storeListingId: string | null) => {
-      const res = await checkinsService.scan({ gym_id: gymId });
+      const res = await checkinsService.scan(
+        isObjectId ? { gym_id: gymId } : { code: gymId },
+      );
       if (res.success) {
         // Streak is a nice-to-have — never block the success screen on it.
         let streak: number | null = null;
