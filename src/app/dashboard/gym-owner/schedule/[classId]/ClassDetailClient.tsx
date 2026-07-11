@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { localeForDateFormat } from "@/lib/format/orgFormat";
 import {
   useGymClass,
   useUpdateGymClass,
@@ -26,6 +28,8 @@ function memberName(b: ClassBooking): string {
 
 /** Roster for one occurrence of the class (confirmed + waitlist). */
 function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classId: string; dayOfWeek: number }) {
+  const { prefs } = useOrgFormat();
+  const dateLocale = localeForDateFormat(prefs);
   const dates = nextOccurrences(dayOfWeek, 4);
   const [date, setDate] = useState(dates[0]);
   const { data: roster = [], isLoading } = useQuery<ClassBooking[]>({

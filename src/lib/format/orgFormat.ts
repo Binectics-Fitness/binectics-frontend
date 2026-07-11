@@ -91,6 +91,22 @@ export function localeForNumberFormat(numberFormat: NumberFormat): string {
   return NUMBER_LOCALES[numberFormat] ?? "en-US";
 }
 
+/**
+ * The Intl locale whose day/month ORDER matches the org's date_format —
+ * for compact labels (calendar chips, "Jan 5" ranges) that Intl builds
+ * from parts rather than a full pattern.
+ */
+export function localeForDateFormat(prefs: OrgFormatPrefs): string {
+  switch (prefs.dateFormat) {
+    case "MM/DD/YYYY":
+      return "en-US";
+    case "YYYY-MM-DD":
+      return "en-CA"; // ISO ordering
+    default:
+      return "en-GB"; // DD-first for 'DD MMM YYYY' and 'DD/MM/YYYY'
+  }
+}
+
 /** "18 May 2026" (per the org's date_format, in the org's time zone). */
 export function formatOrgDate(
   date: string | Date | null | undefined,

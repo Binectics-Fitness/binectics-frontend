@@ -5,17 +5,14 @@ import QRCode from "qrcode";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { checkinsService, type CheckInRejection } from "@/lib/api/checkins";
 import { CheckInHistoryPeriod, type CheckIn } from "@/lib/types";
 
 const FEED_POLL_MS = 10_000;
 
-function timeOf(iso: string) {
-  return new Date(iso).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+// Feed timestamps come from useOrgFormat inside the component — the
+// front desk shows the ORG's 12h/24h preference, not the tablet's.
 
 function personName(
   v: string | { first_name: string; last_name: string } | undefined | null,
@@ -31,6 +28,7 @@ function personName(
  */
 export default function CheckInKioskPage() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const { fmtTime } = useOrgFormat();
   const orgId = currentOrg?._id;
 
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -198,7 +196,7 @@ export default function CheckInKioskPage() {
                     {checkIns.slice(0, 12).map((ci) => (
                       <div key={ci._id} className="flex items-center justify-between border-b border-border py-2.5 text-[13.5px] last:border-b-0">
                         <span style={{ color: "var(--ink)" }}>{personName(ci.member_user_id as never)}</span>
-                        <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{timeOf(ci.checked_in_at)}</span>
+                        <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{fmtTime(ci.checked_in_at)}</span>
                       </div>
                     ))}
                   </div>
@@ -227,7 +225,7 @@ export default function CheckInKioskPage() {
                           >
                             {r.reason === "no_subscription" ? "No membership" : "Duplicate"}
                           </span>
-                          <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{timeOf(r.attempted_at)}</span>
+                          <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{fmtTime(r.attempted_at)}</span>
                         </span>
                       </div>
                     ))}
