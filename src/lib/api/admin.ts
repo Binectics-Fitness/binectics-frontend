@@ -92,6 +92,22 @@ export interface AdminPlan {
 /** Fields the PATCH endpoint accepts (everything except the immutable code). */
 export type UpdateAdminPlan = Partial<Omit<AdminPlan, "_id" | "code">>;
 
+/** A per-market price row for a plan tier (checkout requires one). */
+export interface AdminPlanPrice {
+  _id: string;
+  plan_code: string;
+  market_code: string;
+  currency: string;
+  /** Minor units (kobo/cents). */
+  amount_minor: number;
+  interval: "month" | "year";
+  trial_days?: number;
+  discount_percent?: number;
+  is_active: boolean;
+}
+
+export type UpsertAdminPlanPrice = Omit<AdminPlanPrice, "_id">;
+
 /**
  * Creation payload. `code` must be one of the canonical tiers — the tier
  * enum threads through checkout, org billing status and quota
@@ -224,6 +240,26 @@ class AdminService {
 
   async createPlan(plan: CreateAdminPlan): Promise<ApiResponse<AdminPlan>> {
     return apiClient.post<AdminPlan>("/admin/provider-billing/plans", plan);
+  }
+
+  // ─── Plan market prices (what checkout charges) ─────────────────────────
+
+  async listPlanPrices(): Promise<ApiResponse<AdminPlanPrice[]>> {
+    return apiClient.get<AdminPlanPrice[]>("/admin/provider-billing/prices");
+  }
+
+  /** Upsert keyed on plan_code + market_code + interval. */
+  async upsertPlanPrice(
+    price: UpsertAdminPlanPrice,
+  ): Promise<ApiResponse<AdminPlanPrice>> {
+    return apiClient.put<AdminPlanPrice>(
+      "/admin/provider-billing/prices",
+      price,
+    );
+  }
+
+  async deletePlanPrice(id: string): Promise<ApiResponse<unknown>> {
+    return apiClient.delete(`/admin/provider-billing/prices/${id}`);
   }
 
   // ─── Platform ledger & audit log ─────────────────────────────────────────

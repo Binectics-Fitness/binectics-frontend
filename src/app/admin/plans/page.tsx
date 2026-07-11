@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { AsyncSpinner } from "@/components/ds";
 import { toast } from "@/components/Toast";
-import { adminService, type AdminPlan, type CreateAdminPlan, type UpdateAdminPlan } from "@/lib/api/admin";
+import {
+  adminService,
+  type AdminPlan,
+  type AdminPlanPrice,
+  type CreateAdminPlan,
+  type UpdateAdminPlan,
+} from "@/lib/api/admin";
 
 type QuotaKey =
   | "max_active_members"
@@ -109,6 +115,84 @@ export default function AdminPlansPage() {
   const missingTiers = CANONICAL_TIERS.filter(
     (t) => !plans.some((p) => p.code === t),
   );
+
+  // ── Market prices: what checkout actually charges. No price row for a
+  // tier/market/interval = hosted checkout 404s and the billing page
+  // can't render an amount — this editor is the only way to set them.
+  const [prices, setPrices] = useState<AdminPlanPrice[]>([]);
+  const [priceDraft, setPriceDraft] = useState<{
+    plan_code: string;
+    market_code: string;
+    interval: "month" | "year";
+    currency: string;
+    amount_major: string;
+  } | null>(null);
+  const [priceBusy, setPriceBusy] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const kick = window.setTimeout(() => {
+      void adminService.listPlanPrices().then((res) => {
+        if (active && res.success && res.data) setPrices(res.data);
+      });
+    }, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(kick);
+    };
+  }, []);
+
+  async function savePrice() {
+    if (!priceDraft || priceBusy) return;
+    const amount = Number(priceDraft.amount_major);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error("Enter a positive amount.");
+      return;
+    }
+    setPriceBusy(true);
+    try {
+      const res = await adminService.upsertPlanPrice({
+        plan_code: priceDraft.plan_code,
+        market_code: priceDraft.market_code.trim().toUpperCase() || "GLOBAL",
+        interval: priceDraft.interval,
+        currency: priceDraft.currency.trim().toUpperCase(),
+        amount_minor: Math.round(amount * 100),
+        is_active: true,
+      });
+      if (res.success && res.data) {
+        const saved = res.data;
+        setPrices((prev) => [
+          ...prev.filter(
+            (x) =>
+              !(
+                x.plan_code === saved.plan_code &&
+                x.market_code === saved.market_code &&
+                x.interval === saved.interval
+              ),
+          ),
+          saved,
+        ]);
+        setPriceDraft(null);
+        toast.success("Price saved.");
+      } else {
+        toast.error(res.message || "Couldn't save the price.");
+      }
+    } catch {
+      toast.error("Couldn't save the price.");
+    } finally {
+      setPriceBusy(false);
+    }
+  }
+
+  async function removePrice(id: string) {
+    const res = await adminService.deletePlanPrice(id);
+    if (res.success) {
+      setPrices((prev) => prev.filter((x) => x._id !== id));
+      toast.success("Price removed.");
+    } else {
+      toast.error(res.message || "Couldn't remove the price.");
+    }
+  }
 
   async function submitCreate() {
     if (!creating || createBusy) return;
@@ -290,6 +374,70 @@ export default function AdminPlansPage() {
                       </label>
                     ))}
                   </div>
+                </div>
+
+                {/* Pricing — checkout charges these rows */}
+                <div className={`${labelClass} mt-5 mb-2`} style={{ color: "var(--fg-3)" }}>
+                  Pricing {plan.code === "free" ? "(free tier needs none)" : ""}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {prices
+                    .filter((pr) => pr.plan_code === plan.code)
+                    .map((pr) => (
+                      <div key={pr._id} className="flex flex-wrap items-center gap-3 rounded-(--r-2) px-3 py-2" style={{ background: "var(--bg-2)" }}>
+                        <span className="font-mono text-[11px] uppercase" style={{ color: "var(--fg-3)" }}>{pr.market_code}</span>
+                        <span className="text-[13px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+                          {(pr.amount_minor / 100).toLocaleString()} {pr.currency}
+                        </span>
+                        <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>/ {pr.interval}</span>
+                        {!pr.is_active && <span className="font-mono text-[10px] uppercase" style={{ color: "var(--danger)" }}>inactive</span>}
+                        <button type="button" className="ml-auto text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => void removePrice(pr._id)}>
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  {plan.code !== "free" && prices.filter((pr) => pr.plan_code === plan.code).length === 0 && (
+                    <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+                      No prices — providers cannot check out on this tier until one exists.
+                    </p>
+                  )}
+                  {priceDraft?.plan_code === plan.code ? (
+                    <div className="flex flex-wrap items-end gap-2 rounded-(--r-2) px-3 py-2.5" style={{ border: "1px dashed var(--border-2)" }}>
+                      <div>
+                        <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Market</div>
+                        <input value={priceDraft.market_code} onChange={(e) => setPriceDraft({ ...priceDraft, market_code: e.target.value })} className="h-8 w-24 rounded-(--r-2) border border-border bg-bg px-2 font-mono text-[12px] uppercase text-ink" />
+                      </div>
+                      <div>
+                        <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Amount (major units)</div>
+                        <input type="number" min={0} value={priceDraft.amount_major} onChange={(e) => setPriceDraft({ ...priceDraft, amount_major: e.target.value })} className="h-8 w-28 rounded-(--r-2) border border-border bg-bg px-2 text-[13px] text-ink" />
+                      </div>
+                      <div>
+                        <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Currency</div>
+                        <input value={priceDraft.currency} onChange={(e) => setPriceDraft({ ...priceDraft, currency: e.target.value })} maxLength={3} className="h-8 w-16 rounded-(--r-2) border border-border bg-bg px-2 font-mono text-[12px] uppercase text-ink" />
+                      </div>
+                      <div>
+                        <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Interval</div>
+                        <select value={priceDraft.interval} onChange={(e) => setPriceDraft({ ...priceDraft, interval: e.target.value as "month" | "year" })} className="h-8 rounded-(--r-2) border border-border bg-bg px-2 text-[13px] text-ink">
+                          <option value="month">month</option>
+                          <option value="year">year</option>
+                        </select>
+                      </div>
+                      <button type="button" className="btn-primary-v2 sm" disabled={priceBusy} onClick={() => void savePrice()}>
+                        {priceBusy ? "Saving…" : "Save price"}
+                      </button>
+                      <button type="button" className="btn-ghost-v2 sm" onClick={() => setPriceDraft(null)}>Cancel</button>
+                    </div>
+                  ) : (
+                    plan.code !== "free" && (
+                      <button
+                        type="button"
+                        className="btn-ghost-v2 sm self-start"
+                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: "NGN", amount_major: "" })}
+                      >
+                        Add price
+                      </button>
+                    )
+                  )}
                 </div>
 
                 {/* Actions */}
