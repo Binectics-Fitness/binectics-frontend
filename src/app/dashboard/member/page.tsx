@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { useAuth } from "@/contexts/AuthContext";
@@ -292,13 +293,20 @@ export default function MemberHomePage() {
                         Active membership · scan the front-desk QR to check in
                       </div>
                     </div>
-                    <Link
-                      href="/check-in"
-                      className="btn-primary-v2 sm"
-                      style={{ whiteSpace: "nowrap" }}
-                    >
-                      Check in
-                    </Link>
+                    <div className="flex shrink-0 gap-2">
+                      <StartConversationButton
+                        organizationId={gym.orgId}
+                        messagesHref="/dashboard/messages"
+                        label="Message"
+                      />
+                      <Link
+                        href="/check-in"
+                        className="btn-primary-v2 sm"
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        Check in
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>
