@@ -483,27 +483,34 @@ export default function ProviderBillingPage() {
                               {plan.features.white_label_enabled && <div>White label</div>}
                             </div>
 
-                            {!isCurrent && plan.code !== ProviderPlanTier.FREE && (
-                              <button
-                                type="button"
-                                onClick={() => handleCheckout(plan.code)}
-                                disabled={checkoutLoading === plan.code}
-                                className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
-                                style={{
-                                  background: "var(--ink)",
-                                  color: "var(--bg)",
-                                  cursor: checkoutLoading === plan.code ? "not-allowed" : "pointer",
-                                  opacity: checkoutLoading === plan.code ? 0.7 : 1,
-                                }}
-                              >
-                                {checkoutLoading === plan.code ? "Loading..." : `Upgrade to ${plan.name}`}
-                              </button>
-                            )}
-                            {!isCurrent && plan.code === ProviderPlanTier.FREE && (
-                              <div className="text-sm" style={{ color: "var(--fg-3)" }}>
-                                Contact support to downgrade
-                              </div>
-                            )}
+                            {/* Pinned to the bottom so every card's CTA aligns
+                                regardless of feature count. */}
+                            <div className="mt-auto pt-1">
+                              {isCurrent ? (
+                                <div className="text-sm" style={{ color: "var(--fg-3)" }}>
+                                  Your current plan
+                                </div>
+                              ) : plan.code === ProviderPlanTier.FREE ? (
+                                <div className="text-sm" style={{ color: "var(--fg-3)" }}>
+                                  Contact support to downgrade
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCheckout(plan.code)}
+                                  disabled={checkoutLoading === plan.code}
+                                  className="w-full rounded-(--r-2) px-4 py-2 text-sm font-medium"
+                                  style={{
+                                    background: "var(--ink)",
+                                    color: "var(--bg)",
+                                    cursor: checkoutLoading === plan.code ? "not-allowed" : "pointer",
+                                    opacity: checkoutLoading === plan.code ? 0.7 : 1,
+                                  }}
+                                >
+                                  {checkoutLoading === plan.code ? "Loading..." : `Upgrade to ${plan.name}`}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
