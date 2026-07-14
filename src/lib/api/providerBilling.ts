@@ -96,6 +96,9 @@ export interface ProviderPlanOption {
 export interface CheckoutSessionResult {
   gateway: string;
   checkout_url: string;
+  /** Present for Paystack — resume this server-initialized transaction in
+   * an inline popup (secure: amount is server-set, not client-set). */
+  access_code?: string;
   external_reference: string;
 }
 
