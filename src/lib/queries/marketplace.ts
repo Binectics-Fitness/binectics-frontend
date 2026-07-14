@@ -315,6 +315,67 @@ export function usePublishMyListing() {
   });
 }
 
+export function useCreateMyListing() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof marketplaceService.createMyListing>[0]) =>
+      marketplaceService.createMyListing(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.myListing(),
+      });
+    },
+  });
+}
+
+// ==================== ORG LISTING MUTATIONS ====================
+// The org listing is keyed by organization_id (authoritative for gyms),
+// distinct from the professional_id-scoped "my listing" above.
+
+export function useCreateOrgListing(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof marketplaceService.createOrgListing>[1]) =>
+      marketplaceService.createOrgListing(orgId!, data),
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.marketplace.orgListing(orgId),
+        });
+    },
+  });
+}
+
+export function useUpdateOrgListing(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof marketplaceService.updateOrgListing>[1]) =>
+      marketplaceService.updateOrgListing(orgId!, data),
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.marketplace.orgListing(orgId),
+        });
+    },
+  });
+}
+
+export function usePublishOrgListing(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (publish: boolean) =>
+      publish
+        ? marketplaceService.publishOrgListing(orgId!)
+        : marketplaceService.unpublishOrgListing(orgId!),
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.marketplace.orgListing(orgId),
+        });
+    },
+  });
+}
+
 // ==================== ORG MEMBERSHIP PLAN MUTATIONS ====================
 
 function useInvalidateOrgPlans(orgId: string | undefined) {

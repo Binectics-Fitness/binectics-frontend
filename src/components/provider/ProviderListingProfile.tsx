@@ -3,15 +3,25 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { authService } from "@/lib/api/auth";
 import {
   useMyListing,
   useUpdateMyListing,
   usePublishMyListing,
+  useCreateMyListing,
+  useOrgListing,
+  useUpdateOrgListing,
+  usePublishOrgListing,
+  useCreateOrgListing,
 } from "@/lib/queries/marketplace";
 import { useCountries } from "@/lib/queries/utility";
-import type { UpdateListingRequest } from "@/lib/api/marketplace";
-import type { MarketplaceListing } from "@/lib/types";
+import type {
+  CreateListingRequest,
+  UpdateListingRequest,
+} from "@/lib/api/marketplace";
+import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
+import { UserRole } from "@/lib/types";
 import { ChipEditor } from "@/components/ds";
 
 const INPUT_STYLE = {
@@ -44,6 +54,17 @@ interface AccountForm {
   phone_number: string;
 }
 
+function roleToAccountType(role?: UserRole): MarketplaceAccountType {
+  switch (role) {
+    case UserRole.GYM_OWNER:
+      return "gym_owner";
+    case UserRole.DIETITIAN:
+      return "dietitian";
+    default:
+      return "personal_trainer";
+  }
+}
+
 function seedListing(l: MarketplaceListing): ListingForm {
   return {
     headline: l.headline ?? "",
@@ -69,16 +90,38 @@ function diffListing(base: ListingForm, next: ListingForm): UpdateListingRequest
 }
 
 /**
- * Shared marketplace-profile editor for provider roles. Loads the caller's
- * own listing (GET /marketplace/my-listing) and account identity, saves
- * diffs, and wires publish/unpublish. Rendered by /dashboard/profile-edit
+ * Shared marketplace-profile editor for provider roles. For gym owners the
+ * listing is org-scoped (GET/PATCH /marketplace/organizations/:id/listing);
+ * for solo trainers/dietitians it is the caller's own listing
+ * (/marketplace/my-listing). Both flows load → edit diffs → publish, and both
+ * can create a listing when none exists yet. Rendered by /dashboard/profile-edit
  * and the trainer/dietitian profile routes.
  */
 export function ProviderListingProfile() {
   const { user, updateUser } = useAuth();
-  const { data: listing, isLoading } = useMyListing();
-  const updateListing = useUpdateMyListing();
-  const publish = usePublishMyListing();
+  const { currentOrg, isLoading: orgLoading } = useOrganization();
+
+  const isGym = user?.role === UserRole.GYM_OWNER;
+  const orgId = currentOrg?._id;
+
+  // Role-aware data source. Only one query runs; the other is disabled.
+  const orgListing = useOrgListing(orgId, isGym);
+  const myListing = useMyListing(!isGym);
+  const listing = (isGym ? orgListing.data : myListing.data) ?? null;
+  const listingLoading = isGym ? orgListing.isLoading : myListing.isLoading;
+  const isLoading = listingLoading || (isGym && orgLoading);
+
+  // Role-aware mutations.
+  const updateSolo = useUpdateMyListing();
+  const publishSolo = usePublishMyListing();
+  const createSolo = useCreateMyListing();
+  const updateOrg = useUpdateOrgListing(orgId);
+  const publishOrg = usePublishOrgListing(orgId);
+  const createOrg = useCreateOrgListing(orgId);
+
+  const publishBusy = isGym ? publishOrg.isPending : publishSolo.isPending;
+  const createBusy = isGym ? createOrg.isPending : createSolo.isPending;
+
   const { data: countries = [] } = useCountries();
 
   const [seededId, setSeededId] = useState<string | null>(null);
@@ -125,7 +168,9 @@ export function ProviderListingProfile() {
     setError(null);
     let ok = true;
     if (Object.keys(listingPayload).length > 0 && form) {
-      const res = await updateListing.mutateAsync(listingPayload);
+      const res = isGym
+        ? await updateOrg.mutateAsync(listingPayload)
+        : await updateSolo.mutateAsync(listingPayload);
       if (res.success) setBaseline(form);
       else {
         ok = false;
@@ -151,11 +196,36 @@ export function ProviderListingProfile() {
 
   const onTogglePublish = async () => {
     if (!listing) return;
-    const res = await publish.mutateAsync(!listing.is_published);
+    const res = isGym
+      ? await publishOrg.mutateAsync(!listing.is_published)
+      : await publishSolo.mutateAsync(!listing.is_published);
     if (!res.success) setError(res.message || "Couldn't change publish state.");
   };
 
+  const onCreate = async (payload: CreateListingRequest) => {
+    setError(null);
+    const res = isGym
+      ? await createOrg.mutateAsync(payload)
+      : await createSolo.mutateAsync(payload);
+    if (!res.success) {
+      setError(res.message || "Couldn't create your listing.");
+    }
+  };
+
   const hasListing = !!listing;
+  // A gym owner needs their org resolved before we can create/edit its listing.
+  const orgReady = !isGym || !!orgId;
+  const moreLinks = isGym
+    ? [
+        { href: "/dashboard/gym-owner/plans", label: "Plans & pricing →" },
+        { href: "/dashboard/gym-owner/locations", label: "Locations →" },
+        { href: "/dashboard/gym-owner/settings", label: "Settings →" },
+      ]
+    : [
+        { href: "/dashboard/trainer/plans", label: "Packages & pricing →" },
+        { href: "/dashboard/consultations", label: "Availability →" },
+        { href: "/dashboard/settings", label: "Payouts & settings →" },
+      ];
 
   return (
     <div className="flex flex-col gap-4 max-w-[760px]">
@@ -170,8 +240,8 @@ export function ProviderListingProfile() {
             <button className="btn-primary-v2 sm" disabled={saving} onClick={() => void onSave()}>Save changes</button>
           )}
           {hasListing && (
-            <button className="btn-ghost-v2 sm" disabled={publish.isPending} onClick={() => void onTogglePublish()}>
-              {publish.isPending ? "…" : listing?.is_published ? "Unpublish" : "Publish"}
+            <button className="btn-ghost-v2 sm" disabled={publishBusy} onClick={() => void onTogglePublish()}>
+              {publishBusy ? "…" : listing?.is_published ? "Unpublish" : "Publish"}
             </button>
           )}
         </div>
@@ -187,14 +257,23 @@ export function ProviderListingProfile() {
         </div>
       </Card>
 
-      {/* No listing yet — the marketplace sections below need one */}
-      {!isLoading && !hasListing && (
+      {/* No listing yet → create it (role-aware: org listing for gyms, solo otherwise) */}
+      {!isLoading && !hasListing && orgReady && (
+        <CreateListingCard
+          isGym={isGym}
+          accountType={roleToAccountType(user?.role)}
+          countries={countries}
+          creating={createBusy}
+          onCreate={onCreate}
+        />
+      )}
+
+      {/* Gym owner whose org context hasn't resolved yet */}
+      {!isLoading && !hasListing && !orgReady && (
         <div className="p-6 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>No marketplace profile yet</h2>
-          <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "var(--fg-3)" }}>
-            Your public profile is created when you set up your marketplace listing. Once it exists, you can edit your headline, bio, specializations, and languages here.
+          <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>
+            Select an organization to manage its marketplace listing.
           </p>
-          <Link href="/dashboard" className="btn-ghost-v2 sm inline-block mt-4" style={{ textDecoration: "none" }}>← Back to dashboard</Link>
         </div>
       )}
 
@@ -249,9 +328,9 @@ export function ProviderListingProfile() {
       {/* Where the rest lives */}
       <Card title="More profile settings" desc="These parts of your public profile are managed in their own sections.">
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/trainer/plans" className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>Packages & pricing →</Link>
-          <Link href="/dashboard/consultations" className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>Availability →</Link>
-          <Link href="/dashboard/settings" className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>Payouts & settings →</Link>
+          {moreLinks.map((l) => (
+            <Link key={l.href} href={l.href} className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>{l.label}</Link>
+          ))}
         </div>
       </Card>
       </>
@@ -259,6 +338,90 @@ export function ProviderListingProfile() {
 
       {isLoading && <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your profile…</p>}
     </div>
+  );
+}
+
+/**
+ * Create-listing form shown when the provider has no listing yet. Collects the
+ * DTO's required fields (headline, bio) plus city/country, then creates via the
+ * role-appropriate endpoint. On success the parent's listing query refetches and
+ * this card is replaced by the full editor.
+ */
+function CreateListingCard({
+  isGym,
+  accountType,
+  countries,
+  creating,
+  onCreate,
+}: {
+  isGym: boolean;
+  accountType: MarketplaceAccountType;
+  countries: { code: string; name: string }[];
+  creating: boolean;
+  onCreate: (payload: CreateListingRequest) => Promise<void>;
+}) {
+  const [headline, setHeadline] = useState("");
+  const [bio, setBio] = useState("");
+  const [city, setCity] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  const canSubmit = headline.trim().length > 0 && bio.trim().length > 0 && !creating;
+
+  const submit = async () => {
+    if (!headline.trim()) return setLocalError("Add a headline.");
+    if (!bio.trim()) return setLocalError("Add a short bio.");
+    setLocalError(null);
+    await onCreate({
+      account_type: accountType,
+      headline: headline.trim(),
+      bio: bio.trim(),
+      ...(city.trim() ? { city: city.trim() } : {}),
+      ...(countryCode ? { country_code: countryCode } : {}),
+    });
+  };
+
+  return (
+    <Card
+      title={isGym ? "Create your gym listing" : "Create your marketplace listing"}
+      desc={
+        isGym
+          ? "Publish your gym to the marketplace so members can find and subscribe. You can refine every detail after it's created."
+          : "Set up your public profile so clients can find and book you. You can refine every detail after it's created."
+      }
+    >
+      <Field label="Headline" value={headline} maxLength={200} onChange={setHeadline} />
+      <div className="flex flex-col gap-1.5">
+        <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Bio</label>
+        <textarea
+          value={bio}
+          maxLength={3000}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder={isGym ? "Tell members what makes your gym worth joining." : "Tell clients how you help them."}
+          className="rounded-(--r-2) px-3.5 py-3 text-[14px] resize-y"
+          style={{ ...INPUT_STYLE, minHeight: 100 }}
+        />
+        <span className="text-[11px] self-end" style={{ color: "var(--fg-4)" }}>{bio.length} / 3000</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <Field label="City" value={city} onChange={setCity} />
+        <div className="flex flex-col gap-1.5">
+          <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Country</label>
+          <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE}>
+            <option value="">Select country…</option>
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>{c.name} · {c.code}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {localError && <p className="text-[12.5px]" style={{ color: "var(--danger, #b00020)" }}>{localError}</p>}
+      <div>
+        <button className="btn-primary-v2 sm" disabled={!canSubmit} onClick={() => void submit()}>
+          {creating ? "Creating…" : isGym ? "Create gym listing" : "Create listing"}
+        </button>
+      </div>
+    </Card>
   );
 }
 
