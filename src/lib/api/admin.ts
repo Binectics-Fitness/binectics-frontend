@@ -33,6 +33,9 @@ export interface PlatformMetricsOverview {
   };
   subscriptions: {
     activeCount: number;
+    primaryCurrency: string | null;
+    primaryRevenue: number;
+    primaryAverage: number;
     totalRevenueUsd: number;
     averageValueUsd: number;
     byCurrency: Array<{
