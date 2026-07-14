@@ -64,9 +64,29 @@ export default function AdminOverviewClient() {
     return [...rows].sort((a, b) => b.total - a.total).slice(0, 8);
   }, [metrics]);
 
+  const revenueMoney = (amount: number, currency: string | null) => {
+    if (!currency) return USD.format(amount);
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } catch {
+      return `${amount.toLocaleString()} ${currency}`;
+    }
+  };
+
   const kpis = metrics
     ? [
-        { l: "Subscription revenue", v: USD.format(metrics.subscriptions.totalRevenueUsd), d: `${USD.format(metrics.subscriptions.averageValueUsd)} avg` },
+        {
+          l: "Subscription revenue",
+          v: revenueMoney(
+            metrics.subscriptions.primaryRevenue,
+            metrics.subscriptions.primaryCurrency,
+          ),
+          d: `${revenueMoney(metrics.subscriptions.primaryAverage, metrics.subscriptions.primaryCurrency)} avg`,
+        },
         { l: "Verified providers", v: metrics.verifiedProviders.total.toLocaleString(), d: `${metrics.verifiedProviders.distinctCountries} countries` },
         { l: "Active subscriptions", v: metrics.subscriptions.activeCount.toLocaleString(), d: "Currently active" },
         { l: "Total users", v: metrics.conversion.totalUsers.toLocaleString(), d: `${metrics.conversion.payingUsers.toLocaleString()} paying` },
