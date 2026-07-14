@@ -5,13 +5,11 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
-import DashboardLoading from "@/components/DashboardLoading";
 import SearchableSelect from "@/components/SearchableSelect";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { getClientTimezone } from "@/utils/format";
 import { UserRole } from "@/lib/types";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   consultationsService,
   ConsultationProviderRole,
@@ -83,17 +81,19 @@ function getTimezoneOptions(): string[] {
 }
 
 type ConsultationAvailabilityManagerProps = {
-  role: UserRole;
-  sidebar: ReactNode;
   description: string;
 };
 
+/**
+ * Availability + blocked-dates manager for a consultation provider
+ * (trainer / dietitian). Rendered as CONTENT inside the role's dashboard
+ * shell — the shell owns auth + the sidebar, so this is just the panel.
+ */
 export default function ConsultationAvailabilityManager({
-  role,
-  sidebar,
   description,
 }: ConsultationAvailabilityManagerProps) {
-  const { isLoading, isAuthorized } = useRoleGuard(role);
+  const { user } = useAuth();
+  const role = user?.role;
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
   const userTimezone = useMemo(() => getClientTimezone(), []);
 
@@ -561,23 +561,17 @@ export default function ConsultationAvailabilityManager({
 
   // --- Load exceptions on mount ---
   useEffect(() => {
+    // loadExceptions is async; its setState runs post-await, not
+    // synchronously in the effect body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadExceptions();
   }, [loadExceptions]);
 
-  if (isLoading) return <DashboardLoading />;
-  if (!isAuthorized) return null;
-
   return (
-    <div className="flex min-h-screen bg-bg">
-      {sidebar}
-
-      <main className="md:ml-64 flex-1 p-4 sm:p-6 md:p-8">
-        <div className="mb-6">
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-fg">
-            Consultations
-          </h1>
-          <p className="mt-2 text-fg-2">{description}</p>
-        </div>
+    <div>
+      <div className="mb-6">
+        <p className="text-fg-2">{description}</p>
+      </div>
 
         {/* Tabs */}
         <div className="mb-6">
@@ -1183,7 +1177,6 @@ export default function ConsultationAvailabilityManager({
             </div>
           </section>
         )}
-      </main>
     </div>
   );
 }
