@@ -219,6 +219,10 @@ export default function ProviderBillingPage() {
   }
 
   const currentTier = billingStatus?.plan_tier ?? ProviderPlanTier.FREE;
+  // Rank the current plan by sort_order so any lower-tier card (not just Free)
+  // is presented as a downgrade rather than a spurious "upgrade".
+  const currentPlanOrder =
+    plans.find((p) => p.code === currentTier)?.sort_order ?? null;
 
   return (
     <GymDashboardShell activeItem="Billing" crumb="Billing">
@@ -467,6 +471,9 @@ export default function ProviderBillingPage() {
                       {plans.map((plan) => {
                         const price = plan.prices[interval];
                         const isCurrent = plan.code === currentTier;
+                        const isDowngrade =
+                          currentPlanOrder !== null &&
+                          plan.sort_order < currentPlanOrder;
 
                         return (
                           <div
@@ -532,7 +539,7 @@ export default function ProviderBillingPage() {
                                 <div className="text-sm" style={{ color: "var(--fg-3)" }}>
                                   Your current plan
                                 </div>
-                              ) : plan.code === ProviderPlanTier.FREE ? (
+                              ) : isDowngrade || plan.code === ProviderPlanTier.FREE ? (
                                 <div className="text-sm" style={{ color: "var(--fg-3)" }}>
                                   Contact support to downgrade
                                 </div>
