@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback} from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/Toast";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
@@ -70,21 +70,16 @@ export default function ProviderBillingPage() {
 
   const [interval, setInterval] = useState<"month" | "year">("month");
   const [awaitingActivation, setAwaitingActivation] = useState(false);
+  const pollTimerRef = useRef<number | null>(null);
 
-  // Returning from hosted checkout (?success=1): the tier flips when the
-  // gateway webhook lands, which can trail the redirect by seconds — poll
-  // the status briefly instead of showing a stale plan.
-  useEffect(() => {
-    if (!orgId) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("success") !== "1") return;
-    window.history.replaceState(null, "", window.location.pathname);
-    // Deferred a tick — keeps setState out of the synchronous effect body
-    // (project lint rule).
-    const kick = window.setTimeout(() => setAwaitingActivation(true), 0);
-
+  // The tier flips when the gateway webhook lands, which trails checkout by
+  // seconds. Poll status briefly instead of showing a stale plan. Called
+  // both from the inline popup's onSuccess and the redirect return.
+  const pollForActivation = useCallback(() => {
+    if (!orgId || pollTimerRef.current) return;
+    setAwaitingActivation(true);
     let tries = 0;
-    const timer = window.setInterval(() => {
+    pollTimerRef.current = window.setInterval(() => {
       tries += 1;
       void providerBillingApi.getStatus(orgId).then((res) => {
         const active =
@@ -93,7 +88,8 @@ export default function ProviderBillingPage() {
           res.data.plan_tier !== "free" &&
           res.data.subscription_status === "active";
         if (active || tries >= 15) {
-          window.clearInterval(timer);
+          if (pollTimerRef.current) window.clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
           setAwaitingActivation(false);
           if (active && res.data) {
             setBillingStatus(res.data);
@@ -108,11 +104,25 @@ export default function ProviderBillingPage() {
         }
       });
     }, 2000);
-    return () => {
-      window.clearTimeout(kick);
-      window.clearInterval(timer);
-    };
   }, [orgId]);
+
+  // Fallback path: returning from the HOSTED redirect (?success=1).
+  useEffect(() => {
+    if (!orgId) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") !== "1") return;
+    window.history.replaceState(null, "", window.location.pathname);
+    const kick = window.setTimeout(() => pollForActivation(), 0);
+    return () => window.clearTimeout(kick);
+  }, [orgId, pollForActivation]);
+
+  // Stop polling on unmount.
+  useEffect(
+    () => () => {
+      if (pollTimerRef.current) window.clearInterval(pollTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const load = async () => {
@@ -160,14 +170,46 @@ export default function ProviderBillingPage() {
         cancel_url: `${window.location.origin}/dashboard/billing`,
       });
 
-      if (res.success && res.data?.checkout_url) {
-        router.push(res.data.checkout_url);
+      if (!res.success || !res.data) {
+        setError("Could not create checkout session. Please try again.");
+        setCheckoutLoading(null);
+        return;
+      }
+
+      const { access_code, checkout_url } = res.data;
+
+      // Preferred: inline popup resuming the server-initialized transaction
+      // (amount is server-set, untamperable). Falls back to redirect if the
+      // gateway returns no access_code or the SDK fails to load.
+      if (access_code) {
+        try {
+          const PaystackPop = (await import("@paystack/inline-js")).default;
+          const popup = new PaystackPop();
+          popup.resumeTransaction(access_code, {
+            onSuccess: () => {
+              setCheckoutLoading(null);
+              pollForActivation();
+            },
+            onCancel: () => setCheckoutLoading(null),
+            onError: () => {
+              setCheckoutLoading(null);
+              toast.error("Payment could not be completed. Please try again.");
+            },
+          });
+          return; // popup is open; loading clears when it closes
+        } catch {
+          // SDK failed to load — fall through to the hosted redirect.
+        }
+      }
+
+      if (checkout_url) {
+        router.push(checkout_url); // navigates away
       } else {
         setError("Could not create checkout session. Please try again.");
+        setCheckoutLoading(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
-    } finally {
       setCheckoutLoading(null);
     }
   }
