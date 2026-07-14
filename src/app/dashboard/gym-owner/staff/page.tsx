@@ -6,7 +6,9 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { AddStaffModal } from "@/components/ds/modals/AddStaffModal";
 import { teamsService, MemberStatus, InvitationStatus, type OrganizationMember, type TeamInvitation } from "@/lib/api/teams";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -19,6 +21,12 @@ function memberName(m: OrganizationMember): string {
 
 function memberEmail(m: OrganizationMember): string | null {
   if (typeof m.user_id === "object" && m.user_id !== null) return m.user_id.email;
+  return null;
+}
+
+/** The staff member's user id, only when the reference is populated. */
+function memberUserId(m: OrganizationMember): string | null {
+  if (typeof m.user_id === "object" && m.user_id !== null) return m.user_id._id;
   return null;
 }
 
@@ -53,6 +61,7 @@ const STATUS_STYLE: Record<MemberStatus, { color: string; bg: string; label: str
 
 export default function GymStaffPage() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const { user } = useAuth();
   const { fmtDate } = useOrgFormat();
   const [addStaffOpen, setAddStaffOpen] = useState(false);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
@@ -139,8 +148,13 @@ export default function GymStaffPage() {
             const email = memberEmail(m);
             const st = STATUS_STYLE[m.status];
             const joined = m.joined_at ?? m.created_at;
+            const uid = memberUserId(m);
+            // Direct messaging is relationship-gated server-side to ACTIVE
+            // staff; hide it on your own row (you can't message yourself).
+            const canMessage =
+              m.status === MemberStatus.ACTIVE && !!uid && uid !== user?.id;
             return (
-              <div key={m._id} className="grid gap-4 px-4.5 py-3.5 items-center hover:bg-bg-2" style={{ gridTemplateColumns: "1fr auto auto", borderBottom: i < members.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
+              <div key={m._id} className="grid gap-4 px-4.5 py-3.5 items-center hover:bg-bg-2" style={{ gridTemplateColumns: "1fr auto auto auto", borderBottom: i < members.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(name)}</span>
                   <div className="min-w-0">
@@ -156,6 +170,15 @@ export default function GymStaffPage() {
                 <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st?.color, background: st?.bg, border: `1px solid ${st?.color ?? "var(--border)"}` }}>
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st?.label ?? m.status}
                 </span>
+                <div className="justify-self-end">
+                  {canMessage && (
+                    <StartConversationButton
+                      recipientUserId={uid!}
+                      messagesHref="/dashboard/gym-owner/messages"
+                      label="Message"
+                    />
+                  )}
+                </div>
               </div>
             );
           })}
