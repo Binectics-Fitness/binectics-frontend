@@ -7,12 +7,21 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 
 function getMemberName(sub: MembershipSubscription): string {
   if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
     return `${sub.member_user_id.first_name} ${sub.member_user_id.last_name}`.trim();
   }
   return "Unknown";
+}
+
+/** The member's user id, only when the reference is populated. */
+function getMemberUserId(sub: MembershipSubscription): string | null {
+  if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
+    return sub.member_user_id._id;
+  }
+  return null;
 }
 
 function getMemberEmail(sub: MembershipSubscription): string {
@@ -118,6 +127,10 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   const planName = getPlanName(subscription);
   const statusStyle = STATUS_STYLE[subscription.status];
   const statusLabel = STATUS_LABEL[subscription.status];
+  const memberUserId = getMemberUserId(subscription);
+  // Direct messaging is relationship-gated server-side to ACTIVE members.
+  const canMessage =
+    subscription.status === MembershipSubscriptionStatus.ACTIVE && !!memberUserId;
 
   const kpis = [
     { label: "Plan", value: planName },
@@ -181,13 +194,22 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
             {fmtDate(subscription.created_at)}
           </p>
         </div>
-        <span
-          className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2.5 py-1.5 rounded-full"
-          style={{ color: statusStyle.color, background: statusStyle.bg }}
-        >
-          <span className="w-1.25 h-1.25 rounded-full bg-current" />
-          {statusLabel}
-        </span>
+        <div className="flex items-center gap-2.5">
+          {canMessage && (
+            <StartConversationButton
+              recipientUserId={memberUserId!}
+              messagesHref="/dashboard/gym-owner/messages"
+              label="Message"
+            />
+          )}
+          <span
+            className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2.5 py-1.5 rounded-full"
+            style={{ color: statusStyle.color, background: statusStyle.bg }}
+          >
+            <span className="w-1.25 h-1.25 rounded-full bg-current" />
+            {statusLabel}
+          </span>
+        </div>
       </div>
 
       {/* KPI cards */}

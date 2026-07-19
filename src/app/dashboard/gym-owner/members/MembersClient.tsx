@@ -14,6 +14,7 @@ import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
 import SearchableSelect from "@/components/SearchableSelect";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,14 @@ function getMemberEmail(sub: MembershipSubscription): string {
     return sub.member_user_id.email;
   }
   return "—";
+}
+
+/** The member's user id, only when the reference is populated. */
+function getMemberUserId(sub: MembershipSubscription): string | null {
+  if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
+    return sub.member_user_id._id;
+  }
+  return null;
 }
 
 function getPlanName(sub: MembershipSubscription): string {
@@ -191,6 +200,14 @@ function RowActions({
             onClick={() => { setOpen(false); router.push(`/dashboard/gym-owner/members/${sub._id}`); }}>
             View details
           </button>
+          {isActive && getMemberUserId(sub) && (
+            <StartConversationButton
+              recipientUserId={getMemberUserId(sub)!}
+              messagesHref="/dashboard/gym-owner/messages"
+              label="Message"
+              className={`${item} block`}
+            />
+          )}
           {(isActive || isPending) && (
             <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleResendInvite}>
               Resend invite email
