@@ -8,6 +8,7 @@ import {
   useDeletePaymentConfig,
 } from "@/lib/queries/marketplace";
 import { PaymentGateway } from "@/lib/types";
+import SearchableSelect from "@/components/SearchableSelect";
 
 const GATEWAY_META: Record<string, { label: string; color: string }> = {
   paystack: { label: "Paystack", color: "oklch(0.45 0.18 200)" },
@@ -117,11 +118,14 @@ export function GatewaysSection() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               <div className="flex flex-col gap-1.5">
                 <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Gateway</label>
-                <select value={gateway} onChange={(e) => setGateway(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE}>
-                  {Object.values(PaymentGateway).map((g) => (
-                    <option key={g} value={g}>{GATEWAY_META[g]?.label ?? g}</option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  value={gateway}
+                  onChange={(v) => setGateway(v)}
+                  options={Object.values(PaymentGateway).map((g) => ({
+                    label: GATEWAY_META[g]?.label ?? g,
+                    value: g,
+                  }))}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Public key</label>

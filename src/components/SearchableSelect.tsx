@@ -9,6 +9,9 @@ interface SearchableSelectProps {
   placeholder?: string;
   loading?: boolean;
   name?: string;
+  disabled?: boolean;
+  /** id for the trigger button, so a `<label htmlFor>` associates with it (button is a labelable element). */
+  id?: string;
 }
 
 export default function SearchableSelect({
@@ -18,6 +21,8 @@ export default function SearchableSelect({
   placeholder = "Select…",
   loading = false,
   name,
+  disabled = false,
+  id,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -85,11 +90,14 @@ export default function SearchableSelect({
       {name && <input type="hidden" name={name} value={value} />}
       <button
         type="button"
+        id={id}
+        disabled={disabled}
         onClick={() => {
+          if (disabled) return;
           setOpen((o) => !o);
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
-        className="flex w-full items-center justify-between rounded-(--r-2) border border-border bg-bg px-4 py-3 text-left text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+        className="flex w-full items-center justify-between rounded-(--r-2) border border-border bg-bg px-4 py-3 text-left text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-signal disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span className={value ? "text-ink" : "text-fg-4"}>
           {loading ? "Loading…" : selectedLabel || placeholder}

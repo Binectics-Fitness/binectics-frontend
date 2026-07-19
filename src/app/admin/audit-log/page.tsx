@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SearchableSelect from "@/components/SearchableSelect";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import {
   AsyncSpinner,
@@ -151,26 +152,17 @@ export default function AdminAuditLogPage() {
             }}
           />
         ))}
-        <select
-          className="h-7 px-2 rounded-[var(--r-2)] text-[12.5px] ml-auto"
-          style={{
-            background: "var(--bg)",
-            border: "1px solid var(--border)",
-            color: "var(--fg-2)",
-          }}
-          value={event}
-          onChange={(e) => {
-            setEvent(e.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="">All events</option>
-          {eventNames.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+        <div className="ml-auto">
+          <SearchableSelect
+            value={event}
+            onChange={(v) => {
+              setEvent(v);
+              setPage(1);
+            }}
+            options={eventNames.map((name) => ({ label: name, value: name }))}
+            placeholder="All events"
+          />
+        </div>
       </div>
 
       {error ? (

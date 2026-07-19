@@ -113,7 +113,7 @@ export default function CheckInKioskPage() {
         <img
           src={qrDataUrl}
           alt="Check-in QR code"
-          className="w-[min(70vh,520px)] rounded-2xl border border-border bg-white p-6"
+          className="w-[min(70vh,520px)] rounded-(--r-3) border border-border bg-white p-6"
         />
         <p className="text-[15px]" style={{ color: "var(--fg-2)" }}>
           Scan with your phone camera to check in
@@ -162,10 +162,10 @@ export default function CheckInKioskPage() {
         <>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
             {/* QR card */}
-            <div className="rounded-xl border border-border bg-bg p-5 text-center" style={{ alignSelf: "start" }}>
+            <div className="rounded-(--r-3) border border-border bg-bg p-5 text-center" style={{ alignSelf: "start" }}>
               {qrDataUrl && (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={qrDataUrl} alt="Check-in QR code" className="mx-auto w-full max-w-[260px] rounded-lg border border-border bg-white p-3" />
+                <img src={qrDataUrl} alt="Check-in QR code" className="mx-auto w-full max-w-[260px] rounded-(--r-2) border border-border bg-white p-3" />
               )}
               <div className="mt-3 break-all font-mono text-[10.5px]" style={{ color: "var(--fg-4)" }}>
                 {checkInUrl}
@@ -179,7 +179,7 @@ export default function CheckInKioskPage() {
 
             {/* Live feed */}
             <div className="flex flex-col gap-4">
-              <div className="rounded-xl border border-border bg-bg p-5">
+              <div className="rounded-(--r-3) border border-border bg-bg p-5">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
                     Today&rsquo;s arrivals · {checkIns.length}
@@ -203,7 +203,7 @@ export default function CheckInKioskPage() {
                 )}
               </div>
 
-              <div className="rounded-xl border border-border bg-bg p-5">
+              <div className="rounded-(--r-3) border border-border bg-bg p-5">
                 <h3 className="mb-3" style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
                   Declined at the door
                 </h3>

@@ -1,1 +1,2 @@
-npx tsc --noEmit
+npx tsc --noEmit &&
+npm run tokens:check

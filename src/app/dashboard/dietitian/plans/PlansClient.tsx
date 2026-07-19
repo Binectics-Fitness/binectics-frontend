@@ -11,6 +11,7 @@ import type {
 import { MembershipPlanType, type MarketplaceMembershipPlan } from "@/lib/types";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import SearchableSelect from "@/components/SearchableSelect";
 
 // ─── Plan modal ─────────────────────────────────────────────────────────────
 
@@ -132,15 +133,14 @@ function PlanModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Type</label>
-              <select
+              <SearchableSelect
                 value={form.plan_type}
-                onChange={(e) => set("plan_type", e.target.value as MembershipPlanType)}
-                className="h-9 rounded-(--r-2) px-3 text-[13.5px]"
-                style={{ background: "var(--bg-2)", border: "1px solid var(--border-2)", color: "var(--ink)" }}
-              >
-                <option value={MembershipPlanType.SUBSCRIPTION}>Subscription</option>
-                <option value={MembershipPlanType.ONE_TIME}>One-time</option>
-              </select>
+                onChange={(v) => set("plan_type", v as MembershipPlanType)}
+                options={[
+                  { label: "Subscription", value: MembershipPlanType.SUBSCRIPTION },
+                  { label: "One-time", value: MembershipPlanType.ONE_TIME },
+                ]}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Duration (days)</label>
@@ -174,14 +174,11 @@ function PlanModal({
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Currency</label>
-              <select
+              <SearchableSelect
                 value={form.currency ?? "USD"}
-                onChange={(e) => set("currency", e.target.value)}
-                className="h-9 rounded-(--r-2) px-3 text-[13.5px]"
-                style={{ background: "var(--bg-2)", border: "1px solid var(--border-2)", color: "var(--ink)" }}
-              >
-                {currencies.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
+                onChange={(v) => set("currency", v)}
+                options={currencies.map((c) => ({ label: c, value: c }))}
+              />
             </div>
           </div>
 

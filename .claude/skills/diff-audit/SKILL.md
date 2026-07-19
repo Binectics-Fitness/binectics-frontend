@@ -12,12 +12,16 @@ allowed-tools: Bash(git *) Bash(grep *) Read
 
 Audit only the files listed above. Skip files that are not `.tsx` or `.ts` in `src/`.
 
+**Source of truth:** `src/app/globals.css` (v2 oklch tokens + `btn-*-v2` classes) and `src/components/ds/`. `docs/UI_STANDARDS.md` is legacy — do not audit toward its hex/type/radii. Surviving hard rules: SearchableSelect over native `<select>`, enums, `text-sm` mobile min. The check-in/kiosk surface is exempt from the color/radii/shadow rules where scannability or the QR encoder requires it — flag as justified, don't fix.
+
 For each changed file, check:
 
 ### 1. Design tokens
-- Any raw hex colors, `rgb()`, `rgba()`, `hsl()` values? Should use `var(--token)`
+- Any raw hex colors, `rgb()`, `rgba()`, `hsl()` values? Should use `var(--token)`. (Includes `var(--token, #fallback)` — drop the hex fallback. Exception: hex passed to the `QRCode` encoder / canvas is justified.)
 - Any raw `oklch()` not referencing a CSS variable?
-- Any border-radius values not using `var(--r-1)`, `var(--r-2)`, `var(--r-3)`?
+- **Off-scale radii**: Tailwind classes `rounded-sm|md|lg|xl|2xl|3xl` or `rounded-[Npx]` — must be `rounded-(--r-1|--r-2|--r-3)` or `rounded-full`.
+- **Legacy Tailwind color classes**: `bg-white`, `text-foreground*`, `bg-background*`, `bg-primary-N`, `(text|bg|border)-(neutral|gray|slate|zinc|red|green|blue|yellow)-N` — must be tokens.
+- **Shadows** (`shadow-sm|md|lg|xl`, `boxShadow`) outside modals / check-in.
 
 ### 2. Serif italic
 - Count instances of `font-serif` + `italic` in each file
@@ -38,6 +42,12 @@ For each changed file, check:
 - Images without `alt` text?
 - Interactive elements without keyboard handlers?
 - Missing `aria-label` on icon-only buttons?
+
+### 6. Shared components
+- Native `<select>` → must be `SearchableSelect` (`@/components/SearchableSelect`). Hard rule.
+- Raw color `<button>` reimplementing a button → `btn-*-v2` classes or `@/components/Button`.
+- Bespoke card/toggle/table markup duplicating a `src/components/ds/` primitive.
+- Dashboard page with its own `min-h-screen`/breadcrumb chrome instead of a role shell (`*DashboardShell`).
 
 ## Output
 

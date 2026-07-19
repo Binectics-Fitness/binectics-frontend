@@ -9,6 +9,7 @@ import { useTargetAggregate, useTargetReviews } from "@/lib/queries/reviews";
 import { queryKeys } from "@/lib/queries/keys";
 import { reviewsService, ReviewTargetType, type Review } from "@/lib/api/reviews";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import SearchableSelect from "@/components/SearchableSelect";
 
 type Sort = "newest" | "oldest" | "rating_high" | "rating_low";
 
@@ -72,14 +73,16 @@ export function GymReviewsClient() {
             <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
               {pagination ? `${pagination.total} review${pagination.total === 1 ? "" : "s"}` : ""}
             </span>
-            <select value={sort} onChange={(e) => { setSort(e.target.value as Sort); setPage(1); }}
-              className="rounded-(--r-2) px-3 py-1.5 text-[13px]"
-              style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }}>
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="rating_high">Highest rated</option>
-              <option value="rating_low">Lowest rated</option>
-            </select>
+            <SearchableSelect
+              value={sort}
+              onChange={(v) => { setSort(v as Sort); setPage(1); }}
+              options={[
+                { label: "Newest first", value: "newest" },
+                { label: "Oldest first", value: "oldest" },
+                { label: "Highest rated", value: "rating_high" },
+                { label: "Lowest rated", value: "rating_low" },
+              ]}
+            />
           </div>
 
           <div className="flex flex-col gap-2.5">

@@ -7,6 +7,7 @@ import {
   nextOccurrences,
 } from "@/lib/api/classBookings";
 import { classTime, type GymClass } from "@/lib/api/classes";
+import SearchableSelect from "@/components/SearchableSelect";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -99,13 +100,11 @@ function BookableClassRow({ listingId, gymClass: c }: { listingId: string; gymCl
             {c.waitlist_enabled ? " · waitlist" : ""}
           </div>
         </div>
-        <select value={date} onChange={(e) => { setDate(e.target.value); setMessage(null); }}
-          className="h-8 rounded-(--r-2) px-2.5 text-[12.5px]"
-          style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }}>
-          {dates.map((d) => (
-            <option key={d} value={d}>{occurrenceLabel(d)}</option>
-          ))}
-        </select>
+        <SearchableSelect
+          value={date}
+          onChange={(v) => { setDate(v); setMessage(null); }}
+          options={dates.map((d) => ({ label: occurrenceLabel(d), value: d }))}
+        />
         <button className="btn-primary-v2 sm shrink-0" disabled={book.isPending} onClick={() => book.mutate()}>
           {book.isPending ? "Booking…" : "Book"}
         </button>

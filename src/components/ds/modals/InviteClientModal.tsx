@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService, type EnrollMemberRequest } from "@/lib/api/marketplace";
-import type { MarketplaceMembershipPlan } from "@/lib/types";
+import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
+import SearchableSelect from "@/components/SearchableSelect";
 
 interface InviteClientModalProps {
   open: boolean;
@@ -28,34 +29,19 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
   const { currentOrg } = useOrganization();
   const cancelledRef = useRef(false);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
-  const [loadingPlans, setLoadingPlans] = useState(false);
-  const [planFetchError, setPlanFetchError] = useState(false);
-  const [planRetryKey, setPlanRetryKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open || !currentOrg) return;
-    cancelledRef.current = false;
-    setLoadingPlans(true);
-    setPlans([]);
-    setPlanFetchError(false);
-    marketplaceService
-      .getOrgMembershipPlans(currentOrg._id)
-      .then((res) => {
-        if (res.success && res.data) setPlans(res.data.filter((p) => p.is_active));
-        else setPlanFetchError(true);
-      })
-      .catch(() => setPlanFetchError(true))
-      .finally(() => setLoadingPlans(false));
-  }, [open, currentOrg, planRetryKey]);
-
-  // Auto-fill amount when plan selection changes.
-  useEffect(() => {
-    const plan = plans.find((p) => p._id === form.plan_id);
-    if (plan) setForm((f) => ({ ...f, amount_paid: String(plan.price) }));
-  }, [form.plan_id, plans]);
+  // Plans load via react-query, gated on the modal being open. Deriving the
+  // active list (and the amount auto-fill, see the plan onChange) keeps this
+  // effect-free.
+  const {
+    data: allPlans = [],
+    isLoading: loadingPlans,
+    isError: planFetchError,
+    refetch: refetchPlans,
+  } = useOrgMembershipPlans(currentOrg?._id, open);
+  const plans = allPlans.filter((p) => p.is_active);
 
   const selectedPlan = plans.find((p) => p._id === form.plan_id);
 
@@ -69,6 +55,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
 
   const handleSubmit = async () => {
     if (!currentOrg) return;
+    cancelledRef.current = false;
     setError(null);
     setSubmitting(true);
 
@@ -190,7 +177,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
               </p>
               <button
                 type="button"
-                onClick={() => setPlanRetryKey((k) => k + 1)}
+                onClick={() => void refetchPlans()}
                 className="text-[12.5px] font-medium"
                 style={{ color: "var(--signal-ink)" }}
               >
@@ -202,18 +189,22 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
               No active plans. Create a membership plan first.
             </p>
           ) : (
-            <select
+            <SearchableSelect
               value={form.plan_id}
-              onChange={(e) => setForm((f) => ({ ...f, plan_id: e.target.value }))}
-              className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
-            >
-              <option value="">Select a plan…</option>
-              {plans.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name} — {p.currency} {p.price.toLocaleString()}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => {
+                const plan = plans.find((p) => p._id === v);
+                setForm((f) => ({
+                  ...f,
+                  plan_id: v,
+                  amount_paid: plan ? String(plan.price) : f.amount_paid,
+                }));
+              }}
+              placeholder="Select a plan…"
+              options={plans.map((p) => ({
+                label: `${p.name} — ${p.currency} ${p.price.toLocaleString()}`,
+                value: p._id,
+              }))}
+            />
           )}
         </div>
 
@@ -237,19 +228,19 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
             <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
               Status
             </label>
-            <select
+            <SearchableSelect
               value={form.status}
-              onChange={(e) =>
+              onChange={(v) =>
                 setForm((f) => ({
                   ...f,
-                  status: e.target.value as "active" | "pending_payment",
+                  status: v as "active" | "pending_payment",
                 }))
               }
-              className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
-            >
-              <option value="active">Active</option>
-              <option value="pending_payment">Pending payment</option>
-            </select>
+              options={[
+                { label: "Active", value: "active" },
+                { label: "Pending payment", value: "pending_payment" },
+              ]}
+            />
           </div>
         </div>
 
