@@ -10,6 +10,20 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { authService } from "@/lib/api/auth";
 import { getDashboardRoute } from "@/lib/constants/routes";
 import { loginSchema, registerSchema, type LoginFormData, type RegisterFormData } from "@/lib/schemas/auth";
+import { AccountType } from "@/lib/types";
+
+/**
+ * Maps the ?role= entry-point hint (provider CTAs like /for-dietitians,
+ * /for-gyms link to /login?mode=signup&role=dietitian) to the account type
+ * sent at registration. Unknown/absent values fall through to the backend's
+ * fitness_member default. Kept in lockstep with the onboarding RoleIds.
+ */
+const ROLE_PARAM_TO_ACCOUNT_TYPE: Record<string, AccountType> = {
+  member: AccountType.FITNESS_MEMBER,
+  trainer: AccountType.PERSONAL_TRAINER,
+  gym: AccountType.GYM_OWNER,
+  dietitian: AccountType.DIETITIAN,
+};
 
 /**
  * Auth — auth.html prototype.
@@ -70,11 +84,12 @@ function AuthContent() {
   const onSignup = async (data: RegisterFormData) => {
     setApiError("");
     setIsLoading(true);
-    // Preserve the ?role= URL hint so the onboarding page can pre-select it.
+    // Carry the ?role= hint (from provider entry points like /for-dietitians)
+    // into registration so the account is created with the intended role.
+    // Without this the backend defaults to fitness_member and onboarding then
+    // locks the user to the Member track — the role can't be changed after.
     const rawRole = searchParams.get("role");
-    if (rawRole) {
-      try { sessionStorage.setItem("pendingRole", rawRole); } catch { /* ignore */ }
-    }
+    const signupRole = rawRole ? ROLE_PARAM_TO_ACCOUNT_TYPE[rawRole] : undefined;
     try {
       const result = await authRegister({
         first_name: data.firstName,
@@ -82,6 +97,7 @@ function AuthContent() {
         email: data.email,
         password: data.password,
         accept_tos: data.acceptTos,
+        ...(signupRole ? { role: signupRole } : {}),
       });
       if (!result.success) {
         setApiError(result.error || "Registration failed. Please try again.");
