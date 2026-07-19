@@ -11,6 +11,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/lib/types";
 import { formatLocal } from "@/utils/format";
+import SearchableSelect from "@/components/SearchableSelect";
 
 interface ProviderReviewsSectionProps {
   targetType: ReviewTargetType;
@@ -243,18 +244,15 @@ export default function ProviderReviewsSection({
             >
               Rating
             </label>
-            <select
+            <SearchableSelect
               id="rating"
-              value={ratingInput}
-              onChange={(event) => setRatingInput(Number(event.target.value))}
-              className="rounded-(--r-2) border border-border-2 px-3 py-2 text-sm"
-            >
-              {[5, 4, 3, 2, 1].map((rating) => (
-                <option key={rating} value={rating}>
-                  {rating} - {stars(rating)}
-                </option>
-              ))}
-            </select>
+              value={String(ratingInput)}
+              onChange={(v) => setRatingInput(Number(v))}
+              options={[5, 4, 3, 2, 1].map((rating) => ({
+                label: `${rating} - ${stars(rating)}`,
+                value: String(rating),
+              }))}
+            />
           </div>
 
           <textarea

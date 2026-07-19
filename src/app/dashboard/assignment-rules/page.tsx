@@ -530,15 +530,16 @@ export default function AssignmentRulesPage() {
                   >
                     Status
                   </label>
-                  <select
-                    value={isActive ? "active" : "inactive"}
-                    onChange={(e) => setIsActive(e.target.value === "active")}
-                    className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
-                    style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                  <div className="mt-1.5">
+                    <SearchableSelect
+                      value={isActive ? "active" : "inactive"}
+                      onChange={(v) => setIsActive(v === "active")}
+                      options={[
+                        { label: "Active", value: "active" },
+                        { label: "Inactive", value: "inactive" },
+                      ]}
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -34,6 +34,13 @@ Any component calling `useSearchParams()` must be wrapped in a `<Suspense>` boun
 
 ## Design Tokens (source of truth: globals.css)
 
+Core token VALUES are synced from the design system (`binectics-design-system/shared.css`,
+the block the prototype renders). `npm run tokens:check` fails on drift (CI/pre-commit);
+`npm run tokens:sync` pulls DS values into globals.css. App-only tokens (`--consumer*`,
+`--motion-*`, `--ease*`, `--space-*`, `--fs-*`) are frontend extensions and are left alone.
+Note: the `@binectics-fitness/tokens` package (`packages/tokens`) is a stale earlier draft
+(`--diet` naming, drifted grays) — NOT the source; reconcile it before ever consuming it.
+
 ```
 Surfaces          --bg: oklch(0.985 0.005 85)  --bg-2: oklch(0.965 0.006 85)  --bg-3: oklch(0.945 0.007 85)
 Foreground        --fg: oklch(0.18 0.008 80)   --fg-2: 0.36  --fg-3: 0.55  --fg-4: 0.72  --ink: 0.14

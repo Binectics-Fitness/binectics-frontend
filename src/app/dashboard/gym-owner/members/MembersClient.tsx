@@ -13,6 +13,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
+import SearchableSelect from "@/components/SearchableSelect";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -271,14 +272,14 @@ function ChangePlanModal({
           {getMemberName(sub)} stays on <strong style={{ color: "var(--ink)" }}>{getPlanName(sub)}</strong> until the current period ends
           {sub.end_date ? ` on ${fmtDate(sub.end_date)}` : ""}, then renews onto the new plan. Auto-renew turns on so the switch happens.
         </p>
-        <select value={planId} onChange={(e) => setPlanId(e.target.value)}
-          className="w-full h-10 rounded-(--r-2) px-3 text-[14px] mt-4"
-          style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }}>
-          <option value="">Choose a plan…</option>
-          {options.map((p) => (
-            <option key={p._id} value={p._id}>{p.name}</option>
-          ))}
-        </select>
+        <div className="mt-4">
+          <SearchableSelect
+            value={planId}
+            onChange={(v) => setPlanId(v)}
+            options={options.map((p) => ({ label: p.name, value: p._id }))}
+            placeholder="Choose a plan…"
+          />
+        </div>
         {options.length === 0 && (
           <p className="text-[12px] mt-2" style={{ color: "var(--fg-3)" }}>No other active plans — create one on Plans &amp; pricing first.</p>
         )}

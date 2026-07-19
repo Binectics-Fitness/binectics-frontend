@@ -137,7 +137,7 @@ export default function AdminOverviewClient() {
                 byCountry.map((c, i) => (
                   <div key={c.country_code} className="grid gap-3 px-4.5 py-2.5 items-center text-[13px]" style={{ gridTemplateColumns: "60px 1fr 48px", borderBottom: i < byCountry.length - 1 ? "1px solid var(--border)" : "none" }}>
                     <span className="font-mono text-[11px] tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{c.country_code}</span>
-                    <span className="h-1.5 rounded-sm overflow-hidden" style={{ background: "var(--bg-3)" }}>
+                    <span className="h-1.5 rounded-(--r-1) overflow-hidden" style={{ background: "var(--bg-3)" }}>
                       <span className="block h-full" style={{ width: `${Math.max((c.count / maxCountry) * 100, 4)}%`, background: "var(--ink)" }} />
                     </span>
                     <span className="font-mono text-[12px] text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{c.count}</span>

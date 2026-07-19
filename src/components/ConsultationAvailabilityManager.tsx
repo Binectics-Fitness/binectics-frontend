@@ -675,7 +675,7 @@ export default function ConsultationAvailabilityManager({
                           }`}
                         >
                           <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-bg shadow-sm transition-transform ${
+                            className={`inline-block h-4 w-4 transform rounded-full bg-bg transition-transform ${
                               day.enabled ? "translate-x-4" : "translate-x-0.5"
                             }`}
                           />
@@ -928,7 +928,7 @@ export default function ConsultationAvailabilityManager({
                         }));
                       }
                     }}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`rounded-(--r-2) px-3 py-1.5 text-xs font-medium transition-colors ${
                       exceptionMode === opt.value
                         ? "bg-fg text-bg"
                         : "text-fg-2 hover:bg-bg-2"
@@ -1009,7 +1009,7 @@ export default function ConsultationAvailabilityManager({
                               type: opt.value,
                             }))
                           }
-                          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                          className={`rounded-(--r-2) px-3 py-1.5 text-xs font-medium transition-colors ${
                             newException.type === opt.value
                               ? "bg-fg text-bg"
                               : "text-fg-2 hover:bg-bg-2"

@@ -17,6 +17,7 @@ import {
 } from "@/lib/types";
 import type { CreateOrgMembershipPlanRequest } from "@/lib/api/marketplace";
 import { ChipEditor } from "@/components/ds";
+import SearchableSelect from "@/components/SearchableSelect";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -255,22 +256,27 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <label className="flex flex-col gap-1.5">
           <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Type</span>
-          <select value={planType} onChange={(e) => setPlanType(e.target.value as MembershipPlanType)} className={INPUT_CLASS} style={INPUT_STYLE}>
-            <option value={MembershipPlanType.SUBSCRIPTION}>Subscription</option>
-            <option value={MembershipPlanType.ONE_TIME}>One-time</option>
-          </select>
+          <SearchableSelect
+            value={planType}
+            onChange={(v) => setPlanType(v as MembershipPlanType)}
+            options={[
+              { label: "Subscription", value: MembershipPlanType.SUBSCRIPTION },
+              { label: "One-time", value: MembershipPlanType.ONE_TIME },
+            ]}
+          />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>
             {oneTime ? "Access window" : "Billing period"}
           </span>
-          <select value={period} onChange={(e) => setPeriod(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE}>
-            {PERIODS.map((pp) => (
-              <option key={pp.value} value={pp.value}>
-                {pp.value === "custom" ? pp.label : oneTime ? `${pp.days} days` : pp.label}
-              </option>
-            ))}
-          </select>
+          <SearchableSelect
+            value={period}
+            onChange={(v) => setPeriod(v)}
+            options={PERIODS.map((pp) => ({
+              label: pp.value === "custom" ? pp.label : oneTime ? `${pp.days} days` : pp.label,
+              value: pp.value,
+            }))}
+          />
         </label>
         {period === "custom" && (
           <label className="flex flex-col gap-1.5">

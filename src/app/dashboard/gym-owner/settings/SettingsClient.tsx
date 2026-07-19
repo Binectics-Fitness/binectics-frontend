@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "./GatewaysSection";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection, ApiKeysSection } from "./TeamAccessSections";
@@ -326,12 +327,9 @@ export function SettingsClient() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Registration #" value={form?.registration_number ?? ""} onChange={(v) => set("registration_number", v)} disabled={!form} />
                 <TextField label="VAT registration #" value={form?.vat_registration_number ?? ""} onChange={(v) => set("vat_registration_number", v)} disabled={!form} />
-                <SelectField label="Country" value={form?.country ?? ""} onChange={(v) => set("country", v)} disabled={!form}>
-                  <option value="">Select country…</option>
-                  {countries.map((c) => (
-                    <option key={c.code} value={c.code}>{c.name} · {c.code}</option>
-                  ))}
-                </SelectField>
+                <SelectField label="Country" value={form?.country ?? ""} onChange={(v) => set("country", v)} disabled={!form}
+                  placeholder="Select country…"
+                  options={countries.map((c) => ({ label: `${c.name} · ${c.code}`, value: c.code }))} />
               </div>
               <TextField label="Primary email" type="email" value={form?.primary_email ?? ""} onChange={(v) => set("primary_email", v)} disabled={!form} />
             </div>
@@ -342,17 +340,11 @@ export function SettingsClient() {
             <SectionHeading title="Currency & locale" desc="How money and dates render across your dashboard and to your members." />
             <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <SelectField label="Default currency" value={form?.currency ?? "USD"} onChange={(v) => set("currency", v)} disabled={!form} hint="Used for new membership plans, listings, and revenue display.">
-                  {SUPPORTED_CURRENCIES.map((c) => (
-                    <option key={c.currencyCode} value={c.currencyCode}>{c.currencyCode} · {c.symbol} — {c.regionName}</option>
-                  ))}
-                </SelectField>
-                <SelectField label="Time zone" value={form?.time_zone ?? ""} onChange={(v) => set("time_zone", v)} disabled={!form}>
-                  <option value="">Select time zone…</option>
-                  {timeZones.map((tz) => (
-                    <option key={tz.value} value={tz.value}>{tz.label}</option>
-                  ))}
-                </SelectField>
+                <SelectField label="Default currency" value={form?.currency ?? "USD"} onChange={(v) => set("currency", v)} disabled={!form} hint="Used for new membership plans, listings, and revenue display."
+                  options={SUPPORTED_CURRENCIES.map((c) => ({ label: `${c.currencyCode} · ${c.symbol} — ${c.regionName}`, value: c.currencyCode }))} />
+                <SelectField label="Time zone" value={form?.time_zone ?? ""} onChange={(v) => set("time_zone", v)} disabled={!form}
+                  placeholder="Select time zone…"
+                  options={timeZones.map((tz) => ({ label: tz.label, value: tz.value }))} />
                 <LocaleSelect label="First day of week" value={form?.first_day_of_week} options={FIRST_DAY_OPTIONS} onChange={(v) => set("first_day_of_week", v)} disabled={!form} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -416,17 +408,11 @@ export function SettingsClient() {
             <SectionHeading title="Payout schedule" desc="How often earnings settle to your bank. Execution follows your gateway's capabilities." />
             <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <SelectField label="Frequency" value={form?.payout_schedule.frequency ?? "weekly"} onChange={(v) => onPayoutFrequency(v as PayoutFrequency)} disabled={!form}>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </SelectField>
+                <SelectField label="Frequency" value={form?.payout_schedule.frequency ?? "weekly"} onChange={(v) => onPayoutFrequency(v as PayoutFrequency)} disabled={!form}
+                  options={[{ label: "Daily", value: "daily" }, { label: "Weekly", value: "weekly" }, { label: "Monthly", value: "monthly" }]} />
                 {form?.payout_schedule.frequency === "weekly" && (
-                  <SelectField label="Payout day" value={String(form.payout_schedule.payout_day ?? 1)} onChange={(v) => setPayout({ payout_day: Number(v) })}>
-                    {PAYOUT_WEEKDAYS.map((d) => (
-                      <option key={d.value} value={String(d.value)}>{d.label}</option>
-                    ))}
-                  </SelectField>
+                  <SelectField label="Payout day" value={String(form.payout_schedule.payout_day ?? 1)} onChange={(v) => setPayout({ payout_day: Number(v) })}
+                    options={PAYOUT_WEEKDAYS.map((d) => ({ label: d.label, value: String(d.value) }))} />
                 )}
                 {form?.payout_schedule.frequency === "monthly" && (
                   <TextField label="Day of month (1–28)" type="number" value={String(form.payout_schedule.payout_day ?? 1)} onChange={(v) => {
@@ -484,13 +470,11 @@ function TextField({ label, value, onChange, disabled, type = "text" }: { label:
   );
 }
 
-function SelectField({ label, value, onChange, disabled, hint, children }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; hint?: string; children: React.ReactNode }) {
+function SelectField({ label, value, onChange, options, placeholder, disabled, hint }: { label: string; value: string; onChange: (v: string) => void; options: { label: string; value: string }[]; placeholder?: string; disabled?: boolean; hint?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
-      <select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE}>
-        {children}
-      </select>
+      <SearchableSelect value={value} onChange={onChange} options={options} placeholder={placeholder} disabled={disabled} />
       {hint && <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>{hint}</span>}
     </div>
   );
@@ -502,11 +486,12 @@ function LocaleSelect<T extends string>({ label, value, options, onChange, disab
   return (
     <div className="flex flex-col gap-1.5">
       <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
-      <select value={value ?? ""} disabled={disabled} onChange={(e) => onChange(e.target.value as T)} className={INPUT_CLASS} style={INPUT_STYLE}>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
+      <SearchableSelect
+        value={value ?? ""}
+        onChange={(v) => onChange(v as T)}
+        options={options.map((o) => ({ label: o.label, value: o.value }))}
+        disabled={disabled}
+      />
       {preview && <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>Preview · {preview}</span>}
     </div>
   );

@@ -18,6 +18,7 @@ import {
   type ClassBooking,
 } from "@/lib/api/classBookings";
 import { ClassForm, WEEKDAYS } from "../ClassForm";
+import SearchableSelect from "@/components/SearchableSelect";
 
 function memberName(b: ClassBooking): string {
   if (typeof b.member_user_id === "object") {
@@ -52,15 +53,14 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
             {isLoading ? "Loading…" : `${confirmed.length} confirmed${waitlisted.length ? ` · ${waitlisted.length} waitlisted` : ""}`}
           </div>
         </div>
-        <select value={date} onChange={(e) => setDate(e.target.value)}
-          className="h-8 rounded-(--r-2) px-2.5 text-[12.5px]"
-          style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }}>
-          {dates.map((d) => (
-            <option key={d} value={d}>
-              {new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
-            </option>
-          ))}
-        </select>
+        <SearchableSelect
+          value={date}
+          onChange={setDate}
+          options={dates.map((d) => ({
+            label: new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }),
+            value: d,
+          }))}
+        />
       </div>
       {!isLoading && roster.length === 0 && (
         <p className="px-5.5 py-6 text-[13px]" style={{ color: "var(--fg-3)" }}>No bookings for this occurrence yet.</p>

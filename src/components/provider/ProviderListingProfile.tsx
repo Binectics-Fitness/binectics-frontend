@@ -16,6 +16,7 @@ import {
   useCreateOrgListing,
 } from "@/lib/queries/marketplace";
 import { useCountries } from "@/lib/queries/utility";
+import SearchableSelect from "@/components/SearchableSelect";
 import type {
   CreateListingRequest,
   UpdateListingRequest,
@@ -246,7 +247,7 @@ export function ProviderListingProfile() {
           )}
         </div>
       </div>
-      {error && <p className="text-[12.5px]" style={{ color: "var(--danger, #b00020)" }}>{error}</p>}
+      {error && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{error}</p>}
 
       {/* Account — always editable, listing or not */}
       <Card title="Account" desc="Your name and contact number — used across Binectics, not just the marketplace.">
@@ -285,12 +286,12 @@ export function ProviderListingProfile() {
           <Field label="City" value={form?.city ?? ""} onChange={(v) => set("city", v)} disabled={!form} />
           <div className="flex flex-col gap-1.5">
             <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Country</label>
-            <select value={form?.country_code ?? ""} disabled={!form} onChange={(e) => set("country_code", e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE}>
-              <option value="">Select country…</option>
-              {countries.map((c) => (
-                <option key={c.code} value={c.code}>{c.name} · {c.code}</option>
-              ))}
-            </select>
+            <SearchableSelect
+              value={form?.country_code ?? ""}
+              onChange={(v) => set("country_code", v)}
+              options={countries.map((c) => ({ label: `${c.name} · ${c.code}`, value: c.code }))}
+              placeholder="Select country…"
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Accepting clients</label>
@@ -407,15 +408,15 @@ function CreateListingCard({
         <Field label="City" value={city} onChange={setCity} />
         <div className="flex flex-col gap-1.5">
           <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Country</label>
-          <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE}>
-            <option value="">Select country…</option>
-            {countries.map((c) => (
-              <option key={c.code} value={c.code}>{c.name} · {c.code}</option>
-            ))}
-          </select>
+          <SearchableSelect
+            value={countryCode}
+            onChange={setCountryCode}
+            options={countries.map((c) => ({ label: `${c.name} · ${c.code}`, value: c.code }))}
+            placeholder="Select country…"
+          />
         </div>
       </div>
-      {localError && <p className="text-[12.5px]" style={{ color: "var(--danger, #b00020)" }}>{localError}</p>}
+      {localError && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{localError}</p>}
       <div>
         <button className="btn-primary-v2 sm" disabled={!canSubmit} onClick={() => void submit()}>
           {creating ? "Creating…" : isGym ? "Create gym listing" : "Create listing"}

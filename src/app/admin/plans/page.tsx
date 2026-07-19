@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { AsyncSpinner } from "@/components/ds";
+import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import {
   adminService,
@@ -442,10 +443,11 @@ export default function AdminPlansPage() {
                       </div>
                       <div>
                         <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Interval</div>
-                        <select value={priceDraft.interval} onChange={(e) => setPriceDraft({ ...priceDraft, interval: e.target.value as "month" | "year" })} className="h-8 rounded-(--r-2) border border-border bg-bg px-2 text-[13px] text-ink">
-                          <option value="month">month</option>
-                          <option value="year">year</option>
-                        </select>
+                        <SearchableSelect
+                          value={priceDraft.interval}
+                          onChange={(v) => setPriceDraft({ ...priceDraft, interval: v as "month" | "year" })}
+                          options={[{ label: "month", value: "month" }, { label: "year", value: "year" }]}
+                        />
                       </div>
                       <button type="button" className="btn-primary-v2 sm" disabled={priceBusy} onClick={() => void savePrice()}>
                         {priceBusy ? "Saving…" : "Save price"}

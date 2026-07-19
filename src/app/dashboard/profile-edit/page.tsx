@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { ProviderListingProfile } from "@/components/provider/ProviderListingProfile";
 import type { Metadata } from "next";
 
@@ -9,22 +9,14 @@ export const metadata: Metadata = {
 
 export default function ProfileEditPage() {
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
-      <div
-        className="flex items-center gap-2 text-[13px] sticky top-0 z-10"
-        style={{ height: 56, padding: "0 28px", background: "var(--bg)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}
-      >
-        <Link href="/dashboard" style={{ color: "var(--fg-3)" }}>Dashboard</Link>
-        <span style={{ color: "var(--fg-4)" }}>/</span>
-        <span style={{ color: "var(--ink)", fontWeight: 500 }}>Edit profile</span>
+    <GymDashboardShell activeItem="My listing" crumb="My listing">
+      <div className="pb-1">
+        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>My listing</h1>
+        <div className="text-[13.5px] mt-1.5 max-w-[60ch]" style={{ color: "var(--fg-3)" }}>
+          How your gym appears in the marketplace. Save, then publish to go live.
+        </div>
       </div>
-      <div style={{ padding: "28px" }}>
-        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Edit profile</h1>
-        <p className="text-[13.5px] mt-1.5 mb-6 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
-          This is how you appear in the marketplace. Save your changes, then publish when you&rsquo;re ready for them to go live.
-        </p>
-        <ProviderListingProfile />
-      </div>
-    </div>
+      <ProviderListingProfile />
+    </GymDashboardShell>
   );
 }

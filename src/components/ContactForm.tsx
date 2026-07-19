@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components";
+import SearchableSelect from "@/components/SearchableSelect";
 import { contactSchema, type ContactFormData } from "@/lib/schemas/contact";
 
 interface ContactFormProps {
@@ -15,6 +16,7 @@ export function ContactForm({ categories }: ContactFormProps) {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -93,17 +95,18 @@ export function ContactForm({ categories }: ContactFormProps) {
         >
           Category
         </label>
-        <select
-          id="category"
-          {...register("category")}
-          className="w-full rounded-(--r-2) border border-border bg-bg px-4 py-3 text-fg transition-colors focus:border-signal focus:outline-none focus:ring-2 focus-visible:ring-signal/20"
-        >
-          {categories.map((cat) => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
+        <Controller
+          name="category"
+          control={control}
+          render={({ field }) => (
+            <SearchableSelect
+              id="category"
+              value={field.value}
+              onChange={field.onChange}
+              options={categories.map((cat) => ({ label: cat.label, value: cat.value }))}
+            />
+          )}
+        />
       </div>
 
       <Input

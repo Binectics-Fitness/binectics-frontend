@@ -21,6 +21,8 @@
     "lint": "eslint",
     "api:sync": "openapi-typescript ${OPENAPI_SCHEMA_PATH:-../binectics-api/schema/openapi.json} -o src/lib/api/generated/schema.ts",
     "api:check": "npm run api:sync && git diff --exit-code -- src/lib/api/generated/schema.ts",
+    "tokens:sync": "node scripts/sync-design-tokens.mjs --write",
+    "tokens:check": "node scripts/sync-design-tokens.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

@@ -10,6 +10,7 @@ import {
   type Form,
   type FormQuestion,
 } from "@/lib/api/forms";
+import SearchableSelect from "@/components/SearchableSelect";
 
 type AnswerValue = string | number | string[] | null;
 
@@ -44,17 +45,12 @@ function QuestionField({
       );
     case QuestionType.SELECT:
       return (
-        <select
+        <SearchableSelect
           value={(value as string) ?? ""}
-          onChange={(e) => onChange(e.target.value || null)}
-          className={inputClass}
-          style={inputStyle}
-        >
-          <option value="">Select…</option>
-          {(question.options ?? []).map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+          onChange={(v) => onChange(v || null)}
+          options={(question.options ?? []).map((o) => ({ label: o.label, value: o.value }))}
+          placeholder="Select…"
+        />
       );
     case QuestionType.MULTIPLE_CHOICE:
       return (

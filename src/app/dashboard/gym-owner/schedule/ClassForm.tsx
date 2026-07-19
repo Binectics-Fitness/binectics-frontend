@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { GymClass, CreateGymClassRequest } from "@/lib/api/classes";
+import SearchableSelect from "@/components/SearchableSelect";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -66,11 +67,11 @@ export function ClassForm({ initial, saving, error, onSubmit, onCancel, submitLa
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <label className="flex flex-col gap-1.5">
           <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Day</span>
-          <select value={day} onChange={(e) => setDay(Number(e.target.value))} className={INPUT_CLASS} style={INPUT_STYLE}>
-            {WEEKDAYS.map((d, i) => (
-              <option key={d} value={i}>{d}</option>
-            ))}
-          </select>
+          <SearchableSelect
+            value={String(day)}
+            onChange={(v) => setDay(Number(v))}
+            options={WEEKDAYS.map((d, i) => ({ label: d, value: String(i) }))}
+          />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Start (24h)</span>
