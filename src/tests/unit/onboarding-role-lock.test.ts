@@ -1,27 +1,57 @@
 import { describe, it, expect } from "vitest";
-import { resolvePreselectedRole } from "@/app/onboarding/_config";
+import { resolveEstablishedRole, resolvePreselectedRole } from "@/app/onboarding/_config";
 
-// Regression guard: an invited gym member's role IS their membership, never
-// an open choice. The onboarding page freezes a "roleLocked" flag from this
-// function's result at mount and uses it to disable the persistent role
-// rail — so this function is the entire safety boundary. Getting it wrong
-// either re-opens the "invited member can overwrite their own role" bug, or
-// wrongly locks out a genuine first-time signup with no role yet.
+// Regression guards for the onboarding role model:
+//
+// 1. The backend assigns `fitness_member` (USER) to EVERY generic signup as a
+//    default — so a member account role alone must never count as an
+//    established choice. Treating it as one locked every generic signup out
+//    of the role picker (the "defaulted to member" bug).
+// 2. Provider roles (TRAINER / GYM_OWNER / DIETITIAN) are real commitments —
+//    a stray or crafted ?role= link must not override them, or it could
+//    silently spin up an unrelated org and overwrite the account's role.
+// 3. Members whose role really was preassigned (member invite / gym
+//    enrollment) are locked via membership evidence in page.tsx, not here.
+describe("resolveEstablishedRole", () => {
+  it("is null for no role and for unrecognized roles", () => {
+    expect(resolveEstablishedRole(undefined)).toBeNull();
+    expect(resolveEstablishedRole(null)).toBeNull();
+    expect(resolveEstablishedRole("ADMIN")).toBeNull();
+  });
+
+  it("is null for the default member role — a backend default, not a choice", () => {
+    expect(resolveEstablishedRole("USER")).toBeNull();
+  });
+
+  it("resolves provider roles — those reflect an actual commitment", () => {
+    expect(resolveEstablishedRole("TRAINER")).toBe("trainer");
+    expect(resolveEstablishedRole("GYM_OWNER")).toBe("gym");
+    expect(resolveEstablishedRole("DIETITIAN")).toBe("dietitian");
+  });
+});
+
 describe("resolvePreselectedRole", () => {
   it("is null when neither a query param nor an account role exists (true first-timer)", () => {
     expect(resolvePreselectedRole(null, undefined)).toBeNull();
     expect(resolvePreselectedRole(null, null)).toBeNull();
   });
 
-  it("resolves from the account's existing role (e.g. an invited, claimed member)", () => {
-    expect(resolvePreselectedRole(null, "USER")).toBe("member");
+  it("does NOT preselect from the default member role — the picker must stay open", () => {
+    expect(resolvePreselectedRole(null, "USER")).toBeNull();
+  });
+
+  it("preselects from an established provider account role", () => {
     expect(resolvePreselectedRole(null, "TRAINER")).toBe("trainer");
     expect(resolvePreselectedRole(null, "GYM_OWNER")).toBe("gym");
     expect(resolvePreselectedRole(null, "DIETITIAN")).toBe("dietitian");
   });
 
-  it("resolves from a valid ?role= link when there's no account role yet", () => {
+  it("resolves from a valid ?role= link when there's no established role", () => {
     expect(resolvePreselectedRole("trainer", undefined)).toBe("trainer");
+    // A default-member account is still an open choice, so the marketing
+    // link may preselect (the invited-member case is gated by membership
+    // evidence in page.tsx, plus the workspace-creation guard).
+    expect(resolvePreselectedRole("gym", "USER")).toBe("gym");
   });
 
   it("ignores an unrecognized ?role= value", () => {
@@ -32,11 +62,10 @@ describe("resolvePreselectedRole", () => {
     expect(resolvePreselectedRole(null, "ADMIN")).toBeNull();
   });
 
-  it("prefers the account role over a ?role= link when both exist", () => {
-    // The bug this guards: a stray/crafted ?role= link must not be able to
-    // override an already-claimed member's real account role — that's the
-    // exact override this whole function exists to block.
-    expect(resolvePreselectedRole("gym", "USER")).toBe("member");
+  it("prefers an established provider role over a ?role= link", () => {
+    // A stray/crafted ?role= link must not be able to override a real
+    // provider account role.
     expect(resolvePreselectedRole("member", "TRAINER")).toBe("trainer");
+    expect(resolvePreselectedRole("gym", "DIETITIAN")).toBe("dietitian");
   });
 });
