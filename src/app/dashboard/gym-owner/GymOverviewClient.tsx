@@ -9,6 +9,8 @@ import { checkinsService } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
   MembershipSubscriptionStatus,
@@ -81,6 +83,13 @@ function CardHead({ title, sub }: { title: string; sub?: string }) {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function GymOverviewClient() {
+  // Role guard: wrong-role accounts get redirected to their own dashboard.
+  const { isAuthorized } = useRoleGuard(UserRole.GYM_OWNER);
+  if (!isAuthorized) return null;
+  return <GymOverviewContent />;
+}
+
+function GymOverviewContent() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { user } = useAuth();
   const { fmtDate, fmtTime, fmtMoney } = useOrgFormat();

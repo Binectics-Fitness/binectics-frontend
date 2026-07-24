@@ -194,6 +194,17 @@ function OnboardingContent() {
 
       if (response.success && response.data) {
         setCurrentOrg(response.data);
+        // Org creation promotes the account role server-side (USER →
+        // provider). Pull the fresh user immediately so localStorage /
+        // useAuth stop serving the stale member role — the dashboards'
+        // role guards would otherwise bounce a newly-promoted provider
+        // off their own dashboard until the next full refresh.
+        try {
+          const fresh = await authService.refreshUserFromApi();
+          if (fresh) updateUser(fresh);
+        } catch {
+          // best-effort; onboarding completion refreshes again
+        }
         await refreshOrganizations();
       } else {
         setWorkspaceError(response.message || "We could not create your workspace yet.");
@@ -202,7 +213,7 @@ function OnboardingContent() {
     };
 
     void createWorkspace();
-  }, [accountRole, currentOrg, memberGate, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, user, workspaceReady, workspaceRetryKey]);
+  }, [accountRole, currentOrg, memberGate, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, updateUser, user, workspaceReady, workspaceRetryKey]);
 
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
