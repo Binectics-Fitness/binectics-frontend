@@ -253,6 +253,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear user state when login fails
       setUser(null);
 
+      // Correct credentials but the email was never OTP-verified — pick the
+      // verification flow back up where registration left off.
+      if (response.code === "AUTH_EMAIL_NOT_VERIFIED") {
+        router.push(`/verification?email=${encodeURIComponent(data.email)}`);
+        return {
+          success: false,
+          error: response.message || "Please verify your email to continue.",
+        };
+      }
+
       return {
         success: false,
         error: response.message || "Login failed",
