@@ -12,17 +12,37 @@ export const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
 };
 
 /**
- * Resolves which role, if any, was already decided before the user made
- * any choice on this page — either an explicit `?role=` link, or the
- * account's existing server-side role (e.g. an invited gym member's role
- * IS their membership, never an open choice).
+ * Resolves the account's *established* role — one that reflects an actual
+ * commitment (a provider CTA signup, or a promotion from a completed track).
  *
- * This single result drives two things that must stay in lockstep: whether
- * the full-page role picker (step 0) is skipped, and whether the
- * persistent role rail is locked. Getting them out of sync is exactly how
- * an invited member ends up able to "change their mind" into a role that
- * was never theirs to pick — silently spinning up an unrelated org and
- * overwriting the account's one server-side role.
+ * `USER`/member deliberately does NOT count: the backend assigns
+ * `fitness_member` to every generic signup as a default, so on its own it
+ * proves nothing about intent. Treating that default as established was the
+ * bug that locked every generic signup out of the role picker. Members whose
+ * role really was preassigned (the member invite / gym enrollment flow) are
+ * detected separately, via membership evidence — see the onboarding page.
+ */
+export function resolveEstablishedRole(
+  accountUserRole: string | null | undefined,
+): RoleId | null {
+  const fromAccount =
+    (accountUserRole && ACCOUNT_ROLE_TO_ID[accountUserRole]) || null;
+  return fromAccount && fromAccount !== "member" ? fromAccount : null;
+}
+
+/**
+ * Resolves which role, if any, should already be selected when the user
+ * lands on this page — the account's established role if it has one,
+ * otherwise an explicit `?role=` link.
+ *
+ * The established role wins when it exists: a `?role=` link is just a
+ * marketing convenience for accounts that haven't chosen yet. Letting it
+ * override an established provider role would let a stray or crafted link
+ * silently spin up an unrelated org and overwrite the account's real role.
+ *
+ * Note this drives *preselection* (skipping the step-0 picker), not the
+ * rail lock — the lock additionally depends on membership evidence and on
+ * whether an org already exists (see `roleLocked` in page.tsx).
  */
 export function resolvePreselectedRole(
   searchParamRole: string | null,
@@ -32,13 +52,7 @@ export function resolvePreselectedRole(
     searchParamRole && VALID_ROLES.includes(searchParamRole as RoleId)
       ? (searchParamRole as RoleId)
       : null;
-  const fromAccount =
-    (accountUserRole && ACCOUNT_ROLE_TO_ID[accountUserRole]) || null;
-  // Account role wins when it exists: a `?role=` link is just a marketing
-  // convenience for brand-new signups with no role yet. Letting it override
-  // an already-established account role would let a stray or crafted link
-  // do exactly what this whole function exists to prevent.
-  return fromAccount ?? fromParam;
+  return resolveEstablishedRole(accountUserRole) ?? fromParam;
 }
 
 export interface StepDef {

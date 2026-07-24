@@ -7,11 +7,12 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { teamsService } from "@/lib/api/teams";
+import { marketplaceService } from "@/lib/api/marketplace";
 import { onboardingService } from "@/lib/api/onboarding";
 import { authService } from "@/lib/api/auth";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, resolvePreselectedRole, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import { MEMBER_STEPS } from "./_member";
 import { TRAINER_STEPS } from "./_trainer";
@@ -88,22 +89,60 @@ function OnboardingContent() {
   const { user, updateUser } = useAuth();
   const { organizations, currentOrg, setCurrentOrg, refreshOrganizations, isLoading: orgLoading } = useOrganization();
   const preselected = resolvePreselectedRole(searchParams.get("role"), user?.role);
-  const accountRole = resolvePreselectedRole(null, user?.role);
+  const establishedRole = resolveEstablishedRole(user?.role);
+  const accountRole = user?.role ? (ACCOUNT_ROLE_TO_ID[user.role] ?? null) : null;
 
   const [manualRole, setManualRole] = useState<RoleId | null>(preselected);
-  const role = manualRole ?? accountRole;
-  const [step, setStep] = useState(preselected ? 1 : 0);
+  const [rawStep, setStep] = useState(preselected ? 1 : 0);
+  // Every generic signup gets the `fitness_member` role as a backend default,
+  // so a member account role alone doesn't tell us whether the role was
+  // *chosen* (member invite / gym enrollment — locked, their role IS their
+  // membership) or merely *defaulted* (free to pick any track). Membership
+  // evidence is the distinguishing signal: an invited/enrolled member has at
+  // least one membership subscription; a generic signup has none. "pending"
+  // keeps the rail locked until we know — briefly locking a free user is
+  // harmless, briefly unlocking an invited member is the bug this guards.
+  const [memberGate, setMemberGate] = useState<"pending" | "invited" | "free">("pending");
+  useEffect(() => {
+    if (accountRole !== "member") return;
+    let cancelled = false;
+    marketplaceService
+      .getMyMembershipSubscriptions()
+      .then((res) => {
+        if (cancelled) return;
+        setMemberGate((res.data?.length ?? 0) > 0 ? "invited" : "free");
+      })
+      .catch(() => {
+        // Availability over the guard: wrongly locking a genuine signup out
+        // of the role picker is worse than a UX-only unlock of an invitee.
+        if (!cancelled) setMemberGate("free");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accountRole]);
+
   // Deliberately NOT frozen in state: `user` from useAuth() hydrates
   // asynchronously (starts null, populated a tick after mount), so a
   // useState-frozen value computed on the very first render could lock in
   // "false" before the account's real role is known — and never re-lock
-  // once it arrives. Recomputing every render self-heals the instant
-  // accountRole resolves. If a role was already known (account role, or a
-  // ?role= link), the persistent rail must not offer a live, clickable
-  // "change your mind" — an invited gym member's role IS their membership,
-  // not a choice, and clicking "Trainer"/"Gym" would silently spin up a new
-  // org + overwrite the account's role.
-  const roleLocked = Boolean(preselected);
+  // once it arrives. Recomputing every render self-heals the instant the
+  // inputs resolve. The rail locks when the role is no longer an open
+  // choice: an established provider role, an org that already exists
+  // (switching after workspace creation would strand a mistyped org), or a
+  // member whose role was preassigned by the invite/enrollment flow.
+  const roleLocked =
+    Boolean(establishedRole) ||
+    organizations.length > 0 ||
+    (accountRole === "member" && memberGate !== "free");
+
+  // An invited member's track is already decided: force the Member track
+  // (ignoring any role card clicked before the membership evidence
+  // resolved) and skip the picker. Derived, not set in an effect, so it
+  // takes hold the same render the evidence arrives.
+  const invitedMember = accountRole === "member" && memberGate === "invited";
+  const role = invitedMember ? "member" : (manualRole ?? accountRole);
+  const step = invitedMember && rawStep === 0 ? 1 : rawStep;
   const [data, setData] = useState<Record<string, unknown>>({});
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSavingLater, setIsSavingLater] = useState(false);
@@ -135,6 +174,14 @@ function OnboardingContent() {
       return;
     }
 
+    // A member-role account may only materialize a provider workspace once
+    // membership evidence has cleared it as a free (non-invited) signup —
+    // otherwise a stray ?role= link could strand a provider org on an
+    // invited member before the gate resolves.
+    if (accountRole === "member" && memberGate !== "free") {
+      return;
+    }
+
     creatingWorkspaceRef.current = true;
 
     const createWorkspace = async () => {
@@ -155,7 +202,7 @@ function OnboardingContent() {
     };
 
     void createWorkspace();
-  }, [accountRole, currentOrg, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, user, workspaceReady, workspaceRetryKey]);
+  }, [accountRole, currentOrg, memberGate, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, user, workspaceReady, workspaceRetryKey]);
 
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -378,8 +425,8 @@ function OnboardingContent() {
 
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
-    // Consistent with the rail: only reopen the role picker if nothing
-    // was preselected to begin with (roleLocked mirrors that exact signal).
+    // Consistent with the rail: only reopen the role picker while the role
+    // is still an open choice (same roleLocked signal that gates the rail).
     else if (step === 1 && !roleLocked) {
       setStep(0);
       setManualRole(null);
@@ -495,9 +542,10 @@ function OnboardingContent() {
         <div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", color: "var(--fg-4)", letterSpacing: "0.06em", marginBottom: 12 }}>Role</div>
           {roleLocked ? (
-            // Role already established (account role, or a ?role= link) —
-            // no live picker. Switching roles here would silently spin up
-            // an unrelated org and overwrite the account's role.
+            // Role no longer an open choice (established provider role,
+            // invited/enrolled member, or an org already exists) — no live
+            // picker. Switching here would silently spin up an unrelated
+            // org and overwrite the account's role.
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", minHeight: 44, border: "1px solid var(--border)", borderRadius: "var(--r-2)", background: "var(--bg)" }}>
               <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: ROLES.find((r) => r.id === role)?.color, flexShrink: 0 }} />
               <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>{ROLES.find((r) => r.id === role)?.label}</span>
