@@ -13,6 +13,8 @@ import {
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -55,6 +57,13 @@ const BOOKING_STATUS_STYLE: Record<string, { color: string; bg: string; label: s
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function DietitianTodayClient() {
+  // Role guard: wrong-role accounts get redirected to their own dashboard.
+  const { isAuthorized } = useRoleGuard(UserRole.DIETITIAN);
+  if (!isAuthorized) return null;
+  return <DietitianTodayContent />;
+}
+
+function DietitianTodayContent() {
   const { user } = useAuth();
   const { fmtDate, fmtTime } = useOrgFormat();
   const [clients, setClients] = useState<ClientProfile[]>([]);

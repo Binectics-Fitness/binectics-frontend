@@ -65,16 +65,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const stored = authService.getCurrentUser();
         const expiry = tokenStorage.getExpiry();
         const expired = !!expiry && expiry <= Date.now();
-        if (stored && !expired) {
-          setUser(stored);
-          return;
-        }
-
         const onProtectedPath =
           typeof window !== "undefined" &&
           ["/dashboard", "/admin", "/onboarding", "/check-in"].some((p) =>
             window.location.pathname.startsWith(p),
           );
+        if (stored && !expired) {
+          setUser(stored);
+          // Stale-while-revalidate: the role can change server-side (e.g.
+          // the onboarding org-creation promotion, USER → provider), and a
+          // stale stored role misroutes the role-guarded dashboards. Serve
+          // the cached user instantly, then refresh in the background.
+          // Protected paths only — marketing visits shouldn't fire it.
+          if (onProtectedPath) {
+            void authService
+              .refreshUserFromApi()
+              .then((fresh) => {
+                if (active && fresh) setUser(fresh);
+              })
+              .catch(() => {
+                // best-effort; the cached user stays
+              });
+          }
+          return;
+        }
         if (stored || onProtectedPath) {
           // apiClient transparently refreshes on 401, so a live refresh
           // cookie revives the session; a dead one clears the ghost.

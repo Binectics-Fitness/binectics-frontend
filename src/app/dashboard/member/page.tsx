@@ -6,6 +6,8 @@ import { StartConversationButton } from "@/components/messaging/StartConversatio
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { UserRole } from "@/lib/types";
 import { checkinsService } from "@/lib/api/checkins";
 import { consultationsService, ConsultationBookingStatus } from "@/lib/api/consultations";
 import { loyaltyService } from "@/lib/api/loyalty";
@@ -75,6 +77,16 @@ const cardStyle = {
 };
 
 export default function MemberHomePage() {
+  // Role guard: a provider account (promoted during onboarding) landing
+  // here gets redirected to its own dashboard instead of silently seeing
+  // the member view. Wrapper component so the content's hooks don't run
+  // for wrong-role visitors.
+  const { isAuthorized } = useRoleGuard(UserRole.USER);
+  if (!isAuthorized) return null;
+  return <MemberHomeContent />;
+}
+
+function MemberHomeContent() {
   const { user } = useAuth();
   const [snapshot, setSnapshot] = useState<MemberSnapshot>({
     checkins: null,
