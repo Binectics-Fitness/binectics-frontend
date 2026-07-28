@@ -41,6 +41,9 @@ export interface ConsultationType {
   bufferMinutes: number;
   minAdvanceNoticeMinutes: number;
   isActive: boolean;
+  /** Optional session price in the currency's minor unit (kobo/cents). */
+  priceMinor?: number | null;
+  currency?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -250,6 +253,13 @@ export const consultationsService = {
     return apiClient.patch<ConsultationBooking>(
       `/consultations/bookings/${id}/cancel`,
       payload ?? {},
+    );
+  },
+
+  markNoShow(id: string): Promise<ApiResponse<ConsultationBooking>> {
+    return apiClient.patch<ConsultationBooking>(
+      `/consultations/bookings/${id}/no-show`,
+      {},
     );
   },
 

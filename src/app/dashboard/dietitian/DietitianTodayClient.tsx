@@ -6,7 +6,7 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { NewPlanButton } from "./_actions";
-import { progressService, type ClientProfile } from "@/lib/api/progress";
+import { progressService, type ClientProfile, type DashboardStats } from "@/lib/api/progress";
 import {
   consultationsService,
   ConsultationBookingStatus,
@@ -68,6 +68,7 @@ function DietitianTodayContent() {
   const { fmtDate, fmtTime } = useOrgFormat();
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [now, setNow] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,9 +77,10 @@ function DietitianTodayContent() {
     let active = true;
     const run = async () => {
       setLoading(true);
-      const [clientsRes, bookingsRes] = await Promise.allSettled([
+      const [clientsRes, bookingsRes, statsRes] = await Promise.allSettled([
         progressService.getMyClientProfiles(),
         consultationsService.getProviderBookings(),
+        progressService.getDashboardStats(),
       ]);
       if (!active) return;
 
@@ -89,6 +91,10 @@ function DietitianTodayContent() {
       }
       if (bookingsRes.status === "fulfilled" && bookingsRes.value.success && bookingsRes.value.data) {
         setBookings(bookingsRes.value.data);
+        anyOk = true;
+      }
+      if (statsRes.status === "fulfilled" && statsRes.value.success && statsRes.value.data) {
+        setStats(statsRes.value.data);
         anyOk = true;
       }
       setNow(Date.now());
@@ -164,6 +170,22 @@ function DietitianTodayContent() {
               </div>
             ))}
           </div>
+
+          {/* Practice stats strip (server-side /progress/dashboard-stats) */}
+          {stats && (
+            <div className="rounded-(--r-3) flex flex-wrap items-center gap-x-6 gap-y-2 px-4.5 py-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              {[
+                { label: "Clients", value: `${stats.active_clients} active / ${stats.total_clients} total` },
+                { label: "Pending requests", value: String(stats.pending_requests) },
+                { label: "Pending invitations", value: String(stats.pending_invitations) },
+              ].map((s) => (
+                <div key={s.label} className="flex items-baseline gap-2">
+                  <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.label}</span>
+                  <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-3 items-start">
             {/* Upcoming consults */}

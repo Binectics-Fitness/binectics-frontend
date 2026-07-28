@@ -1,25 +1,20 @@
-import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { FeaturePending } from "@/components/ds/FeaturePending";
 import type { Metadata } from "next";
+import MealPlansClient from "./MealPlansClient";
 
 export const metadata: Metadata = {
   title: "Meal plans",
-  description: "Reusable plan templates",
+  description: "Reusable plan templates you can assign to clients",
 };
 
 /**
- * Honest pending state — this page previously rendered fabricated demo
- * data. Policy: wire what has a backend; never fabricate.
+ * Real diet-plan manager backed by the progress API (provider diet plans).
+ * `?new=1` opens the create form immediately (used by the New plan launcher).
  */
-export default function DietitianMealPlansPage() {
-  return (
-    <DietitianDashboardShell activeItem={"Meal plans"} crumb={"Meal plans"}>
-      <FeaturePending
-        title={"Meal plans"}
-        subtitle={"Reusable plan templates"}
-        pendingTitle={"Meal plan templates are coming soon"}
-        pendingBody={"A template library you can assign to clients will appear here once the meal-plan subsystem is built. Client meal LOGGING is real today via client profiles. This page previously showed fabricated templates."}
-      />
-    </DietitianDashboardShell>
-  );
+export default async function DietitianMealPlansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ new?: string }>;
+}) {
+  const sp = await searchParams;
+  return <MealPlansClient initialCreateOpen={sp?.new === "1"} />;
 }

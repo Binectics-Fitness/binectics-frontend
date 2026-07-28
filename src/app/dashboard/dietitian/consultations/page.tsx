@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
+import { AsyncSpinner, EmptySlate, Drawer } from "@/components/ds";
+import { toast } from "@/components/Toast";
 import {
   consultationsService,
   ConsultationBookingStatus,
@@ -14,8 +17,15 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 type Filter = "Upcoming" | "Past" | "Cancelled";
 
-function getClientLabel(booking: ConsultationBooking) {
-  return `Client ${booking.clientUserId.slice(-6).toUpperCase()}`;
+function clientName(booking: ConsultationBooking): string {
+  const name = [booking.clientFirstName, booking.clientLastName].filter(Boolean).join(" ");
+  return name || "Client";
+}
+
+function clientInitials(booking: ConsultationBooking): string {
+  const parts = clientName(booking).trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  return (parts[0] ?? "?").slice(0, 2).toUpperCase();
 }
 
 function toFilter(status: ConsultationBookingStatus): Filter {
@@ -31,94 +41,103 @@ function toFilter(status: ConsultationBookingStatus): Filter {
   return "Past";
 }
 
+function durationMins(b: ConsultationBooking): number {
+  return Math.max(0, Math.round((new Date(b.endsAt).getTime() - new Date(b.startsAt).getTime()) / 60000));
+}
+
+const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  [ConsultationBookingStatus.PENDING]: { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)", label: "Pending" },
+  [ConsultationBookingStatus.CONFIRMED]: { bg: "var(--signal-soft)", color: "var(--signal-ink)", label: "Confirmed" },
+  [ConsultationBookingStatus.COMPLETED]: { bg: "var(--bg-3)", color: "var(--fg-2)", label: "Completed" },
+  [ConsultationBookingStatus.CANCELLED]: { bg: "var(--danger-soft)", color: "var(--danger)", label: "Cancelled" },
+  [ConsultationBookingStatus.NO_SHOW]: { bg: "var(--danger-soft)", color: "var(--danger)", label: "No-show" },
+};
+
 /* ─── Helpers ────────────────────────────────────────────── */
 
-function StatusBadge({ status }: { status: "Upcoming" | "Past" | "Cancelled" }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Upcoming: { bg: "var(--signal-soft)", color: "var(--signal-ink)" },
-    Past: { bg: "var(--bg-3)", color: "var(--fg-2)" },
-    Cancelled: { bg: "var(--danger-soft)", color: "var(--danger)" },
-  };
-  const s = map[status];
+function StatusBadge({ status }: { status: ConsultationBookingStatus }) {
+  const s = STATUS_STYLE[status] ?? { bg: "var(--bg-3)", color: "var(--fg-2)", label: status };
   return (
     <span
       className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px]"
       style={{ background: s.bg, color: s.color }}
     >
       <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
-      {status}
+      {s.label}
     </span>
   );
 }
 
-function TypePill({ type }: { type: "Initial" | "Follow-up" | "Review" }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Initial: { bg: "var(--dietitian-soft)", color: "var(--dietitian)" },
-    "Follow-up": { bg: "var(--bg-2)", color: "var(--fg-2)" },
-    Review: { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)" },
-  };
-  const s = map[type];
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <span
-      className="font-mono text-[9.5px] px-1.5 py-[2px] rounded-(--r-1) uppercase tracking-[0.04em]"
-      style={{ background: s.bg, color: s.color }}
-    >
-      {type}
-    </span>
+    <div className="flex flex-col gap-1">
+      <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{label}</div>
+      <div className="text-[13.5px]" style={{ color: "var(--ink)" }}>{children}</div>
+    </div>
   );
 }
 
 /* ─── Page ───────────────────────────────────────────────── */
 
 export default function DietitianConsultationsPage() {
-  const { fmtDateTime } = useOrgFormat();
+  const { fmtDateTime, fmtTime } = useOrgFormat();
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [typesById, setTypesById] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<Filter>("Upcoming");
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [acting, setActing] = useState<"complete" | "no-show" | "cancel" | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  // Wall-clock snapshot for past/future checks — refreshed on load and on row
+  // click, never read via Date.now() during render.
+  const [now, setNow] = useState(0);
+
+  const load = useCallback(async () => {
+    const [bookingsRes, typesRes] = await Promise.allSettled([
+      consultationsService.getProviderBookings(),
+      consultationsService.getTypes({ includeInactive: true }),
+    ]);
+
+    let bookingsOk = false;
+    if (bookingsRes.status === "fulfilled" && bookingsRes.value.success && bookingsRes.value.data) {
+      setBookings(bookingsRes.value.data);
+      bookingsOk = true;
+    }
+    if (typesRes.status === "fulfilled" && typesRes.value.success && typesRes.value.data) {
+      setTypesById(
+        typesRes.value.data.reduce<Record<string, string>>((acc, type: ConsultationType) => {
+          acc[type.id] = type.name;
+          return acc;
+        }, {}),
+      );
+    }
+    // The list is only trustworthy when the bookings call itself succeeded —
+    // a failure must never render as "no consultations".
+    setNow(Date.now());
+    setError(bookingsOk ? null : "We couldn't load your consultations. Try again shortly.");
+  }, []);
 
   useEffect(() => {
     let mounted = true;
-
-    const load = async () => {
+    const run = async () => {
       setLoading(true);
-      const [bookingsRes, typesRes] = await Promise.all([
-        consultationsService.getProviderBookings(),
-        consultationsService.getTypes({ includeInactive: true }),
-      ]);
-
-      if (!mounted) return;
-
-      if (bookingsRes.success && bookingsRes.data) {
-        setBookings(bookingsRes.data);
-      } else {
-        setBookings([]);
-      }
-
-      if (typesRes.success && typesRes.data) {
-        setTypesById(
-          typesRes.data.reduce<Record<string, string>>(
-            (acc, type: ConsultationType) => {
-              acc[type.id] = type.name;
-              return acc;
-            },
-            {},
-          ),
-        );
-      } else {
-        setTypesById({});
-      }
-
-      setLoading(false);
+      await load();
+      if (mounted) setLoading(false);
     };
-
-    void load();
-
+    const kick = window.setTimeout(() => void run(), 0);
     return () => {
       mounted = false;
+      window.clearTimeout(kick);
     };
-  }, []);
+  }, [load]);
+
+  const selected = useMemo(
+    () => bookings.find((b) => b.id === selectedId) ?? null,
+    [bookings, selectedId],
+  );
 
   const counts = useMemo(() => {
     return bookings.reduce<Record<Filter, number>>(
@@ -137,15 +156,16 @@ export default function DietitianConsultationsPage() {
       if (tab !== activeFilter) return false;
       if (!q) return true;
 
-      const client = getClientLabel(booking).toLowerCase();
-      const type = (typesById[booking.consultationTypeId] ?? "consultation")
-        .toLowerCase();
+      const client = clientName(booking).toLowerCase();
+      const type = (typesById[booking.consultationTypeId] ?? "consultation").toLowerCase();
       return client.includes(q) || type.includes(q);
     });
   }, [activeFilter, bookings, query, typesById]);
 
   const kpis = useMemo(() => {
-    const completed = counts.Past;
+    const completed = bookings.filter(
+      (b) => b.status === ConsultationBookingStatus.COMPLETED,
+    ).length;
     const noShow = bookings.filter(
       (b) => b.status === ConsultationBookingStatus.NO_SHOW,
     ).length;
@@ -162,16 +182,69 @@ export default function DietitianConsultationsPage() {
     ];
   }, [bookings, counts]);
 
+  // ── Actions ────────────────────────────────────────────────
+  const runAction = async (
+    kind: "complete" | "no-show" | "cancel",
+    booking: ConsultationBooking,
+  ) => {
+    setActing(kind);
+    try {
+      const res =
+        kind === "complete"
+          ? await consultationsService.completeBooking(booking.id)
+          : kind === "no-show"
+            ? await consultationsService.markNoShow(booking.id)
+            : await consultationsService.cancelBooking(
+                booking.id,
+                cancelReason.trim() ? { reason: cancelReason.trim() } : {},
+              );
+      if (res.success) {
+        toast.success(
+          kind === "complete"
+            ? "Session marked as completed."
+            : kind === "no-show"
+              ? "Session marked as a no-show."
+              : "Session cancelled.",
+        );
+        setCancelReason("");
+        setSelectedId(null);
+        await load();
+      } else {
+        toast.error(res.message ?? "That didn't work — try again.");
+      }
+    } catch {
+      toast.error("That didn't work — try again.");
+    }
+    setActing(null);
+  };
+
+  // ── Drawer action availability ─────────────────────────────
+  const actionable =
+    selected != null &&
+    (selected.status === ConsultationBookingStatus.PENDING ||
+      selected.status === ConsultationBookingStatus.CONFIRMED);
+  const isPast = selected != null && now > 0 && new Date(selected.startsAt).getTime() < now;
+
   return (
     <DietitianDashboardShell activeItem="Consultations" crumb="Consultations">
       {/* Heading */}
-      <div>
-        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-          Consultations
-        </h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          Manage your consultation schedule and history
-        </p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
+            Consultations
+          </h1>
+          <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+            Manage your consultation schedule and history
+          </p>
+        </div>
+        <Link
+          href="/dashboard/dietitian/calendar"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-(--r-2) text-[13px] no-underline"
+          style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "var(--bg)" }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
+          Calendar
+        </Link>
       </div>
 
       {/* KPIs */}
@@ -211,6 +284,13 @@ export default function DietitianConsultationsPage() {
         </div>
       </div>
 
+      {/* Error state — never render an API failure as an empty list */}
+      {error && (
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+          {error}
+        </div>
+      )}
+
       {/* Table */}
       <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
         <div className="overflow-x-auto">
@@ -229,45 +309,47 @@ export default function DietitianConsultationsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c) => {
-                const type = typesById[c.consultationTypeId] ?? "Consultation";
-                const statusLabel = toFilter(c.status);
-                const duration = Math.max(
-                  0,
-                  Math.round(
-                    (new Date(c.endsAt).getTime() - new Date(c.startsAt).getTime()) /
-                      60000,
-                  ),
-                );
-                const client = getClientLabel(c);
-                const initials = client.replace("Client ", "").slice(0, 2);
-
-                return (
-                <tr key={c.id} className="hover:bg-[var(--bg-2)] cursor-pointer">
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <div className="flex gap-2.5 items-center">
-                      <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>
-                        {initials}
-                      </span>
-                      <span className="font-medium" style={{ color: "var(--ink)" }}>{client}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{fmtDateTime(c.startsAt)}</span>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <TypePill type={type.includes("Initial") ? "Initial" : type.includes("Review") ? "Review" : "Follow-up"} />
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>{duration} min</span>
-                  </td>
-                  <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <StatusBadge status={statusLabel} />
-                  </td>
-                </tr>
-                );
-              })}
-              {!loading && filtered.length === 0 && (
+              {loading ? (
+                <tr><td colSpan={5} className="px-4.5 py-6"><AsyncSpinner label="Loading consultations" /></td></tr>
+              ) : (
+                filtered.map((c) => {
+                  const type = typesById[c.consultationTypeId] ?? "Consultation";
+                  return (
+                    <tr
+                      key={c.id}
+                      className="hover:bg-[var(--bg-2)] cursor-pointer"
+                      onClick={() => {
+                        setNow(Date.now());
+                        setSelectedId(c.id);
+                      }}
+                    >
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <div className="flex gap-2.5 items-center">
+                          <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>
+                            {clientInitials(c)}
+                          </span>
+                          <span className="font-medium" style={{ color: "var(--ink)" }}>{clientName(c)}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{fmtDateTime(c.startsAt)}</span>
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <span className="font-mono text-[9.5px] px-1.5 py-[2px] rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>
+                          {type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>{durationMins(c)} min</span>
+                      </td>
+                      <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <StatusBadge status={c.status} />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+              {!loading && !error && filtered.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-6 px-4.5 text-center text-[13px]" style={{ color: "var(--fg-3)" }}>
                     No consultations match this filter.
@@ -278,6 +360,96 @@ export default function DietitianConsultationsPage() {
           </table>
         </div>
       </div>
+
+      {/* Detail drawer */}
+      <Drawer open={selected != null} onClose={() => setSelectedId(null)} title="Consultation" width={420}>
+        {selected && (
+          <div className="flex flex-col gap-4 p-1">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>
+                {clientInitials(selected)}
+              </span>
+              <div>
+                <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>{clientName(selected)}</div>
+                <div className="mt-1"><StatusBadge status={selected.status} /></div>
+              </div>
+            </div>
+
+            <DetailRow label="Type">{typesById[selected.consultationTypeId] ?? "Consultation"}</DetailRow>
+            <DetailRow label="When">
+              {fmtDateTime(selected.startsAt)} – {fmtTime(selected.endsAt)}
+              <span className="font-mono text-[11.5px] ml-2" style={{ color: "var(--fg-3)" }}>({durationMins(selected)} min)</span>
+            </DetailRow>
+            {selected.notes && <DetailRow label="Client notes">{selected.notes}</DetailRow>}
+            {selected.completionNote && <DetailRow label="Completion note">{selected.completionNote}</DetailRow>}
+            {selected.cancelReason && (
+              <DetailRow label={`Cancelled${selected.cancelledBy ? ` by ${selected.cancelledBy.toLowerCase()}` : ""}`}>
+                {selected.cancelReason}
+              </DetailRow>
+            )}
+
+            <div style={{ borderTop: "1px solid var(--border)" }} />
+
+            {actionable ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    className="btn-primary-v2 sm"
+                    disabled={acting !== null}
+                    onClick={() => void runAction("complete", selected)}
+                  >
+                    {acting === "complete" ? "Completing…" : "Complete"}
+                  </button>
+                  <button
+                    className="btn-ghost-v2 sm"
+                    disabled={acting !== null || !isPast}
+                    onClick={() => void runAction("no-show", selected)}
+                  >
+                    {acting === "no-show" ? "Marking…" : "Mark no-show"}
+                  </button>
+                </div>
+                {!isPast && (
+                  <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
+                    No-show becomes available once the session start time has passed.
+                  </div>
+                )}
+
+                {!isPast && (
+                  <div className="flex flex-col gap-2 mt-1">
+                    <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Cancel this session</div>
+                    <textarea
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      maxLength={500}
+                      placeholder="Reason (optional — shared with the client)"
+                      className="rounded-(--r-2) px-3 py-2.5 text-[13px] resize-y"
+                      style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 60 }}
+                    />
+                    <button
+                      className="btn-ghost-v2 sm self-start"
+                      disabled={acting !== null}
+                      style={{ color: "var(--danger)" }}
+                      onClick={() => void runAction("cancel", selected)}
+                    >
+                      {acting === "cancel" ? "Cancelling…" : "Cancel session"}
+                    </button>
+                  </div>
+                )}
+                {isPast && (
+                  <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
+                    Cancelling is only available before the session starts.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptySlate
+                message={`No actions available for ${STATUS_STYLE[selected.status]?.label.toLowerCase() ?? selected.status.toLowerCase()} sessions.`}
+                mt="mt-0"
+              />
+            )}
+          </div>
+        )}
+      </Drawer>
     </DietitianDashboardShell>
   );
 }
