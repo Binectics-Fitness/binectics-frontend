@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
+import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { openCommandBar } from "@/hooks/useCommandBar";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -22,6 +24,7 @@ const NAV_LINKS = [
   { label: "Bookings",    href: "/dashboard/bookings" },
   { label: "Messages",    href: "/dashboard/messages" },
   { label: "Activity",    href: "/dashboard/member/streaks" },
+  { label: "Requests",    href: "/dashboard/member/requests" },
 ];
 
 /* ── Props ── */
@@ -96,8 +99,10 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
           {/* Right — actions */}
           <div className="flex items-center" style={{ gap: 8 }}>
-            {/* Search icon button */}
+            {/* Search — opens the global command bar (also ⌘K / Ctrl-K) */}
             <button
+              type="button"
+              onClick={() => openCommandBar()}
               className="flex items-center justify-center"
               style={{
                 width: 32,
@@ -109,6 +114,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                 cursor: "pointer",
               }}
               aria-label="Search"
+              title="Search (⌘K)"
             >
               <I>
                 <circle cx="11" cy="11" r="7" />
@@ -116,25 +122,8 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
               </I>
             </button>
 
-            {/* Notifications icon button */}
-            <button
-              className="flex items-center justify-center"
-              style={{
-                width: 32,
-                height: 32,
-                border: "1px solid var(--border)",
-                borderRadius: "var(--r-2)",
-                background: "var(--bg)",
-                color: "var(--fg-2)",
-                cursor: "pointer",
-              }}
-              aria-label="Notifications"
-            >
-              <I>
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                <path d="M14 21a2 2 0 0 1-4 0" />
-              </I>
-            </button>
+            {/* Notifications — links to the inbox with a live unread count */}
+            <ShellNotificationBell />
 
             {/* Avatar — opens the account menu (profile / settings / log out) */}
             <ShellAccountMenu
@@ -177,8 +166,9 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
           <BinecticsLockup markSize={20} />
         </Link>
 
-        {/* Right — hamburger + avatar */}
+        {/* Right — bell + avatar + hamburger */}
         <div className="flex items-center" style={{ gap: 8 }}>
+          <ShellNotificationBell />
           <Link
             href="/dashboard/settings"
             className="flex items-center justify-center shrink-0"
@@ -281,6 +271,14 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
             {/* Bottom utility links */}
             <div className="mt-auto px-5 pb-8 flex flex-col" style={{ gap: 4, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+              <Link
+                href="/dashboard/notifications"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center rounded-(--r-2) text-[16px]"
+                style={{ height: 48, padding: "0 12px", color: "var(--fg-2)" }}
+              >
+                Notifications
+              </Link>
               <Link
                 href="/dashboard/settings"
                 onClick={() => setMobileOpen(false)}

@@ -880,11 +880,38 @@ export const progressService = {
     return await apiClient.get<ClientInvitation[]>("/progress/my-invitations");
   },
 
+  /**
+   * Member-facing: pending invitations addressed to me.
+   *
+   * Prefer this over `getMyPendingInvitations`. Both list invitations sent to
+   * the signed-in member, but `/my-invitations` matches on the JWT `username`
+   * claim (which is `username || email`, so it misses anyone who set a
+   * username), while this endpoint resolves the user's canonical *verified*
+   * email server-side.
+   */
+  async getMyReceivedInvitations(): Promise<ApiResponse<ClientInvitation[]>> {
+    return await apiClient.get<ClientInvitation[]>(
+      "/progress/my-received-invitations",
+    );
+  },
+
   async acceptInvitationById(
     invitationId: string,
   ): Promise<ApiResponse<ClientProfile>> {
     return await apiClient.post<ClientProfile>(
       `/progress/invitations/${invitationId}/accept`,
+    );
+  },
+
+  /**
+   * Refuse an invitation addressed to me. Distinct from the professional
+   * cancelling it — the API records DECLINED and notifies them.
+   */
+  async declineInvitationById(
+    invitationId: string,
+  ): Promise<ApiResponse<{ declined: true }>> {
+    return await apiClient.post<{ declined: true }>(
+      `/progress/invitations/${invitationId}/decline`,
     );
   },
 

@@ -349,6 +349,15 @@ function OnboardingContent() {
         const city = (stepData.city as string | undefined)?.trim();
         if (city) patch.city = city;
         if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
+      } else if (currentStep === 3) {
+        // Training times/days were collected and thrown away until the API
+        // gained fields for them — persisted here so the answers survive.
+        const patch: Record<string, unknown> = {};
+        const times = stepData.times as string[] | undefined;
+        const days = stepData.days as string[] | undefined;
+        if (times?.length) patch.preferred_training_times = times;
+        if (days?.length) patch.preferred_training_days = days;
+        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
       }
     } catch { /* non-blocking */ }
   }, []);

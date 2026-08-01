@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { notificationsService } from "@/lib/api/notifications";
 import { NotificationCategory } from "@/lib/api/notifications";
@@ -31,6 +31,82 @@ function coerceCategory(value: unknown): NotificationCategory {
   return NotificationCategory.SYSTEM;
 }
 
+// ── Shared notification stream ───────────────────────────────────────────────
+// The bell renders more than once at a time: every shell keeps a desktop and a
+// mobile header in the DOM simultaneously (CSS hides one), and the sidebar has
+// its own bell. One EventSource per hook instance would open a stream per bell
+// and eat the browser's per-host connection budget, so the stream is a
+// refcounted module-level singleton — the first subscriber opens it, the last
+// one closes it.
+
+type StreamEvent =
+  | { type: "increment"; category: NotificationCategory }
+  | { type: "refresh" };
+type StreamListener = (event: StreamEvent) => void;
+
+const listeners = new Set<StreamListener>();
+let eventSource: EventSource | null = null;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+function emit(event: StreamEvent) {
+  // Exactly one listener applies the update. The unread count lives in a single
+  // shared query cache entry, so running the handler once per mounted bell
+  // would multiply every increment by the number of bells on screen. The Set is
+  // insertion-ordered, so if the primary unmounts the next one takes over.
+  const primary = listeners.values().next().value;
+  primary?.(event);
+}
+
+function startPolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(() => emit({ type: "refresh" }), POLL_INTERVAL_MS);
+}
+
+function openStream() {
+  if (eventSource) return;
+  const es = new EventSource(`${API_BASE_URL}/notifications/stream`, {
+    withCredentials: true,
+  });
+  eventSource = es;
+
+  es.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data) as { category?: unknown };
+      emit({ type: "increment", category: coerceCategory(payload.category) });
+    } catch {
+      // Malformed event, ignore
+    }
+  };
+
+  es.onerror = () => {
+    // SSE failed — fall back to polling. `onerror` can fire more than once;
+    // clearing the ref and guarding startPolling keeps this idempotent.
+    es.close();
+    if (eventSource === es) eventSource = null;
+    if (listeners.size > 0) startPolling();
+  };
+}
+
+function closeStream() {
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
+
+function subscribeToStream(listener: StreamListener): () => void {
+  listeners.add(listener);
+  if (listeners.size === 1) openStream();
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) closeStream();
+  };
+}
+
 export function useNotificationCount() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -38,8 +114,6 @@ export function useNotificationCount() {
   // fires an unauthenticated request that 401s.
   const isAuthenticated = user !== null;
   const unreadQuery = useUnreadNotificationCount(isAuthenticated);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /** One-shot REST fetch for the current unread count */
   const refresh = useCallback(async () => {
@@ -54,61 +128,31 @@ export function useNotificationCount() {
   }, [queryClient]);
 
   useEffect(() => {
-    let mounted = true;
-
     if (!isAuthenticated) return;
 
     // Fetch initial count via REST (only when authenticated)
-    refresh();
+    void refresh();
 
-    // Attempt SSE connection
-    const es = new EventSource(`${API_BASE_URL}/notifications/stream`, { withCredentials: true });
-    eventSourceRef.current = es;
+    return subscribeToStream((event) => {
+      if (event.type === "refresh") {
+        void refresh();
+        return;
+      }
 
-    es.onmessage = (event) => {
-      if (!mounted) return;
-      try {
-        const payload = JSON.parse(event.data) as { category?: unknown };
-        const category = coerceCategory(payload.category);
-
-        queryClient.setQueryData(queryKeys.notifications.unreadCount(), (prev: ReturnType<typeof emptyUnreadCount> | null | undefined) => {
+      queryClient.setQueryData(
+        queryKeys.notifications.unreadCount(),
+        (prev: ReturnType<typeof emptyUnreadCount> | null | undefined) => {
           const current = prev ?? emptyUnreadCount();
           return {
             count: current.count + 1,
             by_category: {
               ...current.by_category,
-              [category]: (current.by_category[category] ?? 0) + 1,
+              [event.category]: (current.by_category[event.category] ?? 0) + 1,
             },
           };
-        });
-      } catch {
-        // Malformed event, ignore
-      }
-    };
-
-    es.onerror = () => {
-      // SSE failed — fall back to polling. `onerror` can fire more than once;
-      // guard so we don't leak a second (or third) parallel interval.
-      es.close();
-      eventSourceRef.current = null;
-      if (!mounted || intervalRef.current) return;
-
-      intervalRef.current = setInterval(() => {
-        if (mounted) refresh();
-      }, POLL_INTERVAL_MS);
-    };
-
-    return () => {
-      mounted = false;
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
+        },
+      );
+    });
   }, [queryClient, refresh, isAuthenticated]);
 
   return {

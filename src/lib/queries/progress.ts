@@ -181,11 +181,19 @@ export function usePendingClientRequests(enabled = true) {
   });
 }
 
+/**
+ * Pending client invitations addressed to the signed-in member.
+ *
+ * Uses `/my-received-invitations` rather than `/my-invitations`: the latter
+ * matches on the JWT `username` claim and silently returns nothing for any
+ * member who set a username, while this one resolves the account's verified
+ * email server-side.
+ */
 export function usePendingInvitations(enabled = true) {
   return useQuery({
     queryKey: queryKeys.progress.pendingInvitations(),
     queryFn: async () => {
-      const res = await progressService.getMyPendingInvitations();
+      const res = await progressService.getMyReceivedInvitations();
       return res.success && res.data ? res.data : [];
     },
     enabled,

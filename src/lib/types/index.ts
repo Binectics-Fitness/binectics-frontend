@@ -45,6 +45,9 @@ export interface User {
   is_company?: boolean;
   fitness_goals?: string[];
   preferred_activities?: string[];
+  /** Onboarding step 3 — when the member prefers to train. */
+  preferred_training_times?: string[];
+  preferred_training_days?: string[];
   other_name?: string;
   date_of_birth?: string;
   /**
