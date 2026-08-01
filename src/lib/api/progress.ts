@@ -903,6 +903,18 @@ export const progressService = {
     );
   },
 
+  /**
+   * Refuse an invitation addressed to me. Distinct from the professional
+   * cancelling it — the API records DECLINED and notifies them.
+   */
+  async declineInvitationById(
+    invitationId: string,
+  ): Promise<ApiResponse<{ declined: true }>> {
+    return await apiClient.post<{ declined: true }>(
+      `/progress/invitations/${invitationId}/decline`,
+    );
+  },
+
   // ==================== LATEST WEIGHTS (batch) ====================
 
   async getLatestWeights(): Promise<

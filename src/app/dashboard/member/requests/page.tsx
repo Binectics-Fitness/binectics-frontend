@@ -135,6 +135,30 @@ function MemberRequestsContent() {
     }
   };
 
+  const declineInvitation = async (invitationId: string) => {
+    if (busyId) return;
+    setBusyId(invitationId);
+    try {
+      const res = await progressService.declineInvitationById(invitationId);
+      if (res.success) {
+        await refetchAll();
+        toast.success("Invitation declined.");
+      } else {
+        toast.error(
+          res.message || "Could not decline the invitation. Please try again.",
+        );
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Could not decline the invitation. Please try again.",
+      );
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <MemberDashboardShell activeLabel="Requests">
       <div style={{ marginBottom: 18 }}>
@@ -306,6 +330,19 @@ function MemberRequestsContent() {
                     </div>
                   </div>
                   <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void declineInvitation(id)}
+                      disabled={busy || expired}
+                      className="btn-ghost-v2 sm"
+                      style={{
+                        whiteSpace: "nowrap",
+                        opacity: busy || expired ? 0.5 : 1,
+                        cursor: expired ? "not-allowed" : undefined,
+                      }}
+                    >
+                      Decline
+                    </button>
                     <button
                       type="button"
                       onClick={() => void acceptInvitation(id)}
