@@ -56,6 +56,13 @@ export interface CreateConsultationTypeRequest {
   bufferMinutes?: number;
   minAdvanceNoticeMinutes?: number;
   isActive?: boolean;
+  /**
+   * Session price in the currency's minor unit (kobo/cents). The backend
+   * requires `currency` whenever this is set; it feeds the earnings
+   * page's estimated figures.
+   */
+  priceMinor?: number;
+  currency?: string;
 }
 
 export interface AvailabilityRule {

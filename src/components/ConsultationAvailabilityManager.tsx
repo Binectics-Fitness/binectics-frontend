@@ -8,6 +8,7 @@ import {
 } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import { getClientTimezone } from "@/utils/format";
+import { utilityService } from "@/lib/api/utility";
 import { UserRole } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -117,6 +118,11 @@ export default function ConsultationAvailabilityManager({
   const [bufferMinutes, setBufferMinutes] = useState<number>(0);
   const [minAdvanceNoticeHours, setMinAdvanceNoticeHours] = useState<number>(0);
   const [activeTypeIds, setActiveTypeIds] = useState<string[]>([]);
+  // Session price feeds the earnings page's estimated figures. Entered in
+  // MAJOR units here, sent to the API in minor units (×100).
+  const [priceMajor, setPriceMajor] = useState<string>("");
+  const [priceCurrency, setPriceCurrency] = useState<string>("NGN");
+  const [currencies, setCurrencies] = useState<string[]>(["NGN", "USD", "GBP", "EUR", "ZAR"]);
   const [isSavingSession, setIsSavingSession] = useState(false);
 
   // Exceptions state
@@ -189,8 +195,20 @@ export default function ConsultationAvailabilityManager({
           setMinAdvanceNoticeHours(
             Math.round((first.minAdvanceNoticeMinutes ?? 0) / 60),
           );
+          if (first.priceMinor != null && first.priceMinor > 0) {
+            setPriceMajor(String(first.priceMinor / 100));
+          }
+          if (first.currency) setPriceCurrency(first.currency.toUpperCase());
         }
       }
+    });
+
+    utilityService.getPlatformConfig().then((res) => {
+      if (!res.success || !res.data) return;
+      const supported = res.data.currencies
+        .filter((c) => c.is_active)
+        .map((c) => c.code.toUpperCase());
+      if (supported.length > 0) setCurrencies(supported);
     });
   }, [providerRoleForType]);
 
@@ -233,6 +251,17 @@ export default function ConsultationAvailabilityManager({
       }
     }
 
+    const trimmedPrice = priceMajor.trim();
+    const parsedPrice = trimmedPrice === "" ? null : Number(trimmedPrice);
+    if (parsedPrice !== null && (!Number.isFinite(parsedPrice) || parsedPrice < 0)) {
+      setMessage({
+        text: "Session price must be a positive number (or left empty).",
+        type: "error",
+      });
+      setIsSavingSession(false);
+      return;
+    }
+
     const created = await consultationsService.createType({
       name: "Standard consultation",
       providerRole: providerRoleForType,
@@ -240,6 +269,9 @@ export default function ConsultationAvailabilityManager({
       bufferMinutes,
       minAdvanceNoticeMinutes: minAdvanceNoticeHours * 60,
       isActive: true,
+      ...(parsedPrice !== null && parsedPrice > 0
+        ? { priceMinor: Math.round(parsedPrice * 100), currency: priceCurrency }
+        : {}),
     });
 
     if (created.success && created.data) {
@@ -878,6 +910,40 @@ export default function ConsultationAvailabilityManager({
                     <span className="text-sm text-fg-2">
                       hours
                     </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-fg">
+                      Session price
+                    </p>
+                    <p className="mt-0.5 text-xs text-fg-3">
+                      Shown on your listing and used for estimated earnings.
+                      Leave empty if you agree pricing per client.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={priceCurrency}
+                      onChange={(e) => setPriceCurrency(e.target.value)}
+                      aria-label="Price currency"
+                      className="rounded-(--r-2) border border-border bg-bg px-2 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                    >
+                      {currencies.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      placeholder="0.00"
+                      value={priceMajor}
+                      onChange={(e) => setPriceMajor(e.target.value)}
+                      aria-label="Session price"
+                      className="w-28 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                    />
                   </div>
                 </div>
               </div>

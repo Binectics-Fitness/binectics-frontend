@@ -95,7 +95,9 @@ function DietitianTodayContent() {
       }
       if (statsRes.status === "fulfilled" && statsRes.value.success && statsRes.value.data) {
         setStats(statsRes.value.data);
-        anyOk = true;
+        // Deliberately NOT counted toward anyOk: if both list calls fail,
+        // a lucky stats response must not suppress the failure banner and
+        // leave the page asserting "no consultations today".
       }
       setNow(Date.now());
       setError(anyOk ? null : "We couldn't load your dashboard. Try again shortly.");

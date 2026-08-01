@@ -187,6 +187,13 @@ export default function DietitianConsultationsPage() {
     kind: "complete" | "no-show" | "cancel",
     booking: ConsultationBooking,
   ) => {
+    if (
+      kind === "complete" &&
+      new Date(booking.startsAt).getTime() > Date.now() &&
+      !confirm("This session hasn't started yet. Mark it as completed anyway?")
+    ) {
+      return;
+    }
     setActing(kind);
     try {
       const res =
@@ -320,6 +327,9 @@ export default function DietitianConsultationsPage() {
                       className="hover:bg-[var(--bg-2)] cursor-pointer"
                       onClick={() => {
                         setNow(Date.now());
+                        // Draft text typed for one booking must not leak
+                        // into another booking's cancel box.
+                        setCancelReason("");
                         setSelectedId(c.id);
                       }}
                     >

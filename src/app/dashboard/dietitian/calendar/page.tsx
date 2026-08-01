@@ -80,9 +80,15 @@ export default function DietitianCalendarPage() {
     const load = async () => {
       setLoadingBookings(true);
       try {
+        // Real instants, not date-only strings: the backend parses dates
+        // with new Date(), so "2026-08-02" means midnight UTC — which
+        // silently dropped every booking later on the week's last day
+        // (and the first hours of day 1 in UTC+ timezones).
+        // buildWeekBuckets discards out-of-week rows, so the window can
+        // safely cover the full local week.
         const res = await consultationsService.getProviderBookings({
-          from: localIsoDate(weekStart),
-          to: localIsoDate(weekEnd),
+          from: weekStart.toISOString(),
+          to: addDays(weekStart, 7).toISOString(),
         });
         if (!mounted) return;
         if (res.success && res.data) {
@@ -181,6 +187,13 @@ export default function DietitianCalendarPage() {
       .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
       .slice(0, 4);
   }, [bookings]);
+
+  // The bookings state only holds the VISIBLE week — when the user pages
+  // to another week, "today's bookings" would falsely read as empty.
+  const todayInVisibleWeek = useMemo(() => {
+    const today = new Date();
+    return today >= weekStart && today < addDays(weekStart, 7);
+  }, [weekStart]);
 
   const upcomingExceptions = useMemo(() => {
     return [...exceptions]
@@ -321,7 +334,8 @@ export default function DietitianCalendarPage() {
         </div>
       )}
 
-      {/* Today's bookings */}
+      {/* Today's bookings — only when today is actually on screen */}
+      {todayInVisibleWeek && (
       <div className="rounded-(--r-3) p-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
         <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
           {loadingBookings ? "Loading today's bookings..." : "Today's bookings"}
@@ -347,6 +361,7 @@ export default function DietitianCalendarPage() {
           )}
         </div>
       </div>
+      )}
 
       {/* Week grid */}
       <div className="rounded-(--r-3) overflow-x-auto" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
@@ -476,7 +491,17 @@ export default function DietitianCalendarPage() {
                     <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--ink)" }}>{DOW[dow]}</div>
                     <div className="font-mono text-[12px] tabular-nums" style={{ color: dayRules.length > 0 ? "var(--ink)" : "var(--fg-4)" }}>
                       {dayRules.length > 0
-                        ? dayRules.map((r) => `${r.startTime} – ${r.endTime}`).join(" · ")
+                        ? dayRules
+                            .map((r) => {
+                              const local = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                              // The grid buckets bookings in browser-local
+                              // time; if a rule lives in a different zone,
+                              // say so instead of letting the two halves of
+                              // the page silently disagree.
+                              const tz = r.timezone && r.timezone !== local ? ` (${r.timezone})` : "";
+                              return `${r.startTime} – ${r.endTime}${tz}`;
+                            })
+                            .join(" · ")
                         : "Off"}
                     </div>
                   </div>

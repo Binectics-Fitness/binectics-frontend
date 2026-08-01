@@ -275,6 +275,7 @@ function NewFoodModal({
 
 export default function DietitianFoodsPage() {
   const [items, setItems] = useState<FoodItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -301,8 +302,10 @@ export default function DietitianFoodsPage() {
       if (!mounted) return;
       if (res.success && res.data) {
         setItems(res.data.items);
+        setTotal(res.data.total);
       } else {
         setItems([]);
+        setTotal(0);
         setError(res.message ?? "Failed to load your food library.");
       }
       setLoading(false);
@@ -334,12 +337,17 @@ export default function DietitianFoodsPage() {
         ? Math.round(items.reduce((s, f) => s + f.calories_kcal, 0) / items.length)
         : 0;
     return [
-      { label: "Total foods", value: String(items.length), delta: "In your library" },
+      {
+        label: "Total foods",
+        value: String(total),
+        // Truncation must be visible, not silent: the fetch caps at 200.
+        delta: total > items.length ? `Showing first ${items.length}` : "In your library",
+      },
       { label: "Categories", value: String(categories.length - 1), delta: "Distinct groups" },
       { label: "Avg calories", value: items.length ? `${avgKcal} kcal` : "-", delta: "Per serving" },
       { label: "Visible rows", value: String(filtered.length), delta: "After filters" },
     ];
-  }, [items, categories, filtered]);
+  }, [items, categories, filtered, total]);
 
   const handleCreate = async (payload: CreateFoodItemRequest): Promise<boolean> => {
     const res = await nutritionService.createFood(payload);

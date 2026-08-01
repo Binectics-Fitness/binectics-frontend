@@ -431,6 +431,7 @@ function ApplyModal({
 export default function DietitianProtocolsPage() {
   const { fmtDate } = useOrgFormat();
   const [protocols, setProtocols] = useState<Protocol[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -456,8 +457,10 @@ export default function DietitianProtocolsPage() {
       if (!mounted) return;
       if (res.success && res.data) {
         setProtocols(res.data.items);
+        setTotal(res.data.total);
       } else {
         setProtocols([]);
+        setTotal(0);
         setError(res.message ?? "Failed to load protocols.");
       }
       setLoading(false);
@@ -522,7 +525,7 @@ export default function DietitianProtocolsPage() {
       <div>
         <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Protocols</h1>
         <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {loading ? "Loading protocols..." : `${protocols.length} reusable protocol${protocols.length === 1 ? "" : "s"}`}
+          {loading ? "Loading protocols..." : `${total} reusable protocol${total === 1 ? "" : "s"}${total > protocols.length ? ` — showing first ${protocols.length}` : ""}`}
         </div>
       </div>
 

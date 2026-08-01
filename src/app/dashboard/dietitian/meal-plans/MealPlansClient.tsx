@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
@@ -531,6 +532,14 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     initialCreateOpen ? { mode: "create" } : null,
   );
   const [assignPlan, setAssignPlan] = useState<DietPlan | null>(null);
+  const router = useRouter();
+
+  // ?new=1 opened the create modal once; drop it from the URL so a
+  // refresh or a shared link doesn't reopen an empty form.
+  useEffect(() => {
+    if (initialCreateOpen) router.replace("/dashboard/dietitian/meal-plans", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -599,7 +608,13 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     };
     const res = await progressService.updateStandaloneDietPlan(plan._id, data);
     if (res.success && res.data) {
-      setPlans((p) => p.map((pl) => (pl._id === res.data!._id ? res.data! : pl)));
+      // Merge over the existing item: the PATCH response does not populate
+      // client_id, so a wholesale replace drops the "Assigned · Name" badge.
+      setPlans((p) =>
+        p.map((pl) =>
+          pl._id === res.data!._id ? { ...pl, ...res.data!, client_id: pl.client_id } : pl,
+        ),
+      );
       setModal(null);
       toast.success("Meal plan updated.");
     } else {
@@ -611,7 +626,11 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     const nextStatus = plan.status === PlanStatus.ACTIVE ? PlanStatus.INACTIVE : PlanStatus.ACTIVE;
     const res = await progressService.updateStandaloneDietPlan(plan._id, { status: nextStatus });
     if (res.success && res.data) {
-      setPlans((p) => p.map((pl) => (pl._id === res.data!._id ? res.data! : pl)));
+      setPlans((p) =>
+        p.map((pl) =>
+          pl._id === res.data!._id ? { ...pl, ...res.data!, client_id: pl.client_id } : pl,
+        ),
+      );
     } else {
       toast.error(res.message ?? "Failed to update plan status.");
     }
@@ -741,7 +760,13 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
         />
       )}
 
-      {assignPlan && <AssignPlanModal plan={assignPlan} onClose={() => setAssignPlan(null)} />}
+      {assignPlan && (
+        <AssignPlanModal
+          plan={assignPlan}
+          onClose={() => setAssignPlan(null)}
+          onAssigned={(created) => setPlans((p) => [created, ...p])}
+        />
+      )}
     </DietitianDashboardShell>
   );
 }
