@@ -267,7 +267,7 @@ export default function DietitianCalendarPage() {
   );
 
   return (
-    <DietitianDashboardShell activeItem="Consultations" crumb="Calendar">
+    <DietitianDashboardShell activeItem="Calendar" crumb="Calendar">
       {/* Calendar header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
         <div className="flex items-center gap-3.5 flex-wrap">
