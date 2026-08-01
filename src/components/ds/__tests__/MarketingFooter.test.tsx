@@ -1,6 +1,17 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+
+// The footer embeds RegionSelector, which reads RegionContext; the
+// footer's own content is what's under test, so a minimal region stub
+// is enough.
+vi.mock("@/contexts/RegionContext", () => ({
+  useRegion: () => ({
+    country: "NG",
+    currency: "NGN",
+    setRegion: vi.fn(),
+  }),
+}));
 
 describe("MarketingFooter", () => {
   it("renders all column headers", () => {

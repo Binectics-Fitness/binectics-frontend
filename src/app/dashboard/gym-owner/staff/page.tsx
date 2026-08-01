@@ -9,6 +9,12 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
+import {
+  STATUS_FILTERS,
+  filterMembers,
+  statusCounts,
+  type StatusFilter,
+} from "./staffFilters";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -57,6 +63,7 @@ const STATUS_STYLE: Record<MemberStatus, { color: string; bg: string; label: str
   [MemberStatus.INACTIVE]: { color: "var(--fg-3)", bg: "var(--bg-2)", label: "Inactive" },
 };
 
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function GymStaffPage() {
@@ -69,6 +76,8 @@ export default function GymStaffPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
 
   useEffect(() => {
     if (orgLoading || !currentOrg) return;
@@ -105,6 +114,14 @@ export default function GymStaffPage() {
   }, [currentOrg, orgLoading, reloadKey]);
 
   const activeCount = useMemo(() => members.filter((m) => m.status === MemberStatus.ACTIVE).length, [members]);
+  // Counts stay over the whole roster so the chips don't collapse to the
+  // current view; only the rendered rows are filtered.
+  const counts = useMemo(() => statusCounts(members), [members]);
+  const visibleMembers = useMemo(
+    () => filterMembers(members, query, statusFilter),
+    [members, query, statusFilter],
+  );
+  const isFiltering = query.trim() !== "" || statusFilter !== "All";
 
   return (
     <GymDashboardShell
@@ -120,9 +137,46 @@ export default function GymStaffPage() {
       <div>
         <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Staff</h1>
         <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {members.length > 0 ? `${members.length} team member${members.length === 1 ? "" : "s"} · ${activeCount} active` : "Your team and their roles"}
+          {members.length === 0
+            ? "Your team and their roles"
+            : isFiltering
+              ? `${visibleMembers.length} of ${members.length} team member${members.length === 1 ? "" : "s"}`
+              : `${members.length} team member${members.length === 1 ? "" : "s"} · ${activeCount} active`}
         </div>
       </div>
+
+      {members.length > 0 && (
+        <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <div className="flex-1 min-w-[240px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input
+              className="flex-1 border-0 bg-transparent text-[13px] outline-none"
+              placeholder="Search staff by name, email, or role…"
+              aria-label="Search staff"
+              style={{ color: "var(--ink)" }}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-1 flex-wrap" role="group" aria-label="Filter staff by status">
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                aria-pressed={statusFilter === f}
+                className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
+                style={{
+                  background: statusFilter === f ? "var(--ink)" : "var(--bg)",
+                  color: statusFilter === f ? "var(--bg)" : "var(--fg-3)",
+                  border: statusFilter === f ? "1px solid var(--ink)" : "1px solid var(--border)",
+                }}
+              >
+                {f} <span style={{ color: statusFilter === f ? "oklch(0.75 0.005 85)" : "var(--fg-4)", marginLeft: 4 }}>{counts[f]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {!currentOrg && !orgLoading ? (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
@@ -141,9 +195,17 @@ export default function GymStaffPage() {
         <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <EmptySlate message="No staff yet." hint="Add your first team member to get started." mt="mt-0" />
         </div>
+      ) : members.length > 0 && visibleMembers.length === 0 ? (
+        <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <EmptySlate
+            message="No staff match your filters."
+            hint="Try a different search term or status."
+            mt="mt-0"
+          />
+        </div>
       ) : members.length > 0 ? (
         <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          {members.map((m, i) => {
+          {visibleMembers.map((m, i) => {
             const name = memberName(m);
             const email = memberEmail(m);
             const st = STATUS_STYLE[m.status];
@@ -154,7 +216,7 @@ export default function GymStaffPage() {
             const canMessage =
               m.status === MemberStatus.ACTIVE && !!uid && uid !== user?.id;
             return (
-              <div key={m._id} className="grid gap-4 px-4.5 py-3.5 items-center hover:bg-bg-2" style={{ gridTemplateColumns: "1fr auto auto auto", borderBottom: i < members.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
+              <div key={m._id} className="grid gap-4 px-4.5 py-3.5 items-center hover:bg-bg-2" style={{ gridTemplateColumns: "1fr auto auto auto", borderBottom: i < visibleMembers.length - 1 ? "1px solid var(--border)" : "none", transition: "background 60ms" }}>
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(name)}</span>
                   <div className="min-w-0">
