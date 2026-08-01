@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { loyaltyService } from "@/lib/api/loyalty";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { RoleShell } from "@/components/ds/RoleShell";
 import { AsyncSpinner } from "@/components/ds";
 import {
   LoyaltyEventType,
@@ -115,8 +115,13 @@ export default function LoyaltyCenterPage() {
     [redemptions],
   );
 
+  // Every role reaches this page: the member owns the points and their
+  // dashboard links straight here, while a gym owner administers the same
+  // programme. RoleShell renders each of them their own chrome — hard-wiring
+  // GymDashboardShell put the page behind useRoleGuard(GYM_OWNER) and bounced
+  // the members it was built for.
   return (
-    <GymDashboardShell activeItem="Loyalty" crumb="Loyalty">
+    <RoleShell activeItem="Loyalty" memberActiveLabel="Loyalty" crumb="Loyalty">
       <div className="flex flex-col gap-5">
         <div>
           <div
@@ -502,6 +507,6 @@ export default function LoyaltyCenterPage() {
           </div>
         </div>
       </div>
-    </GymDashboardShell>
+    </RoleShell>
   );
 }

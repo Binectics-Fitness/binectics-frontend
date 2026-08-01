@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { RoleShell } from "@/components/ds/RoleShell";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -96,9 +97,16 @@ export default function NotificationsInboxClient() {
     await Promise.all([listQuery.refetch(), unreadQuery.refetch()]);
   };
 
+  // Wrapped in the signed-in user's own dashboard chrome. The inbox used to
+  // render as a bare full-page card, so now that the shells link here the
+  // visitor would otherwise land somewhere with no navigation back.
   return (
-    <div className="min-h-screen bg-bg-2 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
+    <RoleShell
+      activeItem="Notifications"
+      memberActiveLabel="Notifications"
+      crumb="Notifications"
+    >
+      <div className="mx-auto w-full max-w-5xl">
         <div className="rounded-(--r-3) border border-border bg-bg">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4 sm:px-6">
             <div>
@@ -201,6 +209,6 @@ export default function NotificationsInboxClient() {
           )}
         </div>
       </div>
-    </div>
+    </RoleShell>
   );
 }

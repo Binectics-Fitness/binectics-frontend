@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
+import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import type { UserRole } from "@/lib/types";
 import { ROLE_LABEL, fullName, nameInitials, personInitials, shortName } from "@/lib/identity";
 
@@ -146,7 +147,14 @@ export function ProviderShell({ activeItem, crumb, actions, children, config }: 
       sidebarSlot={<ProviderSidebar activeItem={activeItem} config={config} />}
       crumb={crumb}
       breadcrumbRoot={{ label: breadcrumbLabel, href: config.homeHref }}
-      actions={actions}
+      // The bell leads the header actions so every provider role reaches the
+      // notifications inbox from its own chrome, page-specific actions after.
+      actions={
+        <>
+          <ShellNotificationBell />
+          {actions}
+        </>
+      }
     >
       {children}
     </ProviderDashboardShell>

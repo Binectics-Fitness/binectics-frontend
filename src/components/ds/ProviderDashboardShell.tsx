@@ -68,7 +68,7 @@ export function ProviderDashboardShell({
               ) : null}
               <span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
             </div>
-            {actions && <div className="flex gap-2">{actions}</div>}
+            {actions && <div className="flex items-center gap-2">{actions}</div>}
           </header>
           <main className="flex flex-col gap-5 p-4 sm:p-7 flex-1">{children}</main>
         </div>
@@ -91,7 +91,7 @@ export function ProviderDashboardShell({
             ) : null}
             <span>{crumb}</span>
           </div>
-          {actions && <div className="flex gap-2 flex-wrap">{actions}</div>}
+          {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
         </header>
         <main className="flex flex-col gap-5 p-4 flex-1">{children}</main>
       </div>

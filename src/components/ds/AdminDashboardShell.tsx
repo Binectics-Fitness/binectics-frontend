@@ -6,6 +6,7 @@ import { BinecticsMark } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminGuard } from "@/hooks/useRequireAuth";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
+import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { UserRole } from "@/lib/types";
 import { ROLE_LABEL, personInitials, shortName } from "@/lib/identity";
 
@@ -264,7 +265,10 @@ export function AdminDashboardShell({ activeItem, crumb, actions, children }: Ad
               <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
               <span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
             </div>
-            {actions && <div className="flex items-center gap-2.5">{actions}</div>}
+            <div className="flex items-center gap-2.5">
+              <ShellNotificationBell />
+              {actions}
+            </div>
           </header>
 
           {/* Body */}
@@ -283,7 +287,10 @@ export function AdminDashboardShell({ activeItem, crumb, actions, children }: Ad
           <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
             <span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
           </div>
-          {actions && <div className="flex items-center gap-2.5">{actions}</div>}
+          <div className="flex items-center gap-2.5">
+            <ShellNotificationBell />
+            {actions}
+          </div>
         </header>
         <main className="flex flex-col gap-4 sm:gap-6 p-4 flex-1">
           {children}
