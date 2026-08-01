@@ -1,29 +1,67 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { ActionModal } from "@/components/ds/ActionModal";
-import { toast } from "@/components/Toast";
 
 interface NewPlanModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-const PLAN_TYPES = [
-  { value: "membership", label: "Membership plan", description: "Recurring gym membership with tiers" },
-  { value: "training", label: "Training program", description: "Multi-week strength or conditioning plan" },
-  { value: "meal", label: "Meal plan", description: "Dietitian-built nutrition protocol" },
-];
+interface PlanDestination {
+  value: string;
+  label: string;
+  description: string;
+  href: string;
+}
+
+/**
+ * Launcher for creating a plan. It used to fake creation with a success
+ * toast and no API call; now it routes to the real creation surface for
+ * the chosen plan type (each destination has actual CRUD behind it).
+ */
+function destinationsFor(pathname: string): PlanDestination[] {
+  if (pathname.startsWith("/dashboard/dietitian")) {
+    return [
+      {
+        value: "meal",
+        label: "Meal plan",
+        description: "Reusable nutrition plan you can assign to clients",
+        href: "/dashboard/dietitian/meal-plans?new=1",
+      },
+      {
+        value: "membership",
+        label: "Membership plan",
+        description: "Recurring or one-time plan clients subscribe to",
+        href: "/dashboard/dietitian/plans",
+      },
+    ];
+  }
+  if (pathname.startsWith("/dashboard/gym-owner")) {
+    return [
+      {
+        value: "membership",
+        label: "Membership plan",
+        description: "Recurring gym membership with tiers",
+        href: "/dashboard/gym-owner/plans",
+      },
+    ];
+  }
+  return [];
+}
 
 export function NewPlanModal({ open, onClose }: NewPlanModalProps) {
-  const [selected, setSelected] = useState("");
-  const [name, setName] = useState("");
+  const pathname = usePathname();
+  const router = useRouter();
+  const destinations = destinationsFor(pathname ?? "");
+  const [selected, setSelected] = useState(destinations.length === 1 ? destinations[0].value : "");
 
-  const handleCreate = () => {
-    toast.success(`${PLAN_TYPES.find((t) => t.value === selected)?.label} "${name}" created`);
-    setSelected("");
-    setName("");
+  const handleContinue = () => {
+    const dest = destinations.find((d) => d.value === selected);
+    if (!dest) return;
     onClose();
+    router.push(dest.href);
   };
 
   return (
@@ -39,17 +77,17 @@ export function NewPlanModal({ open, onClose }: NewPlanModalProps) {
           </button>
           <button
             type="button"
-            onClick={handleCreate}
-            disabled={!selected || !name.trim()}
+            onClick={handleContinue}
+            disabled={!selected}
             className="btn-signal-v2 disabled:opacity-40"
           >
-            Create plan
+            Continue
           </button>
         </>
       }
     >
       <div className="space-y-3">
-        {PLAN_TYPES.map((type) => (
+        {destinations.map((type) => (
           <label
             key={type.value}
             className={`flex cursor-pointer items-start gap-3 rounded-(--r-2) border p-3 transition-colors ${
@@ -71,20 +109,6 @@ export function NewPlanModal({ open, onClose }: NewPlanModalProps) {
             </div>
           </label>
         ))}
-        {selected && (
-          <div className="pt-2">
-            <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
-              Plan name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Gold membership"
-              className="h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink placeholder:text-fg-4 focus:border-border-2 focus:outline-none"
-            />
-          </div>
-        )}
       </div>
     </ActionModal>
   );
