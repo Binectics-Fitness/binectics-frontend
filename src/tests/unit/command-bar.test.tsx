@@ -21,6 +21,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+// CommandBar reads the signed-in user (gates authed commands + unified
+// search); render as a signed-in gym owner like the original tests assumed.
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: { id: "u1", role: "GYM_OWNER", first_name: "Test" } }),
+}));
+
 describe("CommandBar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -206,7 +212,9 @@ describe("CommandBar", () => {
     mockUseUnifiedSearch.mockReturnValue({
       data: {
         query: "fit",
-        sections: {} as any,
+        // Deliberately empty: exercises the "backend returned no
+        // sections" path without asserting a shape it never sends.
+        sections: {} as Record<UnifiedSearchSection, never[]>,
         meta: { limitPerSection: 5 },
       },
       isLoading: false,

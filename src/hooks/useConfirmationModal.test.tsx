@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useConfirmationModal } from "./useConfirmationModal";
 import { showAlert } from "@/lib/ui/dialogs";

@@ -1,9 +1,14 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import OnboardingBanner from "@/components/OnboardingBanner";
-import { UserRole } from "@/lib/types";
+import { UserRole, type User } from "@/lib/types";
 
-// Mock next/link
+// The banner is auth-driven and self-gating: it reads the signed-in user
+// from useAuth() (no props) and renders only while onboarding is
+// incomplete; dismissal persists per user id in localStorage. These tests
+// exercise that contract — the old prop-driven API (userRole/userName)
+// no longer exists.
+
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -19,107 +24,110 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-describe("OnboardingBanner", () => {
-  it("renders USER role banner with correct content", () => {
-    render(<OnboardingBanner userRole={UserRole.USER} userName="Adesegun" />);
+const mockUseAuth = vi.fn();
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => mockUseAuth(),
+}));
 
-    expect(screen.getByText(/Welcome, Adesegun!/)).toBeInTheDocument();
-    expect(screen.getByText(/Complete your profile/)).toBeInTheDocument();
+function makeUser(overrides: Partial<User> = {}): Partial<User> {
+  return {
+    id: "user-1",
+    first_name: "Adesegun",
+    role: UserRole.USER,
+    is_onboarding_complete: false,
+    ...overrides,
+  };
+}
+
+function renderWithUser(user: Partial<User> | null) {
+  mockUseAuth.mockReturnValue({ user });
+  return render(<OnboardingBanner />);
+}
+
+describe("OnboardingBanner", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders member content with a personalized welcome", () => {
+    renderWithUser(makeUser());
+
+    expect(screen.getByText(/Welcome, Adesegun/)).toBeInTheDocument();
     expect(screen.getByText("Fitness goals")).toBeInTheDocument();
     expect(screen.getByText("Preferences & interests")).toBeInTheDocument();
     expect(screen.getByText("Location")).toBeInTheDocument();
     expect(screen.getByText("Subscription plan")).toBeInTheDocument();
-    expect(screen.getByText("Complete Setup")).toBeInTheDocument();
+    expect(screen.getByText("Complete setup →")).toBeInTheDocument();
     expect(screen.getByText("Later")).toBeInTheDocument();
   });
 
-  it("renders role-specific content for TRAINER", () => {
-    render(<OnboardingBanner userRole={UserRole.TRAINER} userName="Jake" />);
-
-    expect(
-      screen.getByText(/Complete your trainer profile/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Certifications & credentials"),
-    ).toBeInTheDocument();
+  it("falls back to the role title when the user has no first name", () => {
+    renderWithUser(makeUser({ first_name: undefined }));
+    expect(screen.getByText("Complete your profile")).toBeInTheDocument();
   });
 
-  it("renders role-specific content for DIETITIAN", () => {
-    render(<OnboardingBanner userRole={UserRole.DIETITIAN} userName="Priya" />);
-
-    expect(
-      screen.getByText(/Complete your dietitian profile/),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Professional credentials")).toBeInTheDocument();
+  it.each([
+    [UserRole.TRAINER, /Complete your trainer profile/i, "Certifications & credentials"],
+    [UserRole.DIETITIAN, /Complete your dietitian profile/i, "License information"],
+    [UserRole.GYM_OWNER, /Complete your gym setup/i, "Facilities & amenities"],
+  ])("renders role-specific content for %s", (role, title, step) => {
+    renderWithUser(makeUser({ role, first_name: undefined }));
+    expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByText(step)).toBeInTheDocument();
   });
 
-  it("renders role-specific content for GYM_OWNER", () => {
-    render(<OnboardingBanner userRole={UserRole.GYM_OWNER} userName="David" />);
-
-    expect(screen.getByText(/Complete your gym setup/)).toBeInTheDocument();
-    expect(screen.getByText("Gym details & location")).toBeInTheDocument();
+  it("renders nothing when signed out", () => {
+    const { container } = renderWithUser(null);
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it("dismisses when X button is clicked", () => {
-    const { container } = render(
-      <OnboardingBanner userRole={UserRole.USER} userName="Test" />,
+  it("renders nothing once onboarding is complete", () => {
+    const { container } = renderWithUser(
+      makeUser({ is_onboarding_complete: true }),
     );
-
-    const dismissBtn = screen.getByLabelText("Dismiss");
-    fireEvent.click(dismissBtn);
-
-    // Banner should be gone
-    expect(container.firstChild).toBeNull();
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it("dismisses when Later button is clicked", () => {
-    const { container } = render(
-      <OnboardingBanner userRole={UserRole.USER} userName="Test" />,
+  it("renders nothing for roles without a setup track (e.g. ADMIN)", () => {
+    const { container } = renderWithUser(
+      makeUser({ role: UserRole.ADMIN }),
     );
-
-    const laterBtn = screen.getByText("Later");
-    fireEvent.click(laterBtn);
-
-    expect(container.firstChild).toBeNull();
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it("does not render for ADMIN role", () => {
-    const { container } = render(
-      <OnboardingBanner userRole={"ADMIN" as UserRole} userName="Admin" />,
-    );
+  it("dismisses via the X button and persists per user id", () => {
+    renderWithUser(makeUser());
 
-    expect(container.firstChild).toBeNull();
+    fireEvent.click(screen.getByLabelText("Dismiss setup banner"));
+
+    expect(screen.queryByText(/Welcome, Adesegun/)).not.toBeInTheDocument();
+    expect(localStorage.getItem("setup-banner-dismissed:user-1")).toBe("1");
   });
 
-  it("has mobile-responsive layout classes", () => {
-    const { container } = render(
-      <OnboardingBanner userRole={UserRole.USER} userName="Test" />,
-    );
+  it("dismisses via the Later button", () => {
+    renderWithUser(makeUser());
 
-    // Outer wrapper should have responsive padding
-    const banner = container.firstChild as HTMLElement;
-    expect(banner.className).toContain("p-4");
-    expect(banner.className).toContain("sm:p-6");
+    fireEvent.click(screen.getByText("Later"));
 
-    // Layout flex should stack on mobile
-    const flexContainer = banner.querySelector(".flex.flex-col");
-    expect(flexContainer).not.toBeNull();
+    expect(screen.queryByText(/Welcome, Adesegun/)).not.toBeInTheDocument();
+    expect(localStorage.getItem("setup-banner-dismissed:user-1")).toBe("1");
   });
 
-  it("buttons have whitespace-nowrap to prevent wrapping", () => {
-    render(<OnboardingBanner userRole={UserRole.USER} userName="Test" />);
-
-    const setupLink = screen.getByText("Complete Setup");
-    expect(setupLink.className).toContain("whitespace-nowrap");
-
-    const laterBtn = screen.getByText("Later");
-    expect(laterBtn.className).toContain("whitespace-nowrap");
+  it("stays hidden on later renders once dismissed (stored flag)", () => {
+    localStorage.setItem("setup-banner-dismissed:user-1", "1");
+    const { container } = renderWithUser(makeUser());
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it("Complete Setup links to profile settings", () => {
-    render(<OnboardingBanner userRole={UserRole.USER} userName="Test" />);
+  it("a dismissal by one user does not hide the banner for another", () => {
+    localStorage.setItem("setup-banner-dismissed:someone-else", "1");
+    renderWithUser(makeUser());
+    expect(screen.getByText(/Welcome, Adesegun/)).toBeInTheDocument();
+  });
 
-    const link = screen.getByText("Complete Setup").closest("a");
-    expect(link).toHaveAttribute("href", "/dashboard/settings/profile");
+  it("links Complete setup to the role's onboarding route", () => {
+    renderWithUser(makeUser({ role: UserRole.DIETITIAN, first_name: undefined }));
+    const link = screen.getByText("Complete setup →").closest("a");
+    expect(link).toHaveAttribute("href", "/onboarding/dietitian");
   });
 });
