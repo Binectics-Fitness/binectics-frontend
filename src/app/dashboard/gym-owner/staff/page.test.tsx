@@ -1,11 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 
-// NOTE: the staff page has no search box or status filter today — the
-// design-system revamp removed both. Tests for them were deleted rather
-// than left failing; if those controls come back, restore the tests with
-// them (see PR description).
-//
 // ProviderShell mounts the page twice — a desktop layout and a lg:hidden
 // mobile layout — and jsdom doesn't apply CSS breakpoints, so BOTH copies
 // are in the accessibility tree. Presence checks therefore use
@@ -154,6 +149,132 @@ describe("Staff List Page", () => {
 
     await waitFor(() => {
       expect(screen.getAllByText(/failed to load/i).length).toBeGreaterThan(0);
+    });
+  });
+
+  it("filters members by status", async () => {
+    vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
+      success: true,
+      data: [
+        {
+          _id: "member-1",
+          status: "active",
+          user_id: { first_name: "John", last_name: "Doe", email: "john@example.com" },
+          team_role_id: { _id: "role-1", name: "Trainer" },
+          created_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+        },
+        {
+          _id: "member-2",
+          status: "inactive",
+          user_id: { first_name: "Jane", last_name: "Smith", email: "jane@example.com" },
+          team_role_id: { _id: "role-1", name: "Trainer" },
+          created_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+        },
+      ],
+      message: "Success",
+    });
+    vi.mocked(teamsService.teamsService.getInvitations).mockResolvedValue({
+      success: true,
+      data: [],
+      message: "Success",
+    });
+
+    const user = userEvent.setup();
+    render(<StaffPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Jane Smith").length).toBeGreaterThan(0);
+    });
+
+    // Both layouts render the chip row; click the first "Inactive" chip.
+    await user.click(screen.getAllByRole("button", { name: /^Inactive/ })[0]);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Jane Smith").length).toBeGreaterThan(0);
+      expect(screen.queryAllByText("John Doe")).toHaveLength(0);
+    });
+  });
+
+  it("searches members by name", async () => {
+    vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
+      success: true,
+      data: [
+        {
+          _id: "member-1",
+          status: "active",
+          user_id: { first_name: "John", last_name: "Doe", email: "john@example.com" },
+          team_role_id: { _id: "role-1", name: "Trainer" },
+          created_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+        },
+        {
+          _id: "member-2",
+          status: "active",
+          user_id: { first_name: "Jane", last_name: "Smith", email: "jane@example.com" },
+          team_role_id: { _id: "role-1", name: "Trainer" },
+          created_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+        },
+      ],
+      message: "Success",
+    });
+    vi.mocked(teamsService.teamsService.getInvitations).mockResolvedValue({
+      success: true,
+      data: [],
+      message: "Success",
+    });
+
+    const user = userEvent.setup();
+    render(<StaffPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
+    });
+
+    await user.type(screen.getAllByLabelText("Search staff")[0], "jane");
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Jane Smith").length).toBeGreaterThan(0);
+      expect(screen.queryAllByText("John Doe")).toHaveLength(0);
+    });
+  });
+
+  it("shows a distinct empty state when filters match nothing", async () => {
+    vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
+      success: true,
+      data: [
+        {
+          _id: "member-1",
+          status: "active",
+          user_id: { first_name: "John", last_name: "Doe", email: "john@example.com" },
+          team_role_id: { _id: "role-1", name: "Trainer" },
+          created_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+        },
+      ],
+      message: "Success",
+    });
+    vi.mocked(teamsService.teamsService.getInvitations).mockResolvedValue({
+      success: true,
+      data: [],
+      message: "Success",
+    });
+
+    const user = userEvent.setup();
+    render(<StaffPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
+    });
+
+    await user.type(screen.getAllByLabelText("Search staff")[0], "nobody");
+
+    await waitFor(() => {
+      // Not the "No staff yet" slate — the roster isn't empty, the filter is.
+      expect(screen.getAllByText(/No staff match your filters/).length).toBeGreaterThan(0);
+      expect(screen.queryAllByText(/No staff yet/)).toHaveLength(0);
     });
   });
 
