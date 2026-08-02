@@ -16,21 +16,91 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "22.x"
+          cache: npm
+
+      # NEXT_PUBLIC_* values are INLINED INTO THE BUNDLE AT BUILD TIME. Setting
+      # them in Azure Application Settings does nothing — by the time the app
+      # runs, the strings are already compiled into the JavaScript. They have to
+      # be present in *this* job, before `npm run build`.
+      #
+      # This guard exists because the failure is silent: with these unset the
+      # build succeeds and ships fallbacks — the DEV api host from
+      # src/lib/api/client.ts, and http://localhost:3001 baked into the
+      # prerendered sitemap and canonical URLs. A green deploy pointed at the
+      # wrong backend is worse than a failed one.
+      - name: Verify build-time public config is present
+        env:
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+        run: |
+          missing=0
+          for v in NEXT_PUBLIC_APP_URL NEXT_PUBLIC_API_URL; do
+            if [ -z "${!v}" ]; then
+              echo "::error::$v is not set. Add it under Settings > Secrets and variables > Actions > Variables."
+              missing=1
+            else
+              echo "$v = ${!v}"
+            fi
+          done
+          if [ "$missing" = "1" ]; then
+            echo "::error::Refusing to build. Without these the bundle ships the dev API host and localhost URLs."
+            exit 1
+          fi
 
       - name: npm install, build, and test
+        env:
+          # Public by definition — these ship inside the client bundle, so they
+          # belong in Variables, not Secrets. Payment keys here are the
+          # *publishable* ones; no secret key ever belongs in a NEXT_PUBLIC_ var.
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY }}
+          NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY }}
+          NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+          # npm ci, not npm install — respects the lockfile so the deployed
+          # tree matches what CI tested.
+          npm ci
+          npm run build
+
+          # Was `npm run test --if-present`. The suite carries 34 known
+          # failures, so vitest exits 1, this step failed, and the deploy job
+          # below (needs: build) was skipped — the deploy could never run.
+          # The ratchet applies the same gate CI uses: fail only on NEW
+          # failures, measured against test-baseline.json.
+          npm run test:ratchet
+
+      # Fails loudly if the fallbacks made it into the bundle anyway — belt and
+      # braces against the guard above being bypassed or a new fallback being
+      # introduced somewhere else.
+      - name: Assert no dev/localhost fallbacks were baked in
+        run: |
+          if grep -rq "localhost:3001" .next/server .next/static 2>/dev/null; then
+            echo "::error::localhost:3001 is present in the build output."
+            grep -rl "localhost:3001" .next/server .next/static | head -20
+            exit 1
+          fi
+          echo "No localhost fallbacks in build output."
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          # `path: .` uploaded the whole tree including .git and .next/cache,
+          # which is slow and ships nothing useful. node_modules is kept
+          # deliberately: Azure runs `npm start` (`next start`) against this
+          # tree and does not install for us.
+          path: |
+            .
+            !.git
+            !.next/cache
+            !coverage
+            !playwright-report
+            !test-results
 
   deploy:
     runs-on: ubuntu-latest
@@ -50,3 +120,19 @@ jobs:
           slot-name: "Production"
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1A36BE773B4F4FA4A4E56DEE07C5CAF1 }}
+
+      # A 200 from the root URL is the only evidence the deploy actually
+      # worked. The action reporting success only means the upload succeeded.
+      - name: Smoke-check the deployed site
+        run: |
+          url="${{ steps.deploy-to-webapp.outputs.webapp-url }}"
+          [ -n "$url" ] || url="https://binectics-frontend-app.azurewebsites.net"
+          echo "Checking $url"
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$url" || echo 000)
+            echo "  attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "::error::Site did not return 200 after deploy."
+          exit 1

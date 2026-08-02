@@ -22,6 +22,8 @@
     "api:sync": "openapi-typescript ${OPENAPI_SCHEMA_PATH:-../binectics-api/schema/openapi.json} -o src/lib/api/generated/schema.ts",
     "api:check": "npm run api:sync && git diff --exit-code -- src/lib/api/generated/schema.ts",
     "test": "vitest run",
+    "test:ratchet": "node scripts/test-ratchet.mjs",
+    "test:ratchet:update": "node scripts/test-ratchet.mjs --update",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
