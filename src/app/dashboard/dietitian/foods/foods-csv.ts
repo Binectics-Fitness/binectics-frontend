@@ -1,9 +1,10 @@
 import type { FoodItem } from "@/lib/api/nutrition";
+import { buildCsv, csvNumber } from "@/lib/csv/csv";
 
 /**
  * CSV export for the provider food library. Kept as a pure function (no
  * DOM, no fetch) so it can be unit-tested — the page wires it to a Blob
- * download.
+ * download. RFC 4180 escaping lives in @/lib/csv/csv.
  */
 
 export type FoodCsvRow = Pick<
@@ -33,34 +34,20 @@ export const FOODS_CSV_HEADERS = [
   "Sodium (mg)",
 ] as const;
 
-/** RFC 4180 escaping: quote fields containing commas, quotes, or newlines. */
-function escapeCsvField(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
-
-function num(value: number | undefined | null): string {
-  return value === undefined || value === null ? "" : String(value);
-}
-
 export function buildFoodsCsv(items: FoodCsvRow[]): string {
-  const rows = items.map((f) =>
-    [
+  return buildCsv(
+    FOODS_CSV_HEADERS,
+    items.map((f) => [
       f.name,
       f.category ?? "",
       f.serving_label,
-      num(f.calories_kcal),
-      num(f.protein_g),
-      num(f.carbs_g),
-      num(f.fat_g),
-      num(f.fiber_g),
-      num(f.sugar_g),
-      num(f.sodium_mg),
-    ]
-      .map(escapeCsvField)
-      .join(","),
+      csvNumber(f.calories_kcal),
+      csvNumber(f.protein_g),
+      csvNumber(f.carbs_g),
+      csvNumber(f.fat_g),
+      csvNumber(f.fiber_g),
+      csvNumber(f.sugar_g),
+      csvNumber(f.sodium_mg),
+    ]),
   );
-  return [FOODS_CSV_HEADERS.join(","), ...rows].join("\n");
 }

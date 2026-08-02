@@ -3,30 +3,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate, Drawer } from "@/components/ds";
-import { toast } from "@/components/Toast";
+import { AsyncSpinner, BookingStatusBadge, Drawer } from "@/components/ds";
+import { BookingActionsPanel } from "@/components/BookingActionsPanel";
 import {
   consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
   type ConsultationType,
 } from "@/lib/api/consultations";
+import {
+  clientDisplayName as clientName,
+  clientInitials,
+  durationMins,
+} from "@/lib/consultations/bookingActions";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 /* ─── Data ──────────────────────────────────────────────── */
 
 type Filter = "Upcoming" | "Past" | "Cancelled";
-
-function clientName(booking: ConsultationBooking): string {
-  const name = [booking.clientFirstName, booking.clientLastName].filter(Boolean).join(" ");
-  return name || "Client";
-}
-
-function clientInitials(booking: ConsultationBooking): string {
-  const parts = clientName(booking).trim().split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-  return (parts[0] ?? "?").slice(0, 2).toUpperCase();
-}
 
 function toFilter(status: ConsultationBookingStatus): Filter {
   if (
@@ -41,32 +35,7 @@ function toFilter(status: ConsultationBookingStatus): Filter {
   return "Past";
 }
 
-function durationMins(b: ConsultationBooking): number {
-  return Math.max(0, Math.round((new Date(b.endsAt).getTime() - new Date(b.startsAt).getTime()) / 60000));
-}
-
-const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  [ConsultationBookingStatus.PENDING]: { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)", label: "Pending" },
-  [ConsultationBookingStatus.CONFIRMED]: { bg: "var(--signal-soft)", color: "var(--signal-ink)", label: "Confirmed" },
-  [ConsultationBookingStatus.COMPLETED]: { bg: "var(--bg-3)", color: "var(--fg-2)", label: "Completed" },
-  [ConsultationBookingStatus.CANCELLED]: { bg: "var(--danger-soft)", color: "var(--danger)", label: "Cancelled" },
-  [ConsultationBookingStatus.NO_SHOW]: { bg: "var(--danger-soft)", color: "var(--danger)", label: "No-show" },
-};
-
 /* ─── Helpers ────────────────────────────────────────────── */
-
-function StatusBadge({ status }: { status: ConsultationBookingStatus }) {
-  const s = STATUS_STYLE[status] ?? { bg: "var(--bg-3)", color: "var(--fg-2)", label: status };
-  return (
-    <span
-      className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px]"
-      style={{ background: s.bg, color: s.color }}
-    >
-      <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
-      {s.label}
-    </span>
-  );
-}
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -89,8 +58,6 @@ export default function DietitianConsultationsPage() {
   const [activeFilter, setActiveFilter] = useState<Filter>("Upcoming");
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [acting, setActing] = useState<"complete" | "no-show" | "cancel" | null>(null);
-  const [cancelReason, setCancelReason] = useState("");
   // Wall-clock snapshot for past/future checks — refreshed on load and on row
   // click, never read via Date.now() during render.
   const [now, setNow] = useState(0);
@@ -183,54 +150,12 @@ export default function DietitianConsultationsPage() {
   }, [bookings, counts]);
 
   // ── Actions ────────────────────────────────────────────────
-  const runAction = async (
-    kind: "complete" | "no-show" | "cancel",
-    booking: ConsultationBooking,
-  ) => {
-    if (
-      kind === "complete" &&
-      new Date(booking.startsAt).getTime() > Date.now() &&
-      !confirm("This session hasn't started yet. Mark it as completed anyway?")
-    ) {
-      return;
-    }
-    setActing(kind);
-    try {
-      const res =
-        kind === "complete"
-          ? await consultationsService.completeBooking(booking.id)
-          : kind === "no-show"
-            ? await consultationsService.markNoShow(booking.id)
-            : await consultationsService.cancelBooking(
-                booking.id,
-                cancelReason.trim() ? { reason: cancelReason.trim() } : {},
-              );
-      if (res.success) {
-        toast.success(
-          kind === "complete"
-            ? "Session marked as completed."
-            : kind === "no-show"
-              ? "Session marked as a no-show."
-              : "Session cancelled.",
-        );
-        setCancelReason("");
-        setSelectedId(null);
-        await load();
-      } else {
-        toast.error(res.message ?? "That didn't work — try again.");
-      }
-    } catch {
-      toast.error("That didn't work — try again.");
-    }
-    setActing(null);
+  // Complete / no-show / cancel live in the shared BookingActionsPanel; the
+  // page only closes the drawer and refetches once the API confirms.
+  const afterAction = async () => {
+    setSelectedId(null);
+    await load();
   };
-
-  // ── Drawer action availability ─────────────────────────────
-  const actionable =
-    selected != null &&
-    (selected.status === ConsultationBookingStatus.PENDING ||
-      selected.status === ConsultationBookingStatus.CONFIRMED);
-  const isPast = selected != null && now > 0 && new Date(selected.startsAt).getTime() < now;
 
   return (
     <DietitianDashboardShell activeItem="Consultations" crumb="Consultations">
@@ -327,9 +252,6 @@ export default function DietitianConsultationsPage() {
                       className="hover:bg-[var(--bg-2)] cursor-pointer"
                       onClick={() => {
                         setNow(Date.now());
-                        // Draft text typed for one booking must not leak
-                        // into another booking's cancel box.
-                        setCancelReason("");
                         setSelectedId(c.id);
                       }}
                     >
@@ -353,7 +275,7 @@ export default function DietitianConsultationsPage() {
                         <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>{durationMins(c)} min</span>
                       </td>
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                        <StatusBadge status={c.status} />
+                        <BookingStatusBadge status={c.status} />
                       </td>
                     </tr>
                   );
@@ -381,7 +303,7 @@ export default function DietitianConsultationsPage() {
               </span>
               <div>
                 <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>{clientName(selected)}</div>
-                <div className="mt-1"><StatusBadge status={selected.status} /></div>
+                <div className="mt-1"><BookingStatusBadge status={selected.status} /></div>
               </div>
             </div>
 
@@ -400,63 +322,13 @@ export default function DietitianConsultationsPage() {
 
             <div style={{ borderTop: "1px solid var(--border)" }} />
 
-            {actionable ? (
-              <div className="flex flex-col gap-3">
-                <div className="flex gap-2 flex-wrap">
-                  <button
-                    className="btn-primary-v2 sm"
-                    disabled={acting !== null}
-                    onClick={() => void runAction("complete", selected)}
-                  >
-                    {acting === "complete" ? "Completing…" : "Complete"}
-                  </button>
-                  <button
-                    className="btn-ghost-v2 sm"
-                    disabled={acting !== null || !isPast}
-                    onClick={() => void runAction("no-show", selected)}
-                  >
-                    {acting === "no-show" ? "Marking…" : "Mark no-show"}
-                  </button>
-                </div>
-                {!isPast && (
-                  <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
-                    No-show becomes available once the session start time has passed.
-                  </div>
-                )}
-
-                {!isPast && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Cancel this session</div>
-                    <textarea
-                      value={cancelReason}
-                      onChange={(e) => setCancelReason(e.target.value)}
-                      maxLength={500}
-                      placeholder="Reason (optional — shared with the client)"
-                      className="rounded-(--r-2) px-3 py-2.5 text-[13px] resize-y"
-                      style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 60 }}
-                    />
-                    <button
-                      className="btn-ghost-v2 sm self-start"
-                      disabled={acting !== null}
-                      style={{ color: "var(--danger)" }}
-                      onClick={() => void runAction("cancel", selected)}
-                    >
-                      {acting === "cancel" ? "Cancelling…" : "Cancel session"}
-                    </button>
-                  </div>
-                )}
-                {isPast && (
-                  <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
-                    Cancelling is only available before the session starts.
-                  </div>
-                )}
-              </div>
-            ) : (
-              <EmptySlate
-                message={`No actions available for ${STATUS_STYLE[selected.status]?.label.toLowerCase() ?? selected.status.toLowerCase()} sessions.`}
-                mt="mt-0"
-              />
-            )}
+            {/* Remounted per booking so a draft cancel reason can't leak. */}
+            <BookingActionsPanel
+              key={selected.id}
+              booking={selected}
+              now={now}
+              onActionComplete={afterAction}
+            />
           </div>
         )}
       </Drawer>
