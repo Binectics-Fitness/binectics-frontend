@@ -48,3 +48,42 @@ beforeEach(() => {
   localStorageMock.clear();
   sessionStorageMock.clear();
 });
+
+/**
+ * jsdom ships no EventSource, and the shells open one for the live
+ * notification count — so any test rendering a shell threw
+ * "EventSource is not defined" before reaching its assertions.
+ *
+ * This stub connects to nothing and emits nothing. That is the right
+ * behaviour for tests: the hook already falls back to polling when the
+ * stream is unavailable, so this exercises the same path a browser with
+ * a failed stream would take. Tests that care about stream events should
+ * mock the hook instead.
+ */
+class MockEventSource {
+  static readonly CONNECTING = 0;
+  static readonly OPEN = 1;
+  static readonly CLOSED = 2;
+
+  readonly url: string;
+  readyState = MockEventSource.CONNECTING;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+  onopen: ((event: Event) => void) | null = null;
+
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  addEventListener(): void {}
+  removeEventListener(): void {}
+  close(): void {
+    this.readyState = MockEventSource.CLOSED;
+  }
+}
+
+Object.defineProperty(globalThis, "EventSource", {
+  value: MockEventSource,
+  writable: true,
+  configurable: true,
+});

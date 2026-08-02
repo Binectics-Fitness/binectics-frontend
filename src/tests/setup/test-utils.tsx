@@ -3,6 +3,7 @@
 
 import { ReactNode } from "react";
 import { render, RenderOptions } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
 /**
@@ -138,3 +139,37 @@ export const mockAuthContext = {
     isAuthenticated: true,
   }),
 };
+
+/**
+ * Renders with the providers a dashboard page needs.
+ *
+ * Dashboard shells mount ShellNotificationBell, which reads its unread
+ * count through react-query — so any test rendering a page inside a shell
+ * needs a QueryClient or it throws "No QueryClient set". Reach for this
+ * instead of bare `render` for anything shell-wrapped.
+ *
+ * Retries are off and errors are silenced so a failing query surfaces as
+ * the assertion that failed, not as a timeout plus console noise.
+ */
+export function renderWithProviders(
+  ui: ReactNode,
+  options?: Omit<RenderOptions, "wrapper">,
+) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+
+  function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+  }
+
+  return {
+    queryClient,
+    ...render(ui, { wrapper: Wrapper, ...options }),
+  };
+}
