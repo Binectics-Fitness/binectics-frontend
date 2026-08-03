@@ -1,2 +1,24 @@
-npx tsc --noEmit &&
-npm run tokens:check
+# Pushing publishes a Netlify and a Vercel preview, and on main it goes
+# to production — so this gate is the last thing between a broken build
+# and a live URL. Worth the seconds.
+
+npx tsc --noEmit || exit 1
+npm run tokens:check || exit 1
+
+# Tests: block only when a baseline exists to measure against.
+#
+# Without a ratchet there is no way to tell an inherited failure from one
+# this change introduced, and blocking a push on somebody else's debt is
+# exactly what the ship skill says not to do. So: run them either way,
+# but only fail the push when the ratchet can attribute the failure.
+if node -e "process.exit(require('./package.json').scripts['test:ratchet'] ? 0 : 1)" 2>/dev/null; then
+  npm run test:ratchet || exit 1
+else
+  npm test || {
+    echo ""
+    echo "⚠ Tests are failing, and there is no test:ratchet baseline to"
+    echo "  tell inherited failures from new ones — so this push is NOT"
+    echo "  blocked. Check whether these are yours before continuing."
+    echo ""
+  }
+fi

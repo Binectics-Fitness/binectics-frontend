@@ -1,0 +1,12 @@
+# Fast gate only — this runs on every commit, so it must stay quick.
+# Type-check and tests live in pre-push where a few seconds is affordable.
+
+# Design tokens: cheap, and a drift here breaks every surface at once.
+npm run tokens:check || exit 1
+
+# Lint only what is staged. A full lint carries a large pre-existing
+# count and would block commits on other people's debt.
+STAGED=$(git diff --cached --name-only --diff-filter=ACM -- '*.ts' '*.tsx')
+if [ -n "$STAGED" ]; then
+  echo "$STAGED" | xargs npx eslint --max-warnings=9999 || exit 1
+fi
