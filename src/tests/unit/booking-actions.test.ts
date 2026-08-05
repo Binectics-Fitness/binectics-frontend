@@ -126,9 +126,19 @@ describe("durationMins", () => {
     expect(durationMins(booking())).toBe(45);
   });
 
-  it("floors a reversed or malformed range at zero", () => {
+  it("floors a reversed range at zero", () => {
     expect(
       durationMins(booking({ startsAt: "2026-08-01T14:00:00.000Z", endsAt: "2026-08-01T13:00:00.000Z" })),
+    ).toBe(0);
+  });
+
+  // Math.max(0, NaN) is NaN, not 0, so the floor alone does not cover this.
+  // Untested, it rendered "NaN min" on screen and wrote NaN into the CSV.
+  it("returns zero — not NaN — for an unparseable date", () => {
+    expect(durationMins(booking({ endsAt: "not-a-date" }))).toBe(0);
+    expect(durationMins(booking({ startsAt: "" }))).toBe(0);
+    expect(
+      durationMins(booking({ startsAt: "nope", endsAt: "also-nope" })),
     ).toBe(0);
   });
 });

