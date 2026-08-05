@@ -100,11 +100,11 @@ export function TrainerStep4({ data, setField }: StepProps) {
     <>
       <StageHead crumb="Step 04 of 06 — trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
       <FormGrid>
-        <Field label="1:1 session"><MoneyField {...money("price1on1")} placeholder="₦ 80,000" /></Field>
+        <Field label="1:1 session"><MoneyField {...money("price1on1")} placeholder="₦80,000" /></Field>
         <Field label="Duration"><SelectField value={(data.duration as string) || "60 min"} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
-        <Field label="4-session pack"><MoneyField {...money("price4pack")} placeholder="₦ 280,000" /></Field>
-        <Field label="12-session pack"><MoneyField {...money("price12pack")} placeholder="₦ 800,000" /></Field>
-        <Field label="Online programming · monthly" full><MoneyField {...money("priceMonthly")} placeholder="₦ 120,000 / month" /></Field>
+        <Field label="4-session pack"><MoneyField {...money("price4pack")} placeholder="₦280,000" /></Field>
+        <Field label="12-session pack"><MoneyField {...money("price12pack")} placeholder="₦800,000" /></Field>
+        <Field label="Online programming · monthly" full><MoneyField {...money("priceMonthly")} placeholder="₦120,000 / month" /></Field>
       </FormGrid>
     </>
   );

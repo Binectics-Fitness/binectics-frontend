@@ -95,7 +95,7 @@ export function TextInput({
 
 /**
  * A price field, styled exactly like TextInput but formatted as money while
- * the user types ("60000" → "₦ 60,000"). The stored value is the display
+ * the user types ("60000" → "₦60,000"). The stored value is the display
  * string, which is what the onboarding steps render back in their preview;
  * `onChange` also hands over the amount in minor units for any caller that
  * needs to send it to the API.
