@@ -1,6 +1,6 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard } from "./_components";
+import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard } from "./_components";
 
 const SPECIALIZATIONS = ["Strength", "Hypertrophy", "Running", "Olympic lifting", "Powerlifting", "Bodybuilding", "Functional", "Mobility", "HIIT", "CrossFit", "Pre-natal", "Post-natal"];
 const FORMATS = ["In-person 1:1", "In-person small group", "Online video", "Programming only", "Hybrid"];
@@ -81,16 +81,30 @@ export function TrainerStep3({ data, setField, onUploadStart, onUploadEnd }: Ste
   );
 }
 
+/**
+ * The trainer track collects no currency of its own (only the gym track has
+ * a picker), and its price placeholders are NGN examples, so the fields
+ * format as NGN — Nigeria-first, and consistent with the copy. Swapping the
+ * symbol by country while keeping NGN-scale example amounts would be worse
+ * than either: revisit together, when the track grows a currency field.
+ */
+const TRAINER_PRICING_CURRENCY = "NGN";
+
 export function TrainerStep4({ data, setField }: StepProps) {
+  const money = (key: string) => ({
+    value: (data[key] as string) || "",
+    onChange: (display: string) => setField(key, display),
+    currency: TRAINER_PRICING_CURRENCY,
+  });
   return (
     <>
       <StageHead crumb="Step 04 of 06 — trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
       <FormGrid>
-        <Field label="1:1 session"><TextInput value={(data.price1on1 as string) || ""} onChange={(v) => setField("price1on1", v)} placeholder="₦ 80,000" /></Field>
+        <Field label="1:1 session"><MoneyField {...money("price1on1")} placeholder="₦ 80,000" /></Field>
         <Field label="Duration"><SelectField value={(data.duration as string) || "60 min"} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
-        <Field label="4-session pack"><TextInput value={(data.price4pack as string) || ""} onChange={(v) => setField("price4pack", v)} placeholder="₦ 280,000" /></Field>
-        <Field label="12-session pack"><TextInput value={(data.price12pack as string) || ""} onChange={(v) => setField("price12pack", v)} placeholder="₦ 800,000" /></Field>
-        <Field label="Online programming · monthly" full><TextInput value={(data.priceMonthly as string) || ""} onChange={(v) => setField("priceMonthly", v)} placeholder="₦ 120,000 / month" /></Field>
+        <Field label="4-session pack"><MoneyField {...money("price4pack")} placeholder="₦ 280,000" /></Field>
+        <Field label="12-session pack"><MoneyField {...money("price12pack")} placeholder="₦ 800,000" /></Field>
+        <Field label="Online programming · monthly" full><MoneyField {...money("priceMonthly")} placeholder="₦ 120,000 / month" /></Field>
       </FormGrid>
     </>
   );

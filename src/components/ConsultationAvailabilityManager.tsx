@@ -17,6 +17,12 @@ import {
   AvailabilityExceptionType,
   type AvailabilityException,
 } from "@/lib/api/consultations";
+import { MoneyInput } from "@/components/ds/MoneyInput";
+import {
+  formatMinorForInput,
+  isNegativeMoneyInput,
+  parseMoneyMinor,
+} from "@/lib/money/moneyInput";
 import { Plus, Trash2, CalendarOff } from "lucide-react";
 
 type DayRange = { id: string; startTime: string; endTime: string };
@@ -118,9 +124,10 @@ export default function ConsultationAvailabilityManager({
   const [bufferMinutes, setBufferMinutes] = useState<number>(0);
   const [minAdvanceNoticeHours, setMinAdvanceNoticeHours] = useState<number>(0);
   const [activeTypeIds, setActiveTypeIds] = useState<string[]>([]);
-  // Session price feeds the earnings page's estimated figures. Entered in
-  // MAJOR units here, sent to the API in minor units (×100).
-  const [priceMajor, setPriceMajor] = useState<string>("");
+  // Session price feeds the earnings page's estimated figures. Held as the
+  // formatted display string the user sees ("₦ 25,000") and parsed back to
+  // minor units on save — see lib/money/moneyInput.
+  const [priceDisplay, setPriceDisplay] = useState<string>("");
   const [priceCurrency, setPriceCurrency] = useState<string>("NGN");
   const [currencies, setCurrencies] = useState<string[]>(["NGN", "USD", "GBP", "EUR", "ZAR"]);
   const [isSavingSession, setIsSavingSession] = useState(false);
@@ -195,10 +202,15 @@ export default function ConsultationAvailabilityManager({
           setMinAdvanceNoticeHours(
             Math.round((first.minAdvanceNoticeMinutes ?? 0) / 60),
           );
+          const savedCurrency = (first.currency ?? "NGN").toUpperCase();
           if (first.priceMinor != null && first.priceMinor > 0) {
-            setPriceMajor(String(first.priceMinor / 100));
+            // Prefill formatted, in the price's own currency — not the
+            // currency state, which this same block is about to set.
+            setPriceDisplay(
+              formatMinorForInput(first.priceMinor, { currency: savedCurrency }),
+            );
           }
-          if (first.currency) setPriceCurrency(first.currency.toUpperCase());
+          if (first.currency) setPriceCurrency(savedCurrency);
         }
       }
     });
@@ -251,11 +263,17 @@ export default function ConsultationAvailabilityManager({
       }
     }
 
-    const trimmedPrice = priceMajor.trim();
-    const parsedPrice = trimmedPrice === "" ? null : Number(trimmedPrice);
-    if (parsedPrice !== null && (!Number.isFinite(parsedPrice) || parsedPrice < 0)) {
+    // Empty field → no price at all (null), never a zero one. Anything the
+    // field can hold is already digits-only, but a negative is still worth
+    // catching here rather than letting the API 400 on it.
+    const priceOpts = { currency: priceCurrency };
+    const priceMinor = parseMoneyMinor(priceDisplay, priceOpts);
+    if (
+      priceDisplay.trim() !== "" &&
+      (priceMinor === null || isNegativeMoneyInput(priceDisplay, priceOpts))
+    ) {
       setMessage({
-        text: "Session price must be a positive number (or left empty).",
+        text: "Session price must be a positive amount (or left empty).",
         type: "error",
       });
       setIsSavingSession(false);
@@ -269,8 +287,8 @@ export default function ConsultationAvailabilityManager({
       bufferMinutes,
       minAdvanceNoticeMinutes: minAdvanceNoticeHours * 60,
       isActive: true,
-      ...(parsedPrice !== null && parsedPrice > 0
-        ? { priceMinor: Math.round(parsedPrice * 100), currency: priceCurrency }
+      ...(priceMinor !== null && priceMinor > 0
+        ? { priceMinor, currency: priceCurrency }
         : {}),
     });
 
@@ -926,7 +944,18 @@ export default function ConsultationAvailabilityManager({
                   <div className="flex items-center gap-2">
                     <select
                       value={priceCurrency}
-                      onChange={(e) => setPriceCurrency(e.target.value)}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setPriceCurrency(next);
+                        // Re-render the amount in the new currency so the
+                        // symbol (and its decimals) follow the selection.
+                        setPriceDisplay((prev) =>
+                          formatMinorForInput(
+                            parseMoneyMinor(prev, { currency: priceCurrency }),
+                            { currency: next },
+                          ),
+                        );
+                      }}
                       aria-label="Price currency"
                       className="rounded-(--r-2) border border-border bg-bg px-2 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     >
@@ -934,15 +963,13 @@ export default function ConsultationAvailabilityManager({
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
-                    <input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      placeholder="0.00"
-                      value={priceMajor}
-                      onChange={(e) => setPriceMajor(e.target.value)}
+                    <MoneyInput
+                      value={priceDisplay}
+                      onChange={(display) => setPriceDisplay(display)}
+                      currency={priceCurrency}
+                      placeholder="Not set"
                       aria-label="Session price"
-                      className="w-28 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className="w-32 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
                   </div>
                 </div>
