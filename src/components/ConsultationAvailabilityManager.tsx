@@ -18,11 +18,7 @@ import {
   type AvailabilityException,
 } from "@/lib/api/consultations";
 import { MoneyInput } from "@/components/ds/MoneyInput";
-import {
-  formatMinorForInput,
-  isNegativeMoneyInput,
-  parseMoneyMinor,
-} from "@/lib/money/moneyInput";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { Plus, Trash2, CalendarOff } from "lucide-react";
 
 type DayRange = { id: string; startTime: string; endTime: string };
@@ -124,10 +120,14 @@ export default function ConsultationAvailabilityManager({
   const [bufferMinutes, setBufferMinutes] = useState<number>(0);
   const [minAdvanceNoticeHours, setMinAdvanceNoticeHours] = useState<number>(0);
   const [activeTypeIds, setActiveTypeIds] = useState<string[]>([]);
-  // Session price feeds the earnings page's estimated figures. Held as the
-  // formatted display string the user sees ("₦ 25,000") and parsed back to
-  // minor units on save — see lib/money/moneyInput.
+  // Session price feeds the earnings page's estimated figures. TWO pieces of
+  // state on purpose: the formatted string the user sees ("₦25,000") and the
+  // authoritative amount in minor units. The display string is lossy for a
+  // whole-unit currency (199 kobo reads "₦2"), so re-parsing it on save would
+  // rewrite a price nobody touched — 199 → 200. `priceMinor` only ever changes
+  // when the user edits the field, or is cleared with it.
   const [priceDisplay, setPriceDisplay] = useState<string>("");
+  const [priceMinor, setPriceMinor] = useState<number | null>(null);
   const [priceCurrency, setPriceCurrency] = useState<string>("NGN");
   const [currencies, setCurrencies] = useState<string[]>(["NGN", "USD", "GBP", "EUR", "ZAR"]);
   const [isSavingSession, setIsSavingSession] = useState(false);
@@ -205,7 +205,10 @@ export default function ConsultationAvailabilityManager({
           const savedCurrency = (first.currency ?? "NGN").toUpperCase();
           if (first.priceMinor != null && first.priceMinor > 0) {
             // Prefill formatted, in the price's own currency — not the
-            // currency state, which this same block is about to set.
+            // currency state, which this same block is about to set. The
+            // minor value is kept verbatim so an untouched price saves back
+            // exactly as it was loaded.
+            setPriceMinor(first.priceMinor);
             setPriceDisplay(
               formatMinorForInput(first.priceMinor, { currency: savedCurrency }),
             );
@@ -263,15 +266,12 @@ export default function ConsultationAvailabilityManager({
       }
     }
 
-    // Empty field → no price at all (null), never a zero one. Anything the
-    // field can hold is already digits-only, but a negative is still worth
-    // catching here rather than letting the API 400 on it.
-    const priceOpts = { currency: priceCurrency };
-    const priceMinor = parseMoneyMinor(priceDisplay, priceOpts);
-    if (
-      priceDisplay.trim() !== "" &&
-      (priceMinor === null || isNegativeMoneyInput(priceDisplay, priceOpts))
-    ) {
+    // Empty field → no price at all, never a zero one. A field with something
+    // in it must resolve to a positive amount: the SAME condition decides the
+    // error and the payload below, so a typed 0 is rejected out loud instead
+    // of passing validation and then being silently dropped from the request.
+    const hasPrice = priceDisplay.trim() !== "";
+    if (hasPrice && (priceMinor === null || priceMinor <= 0)) {
       setMessage({
         text: "Session price must be a positive amount (or left empty).",
         type: "error",
@@ -287,7 +287,9 @@ export default function ConsultationAvailabilityManager({
       bufferMinutes,
       minAdvanceNoticeMinutes: minAdvanceNoticeHours * 60,
       isActive: true,
-      ...(priceMinor !== null && priceMinor > 0
+      // Clearing the field omits both, and since this call replaces the
+      // archived type rather than patching it, that un-sets the price.
+      ...(hasPrice && priceMinor !== null
         ? { priceMinor, currency: priceCurrency }
         : {}),
     });
@@ -947,13 +949,14 @@ export default function ConsultationAvailabilityManager({
                       onChange={(e) => {
                         const next = e.target.value;
                         setPriceCurrency(next);
-                        // Re-render the amount in the new currency so the
-                        // symbol (and its decimals) follow the selection.
-                        setPriceDisplay((prev) =>
-                          formatMinorForInput(
-                            parseMoneyMinor(prev, { currency: priceCurrency }),
-                            { currency: next },
-                          ),
+                        // Re-render the SAME amount in the new currency so the
+                        // symbol (and its decimals) follow the selection. Only
+                        // the display string is rebuilt — round-tripping the
+                        // string through a re-parse dropped the cents of
+                        // "$12.34" the moment NGN was selected, and they never
+                        // came back on switching away again.
+                        setPriceDisplay(
+                          formatMinorForInput(priceMinor, { currency: next }),
                         );
                       }}
                       aria-label="Price currency"
@@ -965,7 +968,10 @@ export default function ConsultationAvailabilityManager({
                     </select>
                     <MoneyInput
                       value={priceDisplay}
-                      onChange={(display) => setPriceDisplay(display)}
+                      onChange={(display, minor) => {
+                        setPriceDisplay(display);
+                        setPriceMinor(minor);
+                      }}
                       currency={priceCurrency}
                       placeholder="Not set"
                       aria-label="Session price"
