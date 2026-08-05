@@ -17,6 +17,8 @@ import {
   AvailabilityExceptionType,
   type AvailabilityException,
 } from "@/lib/api/consultations";
+import { MoneyInput } from "@/components/ds/MoneyInput";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { Plus, Trash2, CalendarOff } from "lucide-react";
 
 type DayRange = { id: string; startTime: string; endTime: string };
@@ -118,9 +120,14 @@ export default function ConsultationAvailabilityManager({
   const [bufferMinutes, setBufferMinutes] = useState<number>(0);
   const [minAdvanceNoticeHours, setMinAdvanceNoticeHours] = useState<number>(0);
   const [activeTypeIds, setActiveTypeIds] = useState<string[]>([]);
-  // Session price feeds the earnings page's estimated figures. Entered in
-  // MAJOR units here, sent to the API in minor units (×100).
-  const [priceMajor, setPriceMajor] = useState<string>("");
+  // Session price feeds the earnings page's estimated figures. TWO pieces of
+  // state on purpose: the formatted string the user sees ("₦25,000") and the
+  // authoritative amount in minor units. The display string is lossy for a
+  // whole-unit currency (199 kobo reads "₦2"), so re-parsing it on save would
+  // rewrite a price nobody touched — 199 → 200. `priceMinor` only ever changes
+  // when the user edits the field, or is cleared with it.
+  const [priceDisplay, setPriceDisplay] = useState<string>("");
+  const [priceMinor, setPriceMinor] = useState<number | null>(null);
   const [priceCurrency, setPriceCurrency] = useState<string>("NGN");
   const [currencies, setCurrencies] = useState<string[]>(["NGN", "USD", "GBP", "EUR", "ZAR"]);
   const [isSavingSession, setIsSavingSession] = useState(false);
@@ -195,10 +202,18 @@ export default function ConsultationAvailabilityManager({
           setMinAdvanceNoticeHours(
             Math.round((first.minAdvanceNoticeMinutes ?? 0) / 60),
           );
+          const savedCurrency = (first.currency ?? "NGN").toUpperCase();
           if (first.priceMinor != null && first.priceMinor > 0) {
-            setPriceMajor(String(first.priceMinor / 100));
+            // Prefill formatted, in the price's own currency — not the
+            // currency state, which this same block is about to set. The
+            // minor value is kept verbatim so an untouched price saves back
+            // exactly as it was loaded.
+            setPriceMinor(first.priceMinor);
+            setPriceDisplay(
+              formatMinorForInput(first.priceMinor, { currency: savedCurrency }),
+            );
           }
-          if (first.currency) setPriceCurrency(first.currency.toUpperCase());
+          if (first.currency) setPriceCurrency(savedCurrency);
         }
       }
     });
@@ -251,11 +266,14 @@ export default function ConsultationAvailabilityManager({
       }
     }
 
-    const trimmedPrice = priceMajor.trim();
-    const parsedPrice = trimmedPrice === "" ? null : Number(trimmedPrice);
-    if (parsedPrice !== null && (!Number.isFinite(parsedPrice) || parsedPrice < 0)) {
+    // Empty field → no price at all, never a zero one. A field with something
+    // in it must resolve to a positive amount: the SAME condition decides the
+    // error and the payload below, so a typed 0 is rejected out loud instead
+    // of passing validation and then being silently dropped from the request.
+    const hasPrice = priceDisplay.trim() !== "";
+    if (hasPrice && (priceMinor === null || priceMinor <= 0)) {
       setMessage({
-        text: "Session price must be a positive number (or left empty).",
+        text: "Session price must be a positive amount (or left empty).",
         type: "error",
       });
       setIsSavingSession(false);
@@ -269,8 +287,10 @@ export default function ConsultationAvailabilityManager({
       bufferMinutes,
       minAdvanceNoticeMinutes: minAdvanceNoticeHours * 60,
       isActive: true,
-      ...(parsedPrice !== null && parsedPrice > 0
-        ? { priceMinor: Math.round(parsedPrice * 100), currency: priceCurrency }
+      // Clearing the field omits both, and since this call replaces the
+      // archived type rather than patching it, that un-sets the price.
+      ...(hasPrice && priceMinor !== null
+        ? { priceMinor, currency: priceCurrency }
         : {}),
     });
 
@@ -926,7 +946,19 @@ export default function ConsultationAvailabilityManager({
                   <div className="flex items-center gap-2">
                     <select
                       value={priceCurrency}
-                      onChange={(e) => setPriceCurrency(e.target.value)}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setPriceCurrency(next);
+                        // Re-render the SAME amount in the new currency so the
+                        // symbol (and its decimals) follow the selection. Only
+                        // the display string is rebuilt — round-tripping the
+                        // string through a re-parse dropped the cents of
+                        // "$12.34" the moment NGN was selected, and they never
+                        // came back on switching away again.
+                        setPriceDisplay(
+                          formatMinorForInput(priceMinor, { currency: next }),
+                        );
+                      }}
                       aria-label="Price currency"
                       className="rounded-(--r-2) border border-border bg-bg px-2 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     >
@@ -934,15 +966,16 @@ export default function ConsultationAvailabilityManager({
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
-                    <input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      placeholder="0.00"
-                      value={priceMajor}
-                      onChange={(e) => setPriceMajor(e.target.value)}
+                    <MoneyInput
+                      value={priceDisplay}
+                      onChange={(display, minor) => {
+                        setPriceDisplay(display);
+                        setPriceMinor(minor);
+                      }}
+                      currency={priceCurrency}
+                      placeholder="Not set"
                       aria-label="Session price"
-                      className="w-28 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className="w-32 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
                   </div>
                 </div>

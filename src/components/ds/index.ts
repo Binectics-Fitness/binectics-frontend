@@ -55,6 +55,8 @@ export { BulkActionBar } from "./BulkActionBar";
 export { DateRangePicker } from "./DateRangePicker";
 export { MultiSelect } from "./MultiSelect";
 export { FileUploadZone } from "./FileUploadZone";
+export { MoneyInput } from "./MoneyInput";
+export type { MoneyInputProps } from "./MoneyInput";
 
 // Phase 5 — action modal system
 export { ActionModal } from "./ActionModal";

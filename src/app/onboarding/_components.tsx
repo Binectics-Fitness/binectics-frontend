@@ -2,6 +2,7 @@
 
 import { useId, useState, useRef } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
+import { MoneyInput } from "@/components/ds/MoneyInput";
 import { apiClient } from "@/lib/api/client";
 
 export interface StepProps {
@@ -39,6 +40,18 @@ export function Field({
 
 /* ── Text input ───────────────────────────────────────────── */
 
+/** Shared by TextInput and MoneyField so money fields don't drift visually. */
+const INPUT_STYLE: React.CSSProperties = {
+  background: "var(--bg)",
+  border: "1px solid var(--border-2)",
+  borderRadius: "var(--r-2)",
+  padding: "12px 14px",
+  fontSize: 14,
+  color: "var(--ink)",
+  fontFamily: "var(--font-sans)",
+  width: "100%",
+};
+
 export function TextInput({
   value,
   onChange,
@@ -65,16 +78,7 @@ export function TextInput({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       list={suggestions?.length ? `${id || autoId}-suggestions` : undefined}
-      style={{
-        background: "var(--bg)",
-        border: "1px solid var(--border-2)",
-        borderRadius: "var(--r-2)",
-        padding: "12px 14px",
-        fontSize: 14,
-        color: "var(--ink)",
-        fontFamily: "var(--font-sans)",
-        width: "100%",
-      }}
+      style={INPUT_STYLE}
       />
       {suggestions && suggestions.length > 0 && (
         <datalist id={`${id || autoId}-suggestions`}>
@@ -84,6 +88,41 @@ export function TextInput({
         </datalist>
       )}
     </>
+  );
+}
+
+/* ── Money input ──────────────────────────────────────────── */
+
+/**
+ * A price field, styled exactly like TextInput but formatted as money while
+ * the user types ("60000" → "₦60,000"). The stored value is the display
+ * string, which is what the onboarding steps render back in their preview;
+ * `onChange` also hands over the amount in minor units for any caller that
+ * needs to send it to the API.
+ */
+export function MoneyField({
+  value,
+  onChange,
+  currency,
+  placeholder,
+  id,
+}: {
+  value: string;
+  onChange: (display: string, minor: number | null) => void;
+  currency: string;
+  placeholder?: string;
+  id?: string;
+}) {
+  const autoId = useId();
+  return (
+    <MoneyInput
+      id={id || autoId}
+      value={value}
+      onChange={onChange}
+      currency={currency}
+      placeholder={placeholder}
+      style={INPUT_STYLE}
+    />
   );
 }
 
