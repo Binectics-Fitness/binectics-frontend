@@ -26,6 +26,21 @@ Country always appears before City in form field ordering.
 
 Any component calling `useSearchParams()` must be wrapped in a `<Suspense>` boundary. Extract the hook into an inner component; export a wrapper with `<Suspense fallback={...}>`. Builds fail without this.
 
+### Check the prototype before building a surface
+
+`binectics-design-system/binectics/` holds ~165 built HTML surfaces — one per
+screen. If the page you are building exists there, the design is already
+decided; you are re-implementing it, not inventing it. Run the `design-ref`
+skill to find the prototype and compare against it.
+
+Naming is `<area>-<surface>.html`, with `gym-owner` routes mapping to `gym-`
+and detail pages using `-single-` rather than `[id]`. Where no prototype
+exists, check `BUILD-PLAN.md` before assuming the surface is unspecified.
+
+`binectics/HANDOFF.md` is the design contract — do not invent colours,
+`--signal` is for primary CTAs and success only, 1px hairlines and no
+shadows, Stripe/Linear rather than Headspace.
+
 ## Tech Stack
 
 - Next.js 16 (App Router), React 19, Tailwind CSS 4
