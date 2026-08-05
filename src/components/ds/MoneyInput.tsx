@@ -14,7 +14,7 @@ import {
 /**
  * MoneyInput — a text input that formats money as it is typed.
  *
- * The user sees "₦ 120,000"; the caller gets both that display string and
+ * The user sees "₦120,000"; the caller gets both that display string and
  * the value in minor units (kobo/cents) on every change, so nothing
  * downstream has to re-parse a formatted string. Empty stays empty, and
  * minor is null (not 0) whenever the field holds no number — an unset
@@ -66,6 +66,11 @@ export function MoneyInput({
   const opts: MoneyInputOptions = { currency, locale, showSymbol };
 
   // Re-assert the caret after React has committed the reformatted value.
+  // This effect has no dependency array — it must run after whichever commit
+  // carries the new value — so `commit` only ever arms `pendingCaret` for a
+  // render that is actually coming (see below). An armed caret left behind
+  // would be replayed on the next unrelated parent re-render, yanking the
+  // caret back to wherever the last keystroke put it.
   useLayoutEffect(() => {
     const el = ref.current;
     if (el && pendingCaret.current !== null && document.activeElement === el) {
@@ -76,11 +81,17 @@ export function MoneyInput({
 
   /**
    * Reformat `raw`, place the caret after `significant` digits, and report
-   * up. The DOM value is written here as well as through React: when the
-   * reformat produces the string already in state (a rejected keystroke —
-   * a letter, a second decimal point) React has no re-render to do, and
-   * without the imperative write the rejected character would linger in
-   * the field.
+   * up.
+   *
+   * The DOM value is written imperatively as well as through React because of
+   * the rejected keystroke — a letter, a second decimal point — where the
+   * reformat reproduces the string already in state. React then has no
+   * re-render to do, but it *does* run its controlled-input restore, writing
+   * `node.value = props.value` because the DOM still holds the rejected
+   * character. Assigning `.value` collapses the selection to the end of the
+   * field. Writing the same string here first leaves nothing for the restore
+   * to fix, so the caret survives: without it, typing "." in the middle of
+   * "₦1,234" throws the caret to the end (index 6 instead of 2).
    */
   const commit = (raw: string, significant: number) => {
     const cleaned = allowNegative ? raw : raw.replace(/-/g, "");
@@ -91,7 +102,10 @@ export function MoneyInput({
       el.value = display;
       if (document.activeElement === el) el.setSelectionRange(caret, caret);
     }
-    pendingCaret.current = caret;
+    // Only arm the effect when a re-render is coming. When `display` equals
+    // the current value React bails out, the effect never runs, and the
+    // imperative write above has already placed the caret correctly.
+    if (display !== value) pendingCaret.current = caret;
     onChange(display, parseMoneyMinor(display, opts));
   };
 
