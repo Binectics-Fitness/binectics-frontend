@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithProviders } from "@/tests/setup/test-utils";
 
 // ProviderShell mounts the page twice — a desktop layout and a lg:hidden
 // mobile layout — and jsdom doesn't apply CSS breakpoints, so BOTH copies
@@ -94,7 +95,7 @@ describe("Staff List Page", () => {
       message: "Success",
     });
 
-    render(<StaffPage />);
+    renderWithProviders(<StaffPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
@@ -127,7 +128,7 @@ describe("Staff List Page", () => {
       message: "Success",
     });
 
-    render(<StaffPage />);
+    renderWithProviders(<StaffPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText("invited@example.com").length).toBeGreaterThan(0);
@@ -145,7 +146,7 @@ describe("Staff List Page", () => {
       message: "Failed to load invitations",
     });
 
-    render(<StaffPage />);
+    renderWithProviders(<StaffPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText(/failed to load/i).length).toBeGreaterThan(0);
@@ -182,7 +183,7 @@ describe("Staff List Page", () => {
     });
 
     const user = userEvent.setup();
-    render(<StaffPage />);
+    renderWithProviders(<StaffPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText("Jane Smith").length).toBeGreaterThan(0);
@@ -227,7 +228,7 @@ describe("Staff List Page", () => {
     });
 
     const user = userEvent.setup();
-    render(<StaffPage />);
+    renderWithProviders(<StaffPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
@@ -263,7 +264,7 @@ describe("Staff List Page", () => {
     });
 
     const user = userEvent.setup();
-    render(<StaffPage />);
+    renderWithProviders(<StaffPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
@@ -310,7 +311,7 @@ describe("Staff List Page", () => {
       message: "Success",
     });
 
-    render(<StaffPage />);
+    renderWithProviders(<StaffPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText("Active").length).toBeGreaterThan(0);
@@ -347,7 +348,7 @@ describe("Staff List Page", () => {
       message: "Success",
     });
 
-    render(<StaffPage />);
+    renderWithProviders(<StaffPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText(/2 team members · 1 active/).length).toBeGreaterThan(0);
