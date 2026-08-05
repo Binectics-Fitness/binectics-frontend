@@ -88,14 +88,18 @@ export function bookingStatusLabel(status: ConsultationBookingStatus): string {
   return BOOKING_STATUS_LABEL[status] ?? String(status);
 }
 
-/** Minutes between start and end, floored at 0 for malformed ranges. */
+/**
+ * Minutes between start and end, floored at 0.
+ *
+ * An unparseable date yields NaN, and `Math.max(0, NaN)` is NaN rather than
+ * 0 — so the floor alone is not enough, and without the finite check a bad
+ * timestamp renders "NaN min" on screen and writes NaN into the CSV.
+ */
 export function durationMins(booking: ConsultationBooking): number {
-  return Math.max(
-    0,
-    Math.round(
-      (new Date(booking.endsAt).getTime() - new Date(booking.startsAt).getTime()) / 60000,
-    ),
+  const mins = Math.round(
+    (new Date(booking.endsAt).getTime() - new Date(booking.startsAt).getTime()) / 60000,
   );
+  return Number.isFinite(mins) ? Math.max(0, mins) : 0;
 }
 
 /**
