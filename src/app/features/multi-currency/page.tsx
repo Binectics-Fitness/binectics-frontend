@@ -86,7 +86,7 @@ const FEATURES = [
 ];
 
 const FEE_BREAKDOWN = [
-  { item: "Binectics platform fee", rate: "4.9% of transaction" },
+  { item: "Binectics platform fee", rate: "5% of transaction" },
   { item: "Gateway processing fee", rate: "Set by gateway (typically 1.4–2.9% + fixed)" },
   { item: "Currency conversion", rate: "Handled by gateway at market rate" },
   { item: "Setup fee", rate: "None" },

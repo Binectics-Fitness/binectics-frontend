@@ -71,8 +71,11 @@ function ErrorBanner({ title, body }: { title: string; body: string }) {
 export interface ProviderEarningsProps {
   /** Where "set prices" links to — the role's own settings page. */
   settingsHref: string;
-  /** Noun for a booked session in body copy: "consultation" or "session". */
-  sessionNoun: string;
+  /**
+   * Noun for a booked session in body copy. A union rather than `string` so
+   * a typo is a build error instead of odd copy shipped to a provider.
+   */
+  sessionNoun: "consultation" | "session";
 }
 
 export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarningsProps) {

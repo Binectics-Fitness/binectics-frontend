@@ -40,8 +40,8 @@ const faqItems = [
   { q: "When can I start?", a: "Early access is open now. Founding-cohort providers get hands-on onboarding, early-access pricing that stays locked after launch, and a direct line to the team building the copilot. General availability follows in 2026." },
   { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents — business registration, certifications, identity — and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
   { q: "Is my data secure?", a: "All data is encrypted at rest and in transit. Payment credentials are handled by PCI-compliant processors (Stripe, Paystack, Flutterwave) — we never store card numbers. Infrastructure runs on Azure with SOC 2-aligned controls, automated backups, and region-isolated databases." },
-  { q: "Can I cancel or downgrade anytime?", a: "Yes. Downgrade from Studio to Starter at any time — your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Enterprise plans follow the terms in your service agreement." },
-  { q: "Can I bring my own payment processor?", a: "Yes — Studio and Enterprise plans let providers configure their own Stripe, Paystack, or Flutterwave keys. Payments settle directly to your account; Binectics never holds funds." },
+  { q: "Can I cancel or downgrade anytime?", a: "Yes. Downgrade from a paid plan to Free at any time. Your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Enterprise plans follow the terms in your service agreement." },
+  { q: "Can I bring my own payment processor?", a: "Yes. Paid plans let providers configure their own Stripe, Paystack, or Flutterwave keys, and payments settle directly to your account. Binectics never holds funds." },
   { q: "How do team and multi-location plans work?", a: "Gym owners create an organization, invite staff with role and permission scopes, and manage multiple listings — each with its own facility details, amenities, gallery, and documents. Assignment rules route new clients to the right staff automatically." },
 ];
 
@@ -402,7 +402,7 @@ export default function Home() {
               Transparent pricing.
             </h2>
             <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed">
-              Start free with three AI summaries a month. Upgrade when the drafts win you over — local pricing in 8 currencies, no lock-ins. Founding-cohort pricing stays locked after launch.
+              Start free with three AI summaries a month, and upgrade when the drafts win you over. Local pricing in 8 currencies, no lock-ins. Founding-cohort pricing stays locked after launch.
             </p>
           </div>
         </ScrollReveal>

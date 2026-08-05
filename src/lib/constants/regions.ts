@@ -51,26 +51,7 @@ export const COUNTRY_TO_REGION: Record<string, RegionConfig> = {
   IN: INR,
 };
 
-export const MARKET_PRICES = {
-  studio: { USD: 48, GBP: 39, EUR: 45, NGN: 45_000, KES: 5_500, ZAR: 749, AED: 179, INR: 3_499 },
-  premium: { USD: 9, GBP: 7, EUR: 8, NGN: 5_500, KES: 900, ZAR: 129, AED: 29, INR: 499 },
-  family: { USD: 19, GBP: 15, EUR: 17, NGN: 12_000, KES: 1_900, ZAR: 279, AED: 59, INR: 999 },
-} as const;
-
-export type PlanTier = keyof typeof MARKET_PRICES;
 export type BillingPeriod = "monthly" | "annual";
-
-export function getMarketPriceForPeriod(tier: PlanTier, currency: CurrencyCode, period: BillingPeriod): number {
-  const monthly = MARKET_PRICES[tier][currency];
-  if (period === "annual") return monthly * 10;
-  return monthly;
-}
-
-export function getMonthlyEquivalent(tier: PlanTier, currency: CurrencyCode, period: BillingPeriod): number {
-  const monthly = MARKET_PRICES[tier][currency];
-  if (period === "annual") return Math.round((monthly * 10) / 12);
-  return monthly;
-}
 
 export const SUPPORTED_REGIONS: { code: string; config: RegionConfig }[] = [
   { code: "US", config: USD },
@@ -113,10 +94,6 @@ export function formatCurrencyAmount(
 ): string {
   const config = getConfigForCurrency(currency);
   return formatRegionPrice(amount, config.currencyCode, localeOverride ?? config.locale);
-}
-
-export function getMarketPrice(tier: PlanTier, currency: CurrencyCode): number {
-  return MARKET_PRICES[tier][currency];
 }
 
 /**

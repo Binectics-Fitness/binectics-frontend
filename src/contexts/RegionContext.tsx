@@ -3,13 +3,11 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import {
   type CurrencyCode,
-  type PlanTier,
   type RegionConfig,
   DEFAULT_REGION,
   REGION_COOKIE,
   REGION_OVERRIDE_COOKIE,
   getRegionForCountry,
-  getMarketPrice,
   formatRegionPrice,
 } from "@/lib/constants/regions";
 import { utilityService } from "@/lib/api/utility";
@@ -21,7 +19,6 @@ interface RegionContextValue {
   locale: string;
   regionName: string;
   isDetected: boolean;
-  formatPrice: (tier: PlanTier) => string;
   formatAmount: (amount: number) => string;
   setRegion: (countryCode: string) => void;
 }
@@ -95,14 +92,6 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     setCookie(REGION_COOKIE, code, 30);
   }, []);
 
-  const formatPrice = useCallback(
-    (tier: PlanTier) => {
-      const amount = getMarketPrice(tier, config.currencyCode);
-      return formatRegionPrice(amount, config.currencyCode, config.locale);
-    },
-    [config],
-  );
-
   const formatAmount = useCallback(
     (amount: number) => formatRegionPrice(amount, config.currencyCode, config.locale),
     [config],
@@ -117,7 +106,6 @@ export function RegionProvider({ children }: { children: ReactNode }) {
         locale: config.locale,
         regionName: config.regionName,
         isDetected,
-        formatPrice,
         formatAmount,
         setRegion,
       }}

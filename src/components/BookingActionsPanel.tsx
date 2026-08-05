@@ -24,10 +24,12 @@ import {
  * Cancel — shared by the dietitian consultations drawer and the trainer
  * sessions drawer.
  *
- * Rules (all enforced by the API too):
- *  - only PENDING/CONFIRMED bookings are actionable;
- *  - no-show stays disabled until the start time has passed;
- *  - cancel is only offered before the session starts;
+ * Rules:
+ *  - only PENDING/CONFIRMED bookings are actionable — API-enforced;
+ *  - no-show stays disabled until the start time has passed — API-enforced;
+ *  - cancel is only offered before the session starts — UI POLICY ONLY. The
+ *    API lets a provider cancel any non-terminal booking; only clients face
+ *    a cutoff. Do not assume the server will reject a late cancel.
  *  - nothing is announced as done until the API confirms it, and every
  *    action refetches through `onActionComplete`.
  *
@@ -70,6 +72,7 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
       return;
     }
     setActing(kind);
+    let succeeded = false;
     try {
       const res =
         kind === "complete"
@@ -81,14 +84,25 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
                 cancelReason.trim() ? { reason: cancelReason.trim() } : {},
               );
       if (res.success) {
+        succeeded = true;
         toast.success(ACTION_SUCCESS_MESSAGE[kind]);
         setCancelReason("");
-        await onActionComplete();
       } else {
         toast.error(res.message ?? "That didn't work — try again.");
       }
     } catch {
       toast.error("That didn't work — try again.");
+    }
+
+    // Refetch outside the try: the action already succeeded, so a failing
+    // refresh must not follow the success toast with a contradicting error
+    // one. The list being stale is a display problem, not a failed action.
+    if (succeeded) {
+      try {
+        await onActionComplete();
+      } catch {
+        toast.error("Saved, but the list didn't refresh — reload to see it.");
+      }
     }
     setActing(null);
   };
