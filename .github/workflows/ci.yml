@@ -1,12 +1,23 @@
 name: CI
+
 on:
   push:
     branches: [revamp, main]
   pull_request:
-    branches: [main]
+    # `revamp` is the active development branch and is well ahead of `main`,
+    # so most PRs target it. Listing only `main` here meant those PRs ran no
+    # checks at all.
+    branches: [main, revamp]
+
+# A newer push to the same branch makes the older run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  # ── Blocking: the checks that must hold before anything ships ──────────
   check:
+    name: type-check · tests · build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,5 +26,57 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npx next build
+
+      # Mirrors .husky/pre-push. Also enforced by next.config.ts
+      # (typescript.ignoreBuildErrors is false), but failing here is faster
+      # and gives a clearer message than failing inside the build.
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      # Readable test output for humans reading the log. The suite runs in
+      # ~8s, so running it twice (here and under the ratchet) costs nothing
+      # and means the gate's verdict and the actual failures are both visible.
+      - name: Tests (report)
+        run: npm test
+        continue-on-error: true
+
+      # The gate. This repo carries 34 known failures (28 assertions + 6
+      # suites that fail to collect); a plain `npm test` gate would be red on
+      # every PR for work nobody in that PR did, and a check everyone ignores
+      # enforces nothing. The ratchet fails only on NEW failures, by identity
+      # rather than count. Update the baseline deliberately:
+      #   node scripts/test-ratchet.mjs --update
+      - name: Tests (ratchet — fails only on new failures)
+        run: node scripts/test-ratchet.mjs
+
+      # This is what the Azure deploy workflow runs (`npm run build` ->
+      # `next build --webpack`), so it is the build that actually ships.
+      # CI previously ran `npx next build`, which is Turbopack — a different
+      # bundler from the deployed one, and nothing compared them.
+      - name: Build (webpack — deploy parity)
+        run: npm run build
+
+  # ── Advisory: signal, never a gate ────────────────────────────────────
+  advisory:
+    name: lint · turbopack build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # ~108 pre-existing problems. Reported, never blocking, until someone
+      # ratchets it the way the tests are ratcheted.
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      # Guards against the two bundlers diverging. The webpack build in the
+      # blocking job is the one that ships; this is here so a Turbopack-only
+      # break is visible rather than silent.
+      - name: Build (turbopack)
+        run: npx next build
+        continue-on-error: true
