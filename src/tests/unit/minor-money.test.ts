@@ -3,7 +3,7 @@ import {
   minorToMajor,
   formatMinorMap,
   dominantCurrency,
-} from "@/app/dashboard/dietitian/earnings/minorMoney";
+} from "@/lib/money/minorMoney";
 
 const fmt = (major: number, currency: string) => `${currency} ${major}`;
 

@@ -22,6 +22,7 @@ export { DashboardTopbar } from "./DashboardTopbar";
 
 // Phase 2 — booking + provider patterns
 export { StatusPill } from "./StatusPill";
+export { BookingStatusBadge } from "./BookingStatusBadge";
 export { ReceiptTable } from "./ReceiptTable";
 export { Wizard } from "./Wizard";
 export { SectionNav } from "./SectionNav";

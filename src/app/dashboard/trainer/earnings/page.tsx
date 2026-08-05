@@ -1,25 +1,21 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
-import { FeaturePending } from "@/components/ds/FeaturePending";
+import { ProviderEarnings } from "@/components/ProviderEarnings";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Earnings",
-  description: "Session revenue and payouts",
+  description: "Settled revenue and session activity",
 };
 
 /**
- * Honest pending state — this page previously rendered fabricated demo
- * data. Policy: wire what has a backend; never fabricate.
+ * Real earnings, same two honest sections as the dietitian dashboard:
+ * settled revenue off the org ledger, plus session counts with an
+ * explicitly-labelled estimate of session value.
  */
 export default function TrainerEarningsPage() {
   return (
-    <TrainerDashboardShell activeItem={"Earnings"} crumb={"Earnings"}>
-      <FeaturePending
-        title={"Earnings"}
-        subtitle={"Session revenue and payouts"}
-        pendingTitle={"Earnings reporting is coming soon"}
-        pendingBody={"Per-session earnings, payout history, and summaries will appear here once provider earnings reporting is live. This page previously showed fabricated figures."}
-      />
+    <TrainerDashboardShell activeItem="Earnings" crumb="Earnings">
+      <ProviderEarnings settingsHref="/dashboard/trainer/settings" sessionNoun="session" />
     </TrainerDashboardShell>
   );
 }

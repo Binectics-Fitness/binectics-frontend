@@ -1,8 +1,9 @@
 /**
- * Minor-unit money helpers for the earnings page. The transactions ledger and
- * the session-earnings estimate both report amounts in the currency's minor
- * unit (kobo/cents); the org formatters (fmtMoney) take MAJOR units.
- * Pure functions — unit-tested in src/tests/unit/dietitian-minor-money.test.ts.
+ * Minor-unit money helpers, shared by every provider earnings surface
+ * (dietitian + trainer). The transactions ledger and the session-earnings
+ * estimate both report amounts in the currency's minor unit (kobo/cents);
+ * the org formatters (fmtMoney) take MAJOR units.
+ * Pure functions — unit-tested in src/tests/unit/minor-money.test.ts.
  */
 
 /** Convention across the app: minor / 100 (see billing + admin payments pages). */
