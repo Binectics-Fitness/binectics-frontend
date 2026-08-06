@@ -13,11 +13,12 @@ import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
-  MembershipSubscriptionStatus,
   type CheckIn,
   type MembershipSubscription,
   type OrgCheckInDashboardStats,
 } from "@/lib/types";
+import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -55,13 +56,6 @@ function initials(name: string): string {
       .join("") || "?"
   );
 }
-
-const STATUS_STYLE: Record<MembershipSubscriptionStatus, { color: string; bg: string; label: string }> = {
-  [MembershipSubscriptionStatus.ACTIVE]: { color: "var(--signal-ink)", bg: "var(--signal-soft)", label: "Active" },
-  [MembershipSubscriptionStatus.PENDING_PAYMENT]: { color: "oklch(0.42 0.13 75)", bg: "var(--trainer-soft)", label: "Pending" },
-  [MembershipSubscriptionStatus.EXPIRED]: { color: "var(--fg-3)", bg: "var(--bg-2)", label: "Expired" },
-  [MembershipSubscriptionStatus.CANCELLED]: { color: "var(--danger)", bg: "var(--danger-soft)", label: "Cancelled" },
-};
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -266,7 +260,7 @@ function GymOverviewContent() {
                     {recentMembers.map((sub, idx) => {
                       const name = memberName(sub);
                       const last = idx === recentMembers.length - 1;
-                      const st = STATUS_STYLE[sub.status];
+                      const st = membershipStatusMeta(sub.status);
                       const border = last ? "none" : "1px solid var(--border)";
                       return (
                         <tr key={sub._id} className="hover:bg-bg-2">
@@ -278,12 +272,12 @@ function GymOverviewContent() {
                           </td>
                           <td className="px-4.5 py-3" style={{ borderBottom: border, color: "var(--ink)" }}>{planName(sub)}</td>
                           <td className="px-4.5 py-3" style={{ borderBottom: border }}>
-                            <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st?.color, background: st?.bg, border: `1px solid ${st?.color ?? "var(--border)"}` }}>
-                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st?.label ?? sub.status}
+                            <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st.color, background: st.background, border: `1px solid ${st.color}` }} title={st.hint}>
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st.label}
                             </span>
                           </td>
                           <td className="px-4.5 py-3 font-mono text-[12px]" style={{ borderBottom: border, color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{fmtDate(sub.created_at)}</td>
-                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid != null ? fmtMoney(sub.amount_paid, sub.currency ?? currentOrg?.currency) : "—"}</td>
+                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid_minor != null ? fmtMoney(minorToMajor(sub.amount_paid_minor), sub.currency ?? currentOrg?.currency) : "—"}</td>
                         </tr>
                       );
                     })}

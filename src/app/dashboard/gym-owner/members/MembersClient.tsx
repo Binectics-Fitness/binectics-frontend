@@ -7,8 +7,16 @@ import { AddMemberButton } from "./_actions";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   MembershipSubscriptionStatus,
+  isEntitlingMembershipStatus,
+  isSeatBearingMembershipStatus,
+  TERMINAL_MEMBERSHIP_STATUSES,
   type MembershipSubscription,
 } from "@/lib/types";
+import {
+  membershipStatusMeta,
+  MEMBERSHIP_STATUS_FILTER_ORDER,
+} from "@/lib/constants/membershipStatus";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -56,19 +64,18 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-const STATUS_STYLE: Record<MembershipSubscriptionStatus, { color: string; bg: string; label: string }> = {
-  [MembershipSubscriptionStatus.ACTIVE]:          { color: "var(--signal-ink)", bg: "var(--signal-soft)", label: "Active" },
-  [MembershipSubscriptionStatus.PENDING_PAYMENT]: { color: "oklch(0.42 0.13 75)", bg: "var(--trainer-soft)", label: "Pending" },
-  [MembershipSubscriptionStatus.EXPIRED]:         { color: "var(--fg-3)", bg: "var(--bg-2)", label: "Expired" },
-  [MembershipSubscriptionStatus.CANCELLED]:       { color: "var(--danger)", bg: "var(--danger-soft)", label: "Cancelled" },
-};
-
+/**
+ * Filter pills, in the design system's order — gym-members.html:204-210 shows
+ * All / Active / Paused / Past-due alongside the terminal states, so every
+ * lifecycle state the API can return is reachable here rather than only the
+ * four this page used to know about.
+ */
 const FILTERS: { label: string; value: MembershipSubscriptionStatus | "all" }[] = [
-  { label: "All",      value: "all" },
-  { label: "Active",   value: MembershipSubscriptionStatus.ACTIVE },
-  { label: "Pending",  value: MembershipSubscriptionStatus.PENDING_PAYMENT },
-  { label: "Expired",  value: MembershipSubscriptionStatus.EXPIRED },
-  { label: "Cancelled",value: MembershipSubscriptionStatus.CANCELLED },
+  { label: "All", value: "all" },
+  ...MEMBERSHIP_STATUS_FILTER_ORDER.map((status) => ({
+    label: membershipStatusMeta(status).label,
+    value: status,
+  })),
 ];
 
 const MORE_ICON = (
@@ -123,6 +130,16 @@ function RowActions({
 
   const isActive = sub.status === MembershipSubscriptionStatus.ACTIVE;
   const isPending = sub.status === MembershipSubscriptionStatus.PENDING_PAYMENT;
+  /**
+   * Still a customer — not over. `past_due`, `paused` and `suspended` all
+   * belong here: the gym must be able to message a past-due member (that is
+   * how the payment gets chased), change a paused member's plan, and cancel
+   * any of them. Gating those on `isActive` hid every action the operator
+   * needs precisely when a membership needs attention.
+   */
+  const isLive = !TERMINAL_MEMBERSHIP_STATUSES.includes(sub.status);
+  /** Has access right now: `active` or `past_due`. */
+  const hasAccess = isEntitlingMembershipStatus(sub.status);
   const scheduledPlan =
     sub.next_plan_id && typeof sub.next_plan_id === "object" ? sub.next_plan_id : null;
 
@@ -165,7 +182,9 @@ function RowActions({
     run(async () => {
       if (
         !window.confirm(
-          `Cancel ${getMemberName(sub)}'s membership? They lose access and the plan's member count drops.`,
+          hasAccess
+            ? `Cancel ${getMemberName(sub)}'s membership? They lose access and the seat is freed.`
+            : `Cancel ${getMemberName(sub)}'s membership? It ends for good and the seat is freed — a pause or suspension can be lifted, this cannot.`,
         )
       )
         return;
@@ -200,6 +219,12 @@ function RowActions({
             onClick={() => { setOpen(false); router.push(`/dashboard/gym-owner/members/${sub._id}`); }}>
             View details
           </button>
+          {/* ACTIVE only, deliberately, and NOT `isLive`: the API's messaging
+              relationship gate (messaging.service.ts) still matches
+              `status: ACTIVE` exactly, so offering this for a past_due or
+              paused member would render a button that 403s. Chasing a
+              past-due member by message is a real need — it wants the API
+              gate widened to isEntitlingStatus() first. */}
           {isActive && getMemberUserId(sub) && (
             <StartConversationButton
               recipientUserId={getMemberUserId(sub)!}
@@ -208,7 +233,7 @@ function RowActions({
               className={`${item} block`}
             />
           )}
-          {(isActive || isPending) && (
+          {isLive && (
             <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleResendInvite}>
               Resend invite email
             </button>
@@ -218,18 +243,18 @@ function RowActions({
               Mark as paid
             </button>
           )}
-          {isActive && (
+          {isLive && !isPending && (
             <button type="button" className={item} style={{ color: "var(--ink)" }}
               onClick={() => { setOpen(false); setChangePlanOpen(true); }}>
               Change plan…
             </button>
           )}
-          {isActive && scheduledPlan && (
+          {isLive && scheduledPlan && (
             <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleClearNextPlan}>
               Clear scheduled change ({scheduledPlan.name})
             </button>
           )}
-          {(isActive || isPending) && (
+          {isLive && (
             <button type="button" className={item} style={{ color: "var(--danger, #b00020)" }} onClick={handleCancel}>
               Cancel membership
             </button>
@@ -364,15 +389,18 @@ export default function GymMembersClient() {
     return true;
   });
 
-  const counts = {
-    all: subscriptions.length,
-    [MembershipSubscriptionStatus.ACTIVE]: subscriptions.filter((s) => s.status === MembershipSubscriptionStatus.ACTIVE).length,
-    [MembershipSubscriptionStatus.PENDING_PAYMENT]: subscriptions.filter((s) => s.status === MembershipSubscriptionStatus.PENDING_PAYMENT).length,
-    [MembershipSubscriptionStatus.EXPIRED]: subscriptions.filter((s) => s.status === MembershipSubscriptionStatus.EXPIRED).length,
-    [MembershipSubscriptionStatus.CANCELLED]: subscriptions.filter((s) => s.status === MembershipSubscriptionStatus.CANCELLED).length,
-  };
+  // Counted over every state the enum has rather than a hand-listed four, so a
+  // status this page does not enumerate can never be silently uncounted.
+  const counts: Record<string, number> = { all: subscriptions.length };
+  for (const status of MEMBERSHIP_STATUS_FILTER_ORDER) {
+    counts[status] = subscriptions.filter((s) => s.status === status).length;
+  }
 
-  const activeCount = counts[MembershipSubscriptionStatus.ACTIVE];
+  const activeCount = counts[MembershipSubscriptionStatus.ACTIVE] ?? 0;
+  /** Everyone who can get in today — includes the past-due grace window. */
+  const withAccessCount = subscriptions.filter((s) => isEntitlingMembershipStatus(s.status)).length;
+  /** Everyone the org is billed for. This is the number the seat cap counts. */
+  const seatCount = subscriptions.filter((s) => isSeatBearingMembershipStatus(s.status)).length;
 
   return (
     <GymDashboardShell
@@ -393,9 +421,12 @@ export default function GymMembersClient() {
                   getMemberName(s),
                   getMemberEmail(s),
                   getPlanName(s),
-                  STATUS_STYLE[s.status]?.label ?? s.status,
+                  membershipStatusMeta(s.status).label,
                   fmtDate(s.created_at),
-                  s.amount_paid.toString(),
+                  // Major units in the export: a spreadsheet column headed
+                  // "Amount" next to a "Currency" column means naira, not kobo,
+                  // and every formula the operator writes against it assumes so.
+                  minorToMajor(s.amount_paid_minor).toString(),
                   s.currency,
                 ]),
               ];
@@ -419,7 +450,7 @@ export default function GymMembersClient() {
         <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
           {loading
             ? "Loading…"
-            : `${subscriptions.length} member${subscriptions.length === 1 ? "" : "s"} · ${activeCount} active`}
+            : `${subscriptions.length} member${subscriptions.length === 1 ? "" : "s"} · ${activeCount} active${withAccessCount > activeCount ? ` · ${withAccessCount - activeCount} in grace` : ""} · ${seatCount} seat${seatCount === 1 ? "" : "s"} used`}
         </div>
       </div>
 
@@ -502,7 +533,7 @@ export default function GymMembersClient() {
                   const name = getMemberName(sub);
                   const email = getMemberEmail(sub);
                   const plan = getPlanName(sub);
-                  const statusStyle = STATUS_STYLE[sub.status] ?? STATUS_STYLE[MembershipSubscriptionStatus.EXPIRED];
+                  const statusMeta = membershipStatusMeta(sub.status);
                   return (
                     <tr
                       key={sub._id}
@@ -538,14 +569,15 @@ export default function GymMembersClient() {
                       <td className="px-4.5 py-3">
                         <span
                           className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"
-                          style={{ color: statusStyle.color, background: statusStyle.bg }}
+                          style={{ color: statusMeta.color, background: statusMeta.background, border: statusMeta.border }}
+                          title={statusMeta.hint}
                         >
                           <span className="w-1.25 h-1.25 rounded-full bg-current" />
-                          {statusStyle.label}
+                          {statusMeta.label}
                         </span>
                       </td>
                       <td className="px-4.5 py-3 text-right font-mono font-medium" style={{ color: "var(--ink)" }}>
-                        {fmtMoney(sub.amount_paid, sub.currency)}
+                        {fmtMoney(minorToMajor(sub.amount_paid_minor), sub.currency)}
                       </td>
                       <td className="px-4.5 py-3">
                         {currentOrg && (

@@ -6,6 +6,8 @@ import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
+import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 
@@ -41,20 +43,6 @@ function getPlanName(sub: MembershipSubscription): string {
 function getInitials(name: string): string {
   return name.split(" ").slice(0, 2).map((w) => w[0] ?? "").join("").toUpperCase();
 }
-
-const STATUS_LABEL: Record<MembershipSubscriptionStatus, string> = {
-  [MembershipSubscriptionStatus.ACTIVE]: "Active",
-  [MembershipSubscriptionStatus.PENDING_PAYMENT]: "Pending payment",
-  [MembershipSubscriptionStatus.EXPIRED]: "Expired",
-  [MembershipSubscriptionStatus.CANCELLED]: "Cancelled",
-};
-
-const STATUS_STYLE: Record<MembershipSubscriptionStatus, { color: string; bg: string }> = {
-  [MembershipSubscriptionStatus.ACTIVE]:          { color: "var(--signal-ink)", bg: "var(--signal-soft)" },
-  [MembershipSubscriptionStatus.PENDING_PAYMENT]: { color: "oklch(0.42 0.13 75)", bg: "var(--trainer-soft)" },
-  [MembershipSubscriptionStatus.EXPIRED]:         { color: "var(--fg-3)", bg: "var(--bg-2)" },
-  [MembershipSubscriptionStatus.CANCELLED]:       { color: "var(--danger)", bg: "var(--danger-soft)" },
-};
 
 export default function GymSingleMemberPage({ params }: { params: Promise<{ memberId: string }> }) {
   const { memberId } = React.use(params);
@@ -125,10 +113,12 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   const name = getMemberName(subscription);
   const email = getMemberEmail(subscription);
   const planName = getPlanName(subscription);
-  const statusStyle = STATUS_STYLE[subscription.status];
-  const statusLabel = STATUS_LABEL[subscription.status];
+  const statusMeta = membershipStatusMeta(subscription.status);
+  const statusLabel = statusMeta.label;
   const memberUserId = getMemberUserId(subscription);
-  // Direct messaging is relationship-gated server-side to ACTIVE members.
+  // Direct messaging is relationship-gated server-side to ACTIVE members
+  // exactly — messaging.service.ts matches `status: ACTIVE`, not the door
+  // check — so this stays ACTIVE-only even though `past_due` still has access.
   const canMessage =
     subscription.status === MembershipSubscriptionStatus.ACTIVE && !!memberUserId;
 
@@ -137,11 +127,11 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     {
       label: "Status",
       value: statusLabel,
-      style: { color: statusStyle.color },
+      style: { color: statusMeta.color },
     },
     {
       label: "Amount paid",
-      value: fmtMoney(subscription.amount_paid, subscription.currency),
+      value: fmtMoney(minorToMajor(subscription.amount_paid_minor), subscription.currency),
     },
     {
       label: "Expires",
@@ -151,7 +141,9 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
 
   const details: { label: string; value: string }[] = [
     { label: "Plan", value: planName },
-    { label: "Status", value: statusLabel },
+    // The hint spells out what the state means for access and for the bill —
+    // "Suspended" alone does not tell an operator that paid time keeps running.
+    { label: "Status", value: `${statusLabel} — ${statusMeta.hint}` },
     {
       label: "Started",
       value: fmtDate(subscription.start_date),
@@ -162,7 +154,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     },
     {
       label: "Amount paid",
-      value: fmtMoney(subscription.amount_paid, subscription.currency),
+      value: fmtMoney(minorToMajor(subscription.amount_paid_minor), subscription.currency),
     },
     {
       label: "Payment reference",
@@ -204,7 +196,8 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           )}
           <span
             className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2.5 py-1.5 rounded-full"
-            style={{ color: statusStyle.color, background: statusStyle.bg }}
+            style={{ color: statusMeta.color, background: statusMeta.background, border: statusMeta.border }}
+            title={statusMeta.hint}
           >
             <span className="w-1.25 h-1.25 rounded-full bg-current" />
             {statusLabel}
