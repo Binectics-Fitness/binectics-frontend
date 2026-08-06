@@ -8,7 +8,15 @@ import type {
   CreateOrgMembershipPlanRequest,
   UpdateOrgMembershipPlanRequest,
 } from "@/lib/api/marketplace";
-import { MembershipPlanType, type MarketplaceMembershipPlan } from "@/lib/types";
+import {
+  MembershipPlanType,
+  type MarketplaceMembershipPlan,
+  type MembershipSubscription,
+} from "@/lib/types";
+import { countMembersByPlan } from "@/lib/constants/membershipStatus";
+import { MoneyInput } from "@/components/ds/MoneyInput";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -23,7 +31,9 @@ const EMPTY_FORM: CreateOrgMembershipPlanRequest = {
   description: "",
   plan_type: MembershipPlanType.SUBSCRIPTION,
   duration_days: 30,
-  price: 0,
+  // MINOR units (kobo/cents). 0 is still 0, but every other value here is
+  // 100× what the old major-unit `price` field held.
+  price_minor: 0,
   currency: "USD",
   features: [],
   is_active: true,
@@ -44,6 +54,16 @@ function PlanModal({
   onSave: (data: CreateOrgMembershipPlanRequest) => Promise<void>;
 }) {
   const [form, setForm] = useState<CreateOrgMembershipPlanRequest>(initial);
+  /**
+   * What the price field shows. Seeded from the incoming minor value, and the
+   * minor value on `form` is kept verbatim until the user actually edits —
+   * `formatMinorForInput` is lossy for a whole-unit currency (199 kobo renders
+   * "₦2"), so round-tripping the prefill would raise a saved price by a kobo
+   * on a save that only changed the plan's name.
+   */
+  const [priceDisplay, setPriceDisplay] = useState(() =>
+    formatMinorForInput(initial.price_minor, { currency: initial.currency ?? "USD" }),
+  );
   const [featureInput, setFeatureInput] = useState("");
   const [saving, setSaving] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -161,13 +181,18 @@ function PlanModal({
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
                 Price <span style={{ color: "var(--danger)" }}>*</span>
               </label>
-              <input
-                type="number"
-                min={0}
-                step={0.01}
+              {/* MoneyInput reports MINOR units directly, so nothing here
+                  re-parses a formatted string, and it renders the currency
+                  symbol exactly as the saved price will render elsewhere. */}
+              <MoneyInput
                 required
-                value={form.price}
-                onChange={(e) => set("price", Number(e.target.value))}
+                value={priceDisplay}
+                currency={form.currency ?? "USD"}
+                aria-label="Price"
+                onChange={(display, minor) => {
+                  setPriceDisplay(display);
+                  set("price_minor", minor ?? 0);
+                }}
                 className="h-9 rounded-(--r-2) px-3 text-[13.5px]"
                 style={{ background: "var(--bg-2)", border: "1px solid var(--border-2)", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
               />
@@ -264,11 +289,18 @@ function PlanModal({
 
 function PlanCard({
   plan,
+  memberCount,
   onEdit,
   onToggle,
   onDelete,
 }: {
   plan: MarketplaceMembershipPlan;
+  /**
+   * Derived from the org's subscriptions by the caller.
+   * `MembershipPlan.active_members` was deleted with no successor field, so
+   * this arrives as a prop rather than being read off the plan.
+   */
+  memberCount: number;
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
@@ -296,7 +328,7 @@ function PlanCard({
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[22px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
-            {fmtMoney(plan.price, plan.currency)}
+            {fmtMoney(minorToMajor(plan.price_minor), plan.currency)}
           </div>
           <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
             {plan.duration_days}d
@@ -320,7 +352,7 @@ function PlanCard({
       <div className="grid grid-cols-2" style={{ borderTop: "1px solid var(--border)", background: "var(--bg-2)" }}>
         <div className="py-3.5 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
           <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Subscribers</div>
-          <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{plan.active_members}</div>
+          <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{memberCount}</div>
         </div>
         <div className="py-3.5 px-5.5">
           <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Status</div>
@@ -371,6 +403,9 @@ function PlanCard({
 export default function DietitianPlansClient() {
   const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
   const [orgId, setOrgId] = useState<string | null>(null);
+  // Fetched purely to derive per-plan member counts (see countMembersByPlan).
+  const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
+  const membersByPlan = countMembersByPlan(subscriptions);
   const [currencies, setCurrencies] = useState<string[]>(FALLBACK_CURRENCIES);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<{ mode: ModalMode; plan?: MarketplaceMembershipPlan } | null>(null);
@@ -417,9 +452,15 @@ export default function DietitianPlansClient() {
         return;
       }
       if (mounted) setOrgId(oid);
-      const plansRes = await marketplaceService.getOrgMembershipPlans(oid);
+      const [plansRes, subsRes] = await Promise.all([
+        marketplaceService.getOrgMembershipPlans(oid),
+        marketplaceService.getOrgMembershipSubscriptions(oid),
+      ]);
       if (!mounted) return;
       if (plansRes.success && plansRes.data) setPlans(plansRes.data);
+      // A failed roster load leaves the counts at zero rather than blocking the
+      // page — the plans themselves are what this screen is for.
+      if (subsRes.success && subsRes.data) setSubscriptions(subsRes.data);
       if (mounted) setLoading(false);
     };
 
@@ -527,6 +568,7 @@ export default function DietitianPlansClient() {
             <PlanCard
               key={plan._id}
               plan={plan}
+              memberCount={membersByPlan.get(plan._id) ?? 0}
               onEdit={() => setModal({ mode: "edit", plan })}
               onToggle={() => handleToggle(plan)}
               onDelete={() => handleDelete(plan)}
@@ -555,7 +597,7 @@ export default function DietitianPlansClient() {
                   description: modal.plan.description ?? "",
                   plan_type: modal.plan.plan_type,
                   duration_days: modal.plan.duration_days,
-                  price: modal.plan.price,
+                  price_minor: modal.plan.price_minor,
                   currency: modal.plan.currency,
                   features: modal.plan.features ?? [],
                   is_active: modal.plan.is_active,

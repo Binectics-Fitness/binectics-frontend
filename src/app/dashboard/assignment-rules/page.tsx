@@ -7,6 +7,10 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAssignmentRules } from "@/hooks/useAssignmentRules";
+import { MoneyInput } from "@/components/ds/MoneyInput";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
+import { minorToMajor } from "@/lib/money/minorMoney";
+import { formatCurrency } from "@/utils/format";
 import {
   AssignmentStrategy,
   ClientTier,
@@ -27,6 +31,13 @@ function strategyLabel(strategy: AssignmentStrategy): string {
 export default function AssignmentRulesPage() {
   const { organizations, currentOrg } = useOrganization();
   const orgId = currentOrg?._id;
+  /**
+   * The currency new thresholds are authored in. The org's own, because a rule
+   * is compared against ITS subscriptions — the previous field was labelled
+   * "($)" for every org in every market, so a Lagos gym typing 500 got a ₦500
+   * rule presented as $500.
+   */
+  const ruleCurrency = currentOrg?.currency ?? "USD";
 
   const { rules, isLoading, error, loadRules, createRule, updateRule, deleteRule } =
     useAssignmentRules(orgId ?? "");
@@ -41,7 +52,15 @@ export default function AssignmentRulesPage() {
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [priority, setPriority] = useState(100);
-  const [minAmount, setMinAmount] = useState<number | null>(null);
+  /**
+   * The threshold in MINOR units, plus the formatted string the field shows.
+   * Both come out of <MoneyInput> so nothing here re-parses a formatted
+   * string, and the currency is the org's — the API refuses to compare a
+   * threshold against a subscription in a different currency, which is what
+   * the old currency-less "Min Amount ($)" field silently did.
+   */
+  const [minAmountMinor, setMinAmountMinor] = useState<number | null>(null);
+  const [minAmountDisplay, setMinAmountDisplay] = useState("");
   const [strategy, setStrategy] = useState<AssignmentStrategy>(
     AssignmentStrategy.ROUND_ROBIN,
   );
@@ -83,7 +102,8 @@ export default function AssignmentRulesPage() {
     setDescription("");
     setIsActive(true);
     setPriority(100);
-    setMinAmount(null);
+    setMinAmountMinor(null);
+    setMinAmountDisplay("");
     setStrategy(AssignmentStrategy.ROUND_ROBIN);
     setStaffIds("");
     setSelectedTiers([]);
@@ -103,7 +123,14 @@ export default function AssignmentRulesPage() {
     setDescription(rule.description || "");
     setIsActive(rule.is_active);
     setPriority(rule.priority);
-    setMinAmount(rule.min_amount ?? null);
+    setMinAmountMinor(rule.min_amount_minor ?? null);
+    // Prefill in the rule's OWN currency, falling back to the org's — the
+    // saved threshold is meaningless read against a different one.
+    setMinAmountDisplay(
+      formatMinorForInput(rule.min_amount_minor ?? null, {
+        currency: rule.currency ?? ruleCurrency,
+      }),
+    );
     setStrategy(rule.strategy);
     setStaffIds(rule.staff_user_ids.join(","));
     setSelectedTiers(rule.client_tiers || []);
@@ -154,7 +181,11 @@ export default function AssignmentRulesPage() {
       description: description.trim() || undefined,
       is_active: isActive,
       priority,
-      min_amount: minAmount ?? undefined,
+      // Minor units, and `currency` is REQUIRED alongside it: the API's
+      // @ValidateIf refuses a threshold with no currency, and forbidNonWhitelisted
+      // would 400 on the old `min_amount` key regardless.
+      min_amount_minor: minAmountMinor ?? undefined,
+      currency: minAmountMinor !== null ? ruleCurrency : undefined,
       strategy,
       staff_user_ids: parsedStaffIds,
       client_tiers: selectedTiers.length > 0 ? selectedTiers : undefined,
@@ -176,7 +207,8 @@ export default function AssignmentRulesPage() {
         description: data.description,
         is_active: data.is_active,
         priority: data.priority,
-        min_amount: data.min_amount,
+        min_amount_minor: data.min_amount_minor,
+        currency: data.currency,
         strategy: data.strategy,
         staff_user_ids: data.staff_user_ids,
         client_tiers: data.client_tiers,
@@ -355,7 +387,12 @@ export default function AssignmentRulesPage() {
                         </span>
                       </td>
                       <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
-                        {rule.min_amount ? `$${rule.min_amount}` : "-"}
+                        {rule.min_amount_minor
+                          ? formatCurrency(
+                              minorToMajor(rule.min_amount_minor),
+                              rule.currency ?? ruleCurrency,
+                            )
+                          : "-"}
                       </td>
                       <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
                         <span
@@ -511,13 +548,17 @@ export default function AssignmentRulesPage() {
                     className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
                     style={{ color: "var(--fg-3)" }}
                   >
-                    Min Amount ($)
+                    Min Amount ({ruleCurrency})
                   </label>
-                  <input
-                    type="number"
-                    value={minAmount ?? ""}
-                    onChange={(e) => setMinAmount(e.target.value ? Number(e.target.value) : null)}
+                  <MoneyInput
+                    value={minAmountDisplay}
+                    currency={ruleCurrency}
+                    onChange={(display, minor) => {
+                      setMinAmountDisplay(display);
+                      setMinAmountMinor(minor);
+                    }}
                     placeholder="Optional"
+                    aria-label={`Min Amount (${ruleCurrency})`}
                     className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
                     style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
                   />

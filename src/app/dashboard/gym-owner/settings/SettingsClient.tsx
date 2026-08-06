@@ -14,6 +14,8 @@ import {
 import { useCountries } from "@/lib/queries/utility";
 import { utilityService } from "@/lib/api/utility";
 import { SUPPORTED_CURRENCIES } from "@/lib/constants/regions";
+import { MoneyInput } from "@/components/ds/MoneyInput";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
 import {
   FIRST_DAY_OPTIONS,
   DATE_FORMAT_OPTIONS,
@@ -420,7 +422,7 @@ export function SettingsClient() {
                     setPayout({ payout_day: day });
                   }} />
                 )}
-                <TextField label={`Minimum payout${form?.currency ? ` (${form.currency})` : ""}`} type="number" value={String(form?.payout_schedule.minimum_payout_amount ?? 0)} onChange={(v) => setPayout({ minimum_payout_amount: Math.max(0, Number(v) || 0) })} disabled={!form} />
+                <MoneyField label="Minimum payout" currency={form?.currency ?? "USD"} minor={form?.payout_schedule.minimum_payout_amount_minor ?? 0} onChange={(m) => setPayout({ minimum_payout_amount_minor: Math.max(0, m) })} disabled={!form} />
                 <TextField label="Hold period (days, 0–30)" type="number" value={String(form?.payout_schedule.hold_period_days ?? 0)} onChange={(v) => setPayout({ hold_period_days: Math.min(30, Math.max(0, Number(v) || 0)) })} disabled={!form} />
               </div>
               <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>Earnings below the minimum roll over to the next run. The hold period applies before earnings become payable.</span>
@@ -466,6 +468,54 @@ function TextField({ label, value, onChange, disabled, type = "text" }: { label:
     <div className="flex flex-col gap-1.5">
       <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
       <input type={type} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
+    </div>
+  );
+}
+
+/**
+ * A TextField that holds money. Owns the formatted display string; reports the
+ * value in MINOR units (kobo/cents), which is what the API stores.
+ *
+ * A bare `type="number"` field cannot do this job: it has no currency, so it
+ * cannot know that NGN renders whole and USD renders to cents, and it hands
+ * back a float that has to be scaled by whoever receives it.
+ *
+ * The minor value is passed back verbatim when the user has not touched the
+ * field — `formatMinorForInput` is lossy for a whole-unit currency (199 kobo
+ * renders "₦2"), so re-parsing the prefill would round a saved amount on a
+ * save that changed nothing else.
+ */
+function MoneyField({ label, minor, currency, onChange, disabled }: { label: string; minor: number; currency: string; onChange: (minor: number) => void; disabled?: boolean }) {
+  const opts = { currency };
+  const [display, setDisplay] = useState(() => formatMinorForInput(minor, opts));
+  const lastMinor = useRef(minor);
+  // Re-prefill when the saved value changes underneath us (org switch, reset),
+  // but never while the user is mid-edit — their own keystrokes move `minor`.
+  useEffect(() => {
+    if (minor !== lastMinor.current) {
+      lastMinor.current = minor;
+      setDisplay(formatMinorForInput(minor, opts));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minor, currency]);
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
+      <MoneyInput
+        value={display}
+        currency={currency}
+        disabled={disabled}
+        aria-label={label}
+        onChange={(next, nextMinor) => {
+          setDisplay(next);
+          // Empty means "no minimum", which for this field is zero rather than
+          // unset — the API requires the key.
+          lastMinor.current = nextMinor ?? 0;
+          onChange(nextMinor ?? 0);
+        }}
+        className={INPUT_CLASS}
+        style={INPUT_STYLE}
+      />
     </div>
   );
 }

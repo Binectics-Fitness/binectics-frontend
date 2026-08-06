@@ -5,11 +5,16 @@ import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useOrgMembershipPlans,
+  useOrgMembershipSubscriptions,
   useCreateOrgMembershipPlan,
   useUpdateOrgMembershipPlan,
   useSetOrgMembershipPlanActive,
   useDeleteOrgMembershipPlan,
 } from "@/lib/queries/marketplace";
+import { countMembersByPlan } from "@/lib/constants/membershipStatus";
+import { MoneyInput } from "@/components/ds/MoneyInput";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
   MembershipPlanType,
@@ -46,6 +51,16 @@ export function GymPlansClient() {
   const { currentOrg } = useOrganization();
   const orgId = currentOrg?._id;
   const { data: plans = [], isLoading } = useOrgMembershipPlans(orgId);
+  /**
+   * The roster, purely so per-plan member counts can be derived.
+   * `MembershipPlan.active_members` was deleted with no successor, and
+   * gym-plans.html:160-226 shows "562 active" on every plan row — so the number
+   * is design-required, not optional. Counting the subscriptions the org
+   * already exposes is the derivation; no new endpoint is invented.
+   */
+  const { data: subscriptions = [] } = useOrgMembershipSubscriptions(orgId);
+  const membersByPlan = countMembersByPlan(subscriptions);
+  const membersOf = (planId: string) => membersByPlan.get(planId) ?? 0;
   const create = useCreateOrgMembershipPlan(orgId);
   const setActive = useSetOrgMembershipPlanActive(orgId);
   const remove = useDeleteOrgMembershipPlan(orgId);
@@ -56,13 +71,13 @@ export function GymPlansClient() {
   const [error, setError] = useState<string | null>(null);
 
   const activePlans = plans.filter((p) => p.is_active);
-  const totalMembers = plans.reduce((s, p) => s + (p.active_members ?? 0), 0);
-  const mostPicked = [...plans].sort((a, b) => (b.active_members ?? 0) - (a.active_members ?? 0))[0];
+  const totalMembers = plans.reduce((s, p) => s + membersOf(p._id), 0);
+  const mostPicked = [...plans].sort((a, b) => membersOf(b._id) - membersOf(a._id))[0];
 
   const kpis = [
     { label: "Active subscribers", value: fmtNumber(totalMembers), delta: "across all plans" },
     { label: "Active plans", value: String(activePlans.length), delta: `${plans.length} total` },
-    { label: "Most picked", value: mostPicked && (mostPicked.active_members ?? 0) > 0 ? mostPicked.name : "—", small: true, delta: mostPicked && (mostPicked.active_members ?? 0) > 0 ? `${fmtNumber(mostPicked.active_members)} member${mostPicked.active_members === 1 ? "" : "s"}` : "no subscribers yet" },
+    { label: "Most picked", value: mostPicked && membersOf(mostPicked._id) > 0 ? mostPicked.name : "—", small: true, delta: mostPicked && membersOf(mostPicked._id) > 0 ? `${fmtNumber(membersOf(mostPicked._id))} member${membersOf(mostPicked._id) === 1 ? "" : "s"}` : "no subscribers yet" },
   ];
 
   const onCreate = async (data: CreateOrgMembershipPlanRequest) => {
@@ -144,11 +159,11 @@ export function GymPlansClient() {
                     </div>
                   )}
                   <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>
-                    {fmtNumber(p.active_members ?? 0)} active member{(p.active_members ?? 0) === 1 ? "" : "s"}
+                    {fmtNumber(membersOf(p._id))} member{membersOf(p._id) === 1 ? "" : "s"}
                   </div>
                 </div>
                 <span className="font-mono text-[15px] shrink-0" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                  {fmtMoney(p.price, p.currency)} <small className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>{perLabel(p)}</small>
+                  {fmtMoney(minorToMajor(p.price_minor), p.currency)} <small className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>{perLabel(p)}</small>
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
                   <button className="btn-ghost-v2 sm" onClick={() => { setEditingId(editingId === p._id ? null : p._id); setAdding(false); }}>
@@ -159,8 +174,8 @@ export function GymPlansClient() {
                   </button>
                   <button
                     className="btn-ghost-v2 sm disabled:opacity-40"
-                    disabled={remove.isPending || (p.active_members ?? 0) > 0}
-                    title={(p.active_members ?? 0) > 0 ? "Has active members — deactivate instead so existing subscriptions keep working" : undefined}
+                    disabled={remove.isPending || membersOf(p._id) > 0}
+                    title={membersOf(p._id) > 0 ? "Has members on it — deactivate instead so existing subscriptions keep working" : undefined}
                     onClick={() => onDelete(p)}
                   >Delete</button>
                 </div>
@@ -215,7 +230,17 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
   const [planType, setPlanType] = useState<MembershipPlanType>(initial?.plan_type ?? MembershipPlanType.SUBSCRIPTION);
   const [period, setPeriod] = useState(initialPeriod);
   const [customDays, setCustomDays] = useState(initial?.duration_days ?? 30);
-  const [price, setPrice] = useState(initial ? String(initial.price) : "");
+  /**
+   * The price as the field shows it plus its value in MINOR units. The minor
+   * value is what gets sent; `priceMinor` starts as the plan's saved value
+   * verbatim, because `formatMinorForInput` is lossy for a whole-unit currency
+   * (199 kobo renders "₦2") and re-parsing the prefill would quietly round a
+   * saved price on a save that only changed the plan's name.
+   */
+  const [price, setPrice] = useState(() =>
+    initial ? formatMinorForInput(initial.price_minor, { currency: initial.currency }) : "",
+  );
+  const [priceMinor, setPriceMinor] = useState<number | null>(initial?.price_minor ?? null);
   const [features, setFeatures] = useState<string[]>(initial?.features ?? []);
   const [isPublic, setIsPublic] = useState(initial?.is_public ?? true);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -224,9 +249,10 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
   const durationDays = period === "custom" ? customDays : Number(period);
 
   const submit = () => {
-    const parsedPrice = Number(price);
     if (!name.trim()) return setLocalError("Give the plan a name.");
-    if (price === "" || Number.isNaN(parsedPrice) || parsedPrice < 0) return setLocalError("Enter a valid price.");
+    // A non-empty field that parses to null is a price the wire cannot carry
+    // exactly, not a zero — refuse it rather than saving a rounded amount.
+    if (price === "" || priceMinor === null || priceMinor < 0) return setLocalError("Enter a valid price.");
     if (!Number.isInteger(durationDays) || durationDays < 1) return setLocalError("Duration must be at least 1 day.");
     setLocalError(null);
     onSubmit({
@@ -234,7 +260,9 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
       description: description.trim() || undefined,
       plan_type: planType,
       duration_days: durationDays,
-      price: parsedPrice,
+      // MINOR units, straight from <MoneyInput> — nothing here re-parses the
+      // formatted string, so ₦5,000 leaves as 500000 and not as 5000.
+      price_minor: priceMinor,
       currency: defaultCurrency,
       features,
       is_public: isPublic,
@@ -286,16 +314,18 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
         )}
         <label className="flex flex-col gap-1.5">
           <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Price</span>
-          <div className="flex items-center rounded-(--r-2)" style={{ border: "1px solid var(--border-2)", background: "var(--bg)" }}>
-            <span className="pl-3 pr-1.5 text-[13px] shrink-0" style={{ color: "var(--fg-3)" }}>{defaultCurrency}</span>
-            <input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" placeholder="0"
-              className="h-9 flex-1 min-w-0 rounded-(--r-2) pr-3 text-[13.5px] outline-none"
-              style={{ border: "none", color: "var(--ink)", background: "transparent", fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}
-              // The input's own outline is suppressed for the seamless prefix
-              // look, so the wrapper carries the keyboard-focus indicator.
-              onFocus={(e) => { const w = e.currentTarget.parentElement; if (w) w.style.border = "1px solid var(--ink)"; }}
-              onBlur={(e) => { const w = e.currentTarget.parentElement; if (w) w.style.border = "1px solid var(--border-2)"; }} />
-          </div>
+          {/* MoneyInput renders the currency symbol itself (₦5,000), exactly as
+              formatCurrency will render the saved value, so the standalone
+              currency-code prefix is gone rather than duplicated. */}
+          <MoneyInput
+            value={price}
+            currency={defaultCurrency}
+            aria-label={`Price (${defaultCurrency})`}
+            placeholder="0"
+            onChange={(display, minor) => { setPrice(display); setPriceMinor(minor); }}
+            className={INPUT_CLASS}
+            style={{ ...INPUT_STYLE, fontVariantNumeric: "tabular-nums" }}
+          />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Visible on listing</span>
