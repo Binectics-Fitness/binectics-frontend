@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { adminService, type PlatformMetricsOverview, type FeedbackSummary } from "@/lib/api/admin";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 const USD = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
-function formatCur(amount: number, currency: string): string {
+/** Takes MINOR units (kobo/cents), as every `*Minor` figure on the response is. */
+function formatCur(amountMinor: number, currency: string): string {
+  const amount = minorToMajor(amountMinor);
   try {
     return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
   } catch {
@@ -61,10 +64,17 @@ export default function AdminOverviewClient() {
 
   const byCurrency = useMemo(() => {
     const rows = metrics?.subscriptions.byCurrency ?? [];
-    return [...rows].sort((a, b) => b.total - a.total).slice(0, 8);
+    return [...rows].sort((a, b) => b.totalMinor - a.totalMinor).slice(0, 8);
   }, [metrics]);
 
-  const revenueMoney = (amount: number, currency: string | null) => {
+  /**
+   * Takes MINOR units (kobo/cents) — every revenue figure on this response is
+   * minor, and its name now says so. The conversion happens here rather than
+   * being fed a raw `*Minor` value: rendering ₦12,345,600 kobo through a
+   * currency formatter reads "₦12,345,600" instead of "₦123,456".
+   */
+  const revenueMoney = (amountMinor: number, currency: string | null) => {
+    const amount = minorToMajor(amountMinor);
     if (!currency) return USD.format(amount);
     try {
       return new Intl.NumberFormat(undefined, {
@@ -82,10 +92,10 @@ export default function AdminOverviewClient() {
         {
           l: "Subscription revenue",
           v: revenueMoney(
-            metrics.subscriptions.primaryRevenue,
+            metrics.subscriptions.primaryRevenueMinor,
             metrics.subscriptions.primaryCurrency,
           ),
-          d: `${revenueMoney(metrics.subscriptions.primaryAverage, metrics.subscriptions.primaryCurrency)} avg`,
+          d: `${revenueMoney(metrics.subscriptions.primaryAverageMinor, metrics.subscriptions.primaryCurrency)} avg`,
         },
         { l: "Verified providers", v: metrics.verifiedProviders.total.toLocaleString(), d: `${metrics.verifiedProviders.distinctCountries} countries` },
         { l: "Active subscriptions", v: metrics.subscriptions.activeCount.toLocaleString(), d: "Currently active" },
@@ -160,7 +170,7 @@ export default function AdminOverviewClient() {
                       <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{c.currency}</div>
                       <div className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>{c.count} subscription{c.count === 1 ? "" : "s"}</div>
                     </div>
-                    <span className="font-mono text-[14px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCur(c.total, c.currency)}</span>
+                    <span className="font-mono text-[14px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCur(c.totalMinor, c.currency)}</span>
                   </div>
                 ))
               )}

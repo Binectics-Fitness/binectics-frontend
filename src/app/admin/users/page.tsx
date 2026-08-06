@@ -6,6 +6,8 @@ import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { adminService, type PlatformMetricsOverview, type AdminUserSuspensionResult } from "@/lib/api/admin";
+import { formatCurrency } from "@/utils/format";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 interface SuspendActionState {
   userId: string;
@@ -167,8 +169,8 @@ export default function AdminUsersPage() {
             label: "Active subscriptions",
             value: loading ? "—" : (metrics?.subscriptions.activeCount.toLocaleString() ?? "0"),
             delta:
-              metrics?.subscriptions.totalRevenueUsd != null
-                ? `$${metrics.subscriptions.totalRevenueUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })} total`
+              metrics?.subscriptions.totalRevenueUsdMinor != null
+                ? `${formatCurrency(minorToMajor(metrics.subscriptions.totalRevenueUsdMinor), "USD")} total`
                 : "—",
           },
         ].map((kpi) => (
@@ -410,7 +412,15 @@ export default function AdminUsersPage() {
                         {row.currency}
                       </span>
                     </td>
-                    {[row.count, row.total, row.average].map((v, i) => (
+                    {/* Count is a plain integer; totalMinor/averageMinor are MINOR
+                        units, so they go through formatCurrency(minorToMajor(…))
+                        rather than a bare toLocaleString — which rendered kobo
+                        as if it were naira. */}
+                    {[
+                      row.count.toLocaleString(),
+                      formatCurrency(minorToMajor(row.totalMinor), row.currency),
+                      formatCurrency(minorToMajor(row.averageMinor), row.currency),
+                    ].map((v, i) => (
                       <td
                         key={i}
                         className="py-2.5 px-4.5 text-right font-mono"
@@ -420,7 +430,7 @@ export default function AdminUsersPage() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {typeof v === "number" ? v.toLocaleString(undefined, { maximumFractionDigits: 2 }) : v}
+                        {v}
                       </td>
                     ))}
                   </tr>

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { adminService, type PlatformMetricsOverview } from "@/lib/api/admin";
 import { formatCurrency } from "@/utils/format";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 /**
  * Platform analytics from GET /admin/metrics/overview: verified providers by
@@ -22,8 +23,10 @@ export function AnalyticsClient() {
   const kpis = metrics
     ? [
         { label: "Verified providers", value: metrics.verifiedProviders.total.toLocaleString(), delta: `${metrics.verifiedProviders.distinctCountries} countries` },
-        { label: "Active subscriptions", value: metrics.subscriptions.activeCount.toLocaleString(), delta: `avg ${formatCurrency(metrics.subscriptions.averageValueUsd, "USD")}` },
-        { label: "Subscription revenue", value: formatCurrency(metrics.subscriptions.totalRevenueUsd, "USD"), delta: "USD equivalent" },
+        // Every revenue figure here is MINOR units (cents) — formatCurrency
+        // takes major, so each one goes through minorToMajor first.
+        { label: "Active subscriptions", value: metrics.subscriptions.activeCount.toLocaleString(), delta: `avg ${formatCurrency(minorToMajor(metrics.subscriptions.averageValueUsdMinor), "USD")}` },
+        { label: "Subscription revenue", value: formatCurrency(minorToMajor(metrics.subscriptions.totalRevenueUsdMinor), "USD"), delta: "USD equivalent" },
         // conversionRate is already a percentage server-side (rounded to 1dp) — no rescaling.
         { label: "Free → paid conversion", value: `${metrics.conversion.conversionRate.toFixed(1)}%`, delta: `${metrics.conversion.payingUsers.toLocaleString()} of ${metrics.conversion.totalUsers.toLocaleString()} users` },
       ]
@@ -96,8 +99,8 @@ export function AnalyticsClient() {
                       <tr key={c.currency}>
                         <td className="px-5.5 py-3 font-mono" style={{ borderBottom: i < a.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>{c.currency}</td>
                         <td className="px-5.5 py-3 font-mono" style={{ borderBottom: i < a.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{c.count.toLocaleString()}</td>
-                        <td className="px-5.5 py-3 font-mono" style={{ borderBottom: i < a.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(c.total, c.currency)}</td>
-                        <td className="px-5.5 py-3 font-mono" style={{ borderBottom: i < a.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(c.average, c.currency)}</td>
+                        <td className="px-5.5 py-3 font-mono" style={{ borderBottom: i < a.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(minorToMajor(c.totalMinor), c.currency)}</td>
+                        <td className="px-5.5 py-3 font-mono" style={{ borderBottom: i < a.length - 1 ? "1px solid var(--border)" : "none", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{formatCurrency(minorToMajor(c.averageMinor), c.currency)}</td>
                       </tr>
                     ))}
                   </tbody>

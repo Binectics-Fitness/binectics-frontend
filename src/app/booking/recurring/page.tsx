@@ -7,6 +7,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { AsyncSpinner } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { formatCurrency, getClientTimezone } from "@/utils/format";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   consultationsService,
@@ -239,10 +240,16 @@ function RecurringBookingInner() {
     return options;
   }, []);
 
-  const totalAmount = useMemo(() => {
-    const unit = listing?.price_from ?? 0;
-    return unit * occurrences.length;
-  }, [listing?.price_from, occurrences.length]);
+  /**
+   * Multiplied in MINOR units and converted once at the end. Scaling first
+   * and multiplying second would reintroduce the float that `majorToMinor`
+   * exists to avoid; an integer count of kobo times an integer count of
+   * sessions stays exact.
+   */
+  const totalAmountMinor = useMemo(() => {
+    const unitMinor = listing?.price_from_minor ?? 0;
+    return unitMinor * occurrences.length;
+  }, [listing?.price_from_minor, occurrences.length]);
 
   const canSubmit = Boolean(
     listing && selectedTypeId && occurrences.length > 0 && Number.isFinite(hour) && Number.isFinite(minute),
@@ -310,7 +317,7 @@ function RecurringBookingInner() {
   }
 
   const name = providerName(listing);
-  const unitPrice = listing.price_from ?? 0;
+  const unitPriceMinor = listing.price_from_minor ?? 0;
   const currency = listing.currency ?? "ZAR";
 
   return (
@@ -432,9 +439,9 @@ function RecurringBookingInner() {
             <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
               {endMode === RecurrenceEndMode.AFTER_COUNT ? "Total" : "Estimate"} · {" "}
               <strong className="font-mono font-medium" style={{ color: "var(--ink)" }}>
-                {formatCurrency(totalAmount, currency)}
+                {formatCurrency(minorToMajor(totalAmountMinor), currency)}
               </strong>{" "}
-              ({formatCurrency(unitPrice, currency)} × {occurrences.length})
+              ({formatCurrency(minorToMajor(unitPriceMinor), currency)} × {occurrences.length})
             </div>
             <button
               type="button"

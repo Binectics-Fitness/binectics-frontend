@@ -12,6 +12,7 @@ import { MembershipPlanType } from "@/lib/types";
 import DashboardLoading from "@/components/DashboardLoading";
 import { Button } from "@/components/Button";
 import { formatPrice } from "@/lib/api/payment";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 function SuccessContent() {
   const router = useRouter();
@@ -111,9 +112,10 @@ function SuccessContent() {
               <div className="flex justify-between text-sm border-t border-border pt-2 mt-2">
                 <span className="font-semibold text-fg">Amount</span>
                 <span className="font-bold text-ink">
-                  {plan.price === 0
+                  {/* price_minor is MINOR units; formatPrice takes major. */}
+                  {plan.price_minor === 0
                     ? "Free"
-                    : formatPrice(plan.price, plan.currency)}
+                    : formatPrice(minorToMajor(plan.price_minor), plan.currency)}
                 </span>
               </div>
             </div>

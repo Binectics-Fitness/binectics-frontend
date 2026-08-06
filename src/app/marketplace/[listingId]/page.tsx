@@ -8,6 +8,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatCurrency } from "@/utils/format";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { ListingClassesSection } from "@/components/classes/ListingClassesSection";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 
@@ -55,7 +56,8 @@ interface Listing {
   city?: string;
   country_code?: string;
   currency?: string;
-  price_from?: number;
+  /** MINOR units (kobo/cents) — see MarketplaceListing.price_from_minor. */
+  price_from_minor?: number;
   price_label?: string;
   verification_badge?: string;
   average_rating: number;
@@ -75,7 +77,8 @@ interface Plan {
   description?: string;
   plan_type: string;
   duration_days: number;
-  price: number;
+  /** MINOR units (kobo/cents) — see MarketplaceMembershipPlan.price_minor. */
+  price_minor: number;
   currency: string;
   features?: string[];
   is_active?: boolean;
@@ -169,7 +172,8 @@ export default function ProviderPage() {
   const photos = listing.photos || [];
   const phBg = PH_BG[listing.account_type] || PH_BG.gym_owner;
   const allAmenities = [...(listing.amenities || []), ...(listing.facilities || [])];
-  const price = listing.price_from && listing.currency ? formatCurrency(listing.price_from, listing.currency) : "–";
+  // price_from_minor / price_minor are MINOR units; formatCurrency takes major.
+  const price = listing.price_from_minor && listing.currency ? formatCurrency(minorToMajor(listing.price_from_minor), listing.currency) : "–";
   const selectedPlan = plans[0];
 
   return (
@@ -297,7 +301,7 @@ export default function ProviderPage() {
                       <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{p.description || `${p.plan_type} · ${p.duration_days} days`}</div>
                     </div>
                     <div className="font-mono text-[26px]" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.015em", color: "var(--ink)" }}>
-                      {formatCurrency(p.price, p.currency)} <small className="font-mono text-[13px] font-normal" style={{ color: "var(--fg-3)" }}>/ {p.plan_type === "one_time" ? "once" : `${p.duration_days}d`}</small>
+                      {formatCurrency(minorToMajor(p.price_minor), p.currency)} <small className="font-mono text-[13px] font-normal" style={{ color: "var(--fg-3)" }}>/ {p.plan_type === "one_time" ? "once" : `${p.duration_days}d`}</small>
                     </div>
                     {p.features && p.features.length > 0 && (
                       <ul className="flex flex-col gap-1.5 list-none p-0">
@@ -399,7 +403,7 @@ export default function ProviderPage() {
             <div className="px-5 pt-4.5 pb-3.5 border-b border-border flex justify-between items-start">
               <div>
                 <div className="font-mono text-[24px]" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.012em", color: "var(--ink)" }}>
-                  {selectedPlan ? formatCurrency(selectedPlan.price, selectedPlan.currency) : price}
+                  {selectedPlan ? formatCurrency(minorToMajor(selectedPlan.price_minor), selectedPlan.currency) : price}
                   <small className="font-mono text-[13px]" style={{ color: "var(--fg-3)" }}> / {selectedPlan ? (selectedPlan.plan_type === "one_time" ? "once" : `${selectedPlan.duration_days}d`) : "plan"}</small>
                 </div>
                 <div className="flex items-center gap-1 text-[12.5px] mt-1" style={{ color: "var(--fg-2)" }}>
@@ -432,7 +436,7 @@ export default function ProviderPage() {
                 <div className="border-t border-border pt-3 mt-1">
                   <div className="flex justify-between text-[13.5px] py-1" style={{ color: "var(--fg-2)" }}>
                     <span>{selectedPlan.name}</span>
-                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(selectedPlan.price, selectedPlan.currency)}</span>
+                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(minorToMajor(selectedPlan.price_minor), selectedPlan.currency)}</span>
                   </div>
                   <div className="flex justify-between text-[13.5px] py-1" style={{ color: "var(--fg-2)" }}>
                     <span>Platform fee</span>
@@ -440,7 +444,7 @@ export default function ProviderPage() {
                   </div>
                   <div className="flex justify-between text-[13.5px] py-1 pt-3 mt-1 border-t border-border font-medium" style={{ color: "var(--ink)" }}>
                     <span>Due today</span>
-                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(selectedPlan.price, selectedPlan.currency)}</span>
+                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(minorToMajor(selectedPlan.price_minor), selectedPlan.currency)}</span>
                   </div>
                 </div>
               )}
