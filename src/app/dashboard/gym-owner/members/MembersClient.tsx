@@ -91,11 +91,20 @@ const MORE_ICON = (
 function RowActions({
   sub,
   orgId,
+  canArchive,
   onUpdate,
   onRosterChange,
 }: {
   sub: MembershipSubscription;
   orgId: string;
+  /**
+   * Whether the member — not just this row — can be archived: true only when
+   * NONE of their subscriptions in this org are live. Archive is a member-level
+   * action, so a per-row status check isn't enough; a member with an expired
+   * plan and an active one must not be offered Archive on the expired row (the
+   * API would refuse it). Computed once at the page level from the full list.
+   */
+  canArchive: boolean;
   onUpdate: (updated: MembershipSubscription) => void;
   /** Archive/restore change the roster, not this subscription — reload it all. */
   onRosterChange: () => void;
@@ -294,11 +303,13 @@ function RowActions({
               Cancel membership
             </button>
           )}
-          {/* Roster actions. Archive only when the membership is over
-              (expired/cancelled) — the API refuses it while anything live still
-              entitles the member, so offering it otherwise would only render a
-              button that errors. Restore is the inverse, shown once archived. */}
-          {!isLive && !sub.is_archived && getMemberUserId(sub) && (
+          {/* Roster actions. Archive only when the member has NO live
+              subscription left — the API refuses it while anything live still
+              entitles them, so offering it on one lapsed row of a member who is
+              still active elsewhere would only render a button that errors.
+              `canArchive` is computed per member, not per row. Restore is the
+              inverse, shown once archived. */}
+          {canArchive && !sub.is_archived && getMemberUserId(sub) && (
             <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleArchive}>
               Archive member (free seat)
             </button>
@@ -390,7 +401,7 @@ function ChangePlanModal({
 
 export default function GymMembersClient() {
   const { currentOrg } = useOrganization();
-  const { fmtDate, fmtMoney } = useOrgFormat();
+  const { fmtDate, fmtMoney, fmtNumber } = useOrgFormat();
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
   const [seats, setSeats] = useState<ProviderBillingSeats | null>(null);
@@ -459,14 +470,27 @@ export default function GymMembersClient() {
   /** Everyone who can get in today — includes the past-due grace window. */
   const withAccessCount = subscriptions.filter((s) => isEntitlingMembershipStatus(s.status)).length;
   /**
+   * Members with at least one live (non-terminal) subscription. Archive is a
+   * member-level action the API refuses while anything live entitles them, so
+   * a member is archivable only when absent from this set — see RowActions.
+   */
+  const liveMemberIds = new Set(
+    subscriptions
+      .filter((s) => !TERMINAL_MEMBERSHIP_STATUSES.includes(s.status))
+      .map((s) => getMemberUserId(s))
+      .filter((id): id is string => id !== null),
+  );
+
+  /**
    * Seats, straight from the billing status' `seats` block — the count
    * enforcement uses, "428 of 500". `limit` is null on an uncapped plan, so
-   * render the raw used count then; otherwise "used of limit".
+   * render the raw used count then; otherwise "used of limit". Numbers go
+   * through the org format so a large gym reads "1,284", matching billing.
    */
   const seatLine = seats
     ? seats.limit === null
-      ? `${seats.used} seat${seats.used === 1 ? "" : "s"} used`
-      : `${seats.used} of ${seats.limit} seats used`
+      ? `${fmtNumber(seats.used)} seat${seats.used === 1 ? "" : "s"} used`
+      : `${fmtNumber(seats.used)} of ${fmtNumber(seats.limit)} seats used`
     : null;
 
   return (
@@ -539,8 +563,8 @@ export default function GymMembersClient() {
           </svg>
           <span>
             {seats.over_limit
-              ? `You're over your seat limit — ${seats.used} of ${seats.limit}. `
-              : `You're close to your seat limit — ${seatHeadroomLabel(seats, (n) => String(n))}. `}
+              ? `You're over your seat limit — ${fmtNumber(seats.used)} of ${fmtNumber(seats.limit ?? 0)}. `
+              : `You're close to your seat limit — ${seatHeadroomLabel(seats, fmtNumber)}. `}
             Archiving a member frees their seat. Paused and suspended members still hold theirs — archive them from the row menu once their membership has ended.
           </span>
         </div>
@@ -692,6 +716,12 @@ export default function GymMembersClient() {
                           <RowActions
                             sub={sub}
                             orgId={currentOrg._id}
+                            canArchive={
+                              (() => {
+                                const id = getMemberUserId(sub);
+                                return id !== null && !liveMemberIds.has(id);
+                              })()
+                            }
                             onUpdate={handleSubscriptionUpdate}
                             onRosterChange={() => setRefreshKey((k) => k + 1)}
                           />
