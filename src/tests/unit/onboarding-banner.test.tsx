@@ -130,4 +130,19 @@ describe("OnboardingBanner", () => {
     const link = screen.getByText("Complete setup →").closest("a");
     expect(link).toHaveAttribute("href", "/onboarding/dietitian");
   });
+
+  it.each([UserRole.GYM_OWNER, UserRole.TRAINER, UserRole.DIETITIAN])(
+    "points a provider (%s) at the plan catalogue",
+    (role) => {
+      renderWithUser(makeUser({ role, first_name: undefined }));
+      const link = screen.getByText("Choose your plan").closest("a");
+      expect(link).toHaveAttribute("href", "/dashboard/billing");
+    },
+  );
+
+  it("does not show a plan CTA to a fitness member", () => {
+    // A member subscribes to a gym, not to Binectics — nothing to point at.
+    renderWithUser(makeUser({ role: UserRole.USER }));
+    expect(screen.queryByText("Choose your plan")).not.toBeInTheDocument();
+  });
 });
