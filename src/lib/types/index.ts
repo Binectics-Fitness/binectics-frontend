@@ -651,6 +651,13 @@ export interface MembershipSubscription {
   grace_expires_at?: string | null;
   /** Plan change scheduled by the org, applied at renewal (may be populated). */
   next_plan_id?: string | { _id: string; name: string } | null;
+  /**
+   * Whether this member is off the billable roster (seat freed). A member-level
+   * flag the org-subscriptions list attaches to every row for that member, so
+   * the table can show archived state and offer Restore. Archive is billing-only
+   * — the member keeps their account and data (SEAT_MODEL.md §4.2).
+   */
+  is_archived?: boolean;
   created_at: string;
   updated_at: string;
 }
