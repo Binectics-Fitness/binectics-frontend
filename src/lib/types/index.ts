@@ -260,12 +260,16 @@ export interface MarketplaceMembershipPlan {
   description?: string;
   plan_type: MembershipPlanType;
   duration_days: number;
-  price: number;
+  /**
+   * Plan price in the currency's MINOR unit (kobo/cents) — ₦5,000 is 500000.
+   * Was `price` in major units; rendering this one straight would show 100×
+   * the real amount, so read it through minorToMajor()/formatMinorAmount().
+   */
+  price_minor: number;
   currency: string;
   features: string[];
   is_active: boolean;
   is_public: boolean;
-  active_members: number;
   created_at: string;
   updated_at: string;
 }
@@ -301,7 +305,8 @@ export interface MarketplaceListing {
   contact_email?: string;
   location?: { type: string; coordinates: [number, number] };
   currency: string;
-  price_from?: number;
+  /** Display "from" price in the currency's MINOR unit (kobo/cents). */
+  price_from_minor?: number;
   price_label?: string;
   accepting_clients: boolean;
   max_clients?: number;
@@ -521,11 +526,81 @@ export interface OrgCheckInDashboardStats {
   recent_check_ins: CheckIn[];
 }
 
+/**
+ * The full membership lifecycle. Mirrors the API's
+ * core/enums/membership-subscription-status.enum.ts.
+ *
+ * Two questions have different answers per state, and the UI must not conflate
+ * them (see {@link isEntitlingMembershipStatus} / {@link isSeatBearingMembershipStatus}):
+ *
+ *   - **the door** — may this member get in? `active` and `past_due` only.
+ *   - **the seat** — does the org pay for them? every non-terminal state.
+ *
+ * `past_due` is a member in a grace window who STILL has access, so it must
+ * never be styled or worded as "gone". `paused` is a member on their own
+ * break who is coming back — the frozen days are credited to `end_date` on
+ * resume. `suspended` is the gym blocking them; the days are not credited.
+ */
 export enum MembershipSubscriptionStatus {
   PENDING_PAYMENT = "pending_payment",
   ACTIVE = "active",
+  PAUSED = "paused",
+  SUSPENDED = "suspended",
+  PAST_DUE = "past_due",
   EXPIRED = "expired",
   CANCELLED = "cancelled",
+}
+
+/** Nothing happens on its own from here — only a new payment revives it. */
+export const TERMINAL_MEMBERSHIP_STATUSES: readonly MembershipSubscriptionStatus[] =
+  [
+    MembershipSubscriptionStatus.EXPIRED,
+    MembershipSubscriptionStatus.CANCELLED,
+  ];
+
+/**
+ * States that occupy a billable seat. Paused and suspended members are
+ * included on purpose — a hold is not a churn event, and the org keeps the
+ * relationship, history and data.
+ */
+export const SEAT_BEARING_MEMBERSHIP_STATUSES: readonly MembershipSubscriptionStatus[] =
+  [
+    MembershipSubscriptionStatus.PENDING_PAYMENT,
+    MembershipSubscriptionStatus.ACTIVE,
+    MembershipSubscriptionStatus.PAUSED,
+    MembershipSubscriptionStatus.SUSPENDED,
+    MembershipSubscriptionStatus.PAST_DUE,
+  ];
+
+/**
+ * States that open the door. `past_due` is here because a renewal that has
+ * not completed is not a membership that has ended — the API's door check
+ * additionally requires `grace_expires_at` to still be ahead.
+ */
+export const ENTITLING_MEMBERSHIP_STATUSES: readonly MembershipSubscriptionStatus[] =
+  [MembershipSubscriptionStatus.ACTIVE, MembershipSubscriptionStatus.PAST_DUE];
+
+/**
+ * Has access right now. **Use this instead of `status === ACTIVE`** anywhere
+ * the question is "can this member get in / are they still a customer" —
+ * comparing against ACTIVE alone locks a `past_due` member out of the UI
+ * while the API still lets them through the door.
+ */
+export function isEntitlingMembershipStatus(
+  status: MembershipSubscriptionStatus | string | undefined,
+): boolean {
+  return ENTITLING_MEMBERSHIP_STATUSES.includes(
+    status as MembershipSubscriptionStatus,
+  );
+}
+
+/** Counts towards the org's seat usage (and so towards its bill). */
+export function isSeatBearingMembershipStatus(
+  status: MembershipSubscriptionStatus | string | undefined,
+): boolean {
+  return SEAT_BEARING_MEMBERSHIP_STATUSES.includes(
+    status as MembershipSubscriptionStatus,
+  );
 }
 
 export interface MembershipSubscription {
@@ -540,7 +615,8 @@ export interface MembershipSubscription {
         description?: string;
         plan_type: MembershipPlanType;
         duration_days: number;
-        price: number;
+        /** Minor units (kobo/cents) — see MarketplaceMembershipPlan.price_minor. */
+        price_minor: number;
         currency: string;
         features: string[];
       };
@@ -559,10 +635,20 @@ export interface MembershipSubscription {
   status: MembershipSubscriptionStatus;
   start_date: string;
   end_date?: string;
-  amount_paid: number;
+  /**
+   * What the member paid, in the currency's MINOR unit (kobo/cents). Was
+   * `amount_paid` in major units — this is 100× that number.
+   */
+  amount_paid_minor: number;
   currency: string;
   payment_reference?: string;
   auto_renew: boolean;
+  /** When the current pause began. Null in every state except `paused`. */
+  paused_at?: string | null;
+  /** Total time spent paused, in ms, across all pauses. Credited to end_date. */
+  accumulated_pause_ms?: number;
+  /** When `past_due` grace runs out. Null in every other state. */
+  grace_expires_at?: string | null;
   /** Plan change scheduled by the org, applied at renewal (may be populated). */
   next_plan_id?: string | { _id: string; name: string } | null;
   created_at: string;
@@ -720,7 +806,17 @@ export interface AssignmentRule {
   description?: string;
   is_active: boolean;
   priority: number;
-  min_amount?: number | null;
+  /**
+   * Trigger when `amount_paid_minor` >= this value, in `currency`'s MINOR unit
+   * (kobo/cents). Was `min_amount` in major units and with no currency at all,
+   * so a rule written as "500" matched ₦500 and $500 alike.
+   */
+  min_amount_minor?: number | null;
+  /**
+   * ISO 4217 code for `min_amount_minor`. The API REQUIRES it whenever
+   * `min_amount_minor` is set and refuses to compare across currencies.
+   */
+  currency?: string | null;
   plan_ids: string[];
   client_tiers: ClientTier[];
   strategy: AssignmentStrategy;
@@ -736,7 +832,10 @@ export interface CreateAssignmentRuleRequest {
   description?: string;
   is_active?: boolean;
   priority?: number;
-  min_amount?: number;
+  /** Minor units. Sending this REQUIRES `currency` alongside it. */
+  min_amount_minor?: number;
+  /** ISO 4217, mandatory whenever `min_amount_minor` is present. */
+  currency?: string;
   plan_ids?: string[];
   client_tiers?: ClientTier[];
   strategy: AssignmentStrategy;

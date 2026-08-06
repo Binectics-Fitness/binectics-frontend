@@ -8,6 +8,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatCurrency } from "@/utils/format";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 
 /* ─── Types (from API response) ──────────────────────────── */
@@ -26,7 +27,8 @@ interface Listing {
   city?: string;
   country_code?: string;
   currency?: string;
-  price_from?: number;
+  /** MINOR units (kobo/cents) — see MarketplaceListing.price_from_minor. */
+  price_from_minor?: number;
   price_label?: string;
   verification_badge?: string;
   average_rating: number;
@@ -355,8 +357,8 @@ export default function MarketplacePage() {
                 const sub = listingSubline(l);
                 const tags = listingTags(l);
                 const status = listingStatus(l);
-                const price = l.price_from && l.currency
-                  ? formatCurrency(l.price_from, l.currency)
+                const price = l.price_from_minor && l.currency
+                  ? formatCurrency(minorToMajor(l.price_from_minor), l.currency)
                   : l.price_label || "–";
                 const per = l.price_label?.replace(/^From\s+\S+\s*/, "") || "plan";
                 const isVerified = l.verification_badge && l.verification_badge !== "none";

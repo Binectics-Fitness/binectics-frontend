@@ -18,6 +18,7 @@ import type {
   MarketplaceMembershipPlan,
 } from "@/lib/types";
 import { PaymentGateway, MembershipPlanType } from "@/lib/types";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import DashboardLoading from "@/components/DashboardLoading";
 import { Button } from "@/components/Button";
 
@@ -381,7 +382,9 @@ function CheckoutContent() {
         listing._id,
         plan._id,
         paymentReference,
-        plan.price,
+        // Already minor units — the same unit the API compares against
+        // plan.price_minor, so nothing is scaled on the way out.
+        plan.price_minor,
       );
 
       if (res.success) {
@@ -481,7 +484,13 @@ function CheckoutContent() {
       ? `${listing.professional_id.first_name} ${listing.professional_id.last_name}`
       : listing.headline;
 
-  const isFree = plan.price === 0;
+  const isFree = plan.price_minor === 0;
+  /**
+   * MAJOR units for the gateway widgets. Each of the three takes a major-unit
+   * amount and applies its own gateway's scaling (buildPaystackConfig does the
+   * ×100 itself), so handing them `price_minor` would charge 100× the plan.
+   */
+  const priceMajor = minorToMajor(plan.price_minor);
 
   return (
     <div className="min-h-screen bg-bg py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -570,7 +579,7 @@ function CheckoutContent() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-fg">Total</span>
                   <span className="text-2xl font-black text-ink">
-                    {isFree ? "Free" : formatPrice(plan.price, plan.currency)}
+                    {isFree ? "Free" : formatPrice(minorToMajor(plan.price_minor), plan.currency)}
                   </span>
                 </div>
               </div>
@@ -611,7 +620,7 @@ function CheckoutContent() {
                   {gateway === PaymentGateway.STRIPE && (
                     <Elements stripe={getStripe()}>
                       <StripeCardForm
-                        amount={plan.price}
+                        amount={priceMajor}
                         currency={plan.currency}
                         planName={plan.name}
                         onSuccess={handlePaymentSuccess}
@@ -624,7 +633,7 @@ function CheckoutContent() {
 
                   {gateway === PaymentGateway.PAYSTACK && (
                     <PaystackButton
-                      amount={plan.price}
+                      amount={priceMajor}
                       currency={plan.currency}
                       email={user.email}
                       onSuccess={handlePaymentSuccess}
@@ -637,7 +646,7 @@ function CheckoutContent() {
 
                   {gateway === PaymentGateway.FLUTTERWAVE && (
                     <FlutterwaveButton
-                      amount={plan.price}
+                      amount={priceMajor}
                       currency={plan.currency}
                       email={user.email}
                       name={`${user.first_name} ${user.last_name}`}

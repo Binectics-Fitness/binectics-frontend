@@ -7,6 +7,10 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService, type EnrollMemberRequest } from "@/lib/api/marketplace";
 import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
 import SearchableSelect from "@/components/SearchableSelect";
+import { MoneyInput } from "@/components/ds/MoneyInput";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
+import { minorToMajor } from "@/lib/money/minorMoney";
+import { formatCurrency } from "@/utils/format";
 
 interface InviteClientModalProps {
   open: boolean;
@@ -19,7 +23,10 @@ const EMPTY_FORM = {
   first_name: "",
   last_name: "",
   plan_id: "",
-  amount_paid: "",
+  /** What the field shows, e.g. "₦5,000". Owned by <MoneyInput>. */
+  amount_paid_display: "",
+  /** The same amount in MINOR units — this is what goes on the wire. */
+  amount_paid_minor: null as number | null,
   payment_reference: "",
   status: "active" as "active" | "pending_payment",
   send_invite: true,
@@ -67,7 +74,10 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
     };
     if (form.first_name.trim()) data.first_name = form.first_name.trim();
     if (form.last_name.trim()) data.last_name = form.last_name.trim();
-    if (form.amount_paid !== "") data.amount_paid = Number(form.amount_paid);
+    // MINOR units, straight from <MoneyInput>. Null means "not stated" —
+    // distinct from 0, which comps the member — so it is omitted entirely and
+    // the API falls back to the plan's own price.
+    if (form.amount_paid_minor !== null) data.amount_paid_minor = form.amount_paid_minor;
     if (form.payment_reference.trim()) data.payment_reference = form.payment_reference.trim();
 
     try {
@@ -196,12 +206,18 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
                 setForm((f) => ({
                   ...f,
                   plan_id: v,
-                  amount_paid: plan ? String(plan.price) : f.amount_paid,
+                  // Auto-fill from the plan in MINOR units, keeping the exact
+                  // stored value; the display string is derived from it rather
+                  // than the other way round.
+                  amount_paid_display: plan
+                    ? formatMinorForInput(plan.price_minor, { currency: plan.currency })
+                    : f.amount_paid_display,
+                  amount_paid_minor: plan ? plan.price_minor : f.amount_paid_minor,
                 }));
               }}
               placeholder="Select a plan…"
               options={plans.map((p) => ({
-                label: `${p.name} — ${p.currency} ${p.price.toLocaleString()}`,
+                label: `${p.name} — ${formatCurrency(minorToMajor(p.price_minor), p.currency)}`,
                 value: p._id,
               }))}
             />
@@ -214,13 +230,18 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
             <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
               Amount paid
             </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.amount_paid}
-              onChange={(e) => setForm((f) => ({ ...f, amount_paid: e.target.value }))}
-              placeholder={selectedPlan ? String(selectedPlan.price) : "0"}
+            <MoneyInput
+              value={form.amount_paid_display}
+              currency={selectedPlan?.currency ?? currentOrg?.currency ?? "USD"}
+              aria-label="Amount paid"
+              onChange={(display, minor) =>
+                setForm((f) => ({ ...f, amount_paid_display: display, amount_paid_minor: minor }))
+              }
+              placeholder={
+                selectedPlan
+                  ? formatMinorForInput(selectedPlan.price_minor, { currency: selectedPlan.currency })
+                  : "0"
+              }
               className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink placeholder:text-fg-4 focus:border-border-2 focus:outline-none"
             />
           </div>

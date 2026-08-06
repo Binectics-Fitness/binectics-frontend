@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { formatCurrency, getClientTimezone } from "@/utils/format";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   consultationsService,
@@ -471,18 +472,20 @@ function BookingPageInner() {
           <Receipt k="Duration" v={`${activeType?.defaultDurationMinutes ?? 60} min`} />
         </div>
 
-        {listing.price_from && listing.currency && (
+        {/* price_from_minor is MINOR units (kobo/cents); formatCurrency takes
+            major, so it goes through minorToMajor. */}
+        {listing.price_from_minor && listing.currency && (
           <div className="flex flex-col">
             <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
               <span style={{ color: "var(--fg-2)" }}>Session</span>
               <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrency(listing.price_from, listing.currency)}
+                {formatCurrency(minorToMajor(listing.price_from_minor), listing.currency)}
               </span>
             </div>
             <div className="flex justify-between pt-3.5 font-medium">
               <span className="text-[14px]" style={{ color: "var(--ink)" }}>Due to provider</span>
               <span className="text-[17px]" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrency(listing.price_from, listing.currency)}
+                {formatCurrency(minorToMajor(listing.price_from_minor), listing.currency)}
               </span>
             </div>
             <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>

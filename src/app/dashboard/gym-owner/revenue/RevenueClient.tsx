@@ -8,10 +8,12 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
-  MembershipSubscriptionStatus,
+  isEntitlingMembershipStatus,
+  isSeatBearingMembershipStatus,
   type MembershipSubscription,
   type OrgCheckInDashboardStats,
 } from "@/lib/types";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 const MIX_COLORS = ["var(--ink)", "var(--signal)", "var(--gym)", "var(--trainer)", "var(--dietitian)", "var(--fg-3)"];
 
@@ -63,15 +65,20 @@ export default function RevenueClient() {
     };
   }, [currentOrg, orgLoading]);
 
-  const activeSubs = useMemo(() => subs.filter((s) => s.status === MembershipSubscriptionStatus.ACTIVE), [subs]);
+  /** Subscriptions that can get in today — `active` plus the past-due grace window. */
+  const activeSubs = useMemo(() => subs.filter((s) => isEntitlingMembershipStatus(s.status)), [subs]);
+  /** Subscriptions the org is billed a seat for. */
+  const seatSubs = useMemo(() => subs.filter((s) => isSeatBearingMembershipStatus(s.status)), [subs]);
 
   const mix = useMemo(() => {
+    // Accumulated in MINOR units (integers) and converted per row at render, so
+    // the shares are exact and the totals cannot drift by a kobo.
     const map = new Map<string, number>();
     for (const s of subs) {
-      map.set(planName(s), (map.get(planName(s)) ?? 0) + (s.amount_paid ?? 0));
+      map.set(planName(s), (map.get(planName(s)) ?? 0) + (s.amount_paid_minor ?? 0));
     }
-    const rows = [...map.entries()].map(([label, total]) => ({ label, total })).sort((a, b) => b.total - a.total);
-    const sum = rows.reduce((a, r) => a + r.total, 0);
+    const rows = [...map.entries()].map(([label, totalMinor]) => ({ label, totalMinor })).sort((a, b) => b.totalMinor - a.totalMinor);
+    const sum = rows.reduce((a, r) => a + r.totalMinor, 0);
     return { rows: rows.slice(0, 6), sum };
   }, [subs]);
 
@@ -92,6 +99,9 @@ export default function RevenueClient() {
         { label: "Revenue · today", value: formatAmount(stats.revenue_today) },
         { label: "Active members", value: fmtNumber(stats.active_members) },
         { label: "Active subscriptions", value: fmtNumber(activeSubs.length) },
+        // Seats, not "active", because this is what the org is billed for —
+        // a paused or suspended member still occupies one.
+        { label: "Seats used", value: fmtNumber(seatSubs.length) },
         ...(revenueStats ? [{ label: "New members · 30d", value: fmtNumber(revenueStats.new_members_count) }] : []),
       ]
     : [];
@@ -167,7 +177,7 @@ export default function RevenueClient() {
               <div className="p-4.5">
                 <div className="flex h-3 rounded-1.5 overflow-hidden gap-0.5">
                   {mix.rows.map((r, i) => (
-                    <div key={r.label} style={{ flex: Math.max(r.total, 1), background: MIX_COLORS[i % MIX_COLORS.length] }} />
+                    <div key={r.label} style={{ flex: Math.max(r.totalMinor, 1), background: MIX_COLORS[i % MIX_COLORS.length] }} />
                   ))}
                 </div>
                 <div className="flex flex-col gap-2 mt-4 text-[13px]">
@@ -177,7 +187,7 @@ export default function RevenueClient() {
                         <span className="inline-block w-2 h-2 rounded-sm mr-2 align-middle" style={{ background: MIX_COLORS[i % MIX_COLORS.length] }} />{r.label}
                       </span>
                       <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                        {formatAmount(r.total)} · {Math.round((r.total / mix.sum) * 100)}%
+                        {formatAmount(minorToMajor(r.totalMinor))} · {Math.round((r.totalMinor / mix.sum) * 100)}%
                       </span>
                     </div>
                   ))}

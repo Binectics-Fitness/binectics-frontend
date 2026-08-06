@@ -31,18 +31,24 @@ export interface PlatformMetricsOverview {
     distinctCountries: number;
     byCountry: Array<{ country_code: string; count: number }>;
   };
+  /**
+   * Revenue figures whose names now say their unit. These were ALREADY minor
+   * units (the transactions ledger has only ever stored minor) — the `*Minor`
+   * suffix is a rename, NOT a rescale. Dividing them again by 100 would
+   * report a hundredth of the platform's real revenue.
+   */
   subscriptions: {
     activeCount: number;
     primaryCurrency: string | null;
-    primaryRevenue: number;
-    primaryAverage: number;
-    totalRevenueUsd: number;
-    averageValueUsd: number;
+    primaryRevenueMinor: number;
+    primaryAverageMinor: number;
+    totalRevenueUsdMinor: number;
+    averageValueUsdMinor: number;
     byCurrency: Array<{
       currency: string;
       count: number;
-      total: number;
-      average: number;
+      totalMinor: number;
+      averageMinor: number;
     }>;
   };
   conversion: {

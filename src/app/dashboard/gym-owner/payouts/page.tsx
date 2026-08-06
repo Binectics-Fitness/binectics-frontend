@@ -8,6 +8,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrganizationDetails } from "@/lib/queries/teams";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { PAYOUT_WEEKDAYS } from "@/lib/constants/orgSettingsDefaults";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 /**
  * Payouts — the configured schedule is real (org payout_schedule); payout
@@ -50,7 +51,8 @@ export default function GymPayoutsPage() {
             {scheduleLabel ? (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
                 <strong style={{ color: "var(--ink)" }}>{scheduleLabel}</strong>
-                {" · "}minimum {fmtMoney(schedule?.minimum_payout_amount ?? 0, org?.currency)}
+                {/* minimum_payout_amount_minor is MINOR units; fmtMoney takes major. */}
+                {" · "}minimum {fmtMoney(minorToMajor(schedule?.minimum_payout_amount_minor ?? 0), org?.currency)}
                 {" · "}{schedule?.hold_period_days ?? 0}-day hold
               </p>
             ) : (

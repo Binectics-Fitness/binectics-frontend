@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useEffect, useState, useRef, useCallback} from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/Toast";
@@ -13,11 +14,13 @@ import {
   ProviderInvoiceStatus,
   ProviderPlanTier,
   ProviderSubscriptionStatus,
+  seatHeadroomLabel,
   type ProviderBillingStatus,
   type ProviderInvoice,
   type ProviderPlanOption,
 } from "@/lib/api/providerBilling";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 function subscriptionStatusColor(status: ProviderSubscriptionStatus): React.CSSProperties {
   switch (status) {
@@ -218,6 +221,7 @@ export default function ProviderBillingPage() {
     return val === null ? "Unlimited" : fmtNumber(val);
   }
 
+
   const currentTier = billingStatus?.plan_tier ?? ProviderPlanTier.FREE;
   // Rank the current plan by sort_order so any lower-tier card (not just Free)
   // is presented as a downgrade rather than a spurious "upgrade".
@@ -275,6 +279,45 @@ export default function ProviderBillingPage() {
           <AsyncSpinner label="Loading billing data" />
         ) : (
           <>
+            {/* Near-limit prompt. Named actions, because the seat model only
+                works if the operator knows which lever frees a seat: archiving
+                a member does, and nothing else here does. Shown at near_limit
+                rather than only at over_limit — a prompt that arrives after the
+                enrolment was refused is not a prompt, it is an apology. */}
+            {billingStatus?.seats.near_limit && (
+              <div
+                className="rounded-(--r-3) p-3.5 text-sm flex flex-col gap-1"
+                style={{
+                  border: `1px solid ${billingStatus.seats.over_limit ? "var(--danger)" : "var(--warn)"}`,
+                  background: billingStatus.seats.over_limit ? "var(--danger-soft)" : "var(--bg-2)",
+                }}
+              >
+                <span className="font-medium" style={{ color: "var(--ink)" }}>
+                  {billingStatus.seats.over_limit
+                    ? `You're over your seat limit — ${fmtNumber(billingStatus.seats.used)} of ${renderLimitValue(billingStatus.seats.limit)}.`
+                    : `You're close to your seat limit — ${fmtNumber(billingStatus.seats.used)} of ${renderLimitValue(billingStatus.seats.limit)}.`}
+                </span>
+                <span style={{ color: "var(--fg-2)" }}>
+                  Archiving a member frees their seat. Paused and suspended
+                  members still occupy one, so review those first — or upgrade
+                  for more room.
+                </span>
+                <div className="flex gap-3 mt-1">
+                  <Link href="/dashboard/gym-owner/members" className="underline" style={{ color: "var(--ink)" }}>
+                    Review members
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("plans")}
+                    className="underline"
+                    style={{ color: "var(--ink)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                  >
+                    See plans
+                  </button>
+                </div>
+              </div>
+            )}
+
             {billingStatus && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div
@@ -319,18 +362,39 @@ export default function ProviderBillingPage() {
                   )}
                 </div>
 
+                {/* Seats, from the status response's own `seats` block rather
+                    than usage/limits: the seat count is what enforcement
+                    actually refuses on, and archiving a member is what frees
+                    one. An operator who cannot see this number has no way to
+                    know they should archive — the first signal would be a
+                    refused enrolment. */}
                 <div
                   className="rounded-(--r-3) p-4"
-                  style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+                  style={{
+                    border: `1px solid ${billingStatus.seats.over_limit ? "var(--danger)" : billingStatus.seats.near_limit ? "var(--warn)" : "var(--border)"}`,
+                    background: "var(--bg)",
+                  }}
                 >
                   <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                    Members
+                    Seats
                   </div>
                   <div className="text-[26px] font-medium mt-2 tabular-nums" style={{ color: "var(--ink)" }}>
-                    {billingStatus.usage.active_members}
+                    {fmtNumber(billingStatus.seats.used)}
                     <span className="text-base ml-1" style={{ color: "var(--fg-3)" }}>
-                      / {renderLimitValue(billingStatus.limits.max_active_members)}
+                      of {renderLimitValue(billingStatus.seats.limit)}
                     </span>
+                  </div>
+                  <div
+                    className="text-xs mt-1"
+                    style={{
+                      color: billingStatus.seats.over_limit
+                        ? "var(--danger)"
+                        : billingStatus.seats.near_limit
+                          ? "var(--warn)"
+                          : "var(--fg-3)",
+                    }}
+                  >
+                    {seatHeadroomLabel(billingStatus.seats, fmtNumber)}
                   </div>
                 </div>
 
@@ -385,7 +449,11 @@ export default function ProviderBillingPage() {
                       </h3>
                       <div className="flex flex-col gap-2">
                         {[
-                          { label: "Members", used: billingStatus.usage.active_members, max: billingStatus.limits.max_active_members },
+                          // Driven from `seats` rather than usage/limits so the
+                          // meter and the Seats card above can never disagree —
+                          // the API derives both from the same count, and
+                          // reading them from two places is how they drift.
+                          { label: "Seats", used: billingStatus.seats.used, max: billingStatus.seats.limit },
                           { label: "Plans", used: billingStatus.usage.membership_plans, max: billingStatus.limits.max_membership_plans },
                           { label: "Staff", used: billingStatus.usage.staff_members, max: billingStatus.limits.max_staff_members },
                           { label: "Listings", used: billingStatus.usage.listings, max: billingStatus.limits.max_listings },
@@ -506,10 +574,23 @@ export default function ProviderBillingPage() {
                             </div>
 
                             <div>
-                              {price ? (
+                              {/* A tier with no concrete cap is not purchasable, so
+                                  it shows no amount at all — never a price the
+                                  customer cannot transact. "Custom" over "talk to
+                                  us" follows pricing.html:237. */}
+                              {!plan.is_self_serve ? (
                                 <div>
                                   <span className="text-[26px] font-medium" style={{ color: "var(--ink)" }}>
-                                    {fmtMoney(price.amount_minor / 100, price.currency)}
+                                    Custom
+                                  </span>
+                                  <span className="text-sm block" style={{ color: "var(--fg-3)" }}>
+                                    talk to us
+                                  </span>
+                                </div>
+                              ) : price ? (
+                                <div>
+                                  <span className="text-[26px] font-medium" style={{ color: "var(--ink)" }}>
+                                    {fmtMoney(minorToMajor(price.amount_minor), price.currency)}
                                   </span>
                                   <span className="text-sm" style={{ color: "var(--fg-3)" }}>
                                     /{interval}
@@ -539,6 +620,17 @@ export default function ProviderBillingPage() {
                                 <div className="text-sm" style={{ color: "var(--fg-3)" }}>
                                   Your current plan
                                 </div>
+                              ) : !plan.is_self_serve ? (
+                                /* No buy action: there is no price to charge.
+                                   pricing.html:239 uses a "Talk to sales →" CTA
+                                   for exactly this tier. */
+                                <a
+                                  href="mailto:sales@binectics.com?subject=Enterprise%20plan%20enquiry"
+                                  className="block w-full rounded-(--r-2) px-4 py-2 text-sm font-medium text-center"
+                                  style={{ background: "var(--ink)", color: "var(--bg)" }}
+                                >
+                                  Contact us →
+                                </a>
                               ) : isDowngrade || plan.code === ProviderPlanTier.FREE ? (
                                 <div className="text-sm" style={{ color: "var(--fg-3)" }}>
                                   Contact support to downgrade
@@ -591,8 +683,12 @@ export default function ProviderBillingPage() {
                                   {fmtDate(invoice.period_start)} – {fmtDate(invoice.period_end)}
                                 </td>
                                 <td className="py-3 pr-4 font-mono tabular-nums" style={{ color: "var(--ink)" }}>
-                                  {/* amount_due is in minor units; the invoice's own currency must win */}
-                                  {fmtMoney(invoice.amount_due / 100, invoice.currency)}
+                                  {/* amount_due_minor is minor units — a RENAME of
+                                      amount_due, which was already minor, so the
+                                      value is unchanged and this conversion is the
+                                      same one that was always here. The invoice's
+                                      own currency must win. */}
+                                  {fmtMoney(minorToMajor(invoice.amount_due_minor), invoice.currency)}
                                 </td>
                                 <td className="py-3 pr-4">
                                   <span

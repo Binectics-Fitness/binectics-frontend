@@ -10,15 +10,12 @@ import { formatCurrencyAmount } from "@/lib/constants/regions";
 import { formatDate } from "@/utils/format";
 import {
   MembershipSubscriptionStatus,
+  isEntitlingMembershipStatus,
+  TERMINAL_MEMBERSHIP_STATUSES,
   type MembershipSubscription,
 } from "@/lib/types";
-
-const STATUS_META: Record<MembershipSubscriptionStatus, { label: string; style: React.CSSProperties }> = {
-  [MembershipSubscriptionStatus.ACTIVE]: { label: "Active", style: { background: "var(--signal-soft)", color: "var(--signal-ink)" } },
-  [MembershipSubscriptionStatus.PENDING_PAYMENT]: { label: "Pending payment", style: { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" } },
-  [MembershipSubscriptionStatus.EXPIRED]: { label: "Expired", style: { background: "var(--bg-2)", color: "var(--fg-3)" } },
-  [MembershipSubscriptionStatus.CANCELLED]: { label: "Cancelled", style: { background: "var(--bg-2)", color: "var(--fg-3)" } },
-};
+import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 const planOf = (s: MembershipSubscription) =>
   typeof s.plan_id === "object" ? s.plan_id : null;
@@ -43,27 +40,45 @@ export function BillingClient() {
   const { data: subs = [], isLoading } = useMySubscriptions();
   const cancel = useCancelSubscription();
 
-  const active = subs.filter((s) => s.status === MembershipSubscriptionStatus.ACTIVE);
+  /**
+   * Memberships the member can actually use — `active` AND `past_due`. A
+   * past-due member is in a grace window with access intact, so counting only
+   * ACTIVE told them they had no active plan while they were still getting into
+   * the gym.
+   */
+  const usable = subs.filter((s) => isEntitlingMembershipStatus(s.status));
 
   // Sum lifetime spend per currency (subscriptions can span currencies).
   const totalsByCurrency = useMemo(() => {
     const map = new Map<string, number>();
-    subs.forEach((s) => map.set(s.currency, (map.get(s.currency) ?? 0) + s.amount_paid));
-    return [...map.entries()].map(([cur, amt]) => formatCurrencyAmount(amt, cur)).join(" + ") || "—";
+    // Summed in MINOR units and converted once per currency at the end, so the
+    // total is an exact integer count of kobo rather than a float accumulation.
+    subs.forEach((s) => map.set(s.currency, (map.get(s.currency) ?? 0) + s.amount_paid_minor));
+    return [...map.entries()].map(([cur, minor]) => formatCurrencyAmount(minorToMajor(minor), cur)).join(" + ") || "—";
   }, [subs]);
 
   const nextRenewal = useMemo(() => {
-    const upcoming = active
+    const upcoming = usable
       .map((s) => s.end_date)
       .filter((d): d is string => !!d && new Date(d) > new Date())
       .sort();
     return upcoming[0] ? formatDate(upcoming[0]) : "—";
-  }, [active]);
+  }, [usable]);
+
+  const onHold = subs.filter(
+    (s) =>
+      s.status === MembershipSubscriptionStatus.PAUSED ||
+      s.status === MembershipSubscriptionStatus.SUSPENDED,
+  );
 
   const kpis = [
-    { label: "Active plans", value: String(active.length), delta: `${subs.length} total` },
+    {
+      label: "Active plans",
+      value: String(usable.length),
+      delta: onHold.length > 0 ? `${onHold.length} on hold · ${subs.length} total` : `${subs.length} total`,
+    },
     { label: "Total paid", value: totalsByCurrency, delta: "across all plans", small: totalsByCurrency.length > 10 },
-    { label: "Next renewal", value: nextRenewal, delta: active.find((s) => s.auto_renew) ? "auto-renews" : "manual renewal", small: true },
+    { label: "Next renewal", value: nextRenewal, delta: usable.find((s) => s.auto_renew) ? "auto-renews" : "manual renewal", small: true },
   ];
 
   const onCancel = (s: MembershipSubscription) => {
@@ -102,25 +117,44 @@ export function BillingClient() {
         {subs.map((s, i) => {
           const plan = planOf(s);
           const listing = listingOf(s);
-          const meta = STATUS_META[s.status];
+          const meta = membershipStatusMeta(s.status);
           return (
             <div key={s._id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-5.5 py-4" style={{ borderBottom: i < subs.length - 1 ? "1px solid var(--border)" : "none" }}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5">
                   <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{plan?.name ?? "Membership"}</span>
-                  <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={meta.style}>{meta.label}</span>
+                  <span
+                    className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]"
+                    style={{ background: meta.background, color: meta.color, border: meta.border }}
+                    title={meta.hint}
+                  >{meta.label}</span>
                 </div>
                 <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>
                   {gymNameOf(s)}
                   {listing?.city ? ` · ${listing.city}` : ""}
                   {` · started ${formatDate(s.start_date)}`}
-                  {s.end_date ? ` · ${s.status === MembershipSubscriptionStatus.ACTIVE ? "renews/ends" : "ended"} ${formatDate(s.end_date)}` : ""}
+                  {/* "ended" only when the term really is over. A paused or
+                      suspended membership has a future end_date it has not
+                      reached, and a past_due one is still inside its grace
+                      window — calling either "ended" is simply wrong. */}
+                  {s.end_date ? ` · ${TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) ? "ended" : "renews/ends"} ${formatDate(s.end_date)}` : ""}
                 </div>
+                {!meta.hasAccess && !TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) && (
+                  <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }}>{meta.hint}</div>
+                )}
+                {s.status === MembershipSubscriptionStatus.PAST_DUE && s.grace_expires_at && (
+                  <div className="text-[11.5px] mt-1" style={{ color: "var(--danger)" }}>
+                    Access continues until {formatDate(s.grace_expires_at)} — settle the renewal to keep it.
+                  </div>
+                )}
               </div>
               <span className="font-mono text-[13.5px] shrink-0" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrencyAmount(s.amount_paid, s.currency)}
+                {formatCurrencyAmount(minorToMajor(s.amount_paid_minor), s.currency)}
               </span>
-              {s.status === MembershipSubscriptionStatus.ACTIVE && (
+              {/* Cancelling is offered wherever the membership is still live —
+                  a past_due member can still choose to stop, and a paused one
+                  should not have to resume first. */}
+              {!TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) && s.status !== MembershipSubscriptionStatus.PENDING_PAYMENT && (
                 <button className="btn-ghost-v2 sm shrink-0" disabled={cancel.isPending} onClick={() => onCancel(s)}>
                   Cancel
                 </button>

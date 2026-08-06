@@ -8,6 +8,7 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
 import { formatCurrency } from "@/utils/format";
+import { minorToMajor } from "@/lib/money/minorMoney";
 
 // ─── Enums (mirror backend) ────────────────────────────────────────────────
 
@@ -62,6 +63,34 @@ export interface ProviderBillingUsage {
   listings: number;
 }
 
+/**
+ * Seat headroom, so the UI can render "428 of 500 seats" and prompt BEFORE the
+ * cap rather than after.
+ *
+ * The seat model only works if the operator can see it: archiving a member is
+ * what frees a seat, and a gym that cannot see its count has no way to know it
+ * should archive — the first signal would be a refused enrolment.
+ */
+export interface ProviderBillingSeats {
+  used: number;
+  /** Null when the grant is uncapped. */
+  limit: number | null;
+  /**
+   * Null when uncapped. **Can be negative** once over the cap — that is a real
+   * state under a soft limit, so never clamp it: clamping hides the overage
+   * the gym is about to be billed for.
+   */
+  remaining: number | null;
+  /** True within 10% of the cap — the point at which prompting is useful. */
+  near_limit: boolean;
+  /**
+   * `used > limit`. Note enforcement refuses at `used >= limit`, so a gym
+   * exactly AT its cap reads `over_limit: false` and is still refused. Copy
+   * must not promise "you can still add one".
+   */
+  over_limit: boolean;
+}
+
 export interface ProviderBillingStatus {
   organization_id: string;
   plan_tier: ProviderPlanTier;
@@ -73,6 +102,7 @@ export interface ProviderBillingStatus {
   limits: ProviderBillingLimits;
   features: ProviderBillingFeatures;
   usage: ProviderBillingUsage;
+  seats: ProviderBillingSeats;
 }
 
 export interface ProviderPlanPrice {
@@ -91,6 +121,12 @@ export interface ProviderPlanOption {
     month: ProviderPlanPrice | null;
     year: ProviderPlanPrice | null;
   };
+  /**
+   * False when the tier has no concrete cap and must be negotiated. Render it
+   * as "Contact us" with NO amount and NO buy action — never a price the
+   * customer cannot actually transact.
+   */
+  is_self_serve: boolean;
 }
 
 export interface CheckoutSessionResult {
@@ -108,8 +144,13 @@ export interface ProviderInvoice {
   gateway: string;
   external_invoice_id: string;
   external_payment_id: string | null;
-  amount_due: number;
-  amount_paid: number;
+  /**
+   * Minor units (kobo/cents). Renamed from `amount_due` — which was ALREADY
+   * minor units, so the value is unchanged. Do not rescale it.
+   */
+  amount_due_minor: number;
+  /** Minor units. Renamed from `amount_paid`; already minor, value unchanged. */
+  amount_paid_minor: number;
   currency: string;
   status: ProviderInvoiceStatus;
   period_start: string;
@@ -172,7 +213,35 @@ export const providerBillingApi = {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
+/**
+ * The one line that tells an operator where they stand on seats.
+ *
+ * Two traps, both deliberate:
+ *
+ *   1. `remaining` is NOT clamped. Being over a soft cap is a real state, and
+ *      hiding it hides the overage the gym is about to be billed for.
+ *   2. Zero gets its own wording rather than "0 seats left", because
+ *      enforcement refuses at `used >= limit` while `over_limit` is
+ *      `used > limit`. A gym exactly AT its cap reads `over_limit: false` and
+ *      is still refused — copy implying one more seat is available would
+ *      contradict the refusal they are about to hit.
+ *
+ * `fmtNumber` is injected so the org's own number formatting applies.
+ */
+export function seatHeadroomLabel(
+  seats: Pick<ProviderBillingSeats, "remaining">,
+  fmtNumber: (n: number) => string,
+): string {
+  if (seats.remaining === null) return "Unlimited seats";
+  if (seats.remaining < 0)
+    return `${fmtNumber(Math.abs(seats.remaining))} over your limit`;
+  if (seats.remaining === 0)
+    return "At your limit — free a seat before adding a member";
+  return `${fmtNumber(seats.remaining)} seat${seats.remaining === 1 ? "" : "s"} left`;
+}
+
 export function formatMinorAmount(amountMinor: number, currency: string): string {
-  const major = amountMinor / 100;
-  return formatCurrency(major, currency);
+  // minorToMajor rather than an inline /100, so the factor lives in one place
+  // for both the read and the write side (see lib/money/minorMoney).
+  return formatCurrency(minorToMajor(amountMinor), currency);
 }
