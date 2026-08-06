@@ -57,9 +57,9 @@ function formatWhen(iso: string): string {
 }
 
 function formatMetadata(metadata?: Record<string, unknown>): string {
-  if (!metadata) return "—";
+  if (!metadata) return "-";
   const entries = Object.entries(metadata);
-  if (entries.length === 0) return "—";
+  if (entries.length === 0) return "-";
   return entries.map(([k, v]) => `${k}: ${String(v)}`).join(" · ");
 }
 
@@ -134,7 +134,7 @@ export default function AdminAuditLogPage() {
           className="text-[13.5px] mt-1.5 max-w-[64ch]"
           style={{ color: "var(--fg-3)" }}
         >
-          Security-relevant events recorded by the API — invites, password
+          Security-relevant events recorded by the API, invites, password
           resets, account deletions and more. Personal data is stored hashed;
           events are kept for 90 days.
         </p>
@@ -189,7 +189,7 @@ export default function AdminAuditLogPage() {
           hint={
             level || event
               ? "No events match this filter."
-              : "Security events appear here as they happen — the store keeps the last 90 days."
+              : "Security events appear here as they happen, the store keeps the last 90 days."
           }
         />
       ) : !error && data ? (

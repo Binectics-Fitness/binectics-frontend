@@ -25,7 +25,7 @@ const SETS = [
   { exercise: "Romanian deadlift", set: "1", weight: "65 kg", reps: "8", rpe: "7" },
   { exercise: "Romanian deadlift", set: "2", weight: "65 kg", reps: "8", rpe: "7.5" },
   { exercise: "Bulgarian split squat", set: "1", weight: "20 kg DB", reps: "10/leg", rpe: "7" },
-  { exercise: "Plank · weighted", set: "1", weight: "10 kg", reps: "45 s", rpe: "—" },
+  { exercise: "Plank · weighted", set: "1", weight: "10 kg", reps: "45 s", rpe: "-" },
 ];
 
 export default function SingleSessionPage({ params }: { params: Promise<{ sessionId: string }> }) {
@@ -103,7 +103,7 @@ export default function SingleSessionPage({ params }: { params: Promise<{ sessio
           <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Coach notes</h3>
             <p className="text-[13px] leading-relaxed mb-3" style={{ color: "var(--fg-2)" }}>
-              &ldquo;PR day — Linda hit 92.5 squat clean. Energy good, sleep noted 8h. Form started to break on rep 4 of working set, called it. Schedule deload week 9.&rdquo;
+              &ldquo;PR day, Linda hit 92.5 squat clean. Energy good, sleep noted 8h. Form started to break on rep 4 of working set, called it. Schedule deload week 9.&rdquo;
             </p>
             <button className="btn-ghost-v2 sm">Edit note</button>
           </div>

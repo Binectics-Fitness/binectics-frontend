@@ -5,9 +5,9 @@ import { MemberDemo } from "@/components/ds/MemberDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For Members — Binectics",
+  title: "For Members, Binectics",
   description:
-    "Find your gym, trainer, or dietitian across 52 countries. One profile, one inbox, one checkout. Binectics is free for members — you pay your provider directly.",
+    "Find your gym, trainer, or dietitian across 52 countries. One profile, one inbox, one checkout. Binectics is free for members, you pay your provider directly.",
   keywords:
     "fitness marketplace, find gym, find trainer, find dietitian, gym check-in, fitness app, verified trainers, meal tracking, progress journal",
 };
@@ -26,7 +26,7 @@ const PAIN_POINTS = [
   {
     before:
       "Trainer says you’re progressing but you can’t see the data",
-    after: "Same journal, same graphs — no information gap",
+    after: "Same journal, same graphs, no information gap",
   },
   {
     before: "Cancel a session and chase a refund for weeks",
@@ -43,19 +43,19 @@ const FEATURES = [
   },
   {
     title: "One profile",
-    desc: "Bookings, health metrics, payment history, and progress photos — all in one place, across every provider you work with. Switch trainers without losing your data.",
+    desc: "Bookings, health metrics, payment history, and progress photos, all in one place, across every provider you work with. Switch trainers without losing your data.",
     stat: "Zero data lock-in",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   },
   {
     title: "Check-in streaks",
-    desc: "Scan a QR code at the gym door. Your streak counter updates instantly. Miss a day and it resets — no gamification tricks, just a clean record of when you showed up.",
+    desc: "Scan a QR code at the gym door. Your streak counter updates instantly. Miss a day and it resets, no gamification tricks, just a clean record of when you showed up.",
     stat: "32-day avg streak",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3-7.5.5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.5-2.5 1.5-3.5l1 1z"/></svg>,
   },
   {
     title: "Progress journal",
-    desc: "Your trainer or dietitian logs notes, metrics, and plans. You see the same data they see — weight graphs, adherence scores, photo timelines. Read-only, transparent.",
+    desc: "Your trainer or dietitian logs notes, metrics, and plans. You see the same data they see, weight graphs, adherence scores, photo timelines. Read-only, transparent.",
     stat: "3.4 entries/week avg",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h4"/></svg>,
   },
@@ -101,7 +101,7 @@ export default function ForMembersPage() {
             color: "var(--ink)",
           }}
         >
-          Find your gym, trainer, or dietitian &mdash;{" "}
+          Find your gym, trainer, or dietitian,{" "}
           <em className="font-serif font-normal italic">
             and actually keep going
           </em>
@@ -112,7 +112,7 @@ export default function ForMembersPage() {
           style={{ color: "var(--fg-2)" }}
         >
           14,200 verified providers across 52 countries. One profile, one
-          inbox, one checkout. Pay your provider directly &mdash; Binectics is
+          inbox, one checkout. Pay your provider directly, Binectics is
           free for members.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
@@ -278,7 +278,7 @@ export default function ForMembersPage() {
             className="text-[17px] leading-[1.55] max-w-[58ch]"
             style={{ color: "var(--ink)" }}
           >
-            &ldquo;I was managing three apps &mdash; one for the gym, one for
+            &ldquo;I was managing three apps, one for the gym, one for
             my trainer, one for meal tracking. Now I open Binectics and
             everything is there. My streak counter alone keeps me
             honest.&rdquo;
@@ -346,7 +346,7 @@ export default function ForMembersPage() {
           style={{ color: "var(--fg-2)" }}
         >
           Members never pay Binectics. You pay your provider directly at
-          their listed price. We earn from the provider side &mdash; a 4.9%
+          their listed price. We earn from the provider side, a 4.9%
           transaction fee.
         </p>
         <Link href="/pricing" className="btn-ghost-v2 lg">
@@ -395,8 +395,8 @@ export default function ForMembersPage() {
               className="text-[15px] max-w-[52ch] leading-[1.5]"
               style={{ color: "var(--fg-2)" }}
             >
-              Everything you see above — check-ins, bookings, progress
-              tracking, marketplace — in a native app for iOS and Android.
+              Everything you see above, check-ins, bookings, progress
+              tracking, marketplace, in a native app for iOS and Android.
               Browse the web marketplace today, and be first to download
               when we launch.
             </p>
@@ -474,7 +474,7 @@ export default function ForMembersPage() {
           style={{ color: "var(--fg-2)" }}
         >
           14,200 verified providers. 52 countries. Zero platform fees.
-          Browse the marketplace now — download the app soon.
+          Browse the marketplace now, download the app soon.
         </p>
         <Link href="/marketplace" className="btn-primary-v2 lg">
           Browse marketplace &rarr;

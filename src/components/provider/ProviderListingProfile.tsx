@@ -250,7 +250,7 @@ export function ProviderListingProfile() {
       {error && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{error}</p>}
 
       {/* Account — always editable, listing or not */}
-      <Card title="Account" desc="Your name and contact number — used across Binectics, not just the marketplace.">
+      <Card title="Account" desc="Your name and contact number, used across Binectics, not just the marketplace.">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <Field label="First name" value={account?.first_name ?? ""} onChange={(v) => setAcc("first_name", v)} disabled={!account} />
           <Field label="Last name" value={account?.last_name ?? ""} onChange={(v) => setAcc("last_name", v)} disabled={!account} />

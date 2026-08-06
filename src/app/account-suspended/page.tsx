@@ -113,7 +113,7 @@ export default function AccountSuspendedPage() {
         >
           A human on our trust team reviewed your account on May 24 and found
           multiple chargeback disputes from the same payment method. You can
-          appeal — most appeals resolve within 5 business days.
+          appeal, most appeals resolve within 5 business days.
         </p>
 
         {/* Detail rows */}

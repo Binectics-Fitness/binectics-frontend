@@ -208,7 +208,7 @@ export default function FormsPage() {
     const url = `${window.location.origin}/forms/${formId}`;
     void navigator.clipboard
       .writeText(url)
-      .then(() => showMessage("Share link copied — anyone with it can open the form."))
+      .then(() => showMessage("Share link copied, anyone with it can open the form."))
       .catch(() => showMessage(url, "error"));
   }
 
@@ -603,7 +603,7 @@ export default function FormsPage() {
                     onChange={(e) => void handleToggleSetting(activeForm, "require_authentication", e.target.checked)}
                   />
                   <span className="text-sm" style={{ color: "var(--fg-2)" }}>
-                    Require sign-in to respond <span style={{ color: "var(--fg-4)" }}>— off allows anonymous responses</span>
+                    Require sign-in to respond <span style={{ color: "var(--fg-4)" }}>- off allows anonymous responses</span>
                   </span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">

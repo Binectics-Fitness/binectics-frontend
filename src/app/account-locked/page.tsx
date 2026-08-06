@@ -104,7 +104,7 @@ export default function AccountLockedPage() {
             marginRight: "auto",
           }}
         >
-          Too many failed sign-in attempts. Your account is safe — we paused new
+          Too many failed sign-in attempts. Your account is safe, we paused new
           attempts for the next 15 minutes. Reset your password to unlock
           instantly.
         </p>

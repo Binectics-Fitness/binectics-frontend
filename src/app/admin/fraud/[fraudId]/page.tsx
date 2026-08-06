@@ -18,7 +18,7 @@ export default function AdminFraudDetailPage() {
         title={"Fraud case"}
         subtitle={"Case detail"}
         pendingTitle={"Fraud case detail is coming soon"}
-        pendingBody={"There are no fraud cases yet \u2014 the fraud subsystem hasn't been built. This page previously showed fabricated case data."}
+        pendingBody={"There are no fraud cases yet, the fraud subsystem hasn't been built. This page previously showed fabricated case data."}
         cta={{ href: "/admin/fraud", label: "Back to fraud" }}
       />
     </AdminDashboardShell>

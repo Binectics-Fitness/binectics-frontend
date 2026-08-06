@@ -77,7 +77,7 @@ export function GymPlansClient() {
   const kpis = [
     { label: "Active subscribers", value: fmtNumber(totalMembers), delta: "across all plans" },
     { label: "Active plans", value: String(activePlans.length), delta: `${plans.length} total` },
-    { label: "Most picked", value: mostPicked && membersOf(mostPicked._id) > 0 ? mostPicked.name : "—", small: true, delta: mostPicked && membersOf(mostPicked._id) > 0 ? `${fmtNumber(membersOf(mostPicked._id))} member${membersOf(mostPicked._id) === 1 ? "" : "s"}` : "no subscribers yet" },
+    { label: "Most picked", value: mostPicked && membersOf(mostPicked._id) > 0 ? mostPicked.name : "-", small: true, delta: mostPicked && membersOf(mostPicked._id) > 0 ? `${fmtNumber(membersOf(mostPicked._id))} member${membersOf(mostPicked._id) === 1 ? "" : "s"}` : "no subscribers yet" },
   ];
 
   const onCreate = async (data: CreateOrgMembershipPlanRequest) => {
@@ -130,7 +130,7 @@ export function GymPlansClient() {
         <div className="rounded-(--r-3) flex flex-col items-center text-center px-6 py-14" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>No plans yet</h2>
           <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
-            Create your first membership plan — it becomes purchasable on your marketplace listing.
+            Create your first membership plan, it becomes purchasable on your marketplace listing.
           </p>
           <button className="btn-primary-v2 sm mt-5" disabled={!orgId} onClick={() => setAdding(true)}>+ New plan</button>
         </div>
@@ -175,7 +175,7 @@ export function GymPlansClient() {
                   <button
                     className="btn-ghost-v2 sm disabled:opacity-40"
                     disabled={remove.isPending || membersOf(p._id) > 0}
-                    title={membersOf(p._id) > 0 ? "Has members on it — deactivate instead so existing subscriptions keep working" : undefined}
+                    title={membersOf(p._id) > 0 ? "Has members on it, deactivate instead so existing subscriptions keep working" : undefined}
                     onClick={() => onDelete(p)}
                   >Delete</button>
                 </div>

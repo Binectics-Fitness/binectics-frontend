@@ -308,7 +308,7 @@ export default function FormFillClient() {
           </div>
         ) : submitted ? (
           <div className="rounded-(--r-3) p-8 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <h1 className="text-[22px] font-medium" style={{ color: "var(--ink)" }}>Thanks — response received.</h1>
+            <h1 className="text-[22px] font-medium" style={{ color: "var(--ink)" }}>Thanks, response received.</h1>
             <p className="text-[14px] mt-2" style={{ color: "var(--fg-3)" }}>
               {form.company_name ? `${form.company_name} has your answers.` : "Your answers have been recorded."}
             </p>

@@ -97,11 +97,11 @@ export default function ProviderBillingPage() {
           if (active && res.data) {
             setBillingStatus(res.data);
             toast.success(
-              `You're on ${res.data.plan_tier.toUpperCase()} — subscription active.`,
+              `You're on ${res.data.plan_tier.toUpperCase()}, subscription active.`,
             );
           } else {
             toast.info(
-              "Payment received — activation is taking a moment. Refresh shortly.",
+              "Payment received, activation is taking a moment. Refresh shortly.",
             );
           }
         }
@@ -294,12 +294,12 @@ export default function ProviderBillingPage() {
               >
                 <span className="font-medium" style={{ color: "var(--ink)" }}>
                   {billingStatus.seats.over_limit
-                    ? `You're over your seat limit — ${fmtNumber(billingStatus.seats.used)} of ${renderLimitValue(billingStatus.seats.limit)}.`
-                    : `You're close to your seat limit — ${fmtNumber(billingStatus.seats.used)} of ${renderLimitValue(billingStatus.seats.limit)}.`}
+                    ? `You're over your seat limit, ${fmtNumber(billingStatus.seats.used)} of ${renderLimitValue(billingStatus.seats.limit)}.`
+                    : `You're close to your seat limit, ${fmtNumber(billingStatus.seats.used)} of ${renderLimitValue(billingStatus.seats.limit)}.`}
                 </span>
                 <span style={{ color: "var(--fg-2)" }}>
                   Archiving a member frees their seat. Paused and suspended
-                  members still occupy one, so review those first — or upgrade
+                  members still occupy one, so review those first, or upgrade
                   for more room.
                 </span>
                 <div className="flex gap-3 mt-1">

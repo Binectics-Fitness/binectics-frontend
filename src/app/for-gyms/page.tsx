@@ -5,7 +5,7 @@ import { GymOwnerDemo } from "@/components/ds/GymOwnerDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For Gym Owners — Binectics",
+  title: "For Gym Owners, Binectics",
   description:
     "Manage memberships, check-ins, payouts, staff, and multi-location operations from a single dashboard. Replace Mindbody, spreadsheets, and WhatsApp groups with one platform.",
   keywords:
@@ -105,7 +105,7 @@ export default function ForGymsPage() {
           className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          Members, schedule, check-ins, payouts, payroll, marketing — all in
+          Members, schedule, check-ins, payouts, payroll, marketing, all in
           one place, with copilot seats so your staff trainers&apos; report
           drafts write themselves. No more Excel + Mindbody + WhatsApp groups.
         </p>
@@ -134,7 +134,7 @@ export default function ForGymsPage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Revenue, members, classes, and payouts — all on one screen.
+          Revenue, members, classes, and payouts, all on one screen.
           Click a tab to explore.
         </p>
         <GymOwnerDemo />

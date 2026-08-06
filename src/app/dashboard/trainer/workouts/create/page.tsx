@@ -44,7 +44,7 @@ const DAY_B = [
 
 const AI_SUGGESTIONS = [
   { title: "Add rack pulls after RDL", desc: "Linda's deadlift groove improves with isometric work at the knee. Rack pulls at 110% 1RM for 3×3 with 5s holds.", primary: "Add to Day A", secondary: "Skip" },
-  { title: "Reduce squat volume wk 4", desc: "Current trajectory hits 92.5kg by wk 4. Consider a mini-deload — 3×3 at 85% instead of 4×5.", primary: "Apply", secondary: "Ignore" },
+  { title: "Reduce squat volume wk 4", desc: "Current trajectory hits 92.5kg by wk 4. Consider a mini-deload, 3×3 at 85% instead of 4×5.", primary: "Apply", secondary: "Ignore" },
 ];
 
 function Grip() {

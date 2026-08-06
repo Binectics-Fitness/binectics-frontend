@@ -18,7 +18,7 @@ export default function AdminCompliancePage() {
         title={"Compliance"}
         subtitle={"KYC and regulatory posture"}
         pendingTitle={"Compliance tooling is coming soon"}
-        pendingBody={"KYC queues and regulatory reporting will appear here once the compliance subsystem is built. This page previously showed fabricated statistics \u2014 no KYC pipeline exists yet."}
+        pendingBody={"KYC queues and regulatory reporting will appear here once the compliance subsystem is built. This page previously showed fabricated statistics, no KYC pipeline exists yet."}
       />
     </AdminDashboardShell>
   );

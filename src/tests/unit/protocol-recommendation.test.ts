@@ -19,7 +19,7 @@ describe("buildProtocolRecommendation", () => {
     expect(req.category).toBe(RecommendationCategory.NUTRITION);
   });
 
-  it("falls back to the name for content when there is nothing else — content is required", () => {
+  it("falls back to the name for content when there is nothing else, content is required", () => {
     const req = buildProtocolRecommendation({
       name: "Gut reset",
       description: "  ",
@@ -40,7 +40,7 @@ describe("buildProtocolRecommendation", () => {
       ],
     });
     expect(req.content).toBe(
-      "Steps:\n1. Eliminate — Remove trigger foods for 2 weeks\n2. Reintroduce",
+      "Steps:\n1. Eliminate, Remove trigger foods for 2 weeks\n2. Reintroduce",
     );
   });
 
@@ -76,7 +76,7 @@ describe("buildProtocolRecommendation", () => {
     expect(req.content).toBe("Steps:\n1. Hydrate");
   });
 
-  it("does not attach plan linkage fields — a protocol is not a stored plan", () => {
+  it("does not attach plan linkage fields, a protocol is not a stored plan", () => {
     const req = buildProtocolRecommendation({
       name: "Reset",
       description: undefined,

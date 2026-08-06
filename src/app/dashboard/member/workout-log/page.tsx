@@ -347,7 +347,7 @@ export default function WorkoutLogPage() {
                 id="workout-notes"
                 value={form.notes}
                 onChange={(e) => setField("notes", e.target.value)}
-                placeholder="Felt strong — added 5kg on bench."
+                placeholder="Felt strong, added 5kg on bench."
                 rows={2}
                 style={{ ...fieldInputStyle, resize: "vertical" }}
               />
@@ -596,7 +596,7 @@ export default function WorkoutLogPage() {
                         borderBottom: "1px solid var(--border)",
                       }}
                     >
-                      {activity.notes || "—"}
+                      {activity.notes || "-"}
                     </td>
                   </tr>
                 ))}

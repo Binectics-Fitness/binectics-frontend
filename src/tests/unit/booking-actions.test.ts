@@ -134,7 +134,7 @@ describe("durationMins", () => {
 
   // Math.max(0, NaN) is NaN, not 0, so the floor alone does not cover this.
   // Untested, it rendered "NaN min" on screen and wrote NaN into the CSV.
-  it("returns zero — not NaN — for an unparseable date", () => {
+  it("returns zero, not NaN, for an unparseable date", () => {
     expect(durationMins(booking({ endsAt: "not-a-date" }))).toBe(0);
     expect(durationMins(booking({ startsAt: "" }))).toBe(0);
     expect(

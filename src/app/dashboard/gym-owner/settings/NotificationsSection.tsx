@@ -86,7 +86,7 @@ export function NotificationsSection() {
         ))}
       </div>
       {update.isError && (
-        <p className="text-[12px] mt-2" style={{ color: "var(--danger, #b00020)" }}>Couldn&rsquo;t save that change — try again.</p>
+        <p className="text-[12px] mt-2" style={{ color: "var(--danger, #b00020)" }}>Couldn&rsquo;t save that change, try again.</p>
       )}
     </section>
   );

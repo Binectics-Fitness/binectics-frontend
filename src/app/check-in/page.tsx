@@ -141,7 +141,7 @@ export default function CheckInScannerPage() {
                 No camera available here.
               </p>
               <p className="text-[12.5px]" style={{ color: "var(--bg-2)" }}>
-                Scan the front-desk QR with your phone&rsquo;s camera app —
+                Scan the front-desk QR with your phone&rsquo;s camera app -
                 it opens this site and checks you in.
               </p>
             </div>

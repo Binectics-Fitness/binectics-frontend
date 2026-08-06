@@ -44,9 +44,9 @@ function payerLabel(tx: AdminTransaction): {
   email: string | null;
 } {
   const u = tx.user_id;
-  if (!u) return { name: "—", email: null };
+  if (!u) return { name: "-", email: null };
   const name = [u.first_name, u.last_name].filter(Boolean).join(" ");
-  return { name: name || u.email || "—", email: u.email ?? null };
+  return { name: name || u.email || "-", email: u.email ?? null };
 }
 
 function formatAmount(tx: AdminTransaction): string {
@@ -130,7 +130,7 @@ export default function AdminPaymentsPage() {
           className="text-[13.5px] mt-1.5 max-w-[64ch]"
           style={{ color: "var(--fg-3)" }}
         >
-          The platform-wide money ledger — every subscription, consultation,
+          The platform-wide money ledger, every subscription, consultation,
           refund and payout recorded by the transactions service, newest first.
         </p>
       </div>
@@ -214,7 +214,7 @@ export default function AdminPaymentsPage() {
                           </div>
                         ) : null}
                       </DSTableTd>
-                      <DSTableTd>{tx.organization_id?.name ?? "—"}</DSTableTd>
+                      <DSTableTd>{tx.organization_id?.name ?? "-"}</DSTableTd>
                       <DSTableTd className="capitalize">
                         {tx.type.replaceAll("_", " ")}
                       </DSTableTd>

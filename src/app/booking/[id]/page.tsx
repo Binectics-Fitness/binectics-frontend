@@ -12,7 +12,7 @@ const TIMELINE = [
   { when: "11 May · 15:08", title: "Sarah confirmed", desc: "R 1,890.00 charged · confirmation sent to tunde@gmail.com.", done: true },
   { when: "11 May · 15:09", title: "Added to your calendar", desc: "Google Calendar event created · auto-synced.", done: true },
   { when: "Tue · 19 May", title: "24h reminder", desc: "Last chance to reschedule free of charge." },
-  { when: "Wed · 08:30", title: "Check in with your QR at Iron Lab Sea Point", desc: "QR code is on this page — bring a phone or screenshot." },
+  { when: "Wed · 08:30", title: "Check in with your QR at Iron Lab Sea Point", desc: "QR code is on this page, bring a phone or screenshot." },
 ];
 
 function QrPattern({ size = 13, seed = 19 }: { size?: number; seed?: number }) {
@@ -252,7 +252,7 @@ export default function BookingDetailPage() {
                       className="text-[11.5px] leading-[1.45] mt-0.5"
                       style={{ color: "var(--fg-3)" }}
                     >
-                      Free up to 24h before — pick a new slot from Sarah&apos;s calendar.
+                      Free up to 24h before, pick a new slot from Sarah&apos;s calendar.
                     </div>
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export default function BookingDetailPage() {
                       className="text-[11.5px] leading-[1.45] mt-0.5"
                       style={{ color: "var(--fg-3)" }}
                     >
-                      32h before — full refund to your VISA &bull;&bull;&bull;&bull; 4421.
+                      32h before, full refund to your VISA &bull;&bull;&bull;&bull; 4421.
                     </div>
                   </div>
                 </div>

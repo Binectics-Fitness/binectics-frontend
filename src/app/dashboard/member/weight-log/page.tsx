@@ -218,13 +218,13 @@ export default function WeightLogPage() {
         {[
           {
             label: "Current",
-            value: latestLog ? `${latestLog.weight_kg.toFixed(1)} kg` : "—",
-            delta: latestLog ? formatDate(latestLog.recorded_at) : "—",
+            value: latestLog ? `${latestLog.weight_kg.toFixed(1)} kg` : "-",
+            delta: latestLog ? formatDate(latestLog.recorded_at) : "-",
           },
           {
             label: "Change",
-            value: changeKgValue ? `${changeKgValue > 0 ? "+" : ""}${changeKg}` : "—",
-            delta: changeKgValue ? (changeKgValue < 0 ? "↓ Loss" : "↑ Gain") : "—",
+            value: changeKgValue ? `${changeKgValue > 0 ? "+" : ""}${changeKg}` : "-",
+            delta: changeKgValue ? (changeKgValue < 0 ? "↓ Loss" : "↑ Gain") : "-",
           },
           {
             label: "Logs",
@@ -234,7 +234,7 @@ export default function WeightLogPage() {
           {
             label: "Status",
             value: loading ? "..." : logs.length > 0 ? "Active" : "No logs",
-            delta: logs.length > 0 ? "Latest synced" : "—",
+            delta: logs.length > 0 ? "Latest synced" : "-",
           },
         ].map((kpi) => (
           <div
@@ -389,7 +389,7 @@ export default function WeightLogPage() {
                   const loggedBy = isOwn
                     ? "You"
                     : typeof log.logged_by === "string"
-                      ? "—"
+                      ? "-"
                       : `${log.logged_by.first_name} ${log.logged_by.last_name}`;
                   return (
                     <tr key={log._id}>
@@ -418,7 +418,7 @@ export default function WeightLogPage() {
                           borderBottom: "1px solid var(--border)",
                         }}
                       >
-                        {log.note || "—"}
+                        {log.note || "-"}
                       </td>
                       {hasProviderLogs && (
                         <td

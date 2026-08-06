@@ -42,9 +42,9 @@ function monthLabel(month: string): string {
 function payerLabel(tx: LedgerTransaction): { name: string; email?: string } {
   if (typeof tx.user_id === "object" && tx.user_id !== null) {
     const name = [tx.user_id.first_name, tx.user_id.last_name].filter(Boolean).join(" ");
-    return { name: name || tx.user_id.email || "—", email: name ? tx.user_id.email : undefined };
+    return { name: name || tx.user_id.email || "-", email: name ? tx.user_id.email : undefined };
   }
-  return { name: "—" };
+  return { name: "-" };
 }
 
 function SectionCard({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
@@ -403,7 +403,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
             {/* Estimated value */}
             <SectionCard
               title="Estimated session value"
-              sub="Estimated from your session prices — bookings aren't paid through Binectics yet"
+              sub="Estimated from your session prices, bookings aren't paid through Binectics yet"
             >
               <div className="px-4.5 py-4 flex flex-col gap-2.5">
                 {estimatedEntries.length === 0 ? (
@@ -427,7 +427,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
                 </div>
                 {session.estimated.unpriced_sessions > 0 && (
                   <div className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
-                    {fmtNumber(session.estimated.unpriced_sessions)} session{session.estimated.unpriced_sessions === 1 ? " has" : "s have"} no price set —{" "}
+                    {fmtNumber(session.estimated.unpriced_sessions)} session{session.estimated.unpriced_sessions === 1 ? " has" : "s have"} no price set -{" "}
                     <Link href={settingsHref} className="underline" style={{ color: "var(--ink)" }}>
                       set prices on your {sessionNoun} types
                     </Link>{" "}

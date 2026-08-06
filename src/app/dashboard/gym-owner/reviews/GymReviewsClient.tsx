@@ -40,8 +40,8 @@ export function GymReviewsClient() {
   const needsResponse = reviews.filter((r) => !r.providerResponse).length;
 
   const kpis = [
-    { label: "Overall rating", value: aggregate ? aggregate.averageRating.toFixed(1) : "—", delta: aggregate ? `${aggregate.totalReviews} review${aggregate.totalReviews === 1 ? "" : "s"}` : "" },
-    { label: "5-star reviews", value: aggregate ? String(fiveStars) : "—", delta: aggregate && aggregate.totalReviews > 0 ? `${Math.round((fiveStars / aggregate.totalReviews) * 100)}% of total` : "" },
+    { label: "Overall rating", value: aggregate ? aggregate.averageRating.toFixed(1) : "-", delta: aggregate ? `${aggregate.totalReviews} review${aggregate.totalReviews === 1 ? "" : "s"}` : "" },
+    { label: "5-star reviews", value: aggregate ? String(fiveStars) : "-", delta: aggregate && aggregate.totalReviews > 0 ? `${Math.round((fiveStars / aggregate.totalReviews) * 100)}% of total` : "" },
     { label: "Needs response", value: String(needsResponse), delta: "on this page", danger: needsResponse > 0 },
   ];
 
@@ -89,7 +89,7 @@ export function GymReviewsClient() {
             {isLoading && <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>Loading reviews…</p>}
             {!isLoading && reviews.length === 0 && (
               <div className="rounded-(--r-3) px-6 py-10 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>No reviews yet — they&rsquo;ll appear here once members start rating your gym.</p>
+                <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>No reviews yet, they&rsquo;ll appear here once members start rating your gym.</p>
               </div>
             )}
             {reviews.map((r) => (

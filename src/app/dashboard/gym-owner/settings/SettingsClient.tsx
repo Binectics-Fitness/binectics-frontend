@@ -277,7 +277,7 @@ export function SettingsClient() {
     if (updateOrg.isError)
       return (
         <button className="btn-primary-v2 sm" onClick={() => void onSave()}>
-          Save failed — retry
+          Save failed, retry
         </button>
       );
     if (dirty)
@@ -343,7 +343,7 @@ export function SettingsClient() {
             <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <SelectField label="Default currency" value={form?.currency ?? "USD"} onChange={(v) => set("currency", v)} disabled={!form} hint="Used for new membership plans, listings, and revenue display."
-                  options={SUPPORTED_CURRENCIES.map((c) => ({ label: `${c.currencyCode} · ${c.symbol} — ${c.regionName}`, value: c.currencyCode }))} />
+                  options={SUPPORTED_CURRENCIES.map((c) => ({ label: `${c.currencyCode} · ${c.symbol}, ${c.regionName}`, value: c.currencyCode }))} />
                 <SelectField label="Time zone" value={form?.time_zone ?? ""} onChange={(v) => set("time_zone", v)} disabled={!form}
                   placeholder="Select time zone…"
                   options={timeZones.map((tz) => ({ label: tz.label, value: tz.value }))} />
@@ -359,7 +359,7 @@ export function SettingsClient() {
 
           {/* Tax & VAT */}
           <section id="tax">
-            <SectionHeading title="Tax & VAT" desc="Shown on receipts and invoices. Nothing is computed platform-side yet — this is what your documents display." />
+            <SectionHeading title="Tax & VAT" desc="Shown on receipts and invoices. Nothing is computed platform-side yet, this is what your documents display." />
             <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />

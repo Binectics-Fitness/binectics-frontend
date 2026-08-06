@@ -36,9 +36,9 @@ const TIERS = [
     label: "Fitness ecosystem",
     desc: "Industry bodies and certification authorities we work with.",
     partners: [
-      { name: "REPSSA", role: "Register of Exercise Professionals South Africa — credential verification for SA trainers." },
-      { name: "IHRSA", role: "International Health, Racquet & Sportsclub Association — gym industry standards and benchmarks." },
-      { name: "ACE", role: "American Council on Exercise — trainer and dietitian certification validation." },
+      { name: "REPSSA", role: "Register of Exercise Professionals South Africa, credential verification for SA trainers." },
+      { name: "IHRSA", role: "International Health, Racquet & Sportsclub Association, gym industry standards and benchmarks." },
+      { name: "ACE", role: "American Council on Exercise, trainer and dietitian certification validation." },
     ],
   },
 ];

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 
 const TIMELINE = [
-  { when: "Just now", title: "Booking placed", desc: "Card held — no charge until Sarah confirms.", done: true },
+  { when: "Just now", title: "Booking placed", desc: "Card held, no charge until Sarah confirms.", done: true },
   { when: "Within 4h", title: "Sarah confirms", desc: "You'll get a push notification and email. Card is charged ZAR 1,890.00 only at this point. If she declines or doesn't reply, the hold is released automatically.", now: true },
   { when: "Tue · May 19", title: "Reminder · 24h before", desc: "Final chance to reschedule without a fee. You'll also get the gym's full address & parking info." },
   { when: "Wed · 08:30", title: "Show up · check in at the front desk with your QR", desc: "Bring water and clothes you can move in. Iron Lab provides shoes, plates, and chalk." },
@@ -174,7 +174,7 @@ export default function BookingConfirmedPage() {
               className="text-[15.5px] mt-4 leading-relaxed max-w-[56ch]"
               style={{ color: "var(--fg-3)" }}
             >
-              A hold has been placed on your card — you won&apos;t be charged
+              A hold has been placed on your card, you won&apos;t be charged
               until Sarah accepts (usually within 4 hours). You can cancel or
               reschedule up to 24 hours before your session.
             </p>
@@ -488,7 +488,7 @@ export default function BookingConfirmedPage() {
                 {
                   eyebrow: "Iron Lab",
                   title: "Try a class while you're there",
-                  desc: "Free first group class for new bookers — 6:00 strength is open.",
+                  desc: "Free first group class for new bookers, 6:00 strength is open.",
                   href: "/marketplace/iron-lab",
                 },
               ].map((s) => (

@@ -27,7 +27,7 @@ export function PushRegistrar() {
 
   const onForeground = (title: string, body: string, link?: string) => {
     toast.info(
-      `${title} — ${body}`,
+      `${title}, ${body}`,
       link ? { label: "View", onClick: () => router.push(link) } : undefined,
     );
   };

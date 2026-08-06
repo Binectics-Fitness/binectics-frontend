@@ -119,7 +119,7 @@ export function ApiKeysSection() {
         {revealed && (
           <div className="flex flex-col gap-2 p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--signal, var(--border-2))", background: "var(--signal-soft, var(--bg))" }}>
             <span className="text-[12.5px] font-medium" style={{ color: "var(--signal-ink, var(--ink))" }}>
-              Copy this key now — it will never be shown again.
+              Copy this key now, it will never be shown again.
             </span>
             <div className="flex items-center gap-2">
               <code className="flex-1 min-w-0 truncate font-mono text-[12px] px-2.5 py-2 rounded-(--r-1)" style={{ background: "var(--bg)", border: "1px solid var(--border-2)", color: "var(--ink)" }}>{revealed}</code>

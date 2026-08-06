@@ -493,7 +493,7 @@ export default function ProfileSettingsPage() {
                   options={(platformConfig?.currencies ?? [])
                     .filter((c) => c.is_active)
                     .map((c) => ({
-                      label: `${c.code} — ${c.name}`,
+                      label: `${c.code}, ${c.name}`,
                       value: c.code,
                     }))}
                   placeholder="Select currency"

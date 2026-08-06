@@ -125,7 +125,7 @@ function TrainerTodayContent() {
     { label: "Upcoming sessions", value: String(upcoming.length), sub: "Confirmed + pending" },
     {
       label: "Next session",
-      value: upcoming[0] ? fmtTime(upcoming[0].startsAt) : "—",
+      value: upcoming[0] ? fmtTime(upcoming[0].startsAt) : "-",
       sub: upcoming[0] ? fmtDate(upcoming[0].startsAt) : "None scheduled",
     },
   ];

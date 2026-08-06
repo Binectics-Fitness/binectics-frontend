@@ -87,7 +87,7 @@ export function GymTaxClient() {
               </p>
             ) : (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-                No tax rate configured yet — set one to see estimates here and on receipts.
+                No tax rate configured yet, set one to see estimates here and on receipts.
               </p>
             )}
           </div>
@@ -102,7 +102,7 @@ export function GymTaxClient() {
         <div className="px-5.5 pt-4 pb-3" style={{ borderBottom: "1px solid var(--border)" }}>
           <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Revenue-based estimate</h2>
           <div className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-            Computed from your recorded marketplace revenue. An estimate only — not tax advice, and nothing is filed on your behalf.
+            Computed from your recorded marketplace revenue. An estimate only, not tax advice, and nothing is filed on your behalf.
           </div>
         </div>
         {loading ? (

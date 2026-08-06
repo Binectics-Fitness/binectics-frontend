@@ -81,7 +81,7 @@ describe("isInvitationExpired", () => {
     expect(isInvitationExpired("2026-08-05T12:00:00.000Z", NOW)).toBe(false);
   });
 
-  it("treats an unusable date as not expired — the server decides", () => {
+  it("treats an unusable date as not expired, the server decides", () => {
     expect(isInvitationExpired(undefined, NOW)).toBe(false);
     expect(isInvitationExpired("", NOW)).toBe(false);
     expect(isInvitationExpired("whenever", NOW)).toBe(false);

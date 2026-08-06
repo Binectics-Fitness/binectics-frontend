@@ -144,7 +144,7 @@ export function ClassDetailClient() {
 
       {isLoading && <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>Loading class…</p>}
       {!isLoading && !gymClass && (
-        <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Class not found — it may have been deleted.</p>
+        <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Class not found, it may have been deleted.</p>
       )}
       {gymClass && orgId && (
         <OccurrenceRoster orgId={orgId} classId={classId} dayOfWeek={gymClass.day_of_week} />

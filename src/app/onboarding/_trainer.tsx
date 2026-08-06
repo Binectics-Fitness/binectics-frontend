@@ -14,7 +14,7 @@ function toggleChip(list: string[], chip: string, max?: number): string[] {
 export function TrainerStep1({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 01 of 06 — trainer track" title="Tell us about yourself." desc="This is what members see in your profile." />
+      <StageHead crumb="Step 01 of 06, trainer track" title="Tell us about yourself." desc="This is what members see in your profile." />
       <FormGrid>
         <Field label="First name"><TextInput value={(data.firstName as string) || ""} onChange={(v) => setField("firstName", v)} /></Field>
         <Field label="Last name"><TextInput value={(data.lastName as string) || ""} onChange={(v) => setField("lastName", v)} /></Field>
@@ -33,7 +33,7 @@ export function TrainerStep2({ data, setField }: StepProps) {
   const formats = (data.formats as string[]) || [];
   return (
     <>
-      <StageHead crumb="Step 02 of 06 — trainer track" title="Your specializations." desc="Pick up to 5. Members filter on these." />
+      <StageHead crumb="Step 02 of 06, trainer track" title="Your specializations." desc="Pick up to 5. Members filter on these." />
       <Field label="Specializations" full>
         <ChipGrid options={SPECIALIZATIONS} selected={specs} onToggle={(c) => setField("specializations", toggleChip(specs, c, 5))} />
       </Field>
@@ -47,7 +47,7 @@ export function TrainerStep2({ data, setField }: StepProps) {
 export function TrainerStep3({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 03 of 06 — trainer track" title="Upload your certifications." desc="Verified providers convert 3.4x better. We re-check every 24 months." />
+      <StageHead crumb="Step 03 of 06, trainer track" title="Upload your certifications." desc="Verified providers convert 3.4x better. We re-check every 24 months." />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <UploadZone
           title="Primary certification"
@@ -98,7 +98,7 @@ export function TrainerStep4({ data, setField }: StepProps) {
   });
   return (
     <>
-      <StageHead crumb="Step 04 of 06 — trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
+      <StageHead crumb="Step 04 of 06, trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
       <FormGrid>
         <Field label="1:1 session"><MoneyField {...money("price1on1")} placeholder="₦80,000" /></Field>
         <Field label="Duration"><SelectField value={(data.duration as string) || "60 min"} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
@@ -113,7 +113,7 @@ export function TrainerStep4({ data, setField }: StepProps) {
 export function TrainerStep5({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 05 of 06 — trainer track" title="Connect your payout." desc="Direct to your account. Binectics never holds your money." />
+      <StageHead crumb="Step 05 of 06, trainer track" title="Connect your payout." desc="Direct to your account. Binectics never holds your money." />
       <RadioCards
         selected={(data.payout as string) || "paystack"}
         onSelect={(v) => setField("payout", v)}
@@ -134,7 +134,7 @@ export function TrainerStep6({ data }: StepProps) {
   const meta = `${specs} · ${city} · ${price}/session`;
   return (
     <>
-      <StageHead crumb="Step 06 of 06 — trainer track" title="Preview & publish." desc="Your profile goes live the moment we verify your docs. Usually within 48h." />
+      <StageHead crumb="Step 06 of 06, trainer track" title="Preview & publish." desc="Your profile goes live the moment we verify your docs. Usually within 48h." />
       <PreviewCard name={name} meta={meta} />
     </>
   );

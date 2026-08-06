@@ -431,30 +431,30 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       <div style={S.plainBox}>
         <div style={S.plainH}>In one paragraph</div>
         <p style={S.plainP}>
-          We collect what we need to run a marketplace — your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong style={S.docStrong}>We don&apos;t sell your data, ever.</strong> You can download a full copy or delete your account from settings, any time, and the deletion is real.
+          We collect what we need to run a marketplace, your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong style={S.docStrong}>We don&apos;t sell your data, ever.</strong> You can download a full copy or delete your account from settings, any time, and the deletion is real.
         </p>
       </div>
 
       <h2 id="p-2" style={S.docH2(false)}>
         <span style={S.docNum}>01</span>What we collect
       </h2>
-      <p style={S.docP}>Three categories — what you give us, what we observe, and what others tell us.</p>
+      <p style={S.docP}>Three categories, what you give us, what we observe, and what others tell us.</p>
       <h3 style={S.docH3}>You give us</h3>
       <ul style={S.docUl}>
-        <li><strong style={S.docStrong}>Account info</strong> — name, email, phone, password (hashed with bcrypt + per{"‑"}user salt).</li>
-        <li><strong style={S.docStrong}>Provider documents</strong> — ID, certifications, insurance, bank details. Used only for verification and payouts.</li>
-        <li><strong style={S.docStrong}>Booking data</strong> — sessions, plans, payments, messages with the other side of the marketplace.</li>
-        <li><strong style={S.docStrong}>Optional logs</strong> — weight, photos, mood, meal logs, workout adherence. You choose what to share with which provider.</li>
+        <li><strong style={S.docStrong}>Account info</strong>, name, email, phone, password (hashed with bcrypt + per{"‑"}user salt).</li>
+        <li><strong style={S.docStrong}>Provider documents</strong>, ID, certifications, insurance, bank details. Used only for verification and payouts.</li>
+        <li><strong style={S.docStrong}>Booking data</strong>, sessions, plans, payments, messages with the other side of the marketplace.</li>
+        <li><strong style={S.docStrong}>Optional logs</strong>, weight, photos, mood, meal logs, workout adherence. You choose what to share with which provider.</li>
       </ul>
       <h3 style={S.docH3}>We observe</h3>
       <ul style={S.docUl}>
-        <li><strong style={S.docStrong}>How you use the product</strong> — pages viewed, searches, taps. Stored against a rotating device ID, not your account, where possible.</li>
-        <li><strong style={S.docStrong}>Device &amp; network</strong> — browser, OS, IP, approximate city. Used for fraud detection and to localize the experience.</li>
+        <li><strong style={S.docStrong}>How you use the product</strong>, pages viewed, searches, taps. Stored against a rotating device ID, not your account, where possible.</li>
+        <li><strong style={S.docStrong}>Device &amp; network</strong>, browser, OS, IP, approximate city. Used for fraud detection and to localize the experience.</li>
       </ul>
       <h3 style={S.docH3}>Others tell us</h3>
       <ul style={S.docUl}>
-        <li><strong style={S.docStrong}>Payment processors</strong> — Stripe, Paystack, Flutterwave send us card last{"‑"}4, expiry, and fraud signals. We never see the full card number.</li>
-        <li><strong style={S.docStrong}>Verification partners</strong> — confirm a certification is real or an ID is valid. We log the outcome, not the documents themselves where avoidable.</li>
+        <li><strong style={S.docStrong}>Payment processors</strong>, Stripe, Paystack, Flutterwave send us card last{"‑"}4, expiry, and fraud signals. We never see the full card number.</li>
+        <li><strong style={S.docStrong}>Verification partners</strong>, confirm a certification is real or an ID is valid. We log the outcome, not the documents themselves where avoidable.</li>
       </ul>
 
       <h2 id="p-3" style={S.docH2(false)}>
@@ -470,7 +470,7 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <tbody>
           <tr>
             <td style={{ ...S.td, ...S.tdK }}>Account &amp; bookings</td>
-            <td style={S.td}>To run the service — without this, you can&apos;t book anything.</td>
+            <td style={S.td}>To run the service, without this, you can&apos;t book anything.</td>
           </tr>
           <tr>
             <td style={{ ...S.td, ...S.tdK }}>Payment data</td>
@@ -496,10 +496,10 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       </h2>
       <p style={S.docP}>A short list. We never add to it without telling you.</p>
       <ul style={S.docUl}>
-        <li><strong style={S.docStrong}>The other side of your bookings</strong> — your coach sees what you&apos;d expect (name, sessions, messages, logs you&apos;ve shared).</li>
-        <li><strong style={S.docStrong}>Payment processors</strong> — Stripe, Paystack, Flutterwave, Razorpay, depending on your country.</li>
-        <li><strong style={S.docStrong}>Infrastructure providers</strong> — Cloudflare, AWS (eu{"‑"}west{"‑"}1, af{"‑"}south{"‑"}1), Postmark for email.</li>
-        <li><strong style={S.docStrong}>Government authorities</strong> — only when legally required, with the narrowest possible response.</li>
+        <li><strong style={S.docStrong}>The other side of your bookings</strong>, your coach sees what you&apos;d expect (name, sessions, messages, logs you&apos;ve shared).</li>
+        <li><strong style={S.docStrong}>Payment processors</strong>, Stripe, Paystack, Flutterwave, Razorpay, depending on your country.</li>
+        <li><strong style={S.docStrong}>Infrastructure providers</strong>, Cloudflare, AWS (eu{"‑"}west{"‑"}1, af{"‑"}south{"‑"}1), Postmark for email.</li>
+        <li><strong style={S.docStrong}>Government authorities</strong>, only when legally required, with the narrowest possible response.</li>
       </ul>
 
       <h2 id="p-5" style={S.docH2(false)}>
@@ -548,11 +548,11 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       </h2>
       <p style={S.docP}>Wherever you are, you have these rights. POPIA, GDPR, and our own policy converge on them.</p>
       <ul style={S.docUl}>
-        <li><strong style={S.docStrong}>Access</strong> — download a full copy of your data from settings - ZIP delivery in under 24 hours.</li>
-        <li><strong style={S.docStrong}>Correction</strong> — fix anything wrong from settings, or email <code style={S.code}>privacy@binectics.com</code>.</li>
-        <li><strong style={S.docStrong}>Deletion</strong> — purge your account - your coach keeps their record of past sessions for tax reasons, but we strip your name from anything else within 30 days.</li>
-        <li><strong style={S.docStrong}>Portability</strong> — your data exports as machine{"‑"}readable JSON, not a PDF you can&apos;t reuse.</li>
-        <li><strong style={S.docStrong}>Object to processing</strong> — turn off behavioral analytics in cookie settings - still works for fraud detection.</li>
+        <li><strong style={S.docStrong}>Access</strong>, download a full copy of your data from settings - ZIP delivery in under 24 hours.</li>
+        <li><strong style={S.docStrong}>Correction</strong>, fix anything wrong from settings, or email <code style={S.code}>privacy@binectics.com</code>.</li>
+        <li><strong style={S.docStrong}>Deletion</strong>, purge your account - your coach keeps their record of past sessions for tax reasons, but we strip your name from anything else within 30 days.</li>
+        <li><strong style={S.docStrong}>Portability</strong>, your data exports as machine{"‑"}readable JSON, not a PDF you can&apos;t reuse.</li>
+        <li><strong style={S.docStrong}>Object to processing</strong>, turn off behavioral analytics in cookie settings - still works for fraud detection.</li>
       </ul>
 
       <h2 id="p-8" style={S.docH2(false)}>
@@ -583,7 +583,7 @@ function TermsDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       <div style={S.plainBox}>
         <div style={S.plainH}>In one paragraph</div>
         <p style={S.plainP}>
-          Binectics connects members and providers — gyms, trainers, dietitians. <strong style={S.docStrong}>Providers run their own businesses</strong> - we run the rails: search, payments, messages, verification. If something goes wrong with a session, we mediate. If you break the rules — fake credentials, abusive behavior, payment fraud — we&apos;ll suspend you. You can leave any time and your data goes with you.
+          Binectics connects members and providers, gyms, trainers, dietitians. <strong style={S.docStrong}>Providers run their own businesses</strong> - we run the rails: search, payments, messages, verification. If something goes wrong with a session, we mediate. If you break the rules, fake credentials, abusive behavior, payment fraud, we&apos;ll suspend you. You can leave any time and your data goes with you.
         </p>
       </div>
 
@@ -598,7 +598,7 @@ function TermsDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <span style={S.docNum}>02</span>Your account
       </h2>
       <p style={S.docP}>
-        One account per person. You&apos;re responsible for what happens under your login — keep your password and 2FA secure. Tell us within 24 hours if you suspect access has been compromised; we&apos;ll lock the account and walk you through recovery.
+        One account per person. You&apos;re responsible for what happens under your login, keep your password and 2FA secure. Tell us within 24 hours if you suspect access has been compromised; we&apos;ll lock the account and walk you through recovery.
       </p>
 
       <h2 id="t-4" style={S.docH2(false)}>
@@ -617,7 +617,7 @@ function TermsDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <span style={S.docNum}>04</span>Payments &amp; refunds
       </h2>
       <p style={S.docP}>
-        We take a transparent <strong style={S.docStrong}>platform fee</strong> on processed payments — currently 5% to members, 0% to providers. Providers receive the rest direct to their account; we never hold funds beyond the standard gateway settlement period.
+        We take a transparent <strong style={S.docStrong}>platform fee</strong> on processed payments, currently 5% to members, 0% to providers. Providers receive the rest direct to their account; we never hold funds beyond the standard gateway settlement period.
       </p>
       <p style={S.docP}>Refund windows:</p>
       <ul style={S.docUl}>
@@ -631,7 +631,7 @@ function TermsDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <span style={S.docNum}>05</span>Verification
       </h2>
       <p style={S.docP}>
-        The green verified badge means a human on our team has reviewed the provider&apos;s documents — business registration, certifications, identity. Verified providers stay verified as long as documents remain current. We re{"‑"}check every 24 months.
+        The green verified badge means a human on our team has reviewed the provider&apos;s documents, business registration, certifications, identity. Verified providers stay verified as long as documents remain current. We re{"‑"}check every 24 months.
       </p>
       <p style={S.docP}>
         Rejection comes with a written reason and a 30{"‑"}day path to resubmit.

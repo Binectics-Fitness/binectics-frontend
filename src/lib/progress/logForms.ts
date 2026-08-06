@@ -70,7 +70,7 @@ function parseOptionalNumber(
     return { ok: false, error: `${label} must be a positive number.` };
   }
   if (parsed > max) {
-    return { ok: false, error: `${label} looks too high — check the value.` };
+    return { ok: false, error: `${label} looks too high, check the value.` };
   }
   return { ok: true, value: parsed };
 }

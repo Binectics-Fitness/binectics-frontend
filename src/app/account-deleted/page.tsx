@@ -103,7 +103,7 @@ export default function AccountDeletedPage() {
           }}
         >
           We removed your personal data within 24 hours. Past bookings stay on
-          your providers&apos; records for 7 years — South African tax law, not
+          your providers&apos; records for 7 years, South African tax law, not
           us.
         </p>
 
@@ -186,7 +186,7 @@ export default function AccountDeletedPage() {
           >
             create a new account
           </Link>
-          ? You can — we don&apos;t keep blocklists.
+          ? You can, we don&apos;t keep blocklists.
         </p>
       </div>
     </div>

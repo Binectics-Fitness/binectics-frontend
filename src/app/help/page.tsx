@@ -37,7 +37,7 @@ const CATEGORIES = [
 
 const TRENDING = [
   { cat: "Payments & refunds", title: "When will my refund show up on my card?", desc: "Card refunds take 2–5 business days. Bank transfers usually settle next business day. We send a receipt the moment we issue the refund.", views: "4,128" },
-  { cat: "Bookings & sessions", title: "My provider hasn't confirmed my booking · what now?", desc: "Confirmations usually come within 4 hours. If 12+ have passed with no response, your card is released automatically — no charge to you.", views: "3,402" },
+  { cat: "Bookings & sessions", title: "My provider hasn't confirmed my booking · what now?", desc: "Confirmations usually come within 4 hours. If 12+ have passed with no response, your card is released automatically, no charge to you.", views: "3,402" },
   { cat: "Account", title: "Two‑factor codes aren't arriving by SMS", desc: "Three things to try, in order: switch to authenticator app, check carrier filters, change your country code. The walkthrough sorts 92% of cases.", views: "2,948" },
   { cat: "QR check‑in", title: "Streak broke even though I checked in · why?", desc: "Time zones. Streaks are calculated in your home time zone, not the gym's. If you travel, switch your time zone in settings before midnight local.", views: "2,184" },
   { cat: "Provider onboarding", title: "Why hasn't my listing been approved yet?", desc: "Average approval time is 36 hours. The most common reason for delay is a low‑resolution business document. Re‑upload at 1200×1500 or higher.", views: "1,866" },

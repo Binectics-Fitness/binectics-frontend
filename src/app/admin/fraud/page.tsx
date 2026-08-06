@@ -18,7 +18,7 @@ export default function AdminFraudPage() {
         title={"Fraud"}
         subtitle={"Fraud signals and case management"}
         pendingTitle={"Fraud monitoring is coming soon"}
-        pendingBody={"Automated fraud signals, case queues, and account actions will appear here once the fraud subsystem is built. This page previously showed fabricated cases \u2014 no real signals exist yet."}
+        pendingBody={"Automated fraud signals, case queues, and account actions will appear here once the fraud subsystem is built. This page previously showed fabricated cases, no real signals exist yet."}
       />
     </AdminDashboardShell>
   );

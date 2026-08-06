@@ -380,7 +380,7 @@ export default function DietitianCalendarPage() {
                     : day.date.getDate()}
                 </div>
                 <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-4)" }}>
-                  {count === 0 ? "—" : `${count} session${count === 1 ? "" : "s"}`}
+                  {count === 0 ? "-" : `${count} session${count === 1 ? "" : "s"}`}
                 </div>
               </div>
             );

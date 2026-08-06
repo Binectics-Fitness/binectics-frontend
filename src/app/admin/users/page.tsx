@@ -149,29 +149,29 @@ export default function AdminUsersPage() {
         {[
           {
             label: "Total users",
-            value: loading ? "—" : (metrics?.conversion.totalUsers.toLocaleString() ?? "0"),
+            value: loading ? "-" : (metrics?.conversion.totalUsers.toLocaleString() ?? "0"),
             delta: "all platform members",
           },
           {
             label: "Paying users",
-            value: loading ? "—" : (metrics?.conversion.payingUsers.toLocaleString() ?? "0"),
+            value: loading ? "-" : (metrics?.conversion.payingUsers.toLocaleString() ?? "0"),
             delta:
               metrics?.conversion.conversionRate != null
                 ? `${(metrics.conversion.conversionRate * 100).toFixed(1)}% conversion`
-                : "—",
+                : "-",
           },
           {
             label: "Verified providers",
-            value: loading ? "—" : (metrics?.verifiedProviders.total.toLocaleString() ?? "0"),
+            value: loading ? "-" : (metrics?.verifiedProviders.total.toLocaleString() ?? "0"),
             delta: `${metrics?.verifiedProviders.distinctCountries ?? 0} countries`,
           },
           {
             label: "Active subscriptions",
-            value: loading ? "—" : (metrics?.subscriptions.activeCount.toLocaleString() ?? "0"),
+            value: loading ? "-" : (metrics?.subscriptions.activeCount.toLocaleString() ?? "0"),
             delta:
               metrics?.subscriptions.totalRevenueUsdMinor != null
                 ? `${formatCurrency(minorToMajor(metrics.subscriptions.totalRevenueUsdMinor), "USD")} total`
-                : "—",
+                : "-",
           },
         ].map((kpi) => (
           <div

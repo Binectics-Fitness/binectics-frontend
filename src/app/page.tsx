@@ -10,9 +10,9 @@ import DashboardMosaic from "@/components/DashboardMosaic";
 import LandingPricing from "@/components/LandingPricing";
 
 export const metadata: Metadata = {
-  title: "Binectics — the copilot your fitness business runs on",
+  title: "Binectics, the copilot your fitness business runs on",
   description:
-    "AI-drafted client summaries, weekly reports, and program updates — plus payments in 8 currencies and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
+    "AI-drafted client summaries, weekly reports, and program updates, plus payments in 8 currencies and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
   alternates: { canonical: "/" },
 };
 
@@ -31,18 +31,18 @@ const jsonLd = {
 };
 
 const faqItems = [
-  { q: "What is Binectics and who is it for?", a: "Binectics is the platform fitness professionals run their business on. Trainers and dietitians get an AI copilot that drafts client summaries, weekly reports, and plan updates from the data clients already log — plus payments, scheduling, and a verified marketplace listing. Gyms get the full operations suite; members get one tab to find providers, subscribe, and check in." },
-  { q: "What does the AI copilot actually draft?", a: "Client check-in summaries, weekly progress reports, program adjustment suggestions, intake-form-to-plan drafts, and nudge messages for clients going quiet. Everything is generated only from your own clients’ data — journals, weight logs, meal feedback, and check-ins." },
+  { q: "What is Binectics and who is it for?", a: "Binectics is the platform fitness professionals run their business on. Trainers and dietitians get an AI copilot that drafts client summaries, weekly reports, and plan updates from the data clients already log, plus payments, scheduling, and a verified marketplace listing. Gyms get the full operations suite; members get one tab to find providers, subscribe, and check in." },
+  { q: "What does the AI copilot actually draft?", a: "Client check-in summaries, weekly progress reports, program adjustment suggestions, intake-form-to-plan drafts, and nudge messages for clients going quiet. Everything is generated only from your own clients’ data, journals, weight logs, meal feedback, and check-ins." },
   { q: "Does the AI send anything to my clients directly?", a: "No. Every AI output is a draft. Nothing reaches a client until you review it, edit it if you want, and press send. Sent reports carry an “AI-assisted, reviewed by you” note, and there is a full audit trail." },
   { q: "Is my client data used to train AI models?", a: "No. Generation runs only on your own clients’ data, scoped to your account, and is never used to train models or shared across providers without explicit opt-in. Voice notes are deleted after transcription." },
-  { q: "How is Binectics different from a class-booking app?", a: "Class-booking apps point a member at one studio. Binectics is the rails underneath: an AI copilot for client work, payments, check-ins, client health, journals, plans, and reviews — for gyms, trainers, and dietitians, in one place." },
-  { q: "Which countries and currencies are supported?", a: "Launching with payment support in 50+ countries and eight currencies (USD, EUR, GBP, NGN, KES, ZAR, AED, INR). Payments route automatically — Stripe for USD / EUR / GBP / AED / INR, Paystack for NGN / KES / ZAR, and Flutterwave across NGN / GHS / KES / TZS / UGX." },
+  { q: "How is Binectics different from a class-booking app?", a: "Class-booking apps point a member at one studio. Binectics is the rails underneath: an AI copilot for client work, payments, check-ins, client health, journals, plans, and reviews, for gyms, trainers, and dietitians, in one place." },
+  { q: "Which countries and currencies are supported?", a: "Launching with payment support in 50+ countries and eight currencies (USD, EUR, GBP, NGN, KES, ZAR, AED, INR). Payments route automatically, Stripe for USD / EUR / GBP / AED / INR, Paystack for NGN / KES / ZAR, and Flutterwave across NGN / GHS / KES / TZS / UGX." },
   { q: "When can I start?", a: "Early access is open now. Founding-cohort providers get hands-on onboarding, early-access pricing that stays locked after launch, and a direct line to the team building the copilot. General availability follows in 2026." },
-  { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents — business registration, certifications, identity — and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
-  { q: "Is my data secure?", a: "All data is encrypted at rest and in transit. Payment credentials are handled by PCI-compliant processors (Stripe, Paystack, Flutterwave) — we never store card numbers. Infrastructure runs on Azure with SOC 2-aligned controls, automated backups, and region-isolated databases." },
-  { q: "Can I cancel or downgrade anytime?", a: "Yes. Downgrade from Studio to Starter at any time — your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Enterprise plans follow the terms in your service agreement." },
-  { q: "Can I bring my own payment processor?", a: "Yes — Studio and Enterprise plans let providers configure their own Stripe, Paystack, or Flutterwave keys. Payments settle directly to your account; Binectics never holds funds." },
-  { q: "How do team and multi-location plans work?", a: "Gym owners create an organization, invite staff with role and permission scopes, and manage multiple listings — each with its own facility details, amenities, gallery, and documents. Assignment rules route new clients to the right staff automatically." },
+  { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents, business registration, certifications, identity, and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
+  { q: "Is my data secure?", a: "All data is encrypted at rest and in transit. Payment credentials are handled by PCI-compliant processors (Stripe, Paystack, Flutterwave), we never store card numbers. Infrastructure runs on Azure with SOC 2-aligned controls, automated backups, and region-isolated databases." },
+  { q: "Can I cancel or downgrade anytime?", a: "Yes. Downgrade from Studio to Starter at any time, your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Enterprise plans follow the terms in your service agreement." },
+  { q: "Can I bring my own payment processor?", a: "Yes, Studio and Enterprise plans let providers configure their own Stripe, Paystack, or Flutterwave keys. Payments settle directly to your account; Binectics never holds funds." },
+  { q: "How do team and multi-location plans work?", a: "Gym owners create an organization, invite staff with role and permission scopes, and manage multiple listings, each with its own facility details, amenities, gallery, and documents. Assignment rules route new clients to the right staff automatically." },
 ];
 
 const faqJsonLd = {
@@ -104,7 +104,7 @@ export default function Home() {
             <p className="text-[16px] sm:text-[19px] text-fg-2 max-w-[580px] mt-5 sm:mt-7 leading-relaxed">
               Whether you coach ten clients or run three locations, Binectics drafts the
               client summaries, weekly reports, and program updates from the data your
-              clients already log — and runs your payments in 8 currencies. You review,
+              clients already log, and runs your payments in 8 currencies. You review,
               send, and get back to the floor.
             </p>
 
@@ -163,7 +163,7 @@ export default function Home() {
             <p className="text-[15px] sm:text-[17px] text-fg-2 max-w-[540px] leading-relaxed">
               Built for the professionals first. Trainers and dietitians get a copilot that drafts
               the busywork; gyms get the full operations suite with copilot seats for every staff
-              trainer; members get one tab for everything — and every role works in the same calm chrome.
+              trainer; members get one tab for everything, and every role works in the same calm chrome.
             </p>
           </div>
         </ScrollReveal>
@@ -171,8 +171,8 @@ export default function Home() {
         <ScrollReveal stagger staggerInterval={80} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-border rounded-(--r-3) overflow-hidden bg-bg">
           {[
             { accent: "bg-trainer", micro: "Trainer", title: "Coach more humans, less inbox.", desc: "The copilot drafts check-in summaries, weekly reports, and program tweaks from your clients\u2019 data. You review, send, and coach.", bullets: ["AI client summaries & weekly reports", "Workout plan library", "Client invites & journals", "Earnings dashboard"] },
-            { accent: "bg-dietitian", micro: "Dietitian", title: "Plans, meals, progress — connected.", desc: "Intake forms become draft meal plans. Client feedback and weight data become drafted adjustments — no spreadsheets, no blank pages.", bullets: ["Intake → draft meal plan", "Meal feedback & ratings", "Diet plans with PDF support", "Client weight tracking"] },
-            { accent: "bg-gym", micro: "Gym owner", title: "Run the floor and the books.", desc: "Multi-location management, plans, members, staff schedules, revenue dashboards — and copilot seats for your staff trainers.", bullets: ["Multi-location facilities", "Plans, members, classes", "Staff, roles & copilot seats", "Revenue + check-in analytics"] },
+            { accent: "bg-dietitian", micro: "Dietitian", title: "Plans, meals, progress, connected.", desc: "Intake forms become draft meal plans. Client feedback and weight data become drafted adjustments, no spreadsheets, no blank pages.", bullets: ["Intake → draft meal plan", "Meal feedback & ratings", "Diet plans with PDF support", "Client weight tracking"] },
+            { accent: "bg-gym", micro: "Gym owner", title: "Run the floor and the books.", desc: "Multi-location management, plans, members, staff schedules, revenue dashboards, and copilot seats for your staff trainers.", bullets: ["Multi-location facilities", "Plans, members, classes", "Staff, roles & copilot seats", "Revenue + check-in analytics"] },
             { accent: "bg-ink", micro: "Member", title: "Find a coach. Show up. Repeat.", desc: "Browse verified providers, subscribe in your own currency, check in by QR, and watch your streak count itself.", bullets: ["QR check-in & streaks", "Weight, meal, activity logs", "Read your coach’s journal", "Verified providers, local pricing"] },
           ].map((role, i) => (
             <div key={role.micro} className={`p-6 sm:p-7 flex flex-col gap-3.5 min-h-60 sm:min-h-80 ${i < 3 ? "border-b sm:border-b-0 sm:border-r border-border" : ""} ${i === 1 ? "lg:border-r" : ""}`}>
@@ -216,7 +216,7 @@ export default function Home() {
               The dashboard is <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>calm</em>. The work isn&apos;t.
             </h2>
             <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed">
-              Dense data, flat surfaces, one signal color — and a copilot that drafts the busywork.
+              Dense data, flat surfaces, one signal color, and a copilot that drafts the busywork.
             </p>
           </div>
         </ScrollReveal>
@@ -235,7 +235,7 @@ export default function Home() {
               How it works
             </h2>
             <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed max-w-120 mx-auto">
-              Bring your clients, let the data flow in, review the drafts — all in one tab.
+              Bring your clients, let the data flow in, review the drafts, all in one tab.
             </p>
           </div>
         </ScrollReveal>
@@ -243,8 +243,8 @@ export default function Home() {
         <ScrollReveal stagger staggerInterval={100} className="grid grid-cols-1 sm:grid-cols-3 border border-border rounded-(--r-3) overflow-hidden bg-bg">
           {[
             { num: "Step 01", title: "Connect", desc: "List your practice or bulk-invite your existing roster. Verified listings bring new client leads; your current clients join in minutes." },
-            { num: "Step 02", title: "Coach", desc: "Clients check in by QR and log weight, meals, and workouts. Every data point lands in their profile — no spreadsheets, no chasing." },
-            { num: "Step 03", title: "Review & send", desc: "Each week the copilot drafts client reports and program tweaks. You edit, approve, send — and plans bill in each client’s currency." },
+            { num: "Step 02", title: "Coach", desc: "Clients check in by QR and log weight, meals, and workouts. Every data point lands in their profile, no spreadsheets, no chasing." },
+            { num: "Step 03", title: "Review & send", desc: "Each week the copilot drafts client reports and program tweaks. You edit, approve, send, and plans bill in each client’s currency." },
           ].map((step, i) => (
             <div key={step.title} className={`p-6 sm:p-7 pt-7 sm:pt-8 flex flex-col gap-4 ${i < 2 ? "border-b sm:border-b-0 sm:border-r border-border" : ""}`}>
               <div className="font-mono text-[11px] uppercase tracking-[0.05em] text-fg-4">{step.num}</div>
@@ -320,7 +320,7 @@ export default function Home() {
               <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-1.5" style={{ color: "var(--fg-3)" }}>data points behind this draft</div>
             </div>
             <div>
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mb-3" style={{ color: "var(--fg-3)" }}>Sample — weekly check-in summary</div>
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mb-3" style={{ color: "var(--fg-3)" }}>Sample, weekly check-in summary</div>
               <p className="text-[16px] sm:text-[18px] leading-[1.65] text-fg-2 mb-5">
                 Tunde logged 4 of 5 planned sessions this week. Squat working weight is up 2.5 kg,
                 but sleep dipped Thursday and the journal mentions work stress. Suggest keeping
@@ -402,7 +402,7 @@ export default function Home() {
               Transparent pricing.
             </h2>
             <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed">
-              Start free with three AI summaries a month. Upgrade when the drafts win you over — local pricing in 8 currencies, no lock-ins. Founding-cohort pricing stays locked after launch.
+              Start free with three AI summaries a month. Upgrade when the drafts win you over, local pricing in 8 currencies, no lock-ins. Founding-cohort pricing stays locked after launch.
             </p>
           </div>
         </ScrollReveal>
@@ -428,7 +428,7 @@ export default function Home() {
 
         <div className="text-center mt-6">
           <p className="font-mono text-[11px] text-fg-3 tracking-[0.02em]">
-            Still have questions? Reach us at help@binectics.com — you&apos;ll hear back from the team building the copilot.
+            Still have questions? Reach us at help@binectics.com, you&apos;ll hear back from the team building the copilot.
           </p>
         </div>
       </section>
@@ -444,7 +444,7 @@ export default function Home() {
           </h2>
           <div className="flex flex-col gap-4 items-start">
             <p className="text-[15px] sm:text-[16px] max-w-[36ch] leading-relaxed m-0" style={{ color: "oklch(0.78 0.005 85)" }}>
-              Bring your clients, connect payouts, and let the copilot handle the busywork. Free to start — your first three summaries are included.
+              Bring your clients, connect payouts, and let the copilot handle the busywork. Free to start, your first three summaries are included.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <Link

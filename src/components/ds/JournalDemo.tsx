@@ -21,21 +21,21 @@ const NOTES: NoteEntry[] = [
     typeColor: "var(--signal-ink)",
     typeBg: "var(--signal-soft)",
     date: "Mon 18 May · 08:30",
-    text: "Squatted 90kg x 3 x 4 — smooth. Added 2.5kg vs last week. Hip shift is almost gone. Next session: test 92.5kg for a double.",
+    text: "Squatted 90kg x 3 x 4, smooth. Added 2.5kg vs last week. Hip shift is almost gone. Next session: test 92.5kg for a double.",
   },
   {
     type: "Programming",
     typeColor: "var(--gym)",
     typeBg: "color-mix(in oklch, var(--gym) 12%, var(--bg))",
     date: "Sun 17 May",
-    text: "Updated block 3 — shifted to 3x5 on bench, added rack pulls. Deadlift groove improving but still losing position at the knee.",
+    text: "Updated block 3, shifted to 3x5 on bench, added rack pulls. Deadlift groove improving but still losing position at the knee.",
   },
   {
     type: "Health flag",
     typeColor: "var(--danger, oklch(0.55 0.20 25))",
     typeBg: "oklch(0.95 0.03 25)",
     date: "Wed 14 May · 10:00",
-    text: "Left shoulder clicking on overhead press — no pain but aware. Monitor. If it persists 2+ weeks, refer for imaging.",
+    text: "Left shoulder clicking on overhead press, no pain but aware. Monitor. If it persists 2+ weeks, refer for imaging.",
     warn: true,
   },
   {
@@ -43,7 +43,7 @@ const NOTES: NoteEntry[] = [
     typeColor: "var(--signal-ink)",
     typeBg: "var(--signal-soft)",
     date: "Mon 12 May · 08:30",
-    text: "Deload week — 80% of working weights. Felt strong. Bodyweight stable at 76.2kg. Sleep improving since cutting caffeine after 2pm.",
+    text: "Deload week, 80% of working weights. Felt strong. Bodyweight stable at 76.2kg. Sleep improving since cutting caffeine after 2pm.",
   },
 ];
 

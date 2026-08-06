@@ -5,9 +5,9 @@ import { DietitianDemo } from "@/components/ds/DietitianDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For Dietitians — Binectics",
+  title: "For Dietitians, Binectics",
   description:
-    "Credential-verified dietitian profiles, branded PDF meal plans, a 12,842-food database with West African staples, and client adherence tracking — all on one platform.",
+    "Credential-verified dietitian profiles, branded PDF meal plans, a 12,842-food database with West African staples, and client adherence tracking, all on one platform.",
   keywords:
     "dietitian platform, meal plan software, nutrition practice management, client adherence tracking, food database Nigeria, dietitian verification, clinical nutrition software",
 };
@@ -34,7 +34,7 @@ const FEATURES = [
   },
   {
     title: "Food database",
-    desc: "1,840 Nigerian FCDB entries, South African, Kenyan, and Indian staples. Jollof rice, ugali, dhal — accurate macros verified against government composition tables, not crowd-sourced guesswork.",
+    desc: "1,840 Nigerian FCDB entries, South African, Kenyan, and Indian staples. Jollof rice, ugali, dhal, accurate macros verified against government composition tables, not crowd-sourced guesswork.",
     stat: "1,840 West African entries",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>,
   },
@@ -141,7 +141,7 @@ export default function ForDietitiansPage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Client adherence, meal plans, and action queue — all in one place.
+          Client adherence, meal plans, and action queue, all in one place.
           Click a tab to explore.
         </p>
         <DietitianDemo />
@@ -197,7 +197,7 @@ export default function ForDietitiansPage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Six capabilities designed around how dietitians actually work —
+          Six capabilities designed around how dietitians actually work -
           not how generic SaaS thinks you should.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -299,7 +299,7 @@ export default function ForDietitiansPage() {
             style={{ color: "var(--ink)" }}
           >
             An intake form arrives as a draft meal plan built around the
-            foods your client actually eats — shawarma and biryani included.
+            foods your client actually eats, shawarma and biryani included.
             You refine portions and send it the same day.
           </blockquote>
           <div
@@ -359,7 +359,7 @@ export default function ForDietitiansPage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-6"
           style={{ color: "var(--fg-2)" }}
         >
-          List your practice for free. We charge 4.9% on transactions —
+          List your practice for free. We charge 4.9% on transactions -
           nothing else. Consultation fees, plan sales, and subscriptions
           all included.
         </p>

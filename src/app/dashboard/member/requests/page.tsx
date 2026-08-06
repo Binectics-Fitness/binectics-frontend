@@ -94,7 +94,7 @@ function MemberRequestsContent() {
         await refetchAll();
         toast.success(
           approved
-            ? "Request accepted — they can now see your progress."
+            ? "Request accepted, they can now see your progress."
             : "Request declined.",
         );
       } else {

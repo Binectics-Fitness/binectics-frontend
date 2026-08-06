@@ -5,7 +5,7 @@ import { CurrencyDemo } from "@/components/ds/CurrencyDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Multi-Currency Payments — Binectics",
+  title: "Multi-Currency Payments, Binectics",
   description:
     "Accept payments in 14+ currencies through Stripe, Paystack, Flutterwave, and Razorpay. Clients pay locally, you receive in your settlement currency.",
   keywords:
@@ -26,7 +26,7 @@ const WORKFLOW = [
   {
     step: "03",
     title: "You receive in your currency",
-    desc: "Settlement hits your bank account in 1–3 business days, in your local currency. Platform fee already deducted. One clean number — no reconciliation needed.",
+    desc: "Settlement hits your bank account in 1–3 business days, in your local currency. Platform fee already deducted. One clean number, no reconciliation needed.",
   },
 ];
 
@@ -76,7 +76,7 @@ const REGIONS = [
 
 const FEATURES = [
   { title: "Auto currency detection", desc: "We detect the payer's country from their IP and browser locale. Prices display in their local currency with no manual selection needed." },
-  { title: "Split settlement", desc: "Platform fee is auto-deducted before settlement. You see the gross, the fee, and the net — all on one payout line." },
+  { title: "Split settlement", desc: "Platform fee is auto-deducted before settlement. You see the gross, the fee, and the net, all on one payout line." },
   { title: "Payout dashboard", desc: "Every payout listed with date, amount, bank, and status. Filter by period, export to CSV, or reconcile against your accounting software." },
   { title: "Invoice generation", desc: "Automatic branded invoices for every transaction. VAT number, tax breakdown, and provider details included. PDF download or email delivery." },
   { title: "Tax-ready exports", desc: "Quarterly and annual revenue reports formatted for your local tax authority. SARS, HMRC, IRS, and FIRS templates available." },
@@ -158,7 +158,7 @@ export default function MultiCurrencyPage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Pick a country to see how the checkout adapts — currency,
+          Pick a country to see how the checkout adapts, currency,
           gateway, and payment methods all change automatically.
         </p>
         <CurrencyDemo />

@@ -133,7 +133,7 @@ function CheckInScanContent() {
             </h1>
             <p className="mt-2 text-[15px]" style={{ color: "var(--fg-2)" }}>
               This link can&rsquo;t check you in at{" "}
-              <strong>{outcome.gymName}</strong> — check-ins need a live scan
+              <strong>{outcome.gymName}</strong>, check-ins need a live scan
               of the QR at the front desk, which refreshes every minute.
             </p>
             <div className="mt-8 flex flex-col gap-2">
@@ -187,7 +187,7 @@ function CheckInScanContent() {
             </h1>
             <p className="mt-2 text-[15px]" style={{ color: "var(--fg-2)" }}>
               You&rsquo;ve already checked in at <strong>{outcome.gymName}</strong>{" "}
-              today — your streak is safe. Come back tomorrow!
+              today, your streak is safe. Come back tomorrow!
             </p>
             <div className="mt-8">
               <Link href="/dashboard/member" className="btn-ghost-v2" style={{ textDecoration: "none" }}>

@@ -408,7 +408,7 @@ function OnboardingContent() {
       const dismissed = await onboardingService.dismiss();
       if (!dismissed.success) {
         toast.error(
-          "We couldn't save your onboarding progress — you may be asked again next time.",
+          "We couldn't save your onboarding progress, you may be asked again next time.",
         );
       }
       // Refresh from API so localStorage has the promoted role (e.g. USER→GYM_OWNER)
@@ -649,7 +649,7 @@ function OnboardingContent() {
         {/* Bottom nav bar */}
         <div className="ob-nav">
           <div className="ob-progress" style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", color: "var(--fg-3)", letterSpacing: "0.05em" }}>
-            Progress <strong style={{ color: "var(--ink)", fontWeight: 500 }}>· {progress}%</strong> — about {minsLeft} min left
+            Progress <strong style={{ color: "var(--ink)", fontWeight: 500 }}>· {progress}%</strong>, about {minsLeft} min left
           </div>
           <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
             <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater || uploadCount > 0}>
@@ -741,7 +741,7 @@ function OnboardingContent() {
         <div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 10 }}>Why we ask</div>
           <p style={{ fontSize: "12.5px", color: "var(--fg-3)", lineHeight: 1.6 }}>
-            Members see a verified badge on your profile only after ID and certification are confirmed by our team. Verified providers earn 3.4x more trust from reviewers — so we move quickly. Most are approved in under 48 hours.
+            Members see a verified badge on your profile only after ID and certification are confirmed by our team. Verified providers earn 3.4x more trust from reviewers, so we move quickly. Most are approved in under 48 hours.
           </p>
         </div>
       </aside>

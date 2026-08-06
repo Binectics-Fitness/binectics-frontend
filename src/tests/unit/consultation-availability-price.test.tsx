@@ -112,7 +112,7 @@ const savedPrice = () => {
   };
 };
 
-describe("ConsultationAvailabilityManager — session price round-trip", () => {
+describe("ConsultationAvailabilityManager, session price round-trip", () => {
   it("saves an untouched prefilled price back EXACTLY as it was loaded", async () => {
     // 199 kobo displays as "₦2". Re-parsing that string on save turned the
     // price into 200 — a silent 0.5% raise every time the provider pressed

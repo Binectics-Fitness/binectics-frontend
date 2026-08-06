@@ -211,7 +211,7 @@ function MemberHomeContent() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 14 }}>
         <Kpi
           label="Streak"
-          value={loading ? "—" : `${snapshot.checkins?.current_streak_days ?? 0} days`}
+          value={loading ? "-" : `${snapshot.checkins?.current_streak_days ?? 0} days`}
           delta={
             snapshot.checkins?.has_checked_in_today
               ? "Checked in today"
@@ -223,7 +223,7 @@ function MemberHomeContent() {
         />
         <Kpi
           label="Total check-ins"
-          value={loading ? "—" : String(snapshot.checkins?.total_check_ins ?? 0)}
+          value={loading ? "-" : String(snapshot.checkins?.total_check_ins ?? 0)}
           delta={formatLastCheckIn(snapshot.checkins?.last_check_in_at)}
           deltaColor="var(--fg-3)"
         />
@@ -231,7 +231,7 @@ function MemberHomeContent() {
           label="Next session"
           value={
             loading
-              ? "—"
+              ? "-"
               : snapshot.nextBooking
                 ? formatStartDate(snapshot.nextBooking.startsAt)
                 : "None booked"
@@ -250,7 +250,7 @@ function MemberHomeContent() {
           label="Latest weight"
           value={
             loading
-              ? "—"
+              ? "-"
               : snapshot.latestWeight
                 ? `${snapshot.latestWeight.weight_kg} kg`
                 : "No log yet"

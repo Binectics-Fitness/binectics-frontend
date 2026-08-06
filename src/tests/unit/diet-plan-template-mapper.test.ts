@@ -103,7 +103,7 @@ describe("templateToClientPlanPayload", () => {
     expect(template.meals[1].foods).toEqual(["oats"]);
   });
 
-  it("throws for document-based plans — their content is not copyable", () => {
+  it("throws for document-based plans, their content is not copyable", () => {
     expect(() =>
       templateToClientPlanPayload({ ...template, delivery_type: DietPlanDeliveryType.DOCUMENT }),
     ).toThrow(/document/i);

@@ -27,11 +27,11 @@ const STEPS = [
   {
     step: "03",
     title: "Point your camera at the gym's QR code",
-    desc: "Hold your phone steady and frame the QR code displayed at the gym entrance. The scanner auto-detects it — no need to press anything.",
+    desc: "Hold your phone steady and frame the QR code displayed at the gym entrance. The scanner auto-detects it, no need to press anything.",
   },
   {
     step: "04",
-    title: "You're checked in — your streak updates automatically",
+    title: "You're checked in, your streak updates automatically",
     desc: "A confirmation screen appears instantly. Your attendance streak, visit history, and gym analytics all update in real time.",
   },
 ];
@@ -39,15 +39,15 @@ const STEPS = [
 const FAQS = [
   {
     q: "What if the QR code won't scan?",
-    a: "Make sure your camera lens is clean and you have adequate lighting, and hold the phone steady about 20cm from the screen. If it still won't scan, ask the front desk — they can refresh the kiosk display.",
+    a: "Make sure your camera lens is clean and you have adequate lighting, and hold the phone steady about 20cm from the screen. If it still won't scan, ask the front desk, they can refresh the kiosk display.",
   },
   {
     q: "Can I check in from home, or from a photo of the QR?",
-    a: "No — and that's deliberate. The QR refreshes every minute, so photos, screenshots, bookmarked links and shared codes stop working within minutes. Only a live scan at the gym counts, which keeps streaks and attendance honest.",
+    a: "No, and that's deliberate. The QR refreshes every minute, so photos, screenshots, bookmarked links and shared codes stop working within minutes. Only a live scan at the gym counts, which keeps streaks and attendance honest.",
   },
   {
     q: "Do I need the app open to scan?",
-    a: "No. Your phone's regular camera app works — scanning the QR opens the check-in page in your browser. You'll need to be signed in to your Binectics account.",
+    a: "No. Your phone's regular camera app works, scanning the QR opens the check-in page in your browser. You'll need to be signed in to your Binectics account.",
   },
 ];
 

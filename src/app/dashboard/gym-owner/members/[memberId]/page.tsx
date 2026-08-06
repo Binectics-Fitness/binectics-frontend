@@ -30,14 +30,14 @@ function getMemberEmail(sub: MembershipSubscription): string {
   if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
     return sub.member_user_id.email;
   }
-  return "—";
+  return "-";
 }
 
 function getPlanName(sub: MembershipSubscription): string {
   if (typeof sub.plan_id === "object" && sub.plan_id !== null) {
     return sub.plan_id.name;
   }
-  return "—";
+  return "-";
 }
 
 function getInitials(name: string): string {
@@ -143,7 +143,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     { label: "Plan", value: planName },
     // The hint spells out what the state means for access and for the bill —
     // "Suspended" alone does not tell an operator that paid time keeps running.
-    { label: "Status", value: `${statusLabel} — ${statusMeta.hint}` },
+    { label: "Status", value: `${statusLabel}, ${statusMeta.hint}` },
     {
       label: "Started",
       value: fmtDate(subscription.start_date),
@@ -158,7 +158,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     },
     {
       label: "Payment reference",
-      value: subscription.payment_reference ?? "—",
+      value: subscription.payment_reference ?? "-",
     },
     {
       label: "Enrolled",

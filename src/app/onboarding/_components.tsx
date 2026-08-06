@@ -281,7 +281,7 @@ export function UploadZone({
       const publicId = res.data?.publicId ?? "";
       onUpload({ url, publicId });
     } catch {
-      setError("Upload failed — please try again");
+      setError("Upload failed, please try again");
     } finally {
       setUploading(false);
       onUploadEnd?.();
@@ -303,7 +303,7 @@ export function UploadZone({
       <button
         type="button"
         role="button"
-        aria-label={isDone ? `${title} — uploaded` : `Upload ${title}`}
+        aria-label={isDone ? `${title}, uploaded` : `Upload ${title}`}
         disabled={uploading}
         onClick={handleClick}
         style={{

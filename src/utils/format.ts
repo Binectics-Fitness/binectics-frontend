@@ -92,7 +92,7 @@ export function formatDateShort(
  * Uses a real minus sign (−) for negative values.
  */
 export function signedChange(value: number | undefined | null): string {
-  if (value === undefined || value === null) return "—";
+  if (value === undefined || value === null) return "-";
   if (value > 0) return `+${value}`;
   if (value < 0) return `−${Math.abs(value)}`;
   return "0";

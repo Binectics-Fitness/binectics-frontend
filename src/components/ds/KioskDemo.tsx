@@ -48,7 +48,7 @@ const MEMBERS = [
     streakLabel: "first day",
     nextTime: "6:00",
     nextLine: "Beginner Strength",
-    nextSub: "with Sarah — she’s expecting you",
+    nextSub: "with Sarah, she’s expecting you",
     nextBadge: "First class",
     welcome: "Welcome to Iron Lab. We are glad you are here.",
     flavor: "first",

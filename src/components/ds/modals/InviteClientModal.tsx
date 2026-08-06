@@ -217,7 +217,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
               }}
               placeholder="Select a plan…"
               options={plans.map((p) => ({
-                label: `${p.name} — ${formatCurrency(minorToMajor(p.price_minor), p.currency)}`,
+                label: `${p.name}, ${formatCurrency(minorToMajor(p.price_minor), p.currency)}`,
                 value: p._id,
               }))}
             />

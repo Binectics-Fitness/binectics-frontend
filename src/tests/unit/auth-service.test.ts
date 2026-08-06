@@ -64,7 +64,7 @@ describe("authService.logout", () => {
     expect(storage.clearAuthStorage).toHaveBeenCalledOnce();
   });
 
-  it("always fires the POST — does not skip when no stored token state exists", async () => {
+  it("always fires the POST, does not skip when no stored token state exists", async () => {
     const fetchSpy = mockFetch(200, { statusCode: 200, message: ["Logged out successfully"] });
 
     await authService.logout();

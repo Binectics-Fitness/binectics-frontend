@@ -43,7 +43,7 @@ function memberName(sub: MembershipSubscription): string {
 
 function planName(sub: MembershipSubscription): string {
   if (typeof sub.plan_id === "object" && sub.plan_id !== null) return sub.plan_id.name;
-  return "—";
+  return "-";
 }
 
 function initials(name: string): string {
@@ -142,7 +142,7 @@ function GymOverviewContent() {
     ? [
         { label: "Revenue · 30d", value: formatAmount(stats.revenue_month), sub: `${formatAmount(stats.revenue_today)} today` },
         { label: "Active members", value: String(stats.active_members), sub: `${stats.month_check_ins} check-ins · 30d` },
-        { label: "Check-ins · today", value: String(stats.today_check_ins), sub: attendance != null ? `${attendance}% attendance` : "—" },
+        { label: "Check-ins · today", value: String(stats.today_check_ins), sub: attendance != null ? `${attendance}% attendance` : "-" },
         { label: "Avg rating", value: stats.average_rating.toFixed(1), sub: `${stats.review_count} reviews` },
       ]
     : [];
@@ -193,9 +193,9 @@ function GymOverviewContent() {
               <CardHead title="Revenue" sub="Settled to date" />
               <div className="flex flex-col">
                 {[
-                  { label: "Today", value: stats ? formatAmount(stats.revenue_today) : "—" },
-                  { label: "This week", value: stats ? formatAmount(stats.revenue_week) : "—" },
-                  { label: "This month", value: stats ? formatAmount(stats.revenue_month) : "—" },
+                  { label: "Today", value: stats ? formatAmount(stats.revenue_today) : "-" },
+                  { label: "This week", value: stats ? formatAmount(stats.revenue_week) : "-" },
+                  { label: "This month", value: stats ? formatAmount(stats.revenue_month) : "-" },
                 ].map((row, i, arr) => (
                   <div key={row.label} className="flex justify-between px-4.5 py-3.5" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
                     <span className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>{row.label}</span>
@@ -277,7 +277,7 @@ function GymOverviewContent() {
                             </span>
                           </td>
                           <td className="px-4.5 py-3 font-mono text-[12px]" style={{ borderBottom: border, color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{fmtDate(sub.created_at)}</td>
-                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid_minor != null ? fmtMoney(minorToMajor(sub.amount_paid_minor), sub.currency ?? currentOrg?.currency) : "—"}</td>
+                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid_minor != null ? fmtMoney(minorToMajor(sub.amount_paid_minor), sub.currency ?? currentOrg?.currency) : "-"}</td>
                         </tr>
                       );
                     })}

@@ -42,7 +42,7 @@ function startOfYear(): Date {
 }
 
 function formatShort(d: Date | null, locale: string): string {
-  if (!d) return "—";
+  if (!d) return "-";
   return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 

@@ -177,7 +177,7 @@ function PlanFormModal({
               className="rounded-(--r-2) px-3.5 py-3 text-[12.5px]"
               style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-3)", lineHeight: 1.5 }}
             >
-              This is a document-based plan — its meal content lives in the attached file, so only the details above and notes below can be edited here.
+              This is a document-based plan, its meal content lives in the attached file, so only the details above and notes below can be edited here.
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
@@ -194,7 +194,7 @@ function PlanFormModal({
               </div>
               {form.meals.length === 0 && (
                 <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-                  No meals yet — you can add them now or later.
+                  No meals yet, you can add them now or later.
                 </div>
               )}
               {form.meals.map((meal, i) => (
@@ -228,7 +228,7 @@ function PlanFormModal({
                     <input
                       value={meal.foods}
                       onChange={(e) => setMeal(i, { foods: e.target.value })}
-                      placeholder="Foods, comma-separated — oats, banana, almond milk"
+                      placeholder="Foods, comma-separated, oats, banana, almond milk"
                       className="h-9 rounded-(--r-2) px-3 text-[13px]"
                       style={{ ...fieldStyle, background: "var(--bg)" }}
                     />
@@ -452,13 +452,13 @@ function MealPlanCard({
         <div className="py-3 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
           <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Meals</div>
           <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-            {isDocument ? "—" : plan.meals.length}
+            {isDocument ? "-" : plan.meals.length}
           </div>
         </div>
         <div className="py-3 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
           <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Calories</div>
           <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-            {calories != null ? calories.toLocaleString() : "—"}
+            {calories != null ? calories.toLocaleString() : "-"}
           </div>
         </div>
         <div className="py-3 px-5.5">
@@ -735,7 +735,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
 
       {!loading && !error && counts.Assigned > 0 && (
         <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-          Assigned plans belong to a client — open the client from{" "}
+          Assigned plans belong to a client, open the client from{" "}
           <Link href="/dashboard/dietitian/clients" className="underline" style={{ color: "var(--ink)" }}>Clients</Link>{" "}
           to manage them in context.
         </p>

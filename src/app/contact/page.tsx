@@ -67,7 +67,7 @@ export default function ContactPage() {
           Get in <em className="font-serif font-normal italic">touch</em>.
         </h1>
         <p className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5" style={{ color: "var(--fg-2)" }}>
-          Whether you&apos;re a gym owner exploring the platform, a trainer with a feature request, or press looking for a quote &mdash; we&apos;d love to hear from you.
+          Whether you&apos;re a gym owner exploring the platform, a trainer with a feature request, or press looking for a quote, we&apos;d love to hear from you.
         </p>
       </section>
 
