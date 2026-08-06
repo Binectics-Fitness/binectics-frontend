@@ -314,7 +314,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List all provider plan definitions */
+        /** List provider plan definitions, optionally only one audience’s rows */
         get: operations["AdminProviderBillingController_listPlans"];
         put?: never;
         /** Create a new provider plan definition */
@@ -342,6 +342,23 @@ export interface paths {
         patch: operations["AdminProviderBillingController_updatePlan"];
         trace?: never;
     };
+    "/api/v1/admin/provider-billing/plans/{id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clone a plan definition onto another audience (gym / trainer / dietitian) */
+        post: operations["AdminProviderBillingController_clonePlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/provider-billing/prices": {
         parameters: {
             query?: never;
@@ -351,7 +368,7 @@ export interface paths {
         };
         /** List provider plan market prices */
         get: operations["AdminProviderBillingController_listPrices"];
-        /** Upsert a market price (plan_code + market_code + interval is the key) */
+        /** Upsert a market price (plan_code + market_code + audience + interval is the key) */
         put: operations["AdminProviderBillingController_upsertPrice"];
         post?: never;
         delete?: never;
@@ -905,6 +922,23 @@ export interface paths {
         patch: operations["ConsultationsController_completeBooking"];
         trace?: never;
     };
+    "/api/v1/consultations/bookings/{id}/no-show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark booking as no-show (provider/admin) */
+        patch: operations["ConsultationsController_markNoShow"];
+        trace?: never;
+    };
     "/api/v1/consultations/bookings/{id}/reschedule": {
         parameters: {
             query?: never;
@@ -983,6 +1017,23 @@ export interface paths {
         };
         /** Get bookings for provider */
         get: operations["ConsultationsController_getProviderBookings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/consultations/provider/earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Provider session activity + estimated earnings (counts are real; money is an estimate from type prices) */
+        get: operations["ConsultationsController_getProviderEarnings"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1995,6 +2046,40 @@ export interface paths {
         patch: operations["MarketplaceController_toggleAutoRenew"];
         trace?: never;
     };
+    "/api/v1/marketplace/my-subscriptions/{subscriptionId}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Pause your membership. Access stops; the remaining days are held and credited back on resume. */
+        patch: operations["MarketplaceController_pauseSubscription"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-subscriptions/{subscriptionId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Resume a paused membership. end_date moves out by exactly how long the pause lasted. */
+        patch: operations["MarketplaceController_resumeSubscription"];
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/assignment-rules": {
         parameters: {
             query?: never;
@@ -2498,6 +2583,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Suspend a member. Access stops immediately and the suspended time is NOT credited back. The seat is still held. */
+        patch: operations["MarketplaceOrgController_suspendOrgSubscription"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/unsuspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Lift a suspension. end_date is unchanged — the suspended days are not returned. */
+        patch: operations["MarketplaceOrgController_unsuspendOrgSubscription"];
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions/enroll": {
         parameters: {
             query?: never;
@@ -2789,6 +2908,97 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nutrition/foods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List/search my food library */
+        get: operations["NutritionController_listFoods"];
+        put?: never;
+        /** Create a food item in my library */
+        post: operations["NutritionController_createFood"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nutrition/foods/{foodId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one food item */
+        get: operations["NutritionController_getFood"];
+        put?: never;
+        post?: never;
+        /** Archive a food item (soft delete) */
+        delete: operations["NutritionController_archiveFood"];
+        options?: never;
+        head?: never;
+        /** Update a food item */
+        patch: operations["NutritionController_updateFood"];
+        trace?: never;
+    };
+    "/api/v1/nutrition/foods/{foodId}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duplicate a food item */
+        post: operations["NutritionController_duplicateFood"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nutrition/protocols": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List/search my protocols */
+        get: operations["NutritionController_listProtocols"];
+        put?: never;
+        /** Create a protocol */
+        post: operations["NutritionController_createProtocol"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nutrition/protocols/{protocolId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one protocol */
+        get: operations["NutritionController_getProtocol"];
+        put?: never;
+        post?: never;
+        /** Archive a protocol (soft delete) */
+        delete: operations["NutritionController_archiveProtocol"];
+        options?: never;
+        head?: never;
+        /** Update a protocol */
+        patch: operations["NutritionController_updateProtocol"];
         trace?: never;
     };
     "/api/v1/onboarding/dismiss": {
@@ -3294,6 +3504,23 @@ export interface paths {
         put?: never;
         /** Accept a pending client invitation by ID (as fitness member) */
         post: operations["ProgressController_acceptInvitationById"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/progress/invitations/{invitationId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a pending client invitation by ID (as fitness member) */
+        post: operations["ProgressController_declineInvitationById"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4020,6 +4247,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/provider-billing/organizations/{organizationId}/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List plans priced for THIS org — market and audience resolved server-side
+         * @description Use this for any upgrade UI shown to a signed-in org. The public /plans endpoint defaults its audience to ALL, so a caller that omits the parameter would display shared-catalogue pricing while checkout charges the org’s audience-resolved price.
+         */
+        get: operations["ProviderBillingController_listPlansForOrganization"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/provider-billing/organizations/{organizationId}/status": {
         parameters: {
             query?: never;
@@ -4044,7 +4291,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List active provider plans with pricing for the given market */
+        /**
+         * List active provider plans with pricing for the given market
+         * @description Anonymous/marketing pricing. Signed-in orgs should use GET organizations/:organizationId/plans instead, which resolves the audience server-side rather than trusting the query parameter.
+         */
         get: operations["ProviderBillingController_listPlans"];
         put?: never;
         post?: never;
@@ -4545,6 +4795,57 @@ export interface paths {
         patch: operations["TeamsController_updateRole"];
         trace?: never;
     };
+    "/api/v1/transactions/organizations/{organizationId}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Revenue windows (today/week/month) + all-time */
+        get: operations["ProviderTransactionsController_getSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/organizations/{organizationId}/timeseries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Daily revenue for the trailing N days (max 366) */
+        get: operations["ProviderTransactionsController_getTimeseries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/organizations/{organizationId}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paginated org transaction ledger */
+        get: operations["ProviderTransactionsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/upload/document": {
         parameters: {
             query?: never;
@@ -4928,6 +5229,7 @@ export interface components {
             /** @example NY */
             stateCode: string;
         };
+        ClonePlanForAudienceDto: Record<string, never>;
         CompleteBookingDto: {
             /** @example Consultation completed successfully */
             note?: string;
@@ -4978,11 +5280,19 @@ export interface components {
         CreateAssignmentRuleDto: {
             /** @description Match only these client tiers (empty = any tier). */
             client_tiers?: ("standard" | "vip" | "premium")[];
+            /**
+             * @description ISO 4217 code for min_amount_minor. Required whenever min_amount_minor is set — a threshold with no currency matched a 500-unit payment in any currency, which is not one threshold but several.
+             * @example NGN
+             */
+            currency?: string;
             description?: string;
             /** @default true */
             is_active: boolean;
-            /** @description Trigger when amount_paid >= this value (in plan currency). */
-            min_amount?: number;
+            /**
+             * @description Trigger when amount_paid_minor >= this value, in `currency`’s minor unit (kobo, cents). Requires `currency`.
+             * @example 50000
+             */
+            min_amount_minor?: number;
             /** @description Display name for this rule */
             name: string;
             /** @description Match only these plans (empty = any plan). */
@@ -5050,6 +5360,8 @@ export interface components {
              * @example 0
              */
             bufferMinutes?: number;
+            /** @example NGN */
+            currency?: string;
             /** @example 30 */
             defaultDurationMinutes: number;
             /** @example One-on-one consultation focused on nutrition goals. */
@@ -5066,6 +5378,11 @@ export interface components {
             minAdvanceNoticeMinutes?: number;
             /** @example Initial Nutrition Consultation */
             name: string;
+            /**
+             * @description Session price in the currency minor unit (kobo, cents)
+             * @example 2500000
+             */
+            priceMinor?: number;
             /**
              * @example DIETITIAN
              * @enum {string}
@@ -5127,6 +5444,30 @@ export interface components {
              * @enum {string}
              */
             status: "AVAILABLE" | "MAINTENANCE";
+        };
+        CreateFoodItemDto: {
+            /** @example 340 */
+            caloriesKcal: number;
+            /** @example 52 */
+            carbsG: number;
+            /** @example Grains */
+            category?: string;
+            /** @example 11 */
+            fatG: number;
+            /** @example 2.4 */
+            fiberG?: number;
+            /** @example Jollof rice */
+            name: string;
+            /** @example Prepared with minimal oil. */
+            notes?: string;
+            /** @example 7.5 */
+            proteinG: number;
+            /** @example 1 cup (200 g) */
+            servingLabel: string;
+            /** @example 520 */
+            sodiumMg?: number;
+            /** @example 3.1 */
+            sugarG?: number;
         };
         CreateFormDto: {
             /**
@@ -5275,8 +5616,11 @@ export interface components {
             /** @description Max number of clients */
             max_clients?: number;
             photos?: string[];
-            /** @example 50 */
-            price_from?: number;
+            /**
+             * @description Display "from" price in the currency minor unit (kobo, cents).
+             * @example 5000
+             */
+            price_from_minor?: number;
             /** @example From $50/month */
             price_label?: string;
             /**
@@ -5351,8 +5695,11 @@ export interface components {
             rating?: "great" | "good" | "okay" | "poor";
         };
         CreateMembershipSubscriptionDto: {
-            /** @description Amount paid (defaults to plan price) */
-            amount_paid?: number;
+            /**
+             * @description Amount paid in the currency minor unit (kobo, cents). Defaults to the plan price.
+             * @example 4900
+             */
+            amount_paid_minor?: number;
             /** @description External payment reference */
             payment_reference?: string;
             /** @description ID of the membership plan to subscribe to */
@@ -5453,8 +5800,22 @@ export interface components {
              * @enum {string}
              */
             plan_type: "subscription" | "one_time";
-            /** @example 49 */
-            price: number;
+            /**
+             * @description Plan price in the currency minor unit (kobo, cents). 4900 is $49.00.
+             * @example 4900
+             */
+            price_minor: number;
+        };
+        CreateProtocolDto: {
+            /** @example PCOS */
+            category?: string;
+            /** @example A 12-week staged plan for newly diagnosed PCOS clients. */
+            description?: string;
+            /** @example 12 */
+            durationWeeks?: number;
+            /** @example PCOS nutrition protocol */
+            name: string;
+            steps?: components["schemas"]["ProtocolStepDto"][];
         };
         CreateProviderResponseDto: {
             message: string;
@@ -5611,8 +5972,11 @@ export interface components {
             publicIds: string[];
         };
         EnrollMemberDto: {
-            /** @description Amount paid (defaults to plan price, use 0 for comp/free) */
-            amount_paid?: number;
+            /**
+             * @description Amount paid in the currency minor unit (kobo, cents). Defaults to the plan price; use 0 for a comped or free enrolment.
+             * @example 4900
+             */
+            amount_paid_minor?: number;
             /**
              * @description Email of the user to enroll
              * @example member@example.com
@@ -5642,7 +6006,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "MAIL_SEND_FAILED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "MAIL_SEND_FAILED";
             /** @example Validation failed */
             message: Record<string, never>;
             /** @example POST */
@@ -5796,15 +6160,21 @@ export interface components {
              */
             hold_period_days: number;
             /**
-             * @description Earnings below this stay in balance until the next run.
+             * @description Earnings below this stay in balance until the next run, in the organization’s currency minor unit (kobo, cents).
              * @example 0
              */
-            minimum_payout_amount: number;
+            minimum_payout_amount_minor: number;
             /**
              * @description Weekly: 0–6 (Sunday=0). Monthly: 1–28. Ignored for daily.
              * @example 1
              */
             payout_day?: number;
+        };
+        ProtocolStepDto: {
+            /** @example Swap sugary drinks for water; audit snack labels together. */
+            detail?: string;
+            /** @example Week 1-2: Eliminate refined sugar */
+            title: string;
         };
         QuestionOptionDto: {
             /**
@@ -5955,6 +6325,13 @@ export interface components {
              */
             completion_time_seconds?: number;
         };
+        SuspendSubscriptionDto: {
+            /**
+             * @description Why the member is being suspended. Included verbatim in the notification they receive, so it is written for the member rather than for internal notes.
+             * @example Outstanding balance from March
+             */
+            reason?: string;
+        };
         TransferClientDto: {
             /** @description Current ClientProfile to deactivate */
             from_profile_id: string;
@@ -5975,11 +6352,19 @@ export interface components {
         UpdateAssignmentRuleDto: {
             /** @description Match only these client tiers (empty = any tier). */
             client_tiers?: ("standard" | "vip" | "premium")[];
+            /**
+             * @description ISO 4217 code for min_amount_minor. Required whenever min_amount_minor is set — a threshold with no currency matched a 500-unit payment in any currency, which is not one threshold but several.
+             * @example NGN
+             */
+            currency?: string;
             description?: string;
             /** @default true */
             is_active: boolean;
-            /** @description Trigger when amount_paid >= this value (in plan currency). */
-            min_amount?: number;
+            /**
+             * @description Trigger when amount_paid_minor >= this value, in `currency`’s minor unit (kobo, cents). Requires `currency`.
+             * @example 50000
+             */
+            min_amount_minor?: number;
             /** @description Display name for this rule */
             name?: string;
             /** @description Match only these plans (empty = any plan). */
@@ -6004,6 +6389,8 @@ export interface components {
         UpdateConsultationTypeDto: {
             /** @example 0 */
             bufferMinutes?: number;
+            /** @example NGN */
+            currency?: string;
             /** @example 45 */
             defaultDurationMinutes?: number;
             /** @example Follow-up session focused on progress review. */
@@ -6014,6 +6401,11 @@ export interface components {
             minAdvanceNoticeMinutes?: number;
             /** @example Follow-up Nutrition Consultation */
             name?: string;
+            /**
+             * @description Session price in the currency minor unit (kobo, cents)
+             * @example 2500000
+             */
+            priceMinor?: number;
             /** @enum {string} */
             providerRole?: "DIETITIAN" | "PERSONAL_TRAINER" | "OTHER";
         };
@@ -6048,6 +6440,30 @@ export interface components {
              * @enum {string}
              */
             status: "AVAILABLE" | "MAINTENANCE";
+        };
+        UpdateFoodItemDto: {
+            /** @example 340 */
+            caloriesKcal?: number;
+            /** @example 52 */
+            carbsG?: number;
+            /** @example Grains */
+            category?: string;
+            /** @example 11 */
+            fatG?: number;
+            /** @example 2.4 */
+            fiberG?: number;
+            /** @example Jollof rice */
+            name?: string;
+            /** @example Prepared with minimal oil. */
+            notes?: string;
+            /** @example 7.5 */
+            proteinG?: number;
+            /** @example 1 cup (200 g) */
+            servingLabel?: string;
+            /** @example 520 */
+            sodiumMg?: number;
+            /** @example 3.1 */
+            sugarG?: number;
         };
         UpdateFormDto: {
             /**
@@ -6161,7 +6577,8 @@ export interface components {
             lng?: number;
             max_clients?: number;
             photos?: string[];
-            price_from?: number;
+            /** @description Display "from" price in the currency minor unit (kobo, cents). */
+            price_from_minor?: number;
             price_label?: string;
             specialties?: string[];
         };
@@ -6211,8 +6628,6 @@ export interface components {
             inAppReminders?: boolean;
         };
         UpdateOrganizationDto: {
-            /** @enum {string} */
-            account_type?: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
             booking_rules?: components["schemas"]["BookingRulesDto"];
             /**
              * @description Verified sender email. Requires branded_email_enabled on the plan.
@@ -6296,7 +6711,8 @@ export interface components {
             name?: string;
             /** @enum {string} */
             plan_type?: "subscription" | "one_time";
-            price?: number;
+            /** @description Plan price in the currency minor unit (kobo, cents). */
+            price_minor?: number;
         };
         UpdateOrgNotificationSettingsDto: {
             emailBookingConfirmations?: boolean;
@@ -6361,6 +6777,32 @@ export interface components {
              *     ]
              */
             preferred_activities?: string[];
+            /**
+             * @example [
+             *       "Mon",
+             *       "Wed",
+             *       "Fri"
+             *     ]
+             */
+            preferred_training_days?: string[];
+            /**
+             * @example [
+             *       "Early morning",
+             *       "Evenings"
+             *     ]
+             */
+            preferred_training_times?: string[];
+        };
+        UpdateProtocolDto: {
+            /** @example PCOS */
+            category?: string;
+            /** @example A 12-week staged plan for newly diagnosed PCOS clients. */
+            description?: string;
+            /** @example 12 */
+            durationWeeks?: number;
+            /** @example PCOS nutrition protocol */
+            name?: string;
+            steps?: components["schemas"]["ProtocolStepDto"][];
         };
         UpdateProviderPlanDto: Record<string, never>;
         UpdateQuestionDto: {
@@ -6930,7 +7372,9 @@ export interface operations {
     };
     AdminProviderBillingController_listPlans: {
         parameters: {
-            query?: never;
+            query?: {
+                audience?: "ALL" | "gym_owner" | "personal_trainer" | "dietitian";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -6989,10 +7433,34 @@ export interface operations {
             };
         };
     };
+    AdminProviderBillingController_clonePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClonePlanForAudienceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminProviderBillingController_listPrices: {
         parameters: {
-            query: {
-                plan_code: string;
+            query?: {
+                plan_code?: string;
+                audience?: "ALL" | "gym_owner" | "personal_trainer" | "dietitian";
             };
             header?: never;
             path?: never;
@@ -7730,6 +8198,25 @@ export interface operations {
             };
         };
     };
+    ConsultationsController_markNoShow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ConsultationsController_rescheduleBooking: {
         parameters: {
             query?: never;
@@ -7838,6 +8325,23 @@ export interface operations {
                 from?: string;
                 to?: string;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsultationsController_getProviderEarnings: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -9812,6 +10316,44 @@ export interface operations {
             };
         };
     };
+    MarketplaceController_pauseSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceController_resumeSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AssignmentsController_list: {
         parameters: {
             query?: never;
@@ -10657,6 +11199,50 @@ export interface operations {
             };
         };
     };
+    MarketplaceOrgController_suspendOrgSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuspendSubscriptionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_unsuspendOrgSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceOrgController_enrollMember: {
         parameters: {
             query?: never;
@@ -11085,6 +11671,239 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_listFoods: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive name match */
+                search?: string;
+                category?: string;
+                /** @description Include archived entries ('true') */
+                includeArchived?: string;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_createFood: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFoodItemDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_getFood: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                foodId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_archiveFood: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                foodId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_updateFood: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                foodId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFoodItemDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_duplicateFood: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                foodId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_listProtocols: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive name match */
+                search?: string;
+                category?: string;
+                /** @description Include archived entries ('true') */
+                includeArchived?: string;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_createProtocol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProtocolDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_getProtocol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                protocolId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_archiveProtocol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                protocolId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_updateProtocol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                protocolId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProtocolDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -12006,6 +12825,25 @@ export interface operations {
         };
     };
     ProgressController_acceptInvitationById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgressController_declineInvitationById: {
         parameters: {
             query?: never;
             header?: never;
@@ -13013,6 +13851,25 @@ export interface operations {
             };
         };
     };
+    ProviderBillingController_listPlansForOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProviderBillingController_getStatus: {
         parameters: {
             query?: never;
@@ -13036,6 +13893,8 @@ export interface operations {
         parameters: {
             query?: {
                 market?: string;
+                /** @description Provider type to price for. Omitted or unrecognised falls back to the shared ALL catalogue. */
+                audience?: "ALL" | "gym_owner" | "personal_trainer" | "dietitian";
             };
             header?: never;
             path?: never;
@@ -14188,6 +15047,75 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateTeamRoleDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProviderTransactionsController_getSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProviderTransactionsController_getTimeseries: {
+        parameters: {
+            query: {
+                days: string;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProviderTransactionsController_list: {
+        parameters: {
+            query?: {
+                status?: "pending" | "succeeded" | "failed" | "reversed";
+                type?: "subscription" | "platform_subscription" | "consultation" | "marketplace_request" | "tip" | "adjustment" | "refund" | "payout" | "other";
+                direction?: "credit" | "debit";
+                /** @description ISO date lower bound (occurred_at) */
+                from?: string;
+                /** @description ISO date upper bound (occurred_at) */
+                to?: string;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
