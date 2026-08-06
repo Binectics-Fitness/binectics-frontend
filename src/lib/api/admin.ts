@@ -109,6 +109,12 @@ export interface AdminPlanPrice {
   currency: string;
   /** Minor units (kobo/cents). */
   amount_minor: number;
+  /**
+   * Per-seat price charged for enrolment beyond the seat cap, in `currency`'s
+   * minor units. Required for a paid tier (a seat cap with no overage rate is a
+   * hard cap); null/absent only on the free tier, which hard-blocks instead.
+   */
+  overage_per_seat_minor?: number | null;
   interval: "month" | "year";
   trial_days?: number;
   discount_percent?: number;
