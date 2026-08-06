@@ -127,6 +127,7 @@ export default function AdminPlansPage() {
     interval: "month" | "year";
     currency: string;
     amount_major: string;
+    overage_major: string;
     gateway_plan_code: string;
   } | null>(null);
   const [priceBusy, setPriceBusy] = useState(false);
@@ -151,6 +152,14 @@ export default function AdminPlansPage() {
       toast.error("Enter a positive amount.");
       return;
     }
+    // Overage is required for a paid price — a seat cap with no per-seat rate is
+    // a hard cap, which is what the seat model replaces. This form only opens
+    // for paid tiers, so it is always required here; the API enforces it too.
+    const overage = Number(priceDraft.overage_major);
+    if (!Number.isFinite(overage) || overage <= 0) {
+      toast.error("Enter a positive per-seat overage rate.");
+      return;
+    }
     if (!/^[A-Za-z]{3}$/.test(priceDraft.currency.trim())) {
       toast.error("Currency must be a 3-letter code, e.g. NGN.");
       return;
@@ -163,6 +172,7 @@ export default function AdminPlansPage() {
         interval: priceDraft.interval,
         currency: priceDraft.currency.trim().toUpperCase(),
         amount_minor: Math.round(amount * 100),
+        overage_per_seat_minor: Math.round(overage * 100),
         is_active: true,
         // A Paystack plan code makes the charge recurring; omitted =
         // one-shot payment (tier still activates, but never renews).
@@ -409,6 +419,11 @@ export default function AdminPlansPage() {
                           {(pr.amount_minor / 100).toLocaleString()} {pr.currency}
                         </span>
                         <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>/ {pr.interval}</span>
+                        {pr.overage_per_seat_minor != null && (
+                          <span className="text-[12px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }} title="Per-seat overage rate">
+                            +{(pr.overage_per_seat_minor / 100).toLocaleString()} {pr.currency}/seat over cap
+                          </span>
+                        )}
                         <span className="font-mono text-[10px] uppercase" style={{ color: pr.gateway_prices?.length ? "var(--signal-ink)" : "var(--fg-4)" }}>
                           {pr.gateway_prices?.length ? "recurring" : "one-shot"}
                         </span>
@@ -432,6 +447,10 @@ export default function AdminPlansPage() {
                       <div>
                         <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Amount (major units)</div>
                         <input type="number" min={0} value={priceDraft.amount_major} onChange={(e) => setPriceDraft({ ...priceDraft, amount_major: e.target.value })} className="h-8 w-28 rounded-(--r-2) border border-border bg-bg px-2 text-[13px] text-ink" />
+                      </div>
+                      <div>
+                        <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }} title="Charged per seat beyond the plan's cap. Without it the cap is hard.">Overage / seat (major units)</div>
+                        <input type="number" min={0} value={priceDraft.overage_major} onChange={(e) => setPriceDraft({ ...priceDraft, overage_major: e.target.value })} placeholder="e.g. 500" className="h-8 w-28 rounded-(--r-2) border border-border bg-bg px-2 text-[13px] text-ink" />
                       </div>
                       <div>
                         <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Currency</div>
@@ -459,7 +478,7 @@ export default function AdminPlansPage() {
                       <button
                         type="button"
                         className="btn-ghost-v2 sm self-start"
-                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: "NGN", amount_major: "", gateway_plan_code: "" })}
+                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: "NGN", amount_major: "", overage_major: "", gateway_plan_code: "" })}
                       >
                         Add price
                       </button>
