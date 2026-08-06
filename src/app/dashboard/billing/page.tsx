@@ -355,11 +355,6 @@ export default function ProviderBillingPage() {
                   <div className="text-[20px] font-medium mt-2" style={{ color: "var(--ink)" }}>
                     {fmtDate(billingStatus.subscription_current_period_end)}
                   </div>
-                  {billingStatus.subscription_trial_end && (
-                    <div className="text-xs mt-1" style={{ color: "var(--warn)" }}>
-                      Trial ends {fmtDate(billingStatus.subscription_trial_end)}
-                    </div>
-                  )}
                 </div>
 
                 {/* Seats, from the status response's own `seats` block rather
