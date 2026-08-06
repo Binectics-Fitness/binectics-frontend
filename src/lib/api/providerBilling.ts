@@ -96,8 +96,6 @@ export interface ProviderBillingStatus {
   plan_tier: ProviderPlanTier;
   subscription_status: ProviderSubscriptionStatus;
   subscription_current_period_end: string | null;
-  subscription_trial_end: string | null;
-  subscription_cancelled_at: string | null;
   market_code: string;
   limits: ProviderBillingLimits;
   features: ProviderBillingFeatures;
