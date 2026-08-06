@@ -6,9 +6,13 @@ import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AddMemberButton } from "./_actions";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
+  providerBillingApi,
+  seatHeadroomLabel,
+  type ProviderBillingSeats,
+} from "@/lib/api/providerBilling";
+import {
   MembershipSubscriptionStatus,
   isEntitlingMembershipStatus,
-  isSeatBearingMembershipStatus,
   TERMINAL_MEMBERSHIP_STATUSES,
   type MembershipSubscription,
 } from "@/lib/types";
@@ -87,11 +91,23 @@ const MORE_ICON = (
 function RowActions({
   sub,
   orgId,
+  canArchive,
   onUpdate,
+  onRosterChange,
 }: {
   sub: MembershipSubscription;
   orgId: string;
+  /**
+   * Whether the member — not just this row — can be archived: true only when
+   * NONE of their subscriptions in this org are live. Archive is a member-level
+   * action, so a per-row status check isn't enough; a member with an expired
+   * plan and an active one must not be offered Archive on the expired row (the
+   * API would refuse it). Computed once at the page level from the full list.
+   */
+  canArchive: boolean;
   onUpdate: (updated: MembershipSubscription) => void;
+  /** Archive/restore change the roster, not this subscription — reload it all. */
+  onRosterChange: () => void;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -195,6 +211,34 @@ function RowActions({
       } else toast.error(res.message ?? "Couldn't cancel the membership");
     });
 
+  const handleArchive = () =>
+    run(async () => {
+      const memberUserId = getMemberUserId(sub);
+      if (!memberUserId) return toast.error("This member can't be archived yet.");
+      if (
+        !window.confirm(
+          `Archive ${getMemberName(sub)}? This frees their seat. They keep their account, login and history — archiving is billing-only, not a ban — and you can restore them any time.`,
+        )
+      )
+        return;
+      const res = await marketplaceService.archiveMember(orgId, memberUserId);
+      if (res.success) {
+        toast.success("Member archived — their seat is freed");
+        onRosterChange();
+      } else toast.error(res.message ?? "Couldn't archive the member");
+    });
+
+  const handleRestore = () =>
+    run(async () => {
+      const memberUserId = getMemberUserId(sub);
+      if (!memberUserId) return toast.error("This member can't be restored yet.");
+      const res = await marketplaceService.restoreMember(orgId, memberUserId);
+      if (res.success) {
+        toast.success("Member restored — a seat is taken back");
+        onRosterChange();
+      } else toast.error(res.message ?? "Couldn't restore the member");
+    });
+
   const item = "w-full text-left px-3.5 py-2 text-[13px] hover:bg-[var(--bg-2)] disabled:opacity-50";
 
   return (
@@ -257,6 +301,22 @@ function RowActions({
           {isLive && (
             <button type="button" className={item} style={{ color: "var(--danger, #b00020)" }} onClick={handleCancel}>
               Cancel membership
+            </button>
+          )}
+          {/* Roster actions. Archive only when the member has NO live
+              subscription left — the API refuses it while anything live still
+              entitles them, so offering it on one lapsed row of a member who is
+              still active elsewhere would only render a button that errors.
+              `canArchive` is computed per member, not per row. Restore is the
+              inverse, shown once archived. */}
+          {canArchive && !sub.is_archived && getMemberUserId(sub) && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleArchive}>
+              Archive member (free seat)
+            </button>
+          )}
+          {sub.is_archived && getMemberUserId(sub) && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleRestore}>
+              Restore member
             </button>
           )}
         </div>
@@ -341,9 +401,10 @@ function ChangePlanModal({
 
 export default function GymMembersClient() {
   const { currentOrg } = useOrganization();
-  const { fmtDate, fmtMoney } = useOrgFormat();
+  const { fmtDate, fmtMoney, fmtNumber } = useOrgFormat();
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
+  const [seats, setSeats] = useState<ProviderBillingSeats | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<MembershipSubscriptionStatus | "all">("all");
@@ -360,7 +421,15 @@ export default function GymMembersClient() {
 
     const load = async () => {
       setLoading(true);
-      const res = await marketplaceService.getOrgMembershipSubscriptions(currentOrg._id);
+      // Seats come from the billing status' own `seats` block — the number
+      // enforcement actually counts — rather than tallying subscription rows on
+      // the client, which double-counted a member holding two plans. Loaded
+      // alongside the members, and non-fatal: a members list that renders
+      // without the seat line beats one that fails because billing hiccuped.
+      const [res, statusRes] = await Promise.all([
+        marketplaceService.getOrgMembershipSubscriptions(currentOrg._id),
+        providerBillingApi.getStatus(currentOrg._id),
+      ]);
       if (!mounted) return;
       if (res.success && res.data) {
         setSubscriptions(res.data);
@@ -370,6 +439,7 @@ export default function GymMembersClient() {
         // "No members yet" while the API was 500ing (2026-07-10 regression).
         setLoadError(res.message || "Couldn't load members.");
       }
+      setSeats(statusRes.success && statusRes.data ? statusRes.data.seats : null);
       setLoading(false);
     };
 
@@ -399,8 +469,29 @@ export default function GymMembersClient() {
   const activeCount = counts[MembershipSubscriptionStatus.ACTIVE] ?? 0;
   /** Everyone who can get in today — includes the past-due grace window. */
   const withAccessCount = subscriptions.filter((s) => isEntitlingMembershipStatus(s.status)).length;
-  /** Everyone the org is billed for. This is the number the seat cap counts. */
-  const seatCount = subscriptions.filter((s) => isSeatBearingMembershipStatus(s.status)).length;
+  /**
+   * Members with at least one live (non-terminal) subscription. Archive is a
+   * member-level action the API refuses while anything live entitles them, so
+   * a member is archivable only when absent from this set — see RowActions.
+   */
+  const liveMemberIds = new Set(
+    subscriptions
+      .filter((s) => !TERMINAL_MEMBERSHIP_STATUSES.includes(s.status))
+      .map((s) => getMemberUserId(s))
+      .filter((id): id is string => id !== null),
+  );
+
+  /**
+   * Seats, straight from the billing status' `seats` block — the count
+   * enforcement uses, "428 of 500". `limit` is null on an uncapped plan, so
+   * render the raw used count then; otherwise "used of limit". Numbers go
+   * through the org format so a large gym reads "1,284", matching billing.
+   */
+  const seatLine = seats
+    ? seats.limit === null
+      ? `${fmtNumber(seats.used)} seat${seats.used === 1 ? "" : "s"} used`
+      : `${fmtNumber(seats.used)} of ${fmtNumber(seats.limit)} seats used`
+    : null;
 
   return (
     <GymDashboardShell
@@ -450,9 +541,34 @@ export default function GymMembersClient() {
         <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
           {loading
             ? "Loading…"
-            : `${subscriptions.length} member${subscriptions.length === 1 ? "" : "s"} · ${activeCount} active${withAccessCount > activeCount ? ` · ${withAccessCount - activeCount} in grace` : ""} · ${seatCount} seat${seatCount === 1 ? "" : "s"} used`}
+            : `${subscriptions.length} member${subscriptions.length === 1 ? "" : "s"} · ${activeCount} active${withAccessCount > activeCount ? ` · ${withAccessCount - activeCount} in grace` : ""}${seatLine ? ` · ${seatLine}` : ""}`}
         </div>
       </div>
+
+      {/* Seat headroom prompt. Shown at near_limit, not only over_limit — a
+          prompt that arrives after an enrolment was refused is an apology, not
+          a prompt. Names archiving because that is what frees a seat, and it is
+          one row-menu away here (paused/suspended members still hold theirs). */}
+      {!loading && seats?.near_limit && (
+        <div
+          className="flex items-start gap-2.5 p-3.5 rounded-(--r-3) text-[13px] leading-relaxed"
+          style={{
+            border: `1px solid ${seats.over_limit ? "var(--danger)" : "var(--warn)"}`,
+            background: seats.over_limit ? "var(--danger-soft, var(--bg-2))" : "var(--bg-2)",
+            color: "var(--ink)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ flexShrink: 0, marginTop: "1px", color: seats.over_limit ? "var(--danger)" : "var(--warn)" }}>
+            <path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          </svg>
+          <span>
+            {seats.over_limit
+              ? `You're over your seat limit — ${fmtNumber(seats.used)} of ${fmtNumber(seats.limit ?? 0)}. `
+              : `You're close to your seat limit — ${seatHeadroomLabel(seats, fmtNumber)}. `}
+            Archiving a member frees their seat. Paused and suspended members still hold theirs — archive them from the row menu once their membership has ended.
+          </span>
+        </div>
+      )}
 
       {/* Search + filter bar */}
       <div className="flex items-center gap-3.5 p-3.5 rounded-(--r-3) flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
@@ -538,7 +654,12 @@ export default function GymMembersClient() {
                     <tr
                       key={sub._id}
                       className="cursor-pointer"
-                      style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}
+                      style={{
+                        borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none",
+                        // Archived members are off the billable roster — dimmed
+                        // so the eye skips them, but still present and openable.
+                        opacity: sub.is_archived ? 0.6 : 1,
+                      }}
                       onClick={() => router.push(`/dashboard/gym-owner/members/${sub._id}`)}
                     >
                       <td className="px-4.5 py-3">
@@ -567,21 +688,43 @@ export default function GymMembersClient() {
                         {sub.end_date ? fmtDate(sub.end_date) : "—"}
                       </td>
                       <td className="px-4.5 py-3">
-                        <span
-                          className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"
-                          style={{ color: statusMeta.color, background: statusMeta.background, border: statusMeta.border }}
-                          title={statusMeta.hint}
-                        >
-                          <span className="w-1.25 h-1.25 rounded-full bg-current" />
-                          {statusMeta.label}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"
+                            style={{ color: statusMeta.color, background: statusMeta.background, border: statusMeta.border }}
+                            title={statusMeta.hint}
+                          >
+                            <span className="w-1.25 h-1.25 rounded-full bg-current" />
+                            {statusMeta.label}
+                          </span>
+                          {sub.is_archived && (
+                            <span
+                              className="inline-flex items-center font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"
+                              style={{ color: "var(--fg-3)", background: "var(--bg-2)", border: "1px solid var(--border)" }}
+                              title="Off the billable roster — the seat is freed. The member keeps their account and data."
+                            >
+                              Archived
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4.5 py-3 text-right font-mono font-medium" style={{ color: "var(--ink)" }}>
                         {fmtMoney(minorToMajor(sub.amount_paid_minor), sub.currency)}
                       </td>
                       <td className="px-4.5 py-3">
                         {currentOrg && (
-                          <RowActions sub={sub} orgId={currentOrg._id} onUpdate={handleSubscriptionUpdate} />
+                          <RowActions
+                            sub={sub}
+                            orgId={currentOrg._id}
+                            canArchive={
+                              (() => {
+                                const id = getMemberUserId(sub);
+                                return id !== null && !liveMemberIds.has(id);
+                              })()
+                            }
+                            onUpdate={handleSubscriptionUpdate}
+                            onRosterChange={() => setRefreshKey((k) => k + 1)}
+                          />
                         )}
                       </td>
                     </tr>

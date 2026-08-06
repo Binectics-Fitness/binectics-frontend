@@ -802,6 +802,33 @@ export const marketplaceService = {
     );
   },
 
+  /**
+   * Archive a member to free their seat. Billing-only — the member keeps their
+   * account and data. Refused by the API while a live subscription still
+   * entitles them, so it can't quietly stop the org paying for someone still
+   * training. Keyed on the member, not a subscription (a seat is a person).
+   */
+  async archiveMember(
+    organizationId: string,
+    memberUserId: string,
+    reason?: string,
+  ): Promise<ApiResponse<{ archived: boolean }>> {
+    return await apiClient.post<{ archived: boolean }>(
+      `/marketplace/organizations/${organizationId}/members/${memberUserId}/archive`,
+      reason ? { reason } : {},
+    );
+  },
+
+  /** Restore an archived member, taking a seat back (subject to the seat quota). */
+  async restoreMember(
+    organizationId: string,
+    memberUserId: string,
+  ): Promise<ApiResponse<{ restored: boolean }>> {
+    return await apiClient.post<{ restored: boolean }>(
+      `/marketplace/organizations/${organizationId}/members/${memberUserId}/restore`,
+    );
+  },
+
   // ==================== PAYMENT CONFIGURATION ====================
 
   async getPaymentConfigs(
