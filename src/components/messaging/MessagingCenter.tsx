@@ -154,12 +154,12 @@ export function MessagingCenter({
 
   return (
     <div
-      className="grid gap-3"
-      style={{ gridTemplateColumns: "minmax(0, 300px) 1fr", minHeight: 520 }}
+      className="grid gap-3 h-[calc(100vh-11rem)] min-h-[500px]"
+      style={{ gridTemplateColumns: "minmax(0, 320px) 1fr" }}
     >
       {/* ── Thread list ── */}
       <div
-        className={`rounded-(--r-3) overflow-hidden ${activeId ? "hidden md:block" : ""}`}
+        className={`flex flex-col rounded-(--r-3) overflow-hidden ${activeId ? "hidden md:flex" : ""}`}
         style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
       >
         <div
@@ -184,14 +184,18 @@ export function MessagingCenter({
           )}
         </div>
         {loadingList ? (
-          <AsyncSpinner />
+          <div className="flex flex-1 items-center justify-center">
+            <AsyncSpinner />
+          </div>
         ) : threads.length === 0 ? (
-          <EmptySlate
-            message="No conversations yet"
-            hint="Messages with your gym, trainer or clients appear here."
-          />
+          <div className="flex flex-1 items-center justify-center">
+            <EmptySlate
+              message="No conversations yet"
+              hint="Messages with your gym, trainer or clients appear here."
+            />
+          </div>
         ) : (
-          <div className="flex flex-col">
+          <div className="flex flex-col overflow-y-auto flex-1">
             {threads.map((t) => (
               <button
                 key={t._id}
@@ -202,6 +206,12 @@ export function MessagingCenter({
                   borderBottom: "1px solid var(--border)",
                   background:
                     t._id === activeId ? "var(--bg-2)" : "transparent",
+                  // Left accent bar on the active conversation, per the
+                  // messages prototype (.conv.on::before).
+                  boxShadow:
+                    t._id === activeId
+                      ? "inset 2px 0 0 var(--ink)"
+                      : "none",
                 }}
               >
                 <span
@@ -254,9 +264,20 @@ export function MessagingCenter({
         style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
       >
         {!activeId && !broadcastMode ? (
-          <div className="flex flex-1 items-center justify-center p-8">
-            <span className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>
-              Select a conversation.
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-full"
+              style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.5 8.5 0 1 1 16-4z" />
+              </svg>
+            </span>
+            <span className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+              No conversation selected
+            </span>
+            <span className="text-[13px] max-w-[34ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
+              Choose a conversation on the left to read and reply, or start a new one.
             </span>
           </div>
         ) : (
