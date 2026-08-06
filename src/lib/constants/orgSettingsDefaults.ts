@@ -33,7 +33,7 @@ export const DEFAULT_KIOSK_SETTINGS: KioskSettings = {
 export const DEFAULT_PAYOUT_SCHEDULE: PayoutSchedule = {
   frequency: "weekly",
   payout_day: 1, // Monday
-  minimum_payout_amount: 0,
+  minimum_payout_amount_minor: 0,
   hold_period_days: 0,
 };
 

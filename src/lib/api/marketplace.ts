@@ -46,7 +46,8 @@ export interface CreateListingRequest {
   lat?: number;
   lng?: number;
   currency?: string;
-  price_from?: number;
+  /** Minor units (kobo/cents) — see MarketplaceListing.price_from_minor. */
+  price_from_minor?: number;
   price_label?: string;
   accepting_clients?: boolean;
   max_clients?: number;
@@ -69,7 +70,8 @@ export interface UpdateListingRequest {
   lat?: number;
   lng?: number;
   currency?: string;
-  price_from?: number;
+  /** Minor units (kobo/cents) — see MarketplaceListing.price_from_minor. */
+  price_from_minor?: number;
   price_label?: string;
   accepting_clients?: boolean;
   max_clients?: number;
@@ -114,7 +116,8 @@ export interface CreateOrgMembershipPlanRequest {
   description?: string;
   plan_type: MembershipPlanType;
   duration_days: number;
-  price: number;
+  /** Minor units (kobo/cents). ₦5,000 is 500000, not 5000. */
+  price_minor: number;
   currency?: string;
   features?: string[];
   is_active?: boolean;
@@ -128,7 +131,8 @@ export interface EnrollMemberRequest {
   email: string;
   plan_id: string;
   status?: "active" | "pending_payment";
-  amount_paid?: number;
+  /** Minor units (kobo/cents). Defaults to the plan price; 0 comps the member. */
+  amount_paid_minor?: number;
   payment_reference?: string;
   payment_proof_url?: string;
   first_name?: string;
@@ -157,7 +161,7 @@ export interface FeaturedListingItem {
     | "city"
     | "country_code"
     | "currency"
-    | "price_from"
+    | "price_from_minor"
     | "price_label"
     | "verification_badge"
     | "average_rating"
@@ -172,7 +176,7 @@ export interface FeaturedListingItem {
     | "description"
     | "plan_type"
     | "duration_days"
-    | "price"
+    | "price_minor"
     | "currency"
     | "features"
   > | null;
@@ -675,18 +679,27 @@ export const marketplaceService = {
 
   // ─── Membership Subscriptions ───
 
+  /**
+   * @param amountPaidMinor What was charged, in the currency's MINOR unit
+   *   (kobo/cents) — the same unit as `plan.price_minor`, which the API
+   *   compares it against. Passing a major-unit amount here would record a
+   *   payment 100× too small and the API's `forbidNonWhitelisted` would
+   *   reject the old `amount_paid` key outright.
+   */
   async subscribeToListingPlan(
     listingId: string,
     planId: string,
     paymentReference?: string,
-    amountPaid?: number,
+    amountPaidMinor?: number,
   ): Promise<ApiResponse<MembershipSubscription>> {
     return await apiClient.post<MembershipSubscription>(
       `/marketplace/listings/${listingId}/subscribe`,
       {
         plan_id: planId,
         ...(paymentReference && { payment_reference: paymentReference }),
-        ...(amountPaid !== undefined && { amount_paid: amountPaid }),
+        ...(amountPaidMinor !== undefined && {
+          amount_paid_minor: amountPaidMinor,
+        }),
       },
     );
   },

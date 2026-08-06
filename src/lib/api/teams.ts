@@ -82,7 +82,12 @@ export interface PayoutSchedule {
   frequency: PayoutFrequency;
   /** Weekly: 0–6 (Sun=0). Monthly: 1–28. Omitted for daily. */
   payout_day?: number;
-  minimum_payout_amount: number;
+  /**
+   * Earnings below this stay in balance until the next run, in the org
+   * currency's MINOR unit (kobo/cents). Was `minimum_payout_amount` in major
+   * units; the transactions ledger has always been minor, so this now matches.
+   */
+  minimum_payout_amount_minor: number;
   hold_period_days: number;
 }
 
