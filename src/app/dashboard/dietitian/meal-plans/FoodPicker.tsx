@@ -69,6 +69,9 @@ export function FoodPicker({
   const canAddFree = q.length > 0 && !selected.has(q.toLowerCase());
   // Combined navigable options: library matches, then the "add free text" row.
   const optionCount = libOptions.length + (canAddFree ? 1 : 0);
+  // Results can shrink under the highlight as the query narrows; clamp so the
+  // visible highlight and Enter always target a real option.
+  const activeIndex = optionCount > 0 ? Math.min(highlight, optionCount - 1) : 0;
 
   const commit = (foods: string[]) => {
     const merged = [...value];
@@ -90,7 +93,7 @@ export function FoodPicker({
   const addFree = () => commit(parseFoods(query));
 
   const chooseHighlighted = () => {
-    if (highlight < libOptions.length) addLibrary(libOptions[highlight]);
+    if (activeIndex < libOptions.length) addLibrary(libOptions[activeIndex]);
     else if (canAddFree) addFree();
   };
 
@@ -103,10 +106,10 @@ export function FoodPicker({
       e.preventDefault();
       setHighlight((h) => Math.max(h - 1, 0));
     } else if (e.key === "Enter") {
-      if (optionCount > 0) {
-        e.preventDefault();
-        chooseHighlighted();
-      }
+      // Always stop Enter from submitting the parent <form>: the food field is
+      // a compound widget, so Enter means "add a food", never "create the plan".
+      e.preventDefault();
+      if (optionCount > 0) chooseHighlighted();
     } else if (e.key === "Escape") {
       setOpen(false);
     } else if (e.key === "Backspace" && query === "" && value.length > 0) {
@@ -178,7 +181,7 @@ export function FoodPicker({
                 onClick={() => addLibrary(f)}
                 onMouseEnter={() => setHighlight(idx)}
                 className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left"
-                style={highlight === idx ? activeStyle : undefined}
+                style={activeIndex === idx ? activeStyle : undefined}
               >
                 <span className="text-[13px]" style={{ color: "var(--ink)" }}>{f.name}</span>
                 <span className="shrink-0 text-[11.5px]" style={{ color: "var(--fg-3)" }}>
@@ -196,7 +199,7 @@ export function FoodPicker({
               style={{
                 color: "var(--fg-2)",
                 borderTop: libOptions.length ? "1px solid var(--border)" : undefined,
-                ...(highlight === libOptions.length ? activeStyle : {}),
+                ...(activeIndex === libOptions.length ? activeStyle : {}),
               }}
             >
               Add “{q}” as free text
