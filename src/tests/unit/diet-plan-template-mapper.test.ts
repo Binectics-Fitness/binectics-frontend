@@ -26,7 +26,7 @@ const row = (overrides: Partial<MealFormRow> = {}): MealFormRow => ({
   meal_type: MealSlot.BREAKFAST,
   title: "Oats bowl",
   description: "",
-  foods: "",
+  foods: [],
   calories: "",
   notes: "",
   ...overrides,
@@ -68,7 +68,7 @@ describe("mealRowsToRequests", () => {
 
   it("trims text fields and omits empty optionals", () => {
     const out = mealRowsToRequests([
-      row({ title: "  Lunch  ", description: "  ", foods: " rice , beans ", notes: " keep hydrated " }),
+      row({ title: "  Lunch  ", description: "  ", foods: [" rice ", " beans "], notes: " keep hydrated " }),
     ]);
     expect(out[0].title).toBe("Lunch");
     expect(out[0].description).toBeUndefined();
