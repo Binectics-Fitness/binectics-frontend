@@ -24,11 +24,21 @@ const GALLERY_LIMIT = 50;
  */
 export function GalleryManager({
   photos,
+  coverUrl,
   target,
 }: {
   photos: string[];
+  /**
+   * The listing's profile/cover image, if any. The backend prepends it to
+   * `photos` but the gallery mutation endpoints operate on the gallery WITHOUT
+   * it, so we exclude it here — otherwise reorder sends a wrong-length array
+   * (400) and removing it 404s.
+   */
+  coverUrl?: string;
   target: GalleryTarget;
 }) {
+  // The gallery is everything except the separate cover/profile image.
+  const gallery = coverUrl ? photos.filter((p) => p !== coverUrl) : photos;
   const queryClient = useQueryClient();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +77,7 @@ export function GalleryManager({
 
   const handleUpload = async (files: File[]) => {
     if (files.length === 0) return;
-    const room = GALLERY_LIMIT - photos.length;
+    const room = GALLERY_LIMIT - gallery.length;
     if (room <= 0) {
       setError(`You already have the maximum of ${GALLERY_LIMIT} photos.`);
       return;
@@ -92,8 +102,8 @@ export function GalleryManager({
     );
 
   const move = (from: number, to: number) => {
-    if (to < 0 || to >= photos.length) return;
-    const next = [...photos];
+    if (to < 0 || to >= gallery.length) return;
+    const next = [...gallery];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
     void run(() =>
@@ -109,9 +119,9 @@ export function GalleryManager({
 
   return (
     <div className="flex flex-col gap-3">
-      {photos.length > 0 && (
+      {gallery.length > 0 && (
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          {photos.map((url, i) => (
+          {gallery.map((url, i) => (
             <div
               key={url}
               className="relative aspect-[4/3] overflow-hidden rounded-(--r-2)"
@@ -120,7 +130,7 @@ export function GalleryManager({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={url} alt={`Gallery photo ${i + 1}`} className="h-full w-full object-cover" />
 
-              {i === 0 && (
+              {i === 0 && !coverUrl && (
                 <span
                   className="absolute left-1.5 top-1.5 rounded-(--r-1) px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wide"
                   style={{ background: "var(--bg)", color: "var(--fg-2)", border: "1px solid var(--border)" }}
@@ -147,7 +157,7 @@ export function GalleryManager({
                   <button
                     type="button"
                     onClick={() => move(i, i + 1)}
-                    disabled={pending || i === photos.length - 1}
+                    disabled={pending || i === gallery.length - 1}
                     aria-label={`Move photo ${i + 1} later`}
                     className={ctrlClass}
                     style={ctrlStyle}
@@ -171,7 +181,7 @@ export function GalleryManager({
         </div>
       )}
 
-      {photos.length < GALLERY_LIMIT && (
+      {gallery.length < GALLERY_LIMIT && (
         <FileUploadZone
           key={uploadNonce}
           accept="image/*"
@@ -183,7 +193,7 @@ export function GalleryManager({
             {pending ? "Uploading…" : "Drop photos here or click to upload"}
           </p>
           <p className="mt-1 text-[12px] text-fg-4">
-            JPG or PNG, up to 10 MB each · {photos.length}/{GALLERY_LIMIT} added
+            JPG or PNG, up to 10 MB each · {gallery.length}/{GALLERY_LIMIT} added
           </p>
         </FileUploadZone>
       )}
@@ -193,9 +203,11 @@ export function GalleryManager({
           {error}
         </p>
       )}
-      {photos.length > 0 && (
+      {gallery.length > 0 && (
         <p className="text-[11.5px]" style={{ color: "var(--fg-4)" }}>
-          The first photo is your listing cover. Drag order with the arrows.
+          {coverUrl
+            ? "Reorder with the arrows."
+            : "The first photo is your listing cover. Reorder with the arrows."}
         </p>
       )}
     </div>

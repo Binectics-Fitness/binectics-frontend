@@ -332,6 +332,7 @@ export function ProviderListingProfile() {
         {listing && (isGym ? !!orgId : true) ? (
           <GalleryManager
             photos={listing.photos ?? []}
+            coverUrl={listing.profile_image}
             target={
               isGym
                 ? { kind: "org", orgId: orgId as string }
