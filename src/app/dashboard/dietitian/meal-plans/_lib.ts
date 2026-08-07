@@ -34,15 +34,15 @@ export interface MealFormRow {
   meal_type: MealSlot;
   title: string;
   description: string;
-  /** Comma-separated food list as typed by the user. */
-  foods: string;
+  /** Foods for this meal — library picks and free text alike, one per entry. */
+  foods: string[];
   /** Numeric string; "" means unset. */
   calories: string;
   notes: string;
 }
 
 export function emptyMealRow(slot: MealSlot = MealSlot.BREAKFAST): MealFormRow {
-  return { meal_type: slot, title: "", description: "", foods: "", calories: "", notes: "" };
+  return { meal_type: slot, title: "", description: "", foods: [], calories: "", notes: "" };
 }
 
 /** "oats, banana,, milk " → ["oats", "banana", "milk"] */
@@ -68,10 +68,12 @@ export function mealRowsToRequests(rows: MealFormRow[]): CreateDietMealRequest[]
         meal_type: r.meal_type,
         title: r.title.trim(),
         description: r.description.trim() || undefined,
-        foods: parseFoods(r.foods),
+        foods: r.foods.map((f) => f.trim()).filter(Boolean),
         calories,
         notes: r.notes.trim() || undefined,
-        order: index,
+        // The API validates order >= 1 (1-based); index is 0-based, so the
+        // first meal would fail "meals.0.order must not be less than 1".
+        order: index + 1,
       };
     });
 }
@@ -84,7 +86,7 @@ export function planToMealRows(plan: Pick<DietPlan, "meals">): MealFormRow[] {
       meal_type: m.meal_type,
       title: m.title,
       description: m.description ?? "",
-      foods: (m.foods ?? []).join(", "),
+      foods: [...(m.foods ?? [])],
       calories: m.calories != null ? String(m.calories) : "",
       notes: m.notes ?? "",
     }));
@@ -116,7 +118,7 @@ export function templateToClientPlanPayload(
       foods: [...(m.foods ?? [])],
       calories: m.calories,
       notes: m.notes || undefined,
-      order: index,
+      order: index + 1, // 1-based; the API rejects order < 1
     }));
   return {
     title: plan.title,

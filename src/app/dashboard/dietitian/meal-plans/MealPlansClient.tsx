@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
+import { FoodPicker } from "./FoodPicker";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { DietPlanDeliveryType, PlanStatus, MealSlot } from "@/lib/types";
@@ -224,13 +225,10 @@ function PlanFormModal({
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
                     </button>
                   </div>
-                  <div className="grid grid-cols-[1fr_110px] gap-2">
-                    <input
+                  <div className="grid grid-cols-[1fr_110px] items-start gap-2">
+                    <FoodPicker
                       value={meal.foods}
-                      onChange={(e) => setMeal(i, { foods: e.target.value })}
-                      placeholder="Foods, comma-separated, oats, banana, almond milk"
-                      className="h-9 rounded-(--r-2) px-3 text-[13px]"
-                      style={{ ...fieldStyle, background: "var(--bg)" }}
+                      onChange={(foods) => setMeal(i, { foods })}
                     />
                     <input
                       type="number"
