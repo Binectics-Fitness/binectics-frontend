@@ -48,7 +48,8 @@ describe("mealRowsToRequests", () => {
       row({ title: "Dinner", meal_type: MealSlot.DINNER }),
     ]);
     expect(out).toHaveLength(2);
-    expect(out.map((m) => m.order)).toEqual([0, 1]);
+    // 1-based: the API rejects order < 1 ("meals.0.order must not be less than 1").
+    expect(out.map((m) => m.order)).toEqual([1, 2]);
     expect(out[1].meal_type).toBe(MealSlot.DINNER);
   });
 
@@ -94,7 +95,7 @@ describe("templateToClientPlanPayload", () => {
     expect(payload.title).toBe("Cutting protocol");
     expect(payload.dietitian_notes).toBe("Weigh in weekly");
     expect(payload.meals?.map((m) => m.title)).toEqual(["Breakfast", "Dinner"]);
-    expect(payload.meals?.map((m) => m.order)).toEqual([0, 1]);
+    expect(payload.meals?.map((m) => m.order)).toEqual([1, 2]);
   });
 
   it("deep-copies the foods arrays so the client plan is independent", () => {

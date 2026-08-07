@@ -71,7 +71,9 @@ export function mealRowsToRequests(rows: MealFormRow[]): CreateDietMealRequest[]
         foods: parseFoods(r.foods),
         calories,
         notes: r.notes.trim() || undefined,
-        order: index,
+        // The API validates order >= 1 (1-based); index is 0-based, so the
+        // first meal would fail "meals.0.order must not be less than 1".
+        order: index + 1,
       };
     });
 }
@@ -116,7 +118,7 @@ export function templateToClientPlanPayload(
       foods: [...(m.foods ?? [])],
       calories: m.calories,
       notes: m.notes || undefined,
-      order: index,
+      order: index + 1, // 1-based; the API rejects order < 1
     }));
   return {
     title: plan.title,
