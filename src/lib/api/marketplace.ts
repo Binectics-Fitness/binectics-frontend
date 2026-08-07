@@ -127,9 +127,19 @@ export interface CreateOrgMembershipPlanRequest {
 export type UpdateOrgMembershipPlanRequest =
   Partial<CreateOrgMembershipPlanRequest>;
 
+/**
+ * How the enrolment is paid.
+ * - "manual": money taken off-platform; the subscription is active immediately.
+ * - "paystack_transfer": open a one-time Paystack transfer account for the plan
+ *   price. The subscription stays pending until the transfer is confirmed by
+ *   webhook; the response carries `transfer_account` to display.
+ */
+export type EnrollPaymentMode = "manual" | "paystack_transfer";
+
 export interface EnrollMemberRequest {
   email: string;
   plan_id: string;
+  payment_mode?: EnrollPaymentMode;
   status?: "active" | "pending_payment";
   /** Minor units (kobo/cents). Defaults to the plan price; 0 comps the member. */
   amount_paid_minor?: number;
@@ -140,9 +150,24 @@ export interface EnrollMemberRequest {
   send_invite?: boolean;
 }
 
+/** The one-time bank account a member transfers into (Paystack "Pay with Transfer"). */
+export interface EnrollTransferAccount {
+  account_number: string;
+  account_name?: string;
+  bank_name?: string;
+  /** ISO timestamp after which the account stops accepting the transfer. */
+  expires_at?: string | null;
+  /** Amount to transfer, in minor units. */
+  amount_minor: number;
+  currency: string;
+  reference: string;
+}
+
 export interface EnrollMemberResponse {
   subscription: MembershipSubscription;
   user_created: boolean;
+  /** Present only for a "paystack_transfer" enrolment. */
+  transfer_account?: EnrollTransferAccount;
 }
 
 // ==================== FEATURED ====================
