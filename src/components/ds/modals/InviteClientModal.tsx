@@ -99,7 +99,11 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
 
   const handleClose = () => {
     cancelledRef.current = true;
+    // If a transfer account was generated, the pending member already exists,
+    // so any close (ESC / overlay / X, not just Done) must refresh the list.
+    const enrolled = transfer !== null;
     resetAll();
+    if (enrolled) onEnrolled?.();
     onClose();
   };
 
