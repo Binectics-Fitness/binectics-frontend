@@ -3,11 +3,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { UserRole, type User } from "@/lib/types";
 
-// The banner is auth-driven and self-gating: it reads the signed-in user
-// from useAuth() (no props) and renders only while onboarding is
-// incomplete; dismissal persists per user id in localStorage. These tests
-// exercise that contract — the old prop-driven API (userRole/userName)
-// no longer exists.
+// The banner is auth-driven and self-gating: it reads the signed-in user from
+// useAuth() (no props) and renders only while onboarding is incomplete.
+// Dismissal is now server-side (per-user, cross-device) via the onboarding
+// walkthrough endpoints, read through useOnboardingStatus() — no localStorage.
+// These tests exercise that contract.
 
 vi.mock("next/link", () => ({
   default: ({
@@ -29,6 +29,25 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => mockUseAuth(),
 }));
 
+const mockUseOnboardingStatus = vi.fn();
+vi.mock("@/lib/queries/onboarding", () => ({
+  useOnboardingStatus: () => mockUseOnboardingStatus(),
+}));
+
+const walkthroughDismiss = vi.fn().mockResolvedValue({ success: true });
+const walkthroughReopen = vi.fn().mockResolvedValue({ success: true });
+vi.mock("@/lib/api/onboarding", () => ({
+  onboardingService: {
+    walkthroughDismiss: () => walkthroughDismiss(),
+    walkthroughReopen: () => walkthroughReopen(),
+  },
+}));
+
+const invalidateQueries = vi.fn();
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ invalidateQueries }),
+}));
+
 function makeUser(overrides: Partial<User> = {}): Partial<User> {
   return {
     id: "user-1",
@@ -39,8 +58,14 @@ function makeUser(overrides: Partial<User> = {}): Partial<User> {
   };
 }
 
-function renderWithUser(user: Partial<User> | null) {
+/** Default: signed in, status loaded, not dismissed. */
+function arrange(
+  user: Partial<User> | null,
+  status: { is_dismissed?: boolean } | null = { is_dismissed: false },
+  isLoading = false,
+) {
   mockUseAuth.mockReturnValue({ user });
+  mockUseOnboardingStatus.mockReturnValue({ data: status, isLoading });
   return render(<OnboardingBanner />);
 }
 
@@ -50,19 +75,17 @@ describe("OnboardingBanner", () => {
   });
 
   it("renders member content with a personalized welcome", () => {
-    renderWithUser(makeUser());
+    arrange(makeUser());
 
     expect(screen.getByText(/Welcome, Adesegun/)).toBeInTheDocument();
     expect(screen.getByText("Fitness goals")).toBeInTheDocument();
-    expect(screen.getByText("Preferences & interests")).toBeInTheDocument();
-    expect(screen.getByText("Location")).toBeInTheDocument();
     expect(screen.getByText("Subscription plan")).toBeInTheDocument();
     expect(screen.getByText("Complete setup →")).toBeInTheDocument();
     expect(screen.getByText("Later")).toBeInTheDocument();
   });
 
   it("falls back to the role title when the user has no first name", () => {
-    renderWithUser(makeUser({ first_name: undefined }));
+    arrange(makeUser({ first_name: undefined }));
     expect(screen.getByText("Complete your profile")).toBeInTheDocument();
   });
 
@@ -71,62 +94,72 @@ describe("OnboardingBanner", () => {
     [UserRole.DIETITIAN, /Complete your dietitian profile/i, "License information"],
     [UserRole.GYM_OWNER, /Complete your gym setup/i, "Facilities & amenities"],
   ])("renders role-specific content for %s", (role, title, step) => {
-    renderWithUser(makeUser({ role, first_name: undefined }));
+    arrange(makeUser({ role, first_name: undefined }));
     expect(screen.getByText(title)).toBeInTheDocument();
     expect(screen.getByText(step)).toBeInTheDocument();
   });
 
   it("renders nothing when signed out", () => {
-    const { container } = renderWithUser(null);
+    const { container } = arrange(null);
     expect(container).toBeEmptyDOMElement();
   });
 
   it("renders nothing once onboarding is complete", () => {
-    const { container } = renderWithUser(
-      makeUser({ is_onboarding_complete: true }),
-    );
+    const { container } = arrange(makeUser({ is_onboarding_complete: true }));
     expect(container).toBeEmptyDOMElement();
   });
 
   it("renders nothing for roles without a setup track (e.g. ADMIN)", () => {
-    const { container } = renderWithUser(
-      makeUser({ role: UserRole.ADMIN }),
-    );
+    const { container } = arrange(makeUser({ role: UserRole.ADMIN }));
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("dismisses via the X button and persists per user id", () => {
-    renderWithUser(makeUser());
+  it("renders nothing until the server status has loaded", () => {
+    // Avoids flashing the banner to a user who dismissed it on another device.
+    const { container } = arrange(makeUser(), null, true);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("dismisses via the X button, calling the server and collapsing to a resume row", () => {
+    arrange(makeUser());
 
     fireEvent.click(screen.getByLabelText("Dismiss setup banner"));
 
+    expect(walkthroughDismiss).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(/Welcome, Adesegun/)).not.toBeInTheDocument();
-    expect(localStorage.getItem("setup-banner-dismissed:user-1")).toBe("1");
+    expect(screen.getByText("Setup guide hidden")).toBeInTheDocument();
+    expect(screen.getByText("Resume setup")).toBeInTheDocument();
   });
 
   it("dismisses via the Later button", () => {
-    renderWithUser(makeUser());
+    arrange(makeUser());
 
     fireEvent.click(screen.getByText("Later"));
 
+    expect(walkthroughDismiss).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(/Welcome, Adesegun/)).not.toBeInTheDocument();
-    expect(localStorage.getItem("setup-banner-dismissed:user-1")).toBe("1");
   });
 
-  it("stays hidden on later renders once dismissed (stored flag)", () => {
-    localStorage.setItem("setup-banner-dismissed:user-1", "1");
-    const { container } = renderWithUser(makeUser());
-    expect(container).toBeEmptyDOMElement();
+  it("shows only the resume row when the server reports it dismissed", () => {
+    arrange(makeUser(), { is_dismissed: true });
+
+    expect(screen.queryByText(/Welcome, Adesegun/)).not.toBeInTheDocument();
+    expect(screen.getByText("Setup guide hidden")).toBeInTheDocument();
+    expect(screen.getByText("Resume setup")).toBeInTheDocument();
   });
 
-  it("a dismissal by one user does not hide the banner for another", () => {
-    localStorage.setItem("setup-banner-dismissed:someone-else", "1");
-    renderWithUser(makeUser());
+  it("reopens from the resume row, calling the server and restoring the banner", () => {
+    arrange(makeUser(), { is_dismissed: true });
+
+    fireEvent.click(screen.getByText("Resume setup"));
+
+    expect(walkthroughReopen).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/Welcome, Adesegun/)).toBeInTheDocument();
+    expect(screen.getByText("Complete setup →")).toBeInTheDocument();
   });
 
   it("links Complete setup to the role's onboarding route", () => {
-    renderWithUser(makeUser({ role: UserRole.DIETITIAN, first_name: undefined }));
+    arrange(makeUser({ role: UserRole.DIETITIAN, first_name: undefined }));
     const link = screen.getByText("Complete setup →").closest("a");
     expect(link).toHaveAttribute("href", "/onboarding/dietitian");
   });
@@ -134,7 +167,7 @@ describe("OnboardingBanner", () => {
   it.each([UserRole.GYM_OWNER, UserRole.TRAINER, UserRole.DIETITIAN])(
     "points a provider (%s) at the plan catalogue",
     (role) => {
-      renderWithUser(makeUser({ role, first_name: undefined }));
+      arrange(makeUser({ role, first_name: undefined }));
       const link = screen.getByText("Choose your plan").closest("a");
       expect(link).toHaveAttribute("href", "/dashboard/billing");
     },
@@ -142,7 +175,7 @@ describe("OnboardingBanner", () => {
 
   it("does not show a plan CTA to a fitness member", () => {
     // A member subscribes to a gym, not to Binectics — nothing to point at.
-    renderWithUser(makeUser({ role: UserRole.USER }));
+    arrange(makeUser({ role: UserRole.USER }));
     expect(screen.queryByText("Choose your plan")).not.toBeInTheDocument();
   });
 });

@@ -2,13 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { getOnboardingRoute } from "@/lib/constants/routes";
+import { useOnboardingStatus } from "@/lib/queries/onboarding";
+import { onboardingService } from "@/lib/api/onboarding";
+import { queryKeys } from "@/lib/queries/keys";
 
 /**
  * Self-gating setup banner for first logins. Renders only when the signed-in
- * user has not completed onboarding; dismissal persists per user. Pages just
- * mount <OnboardingBanner /> — no props, no gating at the call site.
+ * user has not completed onboarding; dismissal is stored on the server (via
+ * the onboarding walkthrough endpoints) so it is per-user and cross-device,
+ * not a per-device localStorage flag. Once dismissed it collapses to a slim
+ * "Resume setup" row so the guide can always be brought back. Pages just mount
+ * <OnboardingBanner /> — no props, no gating at the call site.
  */
 
 /**
@@ -61,30 +68,76 @@ const ROLE_CONFIG: Record<
   },
 };
 
-function dismissKey(userId: string) {
-  return `setup-banner-dismissed:${userId}`;
-}
-
 export default function OnboardingBanner() {
   const { user } = useAuth();
-  const [dismissed, setDismissed] = useState(false);
+  const queryClient = useQueryClient();
+  const { data: status, isLoading } = useOnboardingStatus(!!user);
 
-  // user resolves async, so the stored flag is checked at render time rather
-  // than in a state initializer that would only see the pre-auth null user.
-  const storedDismissal =
-    typeof window !== "undefined" && user
-      ? localStorage.getItem(dismissKey(user.id)) === "1"
-      : false;
+  // Optimistic override so a click reacts instantly; the server flag (refetched
+  // after each call) is the source of truth. null means "defer to the server".
+  const [pending, setPending] = useState<null | "dismissed" | "reopened">(null);
 
-  if (!user || user.is_onboarding_complete || dismissed || storedDismissal) return null;
+  if (!user || user.is_onboarding_complete) return null;
 
   const config = ROLE_CONFIG[user.role];
   if (!config) return null; // e.g. ADMIN
 
-  const dismiss = () => {
-    localStorage.setItem(dismissKey(user.id), "1");
-    setDismissed(true);
+  // Wait for the server truth before the first render so a user who dismissed
+  // on another device does not get a flash of the banner. react-query caches
+  // the result, so this only ever delays the very first load.
+  if (isLoading && !status) return null;
+
+  const dismissed =
+    pending === "dismissed"
+      ? true
+      : pending === "reopened"
+        ? false
+        : !!status?.is_dismissed;
+
+  const setDismissed = async (next: boolean) => {
+    setPending(next ? "dismissed" : "reopened");
+    try {
+      const res = next
+        ? await onboardingService.walkthroughDismiss()
+        : await onboardingService.walkthroughReopen();
+      if (!res.success) setPending(null); // revert the optimistic flip on failure
+    } catch {
+      setPending(null);
+    } finally {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.onboarding.status(),
+      });
+    }
   };
+
+  // Dismissed: collapse to a slim row that can bring the guide back.
+  if (dismissed) {
+    return (
+      <div
+        className="flex items-center justify-between gap-3 rounded-(--r-2) px-4 py-2.5"
+        style={{ border: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ background: config.accent }}
+          />
+          <span className="text-[13px] truncate" style={{ color: "var(--fg-3)" }}>
+            Setup guide hidden
+          </span>
+        </div>
+        <button
+          onClick={() => void setDismissed(false)}
+          className="text-[13px] font-medium shrink-0"
+          style={{ color: "var(--fg-2)" }}
+        >
+          Resume setup
+        </button>
+      </div>
+    );
+  }
+
+  const dismiss = () => void setDismissed(true);
 
   return (
     <div
