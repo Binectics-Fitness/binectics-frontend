@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { utilityService } from "@/lib/api/utility";
 import type {
@@ -408,7 +409,13 @@ function PlanCard({
 
 export default function TrainerPlansClient() {
   const [plans, setPlans] = useState<MarketplaceMembershipPlan[]>([]);
-  const [orgId, setOrgId] = useState<string | null>(null);
+  // Membership plans are org-scoped, so the org comes straight from context
+  // (like the gym-owner plans page) — NOT from getMyListing(). A trainer who
+  // has not published a marketplace listing still has an org and must be able
+  // to create plans; deriving orgId from the listing 404'd and left create
+  // silently no-op'ing.
+  const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const orgId = currentOrg?._id ?? null;
   // Fetched purely to derive per-plan member counts (see countMembersByPlan).
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
   const membersByPlan = countMembersByPlan(subscriptions);
@@ -439,28 +446,21 @@ export default function TrainerPlansClient() {
   }, []);
 
   useEffect(() => {
+    // Keep showing skeletons while the org context is still resolving.
+    if (orgLoading) return;
+
     let mounted = true;
 
     const load = async () => {
+      // No active organization: nothing to load, and creation is disabled below.
+      if (!orgId) {
+        if (mounted) setLoading(false);
+        return;
+      }
       setLoading(true);
-      const listingRes = await marketplaceService.getMyListing();
-      if (!listingRes.success || !listingRes.data || !mounted) {
-        if (mounted) setLoading(false);
-        return;
-      }
-      const listing = listingRes.data;
-      const oid =
-        typeof listing.organization_id === "string"
-          ? listing.organization_id
-          : (listing.organization_id as { _id: string } | undefined)?._id ?? null;
-      if (!oid) {
-        if (mounted) setLoading(false);
-        return;
-      }
-      if (mounted) setOrgId(oid);
       const [plansRes, subsRes] = await Promise.all([
-        marketplaceService.getOrgMembershipPlans(oid),
-        marketplaceService.getOrgMembershipSubscriptions(oid),
+        marketplaceService.getOrgMembershipPlans(orgId),
+        marketplaceService.getOrgMembershipSubscriptions(orgId),
       ]);
       if (!mounted) return;
       if (plansRes.success && plansRes.data) setPlans(plansRes.data);
@@ -472,7 +472,7 @@ export default function TrainerPlansClient() {
 
     void load();
     return () => { mounted = false; };
-  }, []);
+  }, [orgId, orgLoading]);
   const handleCreate = async (data: CreateOrgMembershipPlanRequest) => {
     if (!orgId) return;
     const res = await marketplaceService.createOrgMembershipPlan(orgId, data);
@@ -535,7 +535,9 @@ export default function TrainerPlansClient() {
         <button
           type="button"
           onClick={() => setModal({ mode: "create" })}
-          className="btn-signal-v2 inline-flex items-center gap-2 self-start sm:self-auto"
+          disabled={!orgId}
+          title={orgId ? undefined : "Set up your organization to create plans"}
+          className="btn-signal-v2 inline-flex items-center gap-2 self-start sm:self-auto disabled:opacity-40"
           style={{ height: "36px", padding: "0 16px", fontSize: "13px" }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
@@ -562,7 +564,9 @@ export default function TrainerPlansClient() {
           <button
             type="button"
             onClick={() => setModal({ mode: "create" })}
-            className="mt-1 h-9 px-5 rounded-(--r-2) text-[13px] font-medium"
+            disabled={!orgId}
+            title={orgId ? undefined : "Set up your organization to create plans"}
+            className="mt-1 h-9 px-5 rounded-(--r-2) text-[13px] font-medium disabled:opacity-40"
             style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
           >
             Create first plan
