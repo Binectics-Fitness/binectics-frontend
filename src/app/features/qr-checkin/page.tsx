@@ -5,7 +5,7 @@ import { KioskDemo } from "@/components/ds/KioskDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "QR Check-in — Binectics",
+  title: "QR Check-in, Binectics",
   description:
     "Touchless attendance with 92% scan success. iPad kiosks at the door, real-time streak tracking, and a 2-second check-in that members actually enjoy.",
   keywords:
@@ -21,12 +21,12 @@ const HOW_IT_WORKS = [
   {
     step: "02",
     title: "Members scan on entry",
-    desc: "Each member has a unique QR code in the Binectics app. Hold it up to the kiosk camera — no tap, no PIN, no card. The scanner auto-detects in under 400ms.",
+    desc: "Each member has a unique QR code in the Binectics app. Hold it up to the kiosk camera, no tap, no PIN, no card. The scanner auto-detects in under 400ms.",
   },
   {
     step: "03",
     title: "The kiosk responds instantly",
-    desc: "Name, photo, streak count, next class — all rendered in a 2-second animated sequence. The member feels recognized. The gym gets timestamped attendance data.",
+    desc: "Name, photo, streak count, next class, all rendered in a 2-second animated sequence. The member feels recognized. The gym gets timestamped attendance data.",
   },
 ];
 
@@ -35,12 +35,12 @@ const GYM_OWNER_FEATURES = [
   { title: "Streak analytics", desc: "Members with active streaks churn 43% less. See streak distribution, identify members at risk of breaking, and send auto-nudges at configurable thresholds." },
   { title: "Capacity monitoring", desc: "Set your gym's max capacity. The dashboard shows current occupancy as a percentage. Optional: kiosk displays 'at capacity' when the limit is reached." },
   { title: "Peak hour heatmap", desc: "Hourly check-in volume for every day of the week, visualised as a heatmap. Use it to plan staffing, schedule popular classes, and identify dead hours." },
-  { title: "Multi-location support", desc: "Members can check in at any of your locations. Each location has its own kiosk, its own attendance data, and its own leaderboard — or one combined view." },
+  { title: "Multi-location support", desc: "Members can check in at any of your locations. Each location has its own kiosk, its own attendance data, and its own leaderboard, or one combined view." },
   { title: "Offline resilience", desc: "If Wi-Fi drops, the kiosk queues check-ins locally and syncs when connectivity returns. Members never get stuck at the door." },
 ];
 
 const MEMBER_FEATURES = [
-  { title: "Personal streaks", desc: "Consecutive-day and weekly visit counters. Personal best tracking. Break a streak and start rebuilding — the counter remembers your record." },
+  { title: "Personal streaks", desc: "Consecutive-day and weekly visit counters. Personal best tracking. Break a streak and start rebuilding, the counter remembers your record." },
   { title: "Visit history", desc: "Every check-in logged with date, time, and location. Exportable as CSV. Useful for insurance claims, employer wellness programs, and personal records." },
   { title: "Next class preview", desc: "The kiosk shows your next scheduled class, trainer name, and time. First-timers see a welcome message and their assigned trainer's name." },
   { title: "Personalised welcome", desc: "Four flavours: standard returning member, PR potential day, first-timer welcome, and lapsed member re-engagement. The kiosk knows who's at the door." },
@@ -120,7 +120,7 @@ export default function QRCheckinFeaturePage() {
           style={{ color: "var(--fg-2)" }}
         >
           Four members, four contexts. The kiosk recognises who&rsquo;s at
-          the door and responds accordingly — standard return, PR day,
+          the door and responds accordingly, standard return, PR day,
           first-timer, or a member who&rsquo;s been away. Click a name to
           see each flow.
         </p>
@@ -183,8 +183,8 @@ export default function QRCheckinFeaturePage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Every scan generates data. Your dashboard turns it into decisions
-          — staffing, capacity, retention, and engagement.
+          Every scan generates data. Your dashboard turns it into decisions,
+          staffing, capacity, retention, and engagement.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {GYM_OWNER_FEATURES.map((f) => (
@@ -225,7 +225,7 @@ export default function QRCheckinFeaturePage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Check-in is not just access control — it&rsquo;s the moment the
+          Check-in is not just access control, it&rsquo;s the moment the
           gym acknowledges a member by name. That matters for retention.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">

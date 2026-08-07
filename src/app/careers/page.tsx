@@ -18,7 +18,7 @@ const ROLES = [
   {
     title: "Senior product designer",
     team: "Design · Cape Town · hybrid",
-    desc: "Lead design for member surface — the front door to everything we do.",
+    desc: "Lead design for member surface, the front door to everything we do.",
   },
   {
     title: "Staff engineer · payments",

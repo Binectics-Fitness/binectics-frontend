@@ -19,11 +19,11 @@ describe("resolveEstablishedRole", () => {
     expect(resolveEstablishedRole("ADMIN")).toBeNull();
   });
 
-  it("is null for the default member role — a backend default, not a choice", () => {
+  it("is null for the default member role, a backend default, not a choice", () => {
     expect(resolveEstablishedRole("USER")).toBeNull();
   });
 
-  it("resolves provider roles — those reflect an actual commitment", () => {
+  it("resolves provider roles, those reflect an actual commitment", () => {
     expect(resolveEstablishedRole("TRAINER")).toBe("trainer");
     expect(resolveEstablishedRole("GYM_OWNER")).toBe("gym");
     expect(resolveEstablishedRole("DIETITIAN")).toBe("dietitian");
@@ -36,7 +36,7 @@ describe("resolvePreselectedRole", () => {
     expect(resolvePreselectedRole(null, null)).toBeNull();
   });
 
-  it("does NOT preselect from the default member role — the picker must stay open", () => {
+  it("does NOT preselect from the default member role, the picker must stay open", () => {
     expect(resolvePreselectedRole(null, "USER")).toBeNull();
   });
 

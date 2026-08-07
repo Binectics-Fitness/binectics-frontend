@@ -227,7 +227,7 @@ export default function GymStaffPage() {
                   </div>
                 </div>
                 <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
-                  {joined ? `Joined ${fmtDate(joined)}` : "—"}
+                  {joined ? `Joined ${fmtDate(joined)}` : "-"}
                 </span>
                 <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st?.color, background: st?.bg, border: `1px solid ${st?.color ?? "var(--border)"}` }}>
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st?.label ?? m.status}

@@ -408,7 +408,7 @@ export default function MealLogPage() {
           {
             label: "Today",
             value: todayMeals.length.toString(),
-            delta: todayMeals.length > 0 ? "Synced" : "—",
+            delta: todayMeals.length > 0 ? "Synced" : "-",
           },
           { label: "Status", value: loading ? "..." : "Active", delta: "Tracking" },
         ].map((kpi) => (
@@ -520,7 +520,7 @@ export default function MealLogPage() {
                   alignSelf: "center",
                 }}
               >
-                {meal.calories ? `${meal.calories} kcal` : "—"} · {meal.rating || "unrated"}
+                {meal.calories ? `${meal.calories} kcal` : "-"} · {meal.rating || "unrated"}
               </div>
             </div>
           ))

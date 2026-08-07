@@ -78,13 +78,13 @@ function BookableClassRow({ listingId, gymClass: c }: { listingId: string; gymCl
         setMessage({
           text:
             res.data.status === "waitlisted"
-              ? `Class full — you're on the waitlist for ${occurrenceLabel(date)}.`
+              ? `Class full, you're on the waitlist for ${occurrenceLabel(date)}.`
               : `Booked for ${occurrenceLabel(date)} ✓`,
           ok: true,
         });
         void queryClient.invalidateQueries({ queryKey: ["myClassBookings"] });
       } else {
-        setMessage({ text: res.message || "Couldn't book — log in and check your membership.", ok: false });
+        setMessage({ text: res.message || "Couldn't book, log in and check your membership.", ok: false });
       }
     },
   });

@@ -406,7 +406,7 @@ function FlowBReview() {
 
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b", margin: "20px 4px 8px" }}>Your review</div>
         <div style={{ background: "#fff", border: "1px solid #ebe7e1", borderRadius: 12, padding: 14, minHeight: 70, fontSize: 13.5, color: "#54504a", lineHeight: 1.5 }}>
-          Sarah&apos;s programming is the reason I hit 92.5 on squat. She pays attention to recovery, sleep — not just the lift.
+          Sarah&apos;s programming is the reason I hit 92.5 on squat. She pays attention to recovery, sleep, not just the lift.
         </div>
       </div>
       <div style={{ padding: "12px 20px 28px", borderTop: "1px solid #ebe7e1" }}>
@@ -1382,7 +1382,7 @@ function Row3DashCard() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, paddingBottom: 4 }}>
                   <div>
                     <div style={{ fontSize: 30, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--ink)" }}>Good morning, Lerato</div>
-                    <div style={{ fontSize: 13.5, marginTop: 6, color: "var(--fg-3)" }}>Here&apos;s how Iron Lab is doing — all 4 locations · ZAR</div>
+                    <div style={{ fontSize: 13.5, marginTop: 6, color: "var(--fg-3)" }}>Here&apos;s how Iron Lab is doing, all 4 locations · ZAR</div>
                   </div>
                   <div className="r3-time-filter">
                     {["1D", "7D", "30D", "QTD", "YTD", "Custom"].map((t, i) => (

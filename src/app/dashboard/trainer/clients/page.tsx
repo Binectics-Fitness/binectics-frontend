@@ -102,9 +102,9 @@ export default function TrainerClientsPage() {
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
-          { label: "Total clients", value: loading ? "—" : String(clients.length), delta: "All time" },
-          { label: "Active", value: loading ? "—" : String(counts.Active), delta: "Currently active" },
-          { label: "Paused", value: loading ? "—" : String(counts.Paused), delta: "Inactive / paused" },
+          { label: "Total clients", value: loading ? "-" : String(clients.length), delta: "All time" },
+          { label: "Active", value: loading ? "-" : String(counts.Active), delta: "Currently active" },
+          { label: "Paused", value: loading ? "-" : String(counts.Paused), delta: "Inactive / paused" },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
@@ -186,7 +186,7 @@ export default function TrainerClientsPage() {
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                       <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
-                        {c.goals.length > 0 ? c.goals.slice(0, 2).join(" · ") : "—"}
+                        {c.goals.length > 0 ? c.goals.slice(0, 2).join(" · ") : "-"}
                       </span>
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>

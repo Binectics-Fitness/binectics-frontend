@@ -32,15 +32,15 @@ const PRINCIPLES = [
 const TEAM = [
   { name: "Provider success", role: "Onboarding · verification", bio: "Hand-holds every founding-cohort provider onto the platform and reviews every verification document personally.", grad: "linear-gradient(135deg, oklch(0.84 0.05 60), oklch(0.7 0.08 40))" },
   { name: "Payments engineering", role: "Stripe · Paystack · Flutterwave", bio: "Believes payments should be boring. Three rails, eight currencies, settlement directly to provider accounts.", grad: "linear-gradient(135deg, oklch(0.84 0.04 248), oklch(0.7 0.06 220))" },
-  { name: "Copilot & nutrition product", role: "AI drafts · meal plans", bio: "Builds the drafting engine and the meal-plan tools — designed so no client message ever sends without human review.", grad: "linear-gradient(135deg, oklch(0.86 0.04 300), oklch(0.74 0.06 280))" },
+  { name: "Copilot & nutrition product", role: "AI drafts · meal plans", bio: "Builds the drafting engine and the meal-plan tools, designed so no client message ever sends without human review.", grad: "linear-gradient(135deg, oklch(0.86 0.04 300), oklch(0.74 0.06 280))" },
   { name: "Design", role: "Design system · product chrome", bio: "One signal color, 1px hairlines, no shadows. The calm is deliberate.", grad: "linear-gradient(135deg, oklch(0.84 0.04 120), oklch(0.7 0.06 100))" },
 ];
 
 const TIMELINE = [
-  { date: "2025", title: "The thesis", desc: "Fitness professionals lose hours every week to admin software should have absorbed years ago. We started designing the rails — marketplace, payments, check‑ins — as one product." },
+  { date: "2025", title: "The thesis", desc: "Fitness professionals lose hours every week to admin software should have absorbed years ago. We started designing the rails, marketplace, payments, check‑ins, as one product." },
   { date: "Early 2026", title: "Design system v2", desc: "Calm chrome: one signal color, hairline borders, restrained motion. An admin reviewing documents and a trainer writing a journal entry work in the same quiet product." },
-  { date: "Now", title: "Early access", desc: "The founding cohort of gyms, trainers, and dietitians is onboarding — locked pricing, hands‑on setup, and a direct line to the team building the copilot." },
-  { date: "Launch 2026", title: "Copilot GA", desc: "AI‑drafted summaries, weekly reports, and program updates — generated from your clients' data, reviewed by you before anything sends. Member mobile apps follow." },
+  { date: "Now", title: "Early access", desc: "The founding cohort of gyms, trainers, and dietitians is onboarding, locked pricing, hands‑on setup, and a direct line to the team building the copilot." },
+  { date: "Launch 2026", title: "Copilot GA", desc: "AI‑drafted summaries, weekly reports, and program updates, generated from your clients' data, reviewed by you before anything sends. Member mobile apps follow." },
 ];
 
 export default function AboutPage() {
@@ -55,7 +55,7 @@ export default function AboutPage() {
           We build the rails. The <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>people</em> on them do the work.
         </h1>
         <p className="text-[17px] sm:text-[19px] max-w-[60ch] leading-[1.5]" style={{ color: "var(--fg-2)", marginTop: "28px" }}>
-          Binectics is the copilot fitness professionals run their business on — AI-drafted client work, payments, and a verified marketplace for gyms, trainers, dietitians, and the people they work with. We&apos;re a small team with one strong opinion: software should get out of the way.
+          Binectics is the copilot fitness professionals run their business on, AI-drafted client work, payments, and a verified marketplace for gyms, trainers, dietitians, and the people they work with. We&apos;re a small team with one strong opinion: software should get out of the way.
         </p>
       </section>
 
@@ -71,8 +71,8 @@ export default function AboutPage() {
             <p className="max-w-[56ch]">The local fitness marketplace was Instagram DMs. There was nothing in the middle.</p>
           </div>
           <div>
-            <p className="mb-4.5 max-w-[56ch]">So we&apos;re building it: one platform where discovery, payments, check‑ins, and client work run on the same rails — and where <strong style={{ color: "var(--ink)", fontWeight: 500 }}>an AI copilot drafts the busywork</strong> that eats a professional&apos;s week, with every draft reviewed by a human before it sends.</p>
-            <p className="max-w-[56ch]">Early access is open now. The founding cohort of providers is shaping what ships at launch — pricing locked, direct line to the team.</p>
+            <p className="mb-4.5 max-w-[56ch]">So we&apos;re building it: one platform where discovery, payments, check‑ins, and client work run on the same rails, and where <strong style={{ color: "var(--ink)", fontWeight: 500 }}>an AI copilot drafts the busywork</strong> that eats a professional&apos;s week, with every draft reviewed by a human before it sends.</p>
+            <p className="max-w-[56ch]">Early access is open now. The founding cohort of providers is shaping what ships at launch, pricing locked, direct line to the team.</p>
           </div>
         </div>
       </section>
@@ -81,7 +81,7 @@ export default function AboutPage() {
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-12 sm:py-16 lg:py-24" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 items-end mb-12">
           <h2 className="text-[36px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>Where we<br />are today.</h2>
-          <p className="text-[17px] max-w-[50ch] leading-[1.55]" style={{ color: "var(--fg-2)" }}>We&apos;re pre-launch and building in the open. The numbers we can show you are the ones designed into the product — usage numbers come after launch, and they&apos;ll be real when they do.</p>
+          <p className="text-[17px] max-w-[50ch] leading-[1.55]" style={{ color: "var(--fg-2)" }}>We&apos;re pre-launch and building in the open. The numbers we can show you are the ones designed into the product, usage numbers come after launch, and they&apos;ll be real when they do.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 rounded-(--r-3) overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
           {STATS.map((s, i) => (
@@ -114,7 +114,7 @@ export default function AboutPage() {
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-12 sm:py-16 lg:py-24" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 items-end mb-12">
           <h2 className="text-[36px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>Who builds<br />this.</h2>
-          <p className="text-[17px] max-w-[50ch] leading-[1.55]" style={{ color: "var(--fg-2)" }}>A small team across product, engineering, and provider success — growing as we head to launch. The disciplines below; the open roles live on the <Link href="/careers" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>careers page</Link>.</p>
+          <p className="text-[17px] max-w-[50ch] leading-[1.55]" style={{ color: "var(--fg-2)" }}>A small team across product, engineering, and provider success, growing as we head to launch. The disciplines below; the open roles live on the <Link href="/careers" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>careers page</Link>.</p>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {TEAM.map((m) => (
@@ -134,7 +134,7 @@ export default function AboutPage() {
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-12 sm:py-16 lg:py-24" style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 lg:gap-16 items-end mb-12">
           <h2 className="text-[36px] sm:text-[48px] font-medium leading-none max-w-[12ch]" style={{ letterSpacing: "-0.035em", color: "var(--ink)" }}>What ships<br />when.</h2>
-          <p className="text-[17px] max-w-[50ch] leading-[1.55]" style={{ color: "var(--fg-2)" }}>A build log and a roadmap. Each entry is months of unglamorous work — the kind that&apos;s not worth a blog post but compounds into a product worth using.</p>
+          <p className="text-[17px] max-w-[50ch] leading-[1.55]" style={{ color: "var(--fg-2)" }}>A build log and a roadmap. Each entry is months of unglamorous work, the kind that&apos;s not worth a blog post but compounds into a product worth using.</p>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           {TIMELINE.map((t) => (
@@ -154,7 +154,7 @@ export default function AboutPage() {
             List your practice today. Build something real.
           </h2>
           <div className="flex flex-col gap-4 items-start">
-            <p className="text-[16px] max-w-[36ch] leading-[1.5]" style={{ color: "oklch(0.78 0.005 85)", margin: 0 }}>Free to start, three minutes to publish. Or — if our principles resonate — we&apos;re hiring across engineering, design, and provider success.</p>
+            <p className="text-[16px] max-w-[36ch] leading-[1.5]" style={{ color: "oklch(0.78 0.005 85)", margin: 0 }}>Free to start, three minutes to publish. Or, if our principles resonate, we&apos;re hiring across engineering, design, and provider success.</p>
             <div className="flex gap-3">
               <Link href="/login?mode=signup" className="btn-signal-v2 lg" style={{ color: "oklch(0.18 0.05 148)" }}>Start free →</Link>
               <Link href="/careers" className="btn-ghost-v2 lg" style={{ color: "var(--bg)", borderColor: "oklch(0.35 0.008 80)" }}>See open roles</Link>

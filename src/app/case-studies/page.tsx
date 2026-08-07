@@ -17,7 +17,7 @@ const STUDIES = [
   {
     eyebrow: "Lerato Mokoena · owner",
     name: "Iron Lab · Cape Town",
-    quote: "“We saved 14 hours of admin a week and dropped churn by 22%. The QR check-ins replaced our wooden sign-in sheet — best decision I made in 2025.”",
+    quote: "“We saved 14 hours of admin a week and dropped churn by 22%. The QR check-ins replaced our wooden sign-in sheet, best decision I made in 2025.”",
     note: "From 4 spreadsheets and Mindbody to one dashboard.",
     kpis: [
       { label: "Locations", value: "4" },

@@ -18,7 +18,7 @@ export default function AdminDisputeDetailPage() {
         title={"Dispute"}
         subtitle={"Dispute detail"}
         pendingTitle={"Dispute detail is coming soon"}
-        pendingBody={"There are no disputes yet \u2014 the disputes subsystem hasn't been built. This page previously showed fabricated dispute data."}
+        pendingBody={"There are no disputes yet, the disputes subsystem hasn't been built. This page previously showed fabricated dispute data."}
         cta={{ href: "/admin/disputes", label: "Back to disputes" }}
       />
     </AdminDashboardShell>

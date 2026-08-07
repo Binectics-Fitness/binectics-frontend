@@ -56,7 +56,7 @@ export default function AdminSingleReviewPage({
               </span>
             </div>
             <p className="text-[14px] leading-relaxed mt-2" style={{ color: "var(--fg-2)" }}>
-              &ldquo;This place is a SCAM. The staff are racist. The owner [redacted in moderation] should be in jail. Don&apos;t believe the fake reviews — they&apos;re paid by the gym.&rdquo;
+              &ldquo;This place is a SCAM. The staff are racist. The owner [redacted in moderation] should be in jail. Don&apos;t believe the fake reviews, they&apos;re paid by the gym.&rdquo;
             </p>
           </div>
         </div>

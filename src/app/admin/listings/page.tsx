@@ -171,18 +171,18 @@ export default function AdminListingsPage() {
   const kpis = [
     {
       label: "Total listings",
-      value: loading ? "—" : counts.all.toString(),
+      value: loading ? "-" : counts.all.toString(),
       delta: `${counts.verified} verified`,
     },
     {
       label: "Pending review",
-      value: loading ? "—" : counts.pending.toString(),
+      value: loading ? "-" : counts.pending.toString(),
       delta: "no badge yet",
       valueColor: counts.pending > 0 ? "var(--danger)" : "var(--ink)",
     },
     {
       label: "Suspended",
-      value: loading ? "—" : counts.suspended.toString(),
+      value: loading ? "-" : counts.suspended.toString(),
       delta: "needs review",
       deltaColor: "var(--fg-3)",
     },
@@ -190,7 +190,7 @@ export default function AdminListingsPage() {
       label: "Avg rating",
       value:
         loading || listings.length === 0
-          ? "—"
+          ? "-"
           : (
               listings.reduce((acc, l) => acc + (l.average_rating ?? 0), 0) / listings.length
             ).toFixed(2),
@@ -398,7 +398,7 @@ export default function AdminListingsPage() {
                           className="font-mono text-[11.5px] uppercase tracking-[0.04em]"
                           style={{ color: "var(--fg-3)" }}
                         >
-                          {l.country_code ?? "—"}
+                          {l.country_code ?? "-"}
                         </span>
                       </td>
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
@@ -406,7 +406,7 @@ export default function AdminListingsPage() {
                           className="font-mono"
                           style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
                         >
-                          {l.average_rating?.toFixed(1) ?? "—"}
+                          {l.average_rating?.toFixed(1) ?? "-"}
                           <span
                             className="ml-1.5 text-[11px]"
                             style={{ color: "var(--fg-3)" }}

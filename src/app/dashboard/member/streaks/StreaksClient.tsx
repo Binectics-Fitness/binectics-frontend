@@ -37,7 +37,7 @@ export function StreaksClient() {
 
   const kpis = [
     { label: "Current streak", value: `${streak} day${streak === 1 ? "" : "s"}`, delta: stats?.has_checked_in_today ? "checked in today ✓" : "no check-in yet today" },
-    { label: "Total check-ins", value: String(total), delta: stats?.last_check_in_at ? `last ${formatDate(stats.last_check_in_at)}` : "—" },
+    { label: "Total check-ins", value: String(total), delta: stats?.last_check_in_at ? `last ${formatDate(stats.last_check_in_at)}` : "-" },
     ...(points != null ? [{ label: "Loyalty points", value: points.toLocaleString(), delta: "redeemable at your gym" }] : []),
   ];
 
@@ -91,7 +91,7 @@ export function StreaksClient() {
         </div>
         {history.length === 0 ? (
           <p className="px-5.5 py-8 text-center text-[13.5px]" style={{ color: "var(--fg-3)" }}>
-            No check-ins yet — scan the QR at your gym to start your streak.
+            No check-ins yet, scan the QR at your gym to start your streak.
           </p>
         ) : (
           history.slice(0, 10).map((c, i, a) => (

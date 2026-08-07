@@ -17,7 +17,7 @@ const FEED_POLL_MS = 10_000;
 function personName(
   v: string | { first_name: string; last_name: string } | undefined | null,
 ) {
-  return v && typeof v === "object" ? `${v.first_name} ${v.last_name}` : "—";
+  return v && typeof v === "object" ? `${v.first_name} ${v.last_name}` : "-";
 }
 
 /**
@@ -139,7 +139,7 @@ export default function CheckInKioskPage() {
             Check-in kiosk
           </h1>
           <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            Members scan your gym&rsquo;s QR with their phone — arrivals and
+            Members scan your gym&rsquo;s QR with their phone, arrivals and
             declined attempts land here live.
           </p>
         </div>
@@ -172,7 +172,7 @@ export default function CheckInKioskPage() {
               </div>
               <p className="mt-3 text-[12.5px] leading-normal" style={{ color: "var(--fg-3)" }}>
                 Run &ldquo;kiosk display&rdquo; on a front-desk tablet. The
-                code refreshes every minute — printed copies and photos stop
+                code refreshes every minute, printed copies and photos stop
                 working by design.
               </p>
             </div>

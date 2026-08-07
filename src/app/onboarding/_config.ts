@@ -146,7 +146,7 @@ export const ROLE_CARDS = [
   {
     id: "trainer" as RoleId,
     title: "Personal trainer",
-    desc: "List your services, manage clients, take bookings, and get paid — all in one place.",
+    desc: "List your services, manage clients, take bookings, and get paid, all in one place.",
     meta: "Individual · provider",
     color: "var(--trainer)",
   },

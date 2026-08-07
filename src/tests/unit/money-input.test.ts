@@ -87,7 +87,7 @@ describe("extractNumeric", () => {
 });
 
 describe("formatMoneyInput", () => {
-  it("leaves empty input empty — never 0 or ₦0", () => {
+  it("leaves empty input empty, never 0 or ₦0", () => {
     expect(formatMoneyInput("", NGN)).toBe("");
     expect(formatMoneyInput("   ", NGN)).toBe("");
     expect(formatMoneyInput("₦", NGN)).toBe("");

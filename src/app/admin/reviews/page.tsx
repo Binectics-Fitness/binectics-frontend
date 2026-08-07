@@ -18,7 +18,7 @@ export default function AdminReviewsPage() {
         title={"Reviews"}
         subtitle={"Moderate marketplace reviews"}
         pendingTitle={"Review moderation is coming soon"}
-        pendingBody={"Flagged-review queues and moderation actions will appear here once the moderation endpoints are built. Member reviews are live on marketplace listings today \u2014 this page previously showed fabricated records."}
+        pendingBody={"Flagged-review queues and moderation actions will appear here once the moderation endpoints are built. Member reviews are live on marketplace listings today, this page previously showed fabricated records."}
         cta={{ href: "/admin/listings", label: "Manage listings" }}
       />
     </AdminDashboardShell>

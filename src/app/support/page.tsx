@@ -253,7 +253,7 @@ export default function SupportPage() {
                 <span>09:18 SAST</span>
               </div>
               <div className="rounded-(--r-3) text-[13.5px] leading-[1.55] whitespace-pre-line" style={{ padding: "11px 14px", background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}>
-                {`Hi — I cancelled this session 33 hours before the start. According to your terms I should be entitled to a full refund. Iron Lab told me they’re keeping the money because it was “same day” but it’s not?
+                {`Hi, I cancelled this session 33 hours before the start. According to your terms I should be entitled to a full refund. Iron Lab told me they’re keeping the money because it was “same day” but it’s not?
 
 I’d like a full refund please. The cancellation timestamp on my booking screen is clear.`}
               </div>
@@ -270,7 +270,7 @@ I’d like a full refund please. The cancellation timestamp on my booking screen
                 <span>10:42 SAST</span>
               </div>
               <div className="rounded-(--r-3) text-[13.5px] leading-[1.55] whitespace-pre-line" style={{ padding: "11px 14px", background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}>
-                {`Hi team — Pier is mistaken on the timing. Our scheduling system shows the cancellation came in at 09:14 today and his session was scheduled for 18:00 today, so this was 8h 46m before, not 33h. Our cancellation policy is clearly published as 24h notice required.
+                {`Hi team, Pier is mistaken on the timing. Our scheduling system shows the cancellation came in at 09:14 today and his session was scheduled for 18:00 today, so this was 8h 46m before, not 33h. Our cancellation policy is clearly published as 24h notice required.
 
 Happy to provide our system’s audit log on request.`}
               </div>
@@ -286,7 +286,7 @@ Happy to provide our system’s audit log on request.`}
                 <strong className="text-[12.5px] font-medium" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", textTransform: "none" as const, letterSpacing: "-0.005em" }}>You</strong>
               </div>
               <div className="rounded-(--r-3) text-[13.5px] leading-[1.55] whitespace-pre-line" style={{ padding: "11px 14px", background: "var(--ink)", border: "1px solid var(--ink)", color: "var(--bg)" }}>
-                {`Hi Pier and Iron Lab —
+                {`Hi Pier and Iron Lab -
 
 I’ve looked into both sides. The booking was originally for Wed 20 May 08:30. Pier rescheduled to Mon 18 May 18:00 on Friday at 14:18. The cancellation came in at Mon 09:14, which is 8h 46m before the rescheduled time.
 

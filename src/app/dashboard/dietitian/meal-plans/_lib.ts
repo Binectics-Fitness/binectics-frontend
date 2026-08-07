@@ -104,7 +104,7 @@ export function templateToClientPlanPayload(
 ): CreateDietPlanRequest {
   if (plan.delivery_type !== DietPlanDeliveryType.PLATFORM) {
     throw new Error(
-      "Only platform meal plans can be assigned from a template — document plans have no copyable content.",
+      "Only platform meal plans can be assigned from a template, document plans have no copyable content.",
     );
   }
   const meals: CreateDietMealRequest[] = [...(plan.meals ?? [])]

@@ -27,7 +27,7 @@ export function buildProtocolRecommendation(
     steps.forEach((step, i) => {
       const title = step.title.trim();
       const detail = step.detail?.trim();
-      lines.push(`${i + 1}. ${detail ? `${title} — ${detail}` : title}`);
+      lines.push(`${i + 1}. ${detail ? `${title}, ${detail}` : title}`);
     });
   }
 

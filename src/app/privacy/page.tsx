@@ -21,34 +21,34 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
       { num: "00", title: "Plain‑English summary", content: (
         <div className="rounded-r-(--r-2) py-3 px-4 my-4 max-w-[60ch]" style={{ background: "var(--bg-2)", borderLeft: "2px solid var(--ink)" }}>
           <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-1" style={{ color: "var(--fg-3)" }}>In one paragraph</div>
-          <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>We collect what we need to run a marketplace — your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong>We don&apos;t sell your data, ever.</strong> You can download a full copy or delete your account from settings, any time, and the deletion is real.</p>
+          <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>We collect what we need to run a marketplace, your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong>We don&apos;t sell your data, ever.</strong> You can download a full copy or delete your account from settings, any time, and the deletion is real.</p>
         </div>
       )},
       { num: "01", title: "What we collect", content: (<>
-        <p className="text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Three categories — what you give us, what we observe, and what others tell us.</p>
+        <p className="text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Three categories, what you give us, what we observe, and what others tell us.</p>
         <h3 className="text-[16px] font-medium mt-7 mb-2.5" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>You give us</h3>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch] mb-3.5" style={{ color: "var(--fg-2)" }}>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Account info</strong> — name, email, phone, password (hashed with bcrypt + per‑user salt).</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Provider documents</strong> — ID, certifications, insurance, bank details. Used only for verification and payouts.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Booking data</strong> — sessions, plans, payments, messages with the other side of the marketplace.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Optional logs</strong> — weight, photos, mood, meal logs, workout adherence. You choose what to share with which provider.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Account info</strong>, name, email, phone, password (hashed with bcrypt + per‑user salt).</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Provider documents</strong>, ID, certifications, insurance, bank details. Used only for verification and payouts.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Booking data</strong>, sessions, plans, payments, messages with the other side of the marketplace.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Optional logs</strong>, weight, photos, mood, meal logs, workout adherence. You choose what to share with which provider.</li>
         </ul>
         <h3 className="text-[16px] font-medium mt-7 mb-2.5" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>We observe</h3>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch] mb-3.5" style={{ color: "var(--fg-2)" }}>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>How you use the product</strong> — pages viewed, searches, taps. Stored against a rotating device ID, not your account, where possible.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Device & network</strong> — browser, OS, IP, approximate city. Used for fraud detection and to localize the experience.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>How you use the product</strong>, pages viewed, searches, taps. Stored against a rotating device ID, not your account, where possible.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Device & network</strong>, browser, OS, IP, approximate city. Used for fraud detection and to localize the experience.</li>
         </ul>
         <h3 className="text-[16px] font-medium mt-7 mb-2.5" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Others tell us</h3>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Payment processors</strong> — Stripe, Paystack, Flutterwave send us card last‑4, expiry, and fraud signals. We never see the full card number.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Verification partners</strong> — confirm a certification is real or an ID is valid. We log the outcome, not the documents themselves where avoidable.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Payment processors</strong>, Stripe, Paystack, Flutterwave send us card last‑4, expiry, and fraud signals. We never see the full card number.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Verification partners</strong>, confirm a certification is real or an ID is valid. We log the outcome, not the documents themselves where avoidable.</li>
         </ul>
       </>)},
       { num: "02", title: "Why we collect it", content: (
         <div className="rounded-(--r-3) overflow-hidden my-4 max-w-[60ch]" style={{ border: "1px solid var(--border)" }}>
           <div className="grid font-mono text-[11px] uppercase tracking-[0.04em]" style={{ gridTemplateColumns: "1fr 2fr", padding: "10px 16px", background: "var(--bg-2)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}><span>We collect</span><span>Because</span></div>
           {[
-            ["Account & bookings", "To run the service — without this, you can't book anything."],
+            ["Account & bookings", "To run the service, without this, you can't book anything."],
             ["Payment data", "To charge you, pay providers, and prevent stolen‑card use."],
             ["Provider documents", "So members can trust the green verified badge."],
             ["Health logs", "So your coach can do their job. Visible to only the providers you choose."],
@@ -64,10 +64,10 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
       { num: "03", title: "Who we share with", content: (<>
         <p className="text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>A short list. We never add to it without telling you.</p>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>The other side of your bookings</strong> — your coach sees what you&apos;d expect.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Payment processors</strong> — Stripe, Paystack, Flutterwave, Razorpay.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Infrastructure providers</strong> — Cloudflare, AWS, Postmark for email.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Government authorities</strong> — only when legally required.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>The other side of your bookings</strong>, your coach sees what you&apos;d expect.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Payment processors</strong>, Stripe, Paystack, Flutterwave, Razorpay.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Infrastructure providers</strong>, Cloudflare, AWS, Postmark for email.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Government authorities</strong>, only when legally required.</li>
         </ul>
       </>)},
       { num: "04", title: "Where it lives", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Primary database: <strong style={{ color: "var(--ink)", fontWeight: 500 }}>Cape Town, ZA</strong> (af‑south‑1). Real‑time replica: <strong style={{ color: "var(--ink)", fontWeight: 500 }}>Dublin, IE</strong> (eu‑west‑1) for backup and EU latency.</p> },
@@ -91,11 +91,11 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
       { num: "06", title: "Your rights", content: (<>
         <p className="text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Wherever you are, you have these rights. POPIA, GDPR, and our own policy converge on them.</p>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Access</strong> — download a full copy of your data from settings.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Correction</strong> — fix anything wrong from settings or email privacy@binectics.com.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Deletion</strong> — purge your account. 30-day processing.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Portability</strong> — your data exports as machine‑readable JSON.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Object to processing</strong> — turn off behavioral analytics in cookie settings.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Access</strong>, download a full copy of your data from settings.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Correction</strong>, fix anything wrong from settings or email privacy@binectics.com.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Deletion</strong>, purge your account. 30-day processing.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Portability</strong>, your data exports as machine‑readable JSON.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Object to processing</strong>, turn off behavioral analytics in cookie settings.</li>
         </ul>
       </>)},
       { num: "07", title: "Contact us", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Our Data Protection Officer is <strong style={{ color: "var(--ink)", fontWeight: 500 }}>Lerato Mokoena</strong>. Email <span className="font-mono text-[14px]" style={{ color: "var(--ink)" }}>privacy@binectics.com</span>. Most requests get a human reply within 4 hours during weekdays SAST.</p> },
@@ -108,7 +108,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
       { num: "00", title: "Plain‑English summary", content: (
         <div className="rounded-r-(--r-2) py-3 px-4 my-4 max-w-[60ch]" style={{ background: "var(--bg-2)", borderLeft: "2px solid var(--ink)" }}>
           <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-1" style={{ color: "var(--fg-3)" }}>In one paragraph</div>
-          <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>Binectics connects members and providers — gyms, trainers, dietitians. <strong>Providers run their own businesses</strong> · we run the rails. If something goes wrong, we mediate. If you break the rules, we&apos;ll suspend you. You can leave any time and your data goes with you.</p>
+          <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>Binectics connects members and providers, gyms, trainers, dietitians. <strong>Providers run their own businesses</strong> · we run the rails. If something goes wrong, we mediate. If you break the rules, we&apos;ll suspend you. You can leave any time and your data goes with you.</p>
         </div>
       )},
       { num: "01", title: "Who can use Binectics", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>You must be at least 16 years old to book sessions. Youth accounts (under 18) need a parent or guardian. Providers must be 18+ and legally able to work in their country.</p> },
@@ -133,7 +133,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
         </div>
       )},
       { num: "01", title: "Your preferences", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Toggle a category off and your choice is remembered for 13 months. Toggle it back on any time.</p> },
-      { num: "02", title: "Required cookies", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Login session, CSRF protection, cart state. These cannot be disabled — the app stops working without them.</p> },
+      { num: "02", title: "Required cookies", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Login session, CSRF protection, cart state. These cannot be disabled, the app stops working without them.</p> },
       { num: "03", title: "Functional cookies", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Language preference, timezone, currency display, last-used filters. Improve your experience but optional.</p> },
       { num: "04", title: "Analytics", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Anonymous usage data via Plausible (privacy-first, no cross-site tracking). Helps us understand which features get used. You can opt out in settings.</p> },
       { num: "05", title: "Marketing", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>We don&apos;t use marketing cookies. No ad trackers, no retargeting pixels, no Facebook SDK. This is a deliberate choice.</p> },

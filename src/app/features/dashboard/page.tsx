@@ -5,7 +5,7 @@ import { DashboardDemo } from "@/components/ds/DashboardDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard — Binectics",
+  title: "Dashboard, Binectics",
   description:
     "Four role-based dashboards in one login. Gym owners, trainers, dietitians, and members each get purpose-built views, KPIs, and actions.",
   keywords:
@@ -26,11 +26,11 @@ const ROLE_VIEWS = [
     headline: "Operations at a glance",
     items: [
       "Daily / weekly / monthly revenue graph with comparison overlay",
-      "Live check-in feed — member name, photo, timestamp, streak count",
-      "Class schedule heatmap — see which slots are full, which need promotion",
-      "Payout timeline — next payout amount, date, and bank destination",
-      "Member churn alerts — flags accounts with no check-in in 14+ days",
-      "Multi-location switcher — one dashboard, separate P&Ls",
+      "Live check-in feed, member name, photo, timestamp, streak count",
+      "Class schedule heatmap, see which slots are full, which need promotion",
+      "Payout timeline, next payout amount, date, and bank destination",
+      "Member churn alerts, flags accounts with no check-in in 14+ days",
+      "Multi-location switcher, one dashboard, separate P&Ls",
     ],
   },
   {
@@ -40,10 +40,10 @@ const ROLE_VIEWS = [
     items: [
       "Active client roster with last session date and rebooking status",
       "Weekly calendar with drag-drop rescheduling and buffer time",
-      "Program builder — sets, reps, tempo, rest, with copy-to-next-week",
-      "Earnings breakdown — per-client revenue, monthly trend, projected",
-      "Session completion rate — how many clients finish prescribed programs",
-      "Rebooking nudges — auto-drafted follow-up for clients who haven't rebooked",
+      "Program builder, sets, reps, tempo, rest, with copy-to-next-week",
+      "Earnings breakdown, per-client revenue, monthly trend, projected",
+      "Session completion rate, how many clients finish prescribed programs",
+      "Rebooking nudges, auto-drafted follow-up for clients who haven't rebooked",
     ],
   },
   {
@@ -52,11 +52,11 @@ const ROLE_VIEWS = [
     headline: "Plans and compliance",
     items: [
       "Active client list with meal plan status and adherence score",
-      "Meal plan editor — drag-drop meals across days, auto-calculate macros",
-      "Macro compliance graph — daily actuals vs targets per client",
+      "Meal plan editor, drag-drop meals across days, auto-calculate macros",
+      "Macro compliance graph, daily actuals vs targets per client",
       "Consultation calendar with video call integration and prep notes",
-      "Protocol library — save and reuse plans for common conditions",
-      "Revenue dashboard — consultation fees, plan sales, subscription income",
+      "Protocol library, save and reuse plans for common conditions",
+      "Revenue dashboard, consultation fees, plan sales, subscription income",
     ],
   },
   {
@@ -66,16 +66,16 @@ const ROLE_VIEWS = [
     items: [
       "Active subscriptions with renewal dates and payment history",
       "Check-in streak counter with personal best and gym leaderboard",
-      "Upcoming sessions — trainer or dietitian, with join/cancel buttons",
-      "Progress journal — weight, measurements, photos, mood over time",
-      "Invoices and receipts — downloadable PDF for every transaction",
-      "Provider discovery — recommended gyms and trainers near you",
+      "Upcoming sessions, trainer or dietitian, with join/cancel buttons",
+      "Progress journal, weight, measurements, photos, mood over time",
+      "Invoices and receipts, downloadable PDF for every transaction",
+      "Provider discovery, recommended gyms and trainers near you",
     ],
   },
 ];
 
 const SHARED_FEATURES = [
-  { title: "Unified notifications", desc: "One inbox for bookings, payments, check-ins, and journal updates. Push, email, or in-app — you pick." },
+  { title: "Unified notifications", desc: "One inbox for bookings, payments, check-ins, and journal updates. Push, email, or in-app, you pick." },
   { title: "Cross-role visibility", desc: "Gym owners see trainer schedules. Trainers see member check-ins. Everyone works from the same data." },
   { title: "Real-time sync", desc: "A check-in at the door shows on the gym dashboard in under 400ms. No polling, no refresh button." },
   { title: "Mobile-first responsive", desc: "Every dashboard renders cleanly from 320px phone to 2560px ultrawide. No pinch-zooming required." },
@@ -121,8 +121,8 @@ export default function DashboardFeaturePage() {
           style={{ color: "var(--fg-2)" }}
         >
           Gym owners, trainers, dietitians, and members each get a
-          purpose-built dashboard with role-specific KPIs, actions, and views
-          — all on the same platform, all sharing the same data layer.
+          purpose-built dashboard with role-specific KPIs, actions, and views,
+          all on the same platform, all sharing the same data layer.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup" className="btn-primary-v2 lg">
@@ -206,7 +206,7 @@ export default function DashboardFeaturePage() {
           style={{ color: "var(--fg-2)" }}
         >
           Same platform, different views. Every role gets exactly the
-          information and actions they need — nothing more, nothing less.
+          information and actions they need, nothing more, nothing less.
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

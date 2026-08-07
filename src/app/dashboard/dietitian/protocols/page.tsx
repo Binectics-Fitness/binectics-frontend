@@ -100,7 +100,7 @@ function ProtocolModal({
       }
     }
     if (form.steps.some((s) => !s.title.trim())) {
-      setError("Every step needs a title — remove empty steps or fill them in.");
+      setError("Every step needs a title, remove empty steps or fill them in.");
       return;
     }
     setError(null);
@@ -209,7 +209,7 @@ function ProtocolModal({
             </div>
             {form.steps.length === 0 && (
               <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-                No steps yet — add the phases or actions of this protocol in order.
+                No steps yet, add the phases or actions of this protocol in order.
               </p>
             )}
             <div className="flex flex-col gap-2">
@@ -525,7 +525,7 @@ export default function DietitianProtocolsPage() {
       <div>
         <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Protocols</h1>
         <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {loading ? "Loading protocols..." : `${total} reusable protocol${total === 1 ? "" : "s"}${total > protocols.length ? ` — showing first ${protocols.length}` : ""}`}
+          {loading ? "Loading protocols..." : `${total} reusable protocol${total === 1 ? "" : "s"}${total > protocols.length ? `, showing first ${protocols.length}` : ""}`}
         </div>
       </div>
 

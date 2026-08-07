@@ -88,10 +88,10 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
         toast.success(ACTION_SUCCESS_MESSAGE[kind]);
         setCancelReason("");
       } else {
-        toast.error(res.message ?? "That didn't work — try again.");
+        toast.error(res.message ?? "That didn't work, try again.");
       }
     } catch {
-      toast.error("That didn't work — try again.");
+      toast.error("That didn't work, try again.");
     }
 
     // Refetch outside the try: the action already succeeded, so a failing
@@ -101,7 +101,7 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
       try {
         await onActionComplete();
       } catch {
-        toast.error("Saved, but the list didn't refresh — reload to see it.");
+        toast.error("Saved, but the list didn't refresh, reload to see it.");
       }
     }
     setActing(null);
@@ -140,7 +140,7 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             maxLength={500}
-            placeholder="Reason (optional — shared with the client)"
+            placeholder="Reason (optional, shared with the client)"
             className="rounded-(--r-2) px-3 py-2.5 text-[13px] resize-y"
             style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 60 }}
           />

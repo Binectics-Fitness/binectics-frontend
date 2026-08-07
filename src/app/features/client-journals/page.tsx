@@ -5,7 +5,7 @@ import { JournalDemo } from "@/components/ds/JournalDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Client Journals — Binectics",
+  title: "Client Journals, Binectics",
   description:
     "Trainers and dietitians log workouts, meals, metrics, and notes. Clients see their own progress in real time. Built for accountability.",
   keywords:
@@ -16,7 +16,7 @@ const WORKFLOW = [
   {
     step: "01",
     title: "Log an entry",
-    desc: "After a session, consultation, or weigh-in — tap, type, done. Structured fields for metrics, free text for everything else. Under 90 seconds per entry.",
+    desc: "After a session, consultation, or weigh-in, tap, type, done. Structured fields for metrics, free text for everything else. Under 90 seconds per entry.",
   },
   {
     step: "02",
@@ -26,7 +26,7 @@ const WORKFLOW = [
   {
     step: "03",
     title: "Both see the trend",
-    desc: "Weight graph, adherence score, streak counter, photo timeline. The same data, the same view — no information asymmetry between provider and client.",
+    desc: "Weight graph, adherence score, streak counter, photo timeline. The same data, the same view, no information asymmetry between provider and client.",
   },
 ];
 
@@ -58,22 +58,22 @@ const PROVIDER_VIEWS = [
     role: "For Trainers",
     accent: "var(--trainer)",
     items: [
-      "Program adherence rate — percentage of prescribed workouts completed",
-      "Volume progression graph — total weekly volume trending over 12 weeks",
-      "Exercise PB tracking — automatic personal best detection per lift",
-      "Session attendance — no-show rate, cancellation rate, reschedule patterns",
-      "Client comparison — anonymised benchmarks across your roster",
+      "Program adherence rate, percentage of prescribed workouts completed",
+      "Volume progression graph, total weekly volume trending over 12 weeks",
+      "Exercise PB tracking, automatic personal best detection per lift",
+      "Session attendance, no-show rate, cancellation rate, reschedule patterns",
+      "Client comparison, anonymised benchmarks across your roster",
     ],
   },
   {
     role: "For Dietitians",
     accent: "var(--dietitian)",
     items: [
-      "Macro compliance graph — daily actuals vs prescribed targets over 30 days",
-      "Meal plan adherence — which meals get skipped, which get substituted",
-      "Weight trend with moving average — smooths out daily fluctuation noise",
-      "Clinical note timeline — filterable by date, tag, or condition",
-      "Photo timeline — side-by-side comparison with measurement overlay",
+      "Macro compliance graph, daily actuals vs prescribed targets over 30 days",
+      "Meal plan adherence, which meals get skipped, which get substituted",
+      "Weight trend with moving average, smooths out daily fluctuation noise",
+      "Clinical note timeline, filterable by date, tag, or condition",
+      "Photo timeline, side-by-side comparison with measurement overlay",
     ],
   },
 ];
@@ -82,11 +82,11 @@ const FEATURES = [
   { title: "Photo timeline", desc: "Front, side, and back photos with date stamps. Swipe comparison and overlay mode for visual progress tracking." },
   { title: "Trend graphs", desc: "Weight, volume, adherence, and custom metrics graphed over 7, 30, 90, or 365 days. Exportable as PNG or CSV." },
   { title: "Adherence scoring", desc: "0–100 score calculated from plan compliance. Configurable thresholds: what counts as 'on track' is up to you." },
-  { title: "Client-visible feed", desc: "Clients see their own journal entries, graphs, and milestones. Read-only — they can't edit your notes." },
+  { title: "Client-visible feed", desc: "Clients see their own journal entries, graphs, and milestones. Read-only, they can't edit your notes." },
   { title: "PDF export", desc: "Generate a branded progress report for any date range. Logo, client name, metrics, graphs, and notes in a clean 2-page layout." },
   { title: "Milestone alerts", desc: "Automatic celebrations at streak milestones (7, 30, 90 days), PBs, and weight targets. Custom milestones available." },
   { title: "Smart reminders", desc: "If a client hasn't logged in 3+ days, they get a gentle nudge. If a provider hasn't journaled post-session, they get one too." },
-  { title: "Template entries", desc: "Save common entry structures as templates. 'Leg day log', 'Weekly weigh-in', 'Initial consultation' — one tap to start." },
+  { title: "Template entries", desc: "Save common entry structures as templates. 'Leg day log', 'Weekly weigh-in', 'Initial consultation', one tap to start." },
 ];
 
 const KPIS = [
@@ -126,7 +126,7 @@ export default function ClientJournalsPage() {
         >
           Trainers and dietitians log workouts, meals, weight, mood, and
           adherence after every session. Clients see their own journal in
-          real time — same data, same graphs, no surprises.
+          real time, same data, same graphs, no surprises.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup" className="btn-primary-v2 lg">
@@ -392,7 +392,7 @@ export default function ClientJournalsPage() {
           className="text-[16px] sm:text-[17px] max-w-[48ch] mx-auto leading-[1.5] mb-7"
           style={{ color: "var(--fg-2)" }}
         >
-          Start logging today. Your first 5 clients are free — no trial
+          Start logging today. Your first 5 clients are free, no trial
           countdown, no feature gates.
         </p>
         <Link href="/login?mode=signup" className="btn-primary-v2 lg">

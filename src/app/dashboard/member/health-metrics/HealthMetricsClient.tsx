@@ -76,8 +76,8 @@ export function HealthMetricsClient() {
   }, [sorted]);
 
   const kpis = [
-    { label: "Latest weight", value: latest ? `${latest.weight_kg.toFixed(1)} kg` : "—", delta: latest ? formatDate(latest.recorded_at) : "no entries yet" },
-    { label: "30-day change", value: change30 != null ? `${change30 > 0 ? "+" : ""}${change30.toFixed(1)} kg` : "—", delta: change30 != null ? `since ${formatDate(baseline30.recorded_at)}` : "need two entries" },
+    { label: "Latest weight", value: latest ? `${latest.weight_kg.toFixed(1)} kg` : "-", delta: latest ? formatDate(latest.recorded_at) : "no entries yet" },
+    { label: "30-day change", value: change30 != null ? `${change30 > 0 ? "+" : ""}${change30.toFixed(1)} kg` : "-", delta: change30 != null ? `since ${formatDate(baseline30.recorded_at)}` : "need two entries" },
     { label: "Entries", value: String(logs.length), delta: "last 60 recorded" },
   ];
 

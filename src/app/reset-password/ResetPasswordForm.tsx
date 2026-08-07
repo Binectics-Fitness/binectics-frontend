@@ -22,7 +22,7 @@ function formatResetPasswordError(
   // the user to sign in rather than showing a scary "expired" error.
   if (code === "AUTH_TOKEN_USED") {
     return invite
-      ? "Your password is already set — it works for every gym and provider on your Binectics account. Just sign in."
+      ? "Your password is already set, it works for every gym and provider on your Binectics account. Just sign in."
       : "This link was already used. Sign in with your existing password, or request a new reset email if you've forgotten it.";
   }
 
@@ -120,7 +120,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                 </h1>
                 <p className="text-[14.5px] mt-2" style={{ color: "var(--fg-3)" }}>
                   {invite
-                    ? "Choose a password to finish setting up your account — then sign in to check in, book classes, and track your progress."
+                    ? "Choose a password to finish setting up your account, then sign in to check in, book classes, and track your progress."
                     : "Your new password must be different from previously used passwords."}
                 </p>
               </div>

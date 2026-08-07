@@ -5,9 +5,9 @@ import { TrainerDemo } from "@/components/ds/TrainerDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For Personal Trainers — Binectics",
+  title: "For Personal Trainers, Binectics",
   description:
-    "Grow your personal training business on Binectics. Get discovered by local clients, manage bookings, build programs, and get paid — all from one platform.",
+    "Grow your personal training business on Binectics. Get discovered by local clients, manage bookings, build programs, and get paid, all from one platform.",
   keywords:
     "personal trainer software, fitness client management, trainer booking system, online coaching platform, personal training marketplace",
 };
@@ -127,7 +127,7 @@ export default function ForTrainersPage() {
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup&role=trainer" className="btn-primary-v2 lg">
-            List your practice — free
+            List your practice, free
           </Link>
           <Link href="/features/dashboard" className="btn-ghost-v2 lg">
             See the trainer dashboard
@@ -361,7 +361,7 @@ export default function ForTrainersPage() {
           className="text-[16px] max-w-[52ch] leading-[1.5] mb-6"
           style={{ color: "var(--fg-2)" }}
         >
-          List your practice for free. We charge 4.9% on transactions —
+          List your practice for free. We charge 4.9% on transactions -
           nothing else. No monthly fee, no per-client charge.
         </p>
         <Link href="/pricing" className="btn-ghost-v2 lg">
@@ -388,7 +388,7 @@ export default function ForTrainersPage() {
           marketplace results today.
         </p>
         <Link href="/login?mode=signup&role=trainer" className="btn-primary-v2 lg">
-          List your practice — free
+          List your practice, free
         </Link>
       </section>
 

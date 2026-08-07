@@ -62,7 +62,7 @@ export function ScheduleClient() {
         <div className="rounded-(--r-3) flex flex-col items-center text-center px-6 py-14" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>No classes yet</h2>
           <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
-            Build your weekly timetable — recurring classes members will see on your listing.
+            Build your weekly timetable, recurring classes members will see on your listing.
           </p>
           <button className="btn-primary-v2 sm mt-5" disabled={!orgId} onClick={() => setAdding(true)}>+ New class</button>
         </div>
@@ -79,7 +79,7 @@ export function ScheduleClient() {
                   <span className="ml-1.5" style={{ color: "var(--fg-4)" }}>{dayClasses.length || ""}</span>
                 </div>
                 {dayClasses.length === 0 ? (
-                  <div className="rounded-(--r-2) px-2.5 py-3 text-center font-mono text-[10px] uppercase tracking-[0.04em]" style={{ border: "1px dashed var(--border)", color: "var(--fg-4)" }}>—</div>
+                  <div className="rounded-(--r-2) px-2.5 py-3 text-center font-mono text-[10px] uppercase tracking-[0.04em]" style={{ border: "1px dashed var(--border)", color: "var(--fg-4)" }}>-</div>
                 ) : (
                   dayClasses.map((c) => <ClassCard key={c._id} gymClass={c} twelveHour={twelveHour} />)
                 )}

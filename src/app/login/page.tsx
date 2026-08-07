@@ -188,7 +188,7 @@ function AuthContent() {
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
                   Welcome back.<br />Pick up where you <em className="font-serif font-normal italic">left off</em>.
                 </h1>
-                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>3 upcoming sessions waiting — including Wed 08:30 with Sarah.</p>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>3 upcoming sessions waiting, including Wed 08:30 with Sarah.</p>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5 mt-8">
                   {apiError && (
@@ -262,7 +262,7 @@ function AuthContent() {
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
                   Check the code on your phone.
                 </h1>
-                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Sent to +27 82 ••• 1284 — should arrive in a few seconds. The code expires in 5 minutes.</p>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Sent to +27 82 ••• 1284, should arrive in a few seconds. The code expires in 5 minutes.</p>
 
                 <div className="flex flex-col gap-3.5 mt-8">
                   <div className="flex flex-col gap-1.5">

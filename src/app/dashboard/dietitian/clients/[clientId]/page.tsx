@@ -121,7 +121,7 @@ function TemplatePickerModal({
         <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <h2 className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>New plan from template</h2>
           <p className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-            The client gets their own copy — later edits to the template won&apos;t affect it.
+            The client gets their own copy, later edits to the template won&apos;t affect it.
           </p>
         </div>
         <div className="p-6 flex flex-col gap-2">
@@ -351,12 +351,12 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
     ? [
         {
           label: "Current weight",
-          value: latestWeight != null ? `${latestWeight} kg` : "—",
+          value: latestWeight != null ? `${latestWeight} kg` : "-",
           delta: startWeight != null ? `from ${startWeight} kg` : "No baseline",
         },
         {
           label: "Weight change",
-          value: weightDelta != null ? `${weightDelta > 0 ? "+" : ""}${weightDelta.toFixed(1)} kg` : "—",
+          value: weightDelta != null ? `${weightDelta > 0 ? "+" : ""}${weightDelta.toFixed(1)} kg` : "-",
           delta: targetWeight != null ? `target ${targetWeight} kg` : "No target set",
         },
         {
@@ -366,7 +366,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
         },
         {
           label: "Diet plans",
-          value: plansLoading ? "—" : String(plans.length),
+          value: plansLoading ? "-" : String(plans.length),
           delta: plansLoading ? "Loading…" : `${activePlans} active`,
         },
       ]

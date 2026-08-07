@@ -29,7 +29,7 @@ import {
  * because "off by 100" is the whole bug and a test that asserts
  * `minorToMajor(x) === x / 100` cannot catch a caller that forgot to call it.
  */
-describe("minor-unit money contract — the read side (display)", () => {
+describe("minor-unit money contract, the read side (display)", () => {
   it("renders a plan stored as 500000 as ₦5,000, not ₦500,000", () => {
     const priceMinor = 500_000; // what MembershipPlan.price_minor now holds
     expect(formatCurrency(minorToMajor(priceMinor), "NGN")).toBe("₦5,000");
@@ -83,7 +83,7 @@ describe("minor-unit money contract — the read side (display)", () => {
   });
 });
 
-describe("minor-unit money contract — renames that were ALREADY minor", () => {
+describe("minor-unit money contract, renames that were ALREADY minor", () => {
   /**
    * `ProviderInvoice.amount_due`/`amount_paid` and the admin revenue figures
    * were minor units before the rename; the `*Minor` suffix only says so out
@@ -91,7 +91,7 @@ describe("minor-unit money contract — renames that were ALREADY minor", () => 
    * one that was always needed — the risk here is the mirror image of the
    * rescaled fields: dividing twice, and reporting a hundredth of reality.
    */
-  it("renders an invoice of 2500000 minor as ₦25,000 — converted once", () => {
+  it("renders an invoice of 2500000 minor as ₦25,000, converted once", () => {
     expect(formatMinorAmount(2_500_000, "NGN")).toBe("₦25,000");
   });
 
@@ -104,7 +104,7 @@ describe("minor-unit money contract — renames that were ALREADY minor", () => 
   });
 });
 
-describe("minor-unit money contract — the write side (submission)", () => {
+describe("minor-unit money contract, the write side (submission)", () => {
   it("sends 500000 for a ₦5,000 plan price", () => {
     // What <MoneyInput> hands its caller for the string it displays.
     expect(parseMoneyMinor("₦5,000", { currency: "NGN" })).toBe(500_000);
@@ -119,7 +119,7 @@ describe("minor-unit money contract — the write side (submission)", () => {
     expect(parseMoneyMinor("$49.99", { currency: "USD" })).toBe(4_999);
   });
 
-  it("never sends a float — 12.34 becomes exactly 1234", () => {
+  it("never sends a float, 12.34 becomes exactly 1234", () => {
     // 12.34 * 100 is 1233.9999999999998 in IEEE 754. A float must never reach
     // the wire as money: the API's @IsInt would reject it, and a rounded-down
     // 1233 would be a silent one-kobo theft on every save.
@@ -165,7 +165,7 @@ describe("minor-unit money contract — the write side (submission)", () => {
 describe("seat headroom copy", () => {
   const n = (x: number) => x.toLocaleString("en-US");
 
-  it("reads '428 of 500' territory — 72 seats left", () => {
+  it("reads '428 of 500' territory, 72 seats left", () => {
     expect(seatHeadroomLabel({ remaining: 72 }, n)).toBe("72 seats left");
   });
 
@@ -177,7 +177,7 @@ describe("seat headroom copy", () => {
     expect(seatHeadroomLabel({ remaining: null }, n)).toBe("Unlimited seats");
   });
 
-  it("does NOT clamp a negative remaining — being over is a real state", () => {
+  it("does NOT clamp a negative remaining, being over is a real state", () => {
     // A gym 12 seats over its cap is about to be billed for the overage;
     // clamping to "0 left" would hide it.
     expect(seatHeadroomLabel({ remaining: -12 }, n)).toBe("12 over your limit");
@@ -188,7 +188,7 @@ describe("seat headroom copy", () => {
     // so a gym AT its cap reads over_limit:false and is still refused. Copy
     // must not imply another seat is available.
     const label = seatHeadroomLabel({ remaining: 0 }, n);
-    expect(label).toBe("At your limit — free a seat before adding a member");
+    expect(label).toBe("At your limit, free a seat before adding a member");
     expect(label).not.toContain("0 seats left");
   });
 
@@ -197,7 +197,7 @@ describe("seat headroom copy", () => {
   });
 });
 
-describe("membership lifecycle — the three new states", () => {
+describe("membership lifecycle, the three new states", () => {
   const ALL = Object.values(MembershipSubscriptionStatus);
 
   it("knows all seven states, including paused/suspended/past_due", () => {
@@ -222,12 +222,12 @@ describe("membership lifecycle — the three new states", () => {
     expect([...MEMBERSHIP_STATUS_FILTER_ORDER].sort()).toEqual([...ALL].sort());
   });
 
-  it("keeps a past_due member's access — they are in a grace window", () => {
+  it("keeps a past_due member's access, they are in a grace window", () => {
     expect(isEntitlingMembershipStatus(MembershipSubscriptionStatus.PAST_DUE)).toBe(true);
     expect(MEMBERSHIP_STATUS_META[MembershipSubscriptionStatus.PAST_DUE].hasAccess).toBe(true);
   });
 
-  it("denies access to a paused or suspended member — a hold is a hold", () => {
+  it("denies access to a paused or suspended member, a hold is a hold", () => {
     expect(isEntitlingMembershipStatus(MembershipSubscriptionStatus.PAUSED)).toBe(false);
     expect(isEntitlingMembershipStatus(MembershipSubscriptionStatus.SUSPENDED)).toBe(false);
   });
@@ -239,7 +239,7 @@ describe("membership lifecycle — the three new states", () => {
     }
   });
 
-  it("separates the door from the seat — they are not the same question", () => {
+  it("separates the door from the seat, they are not the same question", () => {
     // paused: pays a seat, no access. Collapsing the two is what makes a
     // dashboard claim a paying customer has churned.
     expect(isSeatBearingMembershipStatus(MembershipSubscriptionStatus.PAUSED)).toBe(true);
@@ -253,7 +253,7 @@ describe("membership lifecycle — the three new states", () => {
   });
 });
 
-describe("per-plan member counts — the active_members replacement", () => {
+describe("per-plan member counts, the active_members replacement", () => {
   const sub = (
     planId: string,
     status: MembershipSubscriptionStatus,
@@ -271,7 +271,7 @@ describe("per-plan member counts — the active_members replacement", () => {
     expect(counts.get("p1")).toBe(5);
   });
 
-  it("excludes expired and cancelled — those members really are gone", () => {
+  it("excludes expired and cancelled, those members really are gone", () => {
     const counts = countMembersByPlan([
       sub("p1", MembershipSubscriptionStatus.ACTIVE),
       sub("p1", MembershipSubscriptionStatus.EXPIRED),

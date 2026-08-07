@@ -29,7 +29,7 @@ function clientInitials(profile: ClientProfile): string {
 }
 
 const SIGNALS = [
-  { color: "var(--signal)", title: "Streak momentum", desc: "32 consecutive days. Longest since joining. Worth acknowledging — it sustains itself after 30." },
+  { color: "var(--signal)", title: "Streak momentum", desc: "32 consecutive days. Longest since joining. Worth acknowledging, it sustains itself after 30." },
   { color: "var(--warn)", title: "Shoulder monitor", desc: "Left shoulder click on OHP noted May 14. 2-week window before referral. Check in Wed." },
   { color: "var(--gym)", title: "Pack completion", desc: "10 sessions left on 24-pack. At current pace, expires Jul 8. Plan renewal conversation around session 20." },
 ];
@@ -92,7 +92,7 @@ export default function ClientDetailPage() {
       },
       {
         label: "Latest weight",
-        value: latestWeight !== undefined ? String(latestWeight) : "—",
+        value: latestWeight !== undefined ? String(latestWeight) : "-",
         suffix: latestWeight !== undefined ? "kg" : undefined,
         delta: latestWeight !== undefined ? "From journal log" : "No weight logs",
       },

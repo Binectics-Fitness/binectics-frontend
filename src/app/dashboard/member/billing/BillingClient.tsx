@@ -54,7 +54,7 @@ export function BillingClient() {
     // Summed in MINOR units and converted once per currency at the end, so the
     // total is an exact integer count of kobo rather than a float accumulation.
     subs.forEach((s) => map.set(s.currency, (map.get(s.currency) ?? 0) + s.amount_paid_minor));
-    return [...map.entries()].map(([cur, minor]) => formatCurrencyAmount(minorToMajor(minor), cur)).join(" + ") || "—";
+    return [...map.entries()].map(([cur, minor]) => formatCurrencyAmount(minorToMajor(minor), cur)).join(" + ") || "-";
   }, [subs]);
 
   const nextRenewal = useMemo(() => {
@@ -62,7 +62,7 @@ export function BillingClient() {
       .map((s) => s.end_date)
       .filter((d): d is string => !!d && new Date(d) > new Date())
       .sort();
-    return upcoming[0] ? formatDate(upcoming[0]) : "—";
+    return upcoming[0] ? formatDate(upcoming[0]) : "-";
   }, [usable]);
 
   const onHold = subs.filter(
@@ -111,7 +111,7 @@ export function BillingClient() {
         {isLoading && <div className="px-5.5 py-6 text-[13px]" style={{ color: "var(--fg-3)" }}>Loading your memberships…</div>}
         {!isLoading && subs.length === 0 && (
           <div className="px-5.5 py-10 text-center text-[13.5px]" style={{ color: "var(--fg-3)" }}>
-            No memberships yet — join a gym from the marketplace and it will appear here.
+            No memberships yet, join a gym from the marketplace and it will appear here.
           </div>
         )}
         {subs.map((s, i) => {
@@ -144,7 +144,7 @@ export function BillingClient() {
                 )}
                 {s.status === MembershipSubscriptionStatus.PAST_DUE && s.grace_expires_at && (
                   <div className="text-[11.5px] mt-1" style={{ color: "var(--danger)" }}>
-                    Access continues until {formatDate(s.grace_expires_at)} — settle the renewal to keep it.
+                    Access continues until {formatDate(s.grace_expires_at)}, settle the renewal to keep it.
                   </div>
                 )}
               </div>
@@ -165,7 +165,7 @@ export function BillingClient() {
       </div>
 
       <p className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-        Payment methods and a full transaction ledger are coming — for now this shows your memberships and what you&rsquo;ve paid for them.
+        Payment methods and a full transaction ledger are coming, for now this shows your memberships and what you&rsquo;ve paid for them.
       </p>
     </MemberDashboardShell>
   );

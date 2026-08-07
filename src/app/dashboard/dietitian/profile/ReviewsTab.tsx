@@ -72,7 +72,7 @@ export function ReviewsTab() {
   if (listingError) {
     return (
       <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
-        We couldn&rsquo;t load your listing — reviews are attached to it. Try refreshing.
+        We couldn&rsquo;t load your listing, reviews are attached to it. Try refreshing.
       </div>
     );
   }

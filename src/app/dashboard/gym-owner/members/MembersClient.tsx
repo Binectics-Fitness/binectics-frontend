@@ -41,7 +41,7 @@ function getMemberEmail(sub: MembershipSubscription): string {
   if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
     return sub.member_user_id.email;
   }
-  return "—";
+  return "-";
 }
 
 /** The member's user id, only when the reference is populated. */
@@ -56,7 +56,7 @@ function getPlanName(sub: MembershipSubscription): string {
   if (typeof sub.plan_id === "object" && sub.plan_id !== null) {
     return sub.plan_id.name;
   }
-  return "—";
+  return "-";
 }
 
 function getInitials(name: string): string {
@@ -181,7 +181,7 @@ function RowActions({
   const handleResendInvite = () =>
     run(async () => {
       const res = await marketplaceService.resendMemberInvite(orgId, sub._id);
-      if (res.success) toast.success("Invite email sent — the link lasts 7 days");
+      if (res.success) toast.success("Invite email sent, the link lasts 7 days");
       else toast.error(res.message ?? "Couldn't send the invite");
     });
 
@@ -200,7 +200,7 @@ function RowActions({
         !window.confirm(
           hasAccess
             ? `Cancel ${getMemberName(sub)}'s membership? They lose access and the seat is freed.`
-            : `Cancel ${getMemberName(sub)}'s membership? It ends for good and the seat is freed — a pause or suspension can be lifted, this cannot.`,
+            : `Cancel ${getMemberName(sub)}'s membership? It ends for good and the seat is freed, a pause or suspension can be lifted, this cannot.`,
         )
       )
         return;
@@ -217,13 +217,13 @@ function RowActions({
       if (!memberUserId) return toast.error("This member can't be archived yet.");
       if (
         !window.confirm(
-          `Archive ${getMemberName(sub)}? This frees their seat. They keep their account, login and history — archiving is billing-only, not a ban — and you can restore them any time.`,
+          `Archive ${getMemberName(sub)}? This frees their seat. They keep their account, login and history, archiving is billing-only, not a ban, and you can restore them any time.`,
         )
       )
         return;
       const res = await marketplaceService.archiveMember(orgId, memberUserId);
       if (res.success) {
-        toast.success("Member archived — their seat is freed");
+        toast.success("Member archived, their seat is freed");
         onRosterChange();
       } else toast.error(res.message ?? "Couldn't archive the member");
     });
@@ -234,7 +234,7 @@ function RowActions({
       if (!memberUserId) return toast.error("This member can't be restored yet.");
       const res = await marketplaceService.restoreMember(orgId, memberUserId);
       if (res.success) {
-        toast.success("Member restored — a seat is taken back");
+        toast.success("Member restored, a seat is taken back");
         onRosterChange();
       } else toast.error(res.message ?? "Couldn't restore the member");
     });
@@ -383,7 +383,7 @@ function ChangePlanModal({
           />
         </div>
         {options.length === 0 && (
-          <p className="text-[12px] mt-2" style={{ color: "var(--fg-3)" }}>No other active plans — create one on Plans &amp; pricing first.</p>
+          <p className="text-[12px] mt-2" style={{ color: "var(--fg-3)" }}>No other active plans, create one on Plans &amp; pricing first.</p>
         )}
         {error && <p className="text-[12px] mt-2" style={{ color: "var(--danger, #b00020)" }}>{error}</p>}
         <div className="flex justify-end gap-2 mt-5">
@@ -563,9 +563,9 @@ export default function GymMembersClient() {
           </svg>
           <span>
             {seats.over_limit
-              ? `You're over your seat limit — ${fmtNumber(seats.used)} of ${fmtNumber(seats.limit ?? 0)}. `
-              : `You're close to your seat limit — ${seatHeadroomLabel(seats, fmtNumber)}. `}
-            Archiving a member frees their seat. Paused and suspended members still hold theirs — archive them from the row menu once their membership has ended.
+              ? `You're over your seat limit, ${fmtNumber(seats.used)} of ${fmtNumber(seats.limit ?? 0)}. `
+              : `You're close to your seat limit, ${seatHeadroomLabel(seats, fmtNumber)}. `}
+            Archiving a member frees their seat. Paused and suspended members still hold theirs, archive them from the row menu once their membership has ended.
           </span>
         </div>
       )}
@@ -635,7 +635,7 @@ export default function GymMembersClient() {
               ) : loadError ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-[13.5px]" style={{ color: "var(--danger, #b00020)" }}>
-                    Couldn&apos;t load members — {loadError} <button className="btn-ghost-v2 sm ml-2" onClick={() => setRefreshKey((k) => k + 1)}>Retry</button>
+                    Couldn&apos;t load members, {loadError} <button className="btn-ghost-v2 sm ml-2" onClick={() => setRefreshKey((k) => k + 1)}>Retry</button>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
@@ -685,7 +685,7 @@ export default function GymMembersClient() {
                         {fmtDate(sub.created_at)}
                       </td>
                       <td className="px-4.5 py-3 hidden lg:table-cell" style={{ color: "var(--fg-2)" }}>
-                        {sub.end_date ? fmtDate(sub.end_date) : "—"}
+                        {sub.end_date ? fmtDate(sub.end_date) : "-"}
                       </td>
                       <td className="px-4.5 py-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -701,7 +701,7 @@ export default function GymMembersClient() {
                             <span
                               className="inline-flex items-center font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"
                               style={{ color: "var(--fg-3)", background: "var(--bg-2)", border: "1px solid var(--border)" }}
-                              title="Off the billable roster — the seat is freed. The member keeps their account and data."
+                              title="Off the billable roster, the seat is freed. The member keeps their account and data."
                             >
                               Archived
                             </span>

@@ -45,7 +45,7 @@ export function ContactProvider({
     whatsappMessage ??
     `Hi${providerName ? ` ${providerName}` : ""}, I found your profile on Binectics and I'd like to learn more.`;
   const defaultSubject =
-    emailSubject ?? `Inquiry from Binectics${providerName ? ` — ${providerName}` : ""}`;
+    emailSubject ?? `Inquiry from Binectics${providerName ? `, ${providerName}` : ""}`;
 
   const waUrl = buildWhatsAppUrl(phone, defaultMessage);
   const telUrl = buildTelUrl(phone);

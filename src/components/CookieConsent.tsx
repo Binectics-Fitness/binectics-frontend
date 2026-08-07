@@ -366,7 +366,7 @@ export default function CookieConsent() {
             <div style={{ fontSize: "13.5px", lineHeight: 1.55 }}>
               <strong style={{ fontWeight: 500 }}>We use cookies.</strong>{" "}
               {isGDPR
-                ? "Required only by default — opt in to others to help us improve."
+                ? "Required only by default, opt in to others to help us improve."
                 : "Essential cookies keep you logged in. Optional ones help us improve and remember preferences."}{" "}
               <Link
                 href="/cookies"
@@ -498,7 +498,7 @@ export default function CookieConsent() {
                   }}
                 >
                   {isGDPR
-                    ? "GDPR mode — explicit opt-in required for non-essential."
+                    ? "GDPR mode, explicit opt-in required for non-essential."
                     : "Customize what runs in your browser. Saved for 13 months."}
                 </p>
               </div>

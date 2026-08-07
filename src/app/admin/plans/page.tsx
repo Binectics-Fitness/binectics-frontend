@@ -435,7 +435,7 @@ export default function AdminPlansPage() {
                     ))}
                   {plan.code !== "free" && prices.filter((pr) => pr.plan_code === plan.code).length === 0 && (
                     <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
-                      No prices — providers cannot check out on this tier until one exists.
+                      No prices, providers cannot check out on this tier until one exists.
                     </p>
                   )}
                   {priceDraft?.plan_code === plan.code ? (
@@ -457,7 +457,7 @@ export default function AdminPlansPage() {
                         <input value={priceDraft.currency} onChange={(e) => setPriceDraft({ ...priceDraft, currency: e.target.value })} maxLength={3} className="h-8 w-16 rounded-(--r-2) border border-border bg-bg px-2 font-mono text-[12px] uppercase text-ink" />
                       </div>
                       <div>
-                        <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Paystack plan code (optional — enables auto-renewal)</div>
+                        <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Paystack plan code (optional, enables auto-renewal)</div>
                         <input value={priceDraft.gateway_plan_code} onChange={(e) => setPriceDraft({ ...priceDraft, gateway_plan_code: e.target.value })} placeholder="PLN_xxxx" className="h-8 w-32 rounded-(--r-2) border border-border bg-bg px-2 font-mono text-[12px] text-ink" />
                       </div>
                       <div>
@@ -520,8 +520,8 @@ export default function AdminPlansPage() {
                   Missing tier{missingTiers.length === 1 ? "" : "s"}: {missingTiers.join(", ")}
                 </div>
                 <p className="text-[12.5px] mt-1 max-w-[52ch]" style={{ color: "var(--fg-3)" }}>
-                  Plan codes are fixed to the canonical tiers — the tier flows
-                  through checkout and quota enforcement — but a tier missing
+                  Plan codes are fixed to the canonical tiers, the tier flows
+                  through checkout and quota enforcement, but a tier missing
                   from this environment can be created here.
                 </p>
               </div>

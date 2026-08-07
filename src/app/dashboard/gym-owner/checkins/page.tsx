@@ -191,7 +191,7 @@ export default function GymCheckinsPage() {
           <button
             onClick={refresh}
             disabled={isRefreshing || !isOnline || !currentOrg}
-            title={isOnline ? "Refresh now" : "Offline — reconnect to refresh"}
+            title={isOnline ? "Refresh now" : "Offline, reconnect to refresh"}
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}
           >
@@ -253,7 +253,7 @@ export default function GymCheckinsPage() {
         </div>
       ) : freshness.kind === "stale" && lastUpdatedAt ? (
         <div className="rounded-(--r-3) p-3 text-[12.5px] flex items-center justify-between gap-3" style={{ background: "oklch(0.96 0.06 75)", border: "1px solid oklch(0.85 0.08 75)", color: "oklch(0.40 0.14 75)" }}>
-          <span>Live feed may be out of date — last updated {lastUpdatedLabel}.</span>
+          <span>Live feed may be out of date, last updated {lastUpdatedLabel}.</span>
           <button
             onClick={refresh}
             disabled={isRefreshing}

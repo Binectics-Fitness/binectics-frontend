@@ -21,7 +21,7 @@ const ROLE_CONFIG: Record<string, { title: string; desc: string; steps: string[]
   },
   TRAINER: {
     title: "Complete your trainer profile",
-    desc: "Add your certifications and specialties to get verified — the copilot starts drafting once your first clients join.",
+    desc: "Add your certifications and specialties to get verified, the copilot starts drafting once your first clients join.",
     steps: ["Certifications & credentials", "Specialties & expertise", "Professional bio", "Pricing & availability"],
     accent: "var(--trainer)",
     soft: "var(--trainer-soft)",
@@ -90,7 +90,7 @@ export default function OnboardingBanner() {
 
       <h2 className="text-[19px] sm:text-[21px] font-medium mt-2" style={{ letterSpacing: "-0.015em", color: "var(--ink)" }}>
         {user.first_name
-          ? `Welcome, ${user.first_name} — ${config.title.charAt(0).toLowerCase()}${config.title.slice(1)}`
+          ? `Welcome, ${user.first_name}, ${config.title.charAt(0).toLowerCase()}${config.title.slice(1)}`
           : config.title}
       </h2>
       <p className="text-[14px] leading-relaxed mt-1 max-w-[58ch]" style={{ color: "var(--fg-2)" }}>

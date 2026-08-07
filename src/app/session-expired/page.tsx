@@ -89,7 +89,7 @@ export default function SessionExpiredPage() {
           }}
         >
           For your security, we sign you out after 30 days of inactivity. Sign
-          back in to pick up where you left off — your settings and bookings are
+          back in to pick up where you left off, your settings and bookings are
           exactly as you left them.
         </p>
 

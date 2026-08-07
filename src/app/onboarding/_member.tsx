@@ -22,7 +22,7 @@ function toggleChip(list: string[], chip: string): string[] {
 export function MemberStep1({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 01 of 04 — member track" title="What brings you here?" desc="Pick the goal that matters most. You can change it any time." />
+      <StageHead crumb="Step 01 of 04, member track" title="What brings you here?" desc="Pick the goal that matters most. You can change it any time." />
       <RadioCards
         selected={(data.goal as string) || "strong"}
         onSelect={(v) => setField("goal", v)}
@@ -45,7 +45,7 @@ export function MemberStep2({ data, setField }: StepProps) {
   const cityPlaceholder = citySuggestions[0] ?? "Your city";
   return (
     <>
-      <StageHead crumb="Step 02 of 04 — member track" title="Where do you train?" desc="We'll show providers near you. You can switch cities later." />
+      <StageHead crumb="Step 02 of 04, member track" title="Where do you train?" desc="We'll show providers near you. You can switch cities later." />
       <FormGrid>
         <Field label="City"><TextInput value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder={cityPlaceholder} suggestions={citySuggestions} /></Field>
         <Field label="Neighbourhood (optional)"><TextInput value={(data.neighbourhood as string) || ""} onChange={(v) => setField("neighbourhood", v)} placeholder="Sea Point · Camps Bay · Foreshore" /></Field>
@@ -66,7 +66,7 @@ export function MemberStep3({ data, setField }: StepProps) {
   const days = (data.days as string[]) || [];
   return (
     <>
-      <StageHead crumb="Step 03 of 04 — member track" title="When do you train?" desc="We'll surface providers who match your schedule." />
+      <StageHead crumb="Step 03 of 04, member track" title="When do you train?" desc="We'll surface providers who match your schedule." />
       <Field label="Time slots" full>
         <ChipGrid
           options={["Early morning · 5-8am", "Late morning · 9-11am", "Lunch · 11am-2pm", "Afternoon · 2-5pm", "After work · 5-8pm", "Evening · 8-10pm"]}
@@ -89,11 +89,11 @@ export function MemberStep4({ data }: StepProps) {
   const city = (data.city as string) || "your area";
   return (
     <>
-      <StageHead crumb="Step 04 of 04 — member track" title="You're all set." desc={`We've found providers in ${city} who match. Hit "Go to dashboard" below to start exploring.`} />
+      <StageHead crumb="Step 04 of 04, member track" title="You're all set." desc={`We've found providers in ${city} who match. Hit "Go to dashboard" below to start exploring.`} />
       <div style={{ padding: 20, background: "var(--bg-2)", borderRadius: "var(--r-3)", border: "1px solid var(--border)" }}>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 8 }}>What happens next</div>
         <div style={{ fontSize: "13.5px", color: "var(--fg-2)", lineHeight: 1.55 }}>
-          Browse the marketplace, book your first session, and track your progress — all from your home page.
+          Browse the marketplace, book your first session, and track your progress, all from your home page.
         </div>
       </div>
     </>

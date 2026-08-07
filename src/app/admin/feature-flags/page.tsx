@@ -18,7 +18,7 @@ export default function AdminFeatureFlagsPage() {
         title={"Feature flags"}
         subtitle={"Runtime feature toggles"}
         pendingTitle={"Feature flags are coming soon"}
-        pendingBody={"A flag registry with per-environment rollout will appear here once the feature-flag subsystem is built. This page previously showed fabricated flags \u2014 no runtime flag system exists yet."}
+        pendingBody={"A flag registry with per-environment rollout will appear here once the feature-flag subsystem is built. This page previously showed fabricated flags, no runtime flag system exists yet."}
       />
     </AdminDashboardShell>
   );

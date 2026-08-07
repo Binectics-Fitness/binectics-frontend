@@ -234,7 +234,7 @@ export function seatHeadroomLabel(
   if (seats.remaining < 0)
     return `${fmtNumber(Math.abs(seats.remaining))} over your limit`;
   if (seats.remaining === 0)
-    return "At your limit — free a seat before adding a member";
+    return "At your limit, free a seat before adding a member";
   return `${fmtNumber(seats.remaining)} seat${seats.remaining === 1 ? "" : "s"} left`;
 }
 

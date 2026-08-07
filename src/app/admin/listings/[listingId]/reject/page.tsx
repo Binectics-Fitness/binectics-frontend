@@ -68,7 +68,7 @@ export default function AdminListingRejectPage({
               border: "1px solid var(--border-2)",
               font: "inherit",
             }}
-            defaultValue="Hi Aisha, your NASM cert is verified but page 2 of the liability insurance scan is unreadable. Please re-upload at a higher resolution (1200x1500 or above) and re-submit — we'll re-review within 24h."
+            defaultValue="Hi Aisha, your NASM cert is verified but page 2 of the liability insurance scan is unreadable. Please re-upload at a higher resolution (1200x1500 or above) and re-submit, we'll re-review within 24h."
           />
         </div>
 

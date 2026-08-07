@@ -57,7 +57,7 @@ export default function GymPayoutsPage() {
               </p>
             ) : (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-                No payout schedule configured yet — set how often earnings settle.
+                No payout schedule configured yet, set how often earnings settle.
               </p>
             )}
           </div>

@@ -401,11 +401,11 @@ function BookingPageInner() {
               <div className="mt-8 rounded-(--r-3) p-5" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
                 <div className="flex flex-col gap-3 text-[13.5px]">
                   <Row k="Provider" v={name} />
-                  <Row k="Session type" v={activeType?.name ?? "—"} />
+                  <Row k="Session type" v={activeType?.name ?? "-"} />
                   <Row k="Duration" v={`${activeType?.defaultDurationMinutes ?? 60} min`} />
                   <Row
                     k="Starts at"
-                    v={selectedSlot ? new Date(selectedSlot).toLocaleString(undefined, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
+                    v={selectedSlot ? new Date(selectedSlot).toLocaleString(undefined, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
                   />
                   <Row k="Timezone" v={getClientTimezone()} />
                   {notes.trim() && <Row k="Notes" v={notes.trim()} />}
@@ -458,7 +458,7 @@ function BookingPageInner() {
             <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>{name}</div>
             <div className="flex items-center gap-2 mt-1 text-[12.5px]" style={{ color: "var(--fg-3)" }}>
               <span className="inline-flex items-center gap-1 px-1.75 py-0.5 rounded-full border border-border font-mono text-[10px] uppercase" style={{ color: "var(--ink)" }}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--signal)" }} />{listing.average_rating?.toFixed(1) ?? "—"}
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--signal)" }} />{listing.average_rating?.toFixed(1) ?? "-"}
               </span>
               {listing.review_count ?? 0} reviews
             </div>
@@ -466,9 +466,9 @@ function BookingPageInner() {
         </div>
 
         <div className="flex flex-col">
-          <Receipt k="Date" v={selectedSlot ? new Date(selectedSlot).toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short" }) : "—"} />
-          <Receipt k="Time" v={selectedSlot ? formatTimeLabel(selectedSlot) : "—"} />
-          <Receipt k="Type" v={activeType?.name ?? "—"} />
+          <Receipt k="Date" v={selectedSlot ? new Date(selectedSlot).toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short" }) : "-"} />
+          <Receipt k="Time" v={selectedSlot ? formatTimeLabel(selectedSlot) : "-"} />
+          <Receipt k="Type" v={activeType?.name ?? "-"} />
           <Receipt k="Duration" v={`${activeType?.defaultDurationMinutes ?? 60} min`} />
         </div>
 

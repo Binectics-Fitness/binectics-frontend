@@ -65,7 +65,7 @@ export const MEMBERSHIP_STATUS_META: Record<
     background: "var(--trainer-soft)",
     hasAccess: false,
     bearsSeat: true,
-    hint: "Enrolled but not paid — no access until payment settles.",
+    hint: "Enrolled but not paid, no access until payment settles.",
   },
   [MembershipSubscriptionStatus.PAUSED]: {
     label: "Paused",
@@ -73,7 +73,7 @@ export const MEMBERSHIP_STATUS_META: Record<
     background: "var(--bg-2)",
     hasAccess: false,
     bearsSeat: true,
-    hint: "On their own break. Frozen days are credited back on resume, so they are coming back — not churned.",
+    hint: "On their own break. Frozen days are credited back on resume, so they are coming back, not churned.",
   },
   [MembershipSubscriptionStatus.SUSPENDED]: {
     label: "Suspended",
@@ -129,7 +129,7 @@ export function membershipStatusMeta(
     background: "var(--bg-2)",
     hasAccess: isEntitlingMembershipStatus(status),
     bearsSeat: isSeatBearingMembershipStatus(status),
-    hint: "Unrecognised status — refresh, or contact support if it persists.",
+    hint: "Unrecognised status, refresh, or contact support if it persists.",
   };
 }
 

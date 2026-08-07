@@ -41,7 +41,7 @@ export function AnalyticsClient() {
       {isLoading && <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>Loading platform metrics…</p>}
       {!isLoading && !metrics && (
         <div className="rounded-(--r-3) px-6 py-10 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Couldn&rsquo;t load platform metrics — check your admin permissions and try again.</p>
+          <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Couldn&rsquo;t load platform metrics, check your admin permissions and try again.</p>
         </div>
       )}
 
@@ -68,7 +68,7 @@ export function AnalyticsClient() {
               <div className="flex flex-col gap-2.5">
                 {metrics.verifiedProviders.byCountry.map((c) => (
                   <div key={c.country_code} className="flex items-center gap-3">
-                    <span className="font-mono text-[11.5px] uppercase w-8 shrink-0" style={{ color: "var(--ink)" }}>{c.country_code || "—"}</span>
+                    <span className="font-mono text-[11.5px] uppercase w-8 shrink-0" style={{ color: "var(--ink)" }}>{c.country_code || "-"}</span>
                     <div className="flex-1 h-1.5 rounded-full" style={{ background: "var(--bg-3)" }}>
                       <div className="h-full rounded-full" style={{ width: `${(c.count / maxCountry) * 100}%`, background: "var(--signal)" }} />
                     </div>

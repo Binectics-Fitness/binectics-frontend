@@ -104,7 +104,7 @@ export default function MagicLinkPage() {
             maxWidth: "38ch",
           }}
         >
-          Hang on — checking your link with our auth service. This usually takes
+          Hang on, checking your link with our auth service. This usually takes
           under 2 seconds.
         </p>
 

@@ -60,7 +60,7 @@ export function GymStep1({ data, setField }: StepProps) {
 
   return (
     <>
-      <StageHead crumb="Step 01 of 08 — gym track" title="Business details." desc="Tell us who you are — we'll use this on receipts and your verified profile." />
+      <StageHead crumb="Step 01 of 08, gym track" title="Business details." desc="Tell us who you are, we'll use this on receipts and your verified profile." />
       <FormGrid>
         <Field label="Business name"><TextInput value={(data.bizName as string) || ""} onChange={(v) => setField("bizName", v)} placeholder="Iron Lab" /></Field>
         <Field label="Legal entity"><SelectField value={(data.entity as string) || "Pty Ltd"} onChange={(v) => setField("entity", v)} options={["Pty Ltd", "CC", "Sole prop", "LLC", "Inc"]} /></Field>
@@ -78,7 +78,7 @@ export function GymStep1({ data, setField }: StepProps) {
 export function GymStep2({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 02 of 08 — gym track" title="Add your first location." desc="You can add more later. We just need one to publish." />
+      <StageHead crumb="Step 02 of 08, gym track" title="Add your first location." desc="You can add more later. We just need one to publish." />
       <FormGrid>
         <Field label="Location name" full><TextInput value={(data.locName as string) || ""} onChange={(v) => setField("locName", v)} placeholder="Sea Point" /></Field>
         <Field label="Street address" full><TextInput value={(data.street as string) || ""} onChange={(v) => setField("street", v)} placeholder="142 Main Road, Sea Point" /></Field>
@@ -92,7 +92,7 @@ export function GymStep2({ data, setField }: StepProps) {
 export function GymStep3({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 03 of 08 — gym track" title="Membership plans." desc="Pick templates to start. Customize anything later." />
+      <StageHead crumb="Step 03 of 08, gym track" title="Membership plans." desc="Pick templates to start. Customize anything later." />
       <RadioCards
         selected={(data.planTemplate as string) || "standard"}
         onSelect={(v) => setField("planTemplate", v)}
@@ -110,7 +110,7 @@ export function GymStep3({ data, setField }: StepProps) {
 export function GymStep4({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 04 of 08 — gym track" title="Verification documents." desc="We'll review within 48h. Most gyms are approved on the first pass." />
+      <StageHead crumb="Step 04 of 08, gym track" title="Verification documents." desc="We'll review within 48h. Most gyms are approved on the first pass." />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <UploadZone
           title="Business registration certificate"
@@ -147,7 +147,7 @@ export function GymStep4({ data, setField, onUploadStart, onUploadEnd }: StepPro
 export function GymStep5({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 05 of 08 — gym track" title="Connect your payments." desc="Payouts go straight to your account. Binectics never holds funds." />
+      <StageHead crumb="Step 05 of 08, gym track" title="Connect your payments." desc="Payouts go straight to your account. Binectics never holds funds." />
       <RadioCards
         selected={(data.payout as string) || "paystack"}
         onSelect={(v) => setField("payout", v)}
@@ -164,7 +164,7 @@ export function GymStep5({ data, setField }: StepProps) {
 export function GymStep6({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 06 of 08 — gym track" title="Pick your kiosk." desc="QR check-in needs an iPad at each location. Buy or use existing." />
+      <StageHead crumb="Step 06 of 08, gym track" title="Pick your kiosk." desc="QR check-in needs an iPad at each location. Buy or use existing." />
       <RadioCards
         selected={(data.kiosk as string) || "existing"}
         onSelect={(v) => setField("kiosk", v)}
@@ -182,7 +182,7 @@ export function GymStep7({ data, setField }: StepProps) {
   const roles = (data.staffRoles as string[]) || ["Coach (standard)"];
   return (
     <>
-      <StageHead crumb="Step 07 of 08 — gym track" title="Invite your staff." desc="We'll email each one a unique link to set their password." />
+      <StageHead crumb="Step 07 of 08, gym track" title="Invite your staff." desc="We'll email each one a unique link to set their password." />
       <Field label="Coach emails (one per line)" full>
         <TextArea
           value={(data.staffEmails as string) || ""}
@@ -212,16 +212,16 @@ const PLAN_DISPLAY: Record<string, string> = {
 export function GymStep8({ data }: StepProps) {
   const planId = (data.planTemplate as string) || "standard";
   const rows = [
-    { k: "Business", v: (data.bizName as string) || "—" },
-    { k: "First location", v: (data.locName as string) || "—" },
-    { k: "Plans", v: PLAN_DISPLAY[planId] || "—" },
+    { k: "Business", v: (data.bizName as string) || "-" },
+    { k: "First location", v: (data.locName as string) || "-" },
+    { k: "Plans", v: PLAN_DISPLAY[planId] || "-" },
     { k: "Documents", v: [data.doc_reg, data.doc_tax, data.doc_id].filter(Boolean).length + " uploaded", signal: [data.doc_reg, data.doc_tax, data.doc_id].filter(Boolean).length > 0 },
-    { k: "Payments", v: (data.payout as string) || "—", signal: true },
+    { k: "Payments", v: (data.payout as string) || "-", signal: true },
     { k: "Staff invites", v: ((data.staffEmails as string) || "").split("\n").filter(Boolean).length + " emails" },
   ];
   return (
     <>
-      <StageHead crumb="Step 08 of 08 — gym track" title="Submit for review." desc="Your gym will go live within 48h. We'll email you the moment search traffic starts." />
+      <StageHead crumb="Step 08 of 08, gym track" title="Submit for review." desc="Your gym will go live within 48h. We'll email you the moment search traffic starts." />
       <div style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "var(--r-3)", padding: 20 }}>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 14 }}>Submission summary</div>
         {rows.map((r) => (

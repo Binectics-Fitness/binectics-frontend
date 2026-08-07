@@ -142,7 +142,7 @@ export function TemplateGallery({ onCreated, onError }: TemplateGalleryProps) {
           style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
         >
           <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>
-            {preview.title} — questions
+            {preview.title}, questions
           </div>
           <ol className="mt-2 flex flex-col gap-1.5">
             {preview.questions.map((q, i) => (
