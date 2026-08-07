@@ -82,6 +82,10 @@ export const queryKeys = {
   privacy: {
     preferences: () => ["privacy", "preferences"] as const,
   },
+  onboarding: {
+    all: ["onboarding"] as const,
+    status: () => [...queryKeys.onboarding.all, "status"] as const,
+  },
   notifications: {
     all: ["notifications"] as const,
     list: (params?: Record<string, unknown>) =>
