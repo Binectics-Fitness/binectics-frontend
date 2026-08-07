@@ -11,13 +11,30 @@ import { getOnboardingRoute } from "@/lib/constants/routes";
  * mount <OnboardingBanner /> — no props, no gating at the call site.
  */
 
-const ROLE_CONFIG: Record<string, { title: string; desc: string; steps: string[]; accent: string; soft: string }> = {
+/**
+ * `plansHref`, when set, adds a secondary CTA pointing at the Binectics plan
+ * catalogue. Only the provider roles carry it: they subscribe to a Binectics
+ * tier, so onboarding should show them what plans are on offer. A fitness member
+ * subscribes to a gym, not to Binectics, so there is nothing to point them at.
+ */
+const ROLE_CONFIG: Record<
+  string,
+  {
+    title: string;
+    desc: string;
+    steps: string[];
+    accent: string;
+    soft: string;
+    plansHref?: string;
+  }
+> = {
   GYM_OWNER: {
     title: "Complete your gym setup",
     desc: "Add your locations, facilities, and business details to publish your listing and start accepting members.",
     steps: ["Gym details & location", "Facilities & amenities", "Business registration", "Pricing & plans"],
     accent: "var(--gym)",
     soft: "var(--gym-soft)",
+    plansHref: "/dashboard/billing",
   },
   TRAINER: {
     title: "Complete your trainer profile",
@@ -25,6 +42,7 @@ const ROLE_CONFIG: Record<string, { title: string; desc: string; steps: string[]
     steps: ["Certifications & credentials", "Specialties & expertise", "Professional bio", "Pricing & availability"],
     accent: "var(--trainer)",
     soft: "var(--trainer-soft)",
+    plansHref: "/dashboard/billing",
   },
   DIETITIAN: {
     title: "Complete your dietitian profile",
@@ -32,6 +50,7 @@ const ROLE_CONFIG: Record<string, { title: string; desc: string; steps: string[]
     steps: ["Professional credentials", "License information", "Specialties & approach", "Consultation pricing"],
     accent: "var(--dietitian)",
     soft: "var(--dietitian-soft)",
+    plansHref: "/dashboard/billing",
   },
   USER: {
     title: "Complete your profile",
@@ -116,6 +135,15 @@ export default function OnboardingBanner() {
         >
           Complete setup →
         </Link>
+        {config.plansHref && (
+          <Link
+            href={config.plansHref}
+            className="inline-flex items-center justify-center h-11 px-4.5 rounded-(--r-2) text-[14px] font-medium"
+            style={{ border: "1px solid var(--border-2)", color: "var(--fg-2)", background: "transparent" }}
+          >
+            Choose your plan
+          </Link>
+        )}
         <button
           onClick={dismiss}
           className="inline-flex items-center justify-center h-11 px-4.5 rounded-(--r-2) text-[14px] font-medium"
