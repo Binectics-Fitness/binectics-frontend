@@ -6,6 +6,7 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import {
   progressService,
   type ClientProfile,
@@ -180,6 +181,8 @@ function NewRecommendationModal({
   const [category, setCategory] = useState<RecommendationCategory>(RecommendationCategory.NUTRITION);
   const [saving, setSaving] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { requestClose, dirtyProps, confirmationModal } =
+    useUnsavedChangesGuard(onClose);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,9 +208,10 @@ function NewRecommendationModal({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(3,20,30,0.55)" }}
-      onClick={(e) => e.target === overlayRef.current && onClose()}
+      onClick={(e) => e.target === overlayRef.current && requestClose()}
     >
-      <div className="w-full max-w-md rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }}>
+      {confirmationModal}
+      <div className="w-full max-w-md rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }} {...dirtyProps}>
         <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <h2 className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>New recommendation</h2>
         </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { utilityService } from "@/lib/api/utility";
 import type {
@@ -68,6 +69,8 @@ function PlanModal({
   const [featureInput, setFeatureInput] = useState("");
   const [saving, setSaving] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { requestClose, dirtyProps, confirmationModal } =
+    useUnsavedChangesGuard(onClose);
 
   const set = <K extends keyof CreateOrgMembershipPlanRequest>(
     key: K,
@@ -97,8 +100,9 @@ function PlanModal({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(3,20,30,0.55)" }}
-      onClick={(e) => e.target === overlayRef.current && onClose()}
+      onClick={(e) => e.target === overlayRef.current && requestClose()}
     >
+      {confirmationModal}
       <div
         className="w-full max-w-lg rounded-(--r-3) overflow-y-auto max-h-[90vh]"
         style={{
@@ -106,6 +110,7 @@ function PlanModal({
           border: "1px solid var(--border)",
           boxShadow: "0 24px 64px rgba(3,20,30,0.2)",
         }}
+        {...dirtyProps}
       >
         <div
           className="flex items-center justify-between px-6 py-4"
@@ -116,7 +121,7 @@ function PlanModal({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             className="w-7 h-7 flex items-center justify-center rounded-(--r-2)"
             style={{ color: "var(--fg-3)", border: "1px solid var(--border)" }}
           >

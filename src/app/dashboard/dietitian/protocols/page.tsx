@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/nutrition";
 import { progressService, type ClientProfile } from "@/lib/api/progress";
 import { toast } from "@/components/Toast";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { buildProtocolRecommendation } from "./protocol-recommendation";
 
@@ -65,6 +66,8 @@ function ProtocolModal({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { requestClose, dirtyProps, confirmationModal } =
+    useUnsavedChangesGuard(onClose);
 
   const setStep = (i: number, patch: Partial<ProtocolStep>) =>
     setForm((f) => ({
@@ -124,11 +127,13 @@ function ProtocolModal({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(3,20,30,0.55)" }}
-      onClick={(e) => e.target === overlayRef.current && onClose()}
+      onClick={(e) => e.target === overlayRef.current && requestClose()}
     >
+      {confirmationModal}
       <div
         className="w-full max-w-xl rounded-(--r-3) overflow-y-auto max-h-[90vh]"
         style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }}
+        {...dirtyProps}
       >
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <h2 className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { FoodPicker } from "./FoodPicker";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -94,6 +95,8 @@ function PlanFormModal({
   const [form, setForm] = useState<PlanFormState>(initial);
   const [saving, setSaving] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { requestClose, dirtyProps, confirmationModal } =
+    useUnsavedChangesGuard(onClose);
 
   const setMeal = (index: number, patch: Partial<MealFormRow>) =>
     setForm((f) => ({
@@ -126,11 +129,13 @@ function PlanFormModal({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(3,20,30,0.55)" }}
-      onClick={(e) => e.target === overlayRef.current && onClose()}
+      onClick={(e) => e.target === overlayRef.current && requestClose()}
     >
+      {confirmationModal}
       <div
         className="w-full max-w-2xl rounded-(--r-3) overflow-y-auto max-h-[90vh]"
         style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }}
+        {...dirtyProps}
       >
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <h2 className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>
@@ -138,7 +143,7 @@ function PlanFormModal({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             className="w-7 h-7 flex items-center justify-center rounded-(--r-2)"
             style={{ color: "var(--fg-3)", border: "1px solid var(--border)" }}
           >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 
 interface ModalProps {
   open: boolean;
@@ -9,6 +10,13 @@ interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
+  /**
+   * Opt out of the "Discard changes?" guard on accidental close (overlay / ESC
+   * / X). Off by default — the guard only ever triggers once the user has
+   * actually typed something, so read-only or confirmation modals are
+   * unaffected either way.
+   */
+  disableCloseGuard?: boolean;
 }
 
 export default function Modal({
@@ -18,14 +26,25 @@ export default function Modal({
   children,
   footer,
   size = "md",
+  disableCloseGuard = false,
 }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
+  // Accidental-dismissal guard: overlay / ESC / X route through requestClose,
+  // which confirms only when the form has unsaved input. dirtyProps on the
+  // panel auto-detect typing so no caller wiring is needed.
+  const { requestClose, dirtyProps, reset, confirmationModal } =
+    useUnsavedChangesGuard(onClose, { enabled: !disableCloseGuard });
+
   useEffect(() => {
+    // Mount/unmount enter+exit animation: these state writes are the intended
+    // way to drive the open/close transition, not cascading renders.
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (open) {
+      reset();
       setShouldRender(true);
       requestAnimationFrame(() => setIsAnimating(true));
     } else {
@@ -33,16 +52,17 @@ export default function Modal({
       const timer = setTimeout(() => setShouldRender(false), 220);
       return () => clearTimeout(timer);
     }
-  }, [open]);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [open, reset]);
 
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") requestClose();
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [open, onClose]);
+  }, [open, requestClose]);
 
   const handleFocusTrap = useCallback(
     (e: KeyboardEvent) => {
@@ -95,6 +115,7 @@ export default function Modal({
   };
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         ref={overlayRef}
@@ -104,7 +125,7 @@ export default function Modal({
           opacity: isAnimating ? 1 : 0,
           transitionDuration: "var(--motion-base)",
         }}
-        onClick={onClose}
+        onClick={requestClose}
       />
       <div
         ref={panelRef}
@@ -124,6 +145,7 @@ export default function Modal({
           maxHeight: "calc(100vh - 32px)",
         }}
         onClick={(e) => e.stopPropagation()}
+        {...dirtyProps}
       >
         <div className="p-6">
           <div className="mb-4 flex items-center justify-between">
@@ -134,7 +156,7 @@ export default function Modal({
               {title}
             </h3>
             <button
-              onClick={onClose}
+              onClick={requestClose}
               className="flex h-7 w-7 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-bg-2 hover:text-ink"
               aria-label="Close"
             >
@@ -163,5 +185,7 @@ export default function Modal({
         )}
       </div>
     </div>
+    {confirmationModal}
+    </>
   );
 }
