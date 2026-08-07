@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { GalleryManager } from "@/components/provider/GalleryManager";
 import { authService } from "@/lib/api/auth";
 import {
   useMyListing,
@@ -324,6 +325,24 @@ export function ProviderListingProfile() {
       <Card title="Specializations & credentials" desc="Shown as tags on your listing. Credentials appear next to your name.">
         <ChipEditor label="Specialties" values={form?.specialties ?? []} onChange={(v) => set("specialties", v)} disabled={!form} placeholder="e.g. Strength & conditioning" />
         <ChipEditor label="Certifications" values={form?.certifications ?? []} onChange={(v) => set("certifications", v)} disabled={!form} placeholder="e.g. CSCS" />
+      </Card>
+
+      {/* Photos */}
+      <Card title="Photos" desc="The gallery on your public listing. The first photo is your cover.">
+        {listing && (isGym ? !!orgId : true) ? (
+          <GalleryManager
+            photos={listing.photos ?? []}
+            target={
+              isGym
+                ? { kind: "org", orgId: orgId as string }
+                : { kind: "solo", listingId: listing._id }
+            }
+          />
+        ) : (
+          <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+            Save your listing first, then add photos here.
+          </p>
+        )}
       </Card>
 
       {/* Where the rest lives */}

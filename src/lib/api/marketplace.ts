@@ -634,6 +634,43 @@ export const marketplaceService = {
     );
   },
 
+  // ── Solo listing gallery (trainer / dietitian) ──────────────────────
+  // Same shape as the org gallery methods above, but keyed by the owner's
+  // listing id (marketplace-api #119). A solo listing has no organization.
+
+  async uploadSoloListingGalleryImages(
+    listingId: string,
+    files: File[],
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+
+    return await apiClient.postFormData<MarketplaceListing>(
+      `/marketplace/my-listings/${listingId}/gallery`,
+      formData,
+    );
+  },
+
+  async deleteSoloListingGalleryImage(
+    listingId: string,
+    imageUrl: string,
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/marketplace/my-listings/${listingId}/gallery/delete`,
+      { image_url: imageUrl },
+    );
+  },
+
+  async reorderSoloListingGalleryImages(
+    listingId: string,
+    photos: string[],
+  ): Promise<ApiResponse<MarketplaceListing>> {
+    return await apiClient.patch<MarketplaceListing>(
+      `/marketplace/my-listings/${listingId}/gallery/reorder`,
+      { photos },
+    );
+  },
+
   async getOrgListingRequests(
     organizationId: string,
   ): Promise<ApiResponse<MarketplaceRequest[]>> {
