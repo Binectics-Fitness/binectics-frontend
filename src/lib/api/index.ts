@@ -11,6 +11,7 @@ export { reviewsService } from "./reviews";
 export { utilityService } from "./utility";
 export { checkinsService } from "./checkins";
 export type { ScanCheckInRequest } from "./checkins";
+export { programsService } from "./programs";
 export type {
   AuthResponse,
   ForgotPasswordRequest,
@@ -21,3 +22,4 @@ export type * from "./forms";
 export type * from "./progress";
 export type * from "./consultations";
 export type * from "./reviews";
+export type * from "./programs";
