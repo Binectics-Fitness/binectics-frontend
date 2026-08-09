@@ -797,7 +797,9 @@ function ProgramCard({
             {badge.label}
           </span>
           {draftAhead && isPublished && (
-            <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)" }}>
+            // Neutral fill (not an accent) so it stays distinct from the
+            // "Published" pill on every role, incl. the amber trainer accent.
+            <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-2)", border: "1px solid var(--border-2)" }}>
               Unpublished changes
             </span>
           )}
