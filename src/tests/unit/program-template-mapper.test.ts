@@ -75,6 +75,57 @@ describe("phaseRowsToPayload", () => {
     expect(out[0].blocks[1].metric).toBe("hrv");
   });
 
+  it("keeps a meal_plan block that has a linked plan and carries meal_plan_id", () => {
+    const out = phaseRowsToPayload([
+      {
+        name: "Nutrition",
+        duration_days: "",
+        blocks: [
+          { ...emptyBlockRow("meal_plan"), meal_plan_id: "665f00000000000000000001" }, // no title, but linked → kept
+          { ...emptyBlockRow("meal_plan") }, // no title, no plan → dropped
+        ],
+      },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0].blocks).toHaveLength(1);
+    expect(out[0].blocks[0].meal_plan_id).toBe("665f00000000000000000001");
+  });
+
+  it("round-trips a meal_plan block's linked plan through versionToForm", () => {
+    const form: ProgramFormState = {
+      name: "Nutrition program",
+      category: "",
+      goal_statement: "",
+      duration_days: "",
+      intensity: "",
+      indications: "",
+      cautions: "",
+      phases: [
+        {
+          name: "Eat",
+          duration_days: "",
+          blocks: [{ ...emptyBlockRow("meal_plan"), meal_plan_id: "665f00000000000000000009" }],
+        },
+      ],
+      goals: [],
+    };
+    const payload = formToPayload(form);
+    const version = { _id: "v", template_id: "t", version_no: 1, published_at: null, ...payload } as ProgramTemplateVersion;
+    const round = formToPayload(versionToForm(version));
+    expect(round.phases![0].blocks[0].meal_plan_id).toBe("665f00000000000000000009");
+  });
+
+  it("only carries meal_plan_id for meal_plan blocks", () => {
+    const [phase] = phaseRowsToPayload([
+      {
+        name: "P",
+        duration_days: "",
+        blocks: [{ ...emptyBlockRow("habit"), title: "x", meal_plan_id: "665f00000000000000000002" }],
+      },
+    ]);
+    expect(phase.blocks[0].meal_plan_id).toBeUndefined();
+  });
+
   it("only carries times_per_week for n_per_week and metric for measurement", () => {
     const [phase] = phaseRowsToPayload([
       {

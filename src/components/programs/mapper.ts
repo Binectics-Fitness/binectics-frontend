@@ -65,6 +65,8 @@ export interface BlockFormRow {
   title: string;
   detail: string;
   metric: string;
+  /** DietPlan id for meal_plan blocks; "" when none picked. */
+  meal_plan_id: string;
   start_offset_days: string;
   duration_days: string;
   times_per_week: string;
@@ -105,6 +107,7 @@ export function emptyBlockRow(
     title: "",
     detail: "",
     metric: "",
+    meal_plan_id: "",
     start_offset_days: "",
     duration_days: "",
     times_per_week: "",
@@ -168,14 +171,21 @@ function blockRowToPayload(row: BlockFormRow, order: number): ProgramBlock {
   if (row.type === "measurement" && row.metric.trim()) {
     block.metric = row.metric.trim();
   }
+  if (row.type === "meal_plan" && row.meal_plan_id.trim()) {
+    block.meal_plan_id = row.meal_plan_id.trim();
+  }
   return block;
 }
 
-/** A block is meaningful once it has a title (or is a measurement with a metric). */
+/**
+ * A block is meaningful once it has a title, or is a measurement with a metric,
+ * or is a meal_plan with a linked plan.
+ */
 function blockHasContent(row: BlockFormRow): boolean {
   return (
     row.title.trim().length > 0 ||
-    (row.type === "measurement" && row.metric.trim().length > 0)
+    (row.type === "measurement" && row.metric.trim().length > 0) ||
+    (row.type === "meal_plan" && row.meal_plan_id.trim().length > 0)
   );
 }
 
@@ -254,6 +264,7 @@ export function versionToForm(v: ProgramTemplateVersion): ProgramFormState {
           title: b.title ?? "",
           detail: b.detail ?? "",
           metric: b.metric ?? "",
+          meal_plan_id: b.meal_plan_id ?? "",
           start_offset_days: numToStr(b.start_offset_days),
           duration_days: numToStr(b.duration_days),
           times_per_week: numToStr(b.times_per_week),

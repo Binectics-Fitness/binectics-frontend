@@ -8,7 +8,8 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
-import { progressService, type ClientProfile } from "@/lib/api/progress";
+import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/progress";
+import { DietPlanDeliveryType } from "@/lib/types";
 import type { ProgramsRoleConfig } from "./config";
 import {
   programsService,
@@ -117,8 +118,38 @@ function ProgramFormModal({
 }) {
   const [form, setForm] = useState<ProgramFormState>(initial);
   const [saving, setSaving] = useState(false);
+  const [mealPlans, setMealPlans] = useState<{ label: string; value: string }[]>([]);
+  const [mealPlansLoading, setMealPlansLoading] = useState(true);
   const overlayRef = useRef<HTMLDivElement>(null);
   const { requestClose, dirtyProps, confirmationModal } = useUnsavedChangesGuard(onClose);
+
+  // Reusable meal-plan templates a meal_plan task can link to. Templates only
+  // (no client copy, mirroring isTemplatePlan) and PLATFORM delivery only —
+  // document plans keep their content in a file and can't render as program
+  // tasks, so linking one would be a dead reference.
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const res = await progressService.getProviderDietPlans();
+      if (!active) return;
+      if (res.success && res.data) {
+        setMealPlans(
+          res.data
+            .filter(
+              (p: DietPlan) =>
+                !p.client_profile_id &&
+                !p.client_id &&
+                p.delivery_type === DietPlanDeliveryType.PLATFORM,
+            )
+            .map((p) => ({ label: p.title, value: p._id })),
+        );
+      }
+      setMealPlansLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // ── Phase mutations ──
   const setPhase = (pi: number, patch: Partial<PhaseFormRow>) =>
@@ -399,6 +430,31 @@ function ProgramFormModal({
                               className="h-9 rounded-(--r-2) px-3 text-[13px]"
                               style={fieldStyle}
                             />
+                          </div>
+                        )}
+
+                        {block.type === "meal_plan" && (
+                          <div className="flex flex-col gap-1">
+                            <FieldLabel>Linked meal plan</FieldLabel>
+                            {!mealPlansLoading && mealPlans.length === 0 && !block.meal_plan_id ? (
+                              <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                                No meal plan templates yet. Create one under Meal plans, then link it here.
+                              </div>
+                            ) : (
+                              <SearchableSelect
+                                value={block.meal_plan_id}
+                                onChange={(v) => setBlock(pi, bi, { meal_plan_id: v })}
+                                // Keep a stale/archived link visible and clearable rather than
+                                // silently blank when the fetch didn't return it.
+                                options={
+                                  block.meal_plan_id && !mealPlans.some((o) => o.value === block.meal_plan_id)
+                                    ? [...mealPlans, { label: "Linked plan (unavailable)", value: block.meal_plan_id }]
+                                    : mealPlans
+                                }
+                                placeholder={mealPlansLoading ? "Loading meal plans…" : "Pick a meal plan…"}
+                                loading={mealPlansLoading}
+                              />
+                            )}
                           </div>
                         )}
 
