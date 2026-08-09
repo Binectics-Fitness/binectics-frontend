@@ -9,7 +9,7 @@ import {
   emptyGoalRow,
   type ProgramFormState,
   type PhaseFormRow,
-} from "@/app/dashboard/dietitian/programs/_lib";
+} from "@/components/programs/mapper";
 import type { ProgramTemplateVersion } from "@/lib/api/programs";
 
 // Regression guards for the program builder mapper:
