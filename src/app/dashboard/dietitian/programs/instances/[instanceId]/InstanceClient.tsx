@@ -79,7 +79,8 @@ export default function InstanceClient({ instanceId }: { instanceId: string }) {
     const res = await fn(instanceId);
     setActing(false);
     if (res.success) {
-      toast.success(`Program ${action === "resume" ? "resumed" : action + "d"}.`);
+      const past = { pause: "paused", resume: "resumed", complete: "completed", cancel: "cancelled" } as const;
+      toast.success(`Program ${past[action]}.`);
       applyDetail(await programsService.getInstance(instanceId));
     } else {
       toast.error(res.message ?? `Failed to ${action} program.`);
