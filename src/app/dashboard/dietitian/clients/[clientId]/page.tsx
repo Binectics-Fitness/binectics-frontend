@@ -16,7 +16,7 @@ import {
 } from "@/lib/api/progress";
 import { DietPlanDeliveryType, PlanStatus, RecommendationCategory } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
-import { templateToClientPlanPayload, isTemplatePlan } from "@/app/dashboard/dietitian/meal-plans/_lib";
+import { isTemplatePlan } from "@/app/dashboard/dietitian/meal-plans/_lib";
 
 function clientName(c: ClientProfile): string {
   if (typeof c.client_id === "object" && c.client_id !== null) {
@@ -100,7 +100,8 @@ function TemplatePickerModal({
     const template = templates.find((t) => t._id === selected);
     if (!template) return;
     setCreating(true);
-    const res = await progressService.createDietPlan(profileId, templateToClientPlanPayload(template));
+    // Server-side copy keeps the template's day structure (weekly plans).
+    const res = await progressService.assignDietPlanFromTemplate(profileId, template._id);
     setCreating(false);
     if (res.success && res.data) {
       toast.success(`Plan "${template.title}" created for this client.`);
