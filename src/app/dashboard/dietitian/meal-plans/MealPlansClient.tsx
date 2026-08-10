@@ -17,15 +17,22 @@ import {
   type CreateDietPlanRequest,
   type UpdateDietPlanRequest,
   type DietPlan,
+  type DayOfWeek,
 } from "@/lib/api/progress";
 import {
   MEAL_SLOT_LABELS,
   MEAL_SLOT_ORDER,
+  WEEKDAYS,
+  EVERY_DAY,
+  DAY_LABELS,
   type MealFormRow,
+  type DaysFormState,
   emptyMealRow,
-  mealRowsToRequests,
-  planToMealRows,
-  templateToClientPlanPayload,
+  emptyDaysState,
+  daysStateToRequests,
+  planToDaysState,
+  everyDaySlotCollisions,
+  planMealCount,
   planTotalCalories,
   isTemplatePlan,
 } from "./_lib";
@@ -68,15 +75,15 @@ interface PlanFormState {
   title: string;
   description: string;
   dietitian_notes: string;
-  meals: MealFormRow[];
+  /** One row list per day; "Every day" is the repeating base menu. */
+  days: DaysFormState;
 }
 
-const EMPTY_FORM: PlanFormState = {
-  title: "",
-  description: "",
-  dietitian_notes: "",
-  meals: [emptyMealRow(MealSlot.BREAKFAST)],
-};
+function emptyPlanForm(): PlanFormState {
+  const days = emptyDaysState();
+  days.every_day = [emptyMealRow(MealSlot.BREAKFAST)];
+  return { title: "", description: "", dietitian_notes: "", days };
+}
 
 function PlanFormModal({
   mode,
@@ -94,27 +101,44 @@ function PlanFormModal({
 }) {
   const [form, setForm] = useState<PlanFormState>(initial);
   const [saving, setSaving] = useState(false);
+  const [activeDay, setActiveDay] = useState<DayOfWeek>(EVERY_DAY);
   const overlayRef = useRef<HTMLDivElement>(null);
   const { requestClose, dirtyProps, confirmationModal } =
     useUnsavedChangesGuard(onClose);
 
+  const dayRows = form.days[activeDay];
+
+  const setDayRows = (day: DayOfWeek, rows: MealFormRow[]) =>
+    setForm((f) => ({ ...f, days: { ...f.days, [day]: rows } }));
+
   const setMeal = (index: number, patch: Partial<MealFormRow>) =>
-    setForm((f) => ({
-      ...f,
-      meals: f.meals.map((m, i) => (i === index ? { ...m, ...patch } : m)),
-    }));
+    setDayRows(
+      activeDay,
+      dayRows.map((m, i) => (i === index ? { ...m, ...patch } : m)),
+    );
 
   const addMeal = () =>
-    setForm((f) => ({
-      ...f,
-      meals: [
-        ...f.meals,
-        emptyMealRow(MEAL_SLOT_ORDER[Math.min(f.meals.length, MEAL_SLOT_ORDER.length - 1)]),
-      ],
-    }));
+    setDayRows(activeDay, [
+      ...dayRows,
+      emptyMealRow(MEAL_SLOT_ORDER[Math.min(dayRows.length, MEAL_SLOT_ORDER.length - 1)]),
+    ]);
 
   const removeMeal = (index: number) =>
-    setForm((f) => ({ ...f, meals: f.meals.filter((_, i) => i !== index) }));
+    setDayRows(activeDay, dayRows.filter((_, i) => i !== index));
+
+  /** Copy another day's meals into the active day (append, deep-copied rows). */
+  const copyFromDay = (source: DayOfWeek) => {
+    if (source === activeDay) return;
+    setDayRows(activeDay, [
+      ...dayRows,
+      ...form.days[source].map((m) => ({ ...m, foods: [...m.foods] })),
+    ]);
+  };
+
+  // Weekday slots that also exist in "Every day" — the client sees both
+  // (additive by design); the builder just points it out.
+  const collisions = everyDaySlotCollisions(form.days);
+  const activeDayCollisions = collisions.filter((c) => c.day === activeDay);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,21 +213,82 @@ function PlanFormModal({
             <div className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
                 <FieldLabel>Meals</FieldLabel>
-                <button
-                  type="button"
-                  onClick={addMeal}
-                  className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
-                  style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}
-                >
-                  + Add meal
-                </button>
+                <div className="flex items-center gap-2">
+                  <div className="w-[150px]">
+                    <SearchableSelect
+                      value=""
+                      onChange={(v) => copyFromDay(v as DayOfWeek)}
+                      options={[EVERY_DAY, ...WEEKDAYS]
+                        .filter(
+                          (d) =>
+                            d !== activeDay &&
+                            form.days[d].some((m) => m.title.trim()),
+                        )
+                        .map((d) => ({ label: DAY_LABELS[d], value: d }))}
+                      placeholder="Copy meals from…"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addMeal}
+                    className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
+                    style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}
+                  >
+                    + Add meal
+                  </button>
+                </div>
               </div>
-              {form.meals.length === 0 && (
-                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-                  No meals yet, you can add them now or later.
+
+              {/* Day tabs: the every-day base menu first, then the weekdays. */}
+              <div className="flex gap-1 flex-wrap">
+                {[EVERY_DAY, ...WEEKDAYS].map((day) => {
+                  const count = form.days[day].filter((m) => m.title.trim()).length;
+                  const active = activeDay === day;
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setActiveDay(day)}
+                      className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
+                      style={{
+                        background: active ? "var(--ink)" : "var(--bg-2)",
+                        color: active ? "var(--bg)" : count > 0 ? "var(--ink)" : "var(--fg-3)",
+                        border: active ? "1px solid var(--ink)" : "1px solid var(--border)",
+                      }}
+                    >
+                      {DAY_LABELS[day]}
+                      {count > 0 && (
+                        <span style={{ color: active ? "oklch(0.75 0.005 85)" : "var(--fg-4)", marginLeft: 4 }}>
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeDay === EVERY_DAY ? (
+                <div className="text-[12px]" style={{ color: "var(--fg-3)", lineHeight: 1.5 }}>
+                  Meals here repeat on every day of the week. Build the base menu first, then add day-specific meals on the weekday tabs.
+                </div>
+              ) : dayRows.length === 0 ? (
+                <div className="text-[12px]" style={{ color: "var(--fg-3)", lineHeight: 1.5 }}>
+                  No {DAY_LABELS[activeDay]} meals yet. Clients see the every-day menu on this day; anything you add here appears alongside it.
+                </div>
+              ) : null}
+
+              {activeDayCollisions.length > 0 && (
+                <div
+                  className="rounded-(--r-2) px-3 py-2 text-[12px]"
+                  style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)", lineHeight: 1.5 }}
+                >
+                  Heads up: {DAY_LABELS[activeDay]} also gets{" "}
+                  {[...new Set(activeDayCollisions.map((c) => MEAL_SLOT_LABELS[c.slot].toLowerCase()))].join(", ")}{" "}
+                  from the every-day menu, so clients will see both.
                 </div>
               )}
-              {form.meals.map((meal, i) => (
+
+              {dayRows.map((meal, i) => (
                 <div key={i} className="rounded-(--r-2) p-3.5 flex flex-col gap-2.5" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
                   <div className="flex items-center gap-2">
                     <div className="w-[160px] shrink-0">
@@ -333,7 +418,9 @@ export function AssignPlanModal({
   const handleAssign = async () => {
     if (!selected) return;
     setAssigning(true);
-    const res = await progressService.createDietPlan(selected, templateToClientPlanPayload(plan));
+    // Server-side copy: keeps the plan's day structure (the old client-side
+    // payload rebuild only knew the flat meals[] and flattened weekly plans).
+    const res = await progressService.assignDietPlanFromTemplate(selected, plan._id);
     setAssigning(false);
     if (res.success && res.data) {
       const target = clients.find((c) => c._id === selected);
@@ -455,7 +542,7 @@ function MealPlanCard({
         <div className="py-3 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
           <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Meals</div>
           <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-            {isDocument ? "-" : plan.meals.length}
+            {isDocument ? "-" : planMealCount(plan)}
           </div>
         </div>
         <div className="py-3 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
@@ -583,7 +670,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     title: form.title.trim(),
     description: form.description.trim() || undefined,
     delivery_type: DietPlanDeliveryType.PLATFORM,
-    meals: mealRowsToRequests(form.meals),
+    days: daysStateToRequests(form.days),
     dietitian_notes: form.dietitian_notes.trim() || undefined,
   });
 
@@ -607,7 +694,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
       description: form.description.trim() || undefined,
       dietitian_notes: form.dietitian_notes.trim() || undefined,
       // Document plans keep their content in the file — never overwrite meals.
-      ...(isDocument ? {} : { meals: mealRowsToRequests(form.meals) }),
+      ...(isDocument ? {} : { days: daysStateToRequests(form.days) }),
     };
     const res = await progressService.updateStandaloneDietPlan(plan._id, data);
     if (res.success && res.data) {
@@ -754,9 +841,9 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
                   title: modal.plan.title,
                   description: modal.plan.description ?? "",
                   dietitian_notes: modal.plan.dietitian_notes ?? "",
-                  meals: planToMealRows(modal.plan),
+                  days: planToDaysState(modal.plan),
                 }
-              : EMPTY_FORM
+              : emptyPlanForm()
           }
           onClose={() => setModal(null)}
           onSave={modal.mode === "create" ? handleCreate : handleEdit}

@@ -424,13 +424,35 @@ export interface UpdateWorkoutPlanRequest {
 // ==================== DIET PLAN TYPES ====================
 
 export interface DietMeal {
+  _id?: string;
   meal_type: MealSlot;
   title: string;
   description?: string;
   foods: string[];
   calories?: number;
   notes?: string;
+  /** Position within the meal's day (weekly plans) or the flat list (legacy). */
   order: number;
+}
+
+/**
+ * Day a meal belongs to within a weekly plan (MEAL_PLAN_WEEKLY_SPEC).
+ * `every_day` holds meals that repeat across the week; a weekday's effective
+ * menu is its own meals plus the every-day ones (additive, by design).
+ */
+export type DayOfWeek =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday"
+  | "every_day";
+
+export interface DietDay {
+  day_of_week: DayOfWeek;
+  meals: DietMeal[];
 }
 
 export interface DietPlan {
@@ -464,7 +486,9 @@ export interface DietPlan {
   title: string;
   description?: string;
   delivery_type: DietPlanDeliveryType;
+  /** Legacy flat projection during the weekly migration; `days` is canonical. */
   meals: DietMeal[];
+  days?: DietDay[];
   dietitian_notes?: string;
   document_file_name?: string;
   document_mime_type?: string;
@@ -542,18 +566,27 @@ export interface CreateDietMealRequest {
   order: number;
 }
 
+export interface CreateDietDayRequest {
+  day_of_week: DayOfWeek;
+  meals: CreateDietMealRequest[];
+}
+
 export interface CreateDietPlanRequest {
   title: string;
   description?: string;
   delivery_type: DietPlanDeliveryType;
+  /** Legacy flat list; prefer `days`. Rejected on day-structured plans. */
   meals?: CreateDietMealRequest[];
+  days?: CreateDietDayRequest[];
   dietitian_notes?: string;
 }
 
 export interface UpdateDietPlanRequest {
   title?: string;
   description?: string;
+  /** Legacy flat list; prefer `days`. Rejected on day-structured plans. */
   meals?: CreateDietMealRequest[];
+  days?: CreateDietDayRequest[];
   dietitian_notes?: string;
   status?: PlanStatus;
 }
@@ -1062,6 +1095,21 @@ export const progressService = {
     return await apiClient.post<DietPlan>(
       `/progress/clients/${profileId}/diet-plans`,
       data,
+    );
+  },
+
+  /**
+   * Assign a template plan to a client via the server-side copy, which keeps
+   * the plan's day structure (MEAL_PLAN_WEEKLY_SPEC review C-2). The old
+   * client-side copy only knew the flat meals[] and flattened weekly plans.
+   */
+  async assignDietPlanFromTemplate(
+    profileId: string,
+    templateId: string,
+  ): Promise<ApiResponse<DietPlan>> {
+    return await apiClient.post<DietPlan>(
+      `/progress/clients/${profileId}/diet-plans/from-template/${templateId}`,
+      {},
     );
   },
 
