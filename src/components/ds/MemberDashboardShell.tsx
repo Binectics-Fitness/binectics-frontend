@@ -23,6 +23,7 @@ const NAV_LINKS = [
   { label: "Marketplace", href: "/marketplace" },
   { label: "Bookings",    href: "/dashboard/bookings" },
   { label: "Messages",    href: "/dashboard/messages" },
+  { label: "Meal plans",  href: "/dashboard/member/meal-plans" },
   { label: "Activity",    href: "/dashboard/member/streaks" },
   { label: "Requests",    href: "/dashboard/member/requests" },
 ];
