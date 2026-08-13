@@ -1375,6 +1375,14 @@ export const progressService = {
     return await apiClient.get<DietPlan>(`/progress/my-diet-plans/${planId}`);
   },
 
+  /** Fire-and-forget view ping (the API scopes it to my own plans). */
+  async markMyDietPlanViewed(planId: string): Promise<ApiResponse<void>> {
+    return await apiClient.post<void>(
+      `/progress/my-diet-plans/${planId}/viewed`,
+      {},
+    );
+  },
+
   async getMyDietPlanDocumentAccess(
     planId: string,
   ): Promise<ApiResponse<DietPlanDocumentAccess>> {
