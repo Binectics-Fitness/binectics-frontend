@@ -14,9 +14,105 @@ import {
   mealsForWeekday,
   isWeeklyPlan,
   todayWeekday,
+  shoppingList,
+  type ShoppingItem,
 } from "@/lib/progress/weeklyPlan";
+import { loadShopState, saveShopState } from "@/lib/progress/shoppingListStore";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Weekday = Exclude<DayOfWeek, "every_day">;
+
+/** Whole-week grocery list: grouped foods, check-offs, "have it" hiding. */
+function ShoppingListSection({ plan, planId }: { plan: DietPlan; planId: string }) {
+  const { user } = useAuth();
+  const userId = user?.id ?? "anon";
+  // Lazy-initialized from storage (SSR-safe empty on the server render);
+  // the parent remounts this section via key when the user id changes.
+  const [have, setHave] = useState<string[]>(() => loadShopState(userId, planId).have);
+  const [checked, setChecked] = useState<string[]>(
+    () => loadShopState(userId, planId).checked,
+  );
+
+  const items = shoppingList(plan, have, checked);
+  const visible = items.filter((i) => !i.have);
+  const hidden = items.filter((i) => i.have);
+
+  const persist = (nextHave: string[], nextChecked: string[]) =>
+    saveShopState(userId, planId, nextHave, nextChecked, items.map((i) => i.food));
+
+  const toggleChecked = (item: ShoppingItem) => {
+    const next = item.checked ? checked.filter((f) => f !== item.food) : [...checked, item.food];
+    setChecked(next);
+    persist(have, next);
+  };
+  const toggleHave = (item: ShoppingItem) => {
+    const next = item.have ? have.filter((f) => f !== item.food) : [...have, item.food];
+    setHave(next);
+    persist(next, checked);
+  };
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+        Shopping list · this week
+      </div>
+      <div className="rounded-(--r-2)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        {visible.map((item) => (
+          <div key={item.food} className="flex items-center gap-3 px-4 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+            <button
+              type="button"
+              onClick={() => toggleChecked(item)}
+              aria-label={item.checked ? "Mark as not bought" : "Mark as bought"}
+              className="w-[18px] h-[18px] shrink-0 rounded-(--r-1) flex items-center justify-center"
+              style={{ border: "1px solid var(--border-2)", background: item.checked ? "var(--ink)" : "var(--bg)" }}
+            >
+              {item.checked && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" strokeWidth="3"><path d="M20 6 9 17l-5-5" /></svg>
+              )}
+            </button>
+            <span
+              className="flex-1 text-[13px]"
+              style={{ color: item.checked ? "var(--fg-4)" : "var(--ink)", textDecoration: item.checked ? "line-through" : "none" }}
+            >
+              {item.occurrences[0].raw.trim()}
+            </span>
+            <span className="font-mono text-[10px]" style={{ color: "var(--fg-4)", fontVariantNumeric: "tabular-nums" }}>
+              {item.daily ? "daily" : item.occurrences.length > 1 ? `\u00d7${item.occurrences.length}` : ""}
+            </span>
+            <button
+              type="button"
+              onClick={() => toggleHave(item)}
+              className="font-mono text-[10px] uppercase tracking-[0.04em]"
+              style={{ color: "var(--fg-4)", background: "transparent", border: "none", cursor: "pointer" }}
+            >
+              Have it
+            </button>
+          </div>
+        ))}
+        {hidden.length > 0 && (
+          <div className="px-4 py-2.5 flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-4)" }}>
+              Already have:
+            </span>
+            {hidden.map((item) => (
+              <button
+                key={item.food}
+                type="button"
+                onClick={() => toggleHave(item)}
+                className="font-mono text-[10.5px] px-2 py-0.5 rounded-full"
+                style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-3)", cursor: "pointer" }}
+              >
+                {item.occurrences[0].raw.trim()} +
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function MealCard({ meal }: { meal: DietMeal }) {
   return (
@@ -53,6 +149,7 @@ export default function MemberMealPlanDetailPage({
   params: Promise<{ planId: string }>;
 }) {
   const { planId } = use(params);
+  const { user } = useAuth();
   const [plan, setPlan] = useState<DietPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -175,6 +272,8 @@ export default function MemberMealPlanDetailPage({
                   dayMeals.map((meal, i) => <MealCard key={meal._id ?? i} meal={meal} />)
                 )}
               </div>
+
+              <ShoppingListSection key={`shop-${user?.id ?? "anon"}`} plan={plan} planId={planId} />
 
               {plan.dietitian_notes && (
                 <div className="rounded-(--r-2) px-4 py-3" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>

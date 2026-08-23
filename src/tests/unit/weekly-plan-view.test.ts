@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  normalizeFood,
+  shoppingList,
+  isoWeekKey,
   mealsForWeekday,
   planDays,
   isWeeklyPlan,
@@ -69,5 +72,49 @@ describe("todayWeekday", () => {
     expect(todayWeekday(new Date("2026-08-10T12:00:00Z"))).toBe("monday");
     expect(todayWeekday(new Date("2026-08-16T12:00:00Z"))).toBe("sunday");
     expect(WEEKDAYS).toHaveLength(7);
+  });
+});
+
+// SHARED VECTORS — mobile's utils/__tests__/weeklyPlan.test.ts must mirror
+// these exactly (MEAL_PLAN_WEEKLY_SPEC §8 pinned normalization).
+describe("shoppingList", () => {
+  const withFoods = {
+    meals: [],
+    days: [
+      {
+        day_of_week: "every_day" as const,
+        meals: [{ ...meal("Oats", MealSlot.BREAKFAST), foods: ["100g  Rolled OATS ", "almond milk"] }],
+      },
+      {
+        day_of_week: "friday" as const,
+        meals: [{ ...meal("Treat", MealSlot.DINNER), foods: ["Almond Milk", "salmon"] }],
+      },
+    ],
+  };
+
+  it("pins the normalization algorithm (shared vector)", () => {
+    expect(normalizeFood("  100g  Rolled OATS ")).toBe("100g rolled oats");
+    expect(normalizeFood("Jalape\u00f1o  Peppers")).toBe("jalape\u00f1o peppers");
+  });
+
+  it("groups by normalized food, preserves provenance, flags daily", () => {
+    const items = shoppingList(withFoods, [], []);
+    const milk = items.find((i) => i.food === "almond milk")!;
+    expect(milk.occurrences).toHaveLength(2);
+    expect(milk.daily).toBe(true);
+    expect(milk.occurrences[0].raw).toBe("almond milk");
+    expect(items.find((i) => i.food === "salmon")!.daily).toBe(false);
+  });
+
+  it("marks have/checked from the provided keys", () => {
+    const items = shoppingList(withFoods, ["salmon"], ["almond milk"]);
+    expect(items.find((i) => i.food === "salmon")!.have).toBe(true);
+    expect(items.find((i) => i.food === "almond milk")!.checked).toBe(true);
+  });
+
+  it("isoWeekKey is stable within a week and formats as YYYY-Www", () => {
+    expect(isoWeekKey(new Date(2026, 7, 10))).toBe(isoWeekKey(new Date(2026, 7, 16)));
+    expect(isoWeekKey(new Date(2026, 7, 10))).toMatch(/^\d{4}-W\d{2}$/);
+    expect(isoWeekKey(new Date(2026, 7, 17))).not.toBe(isoWeekKey(new Date(2026, 7, 16)));
   });
 });
