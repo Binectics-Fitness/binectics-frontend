@@ -67,6 +67,8 @@ export default function MemberMealPlanDetailPage({
       if (res.success && res.data) {
         setPlan(res.data);
         setError(null);
+        // View telemetry, fire-and-forget: never block or fail the page.
+        void progressService.markMyDietPlanViewed(planId).catch(() => {});
       } else {
         setError(res.message || "We couldn't load this meal plan.");
       }
