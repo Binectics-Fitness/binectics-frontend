@@ -18,7 +18,12 @@ export type ProgramComponentType =
   | "instruction"
   | "habit"
   | "meal_plan"
-  | "measurement";
+  | "measurement"
+  | "form"
+  // Accepted by the API; not offered in the builder until providers have
+  // reusable workout plans to link (today every workout plan belongs to one
+  // client).
+  | "workout_plan";
 export type ProgramCadence =
   | "once"
   | "daily"
@@ -48,6 +53,9 @@ export interface ProgramBlock {
   detail?: string;
   metric?: string;
   meal_plan_id?: string;
+  workout_plan_id?: string;
+  /** Form (questionnaire) the client fills in to complete a form task. */
+  form_id?: string;
 }
 
 export interface ProgramPhase {
@@ -92,6 +100,8 @@ export interface ProgramTemplateVersion {
   intensity?: string;
   indications?: string;
   cautions?: string;
+  /** Days after a task's date it can still be done (marked late). 0-7. */
+  catch_up_days?: number;
   phases: ProgramPhase[];
   goals: ProgramGoalDef[];
 }
@@ -127,6 +137,9 @@ export interface ProgramInstance {
   started_at?: string;
   ends_at?: string;
   timezone?: string;
+  /** Set when the program completes or is cancelled. */
+  ended_at?: string;
+  catch_up_days?: number;
   name: string;
   category?: string;
   goals: InstanceGoal[];
@@ -161,6 +174,7 @@ export interface ProgramDefinitionPayload {
   intensity?: string;
   indications?: string;
   cautions?: string;
+  catch_up_days?: number;
   phases?: ProgramPhase[];
   goals?: ProgramGoalDef[];
 }

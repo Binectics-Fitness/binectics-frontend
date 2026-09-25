@@ -23,6 +23,8 @@ export const COMPONENT_TYPE_LABELS: Record<ProgramComponentType, string> = {
   habit: "Habit",
   meal_plan: "Meal plan",
   measurement: "Measurement",
+  form: "Form",
+  workout_plan: "Workout plan",
 };
 
 export const COMPONENT_TYPE_ORDER: ProgramComponentType[] = [
@@ -30,6 +32,7 @@ export const COMPONENT_TYPE_ORDER: ProgramComponentType[] = [
   "habit",
   "measurement",
   "meal_plan",
+  "form",
 ];
 
 export const CADENCE_LABELS: Record<ProgramCadence, string> = {
@@ -55,6 +58,10 @@ export const DIRECTION_LABELS: Record<GoalDirection, string> = {
 
 export const DIRECTION_ORDER: GoalDirection[] = ["reach", "reduce", "maintain"];
 
+/** Matches the API default: a task can still be done the day after. */
+export const DEFAULT_CATCH_UP_DAYS = 1;
+export const MAX_CATCH_UP_DAYS = 7;
+
 export const INTENSITY_OPTIONS = ["gentle", "standard", "intensive"];
 
 // ── Form state (strings for free inputs) ─────────────────────────────
@@ -67,6 +74,10 @@ export interface BlockFormRow {
   metric: string;
   /** DietPlan id for meal_plan blocks; "" when none picked. */
   meal_plan_id: string;
+  /** Form id for form blocks; "" when none picked. */
+  form_id: string;
+  /** Carried through untouched so editing a program never drops the link. */
+  workout_plan_id: string;
   start_offset_days: string;
   duration_days: string;
   times_per_week: string;
@@ -94,6 +105,7 @@ export interface ProgramFormState {
   intensity: string;
   indications: string;
   cautions: string;
+  catch_up_days: string;
   phases: PhaseFormRow[];
   goals: GoalFormRow[];
 }
@@ -108,6 +120,8 @@ export function emptyBlockRow(
     detail: "",
     metric: "",
     meal_plan_id: "",
+    form_id: "",
+    workout_plan_id: "",
     start_offset_days: "",
     duration_days: "",
     times_per_week: "",
@@ -136,6 +150,7 @@ export const EMPTY_PROGRAM_FORM: ProgramFormState = {
   intensity: "",
   indications: "",
   cautions: "",
+  catch_up_days: String(DEFAULT_CATCH_UP_DAYS),
   phases: [emptyPhaseRow()],
   goals: [],
 };
@@ -174,19 +189,47 @@ function blockRowToPayload(row: BlockFormRow, order: number): ProgramBlock {
   if (row.type === "meal_plan" && row.meal_plan_id.trim()) {
     block.meal_plan_id = row.meal_plan_id.trim();
   }
+  if (row.type === "form" && row.form_id.trim()) {
+    block.form_id = row.form_id.trim();
+  }
+  if (row.type === "workout_plan" && row.workout_plan_id.trim()) {
+    block.workout_plan_id = row.workout_plan_id.trim();
+  }
   return block;
 }
 
 /**
  * A block is meaningful once it has a title, or is a measurement with a metric,
- * or is a meal_plan with a linked plan.
+ * or links the content its type needs (a meal plan, a form, a workout plan).
  */
 function blockHasContent(row: BlockFormRow): boolean {
   return (
     row.title.trim().length > 0 ||
     (row.type === "measurement" && row.metric.trim().length > 0) ||
-    (row.type === "meal_plan" && row.meal_plan_id.trim().length > 0)
+    (row.type === "meal_plan" && row.meal_plan_id.trim().length > 0) ||
+    (row.type === "form" && row.form_id.trim().length > 0) ||
+    (row.type === "workout_plan" && row.workout_plan_id.trim().length > 0)
   );
+}
+
+/**
+ * Blocks whose type needs linked content but have none: a form task with no
+ * form can never be completed by the client. Returned as "phase N, task M"
+ * labels so the builder can say which ones.
+ */
+export function blocksMissingContent(rows: PhaseFormRow[]): string[] {
+  const missing: string[] = [];
+  rows.forEach((phase, pi) =>
+    phase.blocks.forEach((b, bi) => {
+      if (!blockHasContent(b)) return; // an empty row is dropped, not an error
+      const unlinked =
+        (b.type === "form" && !b.form_id.trim()) ||
+        (b.type === "meal_plan" && !b.meal_plan_id.trim()) ||
+        (b.type === "workout_plan" && !b.workout_plan_id.trim());
+      if (unlinked) missing.push(`phase ${pi + 1}, task ${bi + 1}`);
+    }),
+  );
+  return missing;
 }
 
 /** A phase counts once it has a name or at least one usable block. */
@@ -241,6 +284,10 @@ export function formToPayload(form: ProgramFormState): ProgramDefinitionPayload 
   if (form.intensity.trim()) payload.intensity = form.intensity.trim();
   if (form.indications.trim()) payload.indications = form.indications.trim();
   if (form.cautions.trim()) payload.cautions = form.cautions.trim();
+  const catchUp = toInt(form.catch_up_days);
+  if (catchUp !== undefined) {
+    payload.catch_up_days = Math.min(MAX_CATCH_UP_DAYS, catchUp);
+  }
   return payload;
 }
 
@@ -265,6 +312,8 @@ export function versionToForm(v: ProgramTemplateVersion): ProgramFormState {
           detail: b.detail ?? "",
           metric: b.metric ?? "",
           meal_plan_id: b.meal_plan_id ?? "",
+          form_id: b.form_id ?? "",
+          workout_plan_id: b.workout_plan_id ?? "",
           start_offset_days: numToStr(b.start_offset_days),
           duration_days: numToStr(b.duration_days),
           times_per_week: numToStr(b.times_per_week),
@@ -278,6 +327,7 @@ export function versionToForm(v: ProgramTemplateVersion): ProgramFormState {
     intensity: v.intensity ?? "",
     indications: v.indications ?? "",
     cautions: v.cautions ?? "",
+    catch_up_days: String(v.catch_up_days ?? DEFAULT_CATCH_UP_DAYS),
     phases: phases.length > 0 ? phases : [emptyPhaseRow()],
     goals: (v.goals ?? []).map<GoalFormRow>((g) => ({
       label: g.label,
