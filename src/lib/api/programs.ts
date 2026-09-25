@@ -190,6 +190,35 @@ export interface AssignProgramRequest {
   timezone?: string;
 }
 
+// ── One-off tasks (sent outside any program) ─────────────────────────
+
+export type OneOffTaskType = "form" | "instruction";
+
+/** A task the provider sent a client on its own, with where it stands. */
+export interface OneOffTask {
+  id: string;
+  instance_id: string;
+  type: OneOffTaskType;
+  title: string;
+  detail: string | null;
+  form_id: string | null;
+  /** Due day, YYYY-MM-DD, in the client's timezone. */
+  due_date: string;
+  status: OccurrenceStatus;
+  completed_late: boolean;
+  actioned_at: string | null;
+  form_response_id: string | null;
+}
+
+export interface SendOneOffTaskRequest {
+  type: OneOffTaskType;
+  form_id?: string;
+  title?: string;
+  detail?: string;
+  due_date?: string;
+  timezone?: string;
+}
+
 export const programsService = {
   // ── Authoring ──────────────────────────────────────────────────
   listTemplates(includeArchived = false): Promise<ApiResponse<ProgramTemplate[]>> {
@@ -256,6 +285,27 @@ export const programsService = {
     return apiClient.post<ProgramInstance>(
       `/programs/instances/${instanceId}/complete`,
       {},
+    );
+  },
+
+  // ── One-off tasks ──────────────────────────────────────────────
+  listOneOffTasks(clientProfileId: string): Promise<ApiResponse<OneOffTask[]>> {
+    return apiClient.get<OneOffTask[]>(`/programs/clients/${clientProfileId}/tasks`);
+  },
+
+  sendOneOffTask(
+    clientProfileId: string,
+    payload: SendOneOffTaskRequest,
+  ): Promise<ApiResponse<OneOffTask>> {
+    return apiClient.post<OneOffTask>(`/programs/clients/${clientProfileId}/tasks`, payload);
+  },
+
+  withdrawOneOffTask(
+    clientProfileId: string,
+    taskId: string,
+  ): Promise<ApiResponse<{ withdrawn: boolean }>> {
+    return apiClient.delete<{ withdrawn: boolean }>(
+      `/programs/clients/${clientProfileId}/tasks/${taskId}`,
     );
   },
 
