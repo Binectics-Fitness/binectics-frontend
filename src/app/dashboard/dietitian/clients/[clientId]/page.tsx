@@ -6,15 +6,13 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
-import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import {
   progressService,
   type ClientProfile,
   type DietPlan,
   type ProgressSummary,
-  type Recommendation,
 } from "@/lib/api/progress";
-import { DietPlanDeliveryType, PlanStatus, RecommendationCategory } from "@/lib/types";
+import { DietPlanDeliveryType, PlanStatus } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import OneOffTasksCard from "@/components/programs/OneOffTasksCard";
 import { DIETITIAN_PROGRAMS_CONFIG } from "@/components/programs/config";
@@ -37,21 +35,6 @@ function initials(name: string): string {
       .join("") || "?"
   );
 }
-
-const CATEGORY_LABELS: Record<RecommendationCategory, string> = {
-  [RecommendationCategory.RECOVERY]: "Recovery",
-  [RecommendationCategory.HYDRATION]: "Hydration",
-  [RecommendationCategory.NUTRITION]: "Nutrition",
-  [RecommendationCategory.LIFESTYLE]: "Lifestyle",
-  [RecommendationCategory.EXERCISE]: "Exercise",
-  [RecommendationCategory.GENERAL]: "General",
-};
-
-const fieldStyle: React.CSSProperties = {
-  background: "var(--bg-2)",
-  border: "1px solid var(--border-2)",
-  color: "var(--ink)",
-};
 
 // ─── New plan from template modal ────────────────────────────────────────────
 
@@ -168,111 +151,6 @@ function TemplatePickerModal({
   );
 }
 
-// ─── New recommendation modal ────────────────────────────────────────────────
-
-function NewRecommendationModal({
-  profileId,
-  onClose,
-  onCreated,
-}: {
-  profileId: string;
-  onClose: () => void;
-  onCreated: (rec: Recommendation) => void;
-}) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [category, setCategory] = useState<RecommendationCategory>(RecommendationCategory.NUTRITION);
-  const [saving, setSaving] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const { requestClose, dirtyProps, confirmationModal } =
-    useUnsavedChangesGuard(onClose);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
-    setSaving(true);
-    const res = await progressService.createRecommendation(profileId, {
-      title: title.trim(),
-      content: content.trim(),
-      category,
-    });
-    setSaving(false);
-    if (res.success && res.data) {
-      toast.success("Recommendation sent.");
-      onCreated(res.data);
-      onClose();
-    } else {
-      toast.error(res.message ?? "Failed to create recommendation.");
-    }
-  };
-
-  return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(3,20,30,0.55)" }}
-      onClick={(e) => e.target === overlayRef.current && requestClose()}
-    >
-      {confirmationModal}
-      <div className="w-full max-w-md rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }} {...dirtyProps}>
-        <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-          <h2 className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>New recommendation</h2>
-        </div>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6">
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-              Title <span style={{ color: "var(--danger)" }}>*</span>
-            </label>
-            <input
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Increase daily protein"
-              className="h-9 rounded-(--r-2) px-3 text-[13.5px]"
-              style={fieldStyle}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Category</label>
-            <SearchableSelect
-              value={category}
-              onChange={(v) => setCategory(v as RecommendationCategory)}
-              options={Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ label, value }))}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-              Recommendation <span style={{ color: "var(--danger)" }}>*</span>
-            </label>
-            <textarea
-              required
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What should the client do, and why?"
-              rows={4}
-              className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-none"
-              style={fieldStyle}
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
-            <button type="button" onClick={onClose} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving || !title.trim() || !content.trim()}
-              className="h-9 px-5 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50"
-              style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
-            >
-              {saving ? "Sending..." : "Send recommendation"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function DietitianSingleClientPage({ params }: { params: Promise<{ clientId: string }> }) {
@@ -285,25 +163,20 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Per-section state: diet plans + recommendations each load independently.
+  // Per-section state: diet plans load independently of the summary.
   const [plans, setPlans] = useState<DietPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
   const [plansError, setPlansError] = useState<string | null>(null);
-  const [recs, setRecs] = useState<Recommendation[]>([]);
-  const [recsLoading, setRecsLoading] = useState(true);
-  const [recsError, setRecsError] = useState<string | null>(null);
 
   const [templateModal, setTemplateModal] = useState(false);
-  const [recModal, setRecModal] = useState(false);
 
   useEffect(() => {
     let active = true;
     const run = async () => {
       setLoading(true);
-      const [summaryRes, plansRes, recsRes] = await Promise.allSettled([
+      const [summaryRes, plansRes] = await Promise.allSettled([
         progressService.getProgressSummary(clientId),
         progressService.getDietPlans(clientId),
-        progressService.getRecommendations(clientId),
       ]);
       if (!active) return;
 
@@ -327,16 +200,6 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
         );
       }
       setPlansLoading(false);
-
-      if (recsRes.status === "fulfilled" && recsRes.value.success && recsRes.value.data) {
-        setRecs(recsRes.value.data);
-        setRecsError(null);
-      } else {
-        setRecsError(
-          (recsRes.status === "fulfilled" && recsRes.value.message) || "Couldn't load recommendations.",
-        );
-      }
-      setRecsLoading(false);
     };
     const kick = window.setTimeout(() => void run(), 0);
     return () => {
@@ -500,61 +363,11 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
             )}
           </div>
 
-          {/* Recommendations */}
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="flex items-center justify-between gap-3 px-5.5 py-3.5 flex-wrap" style={{ borderBottom: "1px solid var(--border)" }}>
-              <div>
-                <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Recommendations</h3>
-                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-                  {recsLoading ? "Loading…" : `${recs.length} sent`}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setRecModal(true)}
-                className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.5 rounded-(--r-1)"
-                style={{ border: "1px solid var(--border)", color: "var(--dietitian)", background: "transparent" }}
-              >
-                + New recommendation
-              </button>
-            </div>
-            {recsLoading ? (
-              <div className="px-5.5 py-5"><AsyncSpinner label="Loading recommendations" /></div>
-            ) : recsError ? (
-              <div className="px-5.5 py-4 text-[13px]" style={{ color: "var(--danger)" }}>{recsError}</div>
-            ) : recs.length === 0 ? (
-              <div className="px-5.5 py-4"><EmptySlate message="No recommendations yet." hint="Send targeted guidance the client sees in their app." mt="mt-0" /></div>
-            ) : (
-              recs.map((r, i, arr) => (
-                <div key={r._id} className="px-5.5 py-3.5" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{r.title}</span>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>
-                      {CATEGORY_LABELS[r.category] ?? r.category}
-                    </span>
-                    {!r.is_active && (
-                      <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-3)" }}>Inactive</span>
-                    )}
-                  </div>
-                  <div className="text-[13px] mt-1 line-clamp-2" style={{ color: "var(--fg-2)", lineHeight: 1.5 }}>{r.content}</div>
-                  <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>{fmtDate(r.created_at)}</div>
-                </div>
-              ))
-            )}
-          </div>
-
           {templateModal && (
             <TemplatePickerModal
               profileId={clientId}
               onClose={() => setTemplateModal(false)}
               onCreated={(plan) => setPlans((p) => [plan, ...p])}
-            />
-          )}
-          {recModal && (
-            <NewRecommendationModal
-              profileId={clientId}
-              onClose={() => setRecModal(false)}
-              onCreated={(rec) => setRecs((r) => [rec, ...r])}
             />
           )}
         </>

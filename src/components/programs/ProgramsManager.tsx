@@ -11,6 +11,8 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/progress";
 import { DietPlanDeliveryType } from "@/lib/types";
 import { formsService, type Form } from "@/lib/api/forms";
+import { nutritionService } from "@/lib/api/nutrition";
+import { leftoverProtocolsText } from "./protocol-retirement";
 import type { ProgramsRoleConfig } from "./config";
 import {
   programsService,
@@ -1002,11 +1004,16 @@ type Filter = "All" | "Draft" | "Published";
 export default function ProgramsManager({
   config,
   initialCreateOpen = false,
+  initialEditId,
 }: {
   config: ProgramsRoleConfig;
   initialCreateOpen?: boolean;
+  /** Open this program in the builder on arrival (?edit=<id>). */
+  initialEditId?: string;
 }) {
-  const { Shell, basePath, accentInk, accentSoft, navItem } = config;
+  const { Shell, basePath, accentInk, accentSoft, navItem, protocolsPath } = config;
+  // Retired protocols not yet converted (unconverted = unarchived).
+  const [leftoverProtocols, setLeftoverProtocols] = useState(0);
   const { fmtDate } = useOrgFormat();
   const router = useRouter();
   const [templates, setTemplates] = useState<ProgramTemplate[]>([]);
@@ -1015,15 +1022,41 @@ export default function ProgramsManager({
   const [filter, setFilter] = useState<Filter>("All");
 
   const [modal, setModal] = useState<{ mode: ModalMode; initial: ProgramFormState; loading: boolean; id?: string } | null>(
-    initialCreateOpen ? { mode: "create", initial: EMPTY_PROGRAM_FORM, loading: false } : null,
+    initialEditId
+      ? { mode: "edit", initial: EMPTY_PROGRAM_FORM, loading: true, id: initialEditId }
+      : initialCreateOpen
+        ? { mode: "create", initial: EMPTY_PROGRAM_FORM, loading: false }
+        : null,
   );
   const [assignTemplate, setAssignTemplate] = useState<ProgramTemplate | null>(null);
   const [clientsTemplate, setClientsTemplate] = useState<ProgramTemplate | null>(null);
 
   useEffect(() => {
-    if (initialCreateOpen) router.replace(basePath, { scroll: false });
+    if (initialCreateOpen || initialEditId) router.replace(basePath, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ?edit=<id>: load that program straight into the builder. By id, not by
+  // finding it in the list - it may be archived (not listed) or the list may
+  // still be loading. The id is held from the first render: clearing the URL
+  // (above) re-renders with no ?edit, which must not cancel this load.
+  const [editOnArrival] = useState(initialEditId);
+  useEffect(() => {
+    if (!editOnArrival) return;
+    let active = true;
+    void programsService.getTemplate(editOnArrival).then((res) => {
+      if (!active) return;
+      if (res.success && res.data) {
+        setModal({ mode: "edit", initial: versionToForm(res.data.version), loading: false, id: editOnArrival });
+      } else {
+        toast.error(res.status === 404 ? "That program no longer exists." : (res.message ?? "Couldn't open that program."));
+        setModal(null);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [editOnArrival]);
 
   useEffect(() => {
     let active = true;
@@ -1042,6 +1075,18 @@ export default function ProgramsManager({
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!protocolsPath) return;
+    let active = true;
+    void nutritionService.listProtocols({ limit: 1 }).then((res) => {
+      if (active && res.success && res.data) setLeftoverProtocols(res.data.total);
+    });
+    return () => {
+      active = false;
+    };
+  }, [protocolsPath]);
+
 
   const counts = useMemo(
     () => ({
@@ -1138,6 +1183,15 @@ export default function ProgramsManager({
           New program
         </button>
       </div>
+
+      {protocolsPath && leftoverProtocols > 0 && (
+        <div className="rounded-(--r-3) px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-[13px]" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
+          <span>{leftoverProtocolsText(leftoverProtocols)}</span>
+          <Link href={protocolsPath} className="font-medium underline" style={{ color: "var(--ink)" }}>
+            Review protocols
+          </Link>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>

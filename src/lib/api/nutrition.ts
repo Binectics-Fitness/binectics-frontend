@@ -62,17 +62,12 @@ export type UpdateFoodItemRequest = Partial<CreateFoodItemRequest> & {
   isArchived?: boolean;
 };
 
-export interface CreateProtocolRequest {
-  name: string;
-  description?: string;
-  category?: string;
-  durationWeeks?: number;
-  steps?: ProtocolStep[];
+/** POST /nutrition/protocols/:id/convert - the draft program it became. */
+export interface ProtocolConversion {
+  template: { _id: string; name: string; status: "draft" | "published" | "archived" };
+  /** False when the protocol had already been converted (same program). */
+  created: boolean;
 }
-
-export type UpdateProtocolRequest = Partial<CreateProtocolRequest> & {
-  isArchived?: boolean;
-};
 
 export interface PaginatedList<T> {
   items: T[];
@@ -146,19 +141,14 @@ export const nutritionService = {
     return apiClient.get<Protocol>(`/nutrition/protocols/${protocolId}`);
   },
 
-  createProtocol(
-    payload: CreateProtocolRequest,
-  ): Promise<ApiResponse<Protocol>> {
-    return apiClient.post<Protocol>("/nutrition/protocols", payload);
-  },
-
-  updateProtocol(
-    protocolId: string,
-    payload: UpdateProtocolRequest,
-  ): Promise<ApiResponse<Protocol>> {
-    return apiClient.patch<Protocol>(
-      `/nutrition/protocols/${protocolId}`,
-      payload,
+  /**
+   * Turn a protocol into a draft Program (and archive the protocol). Safe to
+   * repeat: converting again returns the same program.
+   */
+  convertProtocol(protocolId: string): Promise<ApiResponse<ProtocolConversion>> {
+    return apiClient.post<ProtocolConversion>(
+      `/nutrition/protocols/${protocolId}/convert`,
+      {},
     );
   },
 

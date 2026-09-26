@@ -23,6 +23,11 @@ export interface ProgramsRoleConfig {
   accentInk: string;
   /** Accent soft fill for badges. */
   accentSoft: string;
+  /**
+   * Where retired protocols still waiting to be converted are listed. Only
+   * roles that authored protocols (dietitians) have one.
+   */
+  protocolsPath?: string;
 }
 
 export const DIETITIAN_PROGRAMS_CONFIG: ProgramsRoleConfig = {
@@ -31,6 +36,7 @@ export const DIETITIAN_PROGRAMS_CONFIG: ProgramsRoleConfig = {
   basePath: "/dashboard/dietitian/programs",
   accentInk: "var(--dietitian)",
   accentSoft: "var(--dietitian-soft)",
+  protocolsPath: "/dashboard/dietitian/protocols",
 };
 
 export const TRAINER_PROGRAMS_CONFIG: ProgramsRoleConfig = {
