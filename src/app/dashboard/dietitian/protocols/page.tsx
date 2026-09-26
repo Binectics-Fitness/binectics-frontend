@@ -9,6 +9,7 @@ import { nutritionService, type Protocol } from "@/lib/api/nutrition";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { DIETITIAN_PROGRAMS_CONFIG } from "@/components/programs/config";
+import { conversionMessage } from "@/components/programs/protocol-retirement";
 
 /**
  * Protocols are retired: a protocol is a Program with no schedule, and
@@ -21,6 +22,7 @@ export default function DietitianProtocolsPage() {
   const router = useRouter();
   const { fmtDate } = useOrgFormat();
   const [protocols, setProtocols] = useState<Protocol[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
@@ -32,9 +34,11 @@ export default function DietitianProtocolsPage() {
       if (!mounted) return;
       if (res.success && res.data) {
         setProtocols(res.data.items);
+        setTotal(res.data.total);
         setError(null);
       } else {
         setProtocols([]);
+        setTotal(0);
         setError(res.message ?? "Failed to load protocols.");
       }
       setLoading(false);
@@ -46,6 +50,7 @@ export default function DietitianProtocolsPage() {
 
   const refetch = () => {
     setLoading(true);
+    setError(null);
     setRefreshTick((t) => t + 1);
   };
 
@@ -54,7 +59,7 @@ export default function DietitianProtocolsPage() {
     const res = await nutritionService.convertProtocol(protocol._id);
     setBusyId(null);
     if (res.success && res.data) {
-      toast.success(`"${protocol.name}" is now a draft program. Check the schedule, then publish it.`);
+      toast.success(conversionMessage(protocol.name, res.data));
       router.push(`${DIETITIAN_PROGRAMS_CONFIG.basePath}?edit=${res.data.template._id}`);
     } else {
       toast.error(res.message ?? "Couldn't convert this protocol.");
@@ -62,7 +67,12 @@ export default function DietitianProtocolsPage() {
   };
 
   const archive = async (protocol: Protocol) => {
-    if (!confirm(`Archive "${protocol.name}" without converting it? Its steps won't carry over.`)) return;
+    if (
+      !confirm(
+        `Archive "${protocol.name}" without converting it? It won't be listed here again, and its steps won't carry over to Programs.`,
+      )
+    )
+      return;
     const res = await nutritionService.archiveProtocol(protocol._id);
     if (res.success) {
       toast.success(`Archived "${protocol.name}".`);
@@ -77,7 +87,7 @@ export default function DietitianProtocolsPage() {
       <div>
         <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Protocols</h1>
         <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {loading ? "Loading protocols..." : `${protocols.length} to move over`}
+          {loading ? "Loading protocols..." : error ? "Couldn't load protocols" : `${total} to move over`}
         </div>
       </div>
 
@@ -130,7 +140,8 @@ export default function DietitianProtocolsPage() {
                         type="button"
                         onClick={() => void openAsProgram(p)}
                         disabled={busyId === p._id}
-                        aria-label={`Open ${p.name} as a program`}
+                        aria-busy={busyId === p._id}
+                        aria-label={`Open as program: ${p.name}`}
                         className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) cursor-pointer disabled:opacity-50"
                         style={{ border: "1px solid var(--border)", color: "var(--dietitian)", background: "transparent" }}
                       >
@@ -139,8 +150,9 @@ export default function DietitianProtocolsPage() {
                       <button
                         type="button"
                         onClick={() => void archive(p)}
-                        aria-label={`Archive ${p.name}`}
-                        className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) cursor-pointer"
+                        disabled={busyId === p._id}
+                        aria-label={`Archive: ${p.name}`}
+                        className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) cursor-pointer disabled:opacity-50"
                         style={{ border: "1px solid var(--border)", color: "var(--fg-3)", background: "transparent" }}
                       >
                         Archive

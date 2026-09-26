@@ -64,7 +64,8 @@ export type UpdateFoodItemRequest = Partial<CreateFoodItemRequest> & {
 
 /** POST /nutrition/protocols/:id/convert - the draft program it became. */
 export interface ProtocolConversion {
-  template: { _id: string; name: string };
+  template: { _id: string; name: string; status: "draft" | "published" | "archived" };
+  /** False when the protocol had already been converted (same program). */
   created: boolean;
 }
 
