@@ -1098,9 +1098,6 @@ export default function ProgramsManager({
     window.history.replaceState(null, "", basePath);
     const kick = window.setTimeout(() => void openEdit(target), 0);
     return () => window.clearTimeout(kick);
-    // openEdit is stable enough for a one-shot; re-running on its identity
-    // would reopen the modal.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, templates, basePath]);
 
   const handleCreate = async (form: ProgramFormState) => {

@@ -6,7 +6,6 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
-import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import {
   progressService,
   type ClientProfile,
@@ -36,12 +35,6 @@ function initials(name: string): string {
       .join("") || "?"
   );
 }
-
-const fieldStyle: React.CSSProperties = {
-  background: "var(--bg-2)",
-  border: "1px solid var(--border-2)",
-  color: "var(--ink)",
-};
 
 // ─── New plan from template modal ────────────────────────────────────────────
 
