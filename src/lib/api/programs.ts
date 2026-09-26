@@ -228,6 +228,32 @@ export interface SendOneOffTaskRequest {
   timezone?: string;
 }
 
+// ── The provider's view of one client ────────────────────────────────
+
+/** A program as the provider sees it for one client (GET .../overview). */
+export interface ClientProgramSummary {
+  id: string;
+  name: string;
+  kind: "program" | "one_off";
+  status: ProgramInstanceStatus;
+  started_at?: string;
+  ends_at?: string | null;
+  progress?: {
+    day: number | null;
+    total_days: number | null;
+    last_7_days: { scheduled: number; done: number; done_late: number; skipped: number; missed: number; open: number };
+  };
+  counts: { done: number; missed: number; skipped: number; pending: number };
+  /** done / (done + missed); null until anything was due. */
+  adherence_pct: number | null;
+}
+
+export interface ClientProgramOverview {
+  programs: ClientProgramSummary[];
+  /** What the client has on Today from this provider. */
+  today: Array<{ _id: string; title?: string; status: OccurrenceStatus; scheduled_for: string }>;
+}
+
 export const programsService = {
   // ── Authoring ──────────────────────────────────────────────────
   listTemplates(includeArchived = false): Promise<ApiResponse<ProgramTemplate[]>> {
@@ -295,6 +321,10 @@ export const programsService = {
       `/programs/instances/${instanceId}/complete`,
       {},
     );
+  },
+
+  getClientOverview(clientProfileId: string): Promise<ApiResponse<ClientProgramOverview>> {
+    return apiClient.get<ClientProgramOverview>(`/programs/clients/${clientProfileId}/overview`);
   },
 
   // ── One-off tasks ──────────────────────────────────────────────
