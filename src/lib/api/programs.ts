@@ -210,6 +210,15 @@ export interface OneOffTask {
   form_response_id: string | null;
 }
 
+/** GET /programs/clients/:id/tasks - the tasks plus the client's calendar. */
+export interface OneOffTaskList {
+  /** The client's today (YYYY-MM-DD), in their program timezone. */
+  today: string;
+  /** The latest due day the API accepts. */
+  max_due: string;
+  tasks: OneOffTask[];
+}
+
 export interface SendOneOffTaskRequest {
   type: OneOffTaskType;
   form_id?: string;
@@ -289,8 +298,8 @@ export const programsService = {
   },
 
   // ── One-off tasks ──────────────────────────────────────────────
-  listOneOffTasks(clientProfileId: string): Promise<ApiResponse<OneOffTask[]>> {
-    return apiClient.get<OneOffTask[]>(`/programs/clients/${clientProfileId}/tasks`);
+  listOneOffTasks(clientProfileId: string): Promise<ApiResponse<OneOffTaskList>> {
+    return apiClient.get<OneOffTaskList>(`/programs/clients/${clientProfileId}/tasks`);
   },
 
   sendOneOffTask(

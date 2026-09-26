@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { oneOffStatus } from "@/components/programs/OneOffTasksCard";
+import { insertByDueDate, oneOffStatus } from "@/components/programs/OneOffTasksCard";
 import type { OneOffTask } from "@/lib/api/programs";
 
 // What the provider sees next to each form or task they sent on its own.
@@ -27,8 +27,18 @@ describe("oneOffStatus", () => {
     expect(oneOffStatus(task({ due_date: today }), today).label).toBe("Due today");
   });
 
-  it("flags an open task past its due day as overdue", () => {
-    expect(oneOffStatus(task({ due_date: "2026-09-24" }), today)).toEqual({ label: "Overdue", tone: "late" });
+  it("keeps a task past its due day neutral: the client can still catch up", () => {
+    // Once the catch-up window closes the API reports it missed instead.
+    expect(oneOffStatus(task({ due_date: "2026-09-24" }), today)).toEqual({
+      label: "Past due, still open",
+      tone: "open",
+    });
+  });
+
+  it("judges due dates against the day it gives, i.e. the client's", () => {
+    // Due the 26th: "due today" for a client already on the 26th, even if
+    // the provider's own clock still says the 25th.
+    expect(oneOffStatus(task({ due_date: "2026-09-26" }), "2026-09-26").label).toBe("Due today");
   });
 
   it("names a finished form Submitted and a finished task Done, with late when late", () => {
@@ -41,5 +51,16 @@ describe("oneOffStatus", () => {
   it("shows missed and skipped as they are", () => {
     expect(oneOffStatus(task({ status: "missed" }), today)).toEqual({ label: "Missed", tone: "late" });
     expect(oneOffStatus(task({ status: "skipped" }), today).label).toBe("Skipped");
+  });
+});
+
+describe("insertByDueDate", () => {
+  const t = (id: string, due_date: string) => task({ id, due_date });
+
+  it("places a newly sent task where the API would list it (newest due first)", () => {
+    const list = [t("a", "2026-10-20"), t("b", "2026-09-28")];
+    expect(insertByDueDate(list, t("n", "2026-10-01")).map((x) => x.id)).toEqual(["a", "n", "b"]);
+    expect(insertByDueDate(list, t("n", "2026-11-01")).map((x) => x.id)).toEqual(["n", "a", "b"]);
+    expect(insertByDueDate(list, t("n", "2026-09-26")).map((x) => x.id)).toEqual(["a", "b", "n"]);
   });
 });
