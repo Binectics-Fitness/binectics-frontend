@@ -7,6 +7,8 @@ import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, ClientJournalEntry } from "@/lib/api/progress";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import OneOffTasksCard from "@/components/programs/OneOffTasksCard";
+import { TRAINER_PROGRAMS_CONFIG } from "@/components/programs/config";
 
 /**
  * Client detail — client.html prototype.
@@ -173,6 +175,8 @@ export default function ClientDetailPage() {
           </div>
         ))}
       </div>
+
+      {clientId && <OneOffTasksCard clientProfileId={clientId} accentInk={TRAINER_PROGRAMS_CONFIG.accentInk} />}
 
       {/* Tabs */}
       <nav className="flex gap-0 -mx-7 px-7 border-b border-border sticky top-14 z-10 overflow-x-auto flex-nowrap whitespace-nowrap" style={{ background: "var(--bg-2)" }}>

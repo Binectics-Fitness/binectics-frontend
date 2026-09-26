@@ -139,7 +139,7 @@ export default function SearchableSelect({
           <ul ref={listRef} className="max-h-60 overflow-auto py-1">
             {filtered.length === 0 && (
               <li className="px-3 py-2 text-sm text-fg-4">
-                No results found
+                {loading ? "Loading…" : "No results found"}
               </li>
             )}
             {filtered.map((o, i) => (
