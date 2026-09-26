@@ -539,21 +539,6 @@ export interface Recommendation {
   updated_at: string;
 }
 
-export interface CreateRecommendationRequest {
-  title: string;
-  content: string;
-  category?: RecommendationCategory;
-  plan_id?: string;
-  plan_type?: RecommendationPlanType;
-}
-
-export interface UpdateRecommendationRequest {
-  title?: string;
-  content?: string;
-  category?: RecommendationCategory;
-  is_active?: boolean;
-}
-
 // ==================== DIET PLAN REQUEST TYPES ====================
 
 export interface CreateDietMealRequest {
@@ -1391,17 +1376,9 @@ export const progressService = {
     );
   },
 
-  // ==================== RECOMMENDATIONS — Professional ====================
-
-  async createRecommendation(
-    profileId: string,
-    data: CreateRecommendationRequest,
-  ): Promise<ApiResponse<Recommendation>> {
-    return await apiClient.post<Recommendation>(
-      `/progress/clients/${profileId}/recommendations`,
-      data,
-    );
-  },
+  // ==================== RECOMMENDATIONS (retired: read and delete only) ====================
+  // Writes return 410 since Recommendations were retired; send a message or
+  // a one-off task instead (api docs/nutrition/PROTOCOL_RECOMMENDATION_RETIREMENT.md).
 
   async getRecommendations(
     profileId: string,
@@ -1420,17 +1397,6 @@ export const progressService = {
     );
   },
 
-  async updateRecommendation(
-    profileId: string,
-    recommendationId: string,
-    data: UpdateRecommendationRequest,
-  ): Promise<ApiResponse<Recommendation>> {
-    return await apiClient.patch<Recommendation>(
-      `/progress/clients/${profileId}/recommendations/${recommendationId}`,
-      data,
-    );
-  },
-
   async deleteRecommendation(
     profileId: string,
     recommendationId: string,
@@ -1442,35 +1408,12 @@ export const progressService = {
 
   // ==================== RECOMMENDATIONS — Organization ====================
 
-  async createRecommendationInOrg(
-    organizationId: string,
-    profileId: string,
-    data: CreateRecommendationRequest,
-  ): Promise<ApiResponse<Recommendation>> {
-    return await apiClient.post<Recommendation>(
-      `/progress/organizations/${organizationId}/clients/${profileId}/recommendations`,
-      data,
-    );
-  },
-
   async getRecommendationsInOrg(
     organizationId: string,
     profileId: string,
   ): Promise<ApiResponse<Recommendation[]>> {
     return await apiClient.get<Recommendation[]>(
       `/progress/organizations/${organizationId}/clients/${profileId}/recommendations`,
-    );
-  },
-
-  async updateRecommendationInOrg(
-    organizationId: string,
-    profileId: string,
-    recommendationId: string,
-    data: UpdateRecommendationRequest,
-  ): Promise<ApiResponse<Recommendation>> {
-    return await apiClient.patch<Recommendation>(
-      `/progress/organizations/${organizationId}/clients/${profileId}/recommendations/${recommendationId}`,
-      data,
     );
   },
 

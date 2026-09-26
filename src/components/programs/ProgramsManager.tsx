@@ -11,6 +11,7 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/progress";
 import { DietPlanDeliveryType } from "@/lib/types";
 import { formsService, type Form } from "@/lib/api/forms";
+import { nutritionService } from "@/lib/api/nutrition";
 import type { ProgramsRoleConfig } from "./config";
 import {
   programsService,
@@ -1006,7 +1007,10 @@ export default function ProgramsManager({
   config: ProgramsRoleConfig;
   initialCreateOpen?: boolean;
 }) {
-  const { Shell, basePath, accentInk, accentSoft, navItem } = config;
+  const { Shell, basePath, accentInk, accentSoft, navItem, protocolsPath } = config;
+  // Retired protocols not yet converted (unconverted = unarchived).
+  const [leftoverProtocols, setLeftoverProtocols] = useState(0);
+  const editHandled = useRef(false);
   const { fmtDate } = useOrgFormat();
   const router = useRouter();
   const [templates, setTemplates] = useState<ProgramTemplate[]>([]);
@@ -1043,6 +1047,18 @@ export default function ProgramsManager({
     };
   }, []);
 
+  useEffect(() => {
+    if (!protocolsPath) return;
+    let active = true;
+    void nutritionService.listProtocols({ limit: 1 }).then((res) => {
+      if (active && res.success && res.data) setLeftoverProtocols(res.data.total);
+    });
+    return () => {
+      active = false;
+    };
+  }, [protocolsPath]);
+
+
   const counts = useMemo(
     () => ({
       All: templates.length,
@@ -1070,6 +1086,22 @@ export default function ProgramsManager({
       setModal(null);
     }
   };
+
+  // `?edit=<templateId>` opens that program in the builder: where a
+  // protocol lands once it has been opened as a program.
+  useEffect(() => {
+    if (loading || editHandled.current) return;
+    editHandled.current = true;
+    const id = new URLSearchParams(window.location.search).get("edit");
+    const target = id ? templates.find((t) => t._id === id) : undefined;
+    if (!target) return;
+    window.history.replaceState(null, "", basePath);
+    const kick = window.setTimeout(() => void openEdit(target), 0);
+    return () => window.clearTimeout(kick);
+    // openEdit is stable enough for a one-shot; re-running on its identity
+    // would reopen the modal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, templates, basePath]);
 
   const handleCreate = async (form: ProgramFormState) => {
     const res = await programsService.createTemplate(formToPayload(form));
@@ -1138,6 +1170,20 @@ export default function ProgramsManager({
           New program
         </button>
       </div>
+
+      {protocolsPath && leftoverProtocols > 0 && (
+        <div className="rounded-(--r-3) px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-[13px]" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
+          <span>
+            {leftoverProtocols === 1
+              ? "You have 1 protocol from before Programs."
+              : `You have ${leftoverProtocols} protocols from before Programs.`}{" "}
+            Open {leftoverProtocols === 1 ? "it" : "them"} as programs to keep using {leftoverProtocols === 1 ? "it" : "them"}.
+          </span>
+          <Link href={protocolsPath} className="font-medium underline" style={{ color: "var(--ink)" }}>
+            Review protocols
+          </Link>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
