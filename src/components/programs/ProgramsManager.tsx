@@ -10,6 +10,7 @@ import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/progress";
 import { DietPlanDeliveryType } from "@/lib/types";
+import { formsService, type Form } from "@/lib/api/forms";
 import type { ProgramsRoleConfig } from "./config";
 import {
   programsService,
@@ -27,7 +28,9 @@ import {
   DIRECTION_LABELS,
   DIRECTION_ORDER,
   INTENSITY_OPTIONS,
+  MAX_CATCH_UP_DAYS,
   EMPTY_PROGRAM_FORM,
+  blocksMissingContent,
   emptyPhaseRow,
   emptyBlockRow,
   emptyGoalRow,
@@ -120,6 +123,8 @@ function ProgramFormModal({
   const [saving, setSaving] = useState(false);
   const [mealPlans, setMealPlans] = useState<{ label: string; value: string }[]>([]);
   const [mealPlansLoading, setMealPlansLoading] = useState(true);
+  const [forms, setForms] = useState<{ label: string; value: string }[]>([]);
+  const [formsLoading, setFormsLoading] = useState(true);
   const overlayRef = useRef<HTMLDivElement>(null);
   const { requestClose, dirtyProps, confirmationModal } = useUnsavedChangesGuard(onClose);
 
@@ -145,6 +150,27 @@ function ProgramFormModal({
         );
       }
       setMealPlansLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Forms a form task can link to. Published only: the client opens the form
+  // through its public read, which serves published forms and nothing else.
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const res = await formsService.getMyForms();
+      if (!active) return;
+      if (res.success && res.data) {
+        setForms(
+          res.data
+            .filter((f: Form) => f.is_published && f.is_active !== false)
+            .map((f) => ({ label: f.title, value: f._id })),
+        );
+      }
+      setFormsLoading(false);
     })();
     return () => {
       active = false;
@@ -197,6 +223,13 @@ function ProgramFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
+    // A form or meal plan task with nothing linked can't be done by the
+    // client; it would sit on their Today with no way to complete it.
+    const missing = blocksMissingContent(form.phases);
+    if (missing.length > 0) {
+      toast.error(`Link content to ${missing.join("; ")} before saving.`);
+      return;
+    }
     setSaving(true);
     await onSave(form);
     setSaving(false);
@@ -246,7 +279,7 @@ function ProgramFormModal({
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>Category</FieldLabel>
                 <input
@@ -278,7 +311,24 @@ function ProgramFormModal({
                   style={{ ...fieldStyle, fontVariantNumeric: "tabular-nums" }}
                 />
               </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Catch-up days</FieldLabel>
+                <input
+                  type="number"
+                  min={0}
+                  max={MAX_CATCH_UP_DAYS}
+                  value={form.catch_up_days}
+                  onChange={(e) => setForm((f) => ({ ...f, catch_up_days: e.target.value }))}
+                  aria-describedby="catch-up-help"
+                  className="h-9 rounded-(--r-2) px-3 text-[13.5px]"
+                  style={{ ...fieldStyle, fontVariantNumeric: "tabular-nums" }}
+                />
+              </div>
             </div>
+            <p id="catch-up-help" className="-mt-3 text-[12px]" style={{ color: "var(--fg-3)" }}>
+              How many days after a task&apos;s day the client can still do it (0 to {MAX_CATCH_UP_DAYS}). Late tasks count as
+              done. After that they&apos;re missed.
+            </p>
 
             <div className="flex flex-col gap-1.5">
               <FieldLabel>Goal statement</FieldLabel>
@@ -346,7 +396,14 @@ function ProgramFormModal({
                             <SearchableSelect
                               value={block.type}
                               onChange={(v) => setBlock(pi, bi, { type: v as ProgramComponentType })}
-                              options={COMPONENT_TYPE_ORDER.map((t) => ({ label: COMPONENT_TYPE_LABELS[t], value: t }))}
+                              options={
+                                // A type the builder doesn't offer (a workout plan task
+                                // made through the API) stays selectable on its own block.
+                                (COMPONENT_TYPE_ORDER.includes(block.type)
+                                  ? COMPONENT_TYPE_ORDER
+                                  : [...COMPONENT_TYPE_ORDER, block.type]
+                                ).map((t) => ({ label: COMPONENT_TYPE_LABELS[t], value: t }))
+                              }
                             />
                           </div>
                           <input
@@ -455,6 +512,40 @@ function ProgramFormModal({
                                 loading={mealPlansLoading}
                               />
                             )}
+                          </div>
+                        )}
+
+                        {block.type === "form" && (
+                          <div className="flex flex-col gap-1">
+                            <FieldLabel>Linked form</FieldLabel>
+                            {!formsLoading && forms.length === 0 && !block.form_id ? (
+                              <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                                No published forms yet. Publish one under Forms, then link it here.
+                              </div>
+                            ) : (
+                              <SearchableSelect
+                                value={block.form_id}
+                                onChange={(v) => setBlock(pi, bi, { form_id: v })}
+                                options={
+                                  block.form_id && !forms.some((o) => o.value === block.form_id)
+                                    ? [...forms, { label: "Linked form (unpublished or removed)", value: block.form_id }]
+                                    : forms
+                                }
+                                placeholder={formsLoading ? "Loading forms…" : "Pick a form…"}
+                                loading={formsLoading}
+                              />
+                            )}
+                            <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                              The client fills it in from their plan. Each time it&apos;s due counts as a new response.
+                            </div>
+                          </div>
+                        )}
+
+                        {block.type === "workout_plan" && (
+                          <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                            {block.workout_plan_id
+                              ? "Linked to a workout plan. Kept as it is when you save."
+                              : "No workout plan linked."}
                           </div>
                         )}
 
