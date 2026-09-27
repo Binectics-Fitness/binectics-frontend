@@ -94,12 +94,16 @@ export default function TrainerClientsPage() {
   ];
 
   return (
-    <TrainerDashboardShell activeItem="Clients" crumb="Clients">
+    <>
+      {/* Outside the shell: it renders its children twice (desktop and
+          phone trees), and two open copies meant Escape on the hidden one
+          closed the modal past the visible one's unsaved-changes prompt. */}
       <InviteClientModal
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
         onInvited={setInvited}
       />
+    <TrainerDashboardShell activeItem="Clients" crumb="Clients">
       {/* Heading. Actions live here rather than in the shell header, whose
           48px mobile bar can't fit two buttons beside the crumb. */}
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -108,7 +112,7 @@ export default function TrainerClientsPage() {
             Clients
           </h1>
           <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-            {loading ? "Loading…" : `${clients.length} total clients`}
+            {loading ? "Loading…" : error ? "\u00a0" : `${clients.length} total clients`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -233,8 +237,8 @@ export default function TrainerClientsPage() {
                     </div>
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={4} className="px-4.5 py-6"><EmptySlate message="No clients match your search." mt="mt-0" /></td></tr>
+              ) : error ? null : filtered.length === 0 ? (
+                <tr><td colSpan={4} className="px-4.5 py-6"><EmptySlate message={search.trim() ? "No clients match your search." : "No clients in this view."} mt="mt-0" /></td></tr>
               ) : (
                 filtered.map((c) => (
                   <tr key={c._id} className="hover:bg-[var(--bg-2)] cursor-pointer">
@@ -267,5 +271,6 @@ export default function TrainerClientsPage() {
         </div>
       </div>
     </TrainerDashboardShell>
+    </>
   );
 }

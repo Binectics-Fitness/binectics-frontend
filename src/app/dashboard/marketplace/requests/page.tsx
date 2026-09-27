@@ -56,6 +56,8 @@ function listingHref(role?: UserRole): string {
 
 function clientsHref(role?: UserRole): string {
   if (role === UserRole.DIETITIAN) return "/dashboard/dietitian/clients";
+  // Gym listings take requests too (the notification links here).
+  if (role === UserRole.GYM_OWNER) return "/dashboard/gym-owner/members";
   return "/dashboard/trainer/clients";
 }
 

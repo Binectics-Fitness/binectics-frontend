@@ -162,13 +162,14 @@ export function useRespondToListingRequest() {
       }
       return res;
     },
-    onSettled: () => {
-      // Settled, not success: a 400 "already responded to" means the list
-      // on screen is stale either way.
+    // Settled, not success: a 400 "already responded to" means the list on
+    // screen is stale either way. Returned, so the mutation stays pending
+    // until the fresh list is in - otherwise Accept re-enabled on a stale
+    // card and a second tap sent a second accept.
+    onSettled: () =>
       queryClient.invalidateQueries({
         queryKey: queryKeys.marketplace.myListingRequests(),
-      });
-    },
+      }),
   });
 }
 

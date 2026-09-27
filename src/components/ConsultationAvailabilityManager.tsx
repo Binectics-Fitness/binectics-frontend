@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useState,
 } from "react";
@@ -95,6 +96,9 @@ export default function ConsultationAvailabilityManager({
   description,
 }: ConsultationAvailabilityManagerProps) {
   const { user } = useAuth();
+  // The provider shells render their children twice (desktop and phone);
+  // a fixed id pointed the label at the hidden copy.
+  const currencyFieldId = useId();
   const userId = user?.id;
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
   const userTimezone = useMemo(() => getClientTimezone(), []);
@@ -1001,12 +1005,12 @@ export default function ConsultationAvailabilityManager({
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <label htmlFor="session-price-currency" className="sr-only">
+                    <label htmlFor={currencyFieldId} className="sr-only">
                       Price currency
                     </label>
                     <div className="w-28 shrink-0">
                       <SearchableSelect
-                        id="session-price-currency"
+                        id={currencyFieldId}
                         value={priceCurrency}
                         onChange={(next) => {
                           setPriceCurrency(next);

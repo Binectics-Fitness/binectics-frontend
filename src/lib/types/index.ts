@@ -237,9 +237,9 @@ export enum MarketplaceRequestType {
 }
 
 /**
- * Mirrors the API's InvitationStatus. A provider declining a request sets
- * CANCELLED (the same value as a member withdrawing it); there is no
- * "rejected" value on the wire.
+ * Mirrors the API's InvitationStatus. A provider declining sets DECLINED;
+ * CANCELLED is a member withdrawing, and also every decline recorded before
+ * the API made that distinction. There is no "rejected" value on the wire.
  */
 export enum MarketplaceRequestStatus {
   PENDING = "pending",
