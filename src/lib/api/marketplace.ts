@@ -382,21 +382,26 @@ export const marketplaceService = {
     );
   },
 
+  /**
+   * Accepts a connection request. The API answers with the client profile
+   * it created (or the one that already existed), not the request.
+   */
   async acceptRequest(
     requestId: string,
     responseNote?: string,
-  ): Promise<ApiResponse<MarketplaceRequest>> {
-    return await apiClient.patch<MarketplaceRequest>(
+  ): Promise<ApiResponse<{ _id: string }>> {
+    return await apiClient.patch<{ _id: string }>(
       `/marketplace/my-listing/requests/${requestId}/accept`,
       responseNote ? { response_note: responseNote } : {},
     );
   },
 
+  /** Declines a request. The API returns no data, only a message. */
   async rejectRequest(
     requestId: string,
     responseNote?: string,
-  ): Promise<ApiResponse<MarketplaceRequest>> {
-    return await apiClient.patch<MarketplaceRequest>(
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.patch<void>(
       `/marketplace/my-listing/requests/${requestId}/reject`,
       responseNote ? { response_note: responseNote } : {},
     );

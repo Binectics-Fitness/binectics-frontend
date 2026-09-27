@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 import { UserRole } from "@/lib/types";
-import { ProviderShell, SidebarIcon as I, type NavSection } from "./ProviderShell";
+import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
+import { usePendingListingRequestCount } from "@/lib/queries/marketplace";
 
 const SIDEBAR: NavSection[] = [
   { label: "Practice", items: [
@@ -10,6 +11,7 @@ const SIDEBAR: NavSection[] = [
     { name: "Consultations", href: "/dashboard/dietitian/consultations", icon: <I><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></I> },
     { name: "Calendar", href: "/dashboard/dietitian/calendar", icon: <I><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h3M14 13h3M7 17h3"/></I> },
     { name: "Clients", href: "/dashboard/dietitian/clients", icon: <I><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></I> },
+    { name: "Requests", href: "/dashboard/marketplace/requests", icon: <I><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></I> },
     { name: "Inbox", href: "/dashboard/dietitian/messages", icon: <I d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.5 8.5 0 1 1 16-4z" /> },
   ]},
   { label: "Plans & food", items: [
@@ -34,6 +36,7 @@ export interface DietitianDashboardShellProps {
 }
 
 export function DietitianDashboardShell({ activeItem, crumb, actions, children }: DietitianDashboardShellProps) {
+  const pendingRequests = usePendingListingRequestCount();
   return (
     <ProviderShell
       activeItem={activeItem}
@@ -41,7 +44,7 @@ export function DietitianDashboardShell({ activeItem, crumb, actions, children }
       actions={actions}
       config={{
         role: UserRole.DIETITIAN,
-        sections: SIDEBAR,
+        sections: withNavBadge(SIDEBAR, "Requests", pendingRequests),
         identity: "user",
         tone: { avatarBg: "var(--dietitian-soft)", avatarColor: "var(--dietitian)" },
         settingsHref: "/dashboard/dietitian/settings",

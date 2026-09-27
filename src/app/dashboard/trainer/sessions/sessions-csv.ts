@@ -1,4 +1,4 @@
-import type { ConsultationBooking } from "@/lib/api/consultations";
+import { bookingTypeName, type ConsultationBooking } from "@/lib/api/consultations";
 import { buildCsv } from "@/lib/csv/csv";
 import {
   bookingStatusLabel,
@@ -25,7 +25,10 @@ export const SESSIONS_CSV_HEADERS = [
 ] as const;
 
 export interface SessionsCsvOptions {
-  /** Consultation type id → display name. Unknown ids fall back to "Consultation". */
+  /**
+   * Consultation type id → display name, used only when a booking does not
+   * carry `consultationTypeName`. Unknown ids fall back to "Consultation".
+   */
   typesById: Record<string, string>;
   /**
    * Date renderer — pass the org-aware formatter so the export matches what
@@ -43,7 +46,7 @@ export function buildSessionsCsv(
     bookings.map((b) => [
       fmtDateTime(b.startsAt),
       clientDisplayName(b),
-      typesById[b.consultationTypeId] ?? "Consultation",
+      bookingTypeName(b, typesById) ?? "Consultation",
       String(durationMins(b)),
       bookingStatusLabel(b.status),
       b.notes?.trim() ?? "",

@@ -14,6 +14,7 @@ import type {
   MarketplaceSearchParams,
   MarketplaceSearchResult,
 } from "@/lib/types";
+import { MarketplaceRequestStatus } from "@/lib/types";
 
 export function useSearchListings(
   params: MarketplaceSearchParams,
@@ -105,14 +106,70 @@ export function useOrgListing(orgId?: string, enabled = true) {
   });
 }
 
+export interface MyListingRequests {
+  /** False when the provider has no marketplace listing at all (API 404). */
+  hasListing: boolean;
+  /** Newest first, every status. */
+  requests: MarketplaceRequest[];
+}
+
+/**
+ * Connection requests members sent to the signed-in provider's listing.
+ * A failure throws rather than resolving to an empty list: "no requests"
+ * and "couldn't load them" must never look the same.
+ */
 export function useMyListingRequests(enabled = true) {
-  return useQuery<MarketplaceRequest[]>({
+  return useQuery<MyListingRequests>({
     queryKey: queryKeys.marketplace.myListingRequests(),
     queryFn: async () => {
       const res = await marketplaceService.getMyListingRequests();
-      return res.success && res.data ? res.data : [];
+      if (res.success) return { hasListing: true, requests: res.data ?? [] };
+      if (res.status === 404) return { hasListing: false, requests: [] };
+      throw new Error(res.message ?? "Couldn't load your requests");
     },
     enabled,
+    // Shared with the sidebar badge on every provider page; no need to
+    // refetch on each navigation.
+    staleTime: 60_000,
+  });
+}
+
+/** Pending requests waiting on the provider, for the sidebar badge. */
+export function usePendingListingRequestCount(enabled = true) {
+  const { data } = useMyListingRequests(enabled);
+  return (data?.requests ?? []).filter(
+    (r) => r.status === MarketplaceRequestStatus.PENDING,
+  ).length;
+}
+
+export function useRespondToListingRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      requestId,
+      accept,
+      note,
+    }: {
+      requestId: string;
+      accept: boolean;
+      note?: string;
+    }) => {
+      const res = accept
+        ? await marketplaceService.acceptRequest(requestId, note)
+        : await marketplaceService.rejectRequest(requestId, note);
+      if (!res.success) {
+        throw new Error(res.message ?? "Couldn't update this request");
+      }
+      return res;
+    },
+    // Settled, not success: a 400 "already responded to" means the list on
+    // screen is stale either way. Returned, so the mutation stays pending
+    // until the fresh list is in - otherwise Accept re-enabled on a stale
+    // card and a second tap sent a second accept.
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.myListingRequests(),
+      }),
   });
 }
 

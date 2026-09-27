@@ -11,7 +11,6 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   consultationsService,
-  ConsultationProviderRole,
   type ConsultationType,
 } from "@/lib/api/consultations";
 import type { MarketplaceListing } from "@/lib/types";
@@ -62,12 +61,6 @@ function providerName(listing: MarketplaceListing): string {
     return `${listing.professional_id.first_name} ${listing.professional_id.last_name}`;
   }
   return listing.headline;
-}
-
-function mapRole(accountType: string): ConsultationProviderRole | undefined {
-  if (accountType === "personal_trainer") return ConsultationProviderRole.PERSONAL_TRAINER;
-  if (accountType === "dietitian") return ConsultationProviderRole.DIETITIAN;
-  return undefined;
 }
 
 function toYmd(date: Date): string {
@@ -177,16 +170,21 @@ function RecurringBookingInner() {
         const fetchedListing = listingRes.data;
         setListing(fetchedListing);
 
-        const typesRes = await consultationsService.getTypes();
+        // What this provider sells: their own sessions, or their role's
+        // platform default until they set one up. The API decides; any other
+        // type is rejected at booking time.
+        const typesRes = await consultationsService.getTypes({
+          providerId: providerIdFromListing(fetchedListing),
+        });
         if (!mounted) return;
 
-        const role = mapRole(fetchedListing.account_type);
-        const filtered = (typesRes.data ?? []).filter((t) =>
-          role ? t.providerRole === role : true,
-        );
-        setTypes(filtered);
-        if (!selectedTypeId && filtered[0]) {
-          setSelectedTypeId(filtered[0].id);
+        const bookable = typesRes.data ?? [];
+        setTypes(bookable);
+        if (
+          bookable[0] &&
+          (!selectedTypeId || !bookable.some((t) => t.id === selectedTypeId))
+        ) {
+          setSelectedTypeId(bookable[0].id);
         }
       } catch (error) {
         if (!mounted) return;

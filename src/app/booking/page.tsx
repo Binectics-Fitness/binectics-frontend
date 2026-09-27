@@ -9,7 +9,6 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   consultationsService,
-  ConsultationProviderRole,
   type ConsultationSlot,
   type ConsultationType,
 } from "@/lib/api/consultations";
@@ -32,14 +31,15 @@ function providerName(l: MarketplaceListing): string {
   return l.headline;
 }
 
-function mapRole(accountType: string): ConsultationProviderRole | undefined {
-  if (accountType === "personal_trainer") return ConsultationProviderRole.PERSONAL_TRAINER;
-  if (accountType === "dietitian") return ConsultationProviderRole.DIETITIAN;
-  return undefined;
-}
-
+/**
+ * The LOCAL calendar day, YYYY-MM-DD. toISOString() gives the UTC day,
+ * which east of UTC (all of Nigeria) is the day before at local midnight:
+ * every date button carried the previous day, so tapping "Mon 28" asked
+ * for Sunday's slots and today's button looked already selected.
+ */
 function isoDate(d: Date): string {
-  return d.toISOString().split("T")[0];
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function formatTimeLabel(iso: string): string {
@@ -98,14 +98,23 @@ function BookingPageInner() {
         const l = listingRes.data;
         setListing(l);
 
-        const typesRes = await consultationsService.getTypes();
+        // What this provider sells: their own sessions, or their role's
+        // platform default until they set one up. The API decides; any other
+        // type is rejected by the slots and booking endpoints.
+        const typesRes = await consultationsService.getTypes({
+          providerId: providerIdFromListing(l),
+        });
         if (!isMounted) return;
-        const role = mapRole(l.account_type);
-        const filtered = (typesRes.data ?? []).filter((t) =>
-          role ? t.providerRole === role : true,
-        );
-        setTypes(filtered);
-        if (!initialTypeId && filtered[0]) setSelectedTypeId(filtered[0].id);
+        const bookable = typesRes.data ?? [];
+        setTypes(bookable);
+        // A stale ?consultationTypeId (another provider's, or one since
+        // archived) would only fetch an error; fall back to the first.
+        if (
+          bookable[0] &&
+          (!initialTypeId || !bookable.some((t) => t.id === initialTypeId))
+        ) {
+          setSelectedTypeId(bookable[0].id);
+        }
       } catch (err) {
         if (!isMounted) return;
         setMetaError(err instanceof Error ? err.message : "Couldn't load booking details");
@@ -125,13 +134,19 @@ function BookingPageInner() {
     setSlotsError(null);
     setSelectedSlot(null);
     try {
-      const from = new Date(`${selectedDate}T00:00:00.000Z`);
-      const to = new Date(from.getTime() + 24 * 60 * 60 * 1000);
+      // The API takes calendar days (YYYY-MM-DD) and 400s on a timestamp.
+      // Sending ISO timestamps here meant no slot ever showed: every day
+      // read "No availability", however open the provider's week was.
       const res = await consultationsService.getProviderSlots(providerIdFromListing(listing), {
         consultationTypeId: selectedTypeId,
-        dateFrom: from.toISOString(),
-        dateTo: to.toISOString(),
+        dateFrom: selectedDate,
+        dateTo: selectedDate,
       });
+      if (!res.success) {
+        setSlotsError(res.message ?? "Couldn't load available times. Try again.");
+        setSlots([]);
+        return;
+      }
       setSlots(res.data ?? []);
     } catch (err) {
       setSlotsError(err instanceof Error ? err.message : "Couldn't load slots");

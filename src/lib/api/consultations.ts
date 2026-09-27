@@ -34,6 +34,11 @@ export enum AvailabilityExceptionType {
 
 export interface ConsultationType {
   id: string;
+  /**
+   * The provider who sells this session type. `null` for a platform default,
+   * which a provider's clients book until the provider sets up their own.
+   */
+  providerId?: string | null;
   name: string;
   description?: string;
   providerRole: ConsultationProviderRole;
@@ -63,6 +68,39 @@ export interface CreateConsultationTypeRequest {
    */
   priceMinor?: number;
   currency?: string;
+}
+
+/**
+ * A session type the signed-in provider sells
+ * (POST /consultations/provider/types). The role comes from the account, so
+ * there is no `providerRole`. Reusing the name of one of your archived types
+ * brings it back; an active one with the same name is a 409.
+ */
+export interface CreateOwnConsultationTypeRequest {
+  name: string;
+  description?: string;
+  defaultDurationMinutes: number;
+  bufferMinutes?: number;
+  minAdvanceNoticeMinutes?: number;
+  isActive?: boolean;
+  /** Minor units (kobo/cents). `currency` is required whenever this is set. */
+  priceMinor?: number;
+  currency?: string;
+}
+
+/**
+ * PATCH /consultations/provider/types/:id. Every field is optional; an
+ * omitted field is left as it is. `null` clears the price.
+ */
+export interface UpdateOwnConsultationTypeRequest {
+  name?: string;
+  description?: string;
+  defaultDurationMinutes?: number;
+  bufferMinutes?: number;
+  minAdvanceNoticeMinutes?: number;
+  isActive?: boolean;
+  priceMinor?: number | null;
+  currency?: string | null;
 }
 
 export interface AvailabilityRule {
@@ -102,6 +140,11 @@ export interface ConsultationBooking {
   clientLastName?: string;
   providerId: string;
   consultationTypeId: string;
+  /**
+   * The session type's name, resolved by the API. Missing from older API
+   * builds; `null` if the type is gone. Prefer it over a client-side lookup.
+   */
+  consultationTypeName?: string | null;
   startsAt: string;
   endsAt: string;
   providerTimezone: string;
@@ -122,14 +165,94 @@ export type RescheduleBookingRequest = RescheduleBookingDto;
 export type CancelBookingRequest = CancelBookingDto;
 export type CompleteBookingRequest = CompleteBookingDto;
 
+/**
+ * Display name for a booking's session type: the name the API sent with the
+ * booking, else the id -> name map (for API builds that do not send it).
+ * Undefined when neither knows it; callers pick their own fallback label.
+ */
+export function bookingTypeName(
+  booking: Pick<ConsultationBooking, "consultationTypeId" | "consultationTypeName">,
+  typesById: Record<string, string>,
+): string | undefined {
+  return booking.consultationTypeName || typesById[booking.consultationTypeId];
+}
+
 export const consultationsService = {
+  /**
+   * With `providerId`: what a client can book with that provider (their own
+   * active types, else their role's platform defaults). Without it: the
+   * platform defaults only, never another provider's own types.
+   */
   getTypes(params?: {
     includeInactive?: boolean;
+    providerId?: string;
   }): Promise<ApiResponse<ConsultationType[]>> {
-    const query = params?.includeInactive ? "?includeInactive=true" : "";
-    return apiClient.get<ConsultationType[]>(`/consultations/types${query}`);
+    const search = new URLSearchParams();
+    if (params?.includeInactive) search.set("includeInactive", "true");
+    if (params?.providerId) search.set("providerId", params.providerId);
+    const query = search.toString();
+    return apiClient.get<ConsultationType[]>(
+      `/consultations/types${query ? `?${query}` : ""}`,
+    );
   },
 
+  /** The signed-in provider's own session types, archived ones included. */
+  getOwnTypes(): Promise<ApiResponse<ConsultationType[]>> {
+    return apiClient.get<ConsultationType[]>("/consultations/provider/types");
+  },
+
+  createOwnType(
+    payload: CreateOwnConsultationTypeRequest,
+  ): Promise<ApiResponse<ConsultationType>> {
+    return apiClient.post<ConsultationType>(
+      "/consultations/provider/types",
+      payload,
+    );
+  },
+
+  updateOwnType(
+    id: string,
+    payload: UpdateOwnConsultationTypeRequest,
+  ): Promise<ApiResponse<ConsultationType>> {
+    return apiClient.patch<ConsultationType>(
+      `/consultations/provider/types/${id}`,
+      payload,
+    );
+  },
+
+  archiveOwnType(id: string): Promise<ApiResponse<ConsultationType>> {
+    return apiClient.delete<ConsultationType>(
+      `/consultations/provider/types/${id}`,
+    );
+  },
+
+  /**
+   * Id -> name for labelling a provider's own bookings: their own types
+   * (archived included) plus every platform default (archived included),
+   * since older bookings may point at either. The platform list alone no
+   * longer carries a provider's own types.
+   */
+  async getProviderTypeNames(): Promise<
+    ApiResponse<Record<string, string>>
+  > {
+    const [own, platform] = await Promise.all([
+      consultationsService.getOwnTypes(),
+      consultationsService.getTypes({ includeInactive: true }),
+    ]);
+    if (!own.success && !platform.success) {
+      return { success: false, message: own.message ?? platform.message };
+    }
+    const names: Record<string, string> = {};
+    for (const t of platform.data ?? []) names[t.id] = t.name;
+    for (const t of own.data ?? []) names[t.id] = t.name;
+    return { success: true, data: names };
+  },
+
+  /**
+   * Platform-default endpoints: admin only. A provider editing their own
+   * sessions uses createOwnType / updateOwnType instead; archiving a
+   * platform default as a provider is a 403.
+   */
   createType(
     payload: CreateConsultationTypeRequest,
   ): Promise<ApiResponse<ConsultationType>> {
