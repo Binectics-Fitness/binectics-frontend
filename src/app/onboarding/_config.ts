@@ -1,7 +1,28 @@
 import { UserRole } from "@/lib/types";
+import type { CurrencyCode } from "@/lib/constants/regions";
 export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
 export const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
+
+/** The country choices the provider tracks offer, as ISO 3166-1 alpha-2. */
+export const COUNTRY_NAME_TO_CODE: Record<string, string> = {
+  "South Africa": "ZA",
+  Nigeria: "NG",
+  Kenya: "KE",
+  Ghana: "GH",
+  "United States": "US",
+  "United Kingdom": "GB",
+};
+
+/** Suggested default currency for the onboarding country choices. */
+export const COUNTRY_NAME_TO_CURRENCY: Record<string, CurrencyCode> = {
+  "South Africa": "ZAR",
+  Nigeria: "NGN",
+  Kenya: "KES",
+  Ghana: "USD", // GHS not supported yet
+  "United States": "USD",
+  "United Kingdom": "GBP",
+};
 
 /** Maps the account's server-side role to the onboarding RoleId, or null
  *  if the account has no resolvable role yet (or an unrecognized one). */

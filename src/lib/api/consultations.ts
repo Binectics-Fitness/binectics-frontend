@@ -154,6 +154,16 @@ export interface ConsultationBooking {
   completionNote?: string;
   cancelledBy?: ConsultationCancelledBy;
   cancelReason?: string;
+  /**
+   * Present only while a priced booking is an unpaid hold: the slot is
+   * kept until `expiresAt` and released by the API if payment never lands.
+   */
+  payment?: {
+    reference: string;
+    amountMinor?: number | null;
+    currency?: string | null;
+    expiresAt?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

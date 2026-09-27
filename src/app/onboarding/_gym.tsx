@@ -3,21 +3,12 @@
 import { useEffect } from "react";
 import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, TextArea, ChipGrid, UploadZone, RadioCards } from "./_components";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/constants/regions";
+import { SUPPORTED_CURRENCIES } from "@/lib/constants/regions";
+import { COUNTRY_NAME_TO_CURRENCY } from "./_config";
 
 function toggleChip(list: string[], chip: string): string[] {
   return list.includes(chip) ? list.filter((c) => c !== chip) : [...list, chip];
 }
-
-/** Suggested default currency for the onboarding country choices. */
-const COUNTRY_NAME_TO_CURRENCY: Record<string, CurrencyCode> = {
-  "South Africa": "ZAR",
-  Nigeria: "NGN",
-  Kenya: "KES",
-  Ghana: "USD", // GHS not supported yet
-  "United States": "USD",
-  "United Kingdom": "GBP",
-};
 
 const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map(
   (c) => `${c.currencyCode} · ${c.symbol}`,
