@@ -362,7 +362,9 @@ export default function ConsultationBookingsManager({
                             "bg-bg-2 text-fg-3"
                           }`}
                         >
-                          {booking.status.replace("_", " ")}
+                          {booking.status === ConsultationBookingStatus.PENDING && booking.payment
+                            ? "AWAITING PAYMENT"
+                            : booking.status.replace("_", " ")}
                         </span>
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-3">

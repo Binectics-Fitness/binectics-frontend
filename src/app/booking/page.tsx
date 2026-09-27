@@ -183,6 +183,12 @@ function BookingPageInner() {
     () => types.find((t) => t.id === selectedTypeId) ?? null,
     [types, selectedTypeId],
   );
+  // What placing the booking does depends on the session's price: a free
+  // session is confirmed on the spot; a priced one holds the slot for
+  // payment and is released by the API if none arrives.
+  const isPaid = (activeType?.priceMinor ?? 0) > 0;
+  const priceMinor = activeType?.priceMinor ?? listing?.price_from_minor ?? null;
+  const priceCurrency = activeType?.currency ?? listing?.currency ?? null;
 
   const canContinue = useMemo(() => {
     if (step === 0) return Boolean(selectedSlot && selectedTypeId);
@@ -411,7 +417,7 @@ function BookingPageInner() {
             <div>
               <h1 className="text-[32px] font-medium leading-[1.1]" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>Confirm your booking</h1>
               <p className="text-[15px] mt-2.5 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
-                Review the details below. {name} will be notified to confirm.
+                Review the details below. {name} will be notified when it&apos;s confirmed.
               </p>
               <div className="mt-8 rounded-(--r-3) p-5" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
                 <div className="flex flex-col gap-3 text-[13.5px]">
@@ -427,7 +433,9 @@ function BookingPageInner() {
                 </div>
               </div>
               <p className="text-[12.5px] mt-3.5 leading-relaxed" style={{ color: "var(--fg-3)" }}>
-                Payment is handled separately once {name} confirms. You won&apos;t be charged at this step.
+                {isPaid
+                  ? "Placing this booking holds the slot for 30 minutes. It is confirmed once payment is completed, and released if it isn't. Payment can't be completed here yet."
+                  : "Free session. It is confirmed as soon as you place it."}
               </p>
               {submitError && (
                 <div className="mt-3 rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid oklch(0.92 0.05 25)" }}>
@@ -487,30 +495,34 @@ function BookingPageInner() {
           <Receipt k="Duration" v={`${activeType?.defaultDurationMinutes ?? 60} min`} />
         </div>
 
-        {/* price_from_minor is MINOR units (kobo/cents); formatCurrency takes
-            major, so it goes through minorToMajor. */}
-        {listing.price_from_minor && listing.currency && (
+        {/* The selected session's own price, falling back to the listing's
+            "from" price. Both are MINOR units (kobo/cents); formatCurrency
+            takes major, so they go through minorToMajor. */}
+        {priceMinor != null && priceMinor > 0 && priceCurrency && (
           <div className="flex flex-col">
             <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
               <span style={{ color: "var(--fg-2)" }}>Session</span>
               <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrency(minorToMajor(listing.price_from_minor), listing.currency)}
+                {formatCurrency(minorToMajor(priceMinor), priceCurrency)}
               </span>
             </div>
             <div className="flex justify-between pt-3.5 font-medium">
               <span className="text-[14px]" style={{ color: "var(--ink)" }}>Due to provider</span>
               <span className="text-[17px]" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrency(minorToMajor(listing.price_from_minor), listing.currency)}
+                {formatCurrency(minorToMajor(priceMinor), priceCurrency)}
               </span>
             </div>
             <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-              Payment handled after confirmation.
+              {isPaid ? "Slot held for 30 minutes pending payment." : "Payment handled after confirmation."}
             </p>
           </div>
         )}
 
         <div className="flex flex-col gap-3 text-[12.5px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
-          {["Provider confirms within 24h", "Free cancellation up to 24h before", "You'll be notified on accept"].map((t) => (
+          {(isPaid
+            ? ["Slot held for 30 minutes pending payment", "Free cancellation up to 24h before", "You'll be notified when it's confirmed"]
+            : ["Confirmed as soon as you book", "Free cancellation up to 24h before", "You'll be notified of any changes"]
+          ).map((t) => (
             <div key={t} className="flex gap-2.5 items-start">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--signal-ink)" }}><path d="m5 12 5 5L20 7"/></svg>
               {t}

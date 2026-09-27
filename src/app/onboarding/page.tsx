@@ -10,9 +10,10 @@ import { teamsService } from "@/lib/api/teams";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { onboardingService } from "@/lib/api/onboarding";
 import { authService } from "@/lib/api/auth";
+import { consultationsService } from "@/lib/api/consultations";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
 import { MEMBER_STEPS } from "./_member";
@@ -385,10 +386,27 @@ function OnboardingContent() {
   const persistTrainerStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
     try {
       if (currentStep === 1) {
-        const patch: Record<string, unknown> = {};
-        if (stepData.firstName) patch.first_name = stepData.firstName;
-        if (stepData.lastName) patch.last_name = stepData.lastName;
-        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
+        const { profile, currency } = trainerLocationPatch(stepData);
+        if (Object.keys(profile).length > 0) await authService.updateProfile(profile);
+        // The workspace trades in the country's currency, as the gym track
+        // already records on its own step 1; packages and earnings read it.
+        if (orgId) await teamsService.updateOrganization(orgId, { currency });
+      } else if (currentStep === 4) {
+        // The 1:1 price and length become the trainer's own session type,
+        // which is what clients book. Until this was saved the step
+        // collected a price and threw it away, and a trainer who finished
+        // onboarding still had nothing bookable.
+        const session = trainerSessionPatch(stepData);
+        if (session) {
+          const own = await consultationsService.getOwnTypes();
+          const existing = (own.data ?? []).find((t) => t.name.toLowerCase() === session.name.toLowerCase());
+          if (existing) {
+            const { name: _name, ...rest } = session;
+            await consultationsService.updateOwnType(existing.id, { ...rest, isActive: true });
+          } else {
+            await consultationsService.createOwnType(session);
+          }
+        }
       } else if (currentStep === 5) {
         if (stepData.payout && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });

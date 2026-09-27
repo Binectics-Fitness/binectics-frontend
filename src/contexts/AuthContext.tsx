@@ -18,6 +18,13 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  /**
+   * Load the signed-in user from the API into the context. For a session
+   * that was minted outside `login()` (OTP verification signs the new
+   * account in), so the routing cookies and user state exist before the
+   * app routes on them.
+   */
+  refreshUser: () => Promise<User | null>;
   login: (data: LoginRequest) => Promise<{
     success: boolean;
     error?: string;
@@ -335,12 +342,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authService.updateUser(updatedUser);
   };
 
+  const refreshUser = async () => {
+    const fresh = await authService.refreshUserFromApi().catch(() => null);
+    // A failed refresh is not a sign-out: keep whatever user is cached,
+    // the way the mount-time revalidation does.
+    if (fresh) setUser(fresh);
+    return fresh;
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
         isAuthenticated: !!user,
+        refreshUser,
         login,
         register,
         logout,

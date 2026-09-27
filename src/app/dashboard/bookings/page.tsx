@@ -13,6 +13,7 @@ import {
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import { getClientTimezone } from "@/utils/format";
+import { bookingLabel, statusLabel, formatClock } from "@/lib/bookings/labels";
 import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
 
 type TabKey = "upcoming" | "past" | "cancelled";
@@ -34,21 +35,6 @@ function statusVariant(status: ConsultationBookingStatus): "confirmed" | "pendin
     case ConsultationBookingStatus.CANCELLED:
     case ConsultationBookingStatus.NO_SHOW:
       return "cancelled";
-  }
-}
-
-function statusLabel(status: ConsultationBookingStatus): string {
-  switch (status) {
-    case ConsultationBookingStatus.CONFIRMED:
-      return "Confirmed";
-    case ConsultationBookingStatus.PENDING:
-      return "Pending";
-    case ConsultationBookingStatus.COMPLETED:
-      return "Completed";
-    case ConsultationBookingStatus.CANCELLED:
-      return "Cancelled";
-    case ConsultationBookingStatus.NO_SHOW:
-      return "No show";
   }
 }
 
@@ -123,7 +109,7 @@ function BookingRow({
 
       <div className="flex flex-col gap-1 min-w-0">
         <div className="text-[15px] font-medium truncate" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>
-          Consultation &middot; {durationMin} min
+          {booking.consultationTypeName ?? "Consultation"} &middot; {durationMin} min
         </div>
         <div
           className="flex flex-wrap items-center gap-3 font-mono text-[11.5px] uppercase"
@@ -133,6 +119,16 @@ function BookingRow({
           <span className="w-0.75 h-0.75 rounded-full" style={{ background: "var(--border-2)" }} />
           <span>{booking.clientTimezone || getClientTimezone()}</span>
         </div>
+        {booking.status === ConsultationBookingStatus.PENDING && booking.payment?.expiresAt && (
+          <div className="text-[12.5px] mt-1" style={{ color: "var(--fg-2)" }}>
+            Slot held until {formatClock(booking.payment.expiresAt)}, then released unless paid.
+          </div>
+        )}
+        {booking.status === ConsultationBookingStatus.CANCELLED && booking.cancelReason && (
+          <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
+            {booking.cancelReason}
+          </div>
+        )}
         {booking.notes && (
           <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
             {booking.notes}
@@ -141,7 +137,7 @@ function BookingRow({
       </div>
 
       <div className="flex flex-col items-end gap-1.5">
-        <StatusPill variant={statusVariant(booking.status)} label={statusLabel(booking.status)} />
+        <StatusPill variant={statusVariant(booking.status)} label={bookingLabel(booking)} />
         <span
           className="font-mono text-[11.5px]"
           style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}
@@ -395,7 +391,12 @@ export default function MyBookingsPage() {
                 </div>
 
                 <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <StatusPill variant={statusVariant(selected.status)} label={statusLabel(selected.status)} />
+                  <StatusPill variant={statusVariant(selected.status)} label={bookingLabel(selected)} />
+                  {selected.status === ConsultationBookingStatus.PENDING && selected.payment?.expiresAt && (
+                    <div className="text-[12.5px] mt-2" style={{ color: "var(--fg-3)" }}>
+                      This slot is held until {formatClock(selected.payment.expiresAt)} and is confirmed once payment is completed. Payment can&apos;t be completed here yet, so the hold is released automatically if it isn&apos;t paid.
+                    </div>
+                  )}
                   {selected.cancelReason && (
                     <div className="text-[12.5px] mt-2" style={{ color: "var(--fg-3)" }}>
                       {selected.cancelReason}

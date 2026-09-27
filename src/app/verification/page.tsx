@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useVerification } from "@/hooks/useVerification";
+import { useAuth } from "@/contexts/AuthContext";
+import { getDashboardRoute, getOnboardingRoute } from "@/lib/constants/routes";
 import {
   verificationOtpSchema,
   type VerificationOtpFormData,
@@ -16,6 +18,7 @@ function VerificationForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  const { refreshUser } = useAuth();
 
   const {
     register,
@@ -27,6 +30,7 @@ function VerificationForm() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
   const { verifyOtp, resendOtp, isVerifying, isResending } = useVerification();
 
   const handleResend = async () => {
@@ -60,6 +64,21 @@ function VerificationForm() {
     const result = await verifyOtp(email, data.otp);
 
     if (result.success) {
+      // Verifying signs the new account in, so load it into the app and
+      // route on what it needs next. Bouncing through /login instead left
+      // the middleware to pick a dashboard from cookies that did not exist
+      // yet, and the very first screen a new user saw was blank.
+      const fresh = await refreshUser();
+      if (fresh) {
+        setRedirecting(true);
+        setSuccess("Account verified. Taking you in...");
+        router.replace(
+          fresh.is_onboarding_complete === false
+            ? getOnboardingRoute(fresh.role)
+            : getDashboardRoute(fresh.role),
+        );
+        return;
+      }
       setSuccess("Account verified successfully. Redirecting to login...");
       setTimeout(() => {
         router.push("/login");
@@ -92,7 +111,7 @@ function VerificationForm() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+              <label htmlFor="otp" className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
                 Verification code <span style={{ color: "var(--danger)" }}>*</span>
               </label>
               <input
@@ -128,13 +147,15 @@ function VerificationForm() {
                 </svg>
                 <div>
                   <p className="text-[13px]" style={{ color: "var(--signal-ink)" }}>{success}</p>
-                  <Link
-                    href="/login" prefetch={false}
-                    className="text-[12px] font-medium underline mt-1 inline-block"
-                    style={{ color: "var(--signal-ink)" }}
-                  >
-                    Proceed to login
-                  </Link>
+                  {!redirecting && (
+                    <Link
+                      href="/login" prefetch={false}
+                      className="text-[12px] font-medium underline mt-1 inline-block"
+                      style={{ color: "var(--signal-ink)" }}
+                    >
+                      Proceed to login
+                    </Link>
+                  )}
                 </div>
               </div>
             )}
