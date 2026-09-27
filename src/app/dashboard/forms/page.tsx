@@ -243,6 +243,52 @@ export default function FormsPage() {
     QuestionType.SELECT,
   ].includes(qType);
 
+  // One set of actions for both layouts: a card per form on phones, where
+  // the 700px table pushed Edit/Publish/Delete off-screen, and the table above.
+  const renderFormActions = (form: (typeof forms)[number]) => (
+    <>
+      <button
+        type="button"
+        onClick={() => openBuilder(form)}
+        className="rounded-(--r-2) border px-3 py-1.5 text-xs"
+        style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
+      >
+        Edit
+      </button>
+      <button
+        type="button"
+        onClick={() => handleTogglePublish(form)}
+        className="rounded-(--r-2) border px-3 py-1.5 text-xs"
+        style={{
+          borderColor: form.is_published ? "var(--warn)" : "var(--signal)",
+          color: form.is_published ? "var(--warn)" : "var(--signal)",
+          background: "transparent",
+          cursor: "pointer",
+        }}
+      >
+        {form.is_published ? "Unpublish" : "Publish"}
+      </button>
+      {form.is_published && (
+        <button
+          type="button"
+          onClick={() => copyShareLink(form._id)}
+          className="rounded-(--r-2) border px-3 py-1.5 text-xs"
+          style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
+        >
+          Copy link
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => handleDeleteForm(form._id)}
+        className="rounded-(--r-2) border px-3 py-1.5 text-xs"
+        style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+      >
+        Delete
+      </button>
+    </>
+  );
+
   return (
     <WorkspaceShell activeItem="Forms" crumb="Forms">
       <div className="flex flex-col gap-5">
@@ -421,7 +467,37 @@ export default function FormsPage() {
               ) : forms.length === 0 ? (
                 <EmptySlate message="No forms yet. Create one to start collecting responses." />
               ) : (
-                <div className="overflow-x-auto mt-4">
+                <>
+                <ul className="mt-4 flex flex-col sm:hidden">
+                  {forms.map((form) => (
+                    <li key={form._id} className="py-3 flex flex-col gap-2" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <div className="flex items-start justify-between gap-3">
+                        <button
+                          type="button"
+                          onClick={() => openBuilder(form)}
+                          className="min-w-0 text-left text-sm font-medium hover:underline"
+                          style={{ color: "var(--ink)", cursor: "pointer", background: "none", border: "none", padding: 0 }}
+                        >
+                          {form.title}
+                        </button>
+                        <span
+                          className="shrink-0 font-mono text-xs uppercase tracking-wider rounded-(--r-2) px-2 py-1"
+                          style={{
+                            background: form.is_published ? "var(--signal-soft)" : "var(--bg-2)",
+                            color: form.is_published ? "var(--signal)" : "var(--fg-3)",
+                          }}
+                        >
+                          {form.is_published ? "published" : "draft"}
+                        </span>
+                      </div>
+                      <div className="font-mono text-xs tabular-nums" style={{ color: "var(--fg-3)" }}>
+                        {responseCounts[form._id] ?? 0} responses · {fmtDate(form.created_at)}
+                      </div>
+                      <div className="flex flex-wrap gap-2">{renderFormActions(form)}</div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="hidden sm:block overflow-x-auto mt-4">
                   <table className="w-full min-w-[700px] border-collapse text-sm">
                     <thead>
                       <tr style={{ borderBottom: "1px solid var(--border)" }}>
@@ -477,52 +553,13 @@ export default function FormsPage() {
                           <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
                             {fmtDate(form.created_at)}
                           </td>
-                          <td className="py-3 flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openBuilder(form)}
-                              className="rounded-(--r-2) border px-3 py-1.5 text-xs"
-                              style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleTogglePublish(form)}
-                              className="rounded-(--r-2) border px-3 py-1.5 text-xs"
-                              style={{
-                                borderColor: form.is_published ? "var(--warn)" : "var(--signal)",
-                                color: form.is_published ? "var(--warn)" : "var(--signal)",
-                                background: "transparent",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {form.is_published ? "Unpublish" : "Publish"}
-                            </button>
-                            {form.is_published && (
-                              <button
-                                type="button"
-                                onClick={() => copyShareLink(form._id)}
-                                className="rounded-(--r-2) border px-3 py-1.5 text-xs"
-                                style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
-                              >
-                                Copy link
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteForm(form._id)}
-                              className="rounded-(--r-2) border px-3 py-1.5 text-xs"
-                              style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
-                            >
-                              Delete
-                            </button>
-                          </td>
+                          <td className="py-3 flex gap-2">{renderFormActions(form)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                </>
               )}
             </section>
           </>

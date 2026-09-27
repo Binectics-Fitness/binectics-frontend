@@ -181,17 +181,25 @@ body {
   min-height: 100vh;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+/* Element resets that utilities must be able to override. Tailwind v4
+   puts its utilities in a cascade layer, and any rule outside a layer
+   beats every layered rule regardless of specificity: unlayered, this
+   `button { background: transparent }` blanked every bg-* on a <button>
+   (the availability switches and Save buttons rendered invisible), and
+   `a { color: inherit }` did the same to text-* on links. */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
-  background: transparent;
-  color: inherit;
-  font-size: inherit;
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+  }
 }
 
 input,
@@ -208,6 +216,9 @@ select:user-invalid {
   box-shadow: 0 0 0 1px var(--danger);
 }
 
+/* Still unlayered, so margin and font-weight utilities on headings are
+   ignored. About 340 headings carry such classes today; layering this rule
+   would change spacing across the site, so it needs its own audit. */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
   letter-spacing: -0.022em;
