@@ -84,7 +84,8 @@ export interface ClientProfile {
   starting_weight_kg?: number;
   target_weight_kg?: number;
   height_cm?: number;
-  goals: string[];
+  /** Absent on profiles created before goals existed; treat as none. */
+  goals?: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;

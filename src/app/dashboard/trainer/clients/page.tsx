@@ -186,7 +186,7 @@ export default function TrainerClientsPage() {
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                       <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
-                        {c.goals.length > 0 ? c.goals.slice(0, 2).join(" · ") : "-"}
+                        {c.goals?.length ? c.goals.slice(0, 2).join(" · ") : "-"}
                       </span>
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
