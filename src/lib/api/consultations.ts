@@ -164,6 +164,22 @@ export interface ConsultationBooking {
     currency?: string | null;
     expiresAt?: string;
   };
+  /**
+   * Only on the response to verify-payment: what the gateway said about
+   * the charge. `status` above is still the only thing that decides
+   * whether the booking is confirmed.
+   */
+  verification?: {
+    gatewayStatus:
+      | "paid"
+      | "not_payable"
+      | "success"
+      | "failed"
+      | "abandoned"
+      | "ongoing"
+      | "pending"
+      | "error";
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -393,6 +409,23 @@ export const consultationsService = {
     return apiClient.patch<ConsultationBooking>(
       `/consultations/bookings/${id}/cancel`,
       payload ?? {},
+    );
+  },
+
+  /** One booking, as its client or provider. The authoritative read after paying. */
+  getBooking(id: string): Promise<ApiResponse<ConsultationBooking>> {
+    return apiClient.get<ConsultationBooking>(`/consultations/bookings/${id}`);
+  },
+
+  /**
+   * Ask the API to check the booking's charge with the gateway and confirm
+   * the booking if it went through. Nothing is sent: the API uses the
+   * reference and amount it stored. Safe to repeat.
+   */
+  verifyBookingPayment(id: string): Promise<ApiResponse<ConsultationBooking>> {
+    return apiClient.post<ConsultationBooking>(
+      `/consultations/bookings/${id}/verify-payment`,
+      {},
     );
   },
 

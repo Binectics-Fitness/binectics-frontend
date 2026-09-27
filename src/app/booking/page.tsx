@@ -208,8 +208,15 @@ function BookingPageInner() {
         clientTimezone: getClientTimezone(),
         notes: notes.trim() || undefined,
       });
-      if (res.success) {
-        router.push("/dashboard/bookings");
+      if (res.success && res.data) {
+        // A priced booking is a hold that still needs paying; the bookings
+        // page opens straight onto its payment. A free one is confirmed
+        // already and just shows up in the list.
+        router.push(
+          res.data.status === "PENDING" && res.data.payment
+            ? `/dashboard/bookings?booking=${res.data.id}`
+            : "/dashboard/bookings",
+        );
       } else {
         setSubmitError(res.message ?? "Couldn't create booking");
       }
@@ -434,7 +441,7 @@ function BookingPageInner() {
               </div>
               <p className="text-[12.5px] mt-3.5 leading-relaxed" style={{ color: "var(--fg-3)" }}>
                 {isPaid
-                  ? "Placing this booking holds the slot for 30 minutes. It is confirmed once payment is completed, and released if it isn't. Payment can't be completed here yet."
+                  ? `Placing this booking holds the slot for 30 minutes. You then pay ${priceMinor != null && priceCurrency ? formatCurrency(minorToMajor(priceMinor), priceCurrency) : "the session price"} with Paystack to confirm it; if it isn't paid in time, the hold is released.`
                   : "Free session. It is confirmed as soon as you place it."}
               </p>
               {submitError && (
@@ -513,14 +520,14 @@ function BookingPageInner() {
               </span>
             </div>
             <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-              {isPaid ? "Slot held for 30 minutes pending payment." : "Payment handled after confirmation."}
+              {isPaid ? "Paid with Paystack after you place the booking. The slot is held for 30 minutes." : "No payment needed."}
             </p>
           </div>
         )}
 
         <div className="flex flex-col gap-3 text-[12.5px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
           {(isPaid
-            ? ["Slot held for 30 minutes pending payment", "Free cancellation up to 24h before", "You'll be notified when it's confirmed"]
+            ? ["Pay with Paystack right after booking", "Slot held for 30 minutes while you pay", "Free cancellation up to 24h before"]
             : ["Confirmed as soon as you book", "Free cancellation up to 24h before", "You'll be notified of any changes"]
           ).map((t) => (
             <div key={t} className="flex gap-2.5 items-start">

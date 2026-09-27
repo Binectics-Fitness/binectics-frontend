@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { StatusPill } from "@/components/ds/StatusPill";
@@ -12,9 +12,12 @@ import {
   ConsultationBookingStatus,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
-import { getClientTimezone } from "@/utils/format";
+import { formatCurrency, getClientTimezone } from "@/utils/format";
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { bookingLabel, statusLabel, formatClock } from "@/lib/bookings/labels";
 import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
+import { PayBookingButton } from "@/components/bookings/PayBookingButton";
+import { bookingPaymentState, isPayable } from "@/lib/bookings/paymentState";
 
 type TabKey = "upcoming" | "past" | "cancelled";
 
@@ -65,10 +68,13 @@ function BookingRow({
   booking,
   isSelected,
   onSelect,
+  onPay,
 }: {
   booking: ConsultationBooking;
   isSelected: boolean;
   onSelect: () => void;
+  /** Selects the booking and opens its payment, for a held session. */
+  onPay?: () => void;
 }) {
   const date = formatDateBlock(booking.startsAt);
   const durationMin = Math.round(
@@ -119,9 +125,23 @@ function BookingRow({
           <span className="w-0.75 h-0.75 rounded-full" style={{ background: "var(--border-2)" }} />
           <span>{booking.clientTimezone || getClientTimezone()}</span>
         </div>
-        {booking.status === ConsultationBookingStatus.PENDING && booking.payment?.expiresAt && (
-          <div className="text-[12.5px] mt-1" style={{ color: "var(--fg-2)" }}>
-            Slot held until {formatClock(booking.payment.expiresAt)}, then released unless paid.
+        {isPayable(booking) && booking.payment?.expiresAt && (
+          <div className="flex flex-wrap items-center gap-3 mt-1.5">
+            <span className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
+              Slot held until {formatClock(booking.payment.expiresAt)}
+            </span>
+            {onPay && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); onPay(); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onPay(); } }}
+                className="btn-primary-v2 sm"
+                data-testid="pay-now"
+              >
+                Pay now
+              </span>
+            )}
           </div>
         )}
         {booking.status === ConsultationBookingStatus.CANCELLED && booking.cancelReason && (
@@ -176,6 +196,31 @@ function EmptyState({ tab }: { tab: TabKey }) {
   );
 }
 
+/** The booking the URL asks for: the booking page hands over with ?booking=<id>. */
+function wantedBookingId(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("booking");
+}
+
+/**
+ * The list to show and, when the URL names a booking, that booking's id.
+ * A hold just created is in the upcoming list already; a reload on another
+ * tab, or a booking the sweep has since cancelled, is fetched on its own so
+ * the page still lands on it with the state the API has for it.
+ */
+async function withWantedBooking(list: ConsultationBooking[]): Promise<{ list: ConsultationBooking[]; wanted: string | null }> {
+  const wanted = wantedBookingId();
+  if (!wanted) return { list, wanted: null };
+  if (list.some((b) => b.id === wanted)) return { list, wanted };
+  try {
+    const res = await consultationsService.getBooking(wanted);
+    if (res.success && res.data) return { list: [res.data, ...list], wanted };
+  } catch {
+    // fall through: the list is shown without it
+  }
+  return { list, wanted: null };
+}
+
 export default function MyBookingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
@@ -196,8 +241,9 @@ export default function MyBookingsPage() {
       const filtered = tab === "cancelled"
         ? all.filter((b) => b.status === ConsultationBookingStatus.CANCELLED || b.status === ConsultationBookingStatus.NO_SHOW)
         : all;
-      setBookings(filtered);
-      setSelectedId((prev) => (prev && filtered.some((b) => b.id === prev) ? prev : filtered[0]?.id ?? null));
+      const shown = await withWantedBooking(filtered);
+      setBookings(shown.list);
+      setSelectedId((prev) => shown.wanted ?? (prev && shown.list.some((b) => b.id === prev) ? prev : shown.list[0]?.id ?? null));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load bookings";
       setError(message);
@@ -220,8 +266,10 @@ export default function MyBookingsPage() {
         const filtered = activeTab === "cancelled"
           ? all.filter((b) => b.status === ConsultationBookingStatus.CANCELLED || b.status === ConsultationBookingStatus.NO_SHOW)
           : all;
-        setBookings(filtered);
-        setSelectedId(filtered[0]?.id ?? null);
+        const shown = await withWantedBooking(filtered);
+        if (!isMounted) return;
+        setBookings(shown.list);
+        setSelectedId(shown.wanted ?? shown.list[0]?.id ?? null);
       } catch (err) {
         if (!isMounted) return;
         const message = err instanceof Error ? err.message : "Failed to load bookings";
@@ -237,6 +285,19 @@ export default function MyBookingsPage() {
   }, [activeTab]);
 
   const selected = useMemo(() => bookings.find((b) => b.id === selectedId) ?? null, [bookings, selectedId]);
+  const payPanelRef = useRef<HTMLDivElement | null>(null);
+
+  /** An authoritative booking from the API replaces the one we hold. */
+  const replaceBooking = (fresh: ConsultationBooking) => {
+    setBookings((prev) => prev.map((b) => (b.id === fresh.id ? fresh : b)));
+    if (fresh.status === ConsultationBookingStatus.CONFIRMED) toast.success("Payment received. Your session is confirmed.");
+  };
+
+  const payFor = (id: string) => {
+    setSelectedId(id);
+    // The panel is in the detail column; on a phone that is below the list.
+    setTimeout(() => payPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+  };
   const grouped = useMemo(() => groupByMonth(bookings), [bookings]);
   const counts = useMemo(() => bookings.length, [bookings]);
 
@@ -362,6 +423,7 @@ export default function MyBookingsPage() {
                         booking={b}
                         isSelected={b.id === selectedId}
                         onSelect={() => setSelectedId(b.id)}
+                        onPay={isPayable(b) ? () => payFor(b.id) : undefined}
                       />
                     ))}
                   </div>
@@ -392,12 +454,40 @@ export default function MyBookingsPage() {
 
                 <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
                   <StatusPill variant={statusVariant(selected.status)} label={bookingLabel(selected)} />
-                  {selected.status === ConsultationBookingStatus.PENDING && selected.payment?.expiresAt && (
-                    <div className="text-[12.5px] mt-2" style={{ color: "var(--fg-3)" }}>
-                      This slot is held until {formatClock(selected.payment.expiresAt)} and is confirmed once payment is completed. Payment can&apos;t be completed here yet, so the hold is released automatically if it isn&apos;t paid.
+                  {isPayable(selected) && selected.payment?.expiresAt && (
+                    <div className="mt-3 flex flex-col gap-3" ref={payPanelRef} data-testid="payment-panel">
+                      <div className="rounded-(--r-2) p-3.5 flex flex-col gap-1.5" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
+                            {selected.consultationTypeName ?? "Session"}
+                          </span>
+                          <span className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
+                            {selected.payment.amountMinor != null && selected.payment.currency
+                              ? formatCurrency(minorToMajor(selected.payment.amountMinor), selected.payment.currency)
+                              : ""}
+                          </span>
+                        </div>
+                        <div className="text-[12.5px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                          This slot is held for you until {formatClock(selected.payment.expiresAt)}. Pay by then and the session is confirmed; if it isn&apos;t paid, the hold is released and the time goes back on offer.
+                        </div>
+                      </div>
+                      <PayBookingButton
+                        booking={selected}
+                        onBooking={replaceBooking}
+                        onError={(m) => toast.error(m)}
+                      />
+                      <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                        You can leave and come back to pay any time before the deadline.
+                      </div>
                     </div>
                   )}
-                  {selected.cancelReason && (
+                  {bookingPaymentState(selected) === "expired" && (
+                    <div className="text-[12.5px] mt-2 leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                      The hold on this slot ran out before payment, so it was released.{" "}
+                      <Link href="/marketplace" className="underline" style={{ color: "var(--ink)" }}>Choose another time</Link>.
+                    </div>
+                  )}
+                  {selected.cancelReason && bookingPaymentState(selected) !== "expired" && (
                     <div className="text-[12.5px] mt-2" style={{ color: "var(--fg-3)" }}>
                       {selected.cancelReason}
                     </div>
