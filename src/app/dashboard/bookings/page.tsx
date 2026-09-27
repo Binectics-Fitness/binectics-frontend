@@ -13,6 +13,7 @@ import {
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import { getClientTimezone } from "@/utils/format";
+import { bookingLabel, statusLabel, formatClock } from "@/lib/bookings/labels";
 import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
 
 type TabKey = "upcoming" | "past" | "cancelled";
@@ -34,35 +35,6 @@ function statusVariant(status: ConsultationBookingStatus): "confirmed" | "pendin
     case ConsultationBookingStatus.CANCELLED:
     case ConsultationBookingStatus.NO_SHOW:
       return "cancelled";
-  }
-}
-
-/**
- * A priced session is PENDING only while its slot is held for payment, so
- * the pill says that; "Pending" alone reads as waiting on the provider,
- * who has nothing to do.
- */
-function bookingLabel(booking: Pick<ConsultationBooking, "status" | "payment">): string {
-  if (booking.status === ConsultationBookingStatus.PENDING && booking.payment) return "Awaiting payment";
-  return statusLabel(booking.status);
-}
-
-function formatClock(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-}
-
-function statusLabel(status: ConsultationBookingStatus): string {
-  switch (status) {
-    case ConsultationBookingStatus.CONFIRMED:
-      return "Confirmed";
-    case ConsultationBookingStatus.PENDING:
-      return "Pending";
-    case ConsultationBookingStatus.COMPLETED:
-      return "Completed";
-    case ConsultationBookingStatus.CANCELLED:
-      return "Cancelled";
-    case ConsultationBookingStatus.NO_SHOW:
-      return "No show";
   }
 }
 

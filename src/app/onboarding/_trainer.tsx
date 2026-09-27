@@ -1,7 +1,7 @@
 "use client";
 
 import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard } from "./_components";
-import { COUNTRY_NAME_TO_CURRENCY } from "./_config";
+import { COUNTRY_NAME_TO_CURRENCY, trainerCountry } from "./_config";
 
 const SPECIALIZATIONS = ["Strength", "Hypertrophy", "Running", "Olympic lifting", "Powerlifting", "Bodybuilding", "Functional", "Mobility", "HIIT", "CrossFit", "Pre-natal", "Post-natal"];
 const FORMATS = ["In-person 1:1", "In-person small group", "Online video", "Programming only", "Hybrid"];
@@ -82,16 +82,9 @@ export function TrainerStep3({ data, setField, onUploadStart, onUploadEnd }: Ste
   );
 }
 
-/**
- * The trainer track collects no currency of its own (only the gym track has
- * a picker), and its price placeholders are NGN examples, so the fields
- * format as NGN — Nigeria-first, and consistent with the copy. Swapping the
- * symbol by country while keeping NGN-scale example amounts would be worse
- * than either: revisit together, when the track grows a currency field.
- */
 /** Prices are in the currency of the country picked on step 1, not naira for everyone. */
 export function trainerPricingCurrency(data: Record<string, unknown>): string {
-  return COUNTRY_NAME_TO_CURRENCY[(data.country as string) || "South Africa"] ?? "USD";
+  return COUNTRY_NAME_TO_CURRENCY[trainerCountry(data)] ?? "USD";
 }
 
 export function TrainerStep4({ data, setField }: StepProps) {

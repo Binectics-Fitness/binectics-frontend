@@ -13,8 +13,7 @@ import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, COUNTRY_NAME_TO_CODE, type RoleId } from "./_config";
-import { trainerPricingCurrency } from "./_trainer";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
 import { MEMBER_STEPS } from "./_member";
@@ -387,32 +386,25 @@ function OnboardingContent() {
   const persistTrainerStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
     try {
       if (currentStep === 1) {
-        const patch: Record<string, unknown> = {};
-        if (stepData.firstName) patch.first_name = stepData.firstName;
-        if (stepData.lastName) patch.last_name = stepData.lastName;
-        const city = (stepData.city as string | undefined)?.trim();
-        if (city) patch.city = city;
-        const countryCode = COUNTRY_NAME_TO_CODE[stepData.country as string];
-        if (countryCode) patch.country_code = countryCode;
-        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
+        const { profile, currency } = trainerLocationPatch(stepData);
+        if (Object.keys(profile).length > 0) await authService.updateProfile(profile);
         // The workspace trades in the country's currency, as the gym track
         // already records on its own step 1; packages and earnings read it.
-        if (orgId && countryCode) await teamsService.updateOrganization(orgId, { currency: trainerPricingCurrency(stepData) });
+        if (orgId) await teamsService.updateOrganization(orgId, { currency });
       } else if (currentStep === 4) {
         // The 1:1 price and length become the trainer's own session type,
         // which is what clients book. Until this was saved the step
         // collected a price and threw it away, and a trainer who finished
         // onboarding still had nothing bookable.
-        const priceMinor = stepData.price1on1Minor as number | null | undefined;
-        if (typeof priceMinor === "number" && priceMinor >= 0) {
-          const minutes = parseInt(String(stepData.duration ?? "60"), 10) || 60;
-          const currency = trainerPricingCurrency(stepData);
+        const session = trainerSessionPatch(stepData);
+        if (session) {
           const own = await consultationsService.getOwnTypes();
-          const existing = (own.data ?? []).find((t) => t.name.toLowerCase() === "1:1 session");
+          const existing = (own.data ?? []).find((t) => t.name.toLowerCase() === session.name.toLowerCase());
           if (existing) {
-            await consultationsService.updateOwnType(existing.id, { defaultDurationMinutes: minutes, priceMinor, currency, isActive: true });
+            const { name: _name, ...rest } = session;
+            await consultationsService.updateOwnType(existing.id, { ...rest, isActive: true });
           } else {
-            await consultationsService.createOwnType({ name: "1:1 session", defaultDurationMinutes: minutes, priceMinor, currency });
+            await consultationsService.createOwnType(session);
           }
         }
       } else if (currentStep === 5) {

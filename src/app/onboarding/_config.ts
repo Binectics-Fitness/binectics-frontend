@@ -44,6 +44,57 @@ export const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
  * role really was preassigned (the member invite / gym enrollment flow) are
  * detected separately, via membership evidence — see the onboarding page.
  */
+/** The default the step 1 select shows when the trainer never touches it. */
+export const TRAINER_DEFAULT_COUNTRY = "South Africa";
+
+/**
+ * The country a trainer chose on step 1, or the select's default. The
+ * select only writes `data.country` on change, so a trainer who keeps the
+ * default has nothing in the data; reading the raw value there saved no
+ * country and no workspace currency while step 4 priced in the default's
+ * currency anyway.
+ */
+export function trainerCountry(data: Record<string, unknown>): string {
+  return (data.country as string) || TRAINER_DEFAULT_COUNTRY;
+}
+
+/** What step 1 of the trainer track persists to the profile and the workspace. */
+export function trainerLocationPatch(data: Record<string, unknown>): {
+  profile: { first_name?: string; last_name?: string; city?: string; country_code?: string };
+  currency: CurrencyCode;
+} {
+  const profile: { first_name?: string; last_name?: string; city?: string; country_code?: string } = {};
+  if (data.firstName) profile.first_name = data.firstName as string;
+  if (data.lastName) profile.last_name = data.lastName as string;
+  const city = (data.city as string | undefined)?.trim();
+  if (city) profile.city = city;
+  const country = trainerCountry(data);
+  const code = COUNTRY_NAME_TO_CODE[country];
+  if (code) profile.country_code = code;
+  return { profile, currency: COUNTRY_NAME_TO_CURRENCY[country] ?? "USD" };
+}
+
+/**
+ * The trainer's own "1:1 session" as step 4 describes it, or null when no
+ * price was entered (a blank price is not a free session; it is no answer).
+ */
+export function trainerSessionPatch(data: Record<string, unknown>): {
+  name: string;
+  defaultDurationMinutes: number;
+  priceMinor: number;
+  currency: CurrencyCode;
+} | null {
+  const priceMinor = data.price1on1Minor;
+  if (typeof priceMinor !== "number" || priceMinor < 0) return null;
+  const minutes = parseInt(String(data.duration ?? "60"), 10) || 60;
+  return {
+    name: "1:1 session",
+    defaultDurationMinutes: minutes,
+    priceMinor,
+    currency: COUNTRY_NAME_TO_CURRENCY[trainerCountry(data)] ?? "USD",
+  };
+}
+
 export function resolveEstablishedRole(
   accountUserRole: string | null | undefined,
 ): RoleId | null {

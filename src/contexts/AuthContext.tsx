@@ -344,7 +344,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     const fresh = await authService.refreshUserFromApi().catch(() => null);
-    setUser(fresh);
+    // A failed refresh is not a sign-out: keep whatever user is cached,
+    // the way the mount-time revalidation does.
+    if (fresh) setUser(fresh);
     return fresh;
   };
 
