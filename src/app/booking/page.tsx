@@ -31,8 +31,15 @@ function providerName(l: MarketplaceListing): string {
   return l.headline;
 }
 
+/**
+ * The LOCAL calendar day, YYYY-MM-DD. toISOString() gives the UTC day,
+ * which east of UTC (all of Nigeria) is the day before at local midnight:
+ * every date button carried the previous day, so tapping "Mon 28" asked
+ * for Sunday's slots and today's button looked already selected.
+ */
 function isoDate(d: Date): string {
-  return d.toISOString().split("T")[0];
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function formatTimeLabel(iso: string): string {
