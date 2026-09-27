@@ -231,13 +231,23 @@ export type MarketplaceAccountType =
   | "personal_trainer"
   | "dietitian";
 
-export type MarketplaceRequestType = "connection" | "inquiry";
+export enum MarketplaceRequestType {
+  CONNECTION = "connection",
+  INQUIRY = "inquiry",
+}
 
-export type MarketplaceRequestStatus =
-  | "pending"
-  | "accepted"
-  | "rejected"
-  | "cancelled";
+/**
+ * Mirrors the API's InvitationStatus. A provider declining a request sets
+ * CANCELLED (the same value as a member withdrawing it); there is no
+ * "rejected" value on the wire.
+ */
+export enum MarketplaceRequestStatus {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  DECLINED = "declined",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled",
+}
 
 export enum MarketplaceVerificationBadge {
   NONE = "none",
@@ -391,6 +401,7 @@ export interface MarketplaceListingDocument {
 
 export interface MarketplaceRequest {
   _id: string;
+  /** Populated on the provider's list; null once the member's account is gone. */
   client_id:
     | string
     | {
@@ -399,9 +410,10 @@ export interface MarketplaceRequest {
         last_name: string;
         email: string;
         profile_picture?: string;
-      };
+      }
+    | null;
   listing_id: string | MarketplaceListing;
-  organization_id?: string;
+  organization_id?: string | null;
   professional_id:
     | string
     | { _id: string; first_name: string; last_name: string };

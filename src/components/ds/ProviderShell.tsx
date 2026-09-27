@@ -43,6 +43,15 @@ export interface NavSection {
   items: NavItem[];
 }
 
+/** Sets a count badge on the nav item called `name`; zero clears it. */
+export function withNavBadge(sections: NavSection[], name: string, count: number): NavSection[] {
+  if (count <= 0) return sections;
+  return sections.map((s) => ({
+    ...s,
+    items: s.items.map((item) => (item.name === name ? { ...item, badge: String(count) } : item)),
+  }));
+}
+
 /** Avatar styling for the identity chip + user footer. */
 interface ShellTone {
   avatarBg: string;
