@@ -359,6 +359,19 @@ export const teamsService = {
   },
 
   /** Get a single organization by ID */
+  /**
+   * Undo a role picked by mistake during onboarding: removes a workspace
+   * that nothing has been built on yet, and the account becomes a plain
+   * member again. The API refuses (409) once the workspace is in use.
+   */
+  async deleteOrganization(
+    organizationId: string,
+  ): Promise<ApiResponse<{ account_type: string }>> {
+    return await apiClient.delete<{ account_type: string }>(
+      `/teams/organizations/${organizationId}`,
+    );
+  },
+
   async getOrganization(
     organizationId: string,
   ): Promise<ApiResponse<Organization>> {

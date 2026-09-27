@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, TextArea, ChipGrid, UploadZone, RadioCards } from "./_components";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { teamsService } from "@/lib/api/teams";
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/constants/regions";
 
 function toggleChip(list: string[], chip: string): string[] {
@@ -27,7 +26,7 @@ const currencyOption = (code: string) =>
   CURRENCY_OPTIONS.find((o) => o.startsWith(code)) ?? CURRENCY_OPTIONS[0];
 
 export function GymStep1({ data, setField }: StepProps) {
-  const { currentOrg, refreshOrganizations } = useOrganization();
+  const { currentOrg } = useOrganization();
   const country = (data.country as string) || "South Africa";
   // Explicit pick > what the org already has > suggested by country.
   const currency =
@@ -36,27 +35,13 @@ export function GymStep1({ data, setField }: StepProps) {
     COUNTRY_NAME_TO_CURRENCY[country] ??
     "USD";
 
-  // Persist the effective currency onto the organization as soon as it's
-  // known (the workspace is auto-created before this step renders). Skips
-  // when the org already holds this value — no write-back on plain loads —
-  // and refreshes the org context on success so later steps see it. The ref
-  // dedupes in-flight sends; a failed patch clears it for retry.
-  const lastSynced = useRef<string | null>(null);
-  const orgId = currentOrg?._id;
-  const orgCurrency = currentOrg?.currency;
+  // The workspace is created when this step is submitted, and the step's
+  // save patches `currency` with the rest of the business details, so the
+  // effective value is written into the form once it is known. A separate
+  // write from here used to race "Save & finish later" navigating away.
   useEffect(() => {
-    if (!orgId || currency === orgCurrency || lastSynced.current === currency) return;
-    lastSynced.current = currency;
-    void teamsService
-      .updateOrganization(orgId, { currency })
-      .then((res) => {
-        if (res.success) void refreshOrganizations();
-        else lastSynced.current = null;
-      })
-      .catch(() => {
-        lastSynced.current = null;
-      });
-  }, [currency, orgId, orgCurrency, refreshOrganizations]);
+    if (data.currency === undefined) setField("currency", currency);
+  }, [currency, data.currency, setField]);
 
   return (
     <>

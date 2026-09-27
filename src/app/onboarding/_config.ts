@@ -1,3 +1,4 @@
+import { UserRole } from "@/lib/types";
 export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
 export const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
@@ -28,6 +29,69 @@ export function resolveEstablishedRole(
   const fromAccount =
     (accountUserRole && ACCOUNT_ROLE_TO_ID[accountUserRole]) || null;
   return fromAccount && fromAccount !== "member" ? fromAccount : null;
+}
+
+/** What the API calls an account (organization.account_type) → what the app calls its role. */
+export const ACCOUNT_TYPE_TO_USER_ROLE: Record<string, UserRole> = {
+  fitness_member: UserRole.USER,
+  personal_trainer: UserRole.TRAINER,
+  gym_owner: UserRole.GYM_OWNER,
+  dietitian: UserRole.DIETITIAN,
+};
+
+export type WorkspaceDecision =
+  | { kind: "member" }
+  | { kind: "reuse"; orgId: string }
+  | { kind: "create" }
+  | { kind: "blocked"; reason: "loading" | "gate" | "foreign" };
+
+/**
+ * What Continue should do about the workspace before any request is made.
+ * Kept pure so the cases can be pinned: the member track needs none; a
+ * workspace the person owns is reused; one they merely belong to (invited
+ * staff) is never written to under a provider track; nothing is created
+ * while the account or the org list is still loading; and a member-role
+ * account creates one only once membership evidence has cleared it as a
+ * free signup.
+ */
+export function workspaceDecision(input: {
+  currentOrg: { _id: string; owner_id: string } | null;
+  userId: string | undefined;
+  providerTrack: boolean;
+  accountRole: RoleId | null;
+  memberGate: "pending" | "invited" | "free";
+  orgLoading: boolean;
+}): WorkspaceDecision {
+  if (!input.providerTrack) return { kind: "member" };
+  if (input.orgLoading) return { kind: "blocked", reason: "loading" };
+  if (input.currentOrg) {
+    return input.currentOrg.owner_id === input.userId
+      ? { kind: "reuse", orgId: input.currentOrg._id }
+      : { kind: "blocked", reason: "foreign" };
+  }
+  if (input.accountRole === "member" && input.memberGate !== "free") {
+    return { kind: "blocked", reason: "gate" };
+  }
+  return { kind: "create" };
+}
+
+/**
+ * Whether the locked rail may offer "Change role": the account's provider
+ * role came from a workspace it owns, and onboarding isn't finished. The API
+ * decides whether that workspace is still untouched; this only decides
+ * whether to ask.
+ */
+export function canChangeRole(
+  user:
+    | { id: string; role: string; is_onboarding_complete?: boolean }
+    | null
+    | undefined,
+  currentOrg: { owner_id: string } | null | undefined,
+): boolean {
+  if (!user || !currentOrg) return false;
+  if (user.is_onboarding_complete) return false;
+  if (!resolveEstablishedRole(user.role)) return false;
+  return currentOrg.owner_id === user.id;
 }
 
 /**

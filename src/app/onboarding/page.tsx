@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, Suspense } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -12,8 +12,9 @@ import { onboardingService } from "@/lib/api/onboarding";
 import { authService } from "@/lib/api/auth";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, type RoleId } from "./_config";
 import { StageHead } from "./_components";
+import Modal from "@/components/Modal";
 import { MEMBER_STEPS } from "./_member";
 import { TRAINER_STEPS } from "./_trainer";
 import { GYM_STEPS } from "./_gym";
@@ -86,6 +87,7 @@ function buildDefaultOrganizationName(role: RoleId, firstName?: string, lastName
 
 function OnboardingContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { user, updateUser } = useAuth();
   const { organizations, currentOrg, setCurrentOrg, refreshOrganizations, isLoading: orgLoading } = useOrganization();
   const preselected = resolvePreselectedRole(searchParams.get("role"), user?.role);
@@ -148,10 +150,13 @@ function OnboardingContent() {
   const [isSavingLater, setIsSavingLater] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
-  const [workspaceRetryKey, setWorkspaceRetryKey] = useState(0);
-  const creatingWorkspaceRef = useRef(false);
-
-  const workspaceReady = Boolean(currentOrg);
+  const [workspacePending, setWorkspacePending] = useState(false);
+  const [changeRoleOpen, setChangeRoleOpen] = useState(false);
+  // Spans the whole of Continue: creating the workspace, refreshing the
+  // account, saving the step. workspacePending alone re-enabled the button
+  // after the first request, with the rest still in flight.
+  const [advancing, setAdvancing] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
   const roleDef = role ? ROLES.find((r) => r.id === role) : null;
   const steps = roleDef?.steps || GENERIC_STEPS;
   const totalSteps = steps.length;
@@ -163,57 +168,107 @@ function OnboardingContent() {
     }
   }, [user]);
 
-  useEffect(() => {
-    const activeRole = role ?? accountRole;
-    if (!user || orgLoading || creatingWorkspaceRef.current || workspaceReady || organizations.length > 0) {
-      return;
+  // The workspace (organization) is what promotes the account to the chosen
+  // role, so it is created only when the person commits by moving past the
+  // first step - never on the click that picked the role. That click used to
+  // spin up a Trainer workspace and lock the account into it before anything
+  // else was seen, with no way back. Until then, Back reopens the picker.
+  // Returns the workspace id to save against ("" for members), or null when
+  // it could not be created and the step must not advance.
+  const ensureWorkspace = useCallback(async (): Promise<string | null> => {
+    setWorkspaceError(null);
+    const accountType = role ? ROLE_TO_ACCOUNT_TYPE[role] : undefined;
+    const decision = workspaceDecision({
+      currentOrg,
+      userId: user?.id,
+      providerTrack: Boolean(accountType),
+      accountRole,
+      memberGate,
+      orgLoading,
+    });
+    if (decision.kind === "member") return "";
+    if (decision.kind === "reuse") return decision.orgId;
+    if (decision.kind === "blocked") {
+      setWorkspaceError(
+        decision.reason === "loading"
+          ? "Just a moment, we are still loading your account."
+          : decision.reason === "gate"
+            ? "Just a moment, we are still checking your account."
+            : `You are part of ${currentOrg?.name ?? "another workspace"}, which belongs to someone else. To set up a workspace of your own, contact support.`,
+      );
+      return null;
     }
-
-    const accountType = activeRole ? ROLE_TO_ACCOUNT_TYPE[activeRole] : undefined;
-    if (!accountType) {
-      return;
-    }
-
-    // A member-role account may only materialize a provider workspace once
-    // membership evidence has cleared it as a free (non-invited) signup —
-    // otherwise a stray ?role= link could strand a provider org on an
-    // invited member before the gate resolves.
-    if (accountRole === "member" && memberGate !== "free") {
-      return;
-    }
-
-    creatingWorkspaceRef.current = true;
-
-    const createWorkspace = async () => {
-      setWorkspaceError(null);
+    if (!accountType || !user) return "";
+    setWorkspacePending(true);
+    try {
       const response = await teamsService.createOrganization({
-        name: buildDefaultOrganizationName(activeRole ?? "trainer", user.first_name, user.last_name),
+        name: buildDefaultOrganizationName(role ?? "trainer", user.first_name, user.last_name),
         account_type: accountType,
         description: "Auto-created from onboarding",
       });
-
-      if (response.success && response.data) {
-        setCurrentOrg(response.data);
-        // Org creation promotes the account role server-side (USER →
-        // provider). Pull the fresh user immediately so localStorage /
-        // useAuth stop serving the stale member role — the dashboards'
-        // role guards would otherwise bounce a newly-promoted provider
-        // off their own dashboard until the next full refresh.
-        try {
-          const fresh = await authService.refreshUserFromApi();
-          if (fresh) updateUser(fresh);
-        } catch {
-          // best-effort; onboarding completion refreshes again
-        }
-        await refreshOrganizations();
-      } else {
-        setWorkspaceError(response.message || "We could not create your workspace yet.");
-        creatingWorkspaceRef.current = false;
+      if (!response.success || !response.data) {
+        setWorkspaceError(response.message || "We could not create your workspace yet. Try again.");
+        return null;
       }
-    };
+      setCurrentOrg(response.data);
+      // Org creation promotes the account role server-side (USER →
+      // provider). Pull the fresh user immediately so localStorage /
+      // useAuth stop serving the stale member role - the dashboards'
+      // role guards would otherwise bounce a newly-promoted provider
+      // off their own dashboard until the next full refresh.
+      try {
+        const fresh = await authService.refreshUserFromApi();
+        if (fresh) updateUser(fresh);
+      } catch {
+        // best-effort; onboarding completion refreshes again
+      }
+      await refreshOrganizations();
+      return response.data._id;
+    } catch {
+      setWorkspaceError("We could not create your workspace yet. Try again.");
+      return null;
+    } finally {
+      setWorkspacePending(false);
+    }
+  }, [accountRole, currentOrg, memberGate, orgLoading, refreshOrganizations, role, setCurrentOrg, updateUser, user]);
 
-    void createWorkspace();
-  }, [accountRole, currentOrg, memberGate, organizations.length, orgLoading, refreshOrganizations, role, setCurrentOrg, updateUser, user, workspaceReady, workspaceRetryKey]);
+  // Undo a role picked by mistake: remove the untouched workspace, drop the
+  // account back to a plain member, and reopen the picker.
+  const changeRole = async () => {
+    if (!currentOrg) return;
+    setChangingRole(true);
+    setWorkspaceError(null);
+    try {
+      const res = await teamsService.deleteOrganization(currentOrg._id);
+      if (!res.success) {
+        toast.error(res.message || "We could not change your role. Try again.");
+        return;
+      }
+      setCurrentOrg(null);
+      // The account is a member again server-side. If the profile refresh
+      // fails, fall back to the role the API just reported; otherwise the
+      // stale provider role would keep the rail locked with nothing to
+      // change, and the next Continue would create another workspace.
+      const fallbackRole = ACCOUNT_TYPE_TO_USER_ROLE[res.data?.account_type ?? ""];
+      let fresh: typeof user = null;
+      try {
+        fresh = await authService.refreshUserFromApi();
+      } catch {
+        fresh = null;
+      }
+      if (fresh) updateUser(fresh);
+      else if (user && fallbackRole) updateUser({ ...user, role: fallbackRole });
+      await refreshOrganizations();
+      setManualRole(null);
+      setStep(0);
+      setData({});
+      setChangeRoleOpen(false);
+      // A ?role= link would preselect the old role again on refresh.
+      router.replace("/onboarding");
+    } finally {
+      setChangingRole(false);
+    }
+  };
 
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -223,6 +278,7 @@ function OnboardingContent() {
 
   const handleSelectRole = (id: RoleId) => {
     if (roleLocked) return;
+    setWorkspaceError(null);
     setManualRole(id);
     if (step === 0) setStep(1);
   };
@@ -235,6 +291,10 @@ function OnboardingContent() {
         if (stepData.bizName) patch.name = stepData.bizName as string;
         if (stepData.entity) patch.legal_entity = stepData.entity as string;
         if (stepData.regNumber) patch.registration_number = stepData.regNumber as string;
+        // The step seeds `currency` with the effective value (an explicit
+        // pick, or the country's suggestion), so it is saved here with the
+        // rest rather than by a separate write racing page navigation.
+        if (stepData.currency) patch.currency = stepData.currency as string;
         if (Object.keys(patch).length > 0) {
           await teamsService.updateOrganization(orgId, patch);
         }
@@ -387,20 +447,33 @@ function OnboardingContent() {
   }, []);
 
   const handleContinue = async () => {
+    if (advancing) return;
+    setAdvancing(true);
+    try {
+      await advance();
+    } finally {
+      setAdvancing(false);
+    }
+  };
+
+  const advance = async () => {
     if (step === 0 && role) {
       setStep(1);
     } else if (step < totalSteps) {
-      if (role === "gym" && currentOrg?._id) {
-        await persistGymStep(step, data, currentOrg._id);
-      } else if (role === "trainer" && currentOrg) {
-        await persistTrainerStep(step, data, currentOrg._id);
+      const orgId = await ensureWorkspace();
+      if (orgId === null) return;
+      if (role === "gym" && orgId) {
+        await persistGymStep(step, data, orgId);
+      } else if (role === "trainer" && orgId) {
+        await persistTrainerStep(step, data, orgId);
       } else if (role === "member") {
         await persistMemberStep(step, data);
       } else if (role === "dietitian") {
-        await persistDietitianStep(step, data, currentOrg?._id ?? "");
+        await persistDietitianStep(step, data, orgId);
       }
       setStep(step + 1);
     } else if (role) {
+      if ((await ensureWorkspace()) === null) return;
       setIsFinishing(true);
       // dismiss() is what marks onboarding complete server-side. A silent
       // failure here re-onboards the user on every fresh device — surface
@@ -426,21 +499,29 @@ function OnboardingContent() {
   const handleSaveLater = async () => {
     setIsSavingLater(true);
     try {
-      if (role === 'gym' && currentOrg?._id) {
-        await persistGymStep(step, data, currentOrg._id);
-      } else if (role === 'trainer' && currentOrg?._id) {
-        await persistTrainerStep(step, data, currentOrg._id);
+      // Leaving from the picker or before the first step commits to nothing;
+      // from step 1 on, the role is the person's choice, so the workspace
+      // is created here too (their dashboard needs the role).
+      const orgId = step >= 1 ? await ensureWorkspace() : "";
+      if (orgId === null) {
+        setIsSavingLater(false);
+        return;
+      }
+      if (role === 'gym' && orgId) {
+        await persistGymStep(step, data, orgId);
+      } else if (role === 'trainer' && orgId) {
+        await persistTrainerStep(step, data, orgId);
       } else if (role === 'member') {
         await persistMemberStep(step, data);
       } else if (role === 'dietitian') {
-        await persistDietitianStep(step, data, currentOrg?._id ?? '');
+        await persistDietitianStep(step, data, orgId);
       }
     } catch {
       // non-blocking — still redirect
     } finally {
       setIsSavingLater(false);
     }
-    window.location.href = role ? ROLE_DASHBOARD_ROUTES[role] : "/dashboard/member";
+    window.location.href = role && (step >= 1 || role === "member") ? ROLE_DASHBOARD_ROUTES[role] : "/dashboard/member";
   };
 
   const handleBack = () => {
@@ -450,6 +531,7 @@ function OnboardingContent() {
     else if (step === 1 && !roleLocked) {
       setStep(0);
       setManualRole(null);
+      setWorkspaceError(null);
     }
   };
 
@@ -570,6 +652,17 @@ function OnboardingContent() {
               <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: ROLES.find((r) => r.id === role)?.color, flexShrink: 0 }} />
               <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>{ROLES.find((r) => r.id === role)?.label}</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", color: "var(--fg-4)", letterSpacing: "0.05em", marginLeft: "auto" }}>Active</span>
+              {canChangeRole(user, currentOrg) && (
+                <button
+                  type="button"
+                  onClick={() => setChangeRoleOpen(true)}
+                  aria-label="Change role"
+                  className="underline"
+                  style={{ fontSize: 12, color: "var(--fg-2)", background: "none", border: "none", cursor: "pointer", padding: "4px 0", minHeight: 32 }}
+                >
+                  Change
+                </button>
+              )}
             </div>
           ) : (
             <div role="radiogroup" aria-label="Select your role" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -629,18 +722,9 @@ function OnboardingContent() {
       {/* ═══ Center stage ═══ */}
       <main style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="ob-stage-area">
-          {role !== "member" && !workspaceReady ? (
-            <div className="rounded-(--r-3) p-3.5" style={{ border: `1px solid ${workspaceError ? "var(--danger)" : "var(--border)"}`, background: "var(--bg-2)", color: workspaceError ? "var(--danger)" : "var(--fg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <span>{workspaceError ?? "Preparing your workspace…"}</span>
-              {workspaceError && (
-                <button
-                  type="button"
-                  onClick={() => { creatingWorkspaceRef.current = false; setWorkspaceError(null); setWorkspaceRetryKey((k) => k + 1); }}
-                  style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--danger)", flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  Retry
-                </button>
-              )}
+          {workspaceError ? (
+            <div className="rounded-(--r-3) p-3.5" style={{ border: "1px solid var(--danger)", background: "var(--bg-2)", color: "var(--danger)" }} role="alert">
+              {workspaceError}
             </div>
           ) : null}
           {renderStage()}
@@ -652,24 +736,26 @@ function OnboardingContent() {
             Progress <strong style={{ color: "var(--ink)", fontWeight: 500 }}>· {progress}%</strong>, about {minsLeft} min left
           </div>
           <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
-            <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater || uploadCount > 0}>
+            <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater || workspacePending || advancing || orgLoading || uploadCount > 0}>
               {isSavingLater ? "Saving..." : "Save & finish later"}
             </button>
-            {(step > 1 || (step === 1 && !roleLocked)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack}>&larr; Back</button>}
+            {(step > 1 || (step === 1 && !roleLocked)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack} disabled={advancing}>&larr; Back</button>}
             <button
               type="button"
-              disabled={(step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member") || uploadCount > 0}
+              disabled={(step === 0 && !role) || isFinishing || advancing || isSavingLater || orgLoading || uploadCount > 0}
               onClick={handleContinue}
               className="btn-primary-v2 sm"
-              style={{ opacity: (step === 0 && !role) || isFinishing || (!workspaceReady && role !== "member") || uploadCount > 0 ? 0.4 : 1 }}
+              style={{ opacity: (step === 0 && !role) || isFinishing || advancing || isSavingLater || orgLoading || uploadCount > 0 ? 0.4 : 1 }}
             >
               {step >= totalSteps
                 ? isFinishing
                   ? "Finishing..."
                   : "Go to dashboard"
-                : !workspaceReady && role !== "member"
+                : workspacePending
                   ? "Preparing workspace..."
-                  : `Continue${step < totalSteps && roleDef ? ` → ${roleDef.steps[step]?.title || ""}` : " →"}`}
+                  : advancing
+                    ? "Saving..."
+                    : `Continue${step < totalSteps && roleDef ? ` → ${roleDef.steps[step]?.title || ""}` : " →"}`}
             </button>
           </div>
         </div>
@@ -746,6 +832,28 @@ function OnboardingContent() {
         </div>
       </aside>
     </div>
+
+      <Modal
+        open={changeRoleOpen}
+        onClose={() => setChangeRoleOpen(false)}
+        title="Change your role?"
+        size="sm"
+        disableCloseGuard
+        footer={
+          <>
+            <button type="button" className="btn-ghost-v2 sm" onClick={() => setChangeRoleOpen(false)} disabled={changingRole}>
+              Keep {roleDef?.label ?? "this role"}
+            </button>
+            <button type="button" className="btn-primary-v2 sm" onClick={changeRole} disabled={changingRole}>
+              {changingRole ? "Changing..." : "Change role"}
+            </button>
+          </>
+        }
+      >
+        <p style={{ fontSize: "13.5px", color: "var(--fg-2)", lineHeight: 1.6 }}>
+          Your {roleDef?.label ?? ""} workspace will be removed and you can pick again. Anything you have entered so far will be cleared.
+        </p>
+      </Modal>
     </>
   );
 }
