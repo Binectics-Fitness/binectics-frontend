@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveEstablishedRole, resolvePreselectedRole } from "@/app/onboarding/_config";
+import { canChangeRole, resolveEstablishedRole, resolvePreselectedRole } from "@/app/onboarding/_config";
 
 // Regression guards for the onboarding role model:
 //
@@ -67,5 +67,34 @@ describe("resolvePreselectedRole", () => {
     // provider account role.
     expect(resolvePreselectedRole("member", "TRAINER")).toBe("trainer");
     expect(resolvePreselectedRole("gym", "DIETITIAN")).toBe("dietitian");
+  });
+});
+
+// 4. A provider role picked by mistake can be undone while the workspace
+//    that created it is still untouched. The rail only OFFERS the change
+//    here; whether the workspace is really untouched is the API's call.
+describe("canChangeRole", () => {
+  const trainer = { id: "u1", role: "TRAINER", is_onboarding_complete: false };
+  const ownOrg = { owner_id: "u1" };
+
+  it("offers it to a promoted account mid-onboarding, on a workspace it owns", () => {
+    expect(canChangeRole(trainer, ownOrg)).toBe(true);
+  });
+
+  it("never once onboarding is finished, the role is real by then", () => {
+    expect(canChangeRole({ ...trainer, is_onboarding_complete: true }, ownOrg)).toBe(false);
+  });
+
+  it("never for a workspace someone else owns (invited staff)", () => {
+    expect(canChangeRole(trainer, { owner_id: "boss" })).toBe(false);
+  });
+
+  it("never for a member: there is no workspace to undo", () => {
+    expect(canChangeRole({ id: "u1", role: "USER" }, ownOrg)).toBe(false);
+  });
+
+  it("needs both a user and a current workspace", () => {
+    expect(canChangeRole(null, ownOrg)).toBe(false);
+    expect(canChangeRole(trainer, null)).toBe(false);
   });
 });

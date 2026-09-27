@@ -31,6 +31,25 @@ export function resolveEstablishedRole(
 }
 
 /**
+ * Whether the locked rail may offer "Change role": the account's provider
+ * role came from a workspace it owns, and onboarding isn't finished. The API
+ * decides whether that workspace is still untouched; this only decides
+ * whether to ask.
+ */
+export function canChangeRole(
+  user:
+    | { id: string; role: string; is_onboarding_complete?: boolean }
+    | null
+    | undefined,
+  currentOrg: { owner_id: string } | null | undefined,
+): boolean {
+  if (!user || !currentOrg) return false;
+  if (user.is_onboarding_complete) return false;
+  if (!resolveEstablishedRole(user.role)) return false;
+  return currentOrg.owner_id === user.id;
+}
+
+/**
  * Resolves which role, if any, should already be selected when the user
  * lands on this page — the account's established role if it has one,
  * otherwise an explicit `?role=` link.
