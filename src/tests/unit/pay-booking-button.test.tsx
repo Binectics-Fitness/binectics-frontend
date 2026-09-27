@@ -108,6 +108,81 @@ describe("PayBookingButton", () => {
     await waitFor(() => expect(onBooking).toHaveBeenLastCalledWith(expect.objectContaining({ status: "CONFIRMED" })));
   });
 
+  it("gives up polling after the limit and offers to check again, still without assuming anything", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    open.mockResolvedValue({ closed: "callback", reference: "bkg_ref-1" });
+    verify.mockResolvedValue(ok({ ...base, verification: { gatewayStatus: "ongoing" } }));
+    get.mockResolvedValue(ok(base));
+    const onBooking = vi.fn();
+    render(<PayBookingButton booking={base} onBooking={onBooking} />);
+    await userEvent.click(screen.getByRole("button"));
+    await waitFor(() => expect(verify).toHaveBeenCalled());
+    for (let i = 0; i < 20; i++) {
+      await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+    }
+    await waitFor(() => expect(screen.getByRole("button", { name: /Check again/ })).toBeEnabled());
+    expect(get).toHaveBeenCalledTimes(20);
+    expect(onBooking).not.toHaveBeenCalledWith(expect.objectContaining({ status: "CONFIRMED" }));
+    expect(screen.getByText(/still being confirmed/)).toBeInTheDocument();
+  });
+
+  it("polls the booking when the verify call itself fails", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    open.mockResolvedValue({ closed: "callback", reference: "bkg_ref-1" });
+    verify.mockRejectedValue(new Error("network"));
+    get.mockResolvedValue(ok(confirmed));
+    const onBooking = vi.fn();
+    render(<PayBookingButton booking={base} onBooking={onBooking} />);
+    await userEvent.click(screen.getByRole("button"));
+    await waitFor(() => expect(verify).toHaveBeenCalled());
+    await act(async () => { await vi.advanceTimersByTimeAsync(3100); });
+    await waitFor(() => expect(onBooking).toHaveBeenCalledWith(expect.objectContaining({ status: "CONFIRMED" })));
+  });
+
+  it("reports a charge that completed just before the popup was dismissed", async () => {
+    open.mockResolvedValue({ closed: "dismissed", reference: "bkg_ref-1" });
+    get.mockResolvedValue(ok(confirmed));
+    const onBooking = vi.fn();
+    render(<PayBookingButton booking={base} onBooking={onBooking} />);
+    await userEvent.click(screen.getByRole("button"));
+    await waitFor(() => expect(onBooking).toHaveBeenCalledWith(expect.objectContaining({ status: "CONFIRMED" })));
+    expect(verify).not.toHaveBeenCalled();
+  });
+
+  it("says so and offers a retry when the popup cannot open", async () => {
+    open.mockRejectedValue(new Error("Could not load Paystack"));
+    const onError = vi.fn();
+    render(<PayBookingButton booking={base} onBooking={() => {}} onError={onError} />);
+    await userEvent.click(screen.getByRole("button"));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith("Could not load Paystack"));
+    expect(screen.getByRole("button", { name: /Try again/ })).toBeEnabled();
+    expect(verify).not.toHaveBeenCalled();
+  });
+
+  it("refuses a second click while the popup is open, without disabling the button", async () => {
+    let finish: (v: { closed: "callback" | "dismissed"; reference: string }) => void = () => {};
+    open.mockReturnValue(new Promise((r) => { finish = r; }));
+    get.mockResolvedValue(ok(base));
+    render(<PayBookingButton booking={base} onBooking={() => {}} />);
+    await userEvent.click(screen.getByRole("button"));
+    const button = screen.getByRole("button", { name: /Complete payment/ });
+    expect(button).toBeEnabled();
+    await userEvent.click(button);
+    expect(open).toHaveBeenCalledTimes(1);
+    await act(async () => { finish({ closed: "dismissed", reference: "bkg_ref-1" }); });
+    await waitFor(() => expect(screen.getByRole("button", { name: /^Pay / })).toBeEnabled());
+  });
+
+  it("explains a mismatched or reversed charge instead of polling for it", async () => {
+    open.mockResolvedValue({ closed: "callback", reference: "bkg_ref-1" });
+    verify.mockResolvedValue(ok({ ...base, verification: { gatewayStatus: "mismatch" } }));
+    const onError = vi.fn();
+    render(<PayBookingButton booking={base} onBooking={() => {}} onError={onError} />);
+    await userEvent.click(screen.getByRole("button"));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(expect.stringMatching(/does not match/)));
+    expect(get).not.toHaveBeenCalled();
+  });
+
   it("does not offer payment when Paystack is not configured", () => {
     vi.mocked(paystackPublicKey).mockReturnValue(null);
     render(<PayBookingButton booking={base} onBooking={() => {}} />);

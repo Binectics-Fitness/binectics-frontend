@@ -1,5 +1,6 @@
 import {
   ConsultationBookingStatus,
+  ConsultationCancelledBy,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 
@@ -20,7 +21,7 @@ export type BookingPaymentState =
   | "pending";
 
 export function bookingPaymentState(
-  booking: Pick<ConsultationBooking, "status" | "payment" | "cancelReason">,
+  booking: Pick<ConsultationBooking, "status" | "payment" | "cancelReason" | "cancelledBy">,
 ): BookingPaymentState {
   switch (booking.status) {
     case ConsultationBookingStatus.PENDING:
@@ -32,9 +33,10 @@ export function bookingPaymentState(
     case ConsultationBookingStatus.NO_SHOW:
       return "no_show";
     case ConsultationBookingStatus.CANCELLED:
-      // The sweep's reason is the only way to tell a lapsed hold from a
-      // booking someone cancelled on purpose.
-      return /not completed in time/i.test(booking.cancelReason ?? "")
+      // Only the sweep cancels as SYSTEM. Holds it released before the API
+      // recorded that carry its reason alone, so the copy is the fallback.
+      return booking.cancelledBy === ConsultationCancelledBy.SYSTEM ||
+        /not completed in time/i.test(booking.cancelReason ?? "")
         ? "expired"
         : "cancelled";
   }
@@ -66,11 +68,4 @@ export function paystackChargeFor(
     amountMinor: p.amountMinor,
     currency: p.currency.toUpperCase(),
   };
-}
-
-export function formatClock(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }

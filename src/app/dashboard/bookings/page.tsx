@@ -14,7 +14,7 @@ import {
 } from "@/lib/api/consultations";
 import { formatCurrency, getClientTimezone } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
-import { bookingLabel, statusLabel, formatClock } from "@/lib/bookings/labels";
+import { bookingLabel, formatClock } from "@/lib/bookings/labels";
 import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
 import { PayBookingButton } from "@/components/bookings/PayBookingButton";
 import { bookingPaymentState, isPayable } from "@/lib/bookings/paymentState";
@@ -69,12 +69,15 @@ function BookingRow({
   isSelected,
   onSelect,
   onPay,
+  children,
 }: {
   booking: ConsultationBooking;
   isSelected: boolean;
   onSelect: () => void;
   /** Selects the booking and opens its payment, for a held session. */
   onPay?: () => void;
+  /** Rendered under the row: the payment panel, where there is no detail column. */
+  children?: React.ReactNode;
 }) {
   const date = formatDateBlock(booking.startsAt);
   const durationMin = Math.round(
@@ -82,90 +85,128 @@ function BookingRow({
   );
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`text-left w-full grid gap-5 p-4.5 px-5 rounded-(--r-3) mb-3 ${isSelected ? "border-ink" : "hover:border-ink"}`}
+    <div
+      className={`rounded-(--r-3) mb-3 ${isSelected ? "border-ink" : "hover:border-ink"}`}
       style={{
-        gridTemplateColumns: "auto 1fr auto",
         border: `1px solid ${isSelected ? "var(--ink)" : "var(--border)"}`,
         background: "var(--bg)",
         transition: "border-color 120ms",
-        alignItems: "center",
-        cursor: "pointer",
       }}
     >
-      <div
-        className="flex flex-col items-center gap-0.5 shrink-0"
-        style={{ paddingRight: 20, borderRight: "1px solid var(--border)", minWidth: 56 }}
+      <button
+        type="button"
+        onClick={onSelect}
+        className="text-left w-full grid gap-5 p-4.5 px-5"
+        style={{ gridTemplateColumns: "auto 1fr auto", alignItems: "center", cursor: "pointer" }}
       >
-        <span className="font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}>
-          {date.month}
-        </span>
-        <span
-          className="font-medium leading-none text-[28px]"
-          style={{ letterSpacing: "-0.025em", fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}
-        >
-          {date.day}
-        </span>
-        <span className="font-mono text-[10px] uppercase" style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}>
-          {date.dow}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-1 min-w-0">
-        <div className="text-[15px] font-medium truncate" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>
-          {booking.consultationTypeName ?? "Consultation"} &middot; {durationMin} min
-        </div>
         <div
-          className="flex flex-wrap items-center gap-3 font-mono text-[11.5px] uppercase"
-          style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}
+          className="flex flex-col items-center gap-0.5 shrink-0"
+          style={{ paddingRight: 20, borderRight: "1px solid var(--border)", minWidth: 56 }}
         >
-          <span>{date.time}</span>
-          <span className="w-0.75 h-0.75 rounded-full" style={{ background: "var(--border-2)" }} />
-          <span>{booking.clientTimezone || getClientTimezone()}</span>
+          <span className="font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}>
+            {date.month}
+          </span>
+          <span
+            className="font-medium leading-none text-[28px]"
+            style={{ letterSpacing: "-0.025em", fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}
+          >
+            {date.day}
+          </span>
+          <span className="font-mono text-[10px] uppercase" style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}>
+            {date.dow}
+          </span>
         </div>
-        {isPayable(booking) && booking.payment?.expiresAt && (
-          <div className="flex flex-wrap items-center gap-3 mt-1.5">
-            <span className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
-              Slot held until {formatClock(booking.payment.expiresAt)}
-            </span>
-            {onPay && (
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); onPay(); }}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onPay(); } }}
-                className="btn-primary-v2 sm"
-                data-testid="pay-now"
-              >
-                Pay now
-              </span>
-            )}
-          </div>
-        )}
-        {booking.status === ConsultationBookingStatus.CANCELLED && booking.cancelReason && (
-          <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
-            {booking.cancelReason}
-          </div>
-        )}
-        {booking.notes && (
-          <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
-            {booking.notes}
-          </div>
-        )}
-      </div>
 
-      <div className="flex flex-col items-end gap-1.5">
-        <StatusPill variant={statusVariant(booking.status)} label={bookingLabel(booking)} />
-        <span
-          className="font-mono text-[11.5px]"
-          style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}
-        >
-          ID {booking.id.slice(-8)}
-        </span>
+        <div className="flex flex-col gap-1 min-w-0">
+          <div className="text-[15px] font-medium truncate" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>
+            {booking.consultationTypeName ?? "Consultation"} &middot; {durationMin} min
+          </div>
+          <div
+            className="flex flex-wrap items-center gap-3 font-mono text-[11.5px] uppercase"
+            style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}
+          >
+            <span>{date.time}</span>
+            <span className="w-0.75 h-0.75 rounded-full" style={{ background: "var(--border-2)" }} />
+            <span>{booking.clientTimezone || getClientTimezone()}</span>
+          </div>
+          {isPayable(booking) && booking.payment?.expiresAt && (
+            <div className="text-[12.5px] mt-1.5" style={{ color: "var(--fg-2)" }}>
+              Slot held until {formatClock(booking.payment.expiresAt)}
+            </div>
+          )}
+          {booking.status === ConsultationBookingStatus.CANCELLED && booking.cancelReason && (
+            <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
+              {booking.cancelReason}
+            </div>
+          )}
+          {booking.notes && (
+            <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
+              {booking.notes}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col items-end gap-1.5">
+          <StatusPill variant={statusVariant(booking.status)} label={bookingLabel(booking)} />
+          <span
+            className="font-mono text-[11.5px]"
+            style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}
+          >
+            ID {booking.id.slice(-8)}
+          </span>
+        </div>
+      </button>
+
+      {/* A sibling of the row, not a child: a button cannot contain a button.
+          Hidden where the panel below already offers the payment. */}
+      {onPay && (
+        <div className={`${isSelected ? "hidden lg:flex" : "flex"} justify-end px-5 pb-4`}>
+          <button type="button" onClick={onPay} className="btn-primary-v2 sm" data-testid="pay-now">
+            Pay now
+          </button>
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The hold and how to pay it, for the selected booking. Rendered in the
+ * detail column where there is one and under the row where there is not.
+ */
+function BookingPaymentPanel({
+  booking,
+  onBooking,
+  onError,
+}: {
+  booking: ConsultationBooking;
+  onBooking: (booking: ConsultationBooking) => void;
+  onError: (message: string) => void;
+}) {
+  if (!isPayable(booking) || !booking.payment?.expiresAt) return null;
+  return (
+    <div className="flex flex-col gap-3" data-testid="payment-panel">
+      <div className="rounded-(--r-2) p-3.5 flex flex-col gap-1.5" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
+        <div className="flex justify-between items-baseline">
+          <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
+            {booking.consultationTypeName ?? "Session"}
+          </span>
+          <span className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
+            {booking.payment.amountMinor != null && booking.payment.currency
+              ? formatCurrency(minorToMajor(booking.payment.amountMinor), booking.payment.currency)
+              : ""}
+          </span>
+        </div>
+        <div className="text-[12.5px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
+          This slot is held for you until {formatClock(booking.payment.expiresAt)}. Pay by then and the session is confirmed; if it isn&apos;t paid, the hold is released and the time goes back on offer.
+        </div>
       </div>
-    </button>
+      <PayBookingButton booking={booking} onBooking={onBooking} onError={onError} />
+      <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+        You can leave and come back to pay any time before the deadline.
+      </div>
+    </div>
   );
 }
 
@@ -196,20 +237,33 @@ function EmptyState({ tab }: { tab: TabKey }) {
   );
 }
 
-/** The booking the URL asks for: the booking page hands over with ?booking=<id>. */
-function wantedBookingId(): string | null {
+/**
+ * The booking the URL asks for: the booking page hands over with
+ * ?booking=<id>. Read once and removed from the URL, so a later tab
+ * change or reload shows the list as it is instead of pulling the same
+ * booking back to the top.
+ */
+function takeWantedBookingId(): string | null {
   if (typeof window === "undefined") return null;
-  return new URLSearchParams(window.location.search).get("booking");
+  const url = new URL(window.location.href);
+  const id = url.searchParams.get("booking");
+  if (id) {
+    url.searchParams.delete("booking");
+    window.history.replaceState(window.history.state, "", url.toString());
+  }
+  return id;
 }
 
 /**
- * The list to show and, when the URL names a booking, that booking's id.
- * A hold just created is in the upcoming list already; a reload on another
- * tab, or a booking the sweep has since cancelled, is fetched on its own so
- * the page still lands on it with the state the API has for it.
+ * The list to show and, when a booking was asked for, that booking's id.
+ * A hold just created is in the upcoming list already; one the sweep has
+ * since cancelled is fetched on its own so the page still lands on it with
+ * the state the API has for it.
  */
-async function withWantedBooking(list: ConsultationBooking[]): Promise<{ list: ConsultationBooking[]; wanted: string | null }> {
-  const wanted = wantedBookingId();
+async function withWantedBooking(
+  list: ConsultationBooking[],
+  wanted: string | null,
+): Promise<{ list: ConsultationBooking[]; wanted: string | null }> {
   if (!wanted) return { list, wanted: null };
   if (list.some((b) => b.id === wanted)) return { list, wanted };
   try {
@@ -230,6 +284,9 @@ export default function MyBookingsPage() {
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  // undefined: not read yet; a string: read but not yet shown (a fetch the
+  // effect abandoned keeps it); null: consumed.
+  const wantedRef = useRef<string | null | undefined>(undefined);
 
   const loadBookings = async (tab: TabKey) => {
     setLoading(true);
@@ -241,9 +298,8 @@ export default function MyBookingsPage() {
       const filtered = tab === "cancelled"
         ? all.filter((b) => b.status === ConsultationBookingStatus.CANCELLED || b.status === ConsultationBookingStatus.NO_SHOW)
         : all;
-      const shown = await withWantedBooking(filtered);
-      setBookings(shown.list);
-      setSelectedId((prev) => shown.wanted ?? (prev && shown.list.some((b) => b.id === prev) ? prev : shown.list[0]?.id ?? null));
+      setBookings(filtered);
+      setSelectedId((prev) => (prev && filtered.some((b) => b.id === prev) ? prev : filtered[0]?.id ?? null));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load bookings";
       setError(message);
@@ -266,8 +322,10 @@ export default function MyBookingsPage() {
         const filtered = activeTab === "cancelled"
           ? all.filter((b) => b.status === ConsultationBookingStatus.CANCELLED || b.status === ConsultationBookingStatus.NO_SHOW)
           : all;
-        const shown = await withWantedBooking(filtered);
+        if (wantedRef.current === undefined) wantedRef.current = takeWantedBookingId();
+        const shown = await withWantedBooking(filtered, wantedRef.current);
         if (!isMounted) return;
+        wantedRef.current = null;
         setBookings(shown.list);
         setSelectedId(shown.wanted ?? shown.list[0]?.id ?? null);
       } catch (err) {
@@ -285,7 +343,6 @@ export default function MyBookingsPage() {
   }, [activeTab]);
 
   const selected = useMemo(() => bookings.find((b) => b.id === selectedId) ?? null, [bookings, selectedId]);
-  const payPanelRef = useRef<HTMLDivElement | null>(null);
 
   /** An authoritative booking from the API replaces the one we hold. */
   const replaceBooking = (fresh: ConsultationBooking) => {
@@ -295,8 +352,12 @@ export default function MyBookingsPage() {
 
   const payFor = (id: string) => {
     setSelectedId(id);
-    // The panel is in the detail column; on a phone that is below the list.
-    setTimeout(() => payPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    // The panel is in the detail column or, without one, under the row;
+    // scroll to whichever of the two is laid out.
+    setTimeout(() => {
+      const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-testid="payment-panel"]'));
+      panels.find((el) => el.offsetParent !== null)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
   };
   const grouped = useMemo(() => groupByMonth(bookings), [bookings]);
   const counts = useMemo(() => bookings.length, [bookings]);
@@ -424,7 +485,13 @@ export default function MyBookingsPage() {
                         isSelected={b.id === selectedId}
                         onSelect={() => setSelectedId(b.id)}
                         onPay={isPayable(b) ? () => payFor(b.id) : undefined}
-                      />
+                      >
+                        {b.id === selectedId && isPayable(b) && (
+                          <div className="lg:hidden px-5 pb-5">
+                            <BookingPaymentPanel booking={b} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
+                          </div>
+                        )}
+                      </BookingRow>
                     ))}
                   </div>
                 ))}
@@ -454,31 +521,9 @@ export default function MyBookingsPage() {
 
                 <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
                   <StatusPill variant={statusVariant(selected.status)} label={bookingLabel(selected)} />
-                  {isPayable(selected) && selected.payment?.expiresAt && (
-                    <div className="mt-3 flex flex-col gap-3" ref={payPanelRef} data-testid="payment-panel">
-                      <div className="rounded-(--r-2) p-3.5 flex flex-col gap-1.5" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
-                            {selected.consultationTypeName ?? "Session"}
-                          </span>
-                          <span className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
-                            {selected.payment.amountMinor != null && selected.payment.currency
-                              ? formatCurrency(minorToMajor(selected.payment.amountMinor), selected.payment.currency)
-                              : ""}
-                          </span>
-                        </div>
-                        <div className="text-[12.5px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
-                          This slot is held for you until {formatClock(selected.payment.expiresAt)}. Pay by then and the session is confirmed; if it isn&apos;t paid, the hold is released and the time goes back on offer.
-                        </div>
-                      </div>
-                      <PayBookingButton
-                        booking={selected}
-                        onBooking={replaceBooking}
-                        onError={(m) => toast.error(m)}
-                      />
-                      <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-                        You can leave and come back to pay any time before the deadline.
-                      </div>
+                  {isPayable(selected) && (
+                    <div className="mt-3">
+                      <BookingPaymentPanel booking={selected} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
                     </div>
                   )}
                   {bookingPaymentState(selected) === "expired" && (

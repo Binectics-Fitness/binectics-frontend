@@ -9,6 +9,7 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   consultationsService,
+  ConsultationBookingStatus,
   type ConsultationSlot,
   type ConsultationType,
 } from "@/lib/api/consultations";
@@ -213,7 +214,7 @@ function BookingPageInner() {
         // page opens straight onto its payment. A free one is confirmed
         // already and just shows up in the list.
         router.push(
-          res.data.status === "PENDING" && res.data.payment
+          res.data.status === ConsultationBookingStatus.PENDING && res.data.payment
             ? `/dashboard/bookings?booking=${res.data.id}`
             : "/dashboard/bookings",
         );
@@ -505,7 +506,7 @@ function BookingPageInner() {
         {/* The selected session's own price, falling back to the listing's
             "from" price. Both are MINOR units (kobo/cents); formatCurrency
             takes major, so they go through minorToMajor. */}
-        {priceMinor != null && priceMinor > 0 && priceCurrency && (
+        {isPaid && priceMinor != null && priceCurrency && (
           <div className="flex flex-col">
             <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
               <span style={{ color: "var(--fg-2)" }}>Session</span>
@@ -514,13 +515,13 @@ function BookingPageInner() {
               </span>
             </div>
             <div className="flex justify-between pt-3.5 font-medium">
-              <span className="text-[14px]" style={{ color: "var(--ink)" }}>Due to provider</span>
+              <span className="text-[14px]" style={{ color: "var(--ink)" }}>Total</span>
               <span className="text-[17px]" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
                 {formatCurrency(minorToMajor(priceMinor), priceCurrency)}
               </span>
             </div>
             <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-              {isPaid ? "Paid with Paystack after you place the booking. The slot is held for 30 minutes." : "No payment needed."}
+              Paid with Paystack after you place the booking. The slot is held for 30 minutes.
             </p>
           </div>
         )}

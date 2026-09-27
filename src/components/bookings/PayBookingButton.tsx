@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { consultationsService, type ConsultationBooking } from "@/lib/api/consultations";
+import {
+  consultationsService,
+  ConsultationBookingStatus,
+  type ConsultationBooking,
+} from "@/lib/api/consultations";
 import { formatCurrency } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { openPaystack, paystackPublicKey } from "@/lib/payments/paystackInline";
@@ -17,7 +21,31 @@ import { isPayable, paystackChargeFor } from "@/lib/bookings/paymentState";
 const VERIFY_POLL_MS = 3000;
 const VERIFY_POLL_LIMIT = 20;
 
-export type PayPhase = "idle" | "opening" | "checkout" | "verifying" | "unsettled" | "failed";
+export type PayPhase = "idle" | "checkout" | "verifying" | "unsettled" | "failed";
+
+type GatewayStatus = NonNullable<ConsultationBooking["verification"]>["gatewayStatus"];
+
+/**
+ * What to tell the person when the API has verified the charge and the
+ * booking is still not confirmed. Anything not listed is "still settling"
+ * and is polled for instead.
+ */
+function failureMessage(status: GatewayStatus | undefined): string | null {
+  switch (status) {
+    case "failed":
+      return "The payment did not go through. You can try again.";
+    case "abandoned":
+      return "The checkout was closed before payment completed.";
+    case "mismatch":
+      return "The amount paid does not match this booking. Contact support and we will sort it out.";
+    case "reversed":
+      return "The payment was reversed. You can try again.";
+    case "paid_after_expiry":
+      return "The payment arrived after the hold had already been released. Contact support for a refund.";
+    default:
+      return null;
+  }
+}
 
 /**
  * Pays for a held booking with Paystack's popup and reports the booking
@@ -49,6 +77,9 @@ export function PayBookingButton({
     alive.current = true;
     return () => { alive.current = false; };
   }, []);
+  // One attempt at a time. The "checkout" phase keeps the button enabled
+  // (see below), so a second click must be refused here, not by `disabled`.
+  const inFlight = useRef(false);
 
   const charge = paystackChargeFor(booking);
   const configured = !!paystackPublicKey();
@@ -65,10 +96,15 @@ export function PayBookingButton({
       if (!alive.current) return;
       if (verified.success && verified.data) {
         onBooking(verified.data);
-        if (verified.data.status !== "PENDING") { setPhase("idle"); return; }
-        if (verified.data.verification?.gatewayStatus === "abandoned" || verified.data.verification?.gatewayStatus === "failed") {
+        const message = failureMessage(verified.data.verification?.gatewayStatus);
+        if (verified.data.status !== ConsultationBookingStatus.PENDING) {
+          setPhase("idle");
+          if (message) onError?.(message);
+          return;
+        }
+        if (message) {
           setPhase("failed");
-          onError?.(verified.data.verification.gatewayStatus === "failed" ? "The payment did not go through. You can try again." : "The checkout was closed before payment completed.");
+          onError?.(message);
           return;
         }
       }
@@ -83,7 +119,7 @@ export function PayBookingButton({
         if (!alive.current) return;
         if (res.success && res.data) {
           onBooking(res.data);
-          if (res.data.status !== "PENDING") { setPhase("idle"); return; }
+          if (res.data.status !== ConsultationBookingStatus.PENDING) { setPhase("idle"); return; }
         }
       } catch {
         // keep polling
@@ -94,9 +130,8 @@ export function PayBookingButton({
 
   const pay = async () => {
     if (!user?.email) { onError?.("Sign in again to pay."); return; }
-    setPhase("opening");
+    setPhase("checkout");
     try {
-      setPhase("checkout");
       const result = await openPaystack({
         email: user.email,
         amountMinor: charge.amountMinor,
@@ -124,6 +159,16 @@ export function PayBookingButton({
     }
   };
 
+  const run = async (action: () => Promise<void>) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    try {
+      await action();
+    } finally {
+      inFlight.current = false;
+    }
+  };
+
   if (!configured) {
     return (
       <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }} data-testid="pay-unavailable">
@@ -135,11 +180,10 @@ export function PayBookingButton({
   // "checkout" does not disable: the popup's iframe covers the page while it
   // is open, and if Paystack refuses the key it opens nothing and calls
   // nothing back, so a button gated on its callbacks would be a dead end.
-  const busy = phase === "opening" || phase === "verifying";
+  const busy = phase === "verifying";
   const text =
     phase === "verifying" ? "Confirming payment..."
     : phase === "checkout" ? "Complete payment in the Paystack window"
-    : phase === "opening" ? "Opening payment..."
     : phase === "unsettled" ? "Check again"
     : phase === "failed" ? `Try again: ${label ?? `Pay ${amountLabel}`}`
     : label ?? `Pay ${amountLabel}`;
@@ -148,7 +192,7 @@ export function PayBookingButton({
     <div className="flex flex-col gap-2">
       <button
         type="button"
-        onClick={phase === "unsettled" ? settle : pay}
+        onClick={() => void run(phase === "unsettled" ? settle : pay)}
         disabled={busy}
         className={`${className} disabled:opacity-60`}
         data-testid="pay-booking"

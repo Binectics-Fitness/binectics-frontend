@@ -25,6 +25,8 @@ export enum ConsultationCancelledBy {
   CLIENT = "CLIENT",
   PROVIDER = "PROVIDER",
   ADMIN = "ADMIN",
+  /** The API itself: the sweep that releases an unpaid hold. */
+  SYSTEM = "SYSTEM",
 }
 
 export enum AvailabilityExceptionType {
@@ -178,6 +180,11 @@ export interface ConsultationBooking {
       | "abandoned"
       | "ongoing"
       | "pending"
+      /** Paid, but not the amount or currency the booking quoted. */
+      | "mismatch"
+      /** Paid after the hold had already been released. */
+      | "paid_after_expiry"
+      | "reversed"
       | "error";
   };
   createdAt: string;

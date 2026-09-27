@@ -23,7 +23,7 @@ interface PaystackPopStatic {
   }) => PaystackHandler;
 }
 
-/** `window.PaystackPop` once inline.js has run; the checkout page declares it as `any`. */
+/** `window.PaystackPop` once inline.js has run. */
 function installed(): PaystackPopStatic | undefined {
   return (window as unknown as { PaystackPop?: PaystackPopStatic }).PaystackPop;
 }
@@ -68,6 +68,12 @@ export interface OpenPaystackInput {
   currency: string;
   /** The API's reference; the webhook resolves the booking by it. */
   reference: string;
+  /**
+   * A public key other than the platform's. The membership checkout charges
+   * into the gym's own Paystack account with the key its payment config
+   * returns; bookings always use the platform key.
+   */
+  key?: string;
 }
 
 /**
@@ -78,7 +84,7 @@ export interface OpenPaystackInput {
 export async function openPaystack(
   input: OpenPaystackInput,
 ): Promise<{ closed: "callback" | "dismissed"; reference: string }> {
-  const key = paystackPublicKey();
+  const key = input.key || paystackPublicKey();
   if (!key) throw new Error("Payments are not configured");
   const pop = await loadPaystackInline();
   return new Promise((resolve) => {

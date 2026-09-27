@@ -4,7 +4,7 @@ import {
   isPayable,
   paystackChargeFor,
 } from "@/lib/bookings/paymentState";
-import { ConsultationBookingStatus } from "@/lib/api/consultations";
+import { ConsultationBookingStatus, ConsultationCancelledBy } from "@/lib/api/consultations";
 
 const hold = {
   status: ConsultationBookingStatus.PENDING,
@@ -23,10 +23,16 @@ describe("bookingPaymentState", () => {
     expect(isPayable(past)).toBe(true);
   });
 
-  it("reads a lapsed hold off the sweep's cancel reason", () => {
+  it("reads a lapsed hold off who cancelled it, or off the sweep's reason for older ones", () => {
+    expect(
+      bookingPaymentState({ status: ConsultationBookingStatus.CANCELLED, cancelledBy: ConsultationCancelledBy.SYSTEM, cancelReason: "Hold released" }),
+    ).toBe("expired");
     expect(
       bookingPaymentState({ status: ConsultationBookingStatus.CANCELLED, cancelReason: "Payment was not completed in time" }),
     ).toBe("expired");
+    expect(
+      bookingPaymentState({ status: ConsultationBookingStatus.CANCELLED, cancelledBy: ConsultationCancelledBy.CLIENT, cancelReason: "Changed my mind" }),
+    ).toBe("cancelled");
     expect(
       bookingPaymentState({ status: ConsultationBookingStatus.CANCELLED, cancelReason: "Changed my mind" }),
     ).toBe("cancelled");
