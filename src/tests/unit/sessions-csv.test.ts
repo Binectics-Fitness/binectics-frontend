@@ -56,6 +56,16 @@ describe("buildSessionsCsv", () => {
     expect(csv.split("\n")[1]).toContain(",Consultation,");
   });
 
+  it("prefers the type name the API sent with the booking", () => {
+    // A provider's own session type is not in the platform list, so the
+    // booking's own name must win over the id lookup.
+    const csv = buildSessionsCsv(
+      [booking({ consultationTypeId: "own_type", consultationTypeName: "1:1 session" })],
+      opts,
+    );
+    expect(csv.split("\n")[1]).toContain(",1:1 session,");
+  });
+
   it("writes the human status label, not the raw enum", () => {
     const csv = buildSessionsCsv([booking({ status: ConsultationBookingStatus.NO_SHOW })], opts);
     expect(csv).toContain(",No-show,");

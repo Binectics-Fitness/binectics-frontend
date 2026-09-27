@@ -9,7 +9,6 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   consultationsService,
-  ConsultationProviderRole,
   type ConsultationSlot,
   type ConsultationType,
 } from "@/lib/api/consultations";
@@ -30,12 +29,6 @@ function providerName(l: MarketplaceListing): string {
     return `${l.professional_id.first_name} ${l.professional_id.last_name}`;
   }
   return l.headline;
-}
-
-function mapRole(accountType: string): ConsultationProviderRole | undefined {
-  if (accountType === "personal_trainer") return ConsultationProviderRole.PERSONAL_TRAINER;
-  if (accountType === "dietitian") return ConsultationProviderRole.DIETITIAN;
-  return undefined;
 }
 
 function isoDate(d: Date): string {
@@ -98,14 +91,23 @@ function BookingPageInner() {
         const l = listingRes.data;
         setListing(l);
 
-        const typesRes = await consultationsService.getTypes();
+        // What this provider sells: their own sessions, or their role's
+        // platform default until they set one up. The API decides; any other
+        // type is rejected by the slots and booking endpoints.
+        const typesRes = await consultationsService.getTypes({
+          providerId: providerIdFromListing(l),
+        });
         if (!isMounted) return;
-        const role = mapRole(l.account_type);
-        const filtered = (typesRes.data ?? []).filter((t) =>
-          role ? t.providerRole === role : true,
-        );
-        setTypes(filtered);
-        if (!initialTypeId && filtered[0]) setSelectedTypeId(filtered[0].id);
+        const bookable = typesRes.data ?? [];
+        setTypes(bookable);
+        // A stale ?consultationTypeId (another provider's, or one since
+        // archived) would only fetch an error; fall back to the first.
+        if (
+          bookable[0] &&
+          (!initialTypeId || !bookable.some((t) => t.id === initialTypeId))
+        ) {
+          setSelectedTypeId(bookable[0].id);
+        }
       } catch (err) {
         if (!isMounted) return;
         setMetaError(err instanceof Error ? err.message : "Couldn't load booking details");

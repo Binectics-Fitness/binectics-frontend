@@ -9,13 +9,12 @@ import {
 import SearchableSelect from "@/components/SearchableSelect";
 import { getClientTimezone } from "@/utils/format";
 import { utilityService } from "@/lib/api/utility";
-import { UserRole } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   consultationsService,
-  ConsultationProviderRole,
   AvailabilityExceptionType,
   type AvailabilityException,
+  type ConsultationType,
 } from "@/lib/api/consultations";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
@@ -96,7 +95,7 @@ export default function ConsultationAvailabilityManager({
   description,
 }: ConsultationAvailabilityManagerProps) {
   const { user } = useAuth();
-  const role = user?.role;
+  const userId = user?.id;
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
   const userTimezone = useMemo(() => getClientTimezone(), []);
 
@@ -112,14 +111,33 @@ export default function ConsultationAvailabilityManager({
     type: "success" | "error";
   } | null>(null);
 
-  // Session settings (single duration + buffer + min advance)
+  // Session settings (single duration + buffer + min advance + price).
+  // They live on the provider's OWN session type: their first active one.
+  // Until they have one, the form is prefilled from the platform default
+  // their clients currently book, and Save creates their own from it.
   const DEFAULT_SESSION_DURATION = 30;
+  const DEFAULT_SESSION_NAME = "1:1 session";
   const [sessionDuration, setSessionDuration] = useState<number>(
     DEFAULT_SESSION_DURATION,
   );
   const [bufferMinutes, setBufferMinutes] = useState<number>(0);
   const [minAdvanceNoticeHours, setMinAdvanceNoticeHours] = useState<number>(0);
-  const [activeTypeIds, setActiveTypeIds] = useState<string[]>([]);
+  /** The provider's own active session type; null until they have one. */
+  const [ownTypeId, setOwnTypeId] = useState<string | null>(null);
+  /** Name + description a newly created own type starts from. */
+  const [sessionName, setSessionName] = useState<string>(DEFAULT_SESSION_NAME);
+  const [sessionDescription, setSessionDescription] = useState<
+    string | undefined
+  >(undefined);
+  const [sessionLoadState, setSessionLoadState] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
+  // Save feedback for this card only, rendered inside it: the page-level
+  // banner sits above the tabs, a screen away from this Save button on a phone.
+  const [sessionMessage, setSessionMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
   // Session price feeds the earnings page's estimated figures. TWO pieces of
   // state on purpose: the formatted string the user sees ("₦25,000") and the
   // authoritative amount in minor units. The display string is lossy for a
@@ -147,13 +165,6 @@ export default function ConsultationAvailabilityManager({
     endTime: "17:00",
     reason: "",
   });
-
-  const providerRoleForType: ConsultationProviderRole =
-    role === UserRole.DIETITIAN
-      ? ConsultationProviderRole.DIETITIAN
-      : role === UserRole.TRAINER
-        ? ConsultationProviderRole.PERSONAL_TRAINER
-        : ConsultationProviderRole.OTHER;
 
   const enabledDayCount = useMemo(
     () =>
@@ -188,36 +199,6 @@ export default function ConsultationAvailabilityManager({
       }
     });
 
-    // Load active types for this role; pick first as session settings source.
-    consultationsService.getTypes().then((res) => {
-      if (res.success && res.data) {
-        const active = res.data.filter(
-          (t) => t.providerRole === providerRoleForType && t.isActive,
-        );
-        if (active.length > 0) {
-          setActiveTypeIds(active.map((t) => t.id));
-          const first = active[0];
-          setSessionDuration(first.defaultDurationMinutes);
-          setBufferMinutes(first.bufferMinutes ?? 0);
-          setMinAdvanceNoticeHours(
-            Math.round((first.minAdvanceNoticeMinutes ?? 0) / 60),
-          );
-          const savedCurrency = (first.currency ?? "NGN").toUpperCase();
-          if (first.priceMinor != null && first.priceMinor > 0) {
-            // Prefill formatted, in the price's own currency — not the
-            // currency state, which this same block is about to set. The
-            // minor value is kept verbatim so an untouched price saves back
-            // exactly as it was loaded.
-            setPriceMinor(first.priceMinor);
-            setPriceDisplay(
-              formatMinorForInput(first.priceMinor, { currency: savedCurrency }),
-            );
-          }
-          if (first.currency) setPriceCurrency(savedCurrency);
-        }
-      }
-    });
-
     utilityService.getPlatformConfig().then((res) => {
       if (!res.success || !res.data) return;
       const supported = res.data.currencies
@@ -225,45 +206,87 @@ export default function ConsultationAvailabilityManager({
         .map((c) => c.code.toUpperCase());
       if (supported.length > 0) setCurrencies(supported);
     });
-  }, [providerRoleForType]);
+  }, []);
+
+  /** Fill the form from a session type (the provider's own, or a default). */
+  const applySessionType = useCallback((type: ConsultationType) => {
+    setSessionName(type.name);
+    setSessionDescription(type.description || undefined);
+    setSessionDuration(type.defaultDurationMinutes);
+    setBufferMinutes(type.bufferMinutes ?? 0);
+    setMinAdvanceNoticeHours(
+      Math.round((type.minAdvanceNoticeMinutes ?? 0) / 60),
+    );
+    const savedCurrency = (type.currency ?? "NGN").toUpperCase();
+    if (type.priceMinor != null && type.priceMinor > 0) {
+      // Prefill formatted, in the price's own currency — not the currency
+      // state, which this same block is about to set. The minor value is
+      // kept verbatim so an untouched price saves back exactly as loaded.
+      setPriceMinor(type.priceMinor);
+      setPriceDisplay(
+        formatMinorForInput(type.priceMinor, { currency: savedCurrency }),
+      );
+    }
+    if (type.currency) setPriceCurrency(savedCurrency);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const own = await consultationsService.getOwnTypes();
+      if (cancelled) return;
+      if (!own.success) {
+        // Without the provider's own list, Save could create a duplicate of
+        // a session they already have. Block it rather than guess.
+        setSessionLoadState("error");
+        return;
+      }
+      const active = (own.data ?? []).find((t) => t.isActive);
+      if (active) {
+        setOwnTypeId(active.id);
+        applySessionType(active);
+        setSessionLoadState("ready");
+        return;
+      }
+      // No session of their own yet: start from what their clients book
+      // today, the platform default for their role.
+      if (userId) {
+        const fallback = await consultationsService.getTypes({
+          providerId: userId,
+        });
+        if (cancelled) return;
+        const first = fallback.success ? fallback.data?.[0] : undefined;
+        if (first) applySessionType(first);
+      }
+      setSessionLoadState("ready");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, applySessionType]);
 
   const saveSessionDuration = async () => {
+    const fail = (text: string) =>
+      setSessionMessage({ text, type: "error" });
+    if (sessionLoadState !== "ready") {
+      fail(
+        sessionLoadState === "loading"
+          ? "Your session settings are still loading."
+          : "We couldn't load your session settings. Refresh the page and try again.",
+      );
+      return;
+    }
     if (sessionDuration < 5 || sessionDuration > 240) {
-      setMessage({
-        text: "Session length must be between 5 and 240 minutes.",
-        type: "error",
-      });
+      fail("Session length must be between 5 and 240 minutes.");
       return;
     }
     if (bufferMinutes < 0 || bufferMinutes > 60) {
-      setMessage({
-        text: "Buffer must be between 0 and 60 minutes.",
-        type: "error",
-      });
+      fail("Buffer must be between 0 and 60 minutes.");
       return;
     }
     if (minAdvanceNoticeHours < 0 || minAdvanceNoticeHours > 168) {
-      setMessage({
-        text: "Advance notice must be between 0 and 168 hours.",
-        type: "error",
-      });
+      fail("Advance notice must be between 0 and 168 hours.");
       return;
-    }
-
-    setIsSavingSession(true);
-    setMessage(null);
-
-    // Archive ALL previous active types so only the new one remains.
-    for (const id of activeTypeIds) {
-      const archive = await consultationsService.deleteType(id);
-      if (!archive.success) {
-        setMessage({
-          text: archive.message ?? "Failed to update session settings.",
-          type: "error",
-        });
-        setIsSavingSession(false);
-        return;
-      }
     }
 
     // Empty field → no price at all, never a zero one. A field with something
@@ -272,36 +295,54 @@ export default function ConsultationAvailabilityManager({
     // of passing validation and then being silently dropped from the request.
     const hasPrice = priceDisplay.trim() !== "";
     if (hasPrice && (priceMinor === null || priceMinor <= 0)) {
-      setMessage({
-        text: "Session price must be a positive amount (or left empty).",
-        type: "error",
-      });
-      setIsSavingSession(false);
+      fail("Session price must be a positive amount (or left empty).");
       return;
     }
 
-    const created = await consultationsService.createType({
-      name: "Standard consultation",
-      providerRole: providerRoleForType,
+    setIsSavingSession(true);
+    setSessionMessage(null);
+
+    const settings = {
       defaultDurationMinutes: sessionDuration,
       bufferMinutes,
       minAdvanceNoticeMinutes: minAdvanceNoticeHours * 60,
-      isActive: true,
-      // Clearing the field omits both, and since this call replaces the
-      // archived type rather than patching it, that un-sets the price.
-      ...(hasPrice && priceMinor !== null
+    };
+    const price =
+      hasPrice && priceMinor !== null
         ? { priceMinor, currency: priceCurrency }
-        : {}),
-    });
+        : null;
 
-    if (created.success && created.data) {
-      setActiveTypeIds([created.data.id]);
-      setMessage({ text: "Session settings saved.", type: "success" });
+    const res = ownTypeId
+      ? // Patch in place. A cleared field sends null, which removes the
+        // price; omitting it would leave the old one standing.
+        await consultationsService.updateOwnType(ownTypeId, {
+          ...settings,
+          ...(price ?? { priceMinor: null, currency: null }),
+        })
+      : await consultationsService.createOwnType({
+          name: sessionName.trim() || DEFAULT_SESSION_NAME,
+          ...(sessionDescription ? { description: sessionDescription } : {}),
+          ...settings,
+          isActive: true,
+          ...(price ?? {}),
+        });
+
+    if (res.success && res.data) {
+      setOwnTypeId(res.data.id);
+      setSessionMessage({ text: "Session settings saved.", type: "success" });
+    } else if (res.status === 409 && !ownTypeId) {
+      // Created elsewhere since this page loaded (another tab, say). Point
+      // the form at that session so the next Save updates it.
+      const own = await consultationsService.getOwnTypes();
+      const active = own.data?.find((t) => t.isActive);
+      if (active) setOwnTypeId(active.id);
+      fail(
+        active
+          ? `You already have a session called "${active.name}". Press Save again to update it with these settings.`
+          : (res.message ?? "You already have a session with this name."),
+      );
     } else {
-      setMessage({
-        text: created.message ?? "Failed to save session settings.",
-        type: "error",
-      });
+      fail(res.message ?? "We couldn't save your session settings.");
     }
 
     setIsSavingSession(false);
@@ -832,24 +873,40 @@ export default function ConsultationAvailabilityManager({
 
             {/* Session Settings */}
             <section className="rounded-(--r-3) bg-bg shadow-(--shadow-card)">
-              <div className="flex items-center justify-between border-b border-border p-5">
+              <div className="flex items-center justify-between gap-3 border-b border-border p-5">
                 <div>
                   <h2 className="text-lg font-bold text-fg">
                     Session Settings
                   </h2>
                   <p className="mt-0.5 text-xs text-fg-3">
-                    Length, buffer time, and minimum booking notice.
+                    {sessionLoadState === "ready" && !ownTypeId
+                      ? "Clients book the standard session until you save your own."
+                      : "Length, buffer time, price, and minimum booking notice."}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={saveSessionDuration}
-                  disabled={isSavingSession}
-                  className="inline-flex h-9 items-center rounded-(--r-2) bg-signal px-4 text-sm font-semibold text-fg hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                  disabled={isSavingSession || sessionLoadState === "loading"}
+                  className="inline-flex h-9 shrink-0 items-center rounded-(--r-2) bg-signal px-4 text-sm font-semibold text-fg hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                 >
                   {isSavingSession ? "Saving…" : "Save"}
                 </button>
               </div>
+
+              {(sessionMessage || sessionLoadState === "error") && (
+                <div
+                  role={sessionMessage?.type === "success" ? "status" : "alert"}
+                  className={`mx-5 mt-4 rounded-(--r-2) px-4 py-3 text-sm ${
+                    sessionMessage?.type === "success"
+                      ? "bg-signal-soft text-signal-ink"
+                      : "bg-danger-soft text-danger"
+                  }`}
+                >
+                  {sessionMessage?.text ??
+                    "We couldn't load your session settings. Refresh the page and try again."}
+                </div>
+              )}
 
               <div className="divide-y divide-border">
                 <div className="flex flex-col gap-1 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -944,28 +1001,29 @@ export default function ConsultationAvailabilityManager({
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <select
-                      value={priceCurrency}
-                      onChange={(e) => {
-                        const next = e.target.value;
-                        setPriceCurrency(next);
-                        // Re-render the SAME amount in the new currency so the
-                        // symbol (and its decimals) follow the selection. Only
-                        // the display string is rebuilt — round-tripping the
-                        // string through a re-parse dropped the cents of
-                        // "$12.34" the moment NGN was selected, and they never
-                        // came back on switching away again.
-                        setPriceDisplay(
-                          formatMinorForInput(priceMinor, { currency: next }),
-                        );
-                      }}
-                      aria-label="Price currency"
-                      className="rounded-(--r-2) border border-border bg-bg px-2 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
-                    >
-                      {currencies.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
+                    <label htmlFor="session-price-currency" className="sr-only">
+                      Price currency
+                    </label>
+                    <div className="w-28 shrink-0">
+                      <SearchableSelect
+                        id="session-price-currency"
+                        value={priceCurrency}
+                        onChange={(next) => {
+                          setPriceCurrency(next);
+                          // Re-render the SAME amount in the new currency so
+                          // the symbol (and its decimals) follow the selection.
+                          // Only the display string is rebuilt — round-tripping
+                          // the string through a re-parse dropped the cents of
+                          // "$12.34" the moment NGN was selected, and they
+                          // never came back on switching away again.
+                          setPriceDisplay(
+                            formatMinorForInput(priceMinor, { currency: next }),
+                          );
+                        }}
+                        options={currencies.map((c) => ({ label: c, value: c }))}
+                        placeholder="Currency"
+                      />
+                    </div>
                     <MoneyInput
                       value={priceDisplay}
                       onChange={(display, minor) => {
@@ -975,7 +1033,8 @@ export default function ConsultationAvailabilityManager({
                       currency={priceCurrency}
                       placeholder="Not set"
                       aria-label="Session price"
-                      className="w-32 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      // py-3 matches the height of the currency picker beside it.
+                      className="w-32 rounded-(--r-2) border border-border bg-bg px-3 py-3 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
                   </div>
                 </div>

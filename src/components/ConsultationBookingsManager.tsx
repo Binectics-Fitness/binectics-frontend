@@ -6,11 +6,11 @@ import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { dualTimezoneLabel, formatLocal } from "@/utils/format";
 import { UserRole } from "@/lib/types";
 import {
+  bookingTypeName,
   consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
   type ConsultationSlot,
-  type ConsultationType,
 } from "@/lib/api/consultations";
 import { Calendar, CalendarDays, Clock, Globe2, RefreshCw } from "lucide-react";
 
@@ -35,9 +35,7 @@ export default function ConsultationBookingsManager({
   const [actioningBookingId, setActioningBookingId] = useState<string | null>(
     null,
   );
-  const [consultationTypes, setConsultationTypes] = useState<
-    ConsultationType[]
-  >([]);
+  const [typeNames, setTypeNames] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{
     text: string;
     type: "success" | "error";
@@ -81,9 +79,10 @@ export default function ConsultationBookingsManager({
   }, [bookingsFilter]);
 
   useEffect(() => {
-    consultationsService.getTypes({ includeInactive: true }).then((res) => {
+    // Own sessions + platform defaults: bookings may point at either.
+    consultationsService.getProviderTypeNames().then((res) => {
       if (res.success && res.data) {
-        setConsultationTypes(res.data);
+        setTypeNames(res.data);
       }
     });
   }, []);
@@ -242,7 +241,6 @@ export default function ConsultationBookingsManager({
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
 
-  const typeMap = new Map(consultationTypes.map((t) => [t.id, t.name]));
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -317,7 +315,7 @@ export default function ConsultationBookingsManager({
             <ul className="divide-y divide-border">
               {bookings.map((booking) => {
                 const typeName =
-                  typeMap.get(booking.consultationTypeId) || "Consultation";
+                  bookingTypeName(booking, typeNames) || "Consultation";
                 const startsAt = formatLocal(
                   booking.startsAt,
                   "EEE, MMM d • h:mm a",

@@ -6,10 +6,10 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { AsyncSpinner, BookingStatusBadge, Drawer } from "@/components/ds";
 import { BookingActionsPanel } from "@/components/BookingActionsPanel";
 import {
+  bookingTypeName,
   consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
-  type ConsultationType,
 } from "@/lib/api/consultations";
 import {
   clientDisplayName as clientName,
@@ -65,7 +65,8 @@ export default function DietitianConsultationsPage() {
   const load = useCallback(async () => {
     const [bookingsRes, typesRes] = await Promise.allSettled([
       consultationsService.getProviderBookings(),
-      consultationsService.getTypes({ includeInactive: true }),
+      // Own sessions + platform defaults: bookings may point at either.
+      consultationsService.getProviderTypeNames(),
     ]);
 
     let bookingsOk = false;
@@ -74,12 +75,7 @@ export default function DietitianConsultationsPage() {
       bookingsOk = true;
     }
     if (typesRes.status === "fulfilled" && typesRes.value.success && typesRes.value.data) {
-      setTypesById(
-        typesRes.value.data.reduce<Record<string, string>>((acc, type: ConsultationType) => {
-          acc[type.id] = type.name;
-          return acc;
-        }, {}),
-      );
+      setTypesById(typesRes.value.data);
     }
     // The list is only trustworthy when the bookings call itself succeeded —
     // a failure must never render as "no consultations".
@@ -124,7 +120,7 @@ export default function DietitianConsultationsPage() {
       if (!q) return true;
 
       const client = clientName(booking).toLowerCase();
-      const type = (typesById[booking.consultationTypeId] ?? "consultation").toLowerCase();
+      const type = (bookingTypeName(booking, typesById) ?? "consultation").toLowerCase();
       return client.includes(q) || type.includes(q);
     });
   }, [activeFilter, bookings, query, typesById]);
@@ -245,7 +241,7 @@ export default function DietitianConsultationsPage() {
                 <tr><td colSpan={5} className="px-4.5 py-6"><AsyncSpinner label="Loading consultations" /></td></tr>
               ) : (
                 filtered.map((c) => {
-                  const type = typesById[c.consultationTypeId] ?? "Consultation";
+                  const type = bookingTypeName(c, typesById) ?? "Consultation";
                   return (
                     <tr
                       key={c.id}
@@ -307,7 +303,7 @@ export default function DietitianConsultationsPage() {
               </div>
             </div>
 
-            <DetailRow label="Type">{typesById[selected.consultationTypeId] ?? "Consultation"}</DetailRow>
+            <DetailRow label="Type">{bookingTypeName(selected, typesById) ?? "Consultation"}</DetailRow>
             <DetailRow label="When">
               {fmtDateTime(selected.startsAt)} – {fmtTime(selected.endsAt)}
               <span className="font-mono text-[11.5px] ml-2" style={{ color: "var(--fg-3)" }}>({durationMins(selected)} min)</span>

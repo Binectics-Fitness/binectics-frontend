@@ -7,10 +7,10 @@ import { BookingActionsPanel } from "@/components/BookingActionsPanel";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import {
+  bookingTypeName,
   consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
-  type ConsultationType,
 } from "@/lib/api/consultations";
 import {
   clientDisplayName,
@@ -89,7 +89,8 @@ export default function TrainerSessionsListPage() {
 
     const [bookingRes, typesRes] = await Promise.allSettled([
       consultationsService.getProviderBookings(params),
-      consultationsService.getTypes({ includeInactive: true }),
+      // Own sessions + platform defaults: bookings may point at either.
+      consultationsService.getProviderTypeNames(),
     ]);
 
     let bookingsOk = false;
@@ -98,12 +99,7 @@ export default function TrainerSessionsListPage() {
       bookingsOk = true;
     }
     if (typesRes.status === "fulfilled" && typesRes.value.success && typesRes.value.data) {
-      setTypesById(
-        typesRes.value.data.reduce<Record<string, string>>((acc, item: ConsultationType) => {
-          acc[item.id] = item.name;
-          return acc;
-        }, {}),
-      );
+      setTypesById(typesRes.value.data);
     }
     // A failed request must never render as "no sessions".
     setNow(Date.now());
@@ -147,7 +143,7 @@ export default function TrainerSessionsListPage() {
     const q = query.trim().toLowerCase();
     return bookings.filter((b) => {
       const label = clientDisplayName(b);
-      const type = typesById[b.consultationTypeId] ?? "Consultation";
+      const type = bookingTypeName(b, typesById) ?? "Consultation";
 
       if (statusFilter !== "All" && bucketOf(b.status) !== statusFilter) {
         return false;
@@ -269,7 +265,7 @@ export default function TrainerSessionsListPage() {
               ) : (
                 filtered.map((s, i) => {
                   const label = clientDisplayName(s);
-                  const typeLabel = typesById[s.consultationTypeId] ?? "Consultation";
+                  const typeLabel = bookingTypeName(s, typesById) ?? "Consultation";
                   const note = s.notes?.trim() || "No notes";
 
                   return (
@@ -320,7 +316,7 @@ export default function TrainerSessionsListPage() {
               </div>
             </div>
 
-            <DetailRow label="Type">{typesById[selected.consultationTypeId] ?? "Consultation"}</DetailRow>
+            <DetailRow label="Type">{bookingTypeName(selected, typesById) ?? "Consultation"}</DetailRow>
             <DetailRow label="When">
               {fmtDateTime(selected.startsAt)} – {fmtTime(selected.endsAt)}
               <span className="font-mono text-[11.5px] ml-2" style={{ color: "var(--fg-3)" }}>({durationMins(selected)} min)</span>
