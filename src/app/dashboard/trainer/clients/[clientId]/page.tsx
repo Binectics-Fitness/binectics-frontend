@@ -187,7 +187,7 @@ export default function ClientDetailPage() {
               </span>
             </div>
             <div className="mt-2.5 text-[13px]" style={{ color: "var(--fg-3)" }}>
-              <strong style={{ color: "var(--ink)" }}>Goals</strong> {profile.goals.length > 0 ? profile.goals.join(" · ") : "No goals set"}
+              <strong style={{ color: "var(--ink)" }}>Goals</strong> {profile.goals?.length ? profile.goals.join(" · ") : "No goals set"}
             </div>
           </div>
         </div>

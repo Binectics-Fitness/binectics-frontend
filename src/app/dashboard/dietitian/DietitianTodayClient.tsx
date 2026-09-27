@@ -243,7 +243,7 @@ function DietitianTodayContent() {
                       <div className="min-w-0 flex-1">
                         <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{name}</div>
                         <div className="font-mono text-[12px] truncate mt-0.5" style={{ color: "var(--fg-3)" }}>
-                          {c.goals.length > 0 ? c.goals.slice(0, 2).join(" · ") : `Since ${format(new Date(c.created_at), "MMM yyyy")}`}
+                          {c.goals?.length ? c.goals.slice(0, 2).join(" · ") : `Since ${format(new Date(c.created_at), "MMM yyyy")}`}
                         </div>
                       </div>
                     </div>

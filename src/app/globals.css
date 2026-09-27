@@ -181,15 +181,31 @@ body {
   min-height: 100vh;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* Only the resets that were visibly broken live in a layer. Tailwind v4
+   puts utilities in a cascade layer, and a rule outside any layer beats
+   every layered rule regardless of specificity: unlayered,
+   `button { background: transparent }` blanked every bg-* on a <button>
+   (the availability switches and Save buttons rendered invisible), and
+   `a { color: inherit }` did the same to text-* on links.
+
+   The rest of the button reset stays unlayered on purpose. Layering it
+   too would switch on text size, font and colour classes that ~260
+   buttons carry but have never rendered with - a site-wide visual change
+   that needs its own pass, like the heading reset below. */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    background: transparent;
+  }
 }
 
 button {
   font-family: inherit;
   cursor: pointer;
-  background: transparent;
   color: inherit;
   font-size: inherit;
 }
@@ -208,6 +224,9 @@ select:user-invalid {
   box-shadow: 0 0 0 1px var(--danger);
 }
 
+/* Still unlayered, so margin and font-weight utilities on headings are
+   ignored. About 340 headings carry such classes today; layering this rule
+   would change spacing across the site, so it needs its own audit. */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
   letter-spacing: -0.022em;

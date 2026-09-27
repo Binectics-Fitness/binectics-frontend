@@ -11,7 +11,7 @@ export function BookSessionButton() {
   return (
     <Link
       href="/dashboard/trainer/settings"
-      className="btn-primary-v2 sm"
+      className="btn-primary-v2 sm shrink-0 whitespace-nowrap"
       style={{ textDecoration: "none" }}
     >
       Set availability

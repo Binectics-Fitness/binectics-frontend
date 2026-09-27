@@ -267,7 +267,7 @@ function ProgramFormModal({
         {loading ? (
           <AsyncSpinner size="page" label="Loading program" />
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-4 sm:p-6">
             {/* Meta */}
             <div className="flex flex-col gap-1.5">
               <FieldLabel>Program name <span style={{ color: "var(--danger)" }}>*</span></FieldLabel>
@@ -360,13 +360,15 @@ function ProgramFormModal({
 
               {form.phases.map((phase, pi) => (
                 <div key={pi} className="rounded-(--r-2) p-3.5 flex flex-col gap-3" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-                  <div className="flex items-center gap-2">
+                  {/* On phones the name takes the first line and days + controls
+                      wrap under it; a fixed-width row cut the inputs off. */}
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-[10px] tabular-nums w-5 shrink-0" style={{ color: "var(--fg-4)" }}>{pi + 1}</span>
                     <input
                       value={phase.name}
                       onChange={(e) => setPhase(pi, { name: e.target.value })}
                       placeholder={`Phase name, e.g. Remove`}
-                      className="h-9 flex-1 rounded-(--r-2) px-3 text-[13.5px]"
+                      className="h-9 min-w-0 flex-1 basis-[calc(100%-1.75rem)] sm:basis-0 rounded-(--r-2) px-3 text-[13.5px]"
                       style={{ ...fieldStyle, background: "var(--bg)" }}
                     />
                     <input
@@ -375,7 +377,7 @@ function ProgramFormModal({
                       value={phase.duration_days}
                       onChange={(e) => setPhase(pi, { duration_days: e.target.value })}
                       placeholder="days"
-                      className="h-9 w-[76px] rounded-(--r-2) px-3 text-[13px]"
+                      className="h-9 w-[76px] ml-7 sm:ml-0 rounded-(--r-2) px-3 text-[13px]"
                       style={{ ...fieldStyle, background: "var(--bg)", fontVariantNumeric: "tabular-nums" }}
                     />
                     <IconButton label="Move phase up" onClick={() => movePhase(pi, -1)} disabled={pi === 0}>
@@ -390,10 +392,10 @@ function ProgramFormModal({
                   </div>
 
                   {/* Blocks in this phase */}
-                  <div className="flex flex-col gap-2 pl-7">
+                  <div className="flex flex-col gap-2 sm:pl-7">
                     {phase.blocks.map((block, bi) => (
                       <div key={bi} className="rounded-(--r-2) p-3 flex flex-col gap-2" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <div className="w-[130px] shrink-0">
                             <SearchableSelect
                               value={block.type}
@@ -412,12 +414,14 @@ function ProgramFormModal({
                             value={block.title}
                             onChange={(e) => setBlock(pi, bi, { title: e.target.value })}
                             placeholder="Task title"
-                            className="h-9 flex-1 rounded-(--r-2) px-3 text-[13px]"
+                            className="order-last h-9 min-w-0 basis-full sm:order-none sm:basis-0 sm:flex-1 rounded-(--r-2) px-3 text-[13px]"
                             style={fieldStyle}
                           />
-                          <IconButton label="Remove task" onClick={() => removeBlock(pi, bi)}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
-                          </IconButton>
+                          <div className="ml-auto sm:ml-0">
+                            <IconButton label="Remove task" onClick={() => removeBlock(pi, bi)}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                            </IconButton>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -598,7 +602,7 @@ function ProgramFormModal({
                       value={goal.label}
                       onChange={(e) => setGoal(gi, { label: e.target.value })}
                       placeholder="Goal, e.g. Lose 4kg"
-                      className="h-9 flex-1 rounded-(--r-2) px-3 text-[13px]"
+                      className="h-9 min-w-0 flex-1 rounded-(--r-2) px-3 text-[13px]"
                       style={{ ...fieldStyle, background: "var(--bg)" }}
                     />
                     <IconButton label="Remove goal" onClick={() => removeGoal(gi)}>

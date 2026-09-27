@@ -287,11 +287,11 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
           <div className="grid lg:grid-cols-[1fr_1fr] gap-3.5">
             <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Goals</h3>
-              {client.goals.length === 0 ? (
+              {!client.goals?.length ? (
                 <EmptySlate message="No goals recorded." mt="mt-0" />
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {client.goals.map((g) => (
+                  {(client.goals ?? []).map((g) => (
                     <span key={g} className="inline-flex items-center px-2.5 py-1 rounded-(--r-1) text-[12.5px]" style={{ background: "var(--bg-2)", color: "var(--ink)", border: "1px solid var(--border)" }}>{g}</span>
                   ))}
                 </div>

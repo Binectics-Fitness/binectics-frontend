@@ -507,7 +507,7 @@ export default function ProfileSettingsPage() {
                   !orgCurrency ||
                   orgCurrency === (currentOrg.currency || "USD")
                 }
-                className="h-12 rounded-lg bg-signal-soft0 px-6 text-sm font-semibold text-white transition-colors hover:bg-signal/85 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-12 rounded-lg bg-signal px-6 text-sm font-semibold text-ink transition-colors hover:bg-signal/85 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSavingCurrency ? "Saving..." : "Save Currency"}
               </button>

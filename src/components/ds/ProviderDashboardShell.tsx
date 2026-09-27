@@ -76,22 +76,31 @@ export function ProviderDashboardShell({
 
       {/* Mobile content (no sidebar grid) */}
       <div className="lg:hidden">
+        {/* One line at any width: the header is a fixed h-12, and a long
+            account name used to wrap the breadcrumb, which wrapped the
+            actions out of the bar and over the page. On phones the root
+            (the user's own name) is dropped and the crumb truncates. */}
         <header
-          className="flex items-center justify-between h-12 px-5 sticky top-14 z-10"
+          className="flex items-center justify-between gap-3 h-12 px-5 sticky top-14 z-10"
           style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
         >
-          <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
+          <div
+            className="min-w-0 flex-1 truncate whitespace-nowrap text-[13px]"
+            style={{ color: "var(--fg-3)" }}
+          >
             {breadcrumbRoot ? (
-              <>
+              <span className="hidden sm:inline">
                 <span className="font-medium" style={{ color: "var(--ink)" }}>
                   {breadcrumbRoot.label}
                 </span>
                 <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
-              </>
+              </span>
             ) : null}
-            <span>{crumb}</span>
+            <span className="font-medium sm:font-normal" style={{ color: "var(--ink)" }}>
+              {crumb}
+            </span>
           </div>
-          {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
+          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
         </header>
         <main className="flex flex-col gap-5 p-4 flex-1">{children}</main>
       </div>
