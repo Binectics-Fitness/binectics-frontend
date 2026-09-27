@@ -127,13 +127,19 @@ function BookingPageInner() {
     setSlotsError(null);
     setSelectedSlot(null);
     try {
-      const from = new Date(`${selectedDate}T00:00:00.000Z`);
-      const to = new Date(from.getTime() + 24 * 60 * 60 * 1000);
+      // The API takes calendar days (YYYY-MM-DD) and 400s on a timestamp.
+      // Sending ISO timestamps here meant no slot ever showed: every day
+      // read "No availability", however open the provider's week was.
       const res = await consultationsService.getProviderSlots(providerIdFromListing(listing), {
         consultationTypeId: selectedTypeId,
-        dateFrom: from.toISOString(),
-        dateTo: to.toISOString(),
+        dateFrom: selectedDate,
+        dateTo: selectedDate,
       });
+      if (!res.success) {
+        setSlotsError(res.message ?? "Couldn't load available times. Try again.");
+        setSlots([]);
+        return;
+      }
       setSlots(res.data ?? []);
     } catch (err) {
       setSlotsError(err instanceof Error ? err.message : "Couldn't load slots");
