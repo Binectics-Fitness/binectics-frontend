@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { openPaystack } from "@/lib/payments/paystackInline";
 import {
   getPaymentGateway,
   getStripe,
@@ -22,11 +23,6 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import DashboardLoading from "@/components/DashboardLoading";
 import { Button } from "@/components/Button";
 
-declare global {
-  interface Window {
-    PaystackPop?: any;
-  }
-}
 import {
   CardElement,
   Elements,
@@ -142,54 +138,29 @@ function PaystackButton({
   const effectivePublicKey = publicKeyOverride || config?.publicKey;
 
   const handleClick = () => {
-    if (!effectivePublicKey) {
+    if (!effectivePublicKey || !config) {
       onError("Paystack is not configured");
       return;
     }
     setIsProcessing(true);
-    // Dynamically load Paystack script if not present
-    if (!window.PaystackPop) {
-      const script = document.createElement("script");
-      script.src = "https://js.paystack.co/v1/inline.js";
-      script.async = true;
-      script.onload = () => launchPaystack();
-      script.onerror = () => {
-        setIsProcessing(false);
-        onError("Failed to load Paystack script");
-      };
-      document.body.appendChild(script);
-    } else {
-      launchPaystack();
-    }
-  };
-
-  function launchPaystack() {
-    if (!effectivePublicKey || !config) {
-      setIsProcessing(false);
-      onError("Paystack is not configured");
-      return;
-    }
-    if (!window.PaystackPop) {
-      setIsProcessing(false);
-      onError("Paystack script not loaded");
-      return;
-    }
-    const handler = window.PaystackPop.setup({
+    // config.amount is already in the smallest unit (buildPaystackConfig
+    // scales it); the popup loader is the one the booking payment uses.
+    openPaystack({
       key: effectivePublicKey,
       email: config.email,
-      amount: config.amount,
+      amountMinor: config.amount,
       currency: config.currency,
-      ref: config.reference,
-      callback: function (response: any) {
+      reference: config.reference,
+    })
+      .then((result) => {
         setIsProcessing(false);
-        onSuccess(`paystack_${response.reference}`);
-      },
-      onClose: function () {
+        if (result.closed === "callback") onSuccess(`paystack_${result.reference}`);
+      })
+      .catch((err: unknown) => {
         setIsProcessing(false);
-      },
-    });
-    handler.openIframe();
-  }
+        onError(err instanceof Error ? err.message : "Failed to load Paystack script");
+      });
+  };
 
   return (
     <Button
