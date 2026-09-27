@@ -490,8 +490,12 @@ export default function FormsPage() {
                           {form.is_published ? "published" : "draft"}
                         </span>
                       </div>
-                      <div className="font-mono text-xs tabular-nums" style={{ color: "var(--fg-3)" }}>
-                        {responseCounts[form._id] ?? 0} responses · {fmtDate(form.created_at)}
+                      <div className="font-mono text-sm tabular-nums" style={{ color: "var(--fg-3)" }}>
+                        {(() => {
+                          const n = responseCounts[form._id] ?? 0;
+                          return `${n} ${n === 1 ? "response" : "responses"}`;
+                        })()}{" "}
+                        · {fmtDate(form.created_at)}
                       </div>
                       <div className="flex flex-wrap gap-2">{renderFormActions(form)}</div>
                     </li>
