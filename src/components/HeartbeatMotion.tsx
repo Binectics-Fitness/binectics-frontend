@@ -34,7 +34,7 @@ const HUBS = [
     brand: false,
     tipTranslate: "19, 60",
     tipTitle: "London · GB",
-    stats: ["GBP", "Stripe rails"],
+    stats: ["GBP", "Coming soon"],
     live: "Apple Pay · Google Pay",
   },
   {
@@ -48,7 +48,7 @@ const HUBS = [
     brand: false,
     tipTranslate: "183, 151",
     tipTitle: "Lagos · NG",
-    stats: ["NGN", "Paystack · Flutterwave"],
+    stats: ["NGN", "Paystack"],
     live: "Launch market",
   },
   {
@@ -62,7 +62,7 @@ const HUBS = [
     brand: false,
     tipTranslate: "339, 106",
     tipTitle: "Dubai · AE",
-    stats: ["AED", "Stripe rails"],
+    stats: ["AED", "Coming soon"],
     live: "Launch market",
   },
   {
@@ -90,7 +90,7 @@ const HUBS = [
     brand: true,
     tipTranslate: "319, 268",
     tipTitle: "Nairobi · KE",
-    stats: ["KES", "Paystack · Flutterwave"],
+    stats: ["KES", "Paystack"],
     live: "M-Pesa ready",
   },
 ];
