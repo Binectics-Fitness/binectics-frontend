@@ -40,6 +40,16 @@ describe("formatCurrency", () => {
     expect(formatCurrency(12.5, "USD", "en-US")).toContain(".50");
     expect(formatCurrency(1234.5, "USD", "en-US")).toContain(".50");
   });
+
+  it("never guesses a currency: a missing one renders a bare number", () => {
+    expect(formatCurrency(1200, null)).toBe("1,200");
+    expect(formatCurrency(12.5, undefined)).toBe("12.50");
+    expect(formatCurrency(1200, "")).not.toContain("$");
+  });
+
+  it("shows three decimals for a fractional three-decimal currency", () => {
+    expect(formatCurrency(1.25, "KWD", "en-US")).toMatch(/1\.250/);
+  });
 });
 
 describe("formatRegionPrice", () => {

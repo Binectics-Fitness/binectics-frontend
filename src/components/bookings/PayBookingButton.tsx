@@ -85,7 +85,7 @@ export function PayBookingButton({
   const configured = !!paystackPublicKey();
   if (!isPayable(booking) || !charge) return null;
 
-  const amountLabel = formatCurrency(minorToMajor(charge.amountMinor), charge.currency);
+  const amountLabel = formatCurrency(minorToMajor(charge.amountMinor, charge.currency), charge.currency);
 
   const settle = async () => {
     // First ask the API to verify with the gateway directly; if the webhook

@@ -179,7 +179,8 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
   }, []);
 
   // ── Derived ────────────────────────────────────────────────────────────────
-  const orgCurrency = currentOrg?.currency ?? "USD";
+  // The org's own currency, never a guessed one; with none, zero renders bare.
+  const orgCurrency = currentOrg?.currency ?? "";
   const zero = fmtMoney(0, orgCurrency);
 
   const tiles = useMemo(() => {
@@ -273,7 +274,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
                     {chart.points.map((p) => (
                       <div
                         key={p.date}
-                        title={`${p.date}: ${fmtMoney(minorToMajor(p.revenue_minor), p.currency)}`}
+                        title={`${p.date}: ${fmtMoney(minorToMajor(p.revenue_minor, p.currency), p.currency)}`}
                         className="flex-1 rounded-t-[2px] min-h-[2px]"
                         style={{ height: `${Math.max(2, (p.revenue_minor / chart.max) * 80)}px`, background: "var(--signal)" }}
                       />
@@ -333,7 +334,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
                             </td>
                             <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                               <span className="font-mono text-[12px]" style={{ color: debit ? "var(--danger)" : "var(--signal-ink)", fontVariantNumeric: "tabular-nums" }}>
-                                {debit ? "−" : "+"}{fmtMoney(minorToMajor(tx.amount_minor), tx.currency)}
+                                {debit ? "−" : "+"}{fmtMoney(minorToMajor(tx.amount_minor, tx.currency), tx.currency)}
                               </span>
                             </td>
                           </tr>
@@ -417,7 +418,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
                     {estimatedEntries.map(([currency, minor]) => (
                       <div key={currency} className="rounded-(--r-2) px-3.5 py-2.5" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
                         <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>~ estimate · {currency}</div>
-                        <div className="text-[18px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fmtMoney(minorToMajor(minor), currency)}</div>
+                        <div className="text-[18px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fmtMoney(minorToMajor(minor, currency), currency)}</div>
                       </div>
                     ))}
                   </div>

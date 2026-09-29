@@ -461,7 +461,7 @@ function CheckoutContent() {
    * amount and applies its own gateway's scaling (buildPaystackConfig does the
    * ×100 itself), so handing them `price_minor` would charge 100× the plan.
    */
-  const priceMajor = minorToMajor(plan.price_minor);
+  const priceMajor = minorToMajor(plan.price_minor, plan.currency);
 
   return (
     <div className="min-h-screen bg-bg py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -550,7 +550,7 @@ function CheckoutContent() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-fg">Total</span>
                   <span className="text-2xl font-black text-ink">
-                    {isFree ? "Free" : formatPrice(minorToMajor(plan.price_minor), plan.currency)}
+                    {isFree ? "Free" : formatPrice(minorToMajor(plan.price_minor, plan.currency), plan.currency)}
                   </span>
                 </div>
               </div>

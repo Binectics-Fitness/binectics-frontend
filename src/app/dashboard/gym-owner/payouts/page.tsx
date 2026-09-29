@@ -52,7 +52,7 @@ export default function GymPayoutsPage() {
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
                 <strong style={{ color: "var(--ink)" }}>{scheduleLabel}</strong>
                 {/* minimum_payout_amount_minor is MINOR units; fmtMoney takes major. */}
-                {" · "}minimum {fmtMoney(minorToMajor(schedule?.minimum_payout_amount_minor ?? 0), org?.currency)}
+                {" · "}minimum {fmtMoney(minorToMajor(schedule?.minimum_payout_amount_minor ?? 0, org?.currency ?? ""), org?.currency)}
                 {" · "}{schedule?.hold_period_days ?? 0}-day hold
               </p>
             ) : (

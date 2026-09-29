@@ -54,7 +54,7 @@ export function BillingClient() {
     // Summed in MINOR units and converted once per currency at the end, so the
     // total is an exact integer count of kobo rather than a float accumulation.
     subs.forEach((s) => map.set(s.currency, (map.get(s.currency) ?? 0) + s.amount_paid_minor));
-    return [...map.entries()].map(([cur, minor]) => formatCurrencyAmount(minorToMajor(minor), cur)).join(" + ") || "-";
+    return [...map.entries()].map(([cur, minor]) => formatCurrencyAmount(minorToMajor(minor, cur), cur)).join(" + ") || "-";
   }, [subs]);
 
   const nextRenewal = useMemo(() => {
@@ -149,7 +149,7 @@ export function BillingClient() {
                 )}
               </div>
               <span className="font-mono text-[13.5px] shrink-0" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrencyAmount(minorToMajor(s.amount_paid_minor), s.currency)}
+                {formatCurrencyAmount(minorToMajor(s.amount_paid_minor, s.currency), s.currency)}
               </span>
               {/* Cancelling is offered wherever the membership is still live —
                   a past_due member can still choose to stop, and a paused one

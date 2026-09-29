@@ -358,7 +358,7 @@ export default function MarketplacePage() {
                 const tags = listingTags(l);
                 const status = listingStatus(l);
                 const price = l.price_from_minor && l.currency
-                  ? formatCurrency(minorToMajor(l.price_from_minor), l.currency)
+                  ? formatCurrency(minorToMajor(l.price_from_minor, l.currency), l.currency)
                   : l.price_label || "–";
                 const per = l.price_label?.replace(/^From\s+\S+\s*/, "") || "plan";
                 const isVerified = l.verification_badge && l.verification_badge !== "none";

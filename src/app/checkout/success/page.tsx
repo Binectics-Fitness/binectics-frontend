@@ -115,7 +115,7 @@ function SuccessContent() {
                   {/* price_minor is MINOR units; formatPrice takes major. */}
                   {plan.price_minor === 0
                     ? "Free"
-                    : formatPrice(minorToMajor(plan.price_minor), plan.currency)}
+                    : formatPrice(minorToMajor(plan.price_minor, plan.currency), plan.currency)}
                 </span>
               </div>
             </div>

@@ -334,7 +334,7 @@ function PlanCard({
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[22px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
-            {fmtMoney(minorToMajor(plan.price_minor), plan.currency)}
+            {fmtMoney(minorToMajor(plan.price_minor, plan.currency), plan.currency)}
           </div>
           <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
             {plan.duration_days}d

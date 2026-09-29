@@ -194,7 +194,7 @@ function BookingPaymentPanel({
           </span>
           <span className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
             {booking.payment.amountMinor != null && booking.payment.currency
-              ? formatCurrency(minorToMajor(booking.payment.amountMinor), booking.payment.currency)
+              ? formatCurrency(minorToMajor(booking.payment.amountMinor, booking.payment.currency), booking.payment.currency)
               : ""}
           </span>
         </div>

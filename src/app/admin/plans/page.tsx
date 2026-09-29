@@ -5,6 +5,8 @@ import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { AsyncSpinner } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
+import { majorToMinor, minorToMajor } from "@/lib/money/minorMoney";
+import { formatCurrency } from "@/utils/format";
 import {
   adminService,
   type AdminPlan,
@@ -171,8 +173,8 @@ export default function AdminPlansPage() {
         market_code: priceDraft.market_code.trim().toUpperCase() || "GLOBAL",
         interval: priceDraft.interval,
         currency: priceDraft.currency.trim().toUpperCase(),
-        amount_minor: Math.round(amount * 100),
-        overage_per_seat_minor: Math.round(overage * 100),
+        amount_minor: majorToMinor(amount, priceDraft.currency),
+        overage_per_seat_minor: majorToMinor(overage, priceDraft.currency),
         is_active: true,
         // A Paystack plan code makes the charge recurring; omitted =
         // one-shot payment (tier still activates, but never renews).
@@ -416,12 +418,12 @@ export default function AdminPlansPage() {
                       <div key={pr._id} className="flex flex-wrap items-center gap-3 rounded-(--r-2) px-3 py-2" style={{ background: "var(--bg-2)" }}>
                         <span className="font-mono text-[11px] uppercase" style={{ color: "var(--fg-3)" }}>{pr.market_code}</span>
                         <span className="text-[13px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                          {(pr.amount_minor / 100).toLocaleString()} {pr.currency}
+                          {formatCurrency(minorToMajor(pr.amount_minor, pr.currency), pr.currency)}
                         </span>
                         <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>/ {pr.interval}</span>
                         {pr.overage_per_seat_minor != null && (
                           <span className="text-[12px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }} title="Per-seat overage rate">
-                            +{(pr.overage_per_seat_minor / 100).toLocaleString()} {pr.currency}/seat over cap
+                            +{formatCurrency(minorToMajor(pr.overage_per_seat_minor, pr.currency), pr.currency)}/seat over cap
                           </span>
                         )}
                         <span className="font-mono text-[10px] uppercase" style={{ color: pr.gateway_prices?.length ? "var(--signal-ink)" : "var(--fg-4)" }}>

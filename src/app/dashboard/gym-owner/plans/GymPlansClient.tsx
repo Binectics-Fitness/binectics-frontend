@@ -163,7 +163,7 @@ export function GymPlansClient() {
                   </div>
                 </div>
                 <span className="font-mono text-[15px] shrink-0" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                  {fmtMoney(minorToMajor(p.price_minor), p.currency)} <small className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>{perLabel(p)}</small>
+                  {fmtMoney(minorToMajor(p.price_minor, p.currency), p.currency)} <small className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>{perLabel(p)}</small>
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
                   <button className="btn-ghost-v2 sm" onClick={() => { setEditingId(editingId === p._id ? null : p._id); setAdding(false); }}>
