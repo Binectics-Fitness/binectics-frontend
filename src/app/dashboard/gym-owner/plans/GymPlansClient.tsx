@@ -1,5 +1,6 @@
 "use client";
 
+import { writeErrorMessage } from "@/lib/currencies/helpers";
 import { useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -84,7 +85,7 @@ export function GymPlansClient() {
     setError(null);
     const res = await create.mutateAsync(data);
     if (res.success) setAdding(false);
-    else setError(res.message || "Couldn't create the plan.");
+    else setError(writeErrorMessage(res, "Couldn't create the plan."));
   };
 
   const onDelete = (plan: MarketplaceMembershipPlan) => {
@@ -120,7 +121,7 @@ export function GymPlansClient() {
       {adding && (
         <section className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
           <h2 className="text-[16px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>New plan</h2>
-          <PlanForm saving={create.isPending} error={error} defaultCurrency={currentOrg?.currency ?? "USD"} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create plan" />
+          <PlanForm saving={create.isPending} error={error} defaultCurrency={currentOrg?.currency ?? ""} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create plan" />
         </section>
       )}
 
@@ -200,7 +201,7 @@ function EditPlanForm({ plan, orgId, onDone }: { plan: MarketplaceMembershipPlan
     setError(null);
     const res = await update.mutateAsync({ planId: plan._id, data });
     if (res.success) onDone();
-    else setError(res.message || "Couldn't save the plan.");
+    else setError(writeErrorMessage(res, "Couldn't save the plan."));
   };
   return <PlanForm initial={plan} saving={update.isPending} error={error} defaultCurrency={plan.currency} onSubmit={(d) => void onSave(d)} onCancel={onDone} />;
 }
@@ -250,6 +251,8 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
 
   const submit = () => {
     if (!name.trim()) return setLocalError("Give the plan a name.");
+    // Plans price in the org's default currency; there is no guessed one.
+    if (!defaultCurrency) return setLocalError("Choose your default currency in Settings before adding a plan.");
     // A non-empty field that parses to null is a price the wire cannot carry
     // exactly, not a zero — refuse it rather than saving a rounded amount.
     if (price === "" || priceMinor === null || priceMinor < 0) return setLocalError("Enter a valid price.");
@@ -320,7 +323,7 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
           <MoneyInput
             value={price}
             currency={defaultCurrency}
-            aria-label={`Price (${defaultCurrency})`}
+            aria-label={defaultCurrency ? `Price (${defaultCurrency})` : "Price"}
             placeholder="0"
             onChange={(display, minor) => { setPrice(display); setPriceMinor(minor); }}
             className={INPUT_CLASS}
