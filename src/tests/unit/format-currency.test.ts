@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import { formatCurrency, formatSignedCurrency } from "@/utils/format";
-import { formatRegionPrice } from "@/lib/constants/regions";
+import {
+  formatCurrencyAmount,
+  formatRegionPrice,
+  getConfigForCurrency,
+  getRegionForCountry,
+  MARKET_PRICES,
+  SUPPORTED_CURRENCIES,
+  SUPPORTED_REGIONS,
+} from "@/lib/constants/regions";
+import { PaymentGateway } from "@/lib/types";
 
 describe("formatCurrency", () => {
   it("uses narrow currency symbols when available", () => {
@@ -56,5 +65,34 @@ describe("formatRegionPrice", () => {
   it("rounds fractional zero-decimal currency amounts to whole units", () => {
     expect(formatRegionPrice(475.5, "NGN", "en-NG")).not.toContain(".");
     expect(formatRegionPrice(250.25, "KES", "en-KE")).not.toContain(".");
+  });
+});
+
+describe("Ghana region", () => {
+  it("resolves GH to cedis on Paystack", () => {
+    expect(getRegionForCountry("gh")).toMatchObject({
+      currencyCode: "GHS",
+      locale: "en-GH",
+      gateway: PaymentGateway.PAYSTACK,
+      symbol: "GH₵",
+      regionName: "Ghana",
+    });
+    expect(getConfigForCurrency("GHS").currencyCode).toBe("GHS");
+  });
+
+  it("is offered in the region selector and the org currency picker", () => {
+    expect(SUPPORTED_REGIONS.map((r) => r.code)).toContain("GH");
+    expect(SUPPORTED_CURRENCIES.map((c) => c.currencyCode)).toContain("GHS");
+  });
+
+  it("has a market price for every plan tier", () => {
+    for (const tier of Object.values(MARKET_PRICES)) {
+      expect(tier.GHS).toBeGreaterThan(0);
+    }
+  });
+
+  it("formats cedi amounts with the GH₵ symbol", () => {
+    expect(formatCurrencyAmount(450, "GHS")).toBe("GH₵450");
+    expect(formatCurrencyAmount(450.5, "GHS")).toBe("GH₵450.50");
   });
 });

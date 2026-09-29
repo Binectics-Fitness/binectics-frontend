@@ -12,7 +12,7 @@ import LandingPricing from "@/components/LandingPricing";
 export const metadata: Metadata = {
   title: "Binectics, the copilot your fitness business runs on",
   description:
-    "AI-drafted client summaries, weekly reports, and program updates, plus payments in 8 currencies and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
+    "AI-drafted client summaries, weekly reports, and program updates, plus payments in 9 currencies and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
   alternates: { canonical: "/" },
 };
 
@@ -36,7 +36,7 @@ const faqItems = [
   { q: "Does the AI send anything to my clients directly?", a: "No. Every AI output is a draft. Nothing reaches a client until you review it, edit it if you want, and press send. Sent reports carry an “AI-assisted, reviewed by you” note, and there is a full audit trail." },
   { q: "Is my client data used to train AI models?", a: "No. Generation runs only on your own clients’ data, scoped to your account, and is never used to train models or shared across providers without explicit opt-in. Voice notes are deleted after transcription." },
   { q: "How is Binectics different from a class-booking app?", a: "Class-booking apps point a member at one studio. Binectics is the rails underneath: an AI copilot for client work, payments, check-ins, client health, journals, plans, and reviews, for gyms, trainers, and dietitians, in one place." },
-  { q: "Which countries and currencies are supported?", a: "Launching with payment support in 50+ countries and eight currencies (USD, EUR, GBP, NGN, KES, ZAR, AED, INR). Payments route automatically, Stripe for USD / EUR / GBP / AED / INR, Paystack for NGN / KES / ZAR, and Flutterwave across NGN / GHS / KES / TZS / UGX." },
+  { q: "Which countries and currencies are supported?", a: "Launching with payment support in 50+ countries and nine currencies (USD, EUR, GBP, NGN, GHS, KES, ZAR, AED, INR). Payments route automatically, Stripe for USD / EUR / GBP / AED / INR, Paystack for NGN / GHS / KES / ZAR, and Flutterwave across NGN / GHS / KES / TZS / UGX." },
   { q: "When can I start?", a: "Early access is open now. Founding-cohort providers get hands-on onboarding, early-access pricing that stays locked after launch, and a direct line to the team building the copilot. General availability follows in 2026." },
   { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents, business registration, certifications, identity, and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
   { q: "Is my data secure?", a: "All data is encrypted at rest and in transit. Payment credentials are handled by PCI-compliant processors (Stripe, Paystack, Flutterwave), we never store card numbers. Infrastructure runs on Azure with SOC 2-aligned controls, automated backups, and region-isolated databases." },
@@ -104,7 +104,7 @@ export default function Home() {
             <p className="text-[16px] sm:text-[19px] text-fg-2 max-w-[580px] mt-5 sm:mt-7 leading-relaxed">
               Whether you coach ten clients or run three locations, Binectics drafts the
               client summaries, weekly reports, and program updates from the data your
-              clients already log, and runs your payments in 8 currencies. You review,
+              clients already log, and runs your payments in 9 currencies. You review,
               send, and get back to the floor.
             </p>
 
@@ -402,7 +402,7 @@ export default function Home() {
               Transparent pricing.
             </h2>
             <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed">
-              Start free with three AI summaries a month. Upgrade when the drafts win you over, local pricing in 8 currencies, no lock-ins. Founding-cohort pricing stays locked after launch.
+              Start free with three AI summaries a month. Upgrade when the drafts win you over, local pricing in 9 currencies, no lock-ins. Founding-cohort pricing stays locked after launch.
             </p>
           </div>
         </ScrollReveal>

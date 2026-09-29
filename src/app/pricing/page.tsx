@@ -30,14 +30,14 @@ function buildProviderPlans(fmt: (amount: number) => string, period: BillingPeri
 function buildMemberPlans(fmt: (amount: number) => string, period: BillingPeriod, monthlyEq: (tier: PlanTier) => string): PricingPlan[] {
   const isAnnual = period === "annual";
   return [
-    { name: "Member", meta: "For everyone who books", price: "Free", priceSub: "account", text: true, tagline: "No subscription. You only pay for what you book. The 5% platform fee is shown clearly at checkout, never hidden.", cta: "Create account →", divider: "Includes", features: ["Unlimited bookings", "QR check‑in & streak tracking", "Messaging with your providers", "Workout, weight, and meal logs", "One‑click refund flow if something goes wrong", "Supported in 50+ countries, 8 currencies"] },
+    { name: "Member", meta: "For everyone who books", price: "Free", priceSub: "account", text: true, tagline: "No subscription. You only pay for what you book. The 5% platform fee is shown clearly at checkout, never hidden.", cta: "Create account →", divider: "Includes", features: ["Unlimited bookings", "QR check‑in & streak tracking", "Messaging with your providers", "Workout, weight, and meal logs", "One‑click refund flow if something goes wrong", "Supported in 50+ countries, 9 currencies"] },
     { name: "Premium", meta: "For frequent bookers", price: monthlyEq("premium"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: "Waive the platform fee on every booking, plus priority support and early access to new providers in your city.", cta: "Join the waitlist", featured: true, badge: isAnnual ? "Save 2 months" : "Coming soon", divider: "Everything in Member, plus", features: ["0% platform fee on all bookings", "Priority booking on full classes", "Early access to new verified providers", "Priority human support · 1h SLA", "Cross‑city portability when you travel"] },
     { name: "Family", meta: "Up to 5 people", price: monthlyEq("family"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: "One account, five members. Share bookings, manage kids' schedules, see everyone's check‑ins in one feed.", cta: "Join waitlist →", ink: true, divider: "Everything in Premium, plus", features: ["Up to 5 family members", "Single billing across the family", "Youth profiles with guardian controls", "Joint training plans (siblings, couples)", "Shared streak leaderboard"] },
   ];
 }
 
 const EXAMPLE_SESSION: Record<CurrencyCode, number> = {
-  USD: 80, GBP: 65, EUR: 70, NGN: 25_000, KES: 5_000, ZAR: 1_200, AED: 250, INR: 3_000,
+  USD: 80, GBP: 65, EUR: 70, NGN: 25_000, GHS: 300, KES: 5_000, ZAR: 1_200, AED: 250, INR: 3_000,
 };
 
 const GATEWAY_INFO: Record<CurrencyCode, { name: string; pct: number; flat: number }> = {
@@ -45,11 +45,18 @@ const GATEWAY_INFO: Record<CurrencyCode, { name: string; pct: number; flat: numb
   GBP: { name: "Stripe", pct: 0.015, flat: 0.20 },
   EUR: { name: "Stripe", pct: 0.014, flat: 0.25 },
   NGN: { name: "Paystack", pct: 0.015, flat: 100 },
+  GHS: { name: "Paystack", pct: 0.0195, flat: 0 },
   KES: { name: "Flutterwave", pct: 0.02, flat: 0 },
   ZAR: { name: "Paystack", pct: 0.015, flat: 1 },
   AED: { name: "Stripe", pct: 0.024, flat: 0 },
   INR: { name: "Razorpay", pct: 0.02, flat: 0 },
 };
+
+/** "1.5", "2.0", "1.95": one decimal unless the rate needs two (Paystack Ghana's 1.95%). */
+function pctLabel(pct: number): string {
+  const basisPoints = Math.round(pct * 10_000);
+  return (basisPoints / 100).toFixed(basisPoints % 10 ? 2 : 1);
+}
 
 function buildFeeRows(currency: CurrencyCode, fmt: (n: number) => string) {
   const session = EXAMPLE_SESSION[currency];
@@ -61,7 +68,7 @@ function buildFeeRows(currency: CurrencyCode, fmt: (n: number) => string) {
     rows: [
       { nm: "Session price", sub: "set by provider", member: fmt(session), provider: fmt(session), to: "Provider" },
       { nm: "Platform fee", sub: "5% · member side", member: `+ ${fmt(platform)}`, provider: "-", to: "Binectics" },
-      { nm: "Gateway fee", sub: `${gw.name} · ${(gw.pct * 100).toFixed(1)}%${gw.flat ? ` + ${fmt(gw.flat)}` : ""}`, member: `+ ${fmt(gwFee)}`, provider: "-", to: gw.name },
+      { nm: "Gateway fee", sub: `${gw.name} · ${pctLabel(gw.pct)}%${gw.flat ? ` + ${fmt(gw.flat)}` : ""}`, member: `+ ${fmt(gwFee)}`, provider: "-", to: gw.name },
     ],
     totalMember: fmt(total),
     totalProvider: fmt(session),
@@ -100,6 +107,7 @@ const COMPARE = [
 const REGIONS = [
   { country: "South Africa", code: "ZA · ZAR", gateway: "Paystack", fee: "1.5% + R 1" },
   { country: "Nigeria", code: "NG · NGN", gateway: "Paystack", fee: "1.5% + ₦100" },
+  { country: "Ghana", code: "GH · GHS", gateway: "Paystack", fee: "1.95%" },
   { country: "Kenya", code: "KE · KES", gateway: "M‑Pesa · Flutterwave", fee: "2.0%" },
   { country: "United Kingdom", code: "GB · GBP", gateway: "Stripe", fee: "1.5% + 20p" },
   { country: "United States", code: "US · USD", gateway: "Stripe", fee: "2.9% + 30¢" },
@@ -267,7 +275,7 @@ export default function PricingPage() {
       {/* Regional pricing — 4-col cards */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-10 sm:py-16" style={{ borderBottom: "1px solid var(--border)" }}>
         <h2 className="text-[40px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>The same deal, in every country.</h2>
-        <p className="text-[15.5px] max-w-[56ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>52 countries · 8 currencies. We route payments through the gateway that works best where you are, the percentage we take stays the same.</p>
+        <p className="text-[15.5px] max-w-[56ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>52 countries · 9 currencies. We route payments through the gateway that works best where you are, the percentage we take stays the same.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
           {REGIONS.map((r) => (
             <div key={r.country} className="flex flex-col gap-2.5 rounded-(--r-3)" style={{ padding: "18px 20px", border: "1px solid var(--border)", background: "var(--bg)" }}>

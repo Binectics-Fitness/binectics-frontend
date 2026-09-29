@@ -530,7 +530,7 @@ export default function HeartbeatMotion() {
               fontWeight: 600,
             }}
           >
-            8 currencies
+            9 currencies
           </span>
         </div>
       </div>

@@ -65,7 +65,7 @@ const REGIONS = [
   { flag: "🇿🇦", country: "South Africa", currency: "ZAR", gateway: "Paystack", settlement: "T+1" },
   { flag: "🇳🇬", country: "Nigeria", currency: "NGN", gateway: "Paystack", settlement: "T+1" },
   { flag: "🇰🇪", country: "Kenya", currency: "KES", gateway: "Flutterwave", settlement: "T+2" },
-  { flag: "🇬🇭", country: "Ghana", currency: "GHS", gateway: "Flutterwave", settlement: "T+2" },
+  { flag: "🇬🇭", country: "Ghana", currency: "GHS", gateway: "Paystack", settlement: "T+1" },
   { flag: "🇬🇧", country: "United Kingdom", currency: "GBP", gateway: "Stripe", settlement: "T+2" },
   { flag: "🇺🇸", country: "United States", currency: "USD", gateway: "Stripe", settlement: "T+2" },
   { flag: "🇦🇪", country: "UAE", currency: "AED", gateway: "Stripe", settlement: "T+3" },

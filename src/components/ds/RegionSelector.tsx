@@ -5,7 +5,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { SUPPORTED_REGIONS } from "@/lib/constants/regions";
 
 const FLAG: Record<string, string> = {
-  US: "🇺🇸", GB: "🇬🇧", DE: "🇪🇺", NG: "🇳🇬", ZA: "🇿🇦", KE: "🇰🇪", IN: "🇮🇳", AE: "🇦🇪",
+  US: "🇺🇸", GB: "🇬🇧", DE: "🇪🇺", NG: "🇳🇬", GH: "🇬🇭", ZA: "🇿🇦", KE: "🇰🇪", IN: "🇮🇳", AE: "🇦🇪",
 };
 
 export function RegionSelector() {

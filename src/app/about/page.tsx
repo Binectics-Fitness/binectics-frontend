@@ -31,7 +31,7 @@ const PRINCIPLES = [
 
 const TEAM = [
   { name: "Provider success", role: "Onboarding · verification", bio: "Hand-holds every founding-cohort provider onto the platform and reviews every verification document personally.", grad: "linear-gradient(135deg, oklch(0.84 0.05 60), oklch(0.7 0.08 40))" },
-  { name: "Payments engineering", role: "Stripe · Paystack · Flutterwave", bio: "Believes payments should be boring. Three rails, eight currencies, settlement directly to provider accounts.", grad: "linear-gradient(135deg, oklch(0.84 0.04 248), oklch(0.7 0.06 220))" },
+  { name: "Payments engineering", role: "Stripe · Paystack · Flutterwave", bio: "Believes payments should be boring. Three rails, nine currencies, settlement directly to provider accounts.", grad: "linear-gradient(135deg, oklch(0.84 0.04 248), oklch(0.7 0.06 220))" },
   { name: "Copilot & nutrition product", role: "AI drafts · meal plans", bio: "Builds the drafting engine and the meal-plan tools, designed so no client message ever sends without human review.", grad: "linear-gradient(135deg, oklch(0.86 0.04 300), oklch(0.74 0.06 280))" },
   { name: "Design", role: "Design system · product chrome", bio: "One signal color, 1px hairlines, no shadows. The calm is deliberate.", grad: "linear-gradient(135deg, oklch(0.84 0.04 120), oklch(0.7 0.06 100))" },
 ];

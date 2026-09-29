@@ -1,6 +1,6 @@
 import { PaymentGateway } from "@/lib/types";
 
-export type CurrencyCode = "USD" | "EUR" | "GBP" | "NGN" | "KES" | "ZAR" | "AED" | "INR";
+export type CurrencyCode = "USD" | "EUR" | "GBP" | "NGN" | "GHS" | "KES" | "ZAR" | "AED" | "INR";
 
 export interface RegionConfig {
   currencyCode: CurrencyCode;
@@ -25,6 +25,7 @@ const USD: RegionConfig = DEFAULT_REGION;
 const GBP: RegionConfig = { currencyCode: "GBP", locale: "en-GB", gateway: PaymentGateway.STRIPE, symbol: "£", regionName: "United Kingdom" };
 const EUR: RegionConfig = { currencyCode: "EUR", locale: "de-DE", gateway: PaymentGateway.STRIPE, symbol: "€", regionName: "Europe" };
 const NGN: RegionConfig = { currencyCode: "NGN", locale: "en-NG", gateway: PaymentGateway.PAYSTACK, symbol: "₦", regionName: "Nigeria" };
+const GHS: RegionConfig = { currencyCode: "GHS", locale: "en-GH", gateway: PaymentGateway.PAYSTACK, symbol: "GH₵", regionName: "Ghana" };
 const KES: RegionConfig = { currencyCode: "KES", locale: "en-KE", gateway: PaymentGateway.FLUTTERWAVE, symbol: "KSh", regionName: "Kenya" };
 const ZAR: RegionConfig = { currencyCode: "ZAR", locale: "en-ZA", gateway: PaymentGateway.PAYSTACK, symbol: "R", regionName: "South Africa" };
 const AED: RegionConfig = { currencyCode: "AED", locale: "en-AE", gateway: PaymentGateway.STRIPE, symbol: "د.إ", regionName: "UAE" };
@@ -41,6 +42,8 @@ export const COUNTRY_TO_REGION: Record<string, RegionConfig> = {
   CY: EUR, MT: EUR, LU: EUR, HR: EUR,
   // NGN
   NG: NGN,
+  // GHS
+  GH: GHS,
   // KES
   KE: KES,
   // ZAR
@@ -51,10 +54,11 @@ export const COUNTRY_TO_REGION: Record<string, RegionConfig> = {
   IN: INR,
 };
 
+// GHS prices are provisional, pending owner confirmation.
 export const MARKET_PRICES = {
-  studio: { USD: 48, GBP: 39, EUR: 45, NGN: 45_000, KES: 5_500, ZAR: 749, AED: 179, INR: 3_499 },
-  premium: { USD: 9, GBP: 7, EUR: 8, NGN: 5_500, KES: 900, ZAR: 129, AED: 29, INR: 499 },
-  family: { USD: 19, GBP: 15, EUR: 17, NGN: 12_000, KES: 1_900, ZAR: 279, AED: 59, INR: 999 },
+  studio: { USD: 48, GBP: 39, EUR: 45, NGN: 45_000, GHS: 450, KES: 5_500, ZAR: 749, AED: 179, INR: 3_499 },
+  premium: { USD: 9, GBP: 7, EUR: 8, NGN: 5_500, GHS: 79, KES: 900, ZAR: 129, AED: 29, INR: 499 },
+  family: { USD: 19, GBP: 15, EUR: 17, NGN: 12_000, GHS: 179, KES: 1_900, ZAR: 279, AED: 59, INR: 999 },
 } as const;
 
 export type PlanTier = keyof typeof MARKET_PRICES;
@@ -77,6 +81,7 @@ export const SUPPORTED_REGIONS: { code: string; config: RegionConfig }[] = [
   { code: "GB", config: GBP },
   { code: "DE", config: EUR },
   { code: "NG", config: NGN },
+  { code: "GH", config: GHS },
   { code: "ZA", config: ZAR },
   { code: "KE", config: KES },
   { code: "IN", config: INR },
@@ -92,7 +97,7 @@ export function getRegionForCountry(countryCode: string): RegionConfig {
  * Distinct from the visitor-facing region system: an org's money stays in the
  * org's currency no matter where it is viewed from.
  */
-export const SUPPORTED_CURRENCIES: RegionConfig[] = [USD, GBP, EUR, NGN, KES, ZAR, AED, INR];
+export const SUPPORTED_CURRENCIES: RegionConfig[] = [USD, GBP, EUR, NGN, GHS, KES, ZAR, AED, INR];
 
 export function getConfigForCurrency(code: string | null | undefined): RegionConfig {
   const upper = (code ?? "").toUpperCase();

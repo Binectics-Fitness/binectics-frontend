@@ -20,6 +20,13 @@ describe("trainer onboarding: what each step persists", () => {
     expect(currency).toBe("NGN");
   });
 
+  it("prices a Ghana workspace in cedis, not dollars", () => {
+    const { profile, currency } = trainerLocationPatch({ city: "Accra", country: "Ghana" });
+    expect(profile).toEqual({ city: "Accra", country_code: "GH" });
+    expect(currency).toBe("GHS");
+    expect(trainerSessionPatch({ country: "Ghana", price1on1Minor: 30000 })?.currency).toBe("GHS");
+  });
+
   it("turns step 4 into the trainer's own 1:1 session, in the step-1 currency", () => {
     expect(trainerSessionPatch({ country: "Nigeria", price1on1Minor: 2500000, duration: "45 min" })).toEqual({
       name: "1:1 session",

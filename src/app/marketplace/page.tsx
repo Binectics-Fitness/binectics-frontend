@@ -310,7 +310,7 @@ export default function MarketplacePage() {
           <div className="p-4.5 border-b border-border">
             <h4 className="font-mono text-[12.5px] uppercase tracking-[0.04em] font-normal mb-3" style={{ color: "var(--fg-3)" }}>Currency</h4>
             <div className="flex flex-wrap gap-1.5">
-              {["NGN", "USD", "EUR", "GBP", "ZAR", "KES"].map((c, i) => (
+              {["NGN", "USD", "EUR", "GBP", "ZAR", "KES", "GHS"].map((c, i) => (
                 <span key={c} className="inline-flex items-center h-6 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border" style={{ color: i === 0 ? "var(--ink)" : "var(--fg-2)", borderColor: i === 0 ? "var(--ink)" : "var(--border)" }}>{c}</span>
               ))}
             </div>

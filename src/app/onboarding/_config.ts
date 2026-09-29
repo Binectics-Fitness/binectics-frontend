@@ -19,7 +19,7 @@ export const COUNTRY_NAME_TO_CURRENCY: Record<string, CurrencyCode> = {
   "South Africa": "ZAR",
   Nigeria: "NGN",
   Kenya: "KES",
-  Ghana: "USD", // GHS not supported yet
+  Ghana: "GHS",
   "United States": "USD",
   "United Kingdom": "GBP",
 };

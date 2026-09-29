@@ -53,6 +53,7 @@ export const CURRENCIES = [
   { code: "EUR", symbol: "€", name: "Euro" },
   { code: "GBP", symbol: "£", name: "British Pound" },
   { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
+  { code: "GHS", symbol: "GH₵", name: "Ghanaian Cedi" },
   { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
   { code: "ZAR", symbol: "R", name: "South African Rand" },
   { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
