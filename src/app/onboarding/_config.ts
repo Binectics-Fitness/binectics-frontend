@@ -92,6 +92,28 @@ function sessionMinutes(value: unknown, fallback = 60): number {
   return parseInt(String(value ?? fallback), 10) || fallback;
 }
 
+/**
+ * The step of each provider track that sets the session members book, and
+ * the data keys it answers in. The answer is a price, Free, or an explicit
+ * "Set up later"; Continue waits for one of the three, so no provider leaves
+ * the step with nothing bookable without having chosen that.
+ */
+export const SESSION_FIELDS = {
+  trainer: { step: 4, minor: "price1on1Minor", free: "price1on1Free", later: "price1on1Later" },
+  dietitian: { step: 5, minor: "sessionPriceMinor", free: "sessionFree", later: "sessionLater" },
+} as const;
+
+/** Set when Continue was pressed on an unanswered session step. */
+export const SESSION_MISSING = "sessionMissing";
+
+/** True on a provider's session step while it has no answer yet. */
+export function sessionStepUnanswered(role: RoleId | null, step: number, data: Record<string, unknown>): boolean {
+  if (role !== "trainer" && role !== "dietitian") return false;
+  const f = SESSION_FIELDS[role];
+  if (step !== f.step || data[f.later] === true) return false;
+  return sessionPriceMinor(data[f.minor], data[f.free]) === null;
+}
+
 export interface OwnSessionPatch {
   name: string;
   defaultDurationMinutes: number;
@@ -105,6 +127,7 @@ export interface OwnSessionPatch {
  * session, it is no answer, and the trainer sets it up later.
  */
 export function trainerSessionPatch(data: Record<string, unknown>): OwnSessionPatch | null {
+  if (data[SESSION_FIELDS.trainer.later] === true) return null;
   const priceMinor = sessionPriceMinor(data.price1on1Minor, data.price1on1Free);
   if (priceMinor === null) return null;
   return {
@@ -168,6 +191,7 @@ export function dietitianLocationPatch(data: Record<string, unknown>): {
  * creates no session ("set it up later"), a different state from free.
  */
 export function dietitianSessionPatch(data: Record<string, unknown>): OwnSessionPatch | null {
+  if (data[SESSION_FIELDS.dietitian.later] === true) return null;
   const priceMinor = sessionPriceMinor(data.sessionPriceMinor, data.sessionFree);
   if (priceMinor === null) return null;
   return {
@@ -180,32 +204,40 @@ export function dietitianSessionPatch(data: Record<string, unknown>): OwnSession
 
 /** The slice of consultationsService that saving an own session needs. */
 export interface OwnSessionApi {
-  getOwnTypes(): Promise<{ data?: { id: string; name: string }[] | null }>;
-  createOwnType(payload: OwnSessionPatch): Promise<unknown>;
+  getOwnTypes(): Promise<{ success: boolean; data?: { id: string; name: string }[] | null }>;
+  createOwnType(payload: OwnSessionPatch): Promise<{ success: boolean }>;
   updateOwnType(
     id: string,
     payload: Omit<OwnSessionPatch, "name"> & { isActive: boolean },
-  ): Promise<unknown>;
+  ): Promise<{ success: boolean }>;
 }
 
 /**
- * Saves an onboarding session: the provider's own session with the same
- * name (case-insensitive, archived ones included) is updated and brought
- * back, otherwise one is created. Going back and changing the price updates
- * the session instead of colliding with it.
+ * Saves an onboarding session and says whether it was saved. The provider's
+ * own session with the same name (case-insensitive, archived ones included)
+ * is updated and brought back, otherwise one is created, so going back and
+ * changing the price updates the session instead of colliding with it.
+ *
+ * The API client resolves failures rather than throwing, so a failed list is
+ * not an empty one: creating then would hit the existing session and leave
+ * the old price in place with nothing said. It stops there instead.
  */
-export async function upsertOwnSession(session: OwnSessionPatch, api: OwnSessionApi): Promise<void> {
-  const own = await api.getOwnTypes();
-  const existing = (own.data ?? []).find((t) => t.name.toLowerCase() === session.name.toLowerCase());
-  if (existing) {
-    await api.updateOwnType(existing.id, {
-      defaultDurationMinutes: session.defaultDurationMinutes,
-      priceMinor: session.priceMinor,
-      currency: session.currency,
-      isActive: true,
-    });
-  } else {
-    await api.createOwnType(session);
+export async function upsertOwnSession(session: OwnSessionPatch, api: OwnSessionApi): Promise<boolean> {
+  try {
+    const own = await api.getOwnTypes();
+    if (!own.success) return false;
+    const existing = (own.data ?? []).find((t) => t.name.toLowerCase() === session.name.toLowerCase());
+    const saved = existing
+      ? await api.updateOwnType(existing.id, {
+          defaultDurationMinutes: session.defaultDurationMinutes,
+          priceMinor: session.priceMinor,
+          currency: session.currency,
+          isActive: true,
+        })
+      : await api.createOwnType(session);
+    return saved.success;
+  } catch {
+    return false;
   }
 }
 

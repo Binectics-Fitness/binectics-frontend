@@ -6,6 +6,8 @@ import {
   dietitianSessionPatch,
   sessionPriceMinor,
   upsertOwnSession,
+  sessionStepUnanswered,
+  SESSION_FIELDS,
   ROLES,
   type OwnSessionApi,
 } from "@/app/onboarding/_config";
@@ -82,24 +84,24 @@ describe("sessionPriceMinor", () => {
 describe("upsertOwnSession", () => {
   const session = { name: "1:1 session", defaultDurationMinutes: 60, priceMinor: 0, currency: "NGN" as const };
 
-  function fakeApi(existing: { id: string; name: string }[]) {
+  function fakeApi(existing: { id: string; name: string }[], { listOk = true, writeOk = true } = {}) {
     return {
-      getOwnTypes: vi.fn(async () => ({ data: existing })),
-      createOwnType: vi.fn(async () => ({})),
-      updateOwnType: vi.fn(async () => ({})),
+      getOwnTypes: vi.fn(async () => (listOk ? { success: true, data: existing } : { success: false })),
+      createOwnType: vi.fn(async () => ({ success: writeOk })),
+      updateOwnType: vi.fn(async () => ({ success: writeOk })),
     } satisfies OwnSessionApi;
   }
 
   it("creates the session when the provider has none of that name", async () => {
     const api = fakeApi([{ id: "a", name: "Follow-up" }]);
-    await upsertOwnSession(session, api);
+    await expect(upsertOwnSession(session, api)).resolves.toBe(true);
     expect(api.createOwnType).toHaveBeenCalledWith(session);
     expect(api.updateOwnType).not.toHaveBeenCalled();
   });
 
   it("updates and reactivates the one with the same name, ignoring case", async () => {
     const api = fakeApi([{ id: "b", name: "1:1 Session" }]);
-    await upsertOwnSession({ ...session, priceMinor: 500000 }, api);
+    await expect(upsertOwnSession({ ...session, priceMinor: 500000 }, api)).resolves.toBe(true);
     expect(api.updateOwnType).toHaveBeenCalledWith("b", {
       defaultDurationMinutes: 60,
       priceMinor: 500000,
@@ -107,5 +109,58 @@ describe("upsertOwnSession", () => {
       isActive: true,
     });
     expect(api.createOwnType).not.toHaveBeenCalled();
+  });
+
+  it("stops when the list fails, rather than treating it as empty and creating", async () => {
+    // Creating here would collide with the existing session and leave the
+    // old price in place with nothing said.
+    const api = fakeApi([], { listOk: false });
+    await expect(upsertOwnSession(session, api)).resolves.toBe(false);
+    expect(api.createOwnType).not.toHaveBeenCalled();
+    expect(api.updateOwnType).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed write", async () => {
+    await expect(upsertOwnSession(session, fakeApi([], { writeOk: false }))).resolves.toBe(false);
+    await expect(upsertOwnSession(session, fakeApi([{ id: "b", name: "1:1 session" }], { writeOk: false }))).resolves.toBe(false);
+  });
+
+  it("reports a thrown request as a failure", async () => {
+    const api = fakeApi([]);
+    api.getOwnTypes.mockRejectedValueOnce(new Error("offline"));
+    await expect(upsertOwnSession(session, api)).resolves.toBe(false);
+  });
+});
+
+describe("the session step waits for an answer", () => {
+  it("points at the steps whose titles set the session", () => {
+    // The page persists the session on SESSION_FIELDS[role].step; if a step
+    // is inserted before it, this catches the drift.
+    const title = (role: string, step: number) => ROLES.find((r) => r.id === role)!.steps[step - 1].title;
+    expect(title("dietitian", SESSION_FIELDS.dietitian.step)).toBe("Set your consultation");
+    expect(title("dietitian", SESSION_FIELDS.dietitian.step + 1)).toBe("Connect your payout");
+    expect(title("trainer", SESSION_FIELDS.trainer.step)).toBe("Set your pricing");
+  });
+
+  it("holds Continue until a price, Free or Set up later is chosen", () => {
+    expect(sessionStepUnanswered("dietitian", 5, {})).toBe(true);
+    expect(sessionStepUnanswered("dietitian", 5, { sessionPriceMinor: 0 })).toBe(true);
+    expect(sessionStepUnanswered("dietitian", 5, { sessionPriceMinor: 1500000 })).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 5, { sessionFree: true })).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 5, { sessionLater: true })).toBe(false);
+    expect(sessionStepUnanswered("trainer", 4, {})).toBe(true);
+    expect(sessionStepUnanswered("trainer", 4, { price1on1Later: true })).toBe(false);
+  });
+
+  it("never holds other steps or roles", () => {
+    expect(sessionStepUnanswered("dietitian", 4, {})).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 6, {})).toBe(false);
+    expect(sessionStepUnanswered("gym", 5, {})).toBe(false);
+    expect(sessionStepUnanswered("member", 4, {})).toBe(false);
+    expect(sessionStepUnanswered(null, 5, {})).toBe(false);
+  });
+
+  it("saves nothing for Set up later, even with a price typed before it", () => {
+    expect(dietitianSessionPatch({ sessionPriceMinor: 1500000, sessionLater: true })).toBeNull();
   });
 });

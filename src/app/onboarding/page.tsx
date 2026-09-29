@@ -13,7 +13,7 @@ import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
 import { MEMBER_STEPS } from "./_member";
@@ -383,7 +383,8 @@ function OnboardingContent() {
     }
   }, []);
 
-  const persistTrainerStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
+  /** Resolves false only when the session the trainer answered could not be saved. */
+  const persistTrainerStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<boolean> => {
     try {
       if (currentStep === 1) {
         const { profile, currency } = trainerLocationPatch(stepData);
@@ -398,13 +399,14 @@ function OnboardingContent() {
         // onboarding still had nothing bookable.
         // Free saves a price of 0; a blank price creates nothing.
         const session = trainerSessionPatch(stepData);
-        if (session) await upsertOwnSession(session, consultationsService);
+        if (session) return await upsertOwnSession(session, consultationsService);
       } else if (currentStep === 5) {
         if (stepData.payout && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
       }
     } catch { /* non-blocking */ }
+    return true;
   }, []);
 
   const persistMemberStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>) => {
@@ -432,7 +434,8 @@ function OnboardingContent() {
     } catch { /* non-blocking */ }
   }, []);
 
-  const persistDietitianStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
+  /** Resolves false only when the consultation the dietitian answered could not be saved. */
+  const persistDietitianStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<boolean> => {
     try {
       if (currentStep === 1) {
         const { profile, currency } = dietitianLocationPatch(stepData);
@@ -448,14 +451,38 @@ function OnboardingContent() {
         // without it a new dietitian had nothing bookable. Free saves a
         // price of 0; a blank price creates nothing (set it up later).
         const session = dietitianSessionPatch(stepData);
-        if (session) await upsertOwnSession(session, consultationsService);
+        if (session) return await upsertOwnSession(session, consultationsService);
       } else if (currentStep === 6) {
         if (stepData.payout && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
       }
     } catch { /* non-blocking */ }
+    return true;
   }, []);
+
+  /**
+   * Persists the current step. Every save is best effort except the session
+   * members book: the step promised "Clients pay ₦15,000", so a failed save
+   * keeps the person on the step and says so, instead of finishing
+   * onboarding with nothing bookable.
+   */
+  const persistStep = async (orgId: string): Promise<boolean> => {
+    let saved = true;
+    if (role === "gym" && orgId) {
+      await persistGymStep(step, data, orgId);
+    } else if (role === "trainer" && orgId) {
+      saved = await persistTrainerStep(step, data, orgId);
+    } else if (role === "member") {
+      await persistMemberStep(step, data);
+    } else if (role === "dietitian") {
+      saved = await persistDietitianStep(step, data, orgId);
+    }
+    if (!saved) {
+      toast.error(`We couldn't save your ${role === "dietitian" ? "consultation" : "session"}. Check your connection and try again.`);
+    }
+    return saved;
+  };
 
   const handleContinue = async () => {
     if (advancing) return;
@@ -471,17 +498,14 @@ function OnboardingContent() {
     if (step === 0 && role) {
       setStep(1);
     } else if (step < totalSteps) {
+      // The session step needs an answer: a price, Free, or Set up later.
+      if (sessionStepUnanswered(role, step, data)) {
+        setField(SESSION_MISSING, true);
+        return;
+      }
       const orgId = await ensureWorkspace();
       if (orgId === null) return;
-      if (role === "gym" && orgId) {
-        await persistGymStep(step, data, orgId);
-      } else if (role === "trainer" && orgId) {
-        await persistTrainerStep(step, data, orgId);
-      } else if (role === "member") {
-        await persistMemberStep(step, data);
-      } else if (role === "dietitian") {
-        await persistDietitianStep(step, data, orgId);
-      }
+      if (!(await persistStep(orgId))) return;
       setStep(step + 1);
     } else if (role) {
       if ((await ensureWorkspace()) === null) return;
@@ -518,15 +542,9 @@ function OnboardingContent() {
         setIsSavingLater(false);
         return;
       }
-      if (role === 'gym' && orgId) {
-        await persistGymStep(step, data, orgId);
-      } else if (role === 'trainer' && orgId) {
-        await persistTrainerStep(step, data, orgId);
-      } else if (role === 'member') {
-        await persistMemberStep(step, data);
-      } else if (role === 'dietitian') {
-        await persistDietitianStep(step, data, orgId);
-      }
+      // Leaving says nothing about the session, so an unanswered step is
+      // simply not saved; a failed save of an answered one stays here.
+      if (!(await persistStep(orgId))) return;
     } catch {
       // non-blocking — still redirect
     } finally {
@@ -596,6 +614,7 @@ function OnboardingContent() {
       .ob-rail { background: var(--bg-2); border-right: 1px solid var(--border); padding: 28px 24px; display: flex; flex-direction: column; gap: 36px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
       .ob-summary { background: var(--bg-2); border-left: 1px solid var(--border); padding: 36px 24px; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
       .ob-stage-area { padding: 56px 80px; display: flex; flex-direction: column; gap: 32px; max-width: 740px; flex: 1; }
+      .ob-next-arrow { display: none; }
       .ob-nav { padding: 24px 80px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; bottom: 0; background: var(--bg); }
       .ob-mobile-header { display: none; }
       @media (max-width: 1024px) {
@@ -611,6 +630,10 @@ function OnboardingContent() {
         .ob-nav .ob-progress { width: 100%; }
         .ob-nav .ob-actions { width: 100%; display: flex; gap: 8px; }
         .ob-nav .ob-actions button { flex: 1; }
+        /* Three buttons share a phone's width; the next step's name would push
+           the row off screen, and the progress bar already shows it. */
+        .ob-nav .ob-next-title { display: none; }
+        .ob-nav .ob-next-arrow { display: inline; }
         .ob-role-cards { grid-template-columns: 1fr !important; }
         .ob-form-grid { grid-template-columns: 1fr !important; }
       }
@@ -766,7 +789,9 @@ function OnboardingContent() {
                   ? "Preparing workspace..."
                   : advancing
                     ? "Saving..."
-                    : `Continue${step < totalSteps && roleDef ? ` → ${roleDef.steps[step]?.title || ""}` : " →"}`}
+                    : step < totalSteps && roleDef
+                      ? <>Continue<span className="ob-next-title"> → {roleDef.steps[step]?.title || ""}</span><span className="ob-next-arrow" aria-hidden="true"> →</span></>
+                      : "Continue →"}
             </button>
           </div>
         </div>

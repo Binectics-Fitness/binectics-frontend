@@ -107,6 +107,7 @@ export function MoneyField({
   placeholder,
   id,
   disabled,
+  describedBy,
 }: {
   value: string;
   onChange: (display: string, minor: number | null) => void;
@@ -114,11 +115,14 @@ export function MoneyField({
   placeholder?: string;
   id?: string;
   disabled?: boolean;
+  /** Id of the line that explains the field. */
+  describedBy?: string;
 }) {
   const autoId = useId();
   return (
     <MoneyInput
       id={id || autoId}
+      aria-describedby={describedBy}
       value={value}
       onChange={onChange}
       currency={currency}
@@ -129,48 +133,79 @@ export function MoneyField({
   );
 }
 
-/* ── Session price: price or an explicit Free ─────────────── */
+/* ── Session price: a price, Free, or Set up later ────────── */
+
+export const SET_UP_LATER = "Set up later";
 
 /**
- * The line under a session price, saying what will be saved. A blank price
- * with Free not chosen saves no session at all ("set it up later"), which is
- * not the same as free, so the copy never implies otherwise.
+ * The line under a session price, saying what will be saved. Continue waits
+ * for an answer (a price, Free, or Set up later); `missing` is set when it
+ * was pressed without one, and the line then says what is needed.
  */
 export function sessionPriceHint({
   display,
   minor,
   free,
+  later,
+  missing,
+  laterNote,
   minutes,
   noun,
 }: {
   display: string;
   minor: number | null | undefined;
   free: boolean;
+  later?: boolean;
+  missing?: boolean;
+  /** What "Set up later" means for this role's members. */
+  laterNote: string;
   minutes: number;
   noun: string;
 }): string {
   if (free) return `Clients book a ${minutes} min ${noun} with you for free.`;
+  if (later) return laterNote;
   if (typeof minor === "number" && minor > 0) return `Clients pay ${display} for a ${minutes} min ${noun}.`;
   if (typeof minor === "number") return "Enter a price above zero, or choose Free.";
-  return "Enter a price, or choose Free. Leave both empty to set it up later.";
+  if (missing) return `Enter a price, choose Free, or choose ${SET_UP_LATER}.`;
+  return "Enter a price, or choose Free.";
 }
 
-/** The explicit Free choice beside a session price, and what will be saved. */
-export function FreeSessionChoice({
-  label,
+/**
+ * The explicit answers beside a session price: Free, or Set up later. They
+ * exclude each other; picking one clears the other.
+ */
+export function SessionPriceChoice({
+  freeLabel,
   free,
-  onToggle,
+  later,
+  onChoose,
   hint,
+  hintId,
+  error,
 }: {
-  label: string;
+  freeLabel: string;
   free: boolean;
-  onToggle: () => void;
+  later: boolean;
+  onChoose: (choice: "free" | "later") => void;
   hint: string;
+  hintId: string;
+  /** True when Continue was pressed without an answer. */
+  error: boolean;
 }) {
+  const selected = [free ? freeLabel : null, later ? SET_UP_LATER : null].filter(Boolean) as string[];
   return (
     <>
-      <ChipGrid label={label} options={[label]} selected={free ? [label] : []} onToggle={onToggle} />
-      <span aria-live="polite" style={{ fontSize: 12, color: "var(--fg-3)" }}>{hint}</span>
+      <ChipGrid
+        label="Or choose"
+        options={[freeLabel, SET_UP_LATER]}
+        selected={selected}
+        onToggle={(chip) => onChoose(chip === freeLabel ? "free" : "later")}
+      />
+      {/* Only the error is announced; the running price line would be read
+          out on every keystroke. */}
+      <span id={hintId} role={error ? "alert" : undefined} style={{ fontSize: 12, color: error ? "var(--danger)" : "var(--fg-3)" }}>
+        {hint}
+      </span>
     </>
   );
 }
@@ -181,13 +216,17 @@ export function SelectField({
   value,
   onChange,
   options,
+  id,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: string[];
+  /** Pair with Field's htmlFor so the label names the control. */
+  id?: string;
 }) {
   return (
     <SearchableSelect
+      id={id}
       options={options.map((o) => ({ label: o, value: o }))}
       value={value}
       onChange={onChange}
@@ -272,7 +311,7 @@ export function ChipGrid({
               transition: "border-color 120ms, background 120ms, color 120ms",
             }}
           >
-            {on && <span style={{ fontSize: 11 }}>&#10003;</span>}
+            {on && <span aria-hidden="true" style={{ fontSize: 11 }}>&#10003;</span>}
             {chip}
           </button>
         );

@@ -1,7 +1,7 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, FreeSessionChoice, sessionPriceHint } from "./_components";
-import { DIETITIAN_DEFAULT_COUNTRY, dietitianCountry, dietitianCurrency } from "./_config";
+import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
+import { DIETITIAN_DEFAULT_COUNTRY, SESSION_MISSING, dietitianCountry, dietitianCurrency } from "./_config";
 
 const SPECIALIZATIONS = ["PCOS", "Diabetes", "Sport performance", "Gestational", "IBS · FODMAP", "Pre/post-natal", "Weight management", "Cardiovascular", "Renal", "Paediatric", "Eating disorders"];
 const POPULATIONS = ["Adults", "Athletes", "Children", "Pre/post-natal", "Seniors"];
@@ -13,15 +13,24 @@ function toggleChip(list: string[], chip: string, max?: number): string[] {
 }
 
 export function DietStep1({ data, setField }: StepProps) {
+  const changeCountry = (country: string) => {
+    // A price typed on step 5 was in the old currency; relabelling "15,000"
+    // from naira to shillings would publish a different price.
+    if (dietitianCurrency({ ...data, country }) !== dietitianCurrency(data)) {
+      setField("sessionPrice", "");
+      setField("sessionPriceMinor", null);
+    }
+    setField("country", country);
+  };
   return (
     <>
       <StageHead crumb="Step 01 of 07, dietitian track" title="Your practice basics." desc="We'll list this on your profile." />
       <FormGrid>
-        <Field label="Full name (with title)"><TextInput value={(data.fullName as string) || ""} onChange={(v) => setField("fullName", v)} placeholder="Dr Nadia Hassan, RD" /></Field>
-        <Field label="Pronouns"><TextInput value={(data.pronouns as string) || ""} onChange={(v) => setField("pronouns", v)} placeholder="she/her" /></Field>
-        <Field label="City"><TextInput value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder="Lagos" /></Field>
-        <Field label="Country"><SelectField value={dietitianCountry(data)} onChange={(v) => setField("country", v)} options={[DIETITIAN_DEFAULT_COUNTRY, "South Africa", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
-        <Field label="Practice name (optional)" full><TextInput value={(data.practiceName as string) || ""} onChange={(v) => setField("practiceName", v)} placeholder="Nadia Hassan Clinical Nutrition" /></Field>
+        <Field label="Full name (with title)" htmlFor="ob-diet-name"><TextInput id="ob-diet-name" value={(data.fullName as string) || ""} onChange={(v) => setField("fullName", v)} placeholder="Dr Nadia Hassan, RD" /></Field>
+        <Field label="Pronouns" htmlFor="ob-diet-pronouns"><TextInput id="ob-diet-pronouns" value={(data.pronouns as string) || ""} onChange={(v) => setField("pronouns", v)} placeholder="she/her" /></Field>
+        <Field label="City" htmlFor="ob-diet-city"><TextInput id="ob-diet-city" value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder="Lagos" /></Field>
+        <Field label="Country" htmlFor="ob-diet-country"><SelectField id="ob-diet-country" value={dietitianCountry(data)} onChange={changeCountry} options={[DIETITIAN_DEFAULT_COUNTRY, "South Africa", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Practice name (optional)" htmlFor="ob-diet-practice" full><TextInput id="ob-diet-practice" value={(data.practiceName as string) || ""} onChange={(v) => setField("practiceName", v)} placeholder="Nadia Hassan Clinical Nutrition" /></Field>
       </FormGrid>
     </>
   );
@@ -109,31 +118,53 @@ const SESSION_LENGTHS = ["30 min", "45 min", "60 min", "90 min"];
 export function DietStep5({ data, setField }: StepProps) {
   const currency = dietitianCurrency(data);
   const free = data.sessionFree === true;
+  const later = data.sessionLater === true;
+  const missing = data[SESSION_MISSING] === true;
   const duration = (data.sessionDuration as string) || "60 min";
   const display = (data.sessionPrice as string) || "";
+  const choose = (choice: "free" | "later") => {
+    setField("sessionFree", choice === "free" ? !free : false);
+    setField("sessionLater", choice === "later" ? !later : false);
+    setField(SESSION_MISSING, false);
+  };
   return (
     <>
       <StageHead crumb="Step 05 of 07, dietitian track" title="Set your consultation." desc="This is what clients book with you. You can change it, or add more sessions, any time." />
       <FormGrid>
-        <Field label="Session length">
-          <SelectField value={duration} onChange={(v) => setField("sessionDuration", v)} options={SESSION_LENGTHS} />
+        <Field label="Session length" htmlFor="ob-diet-length" full>
+          <SelectField id="ob-diet-length" value={duration} onChange={(v) => setField("sessionDuration", v)} options={SESSION_LENGTHS} />
         </Field>
-        <Field label={`Price per session (${currency})`}>
+        <Field label={`Price per session (${currency})`} htmlFor="ob-diet-price" full>
           <MoneyField
-            value={free ? "" : display}
+            id="ob-diet-price"
+            describedBy="ob-diet-price-hint"
+            value={free || later ? "" : display}
             onChange={(next, minor) => {
               setField("sessionPrice", next);
               setField("sessionPriceMinor", minor);
+              setField(SESSION_MISSING, false);
             }}
             currency={currency}
-            placeholder={free ? "Free" : "15,000"}
-            disabled={free}
+            placeholder={free ? "Free" : later ? "Set up later" : "15,000"}
+            disabled={free || later}
           />
-          <FreeSessionChoice
-            label="Free consultation"
+          <SessionPriceChoice
+            freeLabel="Free consultation"
             free={free}
-            onToggle={() => setField("sessionFree", !free)}
-            hint={sessionPriceHint({ display, minor: data.sessionPriceMinor as number | null | undefined, free, minutes: parseInt(duration, 10) || 60, noun: "consultation" })}
+            later={later}
+            onChoose={choose}
+            hintId="ob-diet-price-hint"
+            error={missing}
+            hint={sessionPriceHint({
+              display,
+              minor: data.sessionPriceMinor as number | null | undefined,
+              free,
+              later,
+              missing,
+              laterNote: "Members can't book you until you set a price. You can add it from your dashboard.",
+              minutes: parseInt(duration, 10) || 60,
+              noun: "consultation",
+            })}
           />
         </Field>
       </FormGrid>
@@ -166,7 +197,7 @@ export function DietStep7({ data }: StepProps) {
   const price =
     data.sessionFree === true
       ? " · Free consult"
-      : typeof minor === "number" && minor > 0 && data.sessionPrice
+      : data.sessionLater !== true && typeof minor === "number" && minor > 0 && data.sessionPrice
         ? ` · ${data.sessionPrice as string}/consult`
         : "";
   return (

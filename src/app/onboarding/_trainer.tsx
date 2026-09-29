@@ -1,7 +1,7 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, FreeSessionChoice, sessionPriceHint } from "./_components";
-import { COUNTRY_NAME_TO_CURRENCY, trainerCountry } from "./_config";
+import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
+import { COUNTRY_NAME_TO_CURRENCY, SESSION_MISSING, trainerCountry } from "./_config";
 
 const SPECIALIZATIONS = ["Strength", "Hypertrophy", "Running", "Olympic lifting", "Powerlifting", "Bodybuilding", "Functional", "Mobility", "HIIT", "CrossFit", "Pre-natal", "Post-natal"];
 const FORMATS = ["In-person 1:1", "In-person small group", "Online video", "Programming only", "Hybrid"];
@@ -12,17 +12,31 @@ function toggleChip(list: string[], chip: string, max?: number): string[] {
   return [...list, chip];
 }
 
+/** The step 4 prices, cleared when the country (so the currency) changes. */
+const PRICE_KEYS = ["price1on1", "price4pack", "price12pack", "priceMonthly"];
+
 export function TrainerStep1({ data, setField }: StepProps) {
+  const changeCountry = (country: string) => {
+    // Prices typed on step 4 were in the old currency; relabelling them
+    // would publish different prices.
+    if (trainerPricingCurrency({ ...data, country }) !== trainerPricingCurrency(data)) {
+      for (const key of PRICE_KEYS) {
+        setField(key, "");
+        setField(`${key}Minor`, null);
+      }
+    }
+    setField("country", country);
+  };
   return (
     <>
       <StageHead crumb="Step 01 of 06, trainer track" title="Tell us about yourself." desc="This is what members see in your profile." />
       <FormGrid>
-        <Field label="First name"><TextInput value={(data.firstName as string) || ""} onChange={(v) => setField("firstName", v)} /></Field>
-        <Field label="Last name"><TextInput value={(data.lastName as string) || ""} onChange={(v) => setField("lastName", v)} /></Field>
-        <Field label="City"><TextInput value={(data.city as string) || ""} onChange={(v) => setField("city", v)} /></Field>
-        <Field label="Country"><SelectField value={(data.country as string) || "South Africa"} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
-        <Field label="Headline (60 char)" hint="Shows under your name in marketplace results." full>
-          <TextInput value={(data.headline as string) || ""} onChange={(v) => setField("headline", v)} placeholder="Strength & running coach · Sea Point" />
+        <Field label="First name" htmlFor="ob-tr-first"><TextInput id="ob-tr-first" value={(data.firstName as string) || ""} onChange={(v) => setField("firstName", v)} /></Field>
+        <Field label="Last name" htmlFor="ob-tr-last"><TextInput id="ob-tr-last" value={(data.lastName as string) || ""} onChange={(v) => setField("lastName", v)} /></Field>
+        <Field label="City" htmlFor="ob-tr-city"><TextInput id="ob-tr-city" value={(data.city as string) || ""} onChange={(v) => setField("city", v)} /></Field>
+        <Field label="Country" htmlFor="ob-tr-country"><SelectField id="ob-tr-country" value={(data.country as string) || "South Africa"} onChange={changeCountry} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Headline (60 char)" hint="Shows under your name in marketplace results." htmlFor="ob-tr-headline" full>
+          <TextInput id="ob-tr-headline" value={(data.headline as string) || ""} onChange={(v) => setField("headline", v)} placeholder="Strength & running coach · Sea Point" />
         </Field>
       </FormGrid>
     </>
@@ -102,25 +116,55 @@ export function TrainerStep4({ data, setField }: StepProps) {
   // Free is an explicit choice (a price of 0); a blank price is no answer
   // and saves no session, so the trainer can set it up later.
   const free = data.price1on1Free === true;
+  const later = data.price1on1Later === true;
+  const missing = data[SESSION_MISSING] === true;
   const oneOnOne = money("price1on1");
   const duration = (data.duration as string) || "60 min";
+  const choose = (choice: "free" | "later") => {
+    setField("price1on1Free", choice === "free" ? !free : false);
+    setField("price1on1Later", choice === "later" ? !later : false);
+    setField(SESSION_MISSING, false);
+  };
   return (
     <>
       <StageHead crumb="Step 04 of 06, trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
       <FormGrid>
-        <Field label="1:1 session">
-          <MoneyField {...oneOnOne} value={free ? "" : oneOnOne.value} placeholder={free ? "Free" : "₦80,000"} disabled={free} />
-          <FreeSessionChoice
-            label="Free session"
+        <Field label="1:1 session" htmlFor="ob-tr-price" full>
+          <MoneyField
+            {...oneOnOne}
+            onChange={(display, minor) => {
+              oneOnOne.onChange(display, minor);
+              setField(SESSION_MISSING, false);
+            }}
+            id="ob-tr-price"
+            describedBy="ob-tr-price-hint"
+            value={free || later ? "" : oneOnOne.value}
+            placeholder={free ? "Free" : later ? "Set up later" : "80,000"}
+            disabled={free || later}
+          />
+          <SessionPriceChoice
+            freeLabel="Free session"
             free={free}
-            onToggle={() => setField("price1on1Free", !free)}
-            hint={sessionPriceHint({ display: (data.price1on1 as string) || "", minor: data.price1on1Minor as number | null | undefined, free, minutes: parseInt(duration, 10) || 60, noun: "session" })}
+            later={later}
+            onChoose={choose}
+            hintId="ob-tr-price-hint"
+            error={missing}
+            hint={sessionPriceHint({
+              display: (data.price1on1 as string) || "",
+              minor: data.price1on1Minor as number | null | undefined,
+              free,
+              later,
+              missing,
+              laterNote: "Members book the standard session until you set your own. You can do it from your dashboard.",
+              minutes: parseInt(duration, 10) || 60,
+              noun: "session",
+            })}
           />
         </Field>
-        <Field label="Duration"><SelectField value={duration} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
-        <Field label="4-session pack"><MoneyField {...money("price4pack")} placeholder="₦280,000" /></Field>
-        <Field label="12-session pack"><MoneyField {...money("price12pack")} placeholder="₦800,000" /></Field>
-        <Field label="Online programming · monthly" full><MoneyField {...money("priceMonthly")} placeholder="₦120,000 / month" /></Field>
+        <Field label="Duration" htmlFor="ob-tr-duration"><SelectField id="ob-tr-duration" value={duration} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
+        <Field label="4-session pack" htmlFor="ob-tr-pack4"><MoneyField id="ob-tr-pack4" {...money("price4pack")} placeholder="280,000" /></Field>
+        <Field label="12-session pack" htmlFor="ob-tr-pack12"><MoneyField id="ob-tr-pack12" {...money("price12pack")} placeholder="800,000" /></Field>
+        <Field label="Online programming · monthly" htmlFor="ob-tr-monthly"><MoneyField id="ob-tr-monthly" {...money("priceMonthly")} placeholder="120,000 / month" /></Field>
       </FormGrid>
     </>
   );
@@ -146,8 +190,15 @@ export function TrainerStep6({ data }: StepProps) {
   const name = `${(data.firstName as string) || "Your"} ${(data.lastName as string) || "Name"}`;
   const specs = ((data.specializations as string[]) || []).slice(0, 2).join(" & ") || "Specializations";
   const city = (data.city as string) || "City";
-  const price = data.price1on1Free === true ? "Free sessions" : `${(data.price1on1 as string) || "₦ 80,000"}/session`;
-  const meta = `${specs} · ${city} · ${price}`;
+  // Only what the trainer answered: no price segment for a blank price or
+  // "Set up later", never a made-up one.
+  const price =
+    data.price1on1Free === true
+      ? " · Free sessions"
+      : data.price1on1Later !== true && typeof data.price1on1Minor === "number" && data.price1on1Minor > 0 && data.price1on1
+        ? ` · ${data.price1on1 as string}/session`
+        : "";
+  const meta = `${specs} · ${city}${price}`;
   return (
     <>
       <StageHead crumb="Step 06 of 06, trainer track" title="Preview & publish." desc="Your profile goes live the moment we verify your docs. Usually within 48h." />
