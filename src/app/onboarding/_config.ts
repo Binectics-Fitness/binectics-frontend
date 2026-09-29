@@ -75,24 +75,170 @@ export function trainerLocationPatch(data: Record<string, unknown>): {
 }
 
 /**
- * The trainer's own "1:1 session" as step 4 describes it, or null when no
- * price was entered (a blank price is not a free session; it is no answer).
+ * The price a session step answered, in minor units: 0 when Free was chosen,
+ * the typed amount when it is above zero, and null for no answer. Mirrors the
+ * mobile app: a blank price is not free, it means "set it up later" and
+ * creates no session; and a typed 0 is not free either (free is an explicit
+ * choice), so it also creates nothing.
  */
-export function trainerSessionPatch(data: Record<string, unknown>): {
+export function sessionPriceMinor(minor: unknown, free: unknown): number | null {
+  if (free === true) return 0;
+  if (typeof minor !== "number" || !Number.isInteger(minor) || minor <= 0) return null;
+  return minor;
+}
+
+/** "45 min" (what the length select holds) as minutes, or the fallback. */
+function sessionMinutes(value: unknown, fallback = 60): number {
+  return parseInt(String(value ?? fallback), 10) || fallback;
+}
+
+/**
+ * The step of each provider track that sets the session members book, and
+ * the data keys it answers in. The answer is a price, Free, or an explicit
+ * "Set up later"; Continue waits for one of the three, so no provider leaves
+ * the step with nothing bookable without having chosen that.
+ */
+export const SESSION_FIELDS = {
+  trainer: { step: 4, minor: "price1on1Minor", free: "price1on1Free", later: "price1on1Later" },
+  dietitian: { step: 5, minor: "sessionPriceMinor", free: "sessionFree", later: "sessionLater" },
+} as const;
+
+/** Set when Continue was pressed on an unanswered session step. */
+export const SESSION_MISSING = "sessionMissing";
+
+/** True on a provider's session step while it has no answer yet. */
+export function sessionStepUnanswered(role: RoleId | null, step: number, data: Record<string, unknown>): boolean {
+  if (role !== "trainer" && role !== "dietitian") return false;
+  const f = SESSION_FIELDS[role];
+  if (step !== f.step || data[f.later] === true) return false;
+  return sessionPriceMinor(data[f.minor], data[f.free]) === null;
+}
+
+export interface OwnSessionPatch {
   name: string;
   defaultDurationMinutes: number;
   priceMinor: number;
   currency: CurrencyCode;
-} | null {
-  const priceMinor = data.price1on1Minor;
-  if (typeof priceMinor !== "number" || priceMinor < 0) return null;
-  const minutes = parseInt(String(data.duration ?? "60"), 10) || 60;
+}
+
+/**
+ * The trainer's own "1:1 session" as step 4 describes it: a price, or 0 when
+ * Free was chosen. Null when neither was given; a blank price is not a free
+ * session, it is no answer, and the trainer sets it up later.
+ */
+export function trainerSessionPatch(data: Record<string, unknown>): OwnSessionPatch | null {
+  if (data[SESSION_FIELDS.trainer.later] === true) return null;
+  const priceMinor = sessionPriceMinor(data.price1on1Minor, data.price1on1Free);
+  if (priceMinor === null) return null;
   return {
     name: "1:1 session",
-    defaultDurationMinutes: minutes,
+    defaultDurationMinutes: sessionMinutes(data.duration),
     priceMinor,
     currency: COUNTRY_NAME_TO_CURRENCY[trainerCountry(data)] ?? "USD",
   };
+}
+
+/** The default the dietitian step 1 country select shows when untouched. */
+export const DIETITIAN_DEFAULT_COUNTRY = "Nigeria";
+
+/**
+ * The name of the session a dietitian's onboarding creates. The settings
+ * editor (ConsultationAvailabilityManager) creates a provider's first own
+ * session under this same name for trainers and dietitians alike, and edits
+ * whichever own session is active, so the two stay one session.
+ */
+export const DIETITIAN_SESSION_NAME = "1:1 session";
+
+/** The country a dietitian chose on step 1, or the select's default. */
+export function dietitianCountry(data: Record<string, unknown>): string {
+  return (data.country as string) || DIETITIAN_DEFAULT_COUNTRY;
+}
+
+/** The currency a dietitian's workspace and consultation price are in. */
+export function dietitianCurrency(data: Record<string, unknown>): CurrencyCode {
+  return COUNTRY_NAME_TO_CURRENCY[dietitianCountry(data)] ?? "USD";
+}
+
+/**
+ * What step 1 of the dietitian track persists to the profile and the
+ * workspace: the name (a leading "Dr" or "Prof" dropped), city, and the
+ * country's code, with the workspace priced in that country's currency, as
+ * trainerLocationPatch does for trainers.
+ */
+export function dietitianLocationPatch(data: Record<string, unknown>): {
+  profile: { first_name?: string; last_name?: string; city?: string; country_code?: string };
+  currency: CurrencyCode;
+} {
+  const profile: { first_name?: string; last_name?: string; city?: string; country_code?: string } = {};
+  const fullName = ((data.fullName as string) || "").replace(/^(Dr\.?|Prof\.?)\s*/i, "").trim();
+  const parts = fullName.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    profile.first_name = parts.slice(0, -1).join(" ");
+    profile.last_name = parts[parts.length - 1];
+  } else if (parts.length === 1) {
+    profile.first_name = parts[0];
+  }
+  const city = (data.city as string | undefined)?.trim();
+  if (city) profile.city = city;
+  const code = COUNTRY_NAME_TO_CODE[dietitianCountry(data)];
+  if (code) profile.country_code = code;
+  return { profile, currency: dietitianCurrency(data) };
+}
+
+/**
+ * The dietitian's own consultation as the session step describes it: a
+ * price, or 0 when Free was chosen. Null when neither was given, which
+ * creates no session ("set it up later"), a different state from free.
+ */
+export function dietitianSessionPatch(data: Record<string, unknown>): OwnSessionPatch | null {
+  if (data[SESSION_FIELDS.dietitian.later] === true) return null;
+  const priceMinor = sessionPriceMinor(data.sessionPriceMinor, data.sessionFree);
+  if (priceMinor === null) return null;
+  return {
+    name: DIETITIAN_SESSION_NAME,
+    defaultDurationMinutes: sessionMinutes(data.sessionDuration),
+    priceMinor,
+    currency: dietitianCurrency(data),
+  };
+}
+
+/** The slice of consultationsService that saving an own session needs. */
+export interface OwnSessionApi {
+  getOwnTypes(): Promise<{ success: boolean; data?: { id: string; name: string }[] | null }>;
+  createOwnType(payload: OwnSessionPatch): Promise<{ success: boolean }>;
+  updateOwnType(
+    id: string,
+    payload: Omit<OwnSessionPatch, "name"> & { isActive: boolean },
+  ): Promise<{ success: boolean }>;
+}
+
+/**
+ * Saves an onboarding session and says whether it was saved. The provider's
+ * own session with the same name (case-insensitive, archived ones included)
+ * is updated and brought back, otherwise one is created, so going back and
+ * changing the price updates the session instead of colliding with it.
+ *
+ * The API client resolves failures rather than throwing, so a failed list is
+ * not an empty one: creating then would hit the existing session and leave
+ * the old price in place with nothing said. It stops there instead.
+ */
+export async function upsertOwnSession(session: OwnSessionPatch, api: OwnSessionApi): Promise<boolean> {
+  try {
+    const own = await api.getOwnTypes();
+    if (!own.success) return false;
+    const existing = (own.data ?? []).find((t) => t.name.toLowerCase() === session.name.toLowerCase());
+    const saved = existing
+      ? await api.updateOwnType(existing.id, {
+          defaultDurationMinutes: session.defaultDurationMinutes,
+          priceMinor: session.priceMinor,
+          currency: session.currency,
+          isActive: true,
+        })
+      : await api.createOwnType(session);
+    return saved.success;
+  } catch {
+    return false;
+  }
 }
 
 export function resolveEstablishedRole(
@@ -257,8 +403,9 @@ export const ROLES: RoleDef[] = [
       { label: "Step 02", title: "Licensure" },
       { label: "Step 03", title: "Your specializations" },
       { label: "Step 04", title: "Seed your library" },
-      { label: "Step 05", title: "Connect your payout" },
-      { label: "Step 06", title: "Preview & publish" },
+      { label: "Step 05", title: "Set your consultation" },
+      { label: "Step 06", title: "Connect your payout" },
+      { label: "Step 07", title: "Preview & publish" },
     ],
   },
 ];
