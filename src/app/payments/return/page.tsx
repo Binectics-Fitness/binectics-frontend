@@ -52,20 +52,12 @@ function PaymentReturnInner() {
   );
   const ran = useRef(false);
 
-  useEffect(() => {
-    if (kind === "other" || authLoading || ran.current) return;
-    ran.current = true;
+  // Signed out: nothing can be checked from here, so say where it will show.
+  const signedOut = kind !== "other" && !authLoading && !user;
 
-    if (!user) {
-      setView({
-        kind: "done",
-        title: "Sign in to see your payment.",
-        body: `Your payment reference is ${reference}. It shows on your account once Paystack confirms it.`,
-        href: "/login",
-        cta: "Sign in",
-      });
-      return;
-    }
+  useEffect(() => {
+    if (kind === "other" || authLoading || !user || ran.current) return;
+    ran.current = true;
 
     void (async () => {
       if (kind === "booking") {
@@ -126,6 +118,16 @@ function PaymentReturnInner() {
     })();
   }, [kind, authLoading, user, reference, router]);
 
+  const shown: View = signedOut
+    ? {
+        kind: "done",
+        title: "Sign in to see your payment.",
+        body: `Your payment reference is ${reference}. It shows on your account once Paystack confirms it.`,
+        href: "/login",
+        cta: "Sign in",
+      }
+    : view;
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-2)" }}>
       <header className="border-b border-border" style={{ background: "var(--bg)" }}>
@@ -139,14 +141,14 @@ function PaymentReturnInner() {
           style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
           aria-live="polite"
         >
-          {view.kind === "working" ? (
-            <p className="text-[15px]" style={{ color: "var(--ink)" }}>{view.text}</p>
+          {shown.kind === "working" ? (
+            <p className="text-[15px]" style={{ color: "var(--ink)" }}>{shown.text}</p>
           ) : (
             <>
-              <h1 className="text-[20px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>{view.title}</h1>
-              <p className="text-[14px] mt-2 leading-relaxed" style={{ color: "var(--fg-2)" }}>{view.body}</p>
-              {view.href && view.cta && (
-                <Link href={view.href} className="btn-ghost-v2 sm mt-5 inline-flex">{view.cta}</Link>
+              <h1 className="text-[20px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>{shown.title}</h1>
+              <p className="text-[14px] mt-2 leading-relaxed" style={{ color: "var(--fg-2)" }}>{shown.body}</p>
+              {shown.href && shown.cta && (
+                <Link href={shown.href} className="btn-ghost-v2 sm mt-5 inline-flex">{shown.cta}</Link>
               )}
             </>
           )}

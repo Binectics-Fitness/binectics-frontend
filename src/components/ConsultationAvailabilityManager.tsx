@@ -212,14 +212,14 @@ export default function ConsultationAvailabilityManager({
     });
   }, []);
 
-  // No saved currency: suggest the org's default when prices can be set in it.
+  // No saved currency and none picked: start from the org's default when
+  // prices can be set in it, otherwise leave it for the provider to choose.
   const orgCurrency = currentOrg?.currency?.toUpperCase() ?? null;
-  useEffect(() => {
-    if (priceCurrency || savedCurrency) return;
-    if (orgCurrency && isSelectable(orgCurrency, currencies, "price")) {
-      setPriceCurrency(orgCurrency);
-    }
-  }, [priceCurrency, savedCurrency, orgCurrency, currencies]);
+  const defaultCurrency =
+    !savedCurrency && orgCurrency && isSelectable(orgCurrency, currencies, "price")
+      ? orgCurrency
+      : "";
+  const activeCurrency = priceCurrency || defaultCurrency;
   const priceCurrencyOptions = currencyOptions(currencies, "price", savedCurrency);
 
   /** Fill the form from a session type (the provider's own, or a default). */
@@ -315,7 +315,7 @@ export default function ConsultationAvailabilityManager({
       fail("Session price must be a positive amount (or left empty).");
       return;
     }
-    if (hasPrice && !priceCurrency) {
+    if (hasPrice && !activeCurrency) {
       fail("Choose the currency your session is priced in.");
       return;
     }
@@ -330,7 +330,7 @@ export default function ConsultationAvailabilityManager({
     };
     const price =
       hasPrice && priceMinor !== null
-        ? { priceMinor, currency: priceCurrency }
+        ? { priceMinor, currency: activeCurrency }
         : null;
 
     const res = ownTypeId
@@ -1028,14 +1028,14 @@ export default function ConsultationAvailabilityManager({
                     <div className="w-28 shrink-0">
                       <SearchableSelect
                         id={currencyFieldId}
-                        value={priceCurrency}
+                        value={activeCurrency}
                         onChange={(next) => {
                           // Keep the same MAJOR amount when the new currency
                           // divides differently (USD cents to whole yen), so
                           // "12.34" stays 12.34 of something, not 1,234.
                           const nextMinor =
-                            priceMinor !== null && priceCurrency
-                              ? majorToMinor(minorToMajor(priceMinor, priceCurrency), next)
+                            priceMinor !== null && activeCurrency
+                              ? majorToMinor(minorToMajor(priceMinor, activeCurrency), next)
                               : priceMinor;
                           setPriceCurrency(next);
                           setPriceMinor(nextMinor);
@@ -1059,7 +1059,7 @@ export default function ConsultationAvailabilityManager({
                         setPriceDisplay(display);
                         setPriceMinor(minor);
                       }}
-                      currency={priceCurrency}
+                      currency={activeCurrency}
                       placeholder="Not set"
                       aria-label="Session price"
                       // py-3 matches the height of the currency picker beside it.
