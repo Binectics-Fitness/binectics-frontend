@@ -52,11 +52,10 @@ export function isPayable(
 }
 
 /**
- * Where the gateway's Paystack `inline.js` popup is told to send the
- * charge. Every value comes from the booking the API returned: the
- * reference the webhook resolves, the amount in minor units (Paystack
- * quotes in kobo/cents, so no scaling), and the currency. The client never
- * decides any of them.
+ * What a held booking will charge, as the API snapshotted it: the reference,
+ * the amount in minor units and the currency. For display only; the charge
+ * itself is started by the API from the same snapshot (see
+ * consultationsService.startBookingPayment), never from these values.
  */
 export function paystackChargeFor(
   booking: Pick<ConsultationBooking, "payment">,

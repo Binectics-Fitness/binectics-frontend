@@ -3,14 +3,11 @@ import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PayBookingButton } from "@/components/bookings/PayBookingButton";
 import { consultationsService, ConsultationBookingStatus, type ConsultationBooking } from "@/lib/api/consultations";
-import { openPaystack, paystackPublicKey } from "@/lib/payments/paystackInline";
+import { openPaystackCheckout, PaystackUnavailableError } from "@/lib/payments/paystackInline";
 
-vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({ user: { email: "ngozi@example.com" } }),
-}));
-vi.mock("@/lib/payments/paystackInline", () => ({
-  openPaystack: vi.fn(),
-  paystackPublicKey: vi.fn(() => "pk_test_abc123"),
+vi.mock("@/lib/payments/paystackInline", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/payments/paystackInline")>()),
+  openPaystackCheckout: vi.fn(),
 }));
 
 const base: ConsultationBooking = {
@@ -34,13 +31,24 @@ const ok = <T,>(data: T) => ({ success: true, data });
 describe("PayBookingButton", () => {
   const verify = vi.spyOn(consultationsService, "verifyBookingPayment");
   const get = vi.spyOn(consultationsService, "getBooking");
-  const open = vi.mocked(openPaystack);
+  const start = vi.spyOn(consultationsService, "startBookingPayment");
+  const open = vi.mocked(openPaystackCheckout);
 
   beforeEach(() => {
     verify.mockReset();
     get.mockReset();
     open.mockReset();
-    vi.mocked(paystackPublicKey).mockReturnValue("pk_test_abc123");
+    start.mockReset();
+    start.mockResolvedValue(
+      ok({
+        reference: "bkg_ref-1",
+        access_code: "AC_123",
+        authorization_url: "https://checkout.paystack.com/AC_123",
+        amount_minor: 2500000,
+        currency: "NGN",
+        expires_at: "2026-09-27T20:00:00.000Z",
+      }),
+    );
   });
   afterEach(() => vi.useRealTimers());
 
@@ -55,12 +63,30 @@ describe("PayBookingButton", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("opens Paystack with the API's reference, minor amount and currency, and the signed-in email", async () => {
+  it("labels the button with the booking's own amount and currency", () => {
+    render(<PayBookingButton booking={base} onBooking={() => {}} />);
+    expect(screen.getByRole("button", { name: "Pay ₦25,000" })).toBeInTheDocument();
+  });
+
+  it("asks the API to start the payment and hands Paystack only the access code", async () => {
     open.mockResolvedValue({ closed: "callback", reference: "bkg_ref-1" });
     verify.mockResolvedValue(ok(confirmed));
     render(<PayBookingButton booking={base} onBooking={() => {}} />);
     await userEvent.click(screen.getByRole("button", { name: /^Pay / }));
-    expect(open).toHaveBeenCalledWith({ email: "ngozi@example.com", amountMinor: 2500000, currency: "NGN", reference: "bkg_ref-1" });
+    expect(start).toHaveBeenCalledWith("b1");
+    // No amount, currency, reference, email or key from the browser.
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open.mock.calls[0]).toEqual(["AC_123"]);
+  });
+
+  it("says why when the API will not start the payment, and opens nothing", async () => {
+    start.mockResolvedValue({ success: false, status: 400, code: "CURRENCY_NOT_SELECTABLE", message: "This price can't be paid right now." });
+    const onError = vi.fn();
+    render(<PayBookingButton booking={base} onBooking={() => {}} onError={onError} />);
+    await userEvent.click(screen.getByRole("button"));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith("This price can't be paid right now."));
+    expect(open).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /Try again/ })).toBeEnabled();
   });
 
   it("treats the callback as 'checkout closed' and reports the booking the API returns, not the callback", async () => {
@@ -149,14 +175,29 @@ describe("PayBookingButton", () => {
     expect(verify).not.toHaveBeenCalled();
   });
 
-  it("says so and offers a retry when the popup cannot open", async () => {
-    open.mockRejectedValue(new Error("Could not load Paystack"));
+  it("says so and offers a retry when Paystack refuses the checkout", async () => {
+    open.mockRejectedValue(new Error("Paystack could not open this payment."));
     const onError = vi.fn();
     render(<PayBookingButton booking={base} onBooking={() => {}} onError={onError} />);
     await userEvent.click(screen.getByRole("button"));
-    await waitFor(() => expect(onError).toHaveBeenCalledWith("Could not load Paystack"));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith("Paystack could not open this payment."));
     expect(screen.getByRole("button", { name: /Try again/ })).toBeEnabled();
     expect(verify).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the hosted checkout when the popup can't load", async () => {
+    open.mockRejectedValue(new PaystackUnavailableError());
+    const assign = vi.fn();
+    const original = window.location;
+    Object.defineProperty(window, "location", { configurable: true, value: { ...original, assign } });
+    try {
+      render(<PayBookingButton booking={base} onBooking={() => {}} />);
+      await userEvent.click(screen.getByRole("button"));
+      await waitFor(() => expect(assign).toHaveBeenCalledWith("https://checkout.paystack.com/AC_123"));
+      expect(verify).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, "location", { configurable: true, value: original });
+    }
   });
 
   it("refuses a second click while the popup is open, without disabling the button", async () => {
@@ -181,12 +222,5 @@ describe("PayBookingButton", () => {
     await userEvent.click(screen.getByRole("button"));
     await waitFor(() => expect(onError).toHaveBeenCalledWith(expect.stringMatching(/does not match/)));
     expect(get).not.toHaveBeenCalled();
-  });
-
-  it("does not offer payment when Paystack is not configured", () => {
-    vi.mocked(paystackPublicKey).mockReturnValue(null);
-    render(<PayBookingButton booking={base} onBooking={() => {}} />);
-    expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.getByTestId("pay-unavailable")).toBeInTheDocument();
   });
 });

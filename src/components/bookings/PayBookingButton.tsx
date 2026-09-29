@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   consultationsService,
   ConsultationBookingStatus,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
-import { formatCurrency } from "@/utils/format";
-import { minorToMajor } from "@/lib/money/minorMoney";
-import { openPaystack, paystackPublicKey } from "@/lib/payments/paystackInline";
+import { formatMinor } from "@/lib/currencies/helpers";
+import { openPaystackCheckout, PaystackUnavailableError } from "@/lib/payments/paystackInline";
 import { isPayable, paystackChargeFor } from "@/lib/bookings/paymentState";
 
 /**
@@ -49,9 +47,14 @@ function failureMessage(status: GatewayStatus | undefined): string | null {
 
 /**
  * Pays for a held booking with Paystack's popup and reports the booking
- * the API returns afterwards. The popup's callback is treated as "the
- * checkout closed", never as "paid": the API verifies the charge with the
- * gateway and only its booking status counts.
+ * the API returns afterwards.
+ *
+ * The API starts the charge (POST /consultations/bookings/:id/payment) from
+ * the booking's own snapshot and returns an access code; the popup only
+ * resumes that transaction, so no amount, currency or reference leaves the
+ * browser. The popup's callback is treated as "the checkout closed", never
+ * as "paid": the API verifies the charge with the gateway and only its
+ * booking status counts.
  */
 export function PayBookingButton({
   booking,
@@ -68,7 +71,6 @@ export function PayBookingButton({
   label?: string;
   className?: string;
 }) {
-  const { user } = useAuth();
   const [phase, setPhase] = useState<PayPhase>("idle");
   // Set inside the effect, not at creation: StrictMode mounts, unmounts and
   // remounts in development, and a ref initialised once would stay false.
@@ -81,11 +83,11 @@ export function PayBookingButton({
   // (see below), so a second click must be refused here, not by `disabled`.
   const inFlight = useRef(false);
 
+  // For the label only; the server charges its own snapshot.
   const charge = paystackChargeFor(booking);
-  const configured = !!paystackPublicKey();
   if (!isPayable(booking) || !charge) return null;
 
-  const amountLabel = formatCurrency(minorToMajor(charge.amountMinor, charge.currency), charge.currency);
+  const amountLabel = formatMinor(charge.currency, charge.amountMinor);
 
   const settle = async () => {
     // First ask the API to verify with the gateway directly; if the webhook
@@ -129,15 +131,29 @@ export function PayBookingButton({
   };
 
   const pay = async () => {
-    if (!user?.email) { onError?.("Sign in again to pay."); return; }
     setPhase("checkout");
     try {
-      const result = await openPaystack({
-        email: user.email,
-        amountMinor: charge.amountMinor,
-        currency: charge.currency,
-        reference: charge.reference,
-      });
+      const started = await consultationsService.startBookingPayment(booking.id);
+      if (!alive.current) return;
+      if (!started.success || !started.data?.access_code) {
+        setPhase("failed");
+        onError?.(started.message || "We couldn't start the payment. Please try again.");
+        return;
+      }
+      const checkout = started.data;
+      let result;
+      try {
+        result = await openPaystackCheckout(checkout.access_code);
+      } catch (err) {
+        if (err instanceof PaystackUnavailableError && checkout.authorization_url) {
+          // The popup can't load here: the hosted page charges the same
+          // server-started transaction and returns to /payments/return,
+          // which asks the API to verify it.
+          window.location.assign(checkout.authorization_url);
+          return;
+        }
+        throw err;
+      }
       if (!alive.current) return;
       if (result.closed === "dismissed") {
         // Closing the popup is not a failure; the hold is still theirs.
@@ -168,14 +184,6 @@ export function PayBookingButton({
       inFlight.current = false;
     }
   };
-
-  if (!configured) {
-    return (
-      <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }} data-testid="pay-unavailable">
-        Payments are not available right now. Your slot stays held until the deadline.
-      </p>
-    );
-  }
 
   // "checkout" does not disable: the popup's iframe covers the page while it
   // is open, and if Paystack refuses the key it opens nothing and calls
