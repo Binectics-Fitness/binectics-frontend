@@ -98,12 +98,21 @@ export function useAdminGuard() {
   return { user, isLoading, isAuthorized };
 }
 
-export function useRoleGuard(requiredRole: UserRole) {
+export interface RoleGuardOptions {
+  /** Let this account in although its role differs (see useTrainerAccess). */
+  allow?: boolean;
+  /** The extra rule is still loading: hold off redirecting until it settles. */
+  pending?: boolean;
+}
+
+export function useRoleGuard(requiredRole: UserRole, options: RoleGuardOptions = {}) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const allow = options.allow === true;
+  const pending = options.pending === true;
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !pending) {
       // Not authenticated — HARD navigation (see useAdminGuard: a client
       // push can ping-pong with the middleware into a blank page).
       if (!user) {
@@ -112,14 +121,14 @@ export function useRoleGuard(requiredRole: UserRole) {
       }
 
       // Wrong role - redirect to correct dashboard
-      if (user.role !== requiredRole) {
+      if (user.role !== requiredRole && !allow) {
         router.replace(getDashboardRoute(user.role));
       }
     }
-  }, [isLoading, user, requiredRole, router]);
+  }, [isLoading, pending, allow, user, requiredRole, router]);
 
   const isAuthorized =
-    !isLoading && user !== null && user.role === requiredRole;
+    !isLoading && user !== null && (user.role === requiredRole || allow);
 
   return {
     user,

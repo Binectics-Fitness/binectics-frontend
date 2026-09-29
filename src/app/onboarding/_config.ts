@@ -1,4 +1,4 @@
-import { UserRole } from "@/lib/types";
+import { UserRole, MembershipSubscriptionStatus } from "@/lib/types";
 import type { CurrencyCode } from "@/lib/constants/regions";
 export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
@@ -261,7 +261,7 @@ export type WorkspaceDecision =
   | { kind: "member" }
   | { kind: "reuse"; orgId: string }
   | { kind: "create" }
-  | { kind: "blocked"; reason: "loading" | "gate" | "foreign" };
+  | { kind: "blocked"; reason: "loading" | "gate" | "enrolled" | "foreign" };
 
 /**
  * What Continue should do about the workspace before any request is made.
@@ -287,10 +287,94 @@ export function workspaceDecision(input: {
       ? { kind: "reuse", orgId: input.currentOrg._id }
       : { kind: "blocked", reason: "foreign" };
   }
-  if (input.accountRole === "member" && input.memberGate !== "free") {
+  if (input.accountRole === "member" && input.memberGate === "pending") {
     return { kind: "blocked", reason: "gate" };
   }
+  if (input.accountRole === "member" && input.memberGate === "invited") {
+    return { kind: "blocked", reason: "enrolled" };
+  }
   return { kind: "create" };
+}
+
+/** The API code for a gym customer trying to open a provider workspace. */
+export const WORKSPACE_ENROLLED_MEMBER = "WORKSPACE_ENROLLED_MEMBER";
+
+/**
+ * A gym's customer can't turn the same login into a trainer or dietitian
+ * business: the gym enrolled that account, and a provider workspace on it
+ * would mix the two relationships. Same copy as the API's 403.
+ */
+export function enrolledMemberMessage(gymName: string | null | undefined): string {
+  return `You're a member of ${gymName?.trim() || "a gym"}. A trainer or dietitian business needs its own account: sign out and create one with a different email.`;
+}
+
+/**
+ * The subscription states that make someone a gym's customer. Mirrors the
+ * API's rule exactly: a pending payment (an abandoned checkout) must not
+ * lock anyone out, and a cancelled or expired membership is history.
+ */
+export const ENROLLED_MEMBERSHIP_STATUSES: readonly string[] = [
+  MembershipSubscriptionStatus.ACTIVE,
+  MembershipSubscriptionStatus.PAUSED,
+  MembershipSubscriptionStatus.SUSPENDED,
+  MembershipSubscriptionStatus.PAST_DUE,
+];
+
+/** The fields of a my-subscriptions row the membership gate reads. */
+export interface MembershipEvidenceRow {
+  status?: string;
+  organization_id?: string | { _id?: string; name?: string; account_type?: string | null } | null;
+  organization?: string | { _id?: string; name?: string; account_type?: string | null } | null;
+}
+
+export interface MembershipGate {
+  gate: "invited" | "free";
+  /** The gym the account belongs to, when the API named it. */
+  gymName: string | null;
+}
+
+/**
+ * Whether a member-role account was enrolled by a gym, from its membership
+ * subscriptions. Only a live subscription counts (see
+ * ENROLLED_MEMBERSHIP_STATUSES), and only one sold by a gym: a trainer's
+ * or dietitian's package does not make the person a gym's customer. Rows
+ * from an older API carry no account_type on the organization; those still
+ * count, as every row did before the API sent it.
+ */
+export function membershipGate(rows: readonly MembershipEvidenceRow[] | null | undefined): MembershipGate {
+  for (const row of rows ?? []) {
+    if (!row.status || !ENROLLED_MEMBERSHIP_STATUSES.includes(row.status)) continue;
+    const raw = row.organization ?? row.organization_id;
+    const org = raw && typeof raw === "object" ? raw : null;
+    const accountType = org?.account_type;
+    if (accountType && accountType !== "gym_owner") continue;
+    return { gate: "invited", gymName: org?.name?.trim() || null };
+  }
+  return { gate: "free", gymName: null };
+}
+
+export interface WorkspaceError {
+  message: string;
+  /** Offer "Sign out": the fix is a different account, not a retry. */
+  signOut?: boolean;
+}
+
+/**
+ * What to show when the API refuses to create the workspace. A gym customer
+ * gets the separate-account copy (named after their gym when we know it);
+ * anything else shows the API's own message.
+ */
+export function workspaceCreateError(
+  response: { code?: string; message?: string },
+  gymName: string | null | undefined,
+): WorkspaceError {
+  if (response.code === WORKSPACE_ENROLLED_MEMBER) {
+    return {
+      message: gymName ? enrolledMemberMessage(gymName) : (response.message || enrolledMemberMessage(null)),
+      signOut: true,
+    };
+  }
+  return { message: response.message || "We could not create your workspace yet. Try again." };
 }
 
 /**

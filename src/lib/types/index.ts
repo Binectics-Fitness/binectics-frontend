@@ -617,8 +617,11 @@ export function isSeatBearingMembershipStatus(
 
 export interface MembershipSubscription {
   _id: string;
-  /** Populated ({_id, name}) by /marketplace/my-subscriptions — the member's gym. */
-  organization_id: string | { _id: string; name: string };
+  /**
+   * Populated ({_id, name, account_type}) by /marketplace/my-subscriptions:
+   * the gym, trainer or dietitian that sold it. Older APIs send no account_type.
+   */
+  organization_id: string | { _id: string; name: string; account_type?: string };
   plan_id:
     | string
     | {

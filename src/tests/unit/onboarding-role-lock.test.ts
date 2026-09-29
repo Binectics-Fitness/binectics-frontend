@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ACCOUNT_TYPE_TO_USER_ROLE, canChangeRole, resolveEstablishedRole, resolvePreselectedRole, workspaceDecision } from "@/app/onboarding/_config";
+import { ACCOUNT_TYPE_TO_USER_ROLE, WORKSPACE_ENROLLED_MEMBER, canChangeRole, enrolledMemberMessage, membershipGate, resolveEstablishedRole, resolvePreselectedRole, workspaceCreateError, workspaceDecision } from "@/app/onboarding/_config";
 
 // Regression guards for the onboarding role model:
 //
@@ -132,7 +132,10 @@ describe("workspaceDecision", () => {
 
   it("waits for membership evidence before a member-role account creates one", () => {
     expect(workspaceDecision({ ...base, memberGate: "pending" })).toEqual({ kind: "blocked", reason: "gate" });
-    expect(workspaceDecision({ ...base, memberGate: "invited" })).toEqual({ kind: "blocked", reason: "gate" });
+  });
+
+  it("refuses a gym's customer outright: they need a separate account, not a wait", () => {
+    expect(workspaceDecision({ ...base, memberGate: "invited" })).toEqual({ kind: "blocked", reason: "enrolled" });
   });
 });
 
@@ -144,5 +147,78 @@ describe("ACCOUNT_TYPE_TO_USER_ROLE", () => {
       gym_owner: "GYM_OWNER",
       dietitian: "DIETITIAN",
     });
+  });
+});
+
+// 6. A gym's customer cannot turn the same login into a provider business.
+//    Only a live subscription sold by a gym makes someone that customer.
+describe("membershipGate", () => {
+  const gym = { _id: "g1", name: "Iron House", account_type: "gym_owner" };
+
+  it("is free with no subscriptions", () => {
+    expect(membershipGate([])).toEqual({ gate: "free", gymName: null });
+    expect(membershipGate(undefined)).toEqual({ gate: "free", gymName: null });
+  });
+
+  it("counts a live gym subscription and keeps the gym's name", () => {
+    expect(membershipGate([{ status: "active", organization_id: gym }])).toEqual({ gate: "invited", gymName: "Iron House" });
+    expect(membershipGate([{ status: "past_due", organization: gym }])).toEqual({ gate: "invited", gymName: "Iron House" });
+  });
+
+  it("counts every live state the API counts", () => {
+    for (const status of ["active", "paused", "suspended", "past_due"]) {
+      expect(membershipGate([{ status, organization_id: gym }]).gate).toBe("invited");
+    }
+  });
+
+  it("does not count a cancelled or expired gym subscription", () => {
+    expect(membershipGate([{ status: "cancelled", organization_id: gym }]).gate).toBe("free");
+    expect(membershipGate([{ status: "expired", organization_id: gym }]).gate).toBe("free");
+  });
+
+  it("does not count an abandoned checkout (pending payment)", () => {
+    expect(membershipGate([{ status: "pending_payment", organization_id: gym }]).gate).toBe("free");
+  });
+
+  it("does not count a trainer's or dietitian's package", () => {
+    expect(membershipGate([{ status: "active", organization_id: { _id: "t1", name: "Ade Coaching", account_type: "personal_trainer" } }]).gate).toBe("free");
+    expect(membershipGate([{ status: "active", organization_id: { _id: "d1", name: "Nouriva", account_type: "dietitian" } }]).gate).toBe("free");
+  });
+
+  it("finds the gym among other rows", () => {
+    expect(
+      membershipGate([
+        { status: "cancelled", organization_id: gym },
+        { status: "active", organization_id: { _id: "t1", name: "Ade Coaching", account_type: "personal_trainer" } },
+        { status: "active", organization_id: { _id: "g2", name: "Pulse", account_type: "gym_owner" } },
+      ]),
+    ).toEqual({ gate: "invited", gymName: "Pulse" });
+  });
+
+  it("falls back to counting the row when an older API sends no account_type", () => {
+    expect(membershipGate([{ status: "active", organization_id: { _id: "g1", name: "Iron House" } }])).toEqual({ gate: "invited", gymName: "Iron House" });
+    expect(membershipGate([{ status: "active", organization_id: "g1" }])).toEqual({ gate: "invited", gymName: null });
+  });
+});
+
+describe("workspaceCreateError", () => {
+  it("maps the enrolled-member 403 to the separate-account copy, with sign out", () => {
+    expect(workspaceCreateError({ code: WORKSPACE_ENROLLED_MEMBER, message: "server copy" }, "Iron House")).toEqual({
+      message: "You're a member of Iron House. A trainer or dietitian business needs its own account: sign out and create one with a different email.",
+      signOut: true,
+    });
+  });
+
+  it("uses the API's message when the gym's name is unknown here", () => {
+    expect(workspaceCreateError({ code: WORKSPACE_ENROLLED_MEMBER, message: "You're a member of Pulse. ..." }, null)).toEqual({
+      message: "You're a member of Pulse. ...",
+      signOut: true,
+    });
+    expect(workspaceCreateError({ code: WORKSPACE_ENROLLED_MEMBER }, null).message).toBe(enrolledMemberMessage(null));
+  });
+
+  it("shows other refusals as the API wrote them, without sign out", () => {
+    expect(workspaceCreateError({ code: "WORKSPACE_STAFF_MEMBER", message: "You are part of X's team." }, "Iron House")).toEqual({ message: "You are part of X's team." });
+    expect(workspaceCreateError({}, null)).toEqual({ message: "We could not create your workspace yet. Try again." });
   });
 });
