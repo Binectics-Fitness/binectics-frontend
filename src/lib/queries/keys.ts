@@ -130,7 +130,6 @@ export const queryKeys = {
 
   utility: {
     countries: () => ["utility", "countries"] as const,
-    platformConfig: () => ["utility", "platformConfig"] as const,
   },
 
   loyalty: {

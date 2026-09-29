@@ -17,7 +17,12 @@ export interface CountryItem {
   cities: CityItem[];
 }
 
-export interface PlatformCurrency {
+/**
+ * GET /utility/platform-config `currencies` rows, kept for compatibility
+ * (`is_active` = prices can be set in it). Pickers read GET /currencies
+ * through useCurrencies instead.
+ */
+export interface PlatformConfigCurrency {
   code: string;
   name: string;
   symbol: string;
@@ -26,7 +31,7 @@ export interface PlatformCurrency {
 
 export interface PlatformConfig {
   languages: string[];
-  currencies: PlatformCurrency[];
+  currencies: PlatformConfigCurrency[];
   facility_suggestions: string[];
   amenity_suggestions: string[];
 }
