@@ -1,38 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
 import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, TextArea, ChipGrid, UploadZone, RadioCards } from "./_components";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { SUPPORTED_CURRENCIES } from "@/lib/constants/regions";
-import { COUNTRY_NAME_TO_CURRENCY } from "./_config";
+import { COUNTRY_NAME_TO_CODE } from "./_config";
+import { OnboardingCurrencyField } from "./_currency";
 
 function toggleChip(list: string[], chip: string): string[] {
   return list.includes(chip) ? list.filter((c) => c !== chip) : [...list, chip];
 }
 
-const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map(
-  (c) => `${c.currencyCode} · ${c.symbol}`,
-);
-const currencyOption = (code: string) =>
-  CURRENCY_OPTIONS.find((o) => o.startsWith(code)) ?? CURRENCY_OPTIONS[0];
-
 export function GymStep1({ data, setField }: StepProps) {
   const { currentOrg } = useOrganization();
   const country = (data.country as string) || "South Africa";
-  // Explicit pick > what the org already has > suggested by country.
-  const currency =
-    (data.currency as string) ??
-    currentOrg?.currency ??
-    COUNTRY_NAME_TO_CURRENCY[country] ??
-    "USD";
-
   // The workspace is created when this step is submitted, and the step's
-  // save patches `currency` with the rest of the business details, so the
-  // effective value is written into the form once it is known. A separate
-  // write from here used to race "Save & finish later" navigating away.
-  useEffect(() => {
-    if (data.currency === undefined) setField("currency", currency);
-  }, [currency, data.currency, setField]);
+  // save patches `currency` with the rest of the business details. The field
+  // writes its effective value (an explicit pick, the org's saved currency,
+  // or the country's suggestion) into the form as soon as it is known.
 
   return (
     <>
@@ -42,10 +25,18 @@ export function GymStep1({ data, setField }: StepProps) {
         <Field label="Legal entity"><SelectField value={(data.entity as string) || "Pty Ltd"} onChange={(v) => setField("entity", v)} options={["Pty Ltd", "CC", "Sole prop", "LLC", "Inc"]} /></Field>
         <Field label="Country"><SelectField value={country} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
         <Field label="Registration #"><TextInput value={(data.regNumber as string) || ""} onChange={(v) => setField("regNumber", v)} placeholder="2018/123456/07" /></Field>
-        <Field label="Default currency"><SelectField value={currencyOption(currency)} onChange={(v) => setField("currency", v.slice(0, 3))} options={CURRENCY_OPTIONS} /></Field>
+        <OnboardingCurrencyField
+          id="ob-gym-currency"
+          data={data}
+          setField={setField}
+          countryCode={COUNTRY_NAME_TO_CODE[country]}
+          countryName={country}
+          orgCurrency={currentOrg?.currency}
+          priceKeys={[]}
+        />
       </FormGrid>
       <p className="text-[12px] mt-2" style={{ color: "var(--fg-3)" }}>
-        New membership plans and listings price in this currency. You can change it any time in Settings.
+        New membership plans and listings price in this currency.
       </p>
     </>
   );

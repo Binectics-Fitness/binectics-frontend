@@ -1,7 +1,11 @@
 "use client";
 
 import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
-import { DIETITIAN_DEFAULT_COUNTRY, SESSION_MISSING, dietitianCountry, dietitianCurrency } from "./_config";
+import { COUNTRY_NAME_TO_CODE, DIETITIAN_DEFAULT_COUNTRY, SESSION_MISSING, dietitianCountry, dietitianCurrency } from "./_config";
+import { OnboardingCurrencyField } from "./_currency";
+
+/** The step 5 price, cleared when the currency changes. */
+const PRICE_KEYS = ["sessionPrice"] as const;
 
 const SPECIALIZATIONS = ["PCOS", "Diabetes", "Sport performance", "Gestational", "IBS · FODMAP", "Pre/post-natal", "Weight management", "Cardiovascular", "Renal", "Paediatric", "Eating disorders"];
 const POPULATIONS = ["Adults", "Athletes", "Children", "Pre/post-natal", "Seniors"];
@@ -13,15 +17,7 @@ function toggleChip(list: string[], chip: string, max?: number): string[] {
 }
 
 export function DietStep1({ data, setField }: StepProps) {
-  const changeCountry = (country: string) => {
-    // A price typed on step 5 was in the old currency; relabelling "15,000"
-    // from naira to shillings would publish a different price.
-    if (dietitianCurrency({ ...data, country }) !== dietitianCurrency(data)) {
-      setField("sessionPrice", "");
-      setField("sessionPriceMinor", null);
-    }
-    setField("country", country);
-  };
+  const country = dietitianCountry(data);
   return (
     <>
       <StageHead crumb="Step 01 of 07, dietitian track" title="Your practice basics." desc="We'll list this on your profile." />
@@ -29,7 +25,15 @@ export function DietStep1({ data, setField }: StepProps) {
         <Field label="Full name (with title)" htmlFor="ob-diet-name"><TextInput id="ob-diet-name" value={(data.fullName as string) || ""} onChange={(v) => setField("fullName", v)} placeholder="Dr Nadia Hassan, RD" /></Field>
         <Field label="Pronouns" htmlFor="ob-diet-pronouns"><TextInput id="ob-diet-pronouns" value={(data.pronouns as string) || ""} onChange={(v) => setField("pronouns", v)} placeholder="she/her" /></Field>
         <Field label="City" htmlFor="ob-diet-city"><TextInput id="ob-diet-city" value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder="Lagos" /></Field>
-        <Field label="Country" htmlFor="ob-diet-country"><SelectField id="ob-diet-country" value={dietitianCountry(data)} onChange={changeCountry} options={[DIETITIAN_DEFAULT_COUNTRY, "South Africa", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Country" htmlFor="ob-diet-country"><SelectField id="ob-diet-country" value={country} onChange={(v) => setField("country", v)} options={[DIETITIAN_DEFAULT_COUNTRY, "South Africa", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <OnboardingCurrencyField
+          id="ob-diet-currency"
+          data={data}
+          setField={setField}
+          countryCode={COUNTRY_NAME_TO_CODE[country]}
+          countryName={country}
+          priceKeys={PRICE_KEYS}
+        />
         <Field label="Practice name (optional)" htmlFor="ob-diet-practice" full><TextInput id="ob-diet-practice" value={(data.practiceName as string) || ""} onChange={(v) => setField("practiceName", v)} placeholder="Nadia Hassan Clinical Nutrition" /></Field>
       </FormGrid>
     </>
@@ -116,7 +120,7 @@ const SESSION_LENGTHS = ["30 min", "45 min", "60 min", "90 min"];
  * own session; leaving both creates nothing, to set up later.
  */
 export function DietStep5({ data, setField }: StepProps) {
-  const currency = dietitianCurrency(data);
+  const currency = dietitianCurrency(data) ?? "";
   const free = data.sessionFree === true;
   const later = data.sessionLater === true;
   const missing = data[SESSION_MISSING] === true;
@@ -134,7 +138,7 @@ export function DietStep5({ data, setField }: StepProps) {
         <Field label="Session length" htmlFor="ob-diet-length" full>
           <SelectField id="ob-diet-length" value={duration} onChange={(v) => setField("sessionDuration", v)} options={SESSION_LENGTHS} />
         </Field>
-        <Field label={`Price per session (${currency})`} htmlFor="ob-diet-price" full>
+        <Field label={currency ? `Price per session (${currency})` : "Price per session"} htmlFor="ob-diet-price" full>
           <MoneyField
             id="ob-diet-price"
             describedBy="ob-diet-price-hint"
