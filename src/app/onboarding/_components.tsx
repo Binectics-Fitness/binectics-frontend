@@ -106,12 +106,14 @@ export function MoneyField({
   currency,
   placeholder,
   id,
+  disabled,
 }: {
   value: string;
   onChange: (display: string, minor: number | null) => void;
   currency: string;
   placeholder?: string;
   id?: string;
+  disabled?: boolean;
 }) {
   const autoId = useId();
   return (
@@ -121,8 +123,55 @@ export function MoneyField({
       onChange={onChange}
       currency={currency}
       placeholder={placeholder}
-      style={INPUT_STYLE}
+      disabled={disabled}
+      style={disabled ? { ...INPUT_STYLE, opacity: 0.5, cursor: "not-allowed" } : INPUT_STYLE}
     />
+  );
+}
+
+/* ── Session price: price or an explicit Free ─────────────── */
+
+/**
+ * The line under a session price, saying what will be saved. A blank price
+ * with Free not chosen saves no session at all ("set it up later"), which is
+ * not the same as free, so the copy never implies otherwise.
+ */
+export function sessionPriceHint({
+  display,
+  minor,
+  free,
+  minutes,
+  noun,
+}: {
+  display: string;
+  minor: number | null | undefined;
+  free: boolean;
+  minutes: number;
+  noun: string;
+}): string {
+  if (free) return `Clients book a ${minutes} min ${noun} with you for free.`;
+  if (typeof minor === "number" && minor > 0) return `Clients pay ${display} for a ${minutes} min ${noun}.`;
+  if (typeof minor === "number") return "Enter a price above zero, or choose Free.";
+  return "Enter a price, or choose Free. Leave both empty to set it up later.";
+}
+
+/** The explicit Free choice beside a session price, and what will be saved. */
+export function FreeSessionChoice({
+  label,
+  free,
+  onToggle,
+  hint,
+}: {
+  label: string;
+  free: boolean;
+  onToggle: () => void;
+  hint: string;
+}) {
+  return (
+    <>
+      <ChipGrid label={label} options={[label]} selected={free ? [label] : []} onToggle={onToggle} />
+      <span aria-live="polite" style={{ fontSize: 12, color: "var(--fg-3)" }}>{hint}</span>
+    </>
   );
 }
 

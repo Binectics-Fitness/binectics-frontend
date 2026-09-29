@@ -32,7 +32,20 @@ describe("trainer onboarding: what each step persists", () => {
   it("creates nothing when no price was entered, and defaults the length to an hour", () => {
     expect(trainerSessionPatch({ country: "Nigeria" })).toBeNull();
     expect(trainerSessionPatch({ country: "Nigeria", price1on1Minor: null })).toBeNull();
-    expect(trainerSessionPatch({ price1on1Minor: 0 })?.defaultDurationMinutes).toBe(60);
-    expect(trainerSessionPatch({ price1on1Minor: 0 })?.priceMinor).toBe(0);
+    expect(trainerSessionPatch({ price1on1Minor: 500000 })?.defaultDurationMinutes).toBe(60);
+  });
+
+  it("saves Free as a price of 0, and only when Free was chosen", () => {
+    expect(trainerSessionPatch({ country: "Nigeria", price1on1Free: true })).toEqual({
+      name: "1:1 session",
+      defaultDurationMinutes: 60,
+      priceMinor: 0,
+      currency: "NGN",
+    });
+    // Free wins over a price typed before it was chosen.
+    expect(trainerSessionPatch({ price1on1Minor: 2500000, price1on1Free: true })?.priceMinor).toBe(0);
+    // A typed 0 is not the Free choice; like a blank, it saves nothing.
+    expect(trainerSessionPatch({ price1on1Minor: 0 })).toBeNull();
+    expect(trainerSessionPatch({ price1on1Minor: 0, price1on1Free: false })).toBeNull();
   });
 });

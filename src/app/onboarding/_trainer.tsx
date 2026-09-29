@@ -1,6 +1,6 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard } from "./_components";
+import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, FreeSessionChoice, sessionPriceHint } from "./_components";
 import { COUNTRY_NAME_TO_CURRENCY, trainerCountry } from "./_config";
 
 const SPECIALIZATIONS = ["Strength", "Hypertrophy", "Running", "Olympic lifting", "Powerlifting", "Bodybuilding", "Functional", "Mobility", "HIIT", "CrossFit", "Pre-natal", "Post-natal"];
@@ -99,12 +99,25 @@ export function TrainerStep4({ data, setField }: StepProps) {
     },
     currency,
   });
+  // Free is an explicit choice (a price of 0); a blank price is no answer
+  // and saves no session, so the trainer can set it up later.
+  const free = data.price1on1Free === true;
+  const oneOnOne = money("price1on1");
+  const duration = (data.duration as string) || "60 min";
   return (
     <>
       <StageHead crumb="Step 04 of 06, trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
       <FormGrid>
-        <Field label="1:1 session"><MoneyField {...money("price1on1")} placeholder="₦80,000" /></Field>
-        <Field label="Duration"><SelectField value={(data.duration as string) || "60 min"} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
+        <Field label="1:1 session">
+          <MoneyField {...oneOnOne} value={free ? "" : oneOnOne.value} placeholder={free ? "Free" : "₦80,000"} disabled={free} />
+          <FreeSessionChoice
+            label="Free session"
+            free={free}
+            onToggle={() => setField("price1on1Free", !free)}
+            hint={sessionPriceHint({ display: (data.price1on1 as string) || "", minor: data.price1on1Minor as number | null | undefined, free, minutes: parseInt(duration, 10) || 60, noun: "session" })}
+          />
+        </Field>
+        <Field label="Duration"><SelectField value={duration} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
         <Field label="4-session pack"><MoneyField {...money("price4pack")} placeholder="₦280,000" /></Field>
         <Field label="12-session pack"><MoneyField {...money("price12pack")} placeholder="₦800,000" /></Field>
         <Field label="Online programming · monthly" full><MoneyField {...money("priceMonthly")} placeholder="₦120,000 / month" /></Field>
@@ -133,8 +146,8 @@ export function TrainerStep6({ data }: StepProps) {
   const name = `${(data.firstName as string) || "Your"} ${(data.lastName as string) || "Name"}`;
   const specs = ((data.specializations as string[]) || []).slice(0, 2).join(" & ") || "Specializations";
   const city = (data.city as string) || "City";
-  const price = (data.price1on1 as string) || "₦ 80,000";
-  const meta = `${specs} · ${city} · ${price}/session`;
+  const price = data.price1on1Free === true ? "Free sessions" : `${(data.price1on1 as string) || "₦ 80,000"}/session`;
+  const meta = `${specs} · ${city} · ${price}`;
   return (
     <>
       <StageHead crumb="Step 06 of 06, trainer track" title="Preview & publish." desc="Your profile goes live the moment we verify your docs. Usually within 48h." />

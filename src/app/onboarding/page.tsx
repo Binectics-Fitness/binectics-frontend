@@ -13,7 +13,7 @@ import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, type RoleId } from "./_config";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
 import { MEMBER_STEPS } from "./_member";
@@ -396,17 +396,9 @@ function OnboardingContent() {
         // which is what clients book. Until this was saved the step
         // collected a price and threw it away, and a trainer who finished
         // onboarding still had nothing bookable.
+        // Free saves a price of 0; a blank price creates nothing.
         const session = trainerSessionPatch(stepData);
-        if (session) {
-          const own = await consultationsService.getOwnTypes();
-          const existing = (own.data ?? []).find((t) => t.name.toLowerCase() === session.name.toLowerCase());
-          if (existing) {
-            const { name: _name, ...rest } = session;
-            await consultationsService.updateOwnType(existing.id, { ...rest, isActive: true });
-          } else {
-            await consultationsService.createOwnType(session);
-          }
-        }
+        if (session) await upsertOwnSession(session, consultationsService);
       } else if (currentStep === 5) {
         if (stepData.payout && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
@@ -443,20 +435,21 @@ function OnboardingContent() {
   const persistDietitianStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
     try {
       if (currentStep === 1) {
-        const fullName = (stepData.fullName as string || "").replace(/^(Dr\.?|Prof\.?)\s*/i, "").trim();
-        const parts = fullName.split(/\s+/).filter(Boolean);
-        const patch: Record<string, unknown> = {};
-        if (parts.length >= 2) {
-          patch.first_name = parts.slice(0, -1).join(" ");
-          patch.last_name = parts[parts.length - 1];
-        } else if (parts.length === 1) {
-          patch.first_name = parts[0];
-        }
-        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
-        if (stepData.practiceName && orgId) {
-          await teamsService.updateOrganization(orgId, { name: stepData.practiceName as string });
-        }
+        const { profile, currency } = dietitianLocationPatch(stepData);
+        if (Object.keys(profile).length > 0) await authService.updateProfile(profile);
+        // The workspace trades in the country's currency, as the trainer
+        // track records on its step 1; the consultation price uses it too.
+        const orgPatch: import("@/lib/api/teams").UpdateOrganizationRequest = { currency };
+        if (stepData.practiceName) orgPatch.name = stepData.practiceName as string;
+        if (orgId) await teamsService.updateOrganization(orgId, orgPatch);
       } else if (currentStep === 5) {
+        // The consultation becomes the dietitian's own session type, which
+        // is what members book. There is no dietitian platform default, so
+        // without it a new dietitian had nothing bookable. Free saves a
+        // price of 0; a blank price creates nothing (set it up later).
+        const session = dietitianSessionPatch(stepData);
+        if (session) await upsertOwnSession(session, consultationsService);
+      } else if (currentStep === 6) {
         if (stepData.payout && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
