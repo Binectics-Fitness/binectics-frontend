@@ -3,19 +3,25 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRegion } from "@/contexts/RegionContext";
-import { type BillingPeriod, getMonthlyEquivalent } from "@/lib/constants/regions";
+import { type BillingPeriod, type PlanTier, marketingMonthlyPrice } from "@/lib/constants/regions";
+import { formatCurrency } from "@/utils/format";
 import { TogglePill } from "@/components/ds/TogglePill";
 
 export default function LandingPricing() {
   const [audience, setAudience] = useState<"provider" | "member">("provider");
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
-  const { formatAmount, currency } = useRegion();
+  const { currency, locale } = useRegion();
+  // Marketing copy: shown in the visitor's currency when the copy has it.
+  const tierPrice = (tier: PlanTier) => {
+    const p = marketingMonthlyPrice(tier, currency, period);
+    return formatCurrency(p.amount, p.currency, locale);
+  };
   const isAnnual = period === "annual";
   const priceSub = isAnnual ? "/ mo · billed annually" : "/ month";
 
-  const studioPrice = formatAmount(getMonthlyEquivalent("studio", currency, period));
-  const premiumPrice = formatAmount(getMonthlyEquivalent("premium", currency, period));
-  const familyPrice = formatAmount(getMonthlyEquivalent("family", currency, period));
+  const studioPrice = tierPrice("studio");
+  const premiumPrice = tierPrice("premium");
+  const familyPrice = tierPrice("family");
 
   return (
     <div>

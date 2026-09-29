@@ -379,7 +379,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
                   <label className={labelClass}>Amount paid</label>
                   <MoneyInput
                     value={form.amount_paid_display}
-                    currency={selectedPlan?.currency ?? currentOrg?.currency ?? "USD"}
+                    currency={selectedPlan?.currency ?? currentOrg?.currency ?? ""}
                     aria-label="Amount paid"
                     onChange={(display, minor) =>
                       setForm((f) => ({

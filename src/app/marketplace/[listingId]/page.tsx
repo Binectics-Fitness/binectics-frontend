@@ -440,7 +440,7 @@ export default function ProviderPage() {
                   </div>
                   <div className="flex justify-between text-[13.5px] py-1" style={{ color: "var(--fg-2)" }}>
                     <span>Platform fee</span>
-                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{selectedPlan.currency === "NGN" ? "₦" : "$"} 0.00</span>
+                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(0, selectedPlan.currency)}</span>
                   </div>
                   <div className="flex justify-between text-[13.5px] py-1 pt-3 mt-1 border-t border-border font-medium" style={{ color: "var(--ink)" }}>
                     <span>Due today</span>

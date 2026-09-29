@@ -146,7 +146,7 @@ function CheckRow({ label, count, on = false }: { label: string; count: number; 
 /* ═══ PAGE ═══════════════════════════════════════════════════ */
 
 export default function MarketplacePage() {
-  const { formatAmount } = useRegion();
+  const { formatAmount, currency: displayCurrency, currencies } = useRegion();
   const [listings, setListings] = useState<Listing[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, total_pages: 0 });
   const [loading, setLoading] = useState(true);
@@ -310,8 +310,9 @@ export default function MarketplacePage() {
           <div className="p-4.5 border-b border-border">
             <h4 className="font-mono text-[12.5px] uppercase tracking-[0.04em] font-normal mb-3" style={{ color: "var(--fg-3)" }}>Currency</h4>
             <div className="flex flex-wrap gap-1.5">
-              {["NGN", "USD", "EUR", "GBP", "ZAR", "KES"].map((c, i) => (
-                <span key={c} className="inline-flex items-center h-6 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border" style={{ color: i === 0 ? "var(--ink)" : "var(--fg-2)", borderColor: i === 0 ? "var(--ink)" : "var(--border)" }}>{c}</span>
+              {/* The platform's currencies (GET /currencies), not a fixed list. */}
+              {currencies.map(({ code: c }) => (
+                <span key={c} className="inline-flex items-center h-6 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border" style={{ color: c === displayCurrency ? "var(--ink)" : "var(--fg-2)", borderColor: c === displayCurrency ? "var(--ink)" : "var(--border)" }}>{c}</span>
               ))}
             </div>
           </div>
