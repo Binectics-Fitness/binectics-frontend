@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { teamsService } from "@/lib/api/teams";
+import { teamsService, type UpdateOrganizationRequest } from "@/lib/api/teams";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { onboardingService } from "@/lib/api/onboarding";
 import { authService } from "@/lib/api/auth";
@@ -439,7 +439,7 @@ function OnboardingContent() {
         if (Object.keys(profile).length > 0) await authService.updateProfile(profile);
         // The workspace trades in the country's currency, as the trainer
         // track records on its step 1; the consultation price uses it too.
-        const orgPatch: import("@/lib/api/teams").UpdateOrganizationRequest = { currency };
+        const orgPatch: UpdateOrganizationRequest = { currency };
         if (stepData.practiceName) orgPatch.name = stepData.practiceName as string;
         if (orgId) await teamsService.updateOrganization(orgId, orgPatch);
       } else if (currentStep === 5) {
