@@ -122,6 +122,12 @@ export const queryKeys = {
       [...queryKeys.checkins.all, "orgCheckIns", orgId, params] as const,
   },
 
+  currencies: {
+    all: ["currencies"] as const,
+    list: () => [...queryKeys.currencies.all, "list"] as const,
+    admin: () => [...queryKeys.currencies.all, "admin"] as const,
+  },
+
   utility: {
     countries: () => ["utility", "countries"] as const,
     platformConfig: () => ["utility", "platformConfig"] as const,
