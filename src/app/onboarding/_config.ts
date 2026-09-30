@@ -112,6 +112,17 @@ export const SESSION_FIELDS = {
   dietitian: { step: 5, minor: "sessionPriceMinor", free: "sessionFree", later: "sessionLater" },
 } as const;
 
+/**
+ * What to tell a gym owner when the membership plan template could not be
+ * added, or null when it was. The API says why on a 4xx (the template holds
+ * more plans than the owner's plan allows); anything else gets plain copy.
+ */
+export function planSeedError(res: { success: boolean; message?: string; status?: number }): string | null {
+  if (res.success) return null;
+  if (res.status && res.status >= 400 && res.status < 500 && res.message) return res.message;
+  return "We couldn't add those membership plans. Try again, or choose Start blank and add plans later.";
+}
+
 /** Set when Continue was pressed on an unanswered session step. */
 export const SESSION_MISSING = "sessionMissing";
 

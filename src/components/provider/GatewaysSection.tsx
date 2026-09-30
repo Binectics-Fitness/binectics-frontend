@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useOrgPaymentConfigs,
@@ -68,6 +68,11 @@ export function GatewaysSection({
   const [publicKey, setPublicKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const fieldId = useId();
+  const gatewayId = `${fieldId}-gateway`;
+  const publicKeyId = `${fieldId}-public-key`;
+  const secretKeyId = `${fieldId}-secret-key`;
+  const secretHintId = `${fieldId}-secret-hint`;
 
   const startAdd = () => {
     setAdding(true);
@@ -179,20 +184,22 @@ export function GatewaysSection({
           <div className="flex flex-col gap-3.5 p-3.5 rounded-(--r-2)" style={{ border: "1px dashed var(--border-2)" }}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               <div className="flex flex-col gap-1.5">
-                <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Gateway</label>
+                <label htmlFor={gatewayId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Gateway</label>
                 <SearchableSelect
+                  id={gatewayId}
                   value={gateway}
                   onChange={(v) => setGateway(v)}
                   options={addable.map((g) => ({ label: g.label, value: g.gateway }))}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Public key</label>
-                <input value={publicKey} onChange={(e) => setPublicKey(e.target.value)} placeholder="pk_live_…" className={INPUT_CLASS} style={INPUT_STYLE} />
+                <label htmlFor={publicKeyId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Public key</label>
+                <input id={publicKeyId} value={publicKey} onChange={(e) => setPublicKey(e.target.value)} placeholder="pk_live_…" className={INPUT_CLASS} style={INPUT_STYLE} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Secret key</label>
-                <input type="password" value={secretKey} onChange={(e) => setSecretKey(e.target.value)} placeholder="sk_live_…" autoComplete="off" className={INPUT_CLASS} style={INPUT_STYLE} />
+                <label htmlFor={secretKeyId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Secret key</label>
+                <input id={secretKeyId} type="password" value={secretKey} onChange={(e) => setSecretKey(e.target.value)} placeholder="sk_live_…" autoComplete="off" aria-describedby={secretHintId} className={INPUT_CLASS} style={INPUT_STYLE} />
+                <span id={secretHintId} className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>Stored encrypted. Never shown again.</span>
               </div>
             </div>
             {error && <span className="text-[12px]" style={{ color: "var(--danger, #b00020)" }}>{error}</span>}
