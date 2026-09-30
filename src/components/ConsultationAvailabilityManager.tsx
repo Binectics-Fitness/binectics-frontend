@@ -100,6 +100,9 @@ export default function ConsultationAvailabilityManager({
 }: ConsultationAvailabilityManagerProps) {
   const { user } = useAuth();
   const { currentOrg } = useOrganization();
+  // Platform currencies only, deliberately: a booking is always charged on
+  // the platform account, so a currency only the provider's own Paystack
+  // account can take (useOrgPriceCurrencies) could be priced but never paid.
   const { all: currencies } = useCurrencies();
   // The provider shells render their children twice (desktop and phone);
   // a fixed id pointed the label at the hidden copy.
@@ -1033,6 +1036,11 @@ export default function ConsultationAvailabilityManager({
                     <p className="mt-0.5 text-xs text-fg-3">
                       Shown on your listing and used for estimated earnings.
                       Choose Free if you don&apos;t charge for it.
+                    </p>
+                    <p className="mt-0.5 text-xs text-fg-3">
+                      1:1 sessions are charged by Binectics, so only currencies
+                      Binectics takes apply here, not ones added on your own
+                      Paystack account.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
