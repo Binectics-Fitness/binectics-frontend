@@ -6,6 +6,10 @@ import {
   type CurrencyUse,
   type PlatformCurrency,
 } from "@/lib/api/currencies";
+import {
+  paymentGatewaysService,
+  type PublicPaymentGateway,
+} from "@/lib/api/paymentGateways";
 
 /**
  * The list changes only when an admin flips a currency, and the API caches
@@ -44,4 +48,21 @@ export function useCurrencies(use?: CurrencyUse, enabled = true) {
     [all, use],
   );
   return { ...query, data, all };
+}
+
+/**
+ * GET /payment-gateways: the gateways we run, and whether a provider may
+ * connect their own keys for each. Same cache horizon as the currency list.
+ */
+export function usePaymentGateways(enabled = true) {
+  return useQuery<PublicPaymentGateway[]>({
+    queryKey: queryKeys.currencies.gateways(),
+    queryFn: async () => {
+      const res = await paymentGatewaysService.list();
+      if (!res.success) throw new Error(res.message || "Could not load payment providers");
+      return res.data ?? [];
+    },
+    staleTime: CURRENCIES_STALE_MS,
+    enabled,
+  });
 }

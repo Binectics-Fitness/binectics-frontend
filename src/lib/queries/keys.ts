@@ -126,6 +126,13 @@ export const queryKeys = {
     all: ["currencies"] as const,
     list: () => [...queryKeys.currencies.all, "list"] as const,
     admin: () => [...queryKeys.currencies.all, "admin"] as const,
+    gateways: () => [...queryKeys.currencies.all, "gateways"] as const,
+  },
+
+  pricing: {
+    all: ["pricing"] as const,
+    publicPlans: (country: string, audience: string) =>
+      [...queryKeys.pricing.all, "publicPlans", country, audience] as const,
   },
 
   utility: {

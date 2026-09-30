@@ -24,6 +24,7 @@ describe("normalizeCurrency", () => {
         minor_unit: 2,
         selectable: { price: true, charge_card: true, charge_transfer: false },
         suggested_for_countries: ["ng"],
+        gateways: [{ gateway: "Paystack", label: "Paystack", methods: ["card", "ussd"] }],
       }),
     ).toEqual({
       code: "NGN",
@@ -32,7 +33,13 @@ describe("normalizeCurrency", () => {
       minor_unit: 2,
       selectable: { price: true, charge_card: true, charge_transfer: false },
       suggested_for_countries: ["NG"],
+      gateways: [{ gateway: "paystack", label: "Paystack", methods: ["card"] }],
     });
+  });
+
+  it("reads missing or malformed gateways as none", () => {
+    expect(normalizeCurrency({ code: "ZAR" })?.gateways).toEqual([]);
+    expect(normalizeCurrency({ code: "ZAR", gateways: [null, { label: "x" }] })?.gateways).toEqual([]);
   });
 
   it("reads a missing flag as not selectable, never as allowed", () => {

@@ -14,6 +14,7 @@ export function currency(
     symbol: code,
     minor_unit: 2,
     suggested_for_countries: [],
+    gateways: [],
     ...rest,
     selectable: { price: true, charge_card: true, charge_transfer: false, ...selectable },
   };
@@ -25,7 +26,12 @@ export function currency(
  * selectable for anything.
  */
 export const SEEDED_CURRENCIES: PlatformCurrency[] = [
-  currency("NGN", { name: "Nigerian Naira", symbol: "₦", suggested_for_countries: ["NG"] }),
+  currency("NGN", {
+    name: "Nigerian Naira",
+    symbol: "₦",
+    suggested_for_countries: ["NG"],
+    gateways: [{ gateway: "paystack", label: "Paystack", methods: ["card"] }],
+  }),
   currency("ZAR", {
     name: "South African Rand",
     symbol: "R",
