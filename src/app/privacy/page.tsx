@@ -40,7 +40,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
         </ul>
         <h3 className="text-[16px] font-medium mt-7 mb-2.5" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Others tell us</h3>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Payment processors</strong>, Stripe, Paystack, Flutterwave send us card last‑4, expiry, and fraud signals. We never see the full card number.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Payment processors</strong>, Stripe, Paystack, Flutterwave send us card last‑4, expiry, and fraud signals. We never see the full card number. (Stripe and Flutterwave are not currently used.)</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Verification partners</strong>, confirm a certification is real or an ID is valid. We log the outcome, not the documents themselves where avoidable.</li>
         </ul>
       </>)},
@@ -65,7 +65,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
         <p className="text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>A short list. We never add to it without telling you.</p>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>The other side of your bookings</strong>, your coach sees what you&apos;d expect.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Payment processors</strong>, Stripe, Paystack, Flutterwave, Razorpay.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Payment processors</strong>, Stripe, Paystack, Flutterwave, Razorpay. (Stripe, Flutterwave and Razorpay are not currently used.)</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Infrastructure providers</strong>, Cloudflare, AWS, Postmark for email.</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Government authorities</strong>, only when legally required.</li>
         </ul>

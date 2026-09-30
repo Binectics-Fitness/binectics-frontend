@@ -28,7 +28,8 @@ export default function RevenueClient() {
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [revenueStats, setRevenueStats] = useState<OrgRevenueStats | null>(null);
   // Org money renders in the org's own currency — never the visitor's region.
-  const formatAmount = (n: number) => fmtMoney(n, revenueStats?.currency ?? currentOrg?.currency);
+  const revenueCurrency = revenueStats?.currency ?? currentOrg?.currency ?? "";
+  const formatAmount = (n: number) => fmtMoney(n, revenueCurrency);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +88,7 @@ export default function RevenueClient() {
     if (!revenueStats || !revenueStats.currency) return [];
     return revenueStats.timeseries
       .filter((r) => r.currency === revenueStats.currency)
-      .map((r) => ({ date: r.date, value: r.revenue_minor / 100 }));
+      .map((r) => ({ date: r.date, value: minorToMajor(r.revenue_minor, r.currency) }));
   }, [revenueStats]);
 
   const maxBar = useMemo(() => Math.max(...timeseries.map((r) => r.value), 1), [timeseries]);
@@ -187,7 +188,7 @@ export default function RevenueClient() {
                         <span className="inline-block w-2 h-2 rounded-sm mr-2 align-middle" style={{ background: MIX_COLORS[i % MIX_COLORS.length] }} />{r.label}
                       </span>
                       <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                        {formatAmount(minorToMajor(r.totalMinor))} · {Math.round((r.totalMinor / mix.sum) * 100)}%
+                        {formatAmount(minorToMajor(r.totalMinor, revenueCurrency))} · {Math.round((r.totalMinor / mix.sum) * 100)}%
                       </span>
                     </div>
                   ))}

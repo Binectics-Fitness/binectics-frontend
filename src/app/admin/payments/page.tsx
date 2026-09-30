@@ -1,5 +1,6 @@
 "use client";
 
+import { minorToMajor } from "@/lib/money/minorMoney";
 import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import {
@@ -50,7 +51,7 @@ function payerLabel(tx: AdminTransaction): {
 }
 
 function formatAmount(tx: AdminTransaction): string {
-  const major = tx.amount_minor / 100;
+  const major = minorToMajor(tx.amount_minor, tx.currency);
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",

@@ -32,7 +32,7 @@ import {
 describe("minor-unit money contract, the read side (display)", () => {
   it("renders a plan stored as 500000 as ₦5,000, not ₦500,000", () => {
     const priceMinor = 500_000; // what MembershipPlan.price_minor now holds
-    expect(formatCurrency(minorToMajor(priceMinor), "NGN")).toBe("₦5,000");
+    expect(formatCurrency(minorToMajor(priceMinor, "NGN"), "NGN")).toBe("₦5,000");
   });
 
   it("renders the SAME plan under the old major-unit reading 100× too high", () => {
@@ -43,20 +43,20 @@ describe("minor-unit money contract, the read side (display)", () => {
 
   it("renders a USD price with its cents intact", () => {
     // 4900 cents is $49.00, which formatCurrency renders whole as "$49".
-    expect(formatCurrency(minorToMajor(4_900), "USD")).toBe("$49");
+    expect(formatCurrency(minorToMajor(4_900, "USD"), "USD")).toBe("$49");
     // 4999 cents keeps the fraction.
-    expect(formatCurrency(minorToMajor(4_999), "USD")).toBe("$49.99");
+    expect(formatCurrency(minorToMajor(4_999, "USD"), "USD")).toBe("$49.99");
   });
 
   it("renders amount_paid_minor for a ₦12,500 monthly membership", () => {
     const sub = { amount_paid_minor: 1_250_000, currency: "NGN" };
-    expect(formatCurrency(minorToMajor(sub.amount_paid_minor), sub.currency)).toBe(
+    expect(formatCurrency(minorToMajor(sub.amount_paid_minor, sub.currency), sub.currency)).toBe(
       "₦12,500",
     );
   });
 
   it("renders price_from_minor on a listing card", () => {
-    expect(formatCurrency(minorToMajor(45_000), "ZAR")).toBe("R 450");
+    expect(formatCurrency(minorToMajor(45_000, "ZAR"), "ZAR")).toBe("R 450");
   });
 
   it("multiplies a recurring booking in minor units and converts once", () => {
@@ -66,7 +66,7 @@ describe("minor-unit money contract, the read side (display)", () => {
     const unitMinor = 800_000;
     const totalMinor = unitMinor * 4;
     expect(totalMinor).toBe(3_200_000);
-    expect(formatCurrency(minorToMajor(totalMinor), "NGN")).toBe("₦32,000");
+    expect(formatCurrency(minorToMajor(totalMinor, "NGN"), "NGN")).toBe("₦32,000");
   });
 
   it("sums amount_paid_minor across subscriptions without float drift", () => {
@@ -74,7 +74,7 @@ describe("minor-unit money contract, the read side (display)", () => {
     // Summing 12.34 three times in floats gives 37.019999999999996.
     const total = [1_234, 1_234, 1_234].reduce((a, b) => a + b, 0);
     expect(total).toBe(3_702);
-    expect(minorToMajor(total)).toBe(37.02);
+    expect(minorToMajor(total, "USD")).toBe(37.02);
   });
 
   it("formatMinorAmount takes minor units end to end", () => {
@@ -96,11 +96,11 @@ describe("minor-unit money contract, renames that were ALREADY minor", () => {
   });
 
   it("would report a hundredth of reality if converted twice", () => {
-    expect(formatMinorAmount(minorToMajor(2_500_000), "NGN")).toBe("₦250");
+    expect(formatMinorAmount(minorToMajor(2_500_000, "NGN"), "NGN")).toBe("₦250");
   });
 
   it("renders platform revenue of 987654321 cents as $9,876,543.21", () => {
-    expect(formatCurrency(minorToMajor(987_654_321), "USD")).toBe("$9,876,543.21");
+    expect(formatCurrency(minorToMajor(987_654_321, "USD"), "USD")).toBe("$9,876,543.21");
   });
 });
 
@@ -156,8 +156,10 @@ describe("minor-unit money contract, the write side (submission)", () => {
   it("round-trips every real amount through major and back exactly", () => {
     // majorToMinor(minorToMajor(x)) === x is the invariant that lets a form
     // prefill from a stored value and send it back untouched.
-    for (const minor of [500_000, 1_250_000, 4_999, 4_900, 45_000, 199, 1]) {
-      expect(majorToMinor(minorToMajor(minor))).toBe(minor);
+    for (const currency of ["NGN", "USD", "JPY", "KWD"]) {
+      for (const minor of [500_000, 1_250_000, 4_999, 4_900, 45_000, 199, 1]) {
+        expect(majorToMinor(minorToMajor(minor, currency), currency)).toBe(minor);
+      }
     }
   });
 });

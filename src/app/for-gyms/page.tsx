@@ -53,7 +53,7 @@ const FEATURES = [
   {
     title: "Revenue dashboard",
     desc: "Daily, weekly, and monthly revenue graphs with comparison overlays. Payout timeline shows the next amount, date, and destination bank. Gateway reconciliation built in.",
-    stat: "R 1.08M avg monthly processed (ZA)",
+    stat: "Each currency shown as it was paid",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
   {
@@ -316,8 +316,8 @@ export default function ForGymsPage() {
           className="text-[16px] sm:text-[17px] max-w-[48ch] mx-auto leading-[1.5] mb-7"
           style={{ color: "var(--fg-2)" }}
         >
-          One plan, no tiers, no per-member fees. 4.9% on transactions.
-          That&rsquo;s it.
+          Plans sized by the members you serve. We take no cut of your
+          payments. That&rsquo;s it.
         </p>
         <Link href="/pricing" className="btn-ghost-v2 lg">
           See full pricing &rarr;

@@ -261,7 +261,7 @@ describe("formatMinorForInput", () => {
     ];
     for (const [minor, currency] of cases) {
       expect(formatMinorForInput(minor, { currency })).toBe(
-        formatCurrency(minorToMajor(minor), currency),
+        formatCurrency(minorToMajor(minor, currency), currency),
       );
     }
   });

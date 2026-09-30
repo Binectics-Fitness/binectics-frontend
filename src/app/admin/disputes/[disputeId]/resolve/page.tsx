@@ -14,9 +14,9 @@ export default function AdminDisputeResolvePage({
   const [selected, setSelected] = useState(1);
 
   const options = [
-    { label: "Full refund to member", desc: "Iron Lab keeps nothing · platform absorbs fee", amount: "R 1,200" },
-    { label: "50 / 50 split + UI fix", desc: "Recommended given the UI confusion · both parties get something", amount: "R 600 each" },
-    { label: "Provider keeps in full", desc: "Cancellation falls inside policy window · member gets nothing", amount: "R 0" },
+    { label: "Full refund to member", desc: "Iron Lab keeps nothing · platform absorbs fee", amount: "-" },
+    { label: "50 / 50 split + UI fix", desc: "Recommended given the UI confusion · both parties get something", amount: "-" },
+    { label: "Provider keeps in full", desc: "Cancellation falls inside policy window · member gets nothing", amount: "-" },
     { label: "Escalate to senior support", desc: "L2 reviewer takes over · 48h response", amount: "-" },
   ];
 

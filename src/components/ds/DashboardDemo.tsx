@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { fillDemoMoney, useDemoMoney } from "@/components/marketing/CurrencyFacts";
 
 /* ------------------------------------------------------------------ */
 /*  Role definitions                                                    */
@@ -46,7 +47,7 @@ const ROLES: RoleDef[] = [
     roleBadge: "OWNER",
     hasSidebar: true,
     kpis: [
-      { label: "Revenue", value: "R 1.08M", sub: "+12.4%", pct: 82 },
+      { label: "Revenue", value: "{{1080000k}}", sub: "+12.4%", pct: 82 },
       { label: "Members", value: "1,284", sub: "+38 net new", pct: 68 },
       { label: "Check-ins", value: "412", sub: "32% attendance", pct: 32 },
       { label: "Churn", value: "2.1%", sub: "-0.4 pts", pct: 21 },
@@ -73,7 +74,7 @@ const ROLES: RoleDef[] = [
     kpis: [
       { label: "Sessions", value: "28/32", sub: "88% utilization", pct: 88 },
       { label: "Clients", value: "42", sub: "+3 this month", pct: 70 },
-      { label: "Earnings", value: "R 38.4K", sub: "+14% vs apr", pct: 64 },
+      { label: "Earnings", value: "{{38400k}}", sub: "+14% vs apr", pct: 64 },
       { label: "Rating", value: "4.9", sub: "steady", pct: 98 },
     ],
     sidebar: [
@@ -327,6 +328,7 @@ function MemberContent({ playing }: { playing: boolean }) {
 /* ------------------------------------------------------------------ */
 
 export function DashboardDemo() {
+  const money = useDemoMoney();
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [runKey, setRunKey] = useState(0);
@@ -457,7 +459,7 @@ export function DashboardDemo() {
               {role.kpis.map((kpi, i) => (
                 <div key={kpi.label} className="dd-kpi" style={{ animationDelay: `${i * 80}ms` }}>
                   <div className="dd-kpi-label">{kpi.label}</div>
-                  <div className="dd-kpi-val">{kpi.value}</div>
+                  <div className="dd-kpi-val">{fillDemoMoney(kpi.value, money)}</div>
                   <div className="dd-kpi-sub">{kpi.sub}</div>
                   {kpi.pct > 0 && (
                     <div className="dd-kpi-bar">

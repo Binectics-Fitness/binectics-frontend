@@ -31,7 +31,8 @@ describe("resolveOrgFormatPrefs", () => {
     expect(p.dateFormat).toBe("DD MMM YYYY");
     expect(p.timeFormat).toBe("24h");
     expect(p.numberFormat).toBe("1,234.56");
-    expect(p.currency).toBe("USD");
+    // No guessed currency: an org without one formats amounts as plain numbers.
+    expect(p.currency).toBeNull();
     expect(p.timeZone.length).toBeGreaterThan(0);
   });
 

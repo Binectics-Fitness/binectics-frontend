@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { fillDemoMoney, useDemoMoney } from "@/components/marketing/CurrencyFacts";
 
 type View = "schedule" | "clients" | "earnings";
 
 const VIEWS: { id: View; label: string; sub: string }[] = [
   { id: "schedule", label: "Schedule", sub: "5 sessions" },
   { id: "clients", label: "Clients", sub: "4 active" },
-  { id: "earnings", label: "Earnings", sub: "R 38.4K" },
+  { id: "earnings", label: "Earnings", sub: "{{38400k}}" },
 ];
 
 const SCHEDULE = [
@@ -76,11 +77,11 @@ const CLIENTS = [
 ];
 
 const EARNINGS = [
-  { title: "Studio · 24-session pack", sub: "Linda M. · May 02", amount: "+ R 14,400", color: "var(--signal-ink)" },
-  { title: "Olympic 12-pack", sub: "Wei C. · Apr 28", amount: "+ R 14,400", color: "var(--signal-ink)" },
-  { title: "Online monthly · May", sub: "Aisha A. · Dubai", amount: "$ 320 pending", color: "var(--fg-3)" },
-  { title: "Postnatal 12-pack", sub: "Thandi N. · Apr 22", amount: "+ R 11,400", color: "var(--signal-ink)" },
-  { title: "Refund · Pier B.", sub: "Cancelled session · 13:00", amount: "− R 1,200", color: "var(--danger)" },
+  { title: "Studio · 24-session pack", sub: "Linda M. · May 02", amount: "+ {{14400}}", color: "var(--signal-ink)" },
+  { title: "Olympic 12-pack", sub: "Wei C. · Apr 28", amount: "+ {{14400}}", color: "var(--signal-ink)" },
+  { title: "Online monthly · May", sub: "Aisha A. · Dubai", amount: "{{320}} pending", color: "var(--fg-3)" },
+  { title: "Postnatal 12-pack", sub: "Thandi N. · Apr 22", amount: "+ {{11400}}", color: "var(--signal-ink)" },
+  { title: "Refund · Pier B.", sub: "Cancelled session · 13:00", amount: "− {{1200}}", color: "var(--danger)" },
 ];
 
 const FLAME_SVG = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1C8 1 3 6 3 10a5 5 0 0 0 10 0C13 6 8 1 8 1Zm0 12.5A3 3 0 0 1 5 10.5c0-1.5 1.5-4 3-5.5 1.5 1.5 3 4 3 5.5A3 3 0 0 1 8 13.5Z" fill="currentColor"/></svg>`;
@@ -142,6 +143,7 @@ export function TrainerDemo() {
     setIdx(i);
   };
 
+  const money = useDemoMoney();
   const phaseClass =
     phase === "exiting"
       ? "trd-phase-exit"
@@ -162,7 +164,7 @@ export function TrainerDemo() {
             type="button"
           >
             <span className="trd-chip-nm">{v.label}</span>
-            <span className="trd-chip-tg">{v.sub}</span>
+            <span className="trd-chip-tg">{fillDemoMoney(v.sub, money)}</span>
           </button>
         ))}
       </div>
@@ -287,11 +289,12 @@ function ClientsView() {
 }
 
 function EarningsView() {
+  const money = useDemoMoney();
   return (
     <div className="trd-earnings">
       <div className="trd-card-header">
         <div className="trd-card-title">Earnings · this month</div>
-        <div className="trd-card-sub">R 38,400 booked · next payout May 13</div>
+        <div className="trd-card-sub">{money(38400)} booked · next payout May 13</div>
       </div>
       {EARNINGS.map((e, i) => (
         <div key={i} className={`trd-earn-row trd-row-${i}`}>
@@ -300,7 +303,7 @@ function EarningsView() {
             <div className="trd-earn-sub">{e.sub}</div>
           </div>
           <div className="trd-earn-amount" style={{ color: e.color }}>
-            {e.amount}
+            {fillDemoMoney(e.amount, money)}
           </div>
         </div>
       ))}

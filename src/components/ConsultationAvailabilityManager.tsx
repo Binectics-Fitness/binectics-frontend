@@ -9,8 +9,10 @@ import {
 } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import { getClientTimezone } from "@/utils/format";
-import { utilityService } from "@/lib/api/utility";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { useCurrencies } from "@/lib/queries/currencies";
+import { currencyOptions, isSelectable, writeErrorMessage } from "@/lib/currencies/helpers";
 import {
   consultationsService,
   AvailabilityExceptionType,
@@ -19,6 +21,7 @@ import {
 } from "@/lib/api/consultations";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
+import { majorToMinor, minorToMajor } from "@/lib/money/minorMoney";
 import { Plus, Trash2, CalendarOff } from "lucide-react";
 
 type DayRange = { id: string; startTime: string; endTime: string };
@@ -96,6 +99,8 @@ export default function ConsultationAvailabilityManager({
   description,
 }: ConsultationAvailabilityManagerProps) {
   const { user } = useAuth();
+  const { currentOrg } = useOrganization();
+  const { all: currencies } = useCurrencies();
   // The provider shells render their children twice (desktop and phone);
   // a fixed id pointed the label at the hidden copy.
   const currencyFieldId = useId();
@@ -150,11 +155,14 @@ export default function ConsultationAvailabilityManager({
   // when the user edits the field, or is cleared with it.
   const [priceDisplay, setPriceDisplay] = useState<string>("");
   const [priceMinor, setPriceMinor] = useState<number | null>(null);
-  const [priceCurrency, setPriceCurrency] = useState<string>("NGN");
+  // The saved session's own currency once loaded; until then (and for a
+  // provider with no priced session) empty, and the org default is offered
+  // below only when prices can be set in it. Never a guessed "NGN".
+  const [priceCurrency, setPriceCurrency] = useState<string>("");
+  const [savedCurrency, setSavedCurrency] = useState<string | null>(null);
   // Free is an explicit choice (a price of 0), as in onboarding and on
   // mobile. An empty field is no answer, and Save asks for one.
   const [priceFree, setPriceFree] = useState(false);
-  const [currencies, setCurrencies] = useState<string[]>(["NGN", "USD", "GBP", "EUR", "ZAR"]);
   const [isSavingSession, setIsSavingSession] = useState(false);
 
   // Exceptions state
@@ -205,15 +213,17 @@ export default function ConsultationAvailabilityManager({
         if (detectedTz) setScheduleTimezone(detectedTz);
       }
     });
-
-    utilityService.getPlatformConfig().then((res) => {
-      if (!res.success || !res.data) return;
-      const supported = res.data.currencies
-        .filter((c) => c.is_active)
-        .map((c) => c.code.toUpperCase());
-      if (supported.length > 0) setCurrencies(supported);
-    });
   }, []);
+
+  // No saved currency and none picked: start from the org's default when
+  // prices can be set in it, otherwise leave it for the provider to choose.
+  const orgCurrency = currentOrg?.currency?.toUpperCase() ?? null;
+  const defaultCurrency =
+    !savedCurrency && orgCurrency && isSelectable(orgCurrency, currencies, "price")
+      ? orgCurrency
+      : "";
+  const activeCurrency = priceCurrency || defaultCurrency;
+  const priceCurrencyOptions = currencyOptions(currencies, "price", savedCurrency);
 
   /** Fill the form from a session type (the provider's own, or a default). */
   const applySessionType = useCallback((type: ConsultationType, own: boolean) => {
@@ -224,17 +234,20 @@ export default function ConsultationAvailabilityManager({
     setMinAdvanceNoticeHours(
       Math.round((type.minAdvanceNoticeMinutes ?? 0) / 60),
     );
-    const savedCurrency = (type.currency ?? "NGN").toUpperCase();
-    if (type.priceMinor != null && type.priceMinor > 0) {
+    const typeCurrency = type.currency ? type.currency.toUpperCase() : "";
+    if (type.priceMinor != null && type.priceMinor > 0 && typeCurrency) {
       // Prefill formatted, in the price's own currency — not the currency
       // state, which this same block is about to set. The minor value is
       // kept verbatim so an untouched price saves back exactly as loaded.
       setPriceMinor(type.priceMinor);
       setPriceDisplay(
-        formatMinorForInput(type.priceMinor, { currency: savedCurrency }),
+        formatMinorForInput(type.priceMinor, { currency: typeCurrency }),
       );
     }
-    if (type.currency) setPriceCurrency(savedCurrency);
+    if (typeCurrency) {
+      setPriceCurrency(typeCurrency);
+      setSavedCurrency(typeCurrency);
+    }
     // The provider's own session with no price is free (the API stores it
     // as 0). A platform default's missing price is only "not chosen yet":
     // Free is never chosen on the provider's behalf.
@@ -312,6 +325,11 @@ export default function ConsultationAvailabilityManager({
       fail("Enter a price, or choose Free.");
       return;
     }
+    // The API needs a currency with any price, a free one (0) included.
+    if (!activeCurrency) {
+      fail("Choose the currency your session is priced in.");
+      return;
+    }
 
     setIsSavingSession(true);
     setSessionMessage(null);
@@ -323,7 +341,7 @@ export default function ConsultationAvailabilityManager({
     };
     const price = {
       priceMinor: priceFree ? 0 : (priceMinor as number),
-      currency: priceCurrency,
+      currency: activeCurrency,
     };
 
     const res = ownTypeId
@@ -354,7 +372,7 @@ export default function ConsultationAvailabilityManager({
           : (res.message ?? "You already have a session with this name."),
       );
     } else {
-      fail(res.message ?? "We couldn't save your session settings.");
+      fail(writeErrorMessage(res, "We couldn't save your session settings."));
     }
 
     setIsSavingSession(false);
@@ -1019,9 +1037,17 @@ export default function ConsultationAvailabilityManager({
                     <div className="w-28 shrink-0">
                       <SearchableSelect
                         id={currencyFieldId}
-                        value={priceCurrency}
+                        value={activeCurrency}
                         onChange={(next) => {
+                          // Keep the same MAJOR amount when the new currency
+                          // divides differently (USD cents to whole yen), so
+                          // "12.34" stays 12.34 of something, not 1,234.
+                          const nextMinor =
+                            priceMinor !== null && activeCurrency
+                              ? majorToMinor(minorToMajor(priceMinor, activeCurrency), next)
+                              : priceMinor;
                           setPriceCurrency(next);
+                          setPriceMinor(nextMinor);
                           // Re-render the SAME amount in the new currency so
                           // the symbol (and its decimals) follow the selection.
                           // Only the display string is rebuilt — round-tripping
@@ -1029,10 +1055,10 @@ export default function ConsultationAvailabilityManager({
                           // "$12.34" the moment NGN was selected, and they
                           // never came back on switching away again.
                           setPriceDisplay(
-                            formatMinorForInput(priceMinor, { currency: next }),
+                            formatMinorForInput(nextMinor, { currency: next }),
                           );
                         }}
-                        options={currencies.map((c) => ({ label: c, value: c }))}
+                        options={priceCurrencyOptions}
                         placeholder="Currency"
                       />
                     </div>
@@ -1042,7 +1068,7 @@ export default function ConsultationAvailabilityManager({
                         setPriceDisplay(display);
                         setPriceMinor(minor);
                       }}
-                      currency={priceCurrency}
+                      currency={activeCurrency}
                       placeholder={priceFree ? "Free" : "Not set"}
                       disabled={priceFree}
                       aria-label="Session price"

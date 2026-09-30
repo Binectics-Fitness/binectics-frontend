@@ -13,6 +13,10 @@ export const metadata: Metadata = {
  * Proto: booking-receipt.html
  * Topbar + centered 640px receipt card.
  * Dynamic route: params.id is a Promise in Next.js 16.
+ *
+ * STATIC PROTOTYPE: sample data, and nothing links here. Its made-up rand
+ * amounts (and a 5% platform fee Binectics doesn't charge) were removed;
+ * there is no receipt endpoint yet to fill them from.
  */
 
 const RECEIPT = {
@@ -21,11 +25,9 @@ const RECEIPT = {
   from: { name: "Sarah Okafor", detail: "Independent contractor · ZA\nSARS: 9180 481 729" },
   to: { name: "Tunde Adebayo", detail: "Cape Town · ZA\ntunde@gmail.com" },
   items: [
-    { desc: "Strength session · 60 min · Iron Lab Sea Point", sub: "Wed 20 May 2026 · 08:30 SAST", amount: "R 1,140.00" },
-    { desc: "Platform fee · 5%", sub: "", amount: "R 60.00" },
-    { desc: "VAT · 15%", sub: "", amount: "R 180.00" },
+    { desc: "Strength session · 60 min · Iron Lab Sea Point", sub: "Wed 20 May 2026 · 08:30 SAST", amount: "-" },
   ],
-  total: "R 1,380.00",
+  total: "-",
   payment: "VISA •••• 4421 · charged 11 May 14:32 SAST",
   reference: "PI_3OqL1k_4221",
   refund: "until 19 May 08:30 (free) · 50% fee after",

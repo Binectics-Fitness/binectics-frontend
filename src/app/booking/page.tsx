@@ -442,7 +442,7 @@ function BookingPageInner() {
               </div>
               <p className="text-[12.5px] mt-3.5 leading-relaxed" style={{ color: "var(--fg-3)" }}>
                 {isPaid
-                  ? `Placing this booking holds the slot for 30 minutes. You then pay ${priceMinor != null && priceCurrency ? formatCurrency(minorToMajor(priceMinor), priceCurrency) : "the session price"} with Paystack to confirm it; if it isn't paid in time, the hold is released.`
+                  ? `Placing this booking holds the slot for 30 minutes. You then pay ${priceMinor != null && priceCurrency ? formatCurrency(minorToMajor(priceMinor, priceCurrency), priceCurrency) : "the session price"} with Paystack to confirm it; if it isn't paid in time, the hold is released.`
                   : "Free session. It is confirmed as soon as you place it."}
               </p>
               {submitError && (
@@ -511,13 +511,13 @@ function BookingPageInner() {
             <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }}>
               <span style={{ color: "var(--fg-2)" }}>Session</span>
               <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrency(minorToMajor(priceMinor), priceCurrency)}
+                {formatCurrency(minorToMajor(priceMinor, priceCurrency), priceCurrency)}
               </span>
             </div>
             <div className="flex justify-between pt-3.5 font-medium">
               <span className="text-[14px]" style={{ color: "var(--ink)" }}>Total</span>
               <span className="text-[17px]" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrency(minorToMajor(priceMinor), priceCurrency)}
+                {formatCurrency(minorToMajor(priceMinor, priceCurrency), priceCurrency)}
               </span>
             </div>
             <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>

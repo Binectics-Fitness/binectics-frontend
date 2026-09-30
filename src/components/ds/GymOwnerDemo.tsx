@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { fillDemoMoney, useDemoMoney } from "@/components/marketing/CurrencyFacts";
 
 const VIEWS = [
   { id: "overview", label: "Overview", sub: "4 KPIs" },
@@ -16,8 +17,8 @@ const FEED_ITEMS = [
   { color: "signal", text: "New subscription · <b>Studio monthly</b> · Jamal S.", time: "2m" },
   { color: "warn", text: "<b>Coach Themba</b> running 4m late · 18:00 class", time: "4m" },
   { color: "signal", text: "Class booked · <b>Olympic basics</b> · Tue 19:00", time: "8m" },
-  { color: "danger", text: "Refund request · R 850 · Pier B. · awaiting review", time: "14m" },
-  { color: "signal", text: "Auto-payout posted · R 84,200 → ABSA •••2241", time: "1h" },
+  { color: "danger", text: "Refund request · {{850}} · Pier B. · awaiting review", time: "14m" },
+  { color: "signal", text: "Auto-payout posted · {{84200}} → ABSA •••2241", time: "1h" },
 ];
 
 const CLASSES = [
@@ -30,10 +31,10 @@ const CLASSES = [
 ];
 
 const REVENUE_SEGMENTS = [
-  { label: "Monthly subscriptions", pct: 64, amount: "R 692,800", color: "var(--ink)" },
-  { label: "Annual", pct: 22, amount: "R 238,500", color: "var(--signal)" },
-  { label: "Day passes", pct: 10, amount: "R 108,420", color: "var(--gym)" },
-  { label: "Personal training", pct: 4, amount: "R 44,480", color: "var(--trainer)" },
+  { label: "Monthly subscriptions", pct: 64, amount: 692800, color: "var(--ink)" },
+  { label: "Annual", pct: 22, amount: 238500, color: "var(--signal)" },
+  { label: "Day passes", pct: 10, amount: 108420, color: "var(--gym)" },
+  { label: "Personal training", pct: 4, amount: 44480, color: "var(--trainer)" },
 ];
 
 const CYCLE_MS = 5000;
@@ -133,12 +134,13 @@ export function GymOwnerDemo() {
 }
 
 function OverviewView() {
+  const money = useDemoMoney();
   return (
     <div className="gyd-kpi-grid">
       <div className="gyd-kpi gyd-row-0">
         <div className="gyd-kpi-label">Revenue &middot; 30d</div>
         <div className="gyd-kpi-row">
-          <div className="gyd-kpi-value">R 1,084,200</div>
+          <div className="gyd-kpi-value">{money(1084200)}</div>
           <div className="gyd-spark">
             {SPARK_BARS.map((h, i) => (
               <div
@@ -174,6 +176,7 @@ function OverviewView() {
 }
 
 function MembersView() {
+  const money = useDemoMoney();
   return (
     <div className="gyd-feed">
       <div className="gyd-feed-header gyd-row-0">
@@ -189,7 +192,7 @@ function MembersView() {
             <span className={`gyd-feed-dot gyd-dot-${item.color}`} />
             <span
               className="gyd-feed-text"
-              dangerouslySetInnerHTML={{ __html: item.text }}
+              dangerouslySetInnerHTML={{ __html: fillDemoMoney(item.text, money, { html: true }) }}
             />
             <span className="gyd-feed-time">{item.time}</span>
           </div>
@@ -223,6 +226,7 @@ function ScheduleView() {
 }
 
 function RevenueView() {
+  const money = useDemoMoney();
   return (
     <div className="gyd-rev">
       <div className="gyd-rev-header gyd-row-0">
@@ -246,7 +250,7 @@ function RevenueView() {
               <span className="gyd-rev-dot" style={{ background: seg.color }} />
               <span className="gyd-rev-label">{seg.label}</span>
             </div>
-            <span className="gyd-rev-val">{seg.amount} &middot; {seg.pct}%</span>
+            <span className="gyd-rev-val">{money(seg.amount)} &middot; {seg.pct}%</span>
           </div>
         ))}
       </div>

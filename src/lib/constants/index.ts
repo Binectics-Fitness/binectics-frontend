@@ -47,18 +47,6 @@ export const DURATION_DAYS: Record<string, number> = {
   yearly: 365,
 };
 
-// Supported Currencies
-export const CURRENCIES = [
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
-  { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
-  { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
-  { code: "ZAR", symbol: "R", name: "South African Rand" },
-  { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
-  { code: "INR", symbol: "₹", name: "Indian Rupee" },
-] as const;
-
 // Common Gym Facilities
 export const GYM_FACILITIES = [
   "Weight Training",

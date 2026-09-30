@@ -7,14 +7,14 @@ import {
   useUpsertPaymentConfig,
   useDeletePaymentConfig,
 } from "@/lib/queries/marketplace";
-import { PaymentGateway } from "@/lib/types";
+import { usePaymentGateways } from "@/lib/queries/currencies";
+import { GATEWAY_NOT_SUPPORTED } from "@/lib/api/paymentGateways";
 import SearchableSelect from "@/components/SearchableSelect";
 
-const GATEWAY_META: Record<string, { label: string; color: string }> = {
-  paystack: { label: "Paystack", color: "oklch(0.45 0.18 200)" },
-  stripe: { label: "Stripe", color: "oklch(0.42 0.22 280)" },
-  flutterwave: { label: "Flutterwave", color: "oklch(0.55 0.15 60)" },
-};
+/** "stripe" -> "Stripe", for a saved gateway the API no longer lists. */
+function titleCase(id: string): string {
+  return id ? id.charAt(0).toUpperCase() + id.slice(1) : id;
+}
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -27,8 +27,14 @@ const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
 /**
  * Payment gateways card: lists the org's configured gateways (secrets never
- * leave the API — reads return public key + active flag only) with add and
+ * leave the API; reads return public key + active flag only) with add and
  * remove. Backed by the marketplace payment-config endpoints.
+ *
+ * The gateways a provider may connect come from GET /payment-gateways
+ * (`provider_keys_supported`), never a client list. A saved config for any
+ * other gateway (Stripe or Flutterwave keys from before) is shown as no
+ * longer supported, with Remove; the API refuses to save one
+ * (GATEWAY_NOT_SUPPORTED) and still allows deleting it.
  */
 export function GatewaysSection() {
   const { currentOrg } = useOrganization();
@@ -36,9 +42,15 @@ export function GatewaysSection() {
   const { data: configs = [], isLoading } = useOrgPaymentConfigs(orgId);
   const upsert = useUpsertPaymentConfig(orgId);
   const remove = useDeletePaymentConfig(orgId);
+  const gateways = usePaymentGateways();
+  const connectable = (gateways.data ?? []).filter((g) => g.provider_keys_supported);
+  const labelOf = (id: string) =>
+    (gateways.data ?? []).find((g) => g.gateway === id)?.label ?? titleCase(id);
+  const isSupported = (id: string) => connectable.some((g) => g.gateway === id);
+  const addable = connectable.filter((g) => !configs.some((c) => c.gateway === g.gateway));
 
   const [adding, setAdding] = useState(false);
-  const [gateway, setGateway] = useState<string>(PaymentGateway.PAYSTACK);
+  const [gateway, setGateway] = useState<string>("");
   const [publicKey, setPublicKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -48,13 +60,14 @@ export function GatewaysSection() {
     setError(null);
     setPublicKey("");
     setSecretKey("");
-    const unconfigured = Object.values(PaymentGateway).find(
-      (g) => !configs.some((c) => c.gateway === g),
-    );
-    if (unconfigured) setGateway(unconfigured);
+    setGateway(addable[0]?.gateway ?? "");
   };
 
   const onSave = async () => {
+    if (!gateway) {
+      setError("Choose a payment provider.");
+      return;
+    }
     if (!publicKey.trim() || !secretKey.trim()) {
       setError("Public and secret key are both required.");
       return;
@@ -68,6 +81,11 @@ export function GatewaysSection() {
     });
     if (res.success) {
       setAdding(false);
+    } else if (res.code === GATEWAY_NOT_SUPPORTED) {
+      // The API names what can be connected ("You can't connect Stripe
+      // yet. You can connect Paystack."); refresh the list it came from.
+      setError(res.message || `You can't connect ${labelOf(gateway)} yet.`);
+      void gateways.refetch();
     } else {
       setError(res.message || "Couldn't save the gateway. Check the keys and try again.");
     }
@@ -85,24 +103,34 @@ export function GatewaysSection() {
           </span>
         )}
         {configs.map((c) => {
-          const meta = GATEWAY_META[c.gateway] ?? { label: c.gateway, color: "var(--fg-3)" };
+          const label = labelOf(c.gateway);
+          // Only judge "no longer supported" once the list has loaded.
+          const legacy = gateways.isSuccess && !isSupported(c.gateway);
           return (
-            <div key={c.gateway} className="flex items-center gap-3 p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
-              <span className="w-10 h-6.5 rounded-(--r-1) flex items-center justify-center text-[9px] font-bold" style={{ background: meta.color, color: "var(--bg)", fontFamily: "var(--font-mono)" }}>{meta.label}</span>
+            <div key={c.gateway} className="flex flex-wrap items-center gap-3 p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
+              <span className="min-w-10 h-6.5 px-1.5 rounded-(--r-1) flex items-center justify-center text-[9px] font-bold uppercase" style={{ background: "var(--bg-2)", color: "var(--ink)", border: "1px solid var(--border)", fontFamily: "var(--font-mono)" }}>{label.slice(0, 2)}</span>
               <div className="flex-1 min-w-0">
-                <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{meta.label}</div>
-                <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-0.5 truncate" style={{ color: "var(--fg-3)" }}>
-                  {c.public_key.slice(0, 14)}…{c.public_key.slice(-4)}
-                </div>
+                <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{label}</div>
+                {legacy ? (
+                  <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                    We can&rsquo;t take payments on {label}. Remove these keys.
+                  </div>
+                ) : (
+                  <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-0.5 truncate" style={{ color: "var(--fg-3)" }}>
+                    {c.public_key.slice(0, 14)}…{c.public_key.slice(-4)}
+                  </div>
+                )}
               </div>
-              {c.is_active && (
+              {legacy ? (
+                <span className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full" style={{ color: "var(--fg-2)", background: "var(--bg-2)", border: "1px solid var(--border)" }}>No longer supported</span>
+              ) : c.is_active ? (
                 <span className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full" style={{ color: "var(--signal-ink)", background: "var(--signal-soft)" }}>Active</span>
-              )}
+              ) : null}
               <button
                 className="btn-ghost-v2 sm"
                 disabled={remove.isPending}
                 onClick={() => {
-                  if (window.confirm(`Remove the ${meta.label} configuration? Checkout falls back to the platform's keys.`)) {
+                  if (window.confirm(`Remove the ${label} configuration? Checkout falls back to the platform's keys.`)) {
                     void remove.mutateAsync(c.gateway);
                   }
                 }}
@@ -121,10 +149,7 @@ export function GatewaysSection() {
                 <SearchableSelect
                   value={gateway}
                   onChange={(v) => setGateway(v)}
-                  options={Object.values(PaymentGateway).map((g) => ({
-                    label: GATEWAY_META[g]?.label ?? g,
-                    value: g,
-                  }))}
+                  options={addable.map((g) => ({ label: g.label, value: g.gateway }))}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -144,9 +169,13 @@ export function GatewaysSection() {
               <button className="btn-ghost-v2 sm" disabled={upsert.isPending} onClick={() => setAdding(false)}>Cancel</button>
             </div>
           </div>
-        ) : (
+        ) : gateways.isError ? (
+          <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+            We couldn&rsquo;t load the payment providers you can connect. Try again shortly.
+          </span>
+        ) : addable.length > 0 ? (
           <button className="btn-ghost-v2 sm self-start" disabled={!orgId} onClick={startAdd}>+ Add gateway</button>
-        )}
+        ) : null}
       </div>
     </section>
   );

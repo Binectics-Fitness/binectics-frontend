@@ -359,9 +359,9 @@ export default function ForDietitiansPage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-6"
           style={{ color: "var(--fg-2)" }}
         >
-          List your practice for free. We charge 4.9% on transactions -
-          nothing else. Consultation fees, plan sales, and subscriptions
-          all included.
+          List your practice for free. Paid plans are sized by how many
+          clients you work with. We take no cut of your consultation fees,
+          plan sales, or subscriptions.
         </p>
         <Link href="/pricing" className="btn-ghost-v2 lg">
           See full pricing

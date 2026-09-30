@@ -5,9 +5,75 @@
 
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
-import type { PlatformCurrency } from "./utility";
 
 // ==================== TYPES ====================
+
+/** What a currency can be used for, as the admin sees it. */
+export type AdminCurrencyUse = "price" | "charge_card" | "charge_transfer" | "provider_billing";
+
+export const ADMIN_CURRENCY_USES: readonly AdminCurrencyUse[] = [
+  "price",
+  "charge_card",
+  "charge_transfer",
+  "provider_billing",
+];
+
+export type PaymentMethodCode = "card" | "bank_transfer";
+
+export interface CurrencyEffect {
+  selectable: boolean;
+  /** Every reason it is not selectable, in plain words; empty when it is. */
+  reasons: { code: string; message: string }[];
+}
+
+export interface AdminCurrencyGateway {
+  gateway: string;
+  label: string;
+  /** The integration can charge this currency at all (code). */
+  capable: boolean;
+  /** Methods the integration supports in this currency (code). */
+  capable_methods: PaymentMethodCode[];
+  /** Switched on for our account (admin). */
+  account_enabled: boolean;
+  /** Methods confirmed on our account (admin). */
+  methods: PaymentMethodCode[];
+}
+
+export interface CurrencyInFlight {
+  pending_bookings: number;
+  pending_subscriptions: number;
+  pending_provider_checkouts: number;
+}
+
+export interface AdminCurrency {
+  code: string;
+  name: string;
+  symbol: string;
+  minor_unit: number;
+  platform_enabled: boolean;
+  notes: string | null;
+  effective: Record<AdminCurrencyUse, CurrencyEffect>;
+  gateways: AdminCurrencyGateway[];
+  usage: {
+    live: { organizations: number; session_types: number; plans: number; listings: number };
+    in_flight: CurrencyInFlight;
+    historical: { transactions: number };
+    in_flight_total: number;
+  };
+  updated_by: string | null;
+  updated_at: string | null;
+}
+
+/** PATCH /admin/currencies/:code. `code` and `minor_unit` are not editable. */
+export interface UpdateAdminCurrency {
+  platform_enabled?: boolean;
+  gateways?: { gateway: string; account_enabled?: boolean; methods?: PaymentMethodCode[] }[];
+  name?: string;
+  symbol?: string;
+  notes?: string | null;
+  /** Confirms turning a currency off while payments in it are in progress. */
+  stop_new_payments?: boolean;
+}
 
 export interface AdminUserSuspensionResult {
   user: {
@@ -42,8 +108,6 @@ export interface PlatformMetricsOverview {
     primaryCurrency: string | null;
     primaryRevenueMinor: number;
     primaryAverageMinor: number;
-    totalRevenueUsdMinor: number;
-    averageValueUsdMinor: number;
     byCurrency: Array<{
       currency: string;
       count: number;
@@ -56,6 +120,17 @@ export interface PlatformMetricsOverview {
     payingUsers: number;
     conversionRate: number;
   };
+  /**
+   * Revenue from active paid memberships, one row per currency in that
+   * currency's MINOR unit, largest first. Never converted or summed across
+   * currencies: there are no FX rates. (The old USD rollups summed USD rows
+   * only and read 0 on an NGN platform; they are not read.)
+   */
+  revenue_by_currency?: Array<{
+    currency: string;
+    amount_minor: number;
+    count: number;
+  }>;
 }
 
 export interface FeedbackSummary {
@@ -232,16 +307,27 @@ class AdminService {
     return apiClient.get<FeedbackSummary>("/admin/feedback/summary");
   }
 
-  async getSupportedCurrencies(): Promise<ApiResponse<PlatformCurrency[]>> {
-    return apiClient.get<PlatformCurrency[]>("/admin/currencies");
+  // ─── Currencies ─────────────────────────────────────────────────────────
+
+  /** Every ISO currency with its effective status, gateways and usage. */
+  async listCurrencies(): Promise<ApiResponse<AdminCurrency[]>> {
+    return apiClient.get<AdminCurrency[]>("/admin/currencies");
   }
 
-  async updateSupportedCurrencies(
-    currencies: PlatformCurrency[],
-  ): Promise<ApiResponse<PlatformCurrency[]>> {
-    return apiClient.put<PlatformCurrency[]>("/admin/currencies", {
-      currencies,
-    });
+  /**
+   * Change one currency. A change that turns it off while payments in it are
+   * in progress is refused with 409 CURRENCY_IN_USE (details.in_flight,
+   * details.uses_lost); resend with `stop_new_payments: true` once the admin
+   * confirms.
+   */
+  async updateCurrency(
+    code: string,
+    patch: UpdateAdminCurrency,
+  ): Promise<ApiResponse<AdminCurrency>> {
+    return apiClient.patch<AdminCurrency>(
+      `/admin/currencies/${encodeURIComponent(code)}`,
+      patch,
+    );
   }
 
   // ─── Provider SaaS plans ───────────────────────────────────────────────
