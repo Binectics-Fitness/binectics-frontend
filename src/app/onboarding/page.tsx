@@ -13,7 +13,7 @@ import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, type RoleId } from "./_config";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
@@ -295,7 +295,10 @@ function OnboardingContent() {
     if (step === 0) setStep(1);
   };
 
-  /** Resolves an error message only when the chosen currency was refused. */
+  /**
+   * Resolves an error message when the chosen currency was refused or the
+   * membership plan template could not be added, else null.
+   */
   const persistGymStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<string | null> => {
     try {
       if (currentStep === 1) {
@@ -343,7 +346,12 @@ function OnboardingContent() {
         // Membership plan template — guard against re-seeding on Back+Continue
         const template = (stepData.planTemplate as string) || 'standard';
         if (template !== 'blank' && !stepData.planSeeded) {
-          await teamsService.seedMembershipPlanTemplate(orgId, template);
+          // Not best effort: a template larger than the owner's plan allows
+          // is refused, and moving on would promise plans that do not exist.
+          // The owner stays here to pick a smaller template or Start blank.
+          const res = await teamsService.seedMembershipPlanTemplate(orgId, template);
+          const refused = planSeedError(res);
+          if (refused) return refused;
           setField('planSeeded', true);
         }
       } else if (currentStep === 4) {

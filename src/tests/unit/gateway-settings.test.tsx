@@ -45,8 +45,10 @@ vi.mock("@/lib/queries/currencies", () => ({
   useOrgPriceCurrencies: () => ({ data: [], isLoading: false, isError: false, providerHint: "Your Paystack account" }),
 }));
 vi.mock("@/components/SearchableSelect", () => ({
-  default: ({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { label: string; value: string }[] }) => (
-    <select aria-label="Gateway" value={value} onChange={(e) => onChange(e.target.value)}>
+  // Forwards `id` as the real trigger does, so the section's <label htmlFor>
+  // is what names it.
+  default: ({ id, value, onChange, options }: { id?: string; value: string; onChange: (v: string) => void; options: { label: string; value: string }[] }) => (
+    <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
       {options.map((o) => (
         <option key={o.value} value={o.value}>{o.label}</option>
       ))}
@@ -60,6 +62,16 @@ describe("GatewaysSection", () => {
     h.upsert.mockReset();
     h.remove.mockReset();
     h.refetch.mockReset();
+  });
+
+  it("labels every field in the add form", async () => {
+    render(<GatewaysSection />);
+    await userEvent.click(screen.getByRole("button", { name: "+ Add gateway" }));
+    expect(screen.getByLabelText("Gateway")).toHaveValue("paystack");
+    expect(screen.getByLabelText("Public key")).toHaveAttribute("placeholder", "pk_live_…");
+    const secret = screen.getByLabelText("Secret key");
+    expect(secret).toHaveAttribute("type", "password");
+    expect(secret).toHaveAccessibleDescription("Stored encrypted. Never shown again.");
   });
 
   it("offers only the gateways a provider may connect", async () => {
