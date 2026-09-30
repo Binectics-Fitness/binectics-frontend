@@ -94,6 +94,14 @@ describe("listing booking card", () => {
     expect(within(group).getByText("Remote monthly").closest("label")).toHaveTextContent(/\$45(\.00)? \/ month/);
   });
 
+  it("says which currencies the prices are in from the plans, not the listing's stored default", async () => {
+    givenPlans([reset, eightWeek, usdMonthly]);
+    render(<ProviderPage />);
+    await bookingCard();
+    const fact = screen.getByText("Prices in").parentElement!;
+    expect(fact).toHaveTextContent("NGN · USD");
+  });
+
   it("keeps Continue disabled until a plan is chosen, then sends a signed-in member to checkout", async () => {
     authState = { user: { id: "m1" }, isLoading: false };
     givenPlans([reset, eightWeek]);

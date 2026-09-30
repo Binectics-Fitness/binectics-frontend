@@ -301,7 +301,9 @@ export default function ProviderPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 border-t border-l border-border mt-6">
               {[
                 ["City", listing.city || "–"],
-                ["Currency", listing.currency || "–"],
+                // From the plans themselves: the listing's stored currency can
+                // be a stale default (USD) that no price is actually in.
+                ["Prices in", [...new Set(plans.map((p) => p.currency).filter(Boolean))].join(" · ") || "–"],
                 ["Languages", listing.languages?.join(" · ") || "–"],
                 ["Active clients", String(listing.active_client_count ?? "–")],
                 ["Rating", listing.average_rating ? `${listing.average_rating} / 5` : "–"],
