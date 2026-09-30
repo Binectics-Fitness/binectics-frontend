@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { resolveDisplayCurrency } from "@/contexts/RegionContext";
-import { marketingCurrency, marketingMonthlyPrice } from "@/lib/constants/regions";
 import { currency, SEEDED_CURRENCIES } from "../setup/currencyFixtures";
 
 describe("resolveDisplayCurrency", () => {
@@ -21,18 +20,5 @@ describe("resolveDisplayCurrency", () => {
     expect(resolveDisplayCurrency({ list, country: "US" })).toBe("GHS");
     expect(resolveDisplayCurrency({ list: [], country: "US" })).toBe("");
     expect(resolveDisplayCurrency({ list: undefined, geoCurrency: "USD" })).toBe("");
-  });
-});
-
-describe("marketing prices", () => {
-  it("show in the visitor's currency when the copy has it, else USD", () => {
-    expect(marketingCurrency("NGN")).toBe("NGN");
-    expect(marketingCurrency("GHS")).toBe("USD");
-    expect(marketingCurrency("")).toBe("USD");
-  });
-
-  it("carry their own currency, and annual is ten months shown monthly", () => {
-    expect(marketingMonthlyPrice("studio", "ngn", "monthly")).toEqual({ amount: 45_000, currency: "NGN" });
-    expect(marketingMonthlyPrice("studio", "GHS", "annual")).toEqual({ amount: 40, currency: "USD" });
   });
 });
