@@ -108,7 +108,7 @@ export function toCards(
       priceSub: view.priceSub,
       text: view.text,
       tagline: plan.description,
-      cta: custom ? "Talk to us" : free ? "Start free" : `Choose ${plan.name}`,
+      cta: custom ? "Talk to us" : free ? "Start free" : view.unavailableReason ? "Start with Free" : `Choose ${plan.name}`,
       href: custom ? "/contact" : "/login?mode=signup",
       ghost: free,
       featured: plan === firstPaid,
