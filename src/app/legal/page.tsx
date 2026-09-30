@@ -453,7 +453,7 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       </ul>
       <h3 style={S.docH3}>Others tell us</h3>
       <ul style={S.docUl}>
-        <li><strong style={S.docStrong}>Payment processors</strong>, Stripe, Paystack, Flutterwave send us card last{"‑"}4, expiry, and fraud signals. We never see the full card number.</li>
+        <li><strong style={S.docStrong}>Payment processors</strong>, Stripe, Paystack, Flutterwave send us card last{"‑"}4, expiry, and fraud signals. We never see the full card number. (Stripe and Flutterwave are not currently used.)</li>
         <li><strong style={S.docStrong}>Verification partners</strong>, confirm a certification is real or an ID is valid. We log the outcome, not the documents themselves where avoidable.</li>
       </ul>
 
@@ -497,7 +497,7 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       <p style={S.docP}>A short list. We never add to it without telling you.</p>
       <ul style={S.docUl}>
         <li><strong style={S.docStrong}>The other side of your bookings</strong>, your coach sees what you&apos;d expect (name, sessions, messages, logs you&apos;ve shared).</li>
-        <li><strong style={S.docStrong}>Payment processors</strong>, Stripe, Paystack, Flutterwave, Razorpay, depending on your country.</li>
+        <li><strong style={S.docStrong}>Payment processors</strong>, Stripe, Paystack, Flutterwave, Razorpay, depending on your country. (Stripe, Flutterwave and Razorpay are not currently used.)</li>
         <li><strong style={S.docStrong}>Infrastructure providers</strong>, Cloudflare, AWS (eu{"‑"}west{"‑"}1, af{"‑"}south{"‑"}1), Postmark for email.</li>
         <li><strong style={S.docStrong}>Government authorities</strong>, only when legally required, with the narrowest possible response.</li>
       </ul>
