@@ -1,6 +1,7 @@
 "use client";
 
 import { StepProps, StageHead, FormGrid, Field, TextInput, SelectField, TextArea, ChipGrid, UploadZone, RadioCards } from "./_components";
+import { PayoutChoice } from "./_payout";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { COUNTRY_NAME_TO_CODE } from "./_config";
 import { OnboardingCurrencyField } from "./_currency";
@@ -115,15 +116,7 @@ export function GymStep5({ data, setField }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 05 of 08, gym track" title="Connect your payments." desc="Payouts go straight to your account. Binectics never holds funds." />
-      <RadioCards
-        selected={(data.payout as string) || "paystack"}
-        onSelect={(v) => setField("payout", v)}
-        options={[
-          { id: "paystack", title: "Paystack · ZA · NG · GH · KE", desc: "Recommended for African markets. Setup takes 4 minutes." },
-          { id: "stripe", title: "Stripe · global", desc: "USD · EUR · GBP · best for international clients." },
-          { id: "skip", title: "Skip for now", desc: "You can publish but cannot accept payments until connected." },
-        ]}
-      />
+      <PayoutChoice data={data} setField={setField} />
     </>
   );
 }
@@ -137,7 +130,7 @@ export function GymStep6({ data, setField }: StepProps) {
         onSelect={(v) => setField("kiosk", v)}
         options={[
           { id: "existing", title: "Use my existing iPad", desc: "Free. Download the Binectics Kiosk app from the App Store." },
-          { id: "buy", title: "Buy a Binectics-ready kit · ₦ 545k", desc: "iPad mini + wall mount + Stripe card reader. Ships in 3 days." },
+          { id: "buy", title: "Get a Binectics-ready kit", desc: "iPad mini and wall mount, set up for check-in." },
           { id: "skip", title: "Skip · I'll set this up later", desc: "Members can also check in with their phone." },
         ]}
       />

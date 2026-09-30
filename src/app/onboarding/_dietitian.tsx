@@ -1,6 +1,7 @@
 "use client";
 
 import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
+import { PayoutChoice } from "./_payout";
 import { COUNTRY_NAME_TO_CODE, DIETITIAN_DEFAULT_COUNTRY, SESSION_MISSING, dietitianCountry, dietitianCurrency } from "./_config";
 import { OnboardingCurrencyField } from "./_currency";
 
@@ -180,15 +181,7 @@ export function DietStep6({ data, setField }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 06 of 07, dietitian track" title="Connect your payout." desc="Direct to your bank account. Binectics never holds your money." />
-      <RadioCards
-        selected={(data.payout as string) || "paystack"}
-        onSelect={(v) => setField("payout", v)}
-        options={[
-          { id: "paystack", title: "Paystack · GTBank", desc: "Setup takes 4 minutes. NGN payouts." },
-          { id: "flutterwave", title: "Flutterwave", desc: "For wider African coverage." },
-          { id: "stripe", title: "Stripe", desc: "For USD clients abroad." },
-        ]}
-      />
+      <PayoutChoice data={data} setField={setField} />
     </>
   );
 }
