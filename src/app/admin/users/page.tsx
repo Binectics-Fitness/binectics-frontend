@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPercent } from "@/lib/admin/percent";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
@@ -158,7 +159,7 @@ export default function AdminUsersPage() {
             value: loading ? "-" : (metrics?.conversion.payingUsers.toLocaleString() ?? "0"),
             delta:
               metrics?.conversion.conversionRate != null
-                ? `${(metrics.conversion.conversionRate * 100).toFixed(1)}% conversion`
+                ? `${formatPercent(metrics.conversion.conversionRate)} conversion`
                 : "-",
           },
           {

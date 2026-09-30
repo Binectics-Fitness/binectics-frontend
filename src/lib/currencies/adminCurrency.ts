@@ -11,6 +11,7 @@ import type {
   PaymentMethodCode,
   UpdateAdminCurrency,
 } from "@/lib/api/admin";
+import { ADMIN_CURRENCY_USES } from "@/lib/api/admin";
 
 export interface CurrencyDraft {
   platform_enabled: boolean;
@@ -71,3 +72,28 @@ export function describeInFlight(f: Partial<CurrencyInFlight> | undefined): stri
 }
 
 export { plural };
+
+export const reasonKey = (reasons: readonly { code: string; message: string }[]) =>
+  reasons.map((r) => `${r.code}:${r.message}`).join("|");
+
+/**
+ * The reasons most "off" uses in a row share, when at least two share them
+ * exactly (GHS: "Paystack can charge GHS, but it isn't enabled on our
+ * account" under several columns). The row states them once; a use that is
+ * off for different reasons keeps its own (USD: bank transfer). Null when no
+ * two off uses share their reasons.
+ */
+export function sharedOffReasons(currency: AdminCurrency): { code: string; message: string }[] | null {
+  const off = ADMIN_CURRENCY_USES.map((u) => currency.effective[u]).filter(
+    (e): e is NonNullable<typeof e> => !!e && !e.selectable && e.reasons.length > 0,
+  );
+  const counts = new Map<string, { n: number; reasons: { code: string; message: string }[] }>();
+  for (const e of off) {
+    const k = reasonKey(e.reasons);
+    const hit = counts.get(k);
+    counts.set(k, { n: (hit?.n ?? 0) + 1, reasons: e.reasons });
+  }
+  let best: { n: number; reasons: { code: string; message: string }[] } | null = null;
+  for (const v of counts.values()) if (!best || v.n > best.n) best = v;
+  return best && best.n >= 2 ? best.reasons : null;
+}

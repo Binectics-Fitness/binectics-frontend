@@ -32,6 +32,8 @@ import {
   describeInFlight,
   draftOf,
   plural,
+  reasonKey,
+  sharedOffReasons,
   type CurrencyDraft,
 } from "@/lib/currencies/adminCurrency";
 
@@ -63,11 +65,24 @@ function liveTotal(c: AdminCurrency): number {
   return l.organizations + l.session_types + l.plans + l.listings;
 }
 
-function UseChip({ currency, use }: { currency: AdminCurrency; use: AdminCurrencyUse }) {
+function UseChip({
+  currency,
+  use,
+  shared,
+}: {
+  currency: AdminCurrency;
+  use: AdminCurrencyUse;
+  shared: readonly { code: string; message: string }[] | null;
+}) {
   const effect = currency.effective[use];
   if (!effect) return <span style={{ color: "var(--fg-4)" }}>-</span>;
   if (effect.selectable) return <StatusPill variant="confirmed" label="On" />;
-  const [first, ...rest] = effect.reasons;
+  // The row states its shared reasons once; this cell shows only what is
+  // different about this use. The tooltip and screen-reader label still
+  // carry every reason.
+  const sharedKeys = new Set((shared ?? []).map((r) => reasonKey([r])));
+  const own = effect.reasons.filter((r) => !sharedKeys.has(reasonKey([r])));
+  const [first, ...rest] = own;
   const chip = (
     <span
       tabIndex={0}
@@ -491,12 +506,20 @@ export default function AdminCurrenciesPage() {
                   </DSTableTd>
                   <DSTableTd>
                     <StatusPill variant={c.platform_enabled ? "confirmed" : "done"} label={c.platform_enabled ? "Offered" : "Off"} />
+                    {sharedOffReasons(c) && (
+                      <div className="text-[11.5px] leading-snug mt-1.5 max-w-[24ch]" style={{ color: "var(--fg-3)" }}>
+                        Why it&apos;s off: {sharedOffReasons(c)!.map((r) => r.message).join(". ")}
+                      </div>
+                    )}
                   </DSTableTd>
-                  {ADMIN_CURRENCY_USES.map((u) => (
-                    <DSTableTd key={u}>
-                      <UseChip currency={c} use={u} />
-                    </DSTableTd>
-                  ))}
+                  {ADMIN_CURRENCY_USES.map((u) => {
+                    const shared = sharedOffReasons(c);
+                    return (
+                      <DSTableTd key={u}>
+                        <UseChip currency={c} use={u} shared={shared} />
+                      </DSTableTd>
+                    );
+                  })}
                   <DSTableTd>
                     <GatewayCell currency={c} />
                   </DSTableTd>
