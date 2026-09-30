@@ -15,6 +15,7 @@ import type {
   PublicProviderPlanOption,
 } from "@/lib/api/providerBilling";
 import { formatMinor } from "@/lib/currencies/helpers";
+import { ProviderPlanTier } from "@/lib/api/providerBilling";
 
 /** The provider types the pricing pages price for, in display order. */
 export const PROVIDER_AUDIENCES: readonly { value: Exclude<PlanAudience, "ALL">; label: string }[] = [
@@ -53,7 +54,7 @@ function priceFor(
  * interval has no price, the other one is shown and labelled as such.
  */
 export function planPriceView(
-  plan: Pick<PublicProviderPlanOption, "prices" | "is_self_serve" | "price_unavailable_reason">,
+  plan: Pick<PublicProviderPlanOption, "code" | "prices" | "is_self_serve" | "price_unavailable_reason">,
   interval: BillingInterval,
   list?: readonly PlatformCurrency[] | null,
 ): PlanPriceView {
@@ -82,7 +83,14 @@ export function planPriceView(
   if (!plan.is_self_serve) {
     return { price: "Custom", priceSub: "talk to us", text: true, unavailableReason: null, interval: null };
   }
-  return { price: "Free", priceSub: "no card needed", text: true, unavailableReason: null, interval: null };
+  // No price at all only means free for the free tier. A paid tier the
+  // admin hasn't priced yet must never read as free (an older API sends no
+  // reason for it; a newer one says "No price is set for this plan yet.").
+  if (plan.code === ProviderPlanTier.FREE) {
+    return { price: "Free", priceSub: "no card needed", text: true, unavailableReason: null, interval: null };
+  }
+  const why = "No price is set for this plan yet.";
+  return { price: "Price not set yet", priceSub: why, text: true, unavailableReason: why, interval: null };
 }
 
 /** True when any plan has a yearly price, so a Monthly/Annual toggle means something. */

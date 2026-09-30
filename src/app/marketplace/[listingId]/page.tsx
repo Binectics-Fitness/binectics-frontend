@@ -421,7 +421,6 @@ export default function ProviderPage() {
               {[
                 { label: "Plan", value: selectedPlan?.name || "Select a plan" },
                 { label: "Location", value: listing.city || "–" },
-                { label: "Currency", value: listing.currency || "–" },
               ].map((f) => (
                 <div key={f.label} className="flex flex-col gap-1.5">
                   <label className="font-mono text-[12px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{f.label}</label>

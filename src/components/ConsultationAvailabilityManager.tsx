@@ -220,7 +220,12 @@ export default function ConsultationAvailabilityManager({
       ? orgCurrency
       : "";
   const activeCurrency = priceCurrency || defaultCurrency;
-  const priceCurrencyOptions = currencyOptions(currencies, "price", savedCurrency);
+  // The box beside the price is narrow: "NGN ₦" reads there, the full
+  // "NGN · ₦, Nigerian Naira" wrapped over three lines.
+  const priceCurrencyOptions = currencyOptions(currencies, "price", savedCurrency).map((o) => {
+    const c = currencies?.find((x) => x.code === o.value);
+    return c ? { ...o, label: c.symbol && c.symbol !== c.code ? `${c.code} ${c.symbol}` : c.code } : o;
+  });
 
   /** Fill the form from a session type (the provider's own, or a default). */
   const applySessionType = useCallback((type: ConsultationType) => {
