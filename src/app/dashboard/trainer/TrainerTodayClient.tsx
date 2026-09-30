@@ -13,8 +13,7 @@ import {
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { UserRole } from "@/lib/types";
+import { useTrainerAccess } from "@/hooks/useTrainerAccess";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -57,8 +56,9 @@ const BOOKING_STATUS_STYLE: Record<string, { color: string; bg: string; label: s
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function TrainerTodayClient() {
-  // Role guard: wrong-role accounts get redirected to their own dashboard.
-  const { isAuthorized } = useRoleGuard(UserRole.TRAINER);
+  // Trainers, and gym owners who coach from their own trainer workspace;
+  // everyone else is redirected to their own dashboard.
+  const { isAuthorized } = useTrainerAccess();
   if (!isAuthorized) return null;
   return <TrainerTodayContent />;
 }

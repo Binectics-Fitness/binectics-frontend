@@ -57,6 +57,7 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
         settingsHref: "/dashboard/settings",
         homeHref: "/dashboard/gym-owner",
         fallbackLabel: "Workspace",
+        workspace: "gym",
       }}
     >
       {children}

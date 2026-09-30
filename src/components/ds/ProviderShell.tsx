@@ -11,17 +11,18 @@
  * its own mobile nav.
  */
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { ProviderDashboardShell } from "./ProviderDashboardShell";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOrganization } from "@/contexts/OrganizationContext";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { useOptionalOrganization, useOrganization } from "@/contexts/OrganizationContext";
+import { useProviderAccess } from "@/hooks/useTrainerAccess";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import type { UserRole } from "@/lib/types";
 import { ROLE_LABEL, fullName, nameInitials, personInitials, shortName } from "@/lib/identity";
+import { ownedWorkspace, pickOrgForDashboard, type DashboardKind } from "@/lib/workspaces";
 
 /** Shared 15px stroked icon used by every provider sidebar nav item. */
 export function SidebarIcon({ children, d }: { children?: ReactNode; d?: string }) {
@@ -72,6 +73,43 @@ export interface ProviderShellConfig {
   homeHref: string;
   /** Breadcrumb/chip label when org/user data isn't loaded yet. */
   fallbackLabel: string;
+  /**
+   * The kind of workspace this dashboard works in. When set, the shell makes
+   * that workspace current (a gym owner who also coaches owns two), and
+   * offers the Gym / Coaching switch to someone who owns both.
+   */
+  workspace?: DashboardKind;
+}
+
+const WORKSPACE_SWITCH: { kind: DashboardKind; label: string; href: string }[] = [
+  { kind: "gym", label: "Gym", href: "/dashboard/gym-owner" },
+  { kind: "trainer", label: "Coaching", href: "/dashboard/trainer" },
+];
+
+/** Gym / Coaching switch, for someone who owns a live workspace of each. */
+function WorkspaceSwitch({ active }: { active: DashboardKind }) {
+  const { user } = useAuth();
+  const orgs = useOptionalOrganization()?.organizations;
+  const both = WORKSPACE_SWITCH.every((w) => ownedWorkspace(orgs, w.kind, user?.id));
+  if (!both) return null;
+  return (
+    <nav aria-label="Switch workspace" className="grid grid-cols-2 gap-0.5 p-0.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+      {WORKSPACE_SWITCH.map((w) => {
+        const selected = w.kind === active;
+        return (
+          <Link
+            key={w.kind}
+            href={w.href}
+            aria-current={selected ? "page" : undefined}
+            className={`text-center text-[12.5px] py-1.25 rounded-[4px] ${selected ? "font-medium" : "hover:bg-bg"}`}
+            style={{ background: selected ? "var(--ink)" : "transparent", color: selected ? "var(--bg)" : "var(--fg-2)" }}
+          >
+            {w.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 }
 
 function ProviderSidebar({ activeItem, config }: { activeItem: string; config: ProviderShellConfig }) {
@@ -97,6 +135,8 @@ function ProviderSidebar({ activeItem, config }: { activeItem: string; config: P
         <span className={`w-5.5 h-5.5 ${tone.chipSquare ? "rounded-[4px]" : "rounded-full"} flex items-center justify-center text-[11px] font-semibold`} style={{ background: tone.avatarBg, color: tone.avatarColor }}>{chipInitials}</span>
         <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>{chipLabel}</span>
       </div>
+
+      {config.workspace === "gym" || config.workspace === "trainer" ? <WorkspaceSwitch active={config.workspace} /> : null}
 
       {/* Nav sections */}
       {sections.map((s) => (
@@ -142,11 +182,27 @@ export interface ProviderShellProps {
 }
 
 export function ProviderShell({ activeItem, crumb, actions, children, config }: ProviderShellProps) {
-  const { user, isAuthorized, isLoading } = useRoleGuard(config.role);
+  const { user, isAuthorized, isLoading } = useProviderAccess(config.role);
   const { currentOrg } = useOrganization();
+  const orgs = useOptionalOrganization();
+  const selectOrgForDashboard = orgs?.selectOrgForDashboard;
 
-  // Wrong role: useRoleGuard redirects; render nothing to avoid a flash.
+  // Make this dashboard's workspace current. Explicit, not whatever sat
+  // first in the list: a gym owner who coaches owns a gym and a trainer
+  // workspace, and each dashboard must only ever act on its own.
+  const target = config.workspace
+    ? pickOrgForDashboard(orgs?.organizations, config.workspace, { userId: user?.id, currentId: currentOrg?._id })
+    : null;
+  const switching = Boolean(target && target._id !== currentOrg?._id);
+  useEffect(() => {
+    if (config.workspace && switching) selectOrgForDashboard?.(config.workspace);
+  }, [config.workspace, switching, selectOrgForDashboard]);
+
+  // Wrong role: the guard redirects; render nothing to avoid a flash. Also
+  // hold the page for the one render it takes to change workspace, so it
+  // never loads data against the other one.
   if (!isLoading && !isAuthorized) return null;
+  if (switching && selectOrgForDashboard) return null;
 
   const breadcrumbLabel =
     config.identity === "org" ? (currentOrg?.name ?? config.fallbackLabel) : (fullName(user) || config.fallbackLabel);

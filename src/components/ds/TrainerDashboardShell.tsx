@@ -45,6 +45,7 @@ export function TrainerDashboardShell({ activeItem, crumb, actions, children }: 
         settingsHref: "/dashboard/trainer/settings",
         homeHref: "/dashboard/trainer",
         fallbackLabel: "Trainer",
+        workspace: "trainer",
       }}
     >
       {children}
