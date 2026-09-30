@@ -6,7 +6,9 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "./GatewaysSection";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection, ApiKeysSection } from "./TeamAccessSections";
+import { CoachingSection } from "./CoachingSection";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   useOrganizationDetails,
   useUpdateOrganization,
@@ -50,6 +52,7 @@ const SECTIONS = [
   { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
   { group: "Money", items: [{ id: "gateways", label: "Payment gateways" }, { id: "payouts", label: "Payout schedule" }] },
   { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }, { id: "api", label: "API access" }] },
+  { group: "Coaching", items: [{ id: "coaching", label: "Coach clients yourself" }] },
 ];
 
 /** Booking toggles — key maps to a boolean on BookingRules (fee is derived). */
@@ -161,7 +164,13 @@ function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest
 
 export function SettingsClient() {
   const { currentOrg, refreshOrganizations } = useOrganization();
+  const { user } = useAuth();
   const orgId = currentOrg?._id;
+  // Only the gym's owner can start a coaching workspace; staff can't.
+  const sections = useMemo(
+    () => (currentOrg && user && currentOrg.owner_id === user.id ? SECTIONS : SECTIONS.filter((s) => s.group !== "Coaching")),
+    [currentOrg, user],
+  );
   const { data: org, isLoading } = useOrganizationDetails(orgId);
   const updateOrg = useUpdateOrganization();
   const { data: countries = [] } = useCountries();
@@ -309,7 +318,7 @@ export function SettingsClient() {
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-10 items-start">
         {/* Section nav */}
         <nav className="sticky top-22 flex flex-col sm:flex-row lg:flex-col gap-0.5 overflow-x-auto">
-          {SECTIONS.map((s, si) => (
+          {sections.map((s, si) => (
             <div key={s.group}>
               <div className={`font-mono text-[10.5px] uppercase tracking-[0.06em] px-2.5 py-1 ${si > 0 ? "mt-3.5" : ""}`} style={{ color: "var(--fg-3)" }}>{s.group}</div>
               {s.items.map((item) => {
@@ -443,6 +452,9 @@ export function SettingsClient() {
 
           {/* API access — issue, list, revoke org API keys */}
           <ApiKeysSection />
+
+          {/* Coach clients yourself: a trainer workspace next to the gym */}
+          <CoachingSection />
 
           {isLoading && (
             <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your organization…</p>

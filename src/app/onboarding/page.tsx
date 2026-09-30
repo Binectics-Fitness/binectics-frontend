@@ -13,7 +13,7 @@ import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, type RoleId } from "./_config";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
@@ -90,7 +90,7 @@ function buildDefaultOrganizationName(role: RoleId, firstName?: string, lastName
 function OnboardingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const { organizations, currentOrg, setCurrentOrg, refreshOrganizations, isLoading: orgLoading } = useOrganization();
   const preselected = resolvePreselectedRole(searchParams.get("role"), user?.role);
   const establishedRole = resolveEstablishedRole(user?.role);
@@ -106,7 +106,10 @@ function OnboardingContent() {
   // least one membership subscription; a generic signup has none. "pending"
   // keeps the rail locked until we know — briefly locking a free user is
   // harmless, briefly unlocking an invited member is the bug this guards.
+  // Only a live subscription sold by a gym counts (see membershipGate):
+  // a trainer's package or a cancelled gym membership leaves the picker open.
   const [memberGate, setMemberGate] = useState<"pending" | "invited" | "free">("pending");
+  const [enrolledGymName, setEnrolledGymName] = useState<string | null>(null);
   useEffect(() => {
     if (accountRole !== "member") return;
     let cancelled = false;
@@ -114,7 +117,9 @@ function OnboardingContent() {
       .getMyMembershipSubscriptions()
       .then((res) => {
         if (cancelled) return;
-        setMemberGate((res.data?.length ?? 0) > 0 ? "invited" : "free");
+        const evidence = membershipGate(res.data);
+        setEnrolledGymName(evidence.gymName);
+        setMemberGate(evidence.gate);
       })
       .catch(() => {
         // Availability over the guard: wrongly locking a genuine signup out
@@ -151,7 +156,7 @@ function OnboardingContent() {
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSavingLater, setIsSavingLater] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
-  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [workspaceError, setWorkspaceError] = useState<WorkspaceError | null>(null);
   const [workspacePending, setWorkspacePending] = useState(false);
   const [changeRoleOpen, setChangeRoleOpen] = useState(false);
   // Spans the whole of Continue: creating the workspace, refreshing the
@@ -192,11 +197,16 @@ function OnboardingContent() {
     if (decision.kind === "reuse") return decision.orgId;
     if (decision.kind === "blocked") {
       setWorkspaceError(
-        decision.reason === "loading"
-          ? "Just a moment, we are still loading your account."
-          : decision.reason === "gate"
-            ? "Just a moment, we are still checking your account."
-            : `You are part of ${currentOrg?.name ?? "another workspace"}, which belongs to someone else. To set up a workspace of your own, contact support.`,
+        decision.reason === "enrolled"
+          ? { message: enrolledMemberMessage(enrolledGymName), signOut: true }
+          : {
+              message:
+                decision.reason === "loading"
+                  ? "Just a moment, we are still loading your account."
+                  : decision.reason === "gate"
+                    ? "Just a moment, we are still checking your account."
+                    : `You are part of ${currentOrg?.name ?? "another workspace"}, which belongs to someone else. To set up a workspace of your own, contact support.`,
+            },
       );
       return null;
     }
@@ -209,7 +219,7 @@ function OnboardingContent() {
         description: "Auto-created from onboarding",
       });
       if (!response.success || !response.data) {
-        setWorkspaceError(response.message || "We could not create your workspace yet. Try again.");
+        setWorkspaceError(workspaceCreateError(response, enrolledGymName));
         return null;
       }
       setCurrentOrg(response.data);
@@ -227,12 +237,12 @@ function OnboardingContent() {
       await refreshOrganizations();
       return response.data._id;
     } catch {
-      setWorkspaceError("We could not create your workspace yet. Try again.");
+      setWorkspaceError({ message: "We could not create your workspace yet. Try again." });
       return null;
     } finally {
       setWorkspacePending(false);
     }
-  }, [accountRole, currentOrg, memberGate, orgLoading, refreshOrganizations, role, setCurrentOrg, updateUser, user]);
+  }, [accountRole, currentOrg, enrolledGymName, memberGate, orgLoading, refreshOrganizations, role, setCurrentOrg, updateUser, user]);
 
   // Undo a role picked by mistake: remove the untouched workspace, drop the
   // account back to a plain member, and reopen the picker.
@@ -595,6 +605,14 @@ function OnboardingContent() {
     }
   };
 
+  const enrolledNote = enrolledMemberNote({
+    memberGate,
+    gymName: enrolledGymName,
+    role,
+    step,
+    hasError: Boolean(workspaceError),
+  });
+
   const renderStage = () => {
     if (step === 0 || !role) {
       return (
@@ -789,7 +807,28 @@ function OnboardingContent() {
         <div className="ob-stage-area">
           {workspaceError ? (
             <div className="rounded-(--r-3) p-3.5" style={{ border: "1px solid var(--danger)", background: "var(--bg-2)", color: "var(--danger)" }} role="alert">
-              {workspaceError}
+              {workspaceError.message}
+              {workspaceError.signOut ? (
+                <div className="mt-2.5">
+                  <button type="button" className="btn-ghost-v2 sm" onClick={() => void logout()}>
+                    Sign out
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          {/* A gym's customer is kept on the member track (the API refuses
+              them a provider workspace). Say why once, on the first step,
+              so they know how to coach: a separate account. Mobile shows
+              the same note. */}
+          {enrolledNote ? (
+            <div className="rounded-(--r-3) p-3.5 mb-5 text-[13.5px] leading-relaxed" style={{ border: "1px solid var(--border)", background: "var(--bg-2)", color: "var(--fg-2)" }}>
+              {enrolledNote}
+              <div className="mt-2.5">
+                <button type="button" className="btn-ghost-v2 sm" onClick={() => void logout()}>
+                  Sign out
+                </button>
+              </div>
             </div>
           ) : null}
           {renderStage()}
