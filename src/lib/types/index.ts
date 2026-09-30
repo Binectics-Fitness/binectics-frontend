@@ -673,6 +673,8 @@ export interface MembershipSubscription {
    * — the member keeps their account and data (SEAT_MODEL.md §4.2).
    */
   is_archived?: boolean;
+  /** The team member (usually a trainer) the gym assigned this member to. */
+  assigned_staff_user_id?: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { teamRoleHint } from "@/lib/workspaces";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
@@ -491,6 +492,11 @@ export default function TeamWorkspacePage() {
                         placeholder="Select role"
                       />
                     </div>
+                    {teamRoleHint(roles.find((r) => r._id === selectedInviteRoleId)?.code) && (
+                      <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+                        {teamRoleHint(roles.find((r) => r._id === selectedInviteRoleId)?.code)}
+                      </p>
+                    )}
                   </div>
                   <button
                     type="submit"
@@ -607,6 +613,11 @@ export default function TeamWorkspacePage() {
                           placeholder="Select role"
                         />
                       </div>
+                      {teamRoleHint(roles.find((r) => r._id === selectedDirectRoleId)?.code) && (
+                      <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+                        {teamRoleHint(roles.find((r) => r._id === selectedDirectRoleId)?.code)}
+                      </p>
+                    )}
                     </div>
                     <button
                       type="submit"

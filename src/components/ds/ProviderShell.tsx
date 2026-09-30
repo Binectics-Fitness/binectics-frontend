@@ -73,6 +73,8 @@ export interface ProviderShellConfig {
   homeHref: string;
   /** Breadcrumb/chip label when org/user data isn't loaded yet. */
   fallbackLabel: string;
+  /** A second line under the identity chip, e.g. "Coaching at Iron Temple". */
+  chipNote?: string;
   /**
    * The kind of workspace this dashboard works in. When set, the shell makes
    * that workspace current, so a dashboard only ever acts on its own kind of
@@ -102,7 +104,10 @@ function ProviderSidebar({ activeItem, config }: { activeItem: string; config: P
       {/* Identity chip */}
       <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
         <span className={`w-5.5 h-5.5 ${tone.chipSquare ? "rounded-[4px]" : "rounded-full"} flex items-center justify-center text-[11px] font-semibold`} style={{ background: tone.avatarBg, color: tone.avatarColor }}>{chipInitials}</span>
-        <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>{chipLabel}</span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-[13px] font-medium" style={{ color: "var(--ink)" }}>{chipLabel}</span>
+          {config.chipNote && <span className="block text-[11.5px] truncate" style={{ color: "var(--fg-3)" }}>{config.chipNote}</span>}
+        </span>
       </div>
 
       {/* Nav sections */}

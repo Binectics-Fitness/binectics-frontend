@@ -4,6 +4,21 @@ import type { ReactNode } from "react";
 import { UserRole } from "@/lib/types";
 import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
 import { usePendingListingRequestCount } from "@/lib/queries/marketplace";
+import { useCoachingGym } from "@/hooks/useTrainerAccess";
+
+/**
+ * What a gym's staff trainer doesn't get: members find them through the
+ * gym's listing (no requests or profile of their own), the gym sells the
+ * packages, and forms are the gym's to manage.
+ */
+const NOT_FOR_GYM_TRAINERS = new Set(["Requests", "Packages", "My profile", "Forms"]);
+
+export function sidebarFor(sections: NavSection[], gymTrainer: boolean): NavSection[] {
+  if (!gymTrainer) return sections;
+  return sections
+    .map((s) => ({ ...s, items: s.items.filter((item) => !NOT_FOR_GYM_TRAINERS.has(item.name)) }))
+    .filter((s) => s.items.length > 0);
+}
 
 const SIDEBAR: NavSection[] = [
   { label: "Work", items: [
@@ -32,6 +47,7 @@ export interface TrainerDashboardShellProps {
 
 export function TrainerDashboardShell({ activeItem, crumb, actions, children }: TrainerDashboardShellProps) {
   const pendingRequests = usePendingListingRequestCount();
+  const gym = useCoachingGym();
   return (
     <ProviderShell
       activeItem={activeItem}
@@ -39,7 +55,8 @@ export function TrainerDashboardShell({ activeItem, crumb, actions, children }: 
       actions={actions}
       config={{
         role: UserRole.TRAINER,
-        sections: withNavBadge(SIDEBAR, "Requests", pendingRequests),
+        sections: sidebarFor(withNavBadge(SIDEBAR, "Requests", pendingRequests), Boolean(gym)),
+        chipNote: gym ? `Coaching at ${gym.name}` : undefined,
         identity: "user",
         tone: { avatarBg: "var(--trainer-soft)", avatarColor: "var(--trainer)" },
         settingsHref: "/dashboard/trainer/settings",
