@@ -13,7 +13,7 @@ import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, type RoleId } from "./_config";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
@@ -605,6 +605,14 @@ function OnboardingContent() {
     }
   };
 
+  const enrolledNote = enrolledMemberNote({
+    memberGate,
+    gymName: enrolledGymName,
+    role,
+    step,
+    hasError: Boolean(workspaceError),
+  });
+
   const renderStage = () => {
     if (step === 0 || !role) {
       return (
@@ -807,6 +815,20 @@ function OnboardingContent() {
                   </button>
                 </div>
               ) : null}
+            </div>
+          ) : null}
+          {/* A gym's customer is kept on the member track (the API refuses
+              them a provider workspace). Say why once, on the first step,
+              so they know how to coach: a separate account. Mobile shows
+              the same note. */}
+          {enrolledNote ? (
+            <div className="rounded-(--r-3) p-3.5 mb-5 text-[13.5px] leading-relaxed" style={{ border: "1px solid var(--border)", background: "var(--bg-2)", color: "var(--fg-2)" }}>
+              {enrolledNote}
+              <div className="mt-2.5">
+                <button type="button" className="btn-ghost-v2 sm" onClick={() => void logout()}>
+                  Sign out
+                </button>
+              </div>
             </div>
           ) : null}
           {renderStage()}

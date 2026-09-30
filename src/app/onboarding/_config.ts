@@ -317,6 +317,24 @@ export const WORKSPACE_ENROLLED_MEMBER = "WORKSPACE_ENROLLED_MEMBER";
  * business: the gym enrolled that account, and a provider workspace on it
  * would mix the two relationships. Same copy as the API's 403.
  */
+/**
+ * The note a gym's customer sees on the first member step: they are kept on
+ * the member track (the API refuses them a provider workspace), and this
+ * says how to coach instead. Null whenever it doesn't apply.
+ */
+export function enrolledMemberNote(input: {
+  memberGate: "pending" | "invited" | "free";
+  gymName: string | null;
+  role: RoleId | null;
+  step: number;
+  hasError: boolean;
+}): string | null {
+  if (input.hasError || input.memberGate !== "invited" || !input.gymName || input.role !== "member" || input.step !== 1) {
+    return null;
+  }
+  return `You're a member of ${input.gymName}. To coach or run a practice on Binectics, create a separate account with a different email.`;
+}
+
 export function enrolledMemberMessage(gymName: string | null | undefined): string {
   return `You're a member of ${gymName?.trim() || "a gym"}. A trainer or dietitian business needs its own account: sign out and create one with a different email.`;
 }

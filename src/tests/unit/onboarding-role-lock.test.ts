@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ACCOUNT_TYPE_TO_USER_ROLE, WORKSPACE_ENROLLED_MEMBER, canChangeRole, enrolledMemberMessage, membershipGate, resolveEstablishedRole, resolvePreselectedRole, workspaceCreateError, workspaceDecision } from "@/app/onboarding/_config";
+import { ACCOUNT_TYPE_TO_USER_ROLE, WORKSPACE_ENROLLED_MEMBER, canChangeRole, enrolledMemberMessage, enrolledMemberNote, membershipGate, resolveEstablishedRole, resolvePreselectedRole, workspaceCreateError, workspaceDecision } from "@/app/onboarding/_config";
 
 // Regression guards for the onboarding role model:
 //
@@ -220,5 +220,23 @@ describe("workspaceCreateError", () => {
   it("shows other refusals as the API wrote them, without sign out", () => {
     expect(workspaceCreateError({ code: "WORKSPACE_STAFF_MEMBER", message: "You are part of X's team." }, "Iron House")).toEqual({ message: "You are part of X's team." });
     expect(workspaceCreateError({}, null)).toEqual({ message: "We could not create your workspace yet. Try again." });
+  });
+});
+
+describe("enrolledMemberNote", () => {
+  const base = { memberGate: "invited" as const, gymName: "Test Gym", role: "member" as const, step: 1, hasError: false };
+
+  it("tells a gym's customer on the first member step how to coach", () => {
+    expect(enrolledMemberNote(base)).toBe(
+      "You're a member of Test Gym. To coach or run a practice on Binectics, create a separate account with a different email.",
+    );
+  });
+
+  it("stays quiet for anyone else, on later steps, or while an error shows", () => {
+    expect(enrolledMemberNote({ ...base, memberGate: "free" })).toBeNull();
+    expect(enrolledMemberNote({ ...base, gymName: null })).toBeNull();
+    expect(enrolledMemberNote({ ...base, step: 2 })).toBeNull();
+    expect(enrolledMemberNote({ ...base, hasError: true })).toBeNull();
+    expect(enrolledMemberNote({ ...base, role: "trainer" })).toBeNull();
   });
 });
