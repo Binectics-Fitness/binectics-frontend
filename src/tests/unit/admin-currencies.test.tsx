@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AdminCurrenciesPage from "@/app/admin/currencies/page";
 import { adminService, type AdminCurrency } from "@/lib/api/admin";
-import { currencyPatch, describeInFlight, draftOf } from "@/lib/currencies/adminCurrency";
+import { currencyPatch, describeInFlight, draftOf, sharedOffReasons } from "@/lib/currencies/adminCurrency";
 import { UserRole } from "@/lib/types";
 
 const replace = vi.fn();
@@ -107,12 +107,22 @@ describe("admin currencies page", () => {
     list.mockResolvedValue({ success: true, data: [NGN, GHS, EUR] });
   });
 
+  it("shows the shared reason once in the row and keeps a different one in its own cell", async () => {
+    const reason = "Paystack can charge GHS, but it isn't enabled on our account";
+    list.mockResolvedValue({ success: true, data: [GHS] } as never);
+    renderPage();
+    const ghs = await firstRow("GHS");
+    expect(within(ghs).getAllByText(new RegExp(reason.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))).toHaveLength(1);
+    expect(within(ghs).getByText(/Why it.s off/)).toBeInTheDocument();
+    expect(within(ghs).getByText("Bank transfer isn't available in GHS")).toBeInTheDocument();
+  });
+
   it("shows each use's status and why it is off", async () => {
     renderPage();
     const ghs = await firstRow("GHS");
     expect(within(ghs).getAllByText(/Paystack can charge GHS, but it isn't enabled on our account/).length).toBeGreaterThan(0);
     // The transfer column carries a second reason behind the first.
-    expect(within(ghs).getByText(/\(\+1\)/)).toBeInTheDocument();
+    expect(within(ghs).getByText("Bank transfer isn't available in GHS")).toBeInTheDocument();
     expect(within(ghs).getByLabelText(/Transfer off: .*Bank transfer isn't available in GHS/)).toBeInTheDocument();
     expect(within(ghs).getByText(/not on our account/)).toBeInTheDocument();
     const ngn = await firstRow("NGN");
@@ -235,4 +245,26 @@ describe("describeInFlight", () => {
     );
     expect(describeInFlight(undefined)).toBe("");
   });
+});
+
+describe("sharedOffReasons: one reason per row, not one per column", () => {
+  const reason = "Paystack can charge GHS, but it isn't enabled on our account";
+
+  it("states a reason once when several off columns share it", () => {
+    expect(sharedOffReasons(GHS)?.map((r) => r.message)).toEqual([reason]);
+  });
+
+  it("returns nothing when only one column is off (USD: bank transfer)", () => {
+    const usd = row({
+      code: "USD",
+      name: "US Dollar",
+      effective: { price: on, charge_card: on, charge_transfer: offReasons("Bank transfer isn't available in USD"), provider_billing: on },
+    });
+    expect(sharedOffReasons(usd)).toBeNull();
+  });
+
+  it("returns nothing when every column is on", () => {
+    expect(sharedOffReasons(NGN)).toBeNull();
+  });
+
 });

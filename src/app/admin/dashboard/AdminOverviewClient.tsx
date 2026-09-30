@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPercent } from "@/lib/admin/percent";
 import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
@@ -7,10 +8,7 @@ import { adminService, type PlatformMetricsOverview, type FeedbackSummary } from
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { formatRevenue, revenueHeadline, revenueRows } from "@/lib/admin/revenue";
 
-function pct(rate: number): string {
-  const v = rate <= 1 ? rate * 100 : rate;
-  return `${v.toFixed(1)}%`;
-}
+const pct = formatPercent;
 
 export default function AdminOverviewClient() {
   const [metrics, setMetrics] = useState<PlatformMetricsOverview | null>(null);
