@@ -1,49 +1,50 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useCurrencyList } from "@/lib/queries/currencies";
+import type { PaymentMethodCode, PlatformCurrency } from "@/lib/api/currencies";
+import { payableCurrencies } from "@/lib/currencies/helpers";
 
-const COUNTRIES = [
-  {
-    id: "ng",
-    name: "Nigeria",
-    currency: "NGN",
-    price: "₦45,500",
-    period: "/month",
-    gateway: "Paystack",
-    methods: "Card · Bank transfer · USSD",
-    settlement: "T+1 to provider",
-  },
-  {
-    id: "gb",
-    name: "United Kingdom",
-    currency: "GBP",
-    price: "£49",
-    period: "/month",
-    gateway: "Coming soon",
-    methods: "Card · Apple Pay · Google Pay",
-    settlement: "T+2 to provider",
-  },
-  {
-    id: "ke",
-    name: "Kenya",
-    currency: "KES",
-    price: "KSh 6,400",
-    period: "/month",
-    gateway: "Coming soon",
-    methods: "Card · M-Pesa · Mobile money",
-    settlement: "T+2 to provider",
-  },
-  {
-    id: "in",
-    name: "India",
-    currency: "INR",
-    price: "₹4,199",
-    period: "/month",
-    gateway: "Coming soon",
-    methods: "Card · UPI · Net banking",
-    settlement: "T+2 to provider",
-  },
-];
+/**
+ * A checkout card that cycles through the currencies we can charge today
+ * (GET /currencies, those with a gateway). Codes, names, symbols, gateways
+ * and methods all come from the list; no amount is invented, the price line
+ * shows the currency's symbol and says the provider sets it. With no payable
+ * currency (or while the list loads) it renders without currency labels.
+ */
+
+const METHOD_LABELS: Record<PaymentMethodCode, string> = {
+  card: "Card",
+  bank_transfer: "Bank transfer",
+};
+
+export interface DemoCurrency {
+  id: string;
+  name: string;
+  currency: string;
+  symbol: string;
+  gateway: string;
+  methods: string;
+}
+
+/** Demo rows from the currency list. Exported for tests. */
+export function demoCurrencies(list: readonly PlatformCurrency[] | null | undefined): DemoCurrency[] {
+  return payableCurrencies(list).map((c) => {
+    const methods = new Set<PaymentMethodCode>();
+    c.gateways.forEach((g) => g.methods.forEach((m) => methods.add(m)));
+    return {
+      id: c.code,
+      name: c.name,
+      currency: c.code,
+      symbol: c.symbol,
+      gateway: c.gateways.map((g) => g.label).join(" · "),
+      methods: (Object.keys(METHOD_LABELS) as PaymentMethodCode[])
+        .filter((m) => methods.has(m))
+        .map((m) => METHOD_LABELS[m])
+        .join(" · "),
+    };
+  });
+}
 
 const CYCLE_MS = 3500;
 const EXIT_MS = 150;
@@ -52,6 +53,8 @@ const ENTER_MS = 350;
 const ROW_STAGGER_MS = 80;
 
 export function CurrencyDemo() {
+  const { data: list } = useCurrencyList();
+  const items = useMemo(() => demoCurrencies(list), [list]);
   const [idx, setIdx] = useState(0);
   const [phase, setPhase] = useState<"visible" | "exiting" | "entering">(
     "visible",
@@ -60,17 +63,18 @@ export function CurrencyDemo() {
   const cycleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const country = COUNTRIES[displayIdx];
+  const country: DemoCurrency | undefined = items[displayIdx] ?? items[0];
 
-  // Auto-cycle
+  // Auto-cycle, only when there is more than one currency to show.
   useEffect(() => {
+    if (items.length < 2) return;
     cycleRef.current = setTimeout(() => {
-      setIdx((i) => (i + 1) % COUNTRIES.length);
+      setIdx((i) => (i + 1) % items.length);
     }, CYCLE_MS);
     return () => {
       if (cycleRef.current) clearTimeout(cycleRef.current);
     };
-  }, [idx, displayIdx]);
+  }, [idx, displayIdx, items.length]);
 
   // Transition sequence when idx changes (but not on first mount)
   const isFirstMount = useRef(true);
@@ -119,20 +123,23 @@ export function CurrencyDemo() {
     <div className="cd-root">
       <style>{CURRENCY_CSS}</style>
 
-      {/* Country selector chips */}
+      {/* Currency selector chips */}
+      {items.length > 1 && (
       <div className="cd-chips">
-        {COUNTRIES.map((c, i) => (
+        {items.map((c, i) => (
           <button
             key={c.id}
             className={`cd-chip ${i === idx ? "active" : ""}`}
             onClick={() => handleChipClick(i)}
             type="button"
+            aria-pressed={i === idx}
           >
             <span className="cd-chip-nm">{c.name}</span>
-            <span className="cd-chip-tg">{c.gateway}</span>
+            <span className="cd-chip-tg">{c.currency}</span>
           </button>
         ))}
       </div>
+      )}
 
       {/* Stage */}
       <div className="cd-stage">
@@ -150,42 +157,48 @@ export function CurrencyDemo() {
           {/* Price display */}
           <div className="cd-price">
             <div className="cd-price-amount" key={`price-${displayIdx}`}>
-              {country.price}
+              {country ? country.symbol : "Your price"}
             </div>
-            <div className="cd-price-period">{country.period}</div>
+            <div className="cd-price-period">
+              {country ? `your price, in ${country.name}` : "set by you"}
+            </div>
           </div>
 
           {/* Divider */}
           <div className="cd-divider" />
 
           {/* Payment details */}
-          <div className="cd-details">
-            <div className="cd-row cd-row-0">
-              <span className="cd-label">Currency</span>
-              <span className="cd-value">{country.currency}</span>
+          {country && (
+            <div className="cd-details">
+              <div className="cd-row cd-row-0">
+                <span className="cd-label">Currency</span>
+                <span className="cd-value">{country.currency}</span>
+              </div>
+              <div className="cd-row cd-row-1">
+                <span className="cd-label">Gateway</span>
+                <span className="cd-value">{country.gateway}</span>
+              </div>
+              {country.methods && (
+                <div className="cd-row cd-row-2">
+                  <span className="cd-label">Methods</span>
+                  <span className="cd-value">{country.methods}</span>
+                </div>
+              )}
+              <div className="cd-row cd-row-3">
+                <span className="cd-label">Settles to</span>
+                <span className="cd-value">Your own account</span>
+              </div>
             </div>
-            <div className="cd-row cd-row-1">
-              <span className="cd-label">Gateway</span>
-              <span className="cd-value">{country.gateway}</span>
-            </div>
-            <div className="cd-row cd-row-2">
-              <span className="cd-label">Methods</span>
-              <span className="cd-value">{country.methods}</span>
-            </div>
-            <div className="cd-row cd-row-3">
-              <span className="cd-label">Settlement</span>
-              <span className="cd-value">{country.settlement}</span>
-            </div>
-          </div>
+          )}
 
           {/* Pay button */}
           <button className="cd-pay-btn" type="button">
-            Pay {country.price}
+            {country ? `Pay in ${country.currency}` : "Pay"}
           </button>
 
           {/* Footer */}
           <div className="cd-footer">
-            Secured by {country.gateway} · 256-bit encryption
+            {country ? `Secured by ${country.gateway}` : "Secure checkout"}
           </div>
         </div>
       </div>
@@ -199,10 +212,7 @@ const CURRENCY_CSS = `
 
 /* Chips */
 .cd-chips {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-}
-@media (max-width: 640px) {
-  .cd-chips { grid-template-columns: repeat(2, 1fr); }
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px;
 }
 .cd-chip {
   border: 1px solid var(--border); border-radius: var(--r-2);
@@ -211,7 +221,9 @@ const CURRENCY_CSS = `
   display: flex; flex-direction: column; gap: 2px;
 }
 .cd-chip:hover { border-color: var(--border-2); }
-.cd-chip.active { border-color: var(--ink); }
+.cd-chip.active { border-color: var(--ink); background: var(--ink); }
+.cd-chip.active .cd-chip-nm { color: var(--bg); }
+.cd-chip.active .cd-chip-tg { color: oklch(0.78 0.005 85); }
 .cd-chip-nm {
   font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: var(--ink);
 }

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s, Binectics",
   },
   description:
-    "AI-drafted client summaries, weekly reports, and program updates, plus payments in 8 currencies and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
+    "AI-drafted client summaries, weekly reports, and program updates, plus payments in your local currency and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
   keywords: [
     "AI fitness copilot",
     "AI client reports",
@@ -37,14 +37,14 @@ export const metadata: Metadata = {
     siteName: "Binectics",
     title: "Binectics, the copilot your fitness business runs on",
     description:
-      "AI-drafted client reports, payments in 8 currencies, and a verified marketplace, for trainers, dietitians, and gyms in 50+ countries.",
+      "AI-drafted client reports, local-currency payments, and a verified marketplace, for trainers, dietitians, and gyms in 50+ countries.",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "Binectics, the copilot your fitness business runs on",
     description:
-      "AI-drafted client reports, payments in 8 currencies, and a verified marketplace, for trainers, dietitians, and gyms in 50+ countries.",
+      "AI-drafted client reports, local-currency payments, and a verified marketplace, for trainers, dietitians, and gyms in 50+ countries.",
   },
   robots: {
     index: true,
