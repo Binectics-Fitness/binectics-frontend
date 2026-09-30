@@ -64,6 +64,18 @@ describe("plan checkout", () => {
     expect(screen.queryByText(/Stripe|Flutterwave|Card Payment/)).toBeNull();
   });
 
+  it("says so when the plans can't be loaded, instead of a blank page", async () => {
+    vi.spyOn(marketplaceService, "getPublicListingPlans").mockResolvedValue({ success: false, message: "Network error" } as never);
+    render(<CheckoutPage />);
+    expect(await screen.findByText("We couldn't load this plan. Check your connection and try again.")).toBeInTheDocument();
+  });
+
+  it("says a plan is gone when the listing no longer offers it", async () => {
+    vi.spyOn(marketplaceService, "getPublicListingPlans").mockResolvedValue({ success: true, data: [] });
+    render(<CheckoutPage />);
+    expect(await screen.findByText(/This plan isn't available anymore/)).toBeInTheDocument();
+  });
+
   it("starts the server checkout, opens its access code, then subscribes with the returned reference", async () => {
     open.mockResolvedValue({ closed: "callback", reference: "mbr_123" });
     render(<CheckoutPage />);
