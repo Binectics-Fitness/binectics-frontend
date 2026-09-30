@@ -5,7 +5,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 
 const TIMELINE = [
   { when: "Just now", title: "Booking placed", desc: "Card held, no charge until Sarah confirms.", done: true },
-  { when: "Within 4h", title: "Sarah confirms", desc: "You'll get a push notification and email. Card is charged ZAR 1,890.00 only at this point. If she declines or doesn't reply, the hold is released automatically.", now: true },
+  { when: "Within 4h", title: "Sarah confirms", desc: "You'll get a push notification and email. Your card is charged only at this point. If she declines or doesn't reply, the hold is released automatically.", now: true },
   { when: "Tue · May 19", title: "Reminder · 24h before", desc: "Final chance to reschedule without a fee. You'll also get the gym's full address & parking info." },
   { when: "Wed · 08:30", title: "Show up · check in at the front desk with your QR", desc: "Bring water and clothes you can move in. Iron Lab provides shoes, plates, and chalk." },
   { when: "After", title: "Sarah delivers your program", desc: "4-week strength block in-app and as PDF within 48 hours. Plus your session recording." },
@@ -605,56 +605,10 @@ export default function BookingConfirmedPage() {
                 border: "1px solid var(--border)",
               }}
             >
-              {[
-                { k: "Session · 60 min", v: "R 1,200.00" },
-                { k: "Take-home program", v: "R 600.00" },
-                { k: "Session recording", v: "Free" },
-                { k: "Platform fee · 5%", v: "R 90.00" },
-              ].map((r) => (
-                <div
-                  key={r.k}
-                  className="flex justify-between py-2 text-[13px]"
-                >
-                  <span style={{ color: "var(--fg-3)" }}>{r.k}</span>
-                  <span
-                    className="font-mono"
-                    style={{
-                      color: "var(--ink)",
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {r.v}
-                  </span>
-                </div>
-              ))}
-              <div
-                className="flex justify-between pt-3.5 mt-1.5 font-medium"
-                style={{ borderTop: "1px solid var(--border)" }}
-              >
-                <span className="text-[14px]" style={{ color: "var(--ink)" }}>
-                  Total &middot; held
-                </span>
-                <span
-                  className="text-[16px]"
-                  style={{
-                    color: "var(--ink)",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  R 1,890.00
-                </span>
-              </div>
-              <div
-                className="font-mono text-[10.5px] uppercase flex justify-between mt-3.5 pt-3.5"
-                style={{
-                  letterSpacing: "0.05em",
-                  borderTop: "1px solid var(--border)",
-                  color: "var(--fg-3)",
-                }}
-              >
-                <span>Paystack &middot; VISA 4421</span>
-                <span>ZAR</span>
-              </div>
+              <p className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
+                The amount, in the provider&apos;s currency, is on your booking in{" "}
+                <Link href="/dashboard/bookings" style={{ color: "var(--ink)" }}>your bookings</Link>.
+              </p>
             </div>
           </div>
         </aside>
