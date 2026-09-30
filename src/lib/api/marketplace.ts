@@ -26,6 +26,105 @@ import type {
   MembershipSubscription,
 } from "@/lib/types";
 
+// ==================== PAYMENT CONFIGURATION TYPES ====================
+
+/**
+ * A currency verified on the org's OWN gateway account (Paystack: listed by
+ * GET /balance on their key), so membership plans may be priced in it even
+ * when the platform can't take it. Never trusted from the provider's word.
+ */
+export interface ProviderAccountCurrency {
+  code: string;
+  /** ISO timestamp of the last successful check. */
+  verified_at: string;
+  /** How it was checked, e.g. "paystack_balance". */
+  verified_via: string;
+}
+
+/** GET .../payment-config row. The secret key never leaves the API. */
+export interface OrgPaymentConfig {
+  gateway: string;
+  public_key: string;
+  is_active: boolean;
+  currencies: ProviderAccountCurrency[];
+}
+
+/** POST/DELETE .../payment-config/:gateway/currencies response. */
+export interface ProviderCurrenciesResult {
+  gateway: string;
+  currencies: ProviderAccountCurrency[];
+}
+
+/** POST .../payment-config/:gateway/currencies/refresh response. */
+export interface ProviderCurrenciesRefreshResult extends ProviderCurrenciesResult {
+  /** Dropped: no longer on the account and nothing depended on them. */
+  removed: string[];
+  /** Kept because plans or payments depend on them, but gone from the account. */
+  missing_on_account: string[];
+}
+
+/** 409 CURRENCY_LOCKED `locked_by`, per currency code. */
+export type ProviderCurrencyLocks = Record<string, { live_plans: number; pending_payments: number }>;
+
+function normalizeProviderCurrencies(raw: unknown): ProviderAccountCurrency[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ProviderAccountCurrency[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const r = row as Record<string, unknown>;
+    const code = typeof r.code === "string" ? r.code.trim().toUpperCase() : "";
+    if (!/^[A-Z]{3}$/.test(code) || out.some((c) => c.code === code)) continue;
+    out.push({
+      code,
+      verified_at: typeof r.verified_at === "string" ? r.verified_at : "",
+      verified_via: typeof r.verified_via === "string" ? r.verified_via : "",
+    });
+  }
+  return out;
+}
+
+/** A payment-config row made safe; an older API without `currencies` reads as none. */
+export function normalizePaymentConfig(raw: unknown): OrgPaymentConfig | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const gateway = typeof r.gateway === "string" ? r.gateway.trim().toLowerCase() : "";
+  if (!gateway) return null;
+  return {
+    gateway,
+    public_key: typeof r.public_key === "string" ? r.public_key : "",
+    is_active: r.is_active === true,
+    currencies: normalizeProviderCurrencies(r.currencies),
+  };
+}
+
+function normalizeCurrenciesResult(raw: unknown, gateway: string): ProviderCurrenciesRefreshResult {
+  const r = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const codes = (v: unknown) =>
+    Array.isArray(v) ? v.filter((c): c is string => typeof c === "string").map((c) => c.toUpperCase()) : [];
+  return {
+    gateway: typeof r.gateway === "string" ? r.gateway : gateway,
+    currencies: normalizeProviderCurrencies(r.currencies),
+    removed: codes(r.removed),
+    missing_on_account: codes(r.missing_on_account),
+  };
+}
+
+/** The `locked_by` a CURRENCY_LOCKED refusal carries, if any. */
+export function providerCurrencyLocks(res: Pick<ApiResponse<unknown>, "details">): ProviderCurrencyLocks {
+  const raw = res.details?.locked_by;
+  if (!raw || typeof raw !== "object") return {};
+  const out: ProviderCurrencyLocks = {};
+  for (const [code, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!v || typeof v !== "object") continue;
+    const l = v as Record<string, unknown>;
+    out[code.toUpperCase()] = {
+      live_plans: typeof l.live_plans === "number" ? l.live_plans : 0,
+      pending_payments: typeof l.pending_payments === "number" ? l.pending_payments : 0,
+    };
+  }
+  return out;
+}
+
 // ==================== REQUEST TYPES ====================
 
 /** POST /marketplace/listings/:id/plans/:planId/checkout. */
@@ -939,14 +1038,18 @@ export const marketplaceService = {
 
   async getPaymentConfigs(
     organizationId: string,
-  ): Promise<
-    ApiResponse<
-      Array<{ gateway: string; public_key: string; is_active: boolean }>
-    >
-  > {
-    return await apiClient.get(
+  ): Promise<ApiResponse<OrgPaymentConfig[]>> {
+    const res = await apiClient.get<unknown>(
       `/marketplace/organizations/${organizationId}/payment-config`,
     );
+    if (!res.success) return { ...res, data: undefined };
+    const rows = Array.isArray(res.data) ? res.data : [];
+    return {
+      ...res,
+      data: rows
+        .map(normalizePaymentConfig)
+        .filter((c): c is OrgPaymentConfig => c !== null),
+    };
   },
 
   async upsertPaymentConfig(
@@ -973,6 +1076,52 @@ export const marketplaceService = {
     return await apiClient.delete(
       `/marketplace/organizations/${organizationId}/payment-config/${gateway}`,
     );
+  },
+
+  /**
+   * Verify `code` on the org's own gateway account and allow membership
+   * prices in it. Refusals: 400 PROVIDER_CURRENCY_NOT_ON_ACCOUNT /
+   * _UNKNOWN / _UNSUPPORTED / _BLOCKED, PROVIDER_ACCOUNT_MISSING,
+   * GATEWAY_NOT_SUPPORTED; 502 PROVIDER_ACCOUNT_CHECK_FAILED.
+   */
+  async verifyProviderCurrency(
+    organizationId: string,
+    gateway: string,
+    code: string,
+  ): Promise<ApiResponse<ProviderCurrenciesResult>> {
+    const res = await apiClient.post<unknown>(
+      `/marketplace/organizations/${organizationId}/payment-config/${encodeURIComponent(gateway)}/currencies`,
+      { code },
+    );
+    if (!res.success) return { ...res, data: undefined };
+    const { currencies } = normalizeCurrenciesResult(res.data, gateway);
+    return { ...res, data: { gateway, currencies } };
+  },
+
+  /** Remove a verified currency; 409 CURRENCY_LOCKED (details.locked_by) while plans or payments depend on it. */
+  async removeProviderCurrency(
+    organizationId: string,
+    gateway: string,
+    code: string,
+  ): Promise<ApiResponse<ProviderCurrenciesResult>> {
+    const res = await apiClient.delete<unknown>(
+      `/marketplace/organizations/${organizationId}/payment-config/${encodeURIComponent(gateway)}/currencies/${encodeURIComponent(code)}`,
+    );
+    if (!res.success) return { ...res, data: undefined };
+    const { currencies } = normalizeCurrenciesResult(res.data, gateway);
+    return { ...res, data: { gateway, currencies } };
+  },
+
+  /** Re-check every stored currency with the gateway in one call. */
+  async refreshProviderCurrencies(
+    organizationId: string,
+    gateway: string,
+  ): Promise<ApiResponse<ProviderCurrenciesRefreshResult>> {
+    const res = await apiClient.post<unknown>(
+      `/marketplace/organizations/${organizationId}/payment-config/${encodeURIComponent(gateway)}/currencies/refresh`,
+    );
+    if (!res.success) return { ...res, data: undefined };
+    return { ...res, data: normalizeCurrenciesResult(res.data, gateway) };
   },
 
   // ==================== MY LISTINGS (multi-location) ====================

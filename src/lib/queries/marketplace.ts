@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "./keys";
-import { marketplaceService } from "@/lib/api/marketplace";
+import {
+  marketplaceService,
+  type OrgPaymentConfig,
+} from "@/lib/api/marketplace";
 import type {
   AmenityKey,
   FacilityCategory,
@@ -287,10 +290,19 @@ export function useUpdateAmenities(listingId: string) {
 
 // ==================== ORG PAYMENT GATEWAY CONFIG ====================
 
-export interface OrgPaymentConfig {
-  gateway: string;
-  public_key: string;
-  is_active: boolean;
+export type { OrgPaymentConfig };
+
+/** Payment keys and verified currencies change what the org can price in. */
+function invalidatePaymentConfig(
+  queryClient: ReturnType<typeof useQueryClient>,
+  orgId: string,
+) {
+  void queryClient.invalidateQueries({
+    queryKey: queryKeys.marketplace.orgPaymentConfigs(orgId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: queryKeys.currencies.org(orgId),
+  });
 }
 
 export function useOrgPaymentConfigs(orgId: string | undefined) {
@@ -318,10 +330,7 @@ export function useUpsertPaymentConfig(orgId: string | undefined) {
       return marketplaceService.upsertPaymentConfig(orgId, data);
     },
     onSuccess: () => {
-      if (orgId)
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.marketplace.orgPaymentConfigs(orgId),
-        });
+      if (orgId) invalidatePaymentConfig(queryClient, orgId);
     },
   });
 }
@@ -334,10 +343,52 @@ export function useDeletePaymentConfig(orgId: string | undefined) {
       return marketplaceService.deletePaymentConfig(orgId, gateway);
     },
     onSuccess: () => {
-      if (orgId)
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.marketplace.orgPaymentConfigs(orgId),
-        });
+      if (orgId) invalidatePaymentConfig(queryClient, orgId);
+    },
+  });
+}
+
+/**
+ * Provider-account currencies (CURRENCY_MODEL.md): verify one on the org's
+ * own gateway account, remove one, or re-check them all. Each resolves the
+ * ApiResponse so the caller can show the server's refusal; any settled call
+ * refreshes the configs and the org's price currencies.
+ */
+export function useVerifyProviderCurrency(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ gateway, code }: { gateway: string; code: string }) => {
+      if (!orgId) throw new Error("No organization selected");
+      return marketplaceService.verifyProviderCurrency(orgId, gateway, code);
+    },
+    onSuccess: () => {
+      if (orgId) invalidatePaymentConfig(queryClient, orgId);
+    },
+  });
+}
+
+export function useRemoveProviderCurrency(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ gateway, code }: { gateway: string; code: string }) => {
+      if (!orgId) throw new Error("No organization selected");
+      return marketplaceService.removeProviderCurrency(orgId, gateway, code);
+    },
+    onSuccess: () => {
+      if (orgId) invalidatePaymentConfig(queryClient, orgId);
+    },
+  });
+}
+
+export function useRefreshProviderCurrencies(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (gateway: string) => {
+      if (!orgId) throw new Error("No organization selected");
+      return marketplaceService.refreshProviderCurrencies(orgId, gateway);
+    },
+    onSuccess: () => {
+      if (orgId) invalidatePaymentConfig(queryClient, orgId);
     },
   });
 }

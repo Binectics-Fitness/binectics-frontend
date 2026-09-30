@@ -1,4 +1,4 @@
-import type { CurrencyUse, PlatformCurrency } from "@/lib/api/currencies";
+import type { CurrencyUse, OrgPriceCurrency, PlatformCurrency } from "@/lib/api/currencies";
 
 /** One GET /currencies row; every use selectable unless overridden. */
 export function currency(
@@ -57,3 +57,30 @@ export const SEEDED_CURRENCIES: PlatformCurrency[] = [
     selectable: { price: false, charge_card: false },
   }),
 ];
+
+/**
+ * One GET /marketplace/organizations/:id/price-currencies row; selectable on
+ * the platform route unless overridden.
+ */
+export function orgPrice(
+  code: string,
+  overrides: Partial<OrgPriceCurrency> = {},
+): OrgPriceCurrency {
+  const selectable = overrides.selectable ?? true;
+  const route = selectable ? (overrides.route ?? "platform") : null;
+  return {
+    code,
+    name: code,
+    symbol: code,
+    minor_unit: 2,
+    reasons: [],
+    payable: {
+      card: { selectable, route },
+      bank_transfer: { selectable: false, route: null },
+    },
+    provider_verified: route === "provider",
+    ...overrides,
+    selectable,
+    route,
+  };
+}

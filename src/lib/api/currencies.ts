@@ -134,10 +134,136 @@ export function normalizeCurrencies(raw: unknown): PlatformCurrency[] {
   return out;
 }
 
+// ─── Membership price currencies for one org ────────────────────────────────
+
+/**
+ * Who takes a payment in a currency: the platform's own Paystack account, or
+ * the provider's own connected one (CURRENCY_MODEL.md, "Provider-account
+ * currencies").
+ */
+export type CurrencyRoute = "platform" | "provider";
+
+export interface CurrencyReason {
+  code: string;
+  message: string;
+}
+
+/**
+ * One row of GET /marketplace/organizations/:id/price-currencies: a currency
+ * this org's MEMBERSHIP prices may use. Platform-enabled currencies plus the
+ * ones verified on the org's own payment account. Session types and bookings
+ * never use this list: they are charged on the platform account.
+ */
+export interface OrgPriceCurrency {
+  code: string;
+  name: string;
+  symbol: string;
+  minor_unit: number;
+  /** Membership prices can be set in it for this org right now. */
+  selectable: boolean;
+  /** Who would take the money; null when not selectable. */
+  route: CurrencyRoute | null;
+  /** Why not, when not selectable. */
+  reasons: CurrencyReason[];
+  payable: {
+    card: { selectable: boolean; route: CurrencyRoute | null };
+    bank_transfer: { selectable: boolean; route: CurrencyRoute | null };
+  };
+  /** Verified on the org's own payment account. */
+  provider_verified: boolean;
+}
+
+function routeOf(raw: unknown): CurrencyRoute | null {
+  return raw === "platform" || raw === "provider" ? raw : null;
+}
+
+function payableOf(raw: unknown): { selectable: boolean; route: CurrencyRoute | null } {
+  const p = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const selectable = p.selectable === true;
+  return { selectable, route: selectable ? routeOf(p.route) : null };
+}
+
+/** One price-currencies row made safe; a missing flag reads as "not selectable". */
+export function normalizeOrgPriceCurrency(raw: unknown): OrgPriceCurrency | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const code = typeof r.code === "string" ? r.code.trim().toUpperCase() : "";
+  if (!ISO_CODE.test(code)) return null;
+  const selectable = r.selectable === true;
+  const minor =
+    typeof r.minor_unit === "number" &&
+    Number.isInteger(r.minor_unit) &&
+    r.minor_unit >= 0 &&
+    r.minor_unit <= 3
+      ? r.minor_unit
+      : currencyExponent(code);
+  const payable = r.payable && typeof r.payable === "object" ? (r.payable as Record<string, unknown>) : {};
+  return {
+    code,
+    name: typeof r.name === "string" && r.name.trim() ? r.name.trim() : code,
+    symbol: typeof r.symbol === "string" && r.symbol.trim() ? r.symbol.trim() : code,
+    minor_unit: minor,
+    selectable,
+    route: selectable ? routeOf(r.route) : null,
+    reasons: Array.isArray(r.reasons)
+      ? r.reasons
+          .filter(
+            (x): x is CurrencyReason =>
+              !!x && typeof x === "object" && typeof (x as CurrencyReason).message === "string",
+          )
+          .map((x) => ({ code: String(x.code ?? ""), message: x.message }))
+      : [],
+    payable: { card: payableOf(payable.card), bank_transfer: payableOf(payable.bank_transfer) },
+    provider_verified: r.provider_verified === true,
+  };
+}
+
+export function normalizeOrgPriceCurrencies(raw: unknown): OrgPriceCurrency[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: OrgPriceCurrency[] = [];
+  for (const row of raw) {
+    const c = normalizeOrgPriceCurrency(row);
+    if (!c || seen.has(c.code)) continue;
+    seen.add(c.code);
+    out.push(c);
+  }
+  return out;
+}
+
+/**
+ * A platform row seen as an org price row: what a picker falls back to when
+ * the org's own list can't be read (no org yet, or an API without the
+ * endpoint). Everything in it is on the platform route.
+ */
+export function platformAsOrgPriceCurrency(c: PlatformCurrency): OrgPriceCurrency {
+  const on = (s: boolean) => ({ selectable: s, route: s ? ("platform" as const) : null });
+  return {
+    code: c.code,
+    name: c.name,
+    symbol: c.symbol,
+    minor_unit: c.minor_unit,
+    selectable: c.selectable.price,
+    route: c.selectable.price ? "platform" : null,
+    reasons: [],
+    payable: { card: on(c.selectable.charge_card), bank_transfer: on(c.selectable.charge_transfer) },
+    provider_verified: false,
+  };
+}
+
 export const currenciesService = {
   async list(): Promise<ApiResponse<PlatformCurrency[]>> {
     const res = await apiClient.get<unknown>("/currencies", false);
     if (!res.success) return { ...res, data: undefined };
     return { ...res, data: normalizeCurrencies(res.data) };
+  },
+
+  /** GET /marketplace/organizations/:id/price-currencies. */
+  async listForOrg(organizationId: string): Promise<ApiResponse<OrgPriceCurrency[]>> {
+    const res = await apiClient.get<unknown>(
+      `/marketplace/organizations/${encodeURIComponent(organizationId)}/price-currencies`,
+    );
+    if (!res.success) return { ...res, data: undefined };
+    return { ...res, data: normalizeOrgPriceCurrencies(res.data) };
   },
 };

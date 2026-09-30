@@ -9,7 +9,7 @@
  */
 
 import type { ApiResponse } from "@/lib/types";
-import type { CurrencyUse, PlatformCurrency } from "@/lib/api/currencies";
+import type { CurrencyUse, OrgPriceCurrency, PlatformCurrency } from "@/lib/api/currencies";
 import { currencyExponent } from "@/lib/money/currencyUnits";
 import { formatCurrency } from "@/utils/format";
 
@@ -137,6 +137,55 @@ export function currencyOptions(
   return options;
 }
 
+/**
+ * Options for a MEMBERSHIP price picker from the org's price currencies
+ * (useOrgPriceCurrencies): the selectable ones, those only the org's own
+ * account can take marked with `providerHint` ("Your Paystack account"), plus
+ * `keep` when it is the saved currency and no longer selectable.
+ */
+export function orgPriceOptions(
+  list: readonly OrgPriceCurrency[] | null | undefined,
+  keep?: string | null,
+  providerHint = "Your own payment account",
+): { label: string; value: string }[] {
+  const options = (list ?? [])
+    .filter((c) => c.selectable)
+    .map((c) => ({
+      label: c.route === "provider" ? `${currencyLabel(c)} (${providerHint})` : currencyLabel(c),
+      value: c.code,
+    }));
+  const kept = keep?.toUpperCase();
+  if (kept && !options.some((o) => o.value === kept)) {
+    options.push({ label: `${kept} (not available for new prices)`, value: kept });
+  }
+  return options;
+}
+
+/** The org price row for `code` when membership prices can use it, else null. */
+export function orgPriceCurrency(
+  code: string | null | undefined,
+  list: readonly OrgPriceCurrency[] | null | undefined,
+): OrgPriceCurrency | null {
+  if (!code) return null;
+  const upper = code.toUpperCase();
+  return (list ?? []).find((c) => c.code === upper && c.selectable) ?? null;
+}
+
+/**
+ * One line under a membership price picker when the chosen currency is paid
+ * into the org's own account, else null.
+ */
+export function providerRouteNote(
+  code: string | null | undefined,
+  list: readonly OrgPriceCurrency[] | null | undefined,
+  providerHint = "Your own payment account",
+): string | null {
+  const row = orgPriceCurrency(code, list);
+  if (!row || row.route !== "provider") return null;
+  const where = providerHint.charAt(0).toLowerCase() + providerHint.slice(1);
+  return `${row.code} is paid only through ${where}. Keep it connected so members can pay.`;
+}
+
 export const CURRENCY_ERROR_CODES = [
   "CURRENCY_NOT_SELECTABLE",
   "CURRENCY_MISSING",
@@ -185,4 +234,95 @@ export function writeErrorMessage(
   fallback: string,
 ): string {
   return describeCurrencyError(res) ?? res.message ?? fallback;
+}
+
+// ─── Provider-account currencies ────────────────────────────────────────────
+
+export const PROVIDER_CURRENCY_ERROR_CODES = [
+  "PROVIDER_CURRENCY_NOT_ON_ACCOUNT",
+  "PROVIDER_CURRENCY_UNKNOWN",
+  "PROVIDER_CURRENCY_UNSUPPORTED",
+  "PROVIDER_CURRENCY_BLOCKED",
+  "PROVIDER_ACCOUNT_MISSING",
+  "GATEWAY_NOT_SUPPORTED",
+  "PROVIDER_ACCOUNT_CHECK_FAILED",
+] as const;
+
+/**
+ * What to tell a provider when adding, removing or re-checking a currency on
+ * their own account is refused. A 502 PROVIDER_ACCOUNT_CHECK_FAILED (or any
+ * 5xx) keys off the code only: the API hides 5xx messages in production. The
+ * 400s carry plain server copy ("Your Paystack account doesn't have GHS
+ * enabled. Enable it with Paystack, then try again."); the fallbacks below
+ * only cover an empty message.
+ */
+export function providerCurrencyMessage(
+  res: Pick<ApiResponse<unknown>, "code" | "message" | "status">,
+  gatewayLabel: string,
+  code?: string,
+): string {
+  if (res.code === "PROVIDER_ACCOUNT_CHECK_FAILED" || (res.status ?? 0) >= 500) {
+    return `We couldn't reach ${gatewayLabel} to check your account. Try again.`;
+  }
+  const message = (res.message ?? "").trim();
+  if (message) return message;
+  const c = code ?? "This currency";
+  switch (res.code) {
+    case "PROVIDER_CURRENCY_NOT_ON_ACCOUNT":
+      return `Your ${gatewayLabel} account doesn't have ${c} enabled. Enable it with ${gatewayLabel}, then try again.`;
+    case "PROVIDER_CURRENCY_UNKNOWN":
+      return `${c} isn't a currency we recognise.`;
+    case "PROVIDER_CURRENCY_UNSUPPORTED":
+      return `${gatewayLabel} can't charge ${c}, so it can't be added.`;
+    case "PROVIDER_CURRENCY_BLOCKED":
+      return `${c} can't be used with your own ${gatewayLabel} account right now.`;
+    case "PROVIDER_ACCOUNT_MISSING":
+      return `Connect your ${gatewayLabel} account first.`;
+    case "GATEWAY_NOT_SUPPORTED":
+      return "That payment provider's currencies can't be checked yet.";
+    default:
+      return "Something went wrong. Try again.";
+  }
+}
+
+function count(n: number, one: string, many: string): string {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+/** "2 active plans and 1 payment in progress", or "" when nothing is held. */
+export function describeCurrencyLock(lock: { live_plans: number; pending_payments: number } | undefined): string {
+  if (!lock) return "";
+  const parts: string[] = [];
+  if (lock.live_plans > 0) parts.push(count(lock.live_plans, "active plan", "active plans"));
+  if (lock.pending_payments > 0) {
+    parts.push(count(lock.pending_payments, "payment in progress", "payments in progress"));
+  }
+  return parts.join(" and ");
+}
+
+/**
+ * Every ISO 4217 code this browser knows, with its English name, for the
+ * "add a currency" picker. Not a list of what Paystack accepts: the API
+ * checks each one with Paystack and says why when it can't be added. Empty
+ * when the runtime has no Intl.supportedValuesOf; the caller then takes a
+ * typed code.
+ */
+export function isoCurrencyChoices(): { code: string; name: string }[] {
+  const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "currency") => string[] };
+  if (typeof intl.supportedValuesOf !== "function") return [];
+  let codes: string[];
+  try {
+    codes = intl.supportedValuesOf("currency");
+  } catch {
+    return [];
+  }
+  let names: Intl.DisplayNames | null = null;
+  try {
+    names = new Intl.DisplayNames(["en"], { type: "currency" });
+  } catch {
+    names = null;
+  }
+  return codes
+    .filter((c) => /^[A-Z]{3}$/.test(c))
+    .map((code) => ({ code, name: names?.of(code) ?? code }));
 }
