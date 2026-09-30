@@ -45,12 +45,29 @@ export interface CurrencyInFlight {
   pending_provider_checkouts: number;
 }
 
+/**
+ * How much rests on providers' OWN payment accounts for a currency: orgs
+ * that verified it on an active own-key config, their active priced plans in
+ * it, and pending subscriptions in it.
+ */
+export interface ProviderCurrencyUsage {
+  organizations: number;
+  live_plans: number;
+  in_flight: number;
+}
+
 export interface AdminCurrency {
   code: string;
   name: string;
   symbol: string;
   minor_unit: number;
   platform_enabled: boolean;
+  /**
+   * Providers who connect their own gateway account may price and collect
+   * membership plans in it when the platform can't. A missing value (older
+   * API) reads as true, as the API does.
+   */
+  provider_accounts_allowed: boolean;
   notes: string | null;
   effective: Record<AdminCurrencyUse, CurrencyEffect>;
   gateways: AdminCurrencyGateway[];
@@ -59,6 +76,8 @@ export interface AdminCurrency {
     in_flight: CurrencyInFlight;
     historical: { transactions: number };
     in_flight_total: number;
+    /** Absent on an older API; read as zeros. */
+    provider?: ProviderCurrencyUsage;
   };
   updated_by: string | null;
   updated_at: string | null;
@@ -67,6 +86,8 @@ export interface AdminCurrency {
 /** PATCH /admin/currencies/:code. `code` and `minor_unit` are not editable. */
 export interface UpdateAdminCurrency {
   platform_enabled?: boolean;
+  /** Turning it off with provider-account payments in progress needs stop_new_payments. */
+  provider_accounts_allowed?: boolean;
   gateways?: { gateway: string; account_enabled?: boolean; methods?: PaymentMethodCode[] }[];
   name?: string;
   symbol?: string;

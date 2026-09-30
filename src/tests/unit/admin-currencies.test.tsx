@@ -31,6 +31,7 @@ function row(over: Partial<AdminCurrency> & Pick<AdminCurrency, "code" | "name">
     symbol: over.code,
     minor_unit: 2,
     platform_enabled: true,
+    provider_accounts_allowed: true,
     notes: null,
     effective: { price: on, charge_card: on, charge_transfer: on, provider_billing: on },
     gateways: [
@@ -194,6 +195,82 @@ describe("admin currencies page", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
+  it("switches providers' own accounts off with PATCH provider_accounts_allowed", async () => {
+    const user = userEvent.setup();
+    const withProvider = row({
+      code: "GHS",
+      name: "Ghanaian Cedi",
+      provider_accounts_allowed: true,
+      usage: { ...GHS.usage, provider: { organizations: 3, live_plans: 5, in_flight: 0 } },
+    });
+    list.mockResolvedValue({ success: true, data: [withProvider] });
+    update.mockResolvedValue({ success: true, data: { ...withProvider, provider_accounts_allowed: false } });
+    renderPage();
+    const ghs = await firstRow("GHS");
+    expect(within(ghs).getByText("Providers' own accounts: 3 orgs, 5 plans")).toBeInTheDocument();
+    await user.click(within(ghs).getByRole("button", { name: "Edit GHS" }));
+    const dialog = await screen.findByRole("dialog");
+    const toggle = within(dialog).getByRole("switch", { name: "Providers may add it" });
+    expect(toggle).toBeChecked();
+    expect(within(dialog).getByText(/In use now: 3 orgs, 5 plans\./)).toBeInTheDocument();
+    await user.click(toggle);
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+    expect(update).toHaveBeenCalledWith("GHS", { provider_accounts_allowed: false });
+  });
+
+  it("asks before stopping provider-account payments in progress, then resends with stop_new_payments", async () => {
+    const user = userEvent.setup();
+    const withProvider = row({
+      code: "GHS",
+      name: "Ghanaian Cedi",
+      provider_accounts_allowed: true,
+      usage: { ...GHS.usage, provider: { organizations: 1, live_plans: 1, in_flight: 2 } },
+    });
+    list.mockResolvedValue({ success: true, data: [withProvider] });
+    update
+      .mockResolvedValueOnce({
+        success: false,
+        status: 409,
+        code: "CURRENCY_IN_USE",
+        message: "GHS has 2 payment(s) in progress on providers' own accounts.",
+        details: { in_flight: { pending_subscriptions: 2 }, uses_lost: ["provider_accounts"] },
+      })
+      .mockResolvedValueOnce({ success: true, data: { ...withProvider, provider_accounts_allowed: false } });
+    renderPage();
+    await user.click(within(await firstRow("GHS")).getByRole("button", { name: "Edit GHS" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("switch", { name: "Providers may add it" }));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    const warning = await within(dialog).findByRole("alert");
+    expect(warning).toHaveTextContent("2 pending memberships would be affected");
+    expect(warning).toHaveTextContent("This change turns off providers' own payment accounts.");
+
+    await user.click(within(dialog).getByRole("button", { name: "Stop new payments now" }));
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
+    expect(update).toHaveBeenNthCalledWith(2, "GHS", { provider_accounts_allowed: false, stop_new_payments: true });
+  });
+
+  it("filters to currencies on providers' own accounts and says when providers can't add one", async () => {
+    const user = userEvent.setup();
+    const eurOnProviders = row({
+      code: "EUR",
+      name: "Euro",
+      platform_enabled: false,
+      provider_accounts_allowed: false,
+      usage: { ...EUR.usage, provider: { organizations: 1, live_plans: 2, in_flight: 0 } },
+    });
+    list.mockResolvedValue({ success: true, data: [NGN, eurOnProviders] });
+    renderPage();
+    await firstRow("NGN");
+    expect(screen.queryAllByText("Euro")).toHaveLength(0);
+    await user.click(screen.getAllByRole("button", { name: /^On providers' accounts/ })[0]);
+    const eur = await firstRow("EUR");
+    expect(within(eur).getByText("Providers' own accounts: 1 org, 2 plans. Providers can't add it")).toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: "Edit NGN" })).toHaveLength(0);
+  });
+
   it("shows the server's reason when a change is refused", async () => {
     const user = userEvent.setup();
     update.mockResolvedValue({
@@ -223,6 +300,16 @@ describe("admin currencies page", () => {
 describe("currencyPatch", () => {
   it("is empty when nothing changed", () => {
     expect(currencyPatch(GHS, draftOf(GHS))).toEqual({});
+  });
+
+  it("sends provider_accounts_allowed only when it changed, reading a missing flag as allowed", () => {
+    // An older API sends no flag at all.
+    const legacy = { ...NGN, provider_accounts_allowed: undefined } as unknown as AdminCurrency;
+    const d = draftOf(legacy);
+    expect(d.provider_accounts_allowed).toBe(true);
+    expect(currencyPatch(legacy, d)).toEqual({});
+    d.provider_accounts_allowed = false;
+    expect(currencyPatch(legacy, d)).toEqual({ provider_accounts_allowed: false });
   });
 
   it("sends changed fields only, with notes cleared to null", () => {

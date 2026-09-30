@@ -9,21 +9,42 @@ import type {
   AdminCurrency,
   CurrencyInFlight,
   PaymentMethodCode,
+  ProviderCurrencyUsage,
   UpdateAdminCurrency,
 } from "@/lib/api/admin";
 import { ADMIN_CURRENCY_USES } from "@/lib/api/admin";
 
 export interface CurrencyDraft {
   platform_enabled: boolean;
+  provider_accounts_allowed: boolean;
   name: string;
   symbol: string;
   notes: string;
   gateways: Record<string, { account_enabled: boolean; methods: PaymentMethodCode[] }>;
 }
 
+/** The API reads a missing flag as allowed; so does the page. */
+export function providerAccountsAllowed(c: Pick<AdminCurrency, "provider_accounts_allowed">): boolean {
+  return c.provider_accounts_allowed !== false;
+}
+
+/** Provider-account usage, zeros when the API didn't send it. */
+export function providerUsage(c: AdminCurrency): ProviderCurrencyUsage {
+  return c.usage.provider ?? { organizations: 0, live_plans: 0, in_flight: 0 };
+}
+
+/** "3 orgs, 5 plans, 1 in progress" on providers' own accounts, or "" for none. */
+export function describeProviderUsage(u: ProviderCurrencyUsage): string {
+  if (u.organizations === 0 && u.live_plans === 0 && u.in_flight === 0) return "";
+  const parts = [plural(u.organizations, "org"), plural(u.live_plans, "plan")];
+  if (u.in_flight > 0) parts.push(`${u.in_flight} in progress`);
+  return parts.join(", ");
+}
+
 export function draftOf(c: AdminCurrency): CurrencyDraft {
   return {
     platform_enabled: c.platform_enabled,
+    provider_accounts_allowed: providerAccountsAllowed(c),
     name: c.name,
     symbol: c.symbol,
     notes: c.notes ?? "",
@@ -37,6 +58,9 @@ export function draftOf(c: AdminCurrency): CurrencyDraft {
 export function currencyPatch(c: AdminCurrency, d: CurrencyDraft): UpdateAdminCurrency {
   const patch: UpdateAdminCurrency = {};
   if (d.platform_enabled !== c.platform_enabled) patch.platform_enabled = d.platform_enabled;
+  if (d.provider_accounts_allowed !== providerAccountsAllowed(c)) {
+    patch.provider_accounts_allowed = d.provider_accounts_allowed;
+  }
   if (d.name.trim() && d.name.trim() !== c.name) patch.name = d.name.trim();
   if (d.symbol.trim() && d.symbol.trim() !== c.symbol) patch.symbol = d.symbol.trim();
   if (d.notes.trim() !== (c.notes ?? "")) patch.notes = d.notes.trim() || null;
