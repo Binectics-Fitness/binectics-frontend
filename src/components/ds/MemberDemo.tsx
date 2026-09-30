@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useDemoMoney } from "@/components/marketing/CurrencyFacts";
 
 const VIEWS = [
   { id: "home", chipLabel: "Home", chipTag: "Your day" },
@@ -170,6 +171,8 @@ function ViewHome({ phaseClass }: { phaseClass: string }) {
 }
 
 function ViewMarketplace({ phaseClass }: { phaseClass: string }) {
+  // Sample prices, in a currency we can charge (GET /currencies).
+  const money = useDemoMoney();
   return (
     <div className={`md-view ${phaseClass}`}>
       <div className="md-topbar">
@@ -200,7 +203,7 @@ function ViewMarketplace({ phaseClass }: { phaseClass: string }) {
               <IconStar />
               <span>4.9 &middot; 412 reviews</span>
             </div>
-            <div className="md-provider-price">From R 450/mo</div>
+            <div className="md-provider-price">From {money(450)}/mo</div>
           </div>
         </div>
 
@@ -213,7 +216,7 @@ function ViewMarketplace({ phaseClass }: { phaseClass: string }) {
               <IconStar />
               <span>4.8 &middot; 89 reviews</span>
             </div>
-            <div className="md-provider-price">From R 600/session</div>
+            <div className="md-provider-price">From {money(600)}/session</div>
           </div>
         </div>
       </div>

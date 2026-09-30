@@ -6,7 +6,13 @@ import {
   gatewayCurrencySummary,
   payableCurrencies,
 } from "@/lib/currencies/helpers";
-import { CurrencyKpis, GatewayStrip, PaidInPhrase } from "@/components/marketing/CurrencyFacts";
+import {
+  CurrencyKpis,
+  GatewayStrip,
+  PaidInPhrase,
+  demoMoney,
+  fillDemoMoney,
+} from "@/components/marketing/CurrencyFacts";
 import { CurrencyDemo, demoCurrencies } from "@/components/ds/CurrencyDemo";
 import { hubStats } from "@/components/HeartbeatMotion";
 import { currency, SEEDED_CURRENCIES } from "../setup/currencyFixtures";
@@ -100,5 +106,27 @@ describe("demo animations", () => {
     expect(hubStats("ZA", SEEDED_CURRENCIES)).toEqual({ stats: ["ZAR"], live: "Coming soon" });
     expect(hubStats("GB", SEEDED_CURRENCIES)).toEqual({ stats: [], live: null });
     expect(hubStats("NG", [currency("NGN")])).toEqual({ stats: [], live: null });
+  });
+});
+
+describe("sample amounts in product demos", () => {
+  it("use the first currency we can charge", () => {
+    const money = demoMoney(SEEDED_CURRENCIES);
+    expect(money.code).toBe("NGN");
+    expect(money(38400)).toBe("₦38,400");
+    expect(money(1_080_000, { compact: true })).toBe("₦ 1.08M");
+    expect(fillDemoMoney("Refund request · {{850}}", money)).toBe("Refund request · ₦850");
+  });
+
+  it("carry no currency label without a payable currency", () => {
+    const money = demoMoney([]);
+    expect(money.code).toBe("");
+    expect(money(38400)).toBe("38,400");
+    expect(fillDemoMoney("{{38400k}} booked", money)).toBe("38.4K booked");
+  });
+
+  it("escape the amount in HTML copy", () => {
+    const money = demoMoney([currency("XOF", { symbol: "<b>", gateways: [PAYSTACK] })]);
+    expect(fillDemoMoney("{{5000k}}", money, { html: true })).toBe("&#60;b&#62; 5K");
   });
 });

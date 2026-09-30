@@ -182,3 +182,90 @@ export function PayableCurrencyCount() {
   const { data } = useCurrencyList();
   return <>{data ? String(payableCurrencies(data).length) : "-"}</>;
 }
+
+export type DemoMoney = ((major: number, opts?: { compact?: boolean }) => string) & {
+  /** The demo currency's code, or "" when there is none. */
+  code: string;
+};
+
+function compactNumber(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(2).replace(/\.?0+$/, "")}M`;
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  return String(n);
+}
+
+/**
+ * A formatter for sample amounts in product demos, in the first currency we
+ * can charge today (GET /currencies). The amounts are illustrations, not
+ * prices; with no payable currency (or before the list loads) they render
+ * as bare numbers with no currency label. Pure; exported for tests.
+ */
+export function demoMoney(list: readonly PlatformCurrency[] | null | undefined): DemoMoney {
+  const c = payableCurrencies(list)[0];
+  const fmt = ((major: number, opts?: { compact?: boolean }) => {
+    if (!c) return opts?.compact ? compactNumber(major) : major.toLocaleString("en");
+    if (opts?.compact) return `${c.symbol} ${compactNumber(major)}`;
+    try {
+      return new Intl.NumberFormat("en", {
+        style: "currency",
+        currency: c.code,
+        currencyDisplay: "narrowSymbol",
+        maximumFractionDigits: 0,
+      }).format(major);
+    } catch {
+      return `${c.symbol} ${major.toLocaleString("en")}`;
+    }
+  }) as DemoMoney;
+  fmt.code = c?.code ?? "";
+  return fmt;
+}
+
+/** demoMoney for the current currency list. */
+export function useDemoMoney(): DemoMoney {
+  const { data } = useCurrencyList();
+  return demoMoney(data);
+}
+
+/**
+ * Fills `{{38400}}` (full) and `{{38400k}}` (compact) sample-amount tokens
+ * in demo copy with `money`. Lets static demo data keep its numbers without
+ * naming a currency. With `html`, the amount is escaped for copy rendered
+ * as HTML (the symbol comes from the API).
+ */
+export function fillDemoMoney(text: string, money: DemoMoney, opts: { html?: boolean } = {}): string {
+  return text.replace(/\{\{(\d+)(k?)\}\}/g, (_, n: string, k: string) => {
+    const out = money(Number(n), { compact: k === "k" });
+    return opts.html ? out.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`) : out;
+  });
+}
+
+/** Partner cards for the payment providers we run, from GET /currencies. */
+export function GatewayPartnerCards() {
+  const { data, isPending } = useCurrencyList();
+  const rows = gatewayCurrencySummary(data);
+  if (isPending) return null;
+  if (rows.length === 0) {
+    return (
+      <p className="text-[14px]" style={{ color: "var(--fg-3)" }}>
+        Payment partners are listed here as each one goes live.
+      </p>
+    );
+  }
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+      {rows.map((g) => {
+        const methods = gatewayMethods(data, g.gateway).map((m) => m.toLowerCase());
+        return (
+          <div key={g.gateway} className="rounded-(--r-3) p-6" style={{ background: "var(--bg-2)" }}>
+            <h3 className="text-[17px] font-medium mb-2" style={{ color: "var(--ink)" }}>{g.label}</h3>
+            <p className="text-[13.5px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
+              Takes payments in {g.codes.join(", ")}
+              {methods.length > 0 ? `, by ${methods.join(" and ")}` : ""}.
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
