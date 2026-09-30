@@ -6,7 +6,7 @@ import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 const KPIS = [
   { label: "Classes this week", value: "12", delta: "82% utilization" },
   { label: "Member rating", value: "4.9", delta: "142 reviews" },
-  { label: "Payout · MTD", value: "R 22,400", delta: "Next Tue" },
+  { label: "Payout · MTD", value: "-", delta: "Sample data" },
   { label: "Cert renewal", value: "14 Jun 2026", delta: "21 days · USAW L2", warn: true, small: true },
 ];
 
@@ -14,7 +14,7 @@ const ROLE_ROWS = [
   { key: "Role", value: "Coach · senior" },
   { key: "Locations", value: "Sea Point · Foreshore" },
   { key: "Classes", value: "Olympic · Strength · Mobility" },
-  { key: "1-on-1", value: "Yes · R 1,200 / session" },
+  { key: "1-on-1", value: "Yes" },
   { key: "Payroll", value: "Contractor · monthly" },
   { key: "Permissions", value: "Schedule own · view members · message clients" },
 ];

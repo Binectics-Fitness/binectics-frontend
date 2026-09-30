@@ -10,13 +10,13 @@ const KPIS = [
   { label: "Referral code uses", value: "42", delta: "This month" },
   { label: "Share-kit downloads", value: "128", delta: "↑ 28% MoM" },
   { label: "Member-of-the-month picked", value: "May", delta: "Folake A." },
-  { label: "Discount redemptions", value: "62", delta: "R 18k discounted" },
+  { label: "Discount redemptions", value: "62", delta: "Sample data" },
 ];
 
 const CODES = [
   { code: "SUMMER25", discount: "25% off first 3 months", used: "14 / 50", expires: "30 Jun", action: "Pause" },
-  { code: "FRIEND50", discount: "R 500 off · referral", used: "18 / ∞", expires: "Never", action: "Edit" },
-  { code: "SARAH", discount: "R 200 off · trainer code", used: "28 / 100", expires: "Dec 26", action: "Edit" },
+  { code: "FRIEND50", discount: "Fixed amount off · referral", used: "18 / ∞", expires: "Never", action: "Edit" },
+  { code: "SARAH", discount: "Fixed amount off · trainer code", used: "28 / 100", expires: "Dec 26", action: "Edit" },
 ];
 
 export default function GymMarketingPage() {

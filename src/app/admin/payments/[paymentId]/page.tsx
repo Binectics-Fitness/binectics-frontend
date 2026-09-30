@@ -7,6 +7,12 @@ export const metadata: Metadata = {
   description: "View payment transaction details and processing history.",
 };
 
+/**
+ * STATIC PROTOTYPE: a sample transaction; the payments list
+ * (/admin/payments, wired to GET /admin/transactions) doesn't link here and
+ * there is no single-transaction endpoint. Its made-up euro amounts, fee
+ * and Stripe trace were removed.
+ */
 export default function AdminSinglePaymentPage({
   params,
 }: {
@@ -32,7 +38,7 @@ export default function AdminSinglePaymentPage({
           Transaction · <span className="font-mono text-[24px]">PI_3OqL08</span>
         </h1>
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {"€"} 89.00 · Stripe · 18 May 10:14 ·{" "}
+          Sample transaction · 18 May 10:14 ·{" "}
           <Pill variant="danger">Chargeback opened</Pill>
         </p>
       </div>
@@ -40,9 +46,6 @@ export default function AdminSinglePaymentPage({
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {[
-          { label: "Amount", value: "€ 89.00", delta: "EUR · DE", deltaColor: "var(--signal-ink)" },
-          { label: "Gateway fee", value: "€ 2.85", delta: "3.2% + €0.25", deltaColor: "var(--fg-3)" },
-          { label: "Net to provider", value: "€ 81.70", delta: "After platform fee", deltaColor: "var(--signal-ink)" },
           { label: "Status", value: "Chargeback", delta: "Evidence due 36h", deltaColor: "var(--danger)", valueColor: "var(--danger)", small: true },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-[10px] p-[13px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
@@ -68,12 +71,12 @@ export default function AdminSinglePaymentPage({
               <tbody>
                 {[
                   { ts: "18 May 10:14:22 UTC", event: "Payment intent created", src: "Binectics" },
-                  { ts: "18 May 10:14:24 UTC", event: "3DS challenge presented", src: "Stripe" },
+                  { ts: "18 May 10:14:24 UTC", event: "3DS challenge presented", src: "Gateway" },
                   { ts: "18 May 10:14:48 UTC", event: "3DS authenticated", src: "Cardholder bank" },
-                  { ts: "18 May 10:14:49 UTC", event: "Payment captured · € 89.00", src: "Stripe" },
-                  { ts: "18 May 10:14:51 UTC", event: "Webhook delivered to Binectics", src: "Stripe → Binectics" },
+                  { ts: "18 May 10:14:49 UTC", event: "Payment captured", src: "Gateway" },
+                  { ts: "18 May 10:14:51 UTC", event: "Webhook delivered to Binectics", src: "Gateway → Binectics" },
                   { ts: "22 May 14:32:18 UTC", event: "Chargeback opened · reason 4855 service not as described", src: "Cardholder bank" },
-                  { ts: "22 May 14:33:02 UTC", event: "Webhook delivered · dispute.created", src: "Stripe → Binectics" },
+                  { ts: "22 May 14:33:02 UTC", event: "Webhook delivered · dispute.created", src: "Gateway → Binectics" },
                 ].map((r) => (
                   <tr key={r.ts}>
                     <td className="py-[11px] px-3.5 font-mono text-[11.5px]" style={{ borderBottom: "1px solid var(--border)" }}>{r.ts}</td>
