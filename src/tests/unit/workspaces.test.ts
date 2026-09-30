@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { dashboardKindForPath, defaultCoachingName, ownedWorkspace, pickOrgForDashboard, trainerAccess } from "@/lib/workspaces";
+import { dashboardKindForPath, ownedWorkspace, pickOrgForDashboard, trainerAccess } from "@/lib/workspaces";
 
 // A gym owner who also coaches owns two workspaces on one login. Each
 // dashboard must work in its own, and the trainer dashboard must let them in.
@@ -79,13 +79,5 @@ describe("dashboardKindForPath", () => {
     expect(dashboardKindForPath("/dashboard/trainers")).toBeNull();
     expect(dashboardKindForPath("/dashboard/billing")).toBeNull();
     expect(dashboardKindForPath(null)).toBeNull();
-  });
-});
-
-describe("defaultCoachingName", () => {
-  it("names it after the person", () => {
-    expect(defaultCoachingName({ first_name: "Ada", last_name: "Obi" })).toBe("Ada Obi Coaching");
-    expect(defaultCoachingName({ first_name: "Ada" })).toBe("Ada Coaching");
-    expect(defaultCoachingName(null)).toBe("My Coaching");
   });
 });

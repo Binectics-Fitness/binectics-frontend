@@ -93,9 +93,3 @@ export function dashboardKindForPath(pathname: string | null | undefined): Dashb
   if (pathname === "/dashboard/dietitian" || pathname.startsWith("/dashboard/dietitian/")) return "dietitian";
   return null;
 }
-
-/** The suggested name for a gym owner's own coaching workspace. */
-export function defaultCoachingName(user: { first_name?: string; last_name?: string } | null | undefined): string {
-  const name = [user?.first_name, user?.last_name].map((p) => p?.trim()).filter(Boolean).join(" ");
-  return name ? `${name} Coaching` : "My Coaching";
-}

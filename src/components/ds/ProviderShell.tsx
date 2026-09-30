@@ -22,7 +22,7 @@ import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import type { UserRole } from "@/lib/types";
 import { ROLE_LABEL, fullName, nameInitials, personInitials, shortName } from "@/lib/identity";
-import { ownedWorkspace, pickOrgForDashboard, type DashboardKind } from "@/lib/workspaces";
+import { pickOrgForDashboard, type DashboardKind } from "@/lib/workspaces";
 
 /** Shared 15px stroked icon used by every provider sidebar nav item. */
 export function SidebarIcon({ children, d }: { children?: ReactNode; d?: string }) {
@@ -75,41 +75,10 @@ export interface ProviderShellConfig {
   fallbackLabel: string;
   /**
    * The kind of workspace this dashboard works in. When set, the shell makes
-   * that workspace current (a gym owner who also coaches owns two), and
-   * offers the Gym / Coaching switch to someone who owns both.
+   * that workspace current, so a dashboard only ever acts on its own kind of
+   * workspace even when the person belongs to more than one.
    */
   workspace?: DashboardKind;
-}
-
-const WORKSPACE_SWITCH: { kind: DashboardKind; label: string; href: string }[] = [
-  { kind: "gym", label: "Gym", href: "/dashboard/gym-owner" },
-  { kind: "trainer", label: "Coaching", href: "/dashboard/trainer" },
-];
-
-/** Gym / Coaching switch, for someone who owns a live workspace of each. */
-function WorkspaceSwitch({ active }: { active: DashboardKind }) {
-  const { user } = useAuth();
-  const orgs = useOptionalOrganization()?.organizations;
-  const both = WORKSPACE_SWITCH.every((w) => ownedWorkspace(orgs, w.kind, user?.id));
-  if (!both) return null;
-  return (
-    <nav aria-label="Switch workspace" className="grid grid-cols-2 gap-0.5 p-0.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
-      {WORKSPACE_SWITCH.map((w) => {
-        const selected = w.kind === active;
-        return (
-          <Link
-            key={w.kind}
-            href={w.href}
-            aria-current={selected ? "page" : undefined}
-            className={`text-center text-[12.5px] py-1.25 rounded-[4px] ${selected ? "font-medium" : "hover:bg-bg"}`}
-            style={{ background: selected ? "var(--ink)" : "transparent", color: selected ? "var(--bg)" : "var(--fg-2)" }}
-          >
-            {w.label}
-          </Link>
-        );
-      })}
-    </nav>
-  );
 }
 
 function ProviderSidebar({ activeItem, config }: { activeItem: string; config: ProviderShellConfig }) {
@@ -135,8 +104,6 @@ function ProviderSidebar({ activeItem, config }: { activeItem: string; config: P
         <span className={`w-5.5 h-5.5 ${tone.chipSquare ? "rounded-[4px]" : "rounded-full"} flex items-center justify-center text-[11px] font-semibold`} style={{ background: tone.avatarBg, color: tone.avatarColor }}>{chipInitials}</span>
         <span className="text-[13px] font-medium flex-1" style={{ color: "var(--ink)" }}>{chipLabel}</span>
       </div>
-
-      {config.workspace === "gym" || config.workspace === "trainer" ? <WorkspaceSwitch active={config.workspace} /> : null}
 
       {/* Nav sections */}
       {sections.map((s) => (
