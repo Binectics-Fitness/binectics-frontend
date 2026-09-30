@@ -170,7 +170,7 @@ export default function AdminUsersPage() {
             value: loading ? "-" : (metrics?.subscriptions.activeCount.toLocaleString() ?? "0"),
             delta:
               metrics?.subscriptions.totalRevenueUsdMinor != null
-                ? `${formatCurrency(minorToMajor(metrics.subscriptions.totalRevenueUsdMinor), "USD")} total`
+                ? `${formatCurrency(minorToMajor(metrics.subscriptions.totalRevenueUsdMinor, "USD"), "USD")} total`
                 : "-",
           },
         ].map((kpi) => (
@@ -418,8 +418,8 @@ export default function AdminUsersPage() {
                         as if it were naira. */}
                     {[
                       row.count.toLocaleString(),
-                      formatCurrency(minorToMajor(row.totalMinor), row.currency),
-                      formatCurrency(minorToMajor(row.averageMinor), row.currency),
+                      formatCurrency(minorToMajor(row.totalMinor, row.currency), row.currency),
+                      formatCurrency(minorToMajor(row.averageMinor, row.currency), row.currency),
                     ].map((v, i) => (
                       <td
                         key={i}

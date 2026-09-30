@@ -517,7 +517,7 @@ export default function GymMembersClient() {
                   // Major units in the export: a spreadsheet column headed
                   // "Amount" next to a "Currency" column means naira, not kobo,
                   // and every formula the operator writes against it assumes so.
-                  minorToMajor(s.amount_paid_minor).toString(),
+                  minorToMajor(s.amount_paid_minor, s.currency ?? "").toString(),
                   s.currency,
                 ]),
               ];
@@ -709,7 +709,7 @@ export default function GymMembersClient() {
                         </div>
                       </td>
                       <td className="px-4.5 py-3 text-right font-mono font-medium" style={{ color: "var(--ink)" }}>
-                        {fmtMoney(minorToMajor(sub.amount_paid_minor), sub.currency)}
+                        {fmtMoney(minorToMajor(sub.amount_paid_minor, sub.currency), sub.currency)}
                       </td>
                       <td className="px-4.5 py-3">
                         {currentOrg && (

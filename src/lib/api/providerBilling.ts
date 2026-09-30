@@ -241,5 +241,5 @@ export function seatHeadroomLabel(
 export function formatMinorAmount(amountMinor: number, currency: string): string {
   // minorToMajor rather than an inline /100, so the factor lives in one place
   // for both the read and the write side (see lib/money/minorMoney).
-  return formatCurrency(minorToMajor(amountMinor), currency);
+  return formatCurrency(minorToMajor(amountMinor, currency), currency);
 }

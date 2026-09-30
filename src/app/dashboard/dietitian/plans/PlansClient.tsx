@@ -5,7 +5,6 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { marketplaceService } from "@/lib/api/marketplace";
-import { utilityService } from "@/lib/api/utility";
 import type {
   CreateOrgMembershipPlanRequest,
   UpdateOrgMembershipPlanRequest,
@@ -22,12 +21,14 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import SearchableSelect from "@/components/SearchableSelect";
+import { useCurrencies } from "@/lib/queries/currencies";
+import type { PlatformCurrency } from "@/lib/api/currencies";
+import { currencyOptions, isSelectable, writeErrorMessage } from "@/lib/currencies/helpers";
 
 // ─── Plan modal ─────────────────────────────────────────────────────────────
 
 type ModalMode = "create" | "edit";
 
-const FALLBACK_CURRENCIES = ["USD", "GBP", "EUR", "ZAR", "NGN", "KES", "GHS"];
 const EMPTY_FORM: CreateOrgMembershipPlanRequest = {
   name: "",
   description: "",
@@ -36,7 +37,9 @@ const EMPTY_FORM: CreateOrgMembershipPlanRequest = {
   // MINOR units (kobo/cents). 0 is still 0, but every other value here is
   // 100× what the old major-unit `price` field held.
   price_minor: 0,
-  currency: "USD",
+  // Set from the org's default when it can be priced in, else chosen in the
+  // form; never a guessed currency.
+  currency: "",
   features: [],
   is_active: true,
   is_public: true,
@@ -51,9 +54,10 @@ function PlanModal({
 }: {
   mode: ModalMode;
   initial: CreateOrgMembershipPlanRequest;
-  currencies: string[];
+  currencies: PlatformCurrency[] | undefined;
   onClose: () => void;
-  onSave: (data: CreateOrgMembershipPlanRequest) => Promise<void>;
+  /** Resolves an error message when the save was refused, else null. */
+  onSave: (data: CreateOrgMembershipPlanRequest) => Promise<string | null>;
 }) {
   const [form, setForm] = useState<CreateOrgMembershipPlanRequest>(initial);
   /**
@@ -64,10 +68,18 @@ function PlanModal({
    * on a save that only changed the plan's name.
    */
   const [priceDisplay, setPriceDisplay] = useState(() =>
-    formatMinorForInput(initial.price_minor, { currency: initial.currency ?? "USD" }),
+    formatMinorForInput(initial.price_minor, { currency: initial.currency ?? "" }),
   );
   const [featureInput, setFeatureInput] = useState("");
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  // Only currencies prices can be set in right now. Editing keeps the plan's
+  // saved one visible (the API accepts it unchanged), labelled as such.
+  const options = currencyOptions(
+    currencies,
+    "price",
+    mode === "edit" ? initial.currency : undefined,
+  );
   const overlayRef = useRef<HTMLDivElement>(null);
   const { requestClose, dirtyProps, confirmationModal } =
     useUnsavedChangesGuard(onClose);
@@ -90,9 +102,15 @@ function PlanModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
+    if (!form.currency) {
+      setFormError("Choose the currency this plan is priced in.");
+      return;
+    }
+    setFormError(null);
     setSaving(true);
-    await onSave(form);
+    const error = await onSave(form);
     setSaving(false);
+    if (error) setFormError(error);
   };
 
   return (
@@ -193,7 +211,7 @@ function PlanModal({
               <MoneyInput
                 required
                 value={priceDisplay}
-                currency={form.currency ?? "USD"}
+                currency={form.currency ?? ""}
                 aria-label="Price"
                 onChange={(display, minor) => {
                   setPriceDisplay(display);
@@ -206,9 +224,10 @@ function PlanModal({
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Currency</label>
               <SearchableSelect
-                value={form.currency ?? "USD"}
+                value={form.currency ?? ""}
                 onChange={(v) => set("currency", v)}
-                options={currencies.map((c) => ({ label: c, value: c }))}
+                options={options}
+                placeholder={currencies ? (options.length ? "Choose currency" : "No currency available") : "Loading..."}
               />
             </div>
           </div>
@@ -266,6 +285,12 @@ function PlanModal({
               </label>
             ))}
           </div>
+
+          {formError && (
+            <p role="alert" className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+              {formError}
+            </p>
+          )}
 
           <div className="flex justify-end gap-2 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
             <button
@@ -334,7 +359,7 @@ function PlanCard({
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[22px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
-            {fmtMoney(minorToMajor(plan.price_minor), plan.currency)}
+            {fmtMoney(minorToMajor(plan.price_minor, plan.currency), plan.currency)}
           </div>
           <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
             {plan.duration_days}d
@@ -418,31 +443,9 @@ export default function DietitianPlansClient() {
   // Fetched purely to derive per-plan member counts (see countMembersByPlan).
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
   const membersByPlan = countMembersByPlan(subscriptions);
-  const [currencies, setCurrencies] = useState<string[]>(FALLBACK_CURRENCIES);
+  const { all: currencies } = useCurrencies();
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<{ mode: ModalMode; plan?: MarketplaceMembershipPlan } | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadCurrencies = async () => {
-      const configRes = await utilityService.getPlatformConfig();
-      if (!mounted || !configRes.success || !configRes.data) return;
-
-      const supported = configRes.data.currencies
-        .filter((currency) => currency.is_active)
-        .map((currency) => currency.code.toUpperCase());
-
-      if (supported.length > 0 && mounted) {
-        setCurrencies(supported);
-      }
-    };
-
-    void loadCurrencies();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     // Keep showing skeletons while the org context is still resolving.
@@ -472,28 +475,32 @@ export default function DietitianPlansClient() {
     void load();
     return () => { mounted = false; };
   }, [orgId, orgLoading]);
-  const handleCreate = async (data: CreateOrgMembershipPlanRequest) => {
-    if (!orgId) return;
+  const handleCreate = async (data: CreateOrgMembershipPlanRequest): Promise<string | null> => {
+    if (!orgId) return null;
     const res = await marketplaceService.createOrgMembershipPlan(orgId, data);
     if (res.success && res.data) {
       setPlans((p) => [res.data!, ...p]);
       setModal(null);
       toast.success("Plan created.");
-    } else {
-      toast.error(res.message ?? "Failed to create plan.");
+      return null;
     }
+    const message = writeErrorMessage(res, "Failed to create plan.");
+    toast.error(message);
+    return message;
   };
 
-  const handleEdit = async (data: UpdateOrgMembershipPlanRequest) => {
-    if (!orgId || !modal?.plan) return;
+  const handleEdit = async (data: UpdateOrgMembershipPlanRequest): Promise<string | null> => {
+    if (!orgId || !modal?.plan) return null;
     const res = await marketplaceService.updateOrgMembershipPlan(orgId, modal.plan._id, data);
     if (res.success && res.data) {
       setPlans((p) => p.map((pl) => (pl._id === res.data!._id ? res.data! : pl)));
       setModal(null);
       toast.success("Plan updated.");
-    } else {
-      toast.error(res.message ?? "Failed to update plan.");
+      return null;
     }
+    const message = writeErrorMessage(res, "Failed to update plan.");
+    toast.error(message);
+    return message;
   };
 
   const handleToggle = async (plan: MarketplaceMembershipPlan) => {
@@ -612,7 +619,13 @@ export default function DietitianPlansClient() {
                   is_active: modal.plan.is_active,
                   is_public: modal.plan.is_public,
                 }
-              : EMPTY_FORM
+              : {
+                  ...EMPTY_FORM,
+                  // The org's default, only when prices can be set in it.
+                  currency: isSelectable(currentOrg?.currency, currencies, "price")
+                    ? currentOrg!.currency!.toUpperCase()
+                    : "",
+                }
           }
           onClose={() => setModal(null)}
           onSave={modal.mode === "create" ? handleCreate : handleEdit}

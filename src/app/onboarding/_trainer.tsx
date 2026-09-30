@@ -1,7 +1,8 @@
 "use client";
 
 import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
-import { COUNTRY_NAME_TO_CURRENCY, SESSION_MISSING, trainerCountry } from "./_config";
+import { COUNTRY_NAME_TO_CODE, SESSION_MISSING, onboardingCurrency, trainerCountry } from "./_config";
+import { OnboardingCurrencyField } from "./_currency";
 
 const SPECIALIZATIONS = ["Strength", "Hypertrophy", "Running", "Olympic lifting", "Powerlifting", "Bodybuilding", "Functional", "Mobility", "HIIT", "CrossFit", "Pre-natal", "Post-natal"];
 const FORMATS = ["In-person 1:1", "In-person small group", "Online video", "Programming only", "Hybrid"];
@@ -12,21 +13,11 @@ function toggleChip(list: string[], chip: string, max?: number): string[] {
   return [...list, chip];
 }
 
-/** The step 4 prices, cleared when the country (so the currency) changes. */
-const PRICE_KEYS = ["price1on1", "price4pack", "price12pack", "priceMonthly"];
+/** The step 4 prices, cleared when the currency changes. */
+const PRICE_KEYS = ["price1on1", "price4pack", "price12pack", "priceMonthly"] as const;
 
 export function TrainerStep1({ data, setField }: StepProps) {
-  const changeCountry = (country: string) => {
-    // Prices typed on step 4 were in the old currency; relabelling them
-    // would publish different prices.
-    if (trainerPricingCurrency({ ...data, country }) !== trainerPricingCurrency(data)) {
-      for (const key of PRICE_KEYS) {
-        setField(key, "");
-        setField(`${key}Minor`, null);
-      }
-    }
-    setField("country", country);
-  };
+  const country = trainerCountry(data);
   return (
     <>
       <StageHead crumb="Step 01 of 06, trainer track" title="Tell us about yourself." desc="This is what members see in your profile." />
@@ -34,7 +25,15 @@ export function TrainerStep1({ data, setField }: StepProps) {
         <Field label="First name" htmlFor="ob-tr-first"><TextInput id="ob-tr-first" value={(data.firstName as string) || ""} onChange={(v) => setField("firstName", v)} /></Field>
         <Field label="Last name" htmlFor="ob-tr-last"><TextInput id="ob-tr-last" value={(data.lastName as string) || ""} onChange={(v) => setField("lastName", v)} /></Field>
         <Field label="City" htmlFor="ob-tr-city"><TextInput id="ob-tr-city" value={(data.city as string) || ""} onChange={(v) => setField("city", v)} /></Field>
-        <Field label="Country" htmlFor="ob-tr-country"><SelectField id="ob-tr-country" value={(data.country as string) || "South Africa"} onChange={changeCountry} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Country" htmlFor="ob-tr-country"><SelectField id="ob-tr-country" value={country} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <OnboardingCurrencyField
+          id="ob-tr-currency"
+          data={data}
+          setField={setField}
+          countryCode={COUNTRY_NAME_TO_CODE[country]}
+          countryName={country}
+          priceKeys={PRICE_KEYS}
+        />
         <Field label="Headline (60 char)" hint="Shows under your name in marketplace results." htmlFor="ob-tr-headline" full>
           <TextInput id="ob-tr-headline" value={(data.headline as string) || ""} onChange={(v) => setField("headline", v)} placeholder="Strength & running coach · Sea Point" />
         </Field>
@@ -96,9 +95,12 @@ export function TrainerStep3({ data, setField, onUploadStart, onUploadEnd }: Ste
   );
 }
 
-/** Prices are in the currency of the country picked on step 1, not naira for everyone. */
+/**
+ * Prices are in the currency chosen on step 1 (the country's suggestion or
+ * the trainer's own pick). Step 1 does not continue without one.
+ */
 export function trainerPricingCurrency(data: Record<string, unknown>): string {
-  return COUNTRY_NAME_TO_CURRENCY[trainerCountry(data)] ?? "USD";
+  return onboardingCurrency(data) ?? "";
 }
 
 export function TrainerStep4({ data, setField }: StepProps) {

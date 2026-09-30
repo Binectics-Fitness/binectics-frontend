@@ -6,33 +6,39 @@
  * Pure functions — unit-tested in src/tests/unit/minor-money.test.ts.
  */
 
-/** Convention across the app: minor / 100 (see billing + admin payments pages). */
-export function minorToMajor(minor: number): number {
-  return minor / 100;
+import { minorPerMajor } from "./currencyUnits";
+
+/**
+ * Minor → major for display, by the currency's ISO exponent: 12345 USD cents
+ * is 123.45, 12345 JPY is 12345, 12345 KWD fils is 12.345.
+ *
+ * `currency` is required on purpose. A fixed `/ 100` was right for every
+ * currency the app happened to price in, and wrong the moment a zero- or
+ * three-decimal currency appeared; an optional parameter defaulting to 100
+ * is how that bug survives.
+ */
+export function minorToMajor(minor: number, currency: string): number {
+  return minor / minorPerMajor(currency);
 }
 
 /**
  * The inverse, for the write side (lib/money/moneyInput). Rounded, because
  * 12.34 * 100 is 1233.9999999999998 in IEEE 754 and a float must never reach
  * the wire as money.
- *
- * The ×100 factor lives here, once, so the read and write sides cannot drift:
- * every currency the app supports has an exponent-2 minor unit in storage
- * (see the API's common/money/currency-units.ts). NGN rendering as a whole
- * number is a *display* choice made in lib/constants/regions, not a different
- * storage exponent.
  */
-export function majorToMinor(major: number): number {
-  return Math.round(major * 100);
+export function majorToMinor(major: number, currency: string): number {
+  return Math.round(major * minorPerMajor(currency));
 }
 
 /**
- * The largest major-unit amount whose minor value is still an exact integer:
- * Number.MAX_SAFE_INTEGER / 100, floored. Past this, `majorToMinor` returns a
- * number that cannot round-trip — 1e22 serialises into a request body as
- * "1e+22" and means nothing to the API.
+ * The largest major-unit amount whose minor value is still an exact integer
+ * in `currency`. Past this, `majorToMinor` returns a number that cannot
+ * round-trip: 1e22 serialises into a request body as "1e+22" and means
+ * nothing to the API.
  */
-export const MAX_SAFE_MAJOR = Math.floor(Number.MAX_SAFE_INTEGER / 100);
+export function maxSafeMajor(currency: string): number {
+  return Math.floor(Number.MAX_SAFE_INTEGER / minorPerMajor(currency));
+}
 
 /**
  * Render a {currency: minorAmount} map as one display string, largest amount
@@ -48,7 +54,7 @@ export function formatMinorMap(
   if (entries.length === 0) return null;
   entries.sort((a, b) => b[1] - a[1]);
   return entries
-    .map(([currency, minor]) => fmt(minorToMajor(minor), currency))
+    .map(([currency, minor]) => fmt(minorToMajor(minor, currency), currency))
     .join(" · ");
 }
 

@@ -316,7 +316,9 @@ function RecurringBookingInner() {
 
   const name = providerName(listing);
   const unitPriceMinor = listing.price_from_minor ?? 0;
-  const currency = listing.currency ?? "ZAR";
+  // The listing's own currency. A listing without one shows bare amounts
+  // rather than borrowing some other country's symbol.
+  const currency = listing.currency ?? "";
 
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh" }}>
@@ -437,9 +439,9 @@ function RecurringBookingInner() {
             <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
               {endMode === RecurrenceEndMode.AFTER_COUNT ? "Total" : "Estimate"} · {" "}
               <strong className="font-mono font-medium" style={{ color: "var(--ink)" }}>
-                {formatCurrency(minorToMajor(totalAmountMinor), currency)}
+                {formatCurrency(minorToMajor(totalAmountMinor, currency), currency)}
               </strong>{" "}
-              ({formatCurrency(minorToMajor(unitPriceMinor), currency)} × {occurrences.length})
+              ({formatCurrency(minorToMajor(unitPriceMinor, currency), currency)} × {occurrences.length})
             </div>
             <button
               type="button"

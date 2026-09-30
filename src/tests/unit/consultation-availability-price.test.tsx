@@ -3,7 +3,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
 import { consultationsService } from "@/lib/api/consultations";
-import { utilityService } from "@/lib/api/utility";
+import { currency } from "../setup/currencyFixtures";
 
 /**
  * The money round-trip on the one surface where a saved price actually
@@ -40,8 +40,20 @@ vi.mock("@/lib/api/consultations", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/api/utility", () => ({
-  utilityService: { getPlatformConfig: vi.fn() },
+// The platform list: NGN and USD can be priced in, GHS is enabled but not
+// yet on our payment account.
+const CURRENCIES = [
+  currency("NGN"),
+  currency("USD"),
+  currency("GHS", { selectable: { price: false, charge_card: false } }),
+];
+vi.mock("@/lib/queries/currencies", () => ({
+  useCurrencies: () => ({ data: CURRENCIES, all: CURRENCIES, isLoading: false }),
+}));
+
+const org = vi.hoisted(() => ({ currentOrg: { _id: "o1", currency: "NGN" } as { _id: string; currency?: string } | null }));
+vi.mock("@/contexts/OrganizationContext", () => ({
+  useOrganization: () => org,
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
@@ -114,10 +126,7 @@ beforeEach(() => {
     success: true,
     data: { id: "type-1" },
   } as never);
-  vi.mocked(utilityService).getPlatformConfig.mockResolvedValue({
-    success: true,
-    data: { currencies: [{ code: "NGN", is_active: true }, { code: "USD", is_active: true }] },
-  } as never);
+  org.currentOrg = { _id: "o1", currency: "NGN" };
 });
 
 const priceField = () =>
@@ -359,5 +368,54 @@ describe("ConsultationAvailabilityManager, whose session is saved", () => {
     await saveSession(user);
     expect(svc.createOwnType).not.toHaveBeenCalled();
     expect(svc.updateOwnType).not.toHaveBeenCalled();
+  });
+});
+
+describe("ConsultationAvailabilityManager currency picker", () => {
+  const options = () =>
+    Array.from(
+      (screen.getByLabelText("Price currency") as HTMLSelectElement).options,
+    ).map((o) => o.value);
+
+  it("offers only currencies prices can be set in", async () => {
+    await renderPanel();
+    expect(options()).toEqual(["NGN", "USD"]);
+  });
+
+  it("keeps a saved session's currency visible when it is no longer offered", async () => {
+    await renderPanel({ priceMinor: 5_000, currency: "GHS" });
+    expect(options()).toEqual(["NGN", "USD", "GHS"]);
+  });
+
+  it("starts from the org's default, not a guessed NGN", async () => {
+    org.currentOrg = { _id: "o1", currency: "USD" };
+    await renderPanel();
+    expect((screen.getByLabelText("Price currency") as HTMLSelectElement).value).toBe("USD");
+  });
+
+  it("asks for a currency when the org's default can't be priced in", async () => {
+    org.currentOrg = { _id: "o1", currency: "GHS" };
+    const user = await renderPanel();
+    await user.type(priceField(), "5000");
+    await saveSession(user);
+    expect(
+      await screen.findByText("Choose the currency your session is priced in."),
+    ).toBeInTheDocument();
+    expect(svc.createOwnType).not.toHaveBeenCalled();
+  });
+
+  it("shows the server's reasons when the currency is refused", async () => {
+    svc.createOwnType.mockResolvedValue({
+      success: false,
+      code: "CURRENCY_NOT_SELECTABLE",
+      message: "Prices can't be set in NGN right now.",
+      details: { reasons: [{ code: "platform_disabled", message: "Turned off on the platform" }] },
+    } as never);
+    const user = await renderPanel();
+    await user.type(priceField(), "5000");
+    await saveSession(user);
+    expect(
+      await screen.findByText("Prices can't be set in NGN right now. Turned off on the platform."),
+    ).toBeInTheDocument();
   });
 });

@@ -131,7 +131,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     },
     {
       label: "Amount paid",
-      value: fmtMoney(minorToMajor(subscription.amount_paid_minor), subscription.currency),
+      value: fmtMoney(minorToMajor(subscription.amount_paid_minor, subscription.currency), subscription.currency),
     },
     {
       label: "Expires",
@@ -154,7 +154,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     },
     {
       label: "Amount paid",
-      value: fmtMoney(minorToMajor(subscription.amount_paid_minor), subscription.currency),
+      value: fmtMoney(minorToMajor(subscription.amount_paid_minor, subscription.currency), subscription.currency),
     },
     {
       label: "Payment reference",

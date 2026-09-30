@@ -5,6 +5,9 @@ import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { AsyncSpinner } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
+import { majorToMinor, minorToMajor } from "@/lib/money/minorMoney";
+import { formatCurrency } from "@/utils/format";
+import { writeErrorMessage } from "@/lib/currencies/helpers";
 import {
   adminService,
   type AdminPlan,
@@ -131,12 +134,25 @@ export default function AdminPlansPage() {
     gateway_plan_code: string;
   } | null>(null);
   const [priceBusy, setPriceBusy] = useState(false);
+  // Currencies a provider plan can be billed in right now (provider_billing
+  // is an admin-only use, so it comes from the admin list, not /currencies).
+  const [billingCurrencies, setBillingCurrencies] = useState<{ label: string; value: string }[] | null>(null);
 
   useEffect(() => {
     let active = true;
     const kick = window.setTimeout(() => {
       void adminService.listPlanPrices().then((res) => {
         if (active && res.success && res.data) setPrices(res.data);
+      });
+      void adminService.listCurrencies().then((res) => {
+        if (!active) return;
+        setBillingCurrencies(
+          res.success && res.data
+            ? res.data
+                .filter((c) => c.effective?.provider_billing?.selectable)
+                .map((c) => ({ label: `${c.code}, ${c.name}`, value: c.code }))
+            : [],
+        );
       });
     }, 0);
     return () => {
@@ -160,8 +176,8 @@ export default function AdminPlansPage() {
       toast.error("Enter a positive per-seat overage rate.");
       return;
     }
-    if (!/^[A-Za-z]{3}$/.test(priceDraft.currency.trim())) {
-      toast.error("Currency must be a 3-letter code, e.g. NGN.");
+    if (!priceDraft.currency) {
+      toast.error("Choose a currency this price can be billed in.");
       return;
     }
     setPriceBusy(true);
@@ -171,8 +187,8 @@ export default function AdminPlansPage() {
         market_code: priceDraft.market_code.trim().toUpperCase() || "GLOBAL",
         interval: priceDraft.interval,
         currency: priceDraft.currency.trim().toUpperCase(),
-        amount_minor: Math.round(amount * 100),
-        overage_per_seat_minor: Math.round(overage * 100),
+        amount_minor: majorToMinor(amount, priceDraft.currency),
+        overage_per_seat_minor: majorToMinor(overage, priceDraft.currency),
         is_active: true,
         // A Paystack plan code makes the charge recurring; omitted =
         // one-shot payment (tier still activates, but never renews).
@@ -204,7 +220,7 @@ export default function AdminPlansPage() {
         setPriceDraft(null);
         toast.success("Price saved.");
       } else {
-        toast.error(res.message || "Couldn't save the price.");
+        toast.error(writeErrorMessage(res, "Couldn't save the price."));
       }
     } catch {
       toast.error("Couldn't save the price.");
@@ -416,12 +432,12 @@ export default function AdminPlansPage() {
                       <div key={pr._id} className="flex flex-wrap items-center gap-3 rounded-(--r-2) px-3 py-2" style={{ background: "var(--bg-2)" }}>
                         <span className="font-mono text-[11px] uppercase" style={{ color: "var(--fg-3)" }}>{pr.market_code}</span>
                         <span className="text-[13px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                          {(pr.amount_minor / 100).toLocaleString()} {pr.currency}
+                          {formatCurrency(minorToMajor(pr.amount_minor, pr.currency), pr.currency)}
                         </span>
                         <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>/ {pr.interval}</span>
                         {pr.overage_per_seat_minor != null && (
                           <span className="text-[12px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }} title="Per-seat overage rate">
-                            +{(pr.overage_per_seat_minor / 100).toLocaleString()} {pr.currency}/seat over cap
+                            +{formatCurrency(minorToMajor(pr.overage_per_seat_minor, pr.currency), pr.currency)}/seat over cap
                           </span>
                         )}
                         <span className="font-mono text-[10px] uppercase" style={{ color: pr.gateway_prices?.length ? "var(--signal-ink)" : "var(--fg-4)" }}>
@@ -454,7 +470,15 @@ export default function AdminPlansPage() {
                       </div>
                       <div>
                         <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Currency</div>
-                        <input value={priceDraft.currency} onChange={(e) => setPriceDraft({ ...priceDraft, currency: e.target.value })} maxLength={3} className="h-8 w-16 rounded-(--r-2) border border-border bg-bg px-2 font-mono text-[12px] uppercase text-ink" />
+                        <div className="w-44">
+                          <SearchableSelect
+                            value={priceDraft.currency}
+                            onChange={(v) => setPriceDraft({ ...priceDraft, currency: v })}
+                            options={billingCurrencies ?? []}
+                            loading={billingCurrencies === null}
+                            placeholder={billingCurrencies && billingCurrencies.length === 0 ? "None can be billed" : "Choose"}
+                          />
+                        </div>
                       </div>
                       <div>
                         <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Paystack plan code (optional, enables auto-renewal)</div>
@@ -478,7 +502,7 @@ export default function AdminPlansPage() {
                       <button
                         type="button"
                         className="btn-ghost-v2 sm self-start"
-                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: "NGN", amount_major: "", overage_major: "", gateway_plan_code: "" })}
+                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: billingCurrencies?.length === 1 ? billingCurrencies[0].value : "", amount_major: "", overage_major: "", gateway_plan_code: "" })}
                       >
                         Add price
                       </button>

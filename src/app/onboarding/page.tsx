@@ -13,7 +13,8 @@ import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, type RoleId } from "./_config";
+import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
 import { MEMBER_STEPS } from "./_member";
@@ -284,7 +285,8 @@ function OnboardingContent() {
     if (step === 0) setStep(1);
   };
 
-  const persistGymStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string) => {
+  /** Resolves an error message only when the chosen currency was refused. */
+  const persistGymStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<string | null> => {
     try {
       if (currentStep === 1) {
         // Business details: patch org name + business fields
@@ -297,7 +299,11 @@ function OnboardingContent() {
         // rest rather than by a separate write racing page navigation.
         if (stepData.currency) patch.currency = stepData.currency as string;
         if (Object.keys(patch).length > 0) {
-          await teamsService.updateOrganization(orgId, patch);
+          const res = await teamsService.updateOrganization(orgId, patch);
+          // Everything else here is best effort; a refused currency is not,
+          // because every plan the gym creates next would price in it.
+          const refused = res.success ? null : describeCurrencyError(res);
+          if (refused) return refused;
         }
       } else if (currentStep === 2) {
         // First location — guard against duplicate creation on Back+Continue
@@ -381,17 +387,25 @@ function OnboardingContent() {
     } catch {
       // Non-blocking: step data save failures don't block navigation
     }
+    return null;
   }, []);
 
-  /** Resolves false only when the session the trainer answered could not be saved. */
-  const persistTrainerStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<boolean> => {
+  /**
+   * Resolves an error message when the currency chosen on step 1 was refused
+   * or the session the trainer answered could not be saved, else null.
+   */
+  const persistTrainerStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<string | null> => {
     try {
       if (currentStep === 1) {
         const { profile, currency } = trainerLocationPatch(stepData);
         if (Object.keys(profile).length > 0) await authService.updateProfile(profile);
-        // The workspace trades in the country's currency, as the gym track
-        // already records on its own step 1; packages and earnings read it.
-        if (orgId) await teamsService.updateOrganization(orgId, { currency });
+        // The workspace trades in the currency chosen here, as the gym track
+        // records on its own step 1; packages and earnings read it.
+        if (orgId && currency) {
+          const res = await teamsService.updateOrganization(orgId, { currency });
+          const refused = res.success ? null : describeCurrencyError(res);
+          if (refused) return refused;
+        }
       } else if (currentStep === 4) {
         // The 1:1 price and length become the trainer's own session type,
         // which is what clients book. Until this was saved the step
@@ -399,14 +413,16 @@ function OnboardingContent() {
         // onboarding still had nothing bookable.
         // Free saves a price of 0; a blank price creates nothing.
         const session = trainerSessionPatch(stepData);
-        if (session) return await upsertOwnSession(session, consultationsService);
+        if (session && !(await upsertOwnSession(session, consultationsService))) {
+          return "We couldn't save your session. Check your connection and try again.";
+        }
       } else if (currentStep === 5) {
         if (stepData.payout && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
       }
     } catch { /* non-blocking */ }
-    return true;
+    return null;
   }, []);
 
   const persistMemberStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>) => {
@@ -434,31 +450,41 @@ function OnboardingContent() {
     } catch { /* non-blocking */ }
   }, []);
 
-  /** Resolves false only when the consultation the dietitian answered could not be saved. */
-  const persistDietitianStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<boolean> => {
+  /**
+   * Resolves an error message when the currency chosen on step 1 was refused
+   * or the consultation the dietitian answered could not be saved, else null.
+   */
+  const persistDietitianStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<string | null> => {
     try {
       if (currentStep === 1) {
         const { profile, currency } = dietitianLocationPatch(stepData);
         if (Object.keys(profile).length > 0) await authService.updateProfile(profile);
-        // The workspace trades in the country's currency, as the trainer
+        // The workspace trades in the currency chosen here, as the trainer
         // track records on its step 1; the consultation price uses it too.
-        const orgPatch: UpdateOrganizationRequest = { currency };
+        const orgPatch: UpdateOrganizationRequest = {};
+        if (currency) orgPatch.currency = currency;
         if (stepData.practiceName) orgPatch.name = stepData.practiceName as string;
-        if (orgId) await teamsService.updateOrganization(orgId, orgPatch);
+        if (orgId && Object.keys(orgPatch).length > 0) {
+          const res = await teamsService.updateOrganization(orgId, orgPatch);
+          const refused = res.success ? null : describeCurrencyError(res);
+          if (refused) return refused;
+        }
       } else if (currentStep === 5) {
         // The consultation becomes the dietitian's own session type, which
         // is what members book. There is no dietitian platform default, so
         // without it a new dietitian had nothing bookable. Free saves a
         // price of 0; a blank price creates nothing (set it up later).
         const session = dietitianSessionPatch(stepData);
-        if (session) return await upsertOwnSession(session, consultationsService);
+        if (session && !(await upsertOwnSession(session, consultationsService))) {
+          return "We couldn't save your consultation. Check your connection and try again.";
+        }
       } else if (currentStep === 6) {
         if (stepData.payout && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
       }
     } catch { /* non-blocking */ }
-    return true;
+    return null;
   }, []);
 
   /**
@@ -468,20 +494,18 @@ function OnboardingContent() {
    * onboarding with nothing bookable.
    */
   const persistStep = async (orgId: string): Promise<boolean> => {
-    let saved = true;
+    let error: string | null = null;
     if (role === "gym" && orgId) {
-      await persistGymStep(step, data, orgId);
+      error = await persistGymStep(step, data, orgId);
     } else if (role === "trainer" && orgId) {
-      saved = await persistTrainerStep(step, data, orgId);
+      error = await persistTrainerStep(step, data, orgId);
     } else if (role === "member") {
       await persistMemberStep(step, data);
     } else if (role === "dietitian") {
-      saved = await persistDietitianStep(step, data, orgId);
+      error = await persistDietitianStep(step, data, orgId);
     }
-    if (!saved) {
-      toast.error(`We couldn't save your ${role === "dietitian" ? "consultation" : "session"}. Check your connection and try again.`);
-    }
-    return saved;
+    if (error) toast.error(error);
+    return error === null;
   };
 
   const handleContinue = async () => {
@@ -498,6 +522,12 @@ function OnboardingContent() {
     if (step === 0 && role) {
       setStep(1);
     } else if (step < totalSteps) {
+      // A provider's step 1 needs a currency: the country only suggests one,
+      // and when it has none the person chooses.
+      if (currencyStepUnanswered(role, step, data)) {
+        setField(CURRENCY_MISSING, true);
+        return;
+      }
       // The session step needs an answer: a price, Free, or Set up later.
       if (sessionStepUnanswered(role, step, data)) {
         setField(SESSION_MISSING, true);

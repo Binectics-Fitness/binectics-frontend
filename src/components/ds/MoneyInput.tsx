@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { currencyFractionDigits } from "@/lib/constants/regions";
+import { currencyFractionDigits } from "@/lib/money/currencyUnits";
 import {
   caretAfterSignificant,
   deleteAcrossSeparator,

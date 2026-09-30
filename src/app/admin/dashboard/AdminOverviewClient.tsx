@@ -6,11 +6,9 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { adminService, type PlatformMetricsOverview, type FeedbackSummary } from "@/lib/api/admin";
 import { minorToMajor } from "@/lib/money/minorMoney";
 
-const USD = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-
 /** Takes MINOR units (kobo/cents), as every `*Minor` figure on the response is. */
 function formatCur(amountMinor: number, currency: string): string {
-  const amount = minorToMajor(amountMinor);
+  const amount = minorToMajor(amountMinor, currency);
   try {
     return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
   } catch {
@@ -74,8 +72,9 @@ export default function AdminOverviewClient() {
    * currency formatter reads "₦12,345,600" instead of "₦123,456".
    */
   const revenueMoney = (amountMinor: number, currency: string | null) => {
-    const amount = minorToMajor(amountMinor);
-    if (!currency) return USD.format(amount);
+    // No revenue yet means no currency: show the bare number, not dollars.
+    if (!currency) return Math.round(amountMinor).toLocaleString();
+    const amount = minorToMajor(amountMinor, currency);
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",

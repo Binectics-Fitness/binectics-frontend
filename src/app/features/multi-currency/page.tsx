@@ -7,9 +7,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Multi-Currency Payments, Binectics",
   description:
-    "Accept payments in 14+ currencies through Stripe, Paystack, Flutterwave, and Razorpay. Clients pay locally, you receive in your settlement currency.",
+    "Accept payments in local currency through Paystack. Clients pay locally, you receive in your settlement currency.",
   keywords:
-    "multi-currency payments, fitness payments, gym payment processing, international payments, Paystack, Stripe, Flutterwave, Razorpay",
+    "multi-currency payments, fitness payments, gym payment processing, international payments, Paystack",
 };
 
 const WORKFLOW = [
@@ -20,8 +20,8 @@ const WORKFLOW = [
   },
   {
     step: "02",
-    title: "We route to the best gateway",
-    desc: "Paystack for West Africa. Stripe for Europe and North America. Flutterwave for East Africa. Razorpay for India. The optimal gateway is selected automatically based on the payer's location.",
+    title: "Paystack takes the payment",
+    desc: "Payments run through Paystack today. A price can only be set in a currency we can actually charge, so every checkout completes. More gateways follow as we open markets.",
   },
   {
     step: "03",
@@ -30,48 +30,27 @@ const WORKFLOW = [
   },
 ];
 
+// Marketing copy. Paystack is the only gateway integrated today.
 const GATEWAYS = [
   {
-    name: "Stripe",
-    coverage: "40+ countries",
-    currencies: "USD, GBP, EUR, AED, CAD, AUD, and 130+ more",
-    settlement: "2 business days",
-    methods: "Cards, Apple Pay, Google Pay, bank debits, SEPA",
-  },
-  {
     name: "Paystack",
-    coverage: "Nigeria, Ghana, South Africa, Kenya",
-    currencies: "NGN, GHS, ZAR, KES",
+    coverage: "Nigeria today, more markets as they are enabled",
+    currencies: "NGN today; ZAR, KES and GHS as our account enables them",
     settlement: "Next business day",
-    methods: "Cards, bank transfer, USSD, mobile money",
-  },
-  {
-    name: "Flutterwave",
-    coverage: "30+ African countries",
-    currencies: "NGN, KES, GHS, TZS, UGX, ZAR, XOF, and more",
-    settlement: "2 business days",
-    methods: "Cards, mobile money, bank transfer, USSD, M-Pesa",
-  },
-  {
-    name: "Razorpay",
-    coverage: "India",
-    currencies: "INR",
-    settlement: "2 business days",
-    methods: "Cards, UPI, net banking, wallets, EMI",
+    methods: "Cards, bank transfer",
   },
 ];
 
 const REGIONS = [
   { flag: "🇿🇦", country: "South Africa", currency: "ZAR", gateway: "Paystack", settlement: "T+1" },
   { flag: "🇳🇬", country: "Nigeria", currency: "NGN", gateway: "Paystack", settlement: "T+1" },
-  { flag: "🇰🇪", country: "Kenya", currency: "KES", gateway: "Flutterwave", settlement: "T+2" },
-  { flag: "🇬🇭", country: "Ghana", currency: "GHS", gateway: "Flutterwave", settlement: "T+2" },
-  { flag: "🇬🇧", country: "United Kingdom", currency: "GBP", gateway: "Stripe", settlement: "T+2" },
-  { flag: "🇺🇸", country: "United States", currency: "USD", gateway: "Stripe", settlement: "T+2" },
-  { flag: "🇦🇪", country: "UAE", currency: "AED", gateway: "Stripe", settlement: "T+3" },
-  { flag: "🇮🇳", country: "India", currency: "INR", gateway: "Razorpay", settlement: "T+2" },
-  { flag: "🇩🇪", country: "Germany", currency: "EUR", gateway: "Stripe", settlement: "T+2" },
-  { flag: "🇹🇿", country: "Tanzania", currency: "TZS", gateway: "Flutterwave", settlement: "T+2" },
+  { flag: "🇰🇪", country: "Kenya", currency: "KES", gateway: "Paystack · coming soon", settlement: "-" },
+  { flag: "🇬🇭", country: "Ghana", currency: "GHS", gateway: "Paystack · coming soon", settlement: "-" },
+  { flag: "🇬🇧", country: "United Kingdom", currency: "GBP", gateway: "Not yet available", settlement: "-" },
+  { flag: "🇺🇸", country: "United States", currency: "USD", gateway: "Not yet available", settlement: "-" },
+  { flag: "🇦🇪", country: "UAE", currency: "AED", gateway: "Not yet available", settlement: "-" },
+  { flag: "🇮🇳", country: "India", currency: "INR", gateway: "Not yet available", settlement: "-" },
+  { flag: "🇩🇪", country: "Germany", currency: "EUR", gateway: "Not yet available", settlement: "-" },
 ];
 
 const FEATURES = [
@@ -129,8 +108,8 @@ export default function MultiCurrencyPage() {
           className="text-[17px] sm:text-[18px] max-w-[62ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          Accept payments from 52 countries through 4 regional gateways. We
-          handle routing, conversion, compliance, and settlement. You see
+          Accept payments through Paystack, in the currencies we can charge
+          today. We handle checkout, compliance, and settlement. You see
           one clean number in your dashboard.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
@@ -158,8 +137,8 @@ export default function MultiCurrencyPage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Pick a country to see how the checkout adapts, currency,
-          gateway, and payment methods all change automatically.
+          Pick a country to see how checkout will look there. Paystack is
+          live today; the other markets are coming.
         </p>
         <CurrencyDemo />
       </section>
@@ -214,13 +193,13 @@ export default function MultiCurrencyPage() {
           className="text-[28px] sm:text-[32px] font-medium mb-3"
           style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}
         >
-          Four gateways, zero config
+          One gateway, zero config
         </h2>
         <p
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          We&rsquo;ve integrated each gateway so you don&rsquo;t have to.
+          We&rsquo;ve integrated Paystack so you don&rsquo;t have to.
           No API keys to manage, no webhook URLs to configure. Sign up and
           payments work.
         </p>
@@ -316,7 +295,7 @@ export default function MultiCurrencyPage() {
           className="text-[13px] mt-4"
           style={{ color: "var(--fg-3)" }}
         >
-          +42 more countries supported via Stripe and Flutterwave.
+          More countries follow as each currency is enabled on our payment account.
         </p>
       </section>
 

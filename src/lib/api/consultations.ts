@@ -135,6 +135,17 @@ export interface ConsultationSlot {
   isAvailable: boolean;
 }
 
+/** POST /consultations/bookings/:id/payment. */
+export interface BookingCheckout {
+  reference: string;
+  access_code: string;
+  authorization_url: string | null;
+  /** The booking's snapshot, for display only. */
+  amount_minor: number;
+  currency: string;
+  expires_at: string;
+}
+
 export interface ConsultationBooking {
   id: string;
   clientUserId: string;
@@ -416,6 +427,20 @@ export const consultationsService = {
     return apiClient.patch<ConsultationBooking>(
       `/consultations/bookings/${id}/cancel`,
       payload ?? {},
+    );
+  },
+
+  /**
+   * Start paying for a held booking. The API initialises the Paystack
+   * transaction itself from the booking's own amount and currency and
+   * returns what the browser opens (`access_code`). Nothing is sent, so the
+   * client cannot change the charge; calling it again returns the same
+   * checkout.
+   */
+  startBookingPayment(id: string): Promise<ApiResponse<BookingCheckout>> {
+    return apiClient.post<BookingCheckout>(
+      `/consultations/bookings/${id}/payment`,
+      {},
     );
   },
 

@@ -8,7 +8,8 @@ import { TogglePill } from "@/components/ds/TogglePill";
 import { PlanCard } from "@/components/ds/PlanCard";
 import type { PlanCardPlan } from "@/components/ds/PlanCard";
 import { useRegion } from "@/contexts/RegionContext";
-import { type PlanTier, type BillingPeriod, type CurrencyCode, getMonthlyEquivalent } from "@/lib/constants/regions";
+import { type PlanTier, type BillingPeriod, marketingCurrency, marketingMonthlyPrice } from "@/lib/constants/regions";
+import { formatCurrency } from "@/utils/format";
 
 /**
  * Pricing — pricing.html prototype. Pixel-perfect rebuild.
@@ -22,7 +23,7 @@ function buildProviderPlans(fmt: (amount: number) => string, period: BillingPeri
   const isAnnual = period === "annual";
   return [
     { name: "Starter", meta: "For new providers", price: "Free", priceSub: "forever", text: true, tagline: "List a single profile, take up to 50 active members. Try the rails, and the copilot, before you commit.", cta: "Start free →", ghost: true, divider: "Includes", features: ["1 marketplace listing", "Up to 50 active members or clients", "3 AI summaries / month", "QR check‑in & streak tracking", "Booking, payments, messages", "Standard payment fees apply", "Email support · 24h response"] },
-    { name: "Studio", meta: "Solo & single‑location", price: monthlyEq("studio"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: isAnnual ? "Pay once a year and save ~17%. For full‑time trainers, dietitians, and single‑location gyms." : "For full‑time trainers, dietitians, and single‑location gyms running a real practice. Cancel any time.", cta: "Choose Studio", featured: true, badge: isAnnual ? "Save 2 months" : undefined, divider: "Everything in Starter, plus", features: ["Unlimited copilot drafts · summaries, reports, plan updates", "Up to 500 active members", "Staff & client management", "Custom gateway keys · Stripe / Paystack / Flutterwave", "Revenue + check‑in analytics", "Plan / program builder", "Verified badge after document review", "Provider success Slack channel"] },
+    { name: "Studio", meta: "Solo & single‑location", price: monthlyEq("studio"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: isAnnual ? "Pay once a year and save ~17%. For full‑time trainers, dietitians, and single‑location gyms." : "For full‑time trainers, dietitians, and single‑location gyms running a real practice. Cancel any time.", cta: "Choose Studio", featured: true, badge: isAnnual ? "Save 2 months" : undefined, divider: "Everything in Starter, plus", features: ["Unlimited copilot drafts · summaries, reports, plan updates", "Up to 500 active members", "Staff & client management", "Custom gateway keys · Paystack", "Revenue + check‑in analytics", "Plan / program builder", "Verified badge after document review", "Provider success Slack channel"] },
     { name: "Enterprise", meta: "Multi‑location · multi‑country", price: "Custom", priceSub: "talk to us", text: true, tagline: "For chains with 3+ locations, corporate wellness contracts, or 5,000+ members. We meet your team and shape a deal.", cta: "Talk to sales →", ink: true, divider: "Everything in Studio, plus", features: ["Unlimited locations & members", "Copilot seats for every staff trainer", "Org‑level billing & SSO", "Assignment rules & team scopes", "Dedicated provider success", "99.95% uptime SLA · audit logs", "Sandbox + staging environments", "API access"] },
   ];
 }
@@ -30,28 +31,34 @@ function buildProviderPlans(fmt: (amount: number) => string, period: BillingPeri
 function buildMemberPlans(fmt: (amount: number) => string, period: BillingPeriod, monthlyEq: (tier: PlanTier) => string): PricingPlan[] {
   const isAnnual = period === "annual";
   return [
-    { name: "Member", meta: "For everyone who books", price: "Free", priceSub: "account", text: true, tagline: "No subscription. You only pay for what you book. The 5% platform fee is shown clearly at checkout, never hidden.", cta: "Create account →", divider: "Includes", features: ["Unlimited bookings", "QR check‑in & streak tracking", "Messaging with your providers", "Workout, weight, and meal logs", "One‑click refund flow if something goes wrong", "Supported in 50+ countries, 8 currencies"] },
+    { name: "Member", meta: "For everyone who books", price: "Free", priceSub: "account", text: true, tagline: "No subscription. You only pay for what you book. The 5% platform fee is shown clearly at checkout, never hidden.", cta: "Create account →", divider: "Includes", features: ["Unlimited bookings", "QR check‑in & streak tracking", "Messaging with your providers", "Workout, weight, and meal logs", "One‑click refund flow if something goes wrong", "Pay by card through Paystack"] },
     { name: "Premium", meta: "For frequent bookers", price: monthlyEq("premium"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: "Waive the platform fee on every booking, plus priority support and early access to new providers in your city.", cta: "Join the waitlist", featured: true, badge: isAnnual ? "Save 2 months" : "Coming soon", divider: "Everything in Member, plus", features: ["0% platform fee on all bookings", "Priority booking on full classes", "Early access to new verified providers", "Priority human support · 1h SLA", "Cross‑city portability when you travel"] },
     { name: "Family", meta: "Up to 5 people", price: monthlyEq("family"), priceSub: isAnnual ? "/ mo · billed annually" : "/ month", tagline: "One account, five members. Share bookings, manage kids' schedules, see everyone's check‑ins in one feed.", cta: "Join waitlist →", ink: true, divider: "Everything in Premium, plus", features: ["Up to 5 family members", "Single billing across the family", "Youth profiles with guardian controls", "Joint training plans (siblings, couples)", "Shared streak leaderboard"] },
   ];
 }
 
-const EXAMPLE_SESSION: Record<CurrencyCode, number> = {
+/** Marketing copy: a typical session price per display currency. */
+const EXAMPLE_SESSION: Record<string, number> = {
   USD: 80, GBP: 65, EUR: 70, NGN: 25_000, KES: 5_000, ZAR: 1_200, AED: 250, INR: 3_000,
 };
 
-const GATEWAY_INFO: Record<CurrencyCode, { name: string; pct: number; flat: number }> = {
-  USD: { name: "Stripe", pct: 0.029, flat: 0.30 },
-  GBP: { name: "Stripe", pct: 0.015, flat: 0.20 },
-  EUR: { name: "Stripe", pct: 0.014, flat: 0.25 },
+/**
+ * Marketing copy: an indicative card fee per display currency. Payments run
+ * through Paystack today; where it is not live yet the row says "Card
+ * processing" rather than naming a gateway we have not integrated.
+ */
+const GATEWAY_INFO: Record<string, { name: string; pct: number; flat: number }> = {
+  USD: { name: "Card processing", pct: 0.029, flat: 0.30 },
+  GBP: { name: "Card processing", pct: 0.015, flat: 0.20 },
+  EUR: { name: "Card processing", pct: 0.014, flat: 0.25 },
   NGN: { name: "Paystack", pct: 0.015, flat: 100 },
-  KES: { name: "Flutterwave", pct: 0.02, flat: 0 },
+  KES: { name: "Card processing", pct: 0.02, flat: 0 },
   ZAR: { name: "Paystack", pct: 0.015, flat: 1 },
-  AED: { name: "Stripe", pct: 0.024, flat: 0 },
-  INR: { name: "Razorpay", pct: 0.02, flat: 0 },
+  AED: { name: "Card processing", pct: 0.024, flat: 0 },
+  INR: { name: "Card processing", pct: 0.02, flat: 0 },
 };
 
-function buildFeeRows(currency: CurrencyCode, fmt: (n: number) => string) {
+function buildFeeRows(currency: string, fmt: (n: number) => string) {
   const session = EXAMPLE_SESSION[currency];
   const platform = session * 0.05;
   const gw = GATEWAY_INFO[currency];
@@ -97,21 +104,23 @@ const COMPARE = [
   ]},
 ];
 
+// Marketing copy. Only Paystack is integrated today; other markets say so
+// rather than naming a gateway we don't run.
 const REGIONS = [
   { country: "South Africa", code: "ZA · ZAR", gateway: "Paystack", fee: "1.5% + R 1" },
   { country: "Nigeria", code: "NG · NGN", gateway: "Paystack", fee: "1.5% + ₦100" },
-  { country: "Kenya", code: "KE · KES", gateway: "M‑Pesa · Flutterwave", fee: "2.0%" },
-  { country: "United Kingdom", code: "GB · GBP", gateway: "Stripe", fee: "1.5% + 20p" },
-  { country: "United States", code: "US · USD", gateway: "Stripe", fee: "2.9% + 30¢" },
-  { country: "UAE", code: "AE · AED", gateway: "Stripe · Tabby", fee: "2.4%" },
-  { country: "India", code: "IN · INR", gateway: "Razorpay", fee: "2.0%" },
-  { country: "Germany", code: "DE · EUR", gateway: "Stripe", fee: "1.4% + 25¢" },
+  { country: "Kenya", code: "KE · KES", gateway: "Paystack", fee: "Coming soon" },
+  { country: "United Kingdom", code: "GB · GBP", gateway: "Not yet available", fee: "-" },
+  { country: "United States", code: "US · USD", gateway: "Not yet available", fee: "-" },
+  { country: "UAE", code: "AE · AED", gateway: "Not yet available", fee: "-" },
+  { country: "India", code: "IN · INR", gateway: "Not yet available", fee: "-" },
+  { country: "Germany", code: "DE · EUR", gateway: "Not yet available", fee: "-" },
 ];
 
 const FAQS = [
   { q: "Is there a setup fee or annual contract?", a: "No. Studio is month‑to‑month, cancel any time. Enterprise contracts can be annual or quarterly, your choice. We don't ask for an upfront payment, and we don't claw back fees on cancellation." },
   { q: "What happens if I cross my plan's member limit?", a: <>We email you when you hit 80% and 100%. We don&apos;t auto‑upgrade you. If you stay over for two full months, we&apos;ll move you to Studio or Enterprise, but only after a conversation. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>No surprise charges.</strong></> },
-  { q: "Can I use my own payment processor keys?", a: "Yes, Studio and Enterprise providers configure their own Stripe, Paystack, Flutterwave, or Razorpay keys. Payments settle directly to your account. Binectics never holds funds, and your customers see your business name on their statement, not ours." },
+  { q: "Can I use my own payment processor keys?", a: "Yes, Studio and Enterprise providers can connect their own Paystack keys. Payments settle directly to your account. Binectics never holds funds, and your customers see your business name on their statement, not ours." },
   { q: "What does the 5% platform fee actually cover?", a: "Discovery (search, marketplace ranking), payments rails, dispute resolution, verification, SMS & email notifications, fraud protection, and a 24h human SLA. Roughly $2.5M of monthly platform GMV passes through these systems at any time." },
   { q: "Do you offer discounts for non‑profits or community programs?", a: <>Yes. Registered non‑profits get the Studio plan free, plus a reduced 2% platform fee. Apply at <span className="font-mono text-[13px]" style={{ color: "var(--ink)" }}>community@binectics.com</span> with your registration number.</> },
   { q: "What if I'm not happy with my plan?", a: "Downgrade or cancel from settings, instantly. Your data stays exportable for 90 days after closing. We'll prorate the unused part of the month and credit it back to your card within 5 business days." },
@@ -125,8 +134,14 @@ function Check() {
 export default function PricingPage() {
   const [audience, setAudience] = useState<"provider" | "member">("provider");
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
-  const { formatAmount, currency, regionName } = useRegion();
-  const monthlyEq = (tier: PlanTier) => formatAmount(getMonthlyEquivalent(tier, currency, period));
+  const { currency: visitorCurrency, locale, regionName } = useRegion();
+  // Marketing amounts show in the visitor's currency when the copy has it.
+  const currency = marketingCurrency(visitorCurrency);
+  const formatAmount = (amount: number) => formatCurrency(amount, currency, locale);
+  const monthlyEq = (tier: PlanTier) => {
+    const p = marketingMonthlyPrice(tier, currency, period);
+    return formatCurrency(p.amount, p.currency, locale);
+  };
   const plans = audience === "provider"
     ? buildProviderPlans(formatAmount, period, monthlyEq)
     : buildMemberPlans(formatAmount, period, monthlyEq);
@@ -190,7 +205,7 @@ export default function PricingPage() {
       <section className="mx-auto max-w-360 mt-10 sm:mt-16 px-5 sm:px-10 pb-10 sm:pb-16" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-16 items-end mb-8">
           <h2 className="text-[40px] font-medium leading-[1.05] max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>What you actually pay.</h2>
-          <p className="text-[16px] leading-[1.55] max-w-[56ch]" style={{ color: "var(--fg-2)", margin: 0 }}>A worked example: a member books a {formatAmount(sessionPrice)} session with a local trainer using a card via {fee.gwName}. Here&apos;s where every unit goes. <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>Amounts shown in {currency}.</span></p>
+          <p className="text-[16px] leading-[1.55] max-w-[56ch]" style={{ color: "var(--fg-2)", margin: 0 }}>A worked example: a member books a {formatAmount(sessionPrice)} session with a local trainer using a card{fee.gwName === "Paystack" ? " via Paystack" : ""}. Here&apos;s where every unit goes. <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>Amounts shown in {currency}.</span></p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
           {/* Fee table */}
@@ -267,7 +282,7 @@ export default function PricingPage() {
       {/* Regional pricing — 4-col cards */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 py-10 sm:py-16" style={{ borderBottom: "1px solid var(--border)" }}>
         <h2 className="text-[40px] font-medium leading-none max-w-[14ch]" style={{ letterSpacing: "-0.028em", color: "var(--ink)" }}>The same deal, in every country.</h2>
-        <p className="text-[15.5px] max-w-[56ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>52 countries · 8 currencies. We route payments through the gateway that works best where you are, the percentage we take stays the same.</p>
+        <p className="text-[15.5px] max-w-[56ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>Payments run through Paystack today, starting in Nigeria and South Africa. The percentage we take stays the same everywhere.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
           {REGIONS.map((r) => (
             <div key={r.country} className="flex flex-col gap-2.5 rounded-(--r-3)" style={{ padding: "18px 20px", border: "1px solid var(--border)", background: "var(--bg)" }}>
