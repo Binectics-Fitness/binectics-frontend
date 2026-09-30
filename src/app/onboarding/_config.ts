@@ -323,6 +323,9 @@ export function workspaceDecision(input: {
 /** The API code for a gym customer trying to open a provider workspace. */
 export const WORKSPACE_ENROLLED_MEMBER = "WORKSPACE_ENROLLED_MEMBER";
 
+/** The API code for a gym owner trying to open a trainer or dietitian workspace. */
+export const WORKSPACE_GYM_OWNER = "WORKSPACE_GYM_OWNER";
+
 /**
  * A gym's customer can't turn the same login into a trainer or dietitian
  * business: the gym enrolled that account, and a provider workspace on it
@@ -403,8 +406,10 @@ export interface WorkspaceError {
 
 /**
  * What to show when the API refuses to create the workspace. A gym customer
- * gets the separate-account copy (named after their gym when we know it);
- * anything else shows the API's own message.
+ * gets the separate-account copy (named after their gym when we know it); a
+ * gym owner gets the API's separate-account message; both are offered
+ * "Sign out", since the fix is another account. Anything else shows the
+ * API's own message.
  */
 export function workspaceCreateError(
   response: { code?: string; message?: string },
@@ -413,6 +418,12 @@ export function workspaceCreateError(
   if (response.code === WORKSPACE_ENROLLED_MEMBER) {
     return {
       message: gymName ? enrolledMemberMessage(gymName) : (response.message || enrolledMemberMessage(null)),
+      signOut: true,
+    };
+  }
+  if (response.code === WORKSPACE_GYM_OWNER) {
+    return {
+      message: response.message || "This account runs a gym. To coach clients yourself, sign up for a separate account with a different email.",
       signOut: true,
     };
   }

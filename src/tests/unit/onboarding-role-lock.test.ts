@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ACCOUNT_TYPE_TO_USER_ROLE, WORKSPACE_ENROLLED_MEMBER, canChangeRole, enrolledMemberMessage, enrolledMemberNote, membershipGate, resolveEstablishedRole, resolvePreselectedRole, workspaceCreateError, workspaceDecision } from "@/app/onboarding/_config";
+import { ACCOUNT_TYPE_TO_USER_ROLE, WORKSPACE_ENROLLED_MEMBER, WORKSPACE_GYM_OWNER, canChangeRole, enrolledMemberMessage, enrolledMemberNote, membershipGate, resolveEstablishedRole, resolvePreselectedRole, workspaceCreateError, workspaceDecision } from "@/app/onboarding/_config";
 
 // Regression guards for the onboarding role model:
 //
@@ -215,6 +215,14 @@ describe("workspaceCreateError", () => {
       signOut: true,
     });
     expect(workspaceCreateError({ code: WORKSPACE_ENROLLED_MEMBER }, null).message).toBe(enrolledMemberMessage(null));
+  });
+
+  it("offers sign out to a gym owner opening a coaching workspace, with the API's copy", () => {
+    expect(workspaceCreateError({ code: WORKSPACE_GYM_OWNER, message: "This account runs Iron House. ..." }, null)).toEqual({
+      message: "This account runs Iron House. ...",
+      signOut: true,
+    });
+    expect(workspaceCreateError({ code: WORKSPACE_GYM_OWNER }, null)).toMatchObject({ signOut: true, message: expect.stringContaining("separate account") });
   });
 
   it("shows other refusals as the API wrote them, without sign out", () => {
