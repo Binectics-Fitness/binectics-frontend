@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import SearchableSelect from "@/components/SearchableSelect";
-import { GatewaysSection } from "./GatewaysSection";
+import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection, ApiKeysSection } from "./TeamAccessSections";
 import { useOrganization } from "@/contexts/OrganizationContext";

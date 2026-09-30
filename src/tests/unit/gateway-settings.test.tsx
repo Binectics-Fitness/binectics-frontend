@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { GatewaysSection } from "@/app/dashboard/gym-owner/settings/GatewaysSection";
+import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { payoutOptions } from "@/app/onboarding/_payout";
 import { normalizePaymentGateways, type PublicPaymentGateway } from "@/lib/api/paymentGateways";
 
@@ -17,7 +17,7 @@ const GATEWAYS: PublicPaymentGateway[] = [
 ];
 
 const h = vi.hoisted(() => ({
-  configs: [] as { gateway: string; public_key: string; is_active: boolean }[],
+  configs: [] as { gateway: string; public_key: string; is_active: boolean; currencies: { code: string; verified_at: string; verified_via: string }[] }[],
   upsert: vi.fn(),
   remove: vi.fn(),
   refetch: vi.fn(),
@@ -30,6 +30,9 @@ vi.mock("@/lib/queries/marketplace", () => ({
   useOrgPaymentConfigs: () => ({ data: h.configs, isLoading: false }),
   useUpsertPaymentConfig: () => ({ mutateAsync: h.upsert, isPending: false }),
   useDeletePaymentConfig: () => ({ mutateAsync: h.remove, isPending: false }),
+  useVerifyProviderCurrency: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useRemoveProviderCurrency: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useRefreshProviderCurrencies: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock("@/lib/queries/currencies", () => ({
   usePaymentGateways: () => ({
@@ -39,6 +42,7 @@ vi.mock("@/lib/queries/currencies", () => ({
     isPending: false,
     refetch: h.refetch,
   }),
+  useOrgPriceCurrencies: () => ({ data: [], isLoading: false, isError: false, providerHint: "Your Paystack account" }),
 }));
 vi.mock("@/components/SearchableSelect", () => ({
   default: ({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { label: string; value: string }[] }) => (
@@ -67,8 +71,8 @@ describe("GatewaysSection", () => {
 
   it("marks saved Stripe keys as no longer supported and lets the owner remove them", async () => {
     h.configs = [
-      { gateway: "stripe", public_key: "pk_live_abcdefghijklmnop", is_active: true },
-      { gateway: "paystack", public_key: "pk_live_1234567890abcdef", is_active: true },
+      { gateway: "stripe", public_key: "pk_live_abcdefghijklmnop", is_active: true, currencies: [] },
+      { gateway: "paystack", public_key: "pk_live_1234567890abcdef", is_active: true, currencies: [] },
     ];
     vi.spyOn(window, "confirm").mockReturnValue(true);
     render(<GatewaysSection />);
@@ -77,6 +81,7 @@ describe("GatewaysSection", () => {
     expect(within(stripeRow.parentElement as HTMLElement).getByText("No longer supported")).toBeInTheDocument();
     expect(screen.getAllByText("No longer supported")).toHaveLength(1);
 
+    h.remove.mockResolvedValue({ success: true });
     const removeButtons = screen.getAllByRole("button", { name: "Remove" });
     await userEvent.click(removeButtons[0]);
     expect(h.remove).toHaveBeenCalledWith("stripe");
