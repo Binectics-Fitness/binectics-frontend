@@ -3,14 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
-import { formatCurrency } from "@/utils/format";
-import { minorToMajor } from "@/lib/money/minorMoney";
+import { formatMinor, isSelectable } from "@/lib/currencies/helpers";
+import { useCurrencies } from "@/lib/queries/currencies";
+import { planPerLabel } from "@/lib/marketplace/planDisplay";
+import { useAuth } from "@/contexts/AuthContext";
 import { ListingClassesSection } from "@/components/classes/ListingClassesSection";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
+import type { MembershipPlanType } from "@/lib/types";
 
 /* ─── Icons ──────────────────────────────────────────────── */
 
@@ -19,9 +22,6 @@ function Star({ size = 14 }: { size?: number }) {
 }
 function StarOutline({ size = 12 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m12 2 3 7 7 .8-5.3 4.7L18 22l-6-4-6 4 1.3-7.5L2 9.8 9 9z" /></svg>;
-}
-function Chev() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m6 9 6 6 6-6" /></svg>;
 }
 
 /* ─── Helpers ────────────────────────────────────────────── */
@@ -75,7 +75,7 @@ interface Plan {
   _id: string;
   name: string;
   description?: string;
-  plan_type: string;
+  plan_type: MembershipPlanType;
   duration_days: number;
   /** MINOR units (kobo/cents) — see MarketplaceMembershipPlan.price_minor. */
   price_minor: number;
@@ -97,9 +97,15 @@ interface Review {
 export default function ProviderPage() {
   const params = useParams();
   const listingId = params.listingId as string;
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+  // What a plan's currency can be paid in right now, for the footer copy only;
+  // the checkout itself is refused by the API, with its reason, if it can't.
+  const { all: currencyList } = useCurrencies();
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [chosenPlanId, setChosenPlanId] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -172,9 +178,29 @@ export default function ProviderPage() {
   const photos = listing.photos || [];
   const phBg = PH_BG[listing.account_type] || PH_BG.gym_owner;
   const allAmenities = [...(listing.amenities || []), ...(listing.facilities || [])];
-  // price_from_minor / price_minor are MINOR units; formatCurrency takes major.
-  const price = listing.price_from_minor && listing.currency ? formatCurrency(minorToMajor(listing.price_from_minor, listing.currency), listing.currency) : "–";
-  const selectedPlan = plans[0];
+  // A single plan is chosen for the member; with several, they pick.
+  const selectedPlan =
+    plans.find((p) => p._id === chosenPlanId) ?? (plans.length === 1 ? plans[0] : undefined);
+  const planPrice = (p: Plan) => formatMinor(p.currency, p.price_minor, { list: currencyList });
+  const selectedIsFree = selectedPlan ? selectedPlan.price_minor === 0 : false;
+  const selectedPayable = selectedPlan ? isSelectable(selectedPlan.currency, currencyList, "charge_card") : false;
+  const checkoutUrl = selectedPlan ? `/checkout?listing=${listing._id}&plan=${selectedPlan._id}` : null;
+  const continueToCheckout = () => {
+    if (!checkoutUrl) return;
+    // Signed out goes through login and comes back here; while auth is still
+    // loading, /checkout itself sends a signed-out visitor to login the same way.
+    if (!user && !authLoading) {
+      router.push(`/login?redirect=${encodeURIComponent(checkoutUrl)}`);
+      return;
+    }
+    router.push(checkoutUrl);
+  };
+  const choosePlan = (id: string) => {
+    setChosenPlanId(id);
+    if (typeof window !== "undefined" && window.matchMedia?.("(max-width: 1023px)").matches) {
+      document.getElementById("booking-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <div style={{ background: "var(--bg)" }}>
@@ -294,14 +320,16 @@ export default function ProviderPage() {
             <section className="py-8 border-b border-border">
               <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Plans</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {plans.map((p, i) => (
-                  <div key={p._id} className={`border rounded-(--r-3) p-5 flex flex-col gap-3 ${i === 0 ? "border-ink bg-bg-2" : "border-border bg-bg"}`}>
+                {plans.map((p) => {
+                  const isSelected = selectedPlan?._id === p._id;
+                  return (
+                  <div key={p._id} className={`border rounded-(--r-3) p-5 flex flex-col gap-3 ${isSelected ? "border-ink bg-bg-2" : "border-border bg-bg"}`}>
                     <div>
                       <div className="text-[17px] font-medium" style={{ letterSpacing: "-0.015em", color: "var(--ink)" }}>{p.name}</div>
                       <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{p.description || `${p.plan_type} · ${p.duration_days} days`}</div>
                     </div>
                     <div className="font-mono text-[26px]" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.015em", color: "var(--ink)" }}>
-                      {formatCurrency(minorToMajor(p.price_minor, p.currency), p.currency)} <small className="font-mono text-[13px] font-normal" style={{ color: "var(--fg-3)" }}>/ {p.plan_type === "one_time" ? "once" : `${p.duration_days}d`}</small>
+                      {planPrice(p)} <small className="font-mono text-[13px] font-normal" style={{ color: "var(--fg-3)" }}>{planPerLabel(p)}</small>
                     </div>
                     {p.features && p.features.length > 0 && (
                       <ul className="flex flex-col gap-1.5 list-none p-0">
@@ -314,14 +342,19 @@ export default function ProviderPage() {
                       </ul>
                     )}
                     <div className="mt-auto">
-                      {i === 0 ? (
-                        <button className="btn-signal-v2 w-full" style={{ height: "44px" }}>Choose {p.name}</button>
-                      ) : (
-                        <button className="btn-ghost-v2 w-full" style={{ height: "44px" }}>Choose {p.name}</button>
-                      )}
+                      <button
+                        type="button"
+                        className={`${isSelected ? "btn-primary-v2" : "btn-ghost-v2"} w-full`}
+                        style={{ height: "44px" }}
+                        aria-pressed={isSelected}
+                        onClick={() => choosePlan(p._id)}
+                      >
+                        {isSelected ? `${p.name} chosen` : `Choose ${p.name}`}
+                      </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
@@ -398,14 +431,20 @@ export default function ProviderPage() {
         </div>
 
         {/* ─── RIGHT: BOOKING CARD ─── */}
-        <aside className="sticky" style={{ top: "88px" }}>
+        <aside id="booking-card" className="sticky" style={{ top: "88px" }}>
           <div className="border border-border rounded-(--r-3) bg-bg overflow-hidden">
             <div className="px-5 pt-4.5 pb-3.5 border-b border-border flex justify-between items-start">
               <div>
-                <div className="font-mono text-[24px]" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.012em", color: "var(--ink)" }}>
-                  {selectedPlan ? formatCurrency(minorToMajor(selectedPlan.price_minor, selectedPlan.currency), selectedPlan.currency) : price}
-                  <small className="font-mono text-[13px]" style={{ color: "var(--fg-3)" }}> / {selectedPlan ? (selectedPlan.plan_type === "one_time" ? "once" : `${selectedPlan.duration_days}d`) : "plan"}</small>
-                </div>
+                {selectedPlan ? (
+                  <div className="font-mono text-[24px]" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.012em", color: "var(--ink)" }}>
+                    {planPrice(selectedPlan)}
+                    <small className="font-mono text-[13px]" style={{ color: "var(--fg-3)" }}> {planPerLabel(selectedPlan)}</small>
+                  </div>
+                ) : (
+                  <div className="text-[17px] font-medium" style={{ letterSpacing: "-0.015em", color: "var(--ink)" }}>
+                    {plans.length > 0 ? "Choose a plan" : "Membership"}
+                  </div>
+                )}
                 <div className="flex items-center gap-1 text-[12.5px] mt-1" style={{ color: "var(--fg-2)" }}>
                   <span style={{ color: "var(--ink)" }}><Star size={11} /></span>
                   <span style={{ color: "var(--ink)", fontWeight: 500 }}>{listing.average_rating || "–"}</span>
@@ -418,44 +457,69 @@ export default function ProviderPage() {
             </div>
 
             <div className="px-5 py-4 flex flex-col gap-4">
-              {[
-                { label: "Plan", value: selectedPlan?.name || "Select a plan" },
-                { label: "Location", value: listing.city || "–" },
-              ].map((f) => (
-                <div key={f.label} className="flex flex-col gap-1.5">
-                  <label className="font-mono text-[12px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{f.label}</label>
-                  <div className="h-9 px-3 rounded-(--r-2) flex items-center justify-between text-[13.5px] cursor-pointer" style={{ color: "var(--ink)", background: "var(--bg)", border: "1px solid var(--border-2)" }}>
-                    <span>{f.value}</span>
-                    <Chev />
-                  </div>
-                </div>
-              ))}
+              {plans.length === 0 ? (
+                <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>No membership plans yet.</p>
+              ) : (
+                <fieldset className="flex flex-col gap-1.5 border-0 p-0 m-0">
+                  <legend className="font-mono text-[12px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Plan</legend>
+                  {plans.map((p) => {
+                    const checked = selectedPlan?._id === p._id;
+                    return (
+                      <label
+                        key={p._id}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-(--r-2) cursor-pointer text-[13.5px]"
+                        style={{
+                          color: "var(--ink)",
+                          background: checked ? "var(--bg-2)" : "var(--bg)",
+                          border: `1px solid ${checked ? "var(--ink)" : "var(--border-2)"}`,
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="listing-plan"
+                          value={p._id}
+                          checked={checked}
+                          onChange={() => setChosenPlanId(p._id)}
+                          className="shrink-0"
+                          style={{ accentColor: "var(--ink)" }}
+                        />
+                        <span className="flex-1 min-w-0 truncate">{p.name}</span>
+                        <span className="font-mono shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>
+                          {planPrice(p)} <small style={{ color: "var(--fg-3)" }}>{planPerLabel(p)}</small>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+              )}
 
               {selectedPlan && (
                 <div className="border-t border-border pt-3 mt-1">
-                  <div className="flex justify-between text-[13.5px] py-1" style={{ color: "var(--fg-2)" }}>
-                    <span>{selectedPlan.name}</span>
-                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(minorToMajor(selectedPlan.price_minor, selectedPlan.currency), selectedPlan.currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-[13.5px] py-1" style={{ color: "var(--fg-2)" }}>
-                    <span>Platform fee</span>
-                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(0, selectedPlan.currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-[13.5px] py-1 pt-3 mt-1 border-t border-border font-medium" style={{ color: "var(--ink)" }}>
+                  <div className="flex justify-between text-[13.5px] py-1 font-medium" style={{ color: "var(--ink)" }}>
                     <span>Due today</span>
-                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(minorToMajor(selectedPlan.price_minor, selectedPlan.currency), selectedPlan.currency)}</span>
+                    <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums" }}>{selectedIsFree ? "Free" : planPrice(selectedPlan)}</span>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="px-5 pt-4 pb-4.5 border-t border-border flex flex-col gap-2.5" style={{ background: "var(--bg-2)" }}>
-              <button className="btn-signal-v2 lg w-full">Continue to checkout →</button>
-              <div className="flex items-center gap-2 justify-center font-mono text-[11px] tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-                <span style={{ color: "var(--ink)" }}>Paystack</span><span>·</span><span style={{ color: "var(--ink)" }}>Card</span>
+            {plans.length > 0 && (
+              <div className="px-5 pt-4 pb-4.5 border-t border-border flex flex-col gap-2.5" style={{ background: "var(--bg-2)" }}>
+                <button
+                  type="button"
+                  className="btn-signal-v2 lg w-full disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={!selectedPlan}
+                  onClick={continueToCheckout}
+                >
+                  Continue to checkout →
+                </button>
+                {selectedPlan && (selectedIsFree || selectedPayable) && (
+                  <div className="text-[12px] text-center leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                    {selectedIsFree ? "Free plan, no payment needed" : "Paid securely with Paystack"}
+                  </div>
+                )}
               </div>
-              <div className="text-[12px] text-center leading-relaxed" style={{ color: "var(--fg-3)" }}>Cancel any time · 24‑hr review window after each charge</div>
-            </div>
+            )}
           </div>
 
           <div className="border border-border rounded-(--r-3) p-4 mt-4 flex items-center gap-3.5 bg-bg">
