@@ -22,6 +22,21 @@ export const CURRENCY_USES: readonly CurrencyUse[] = [
   "charge_transfer",
 ];
 
+/** A payment method a gateway collects a currency by. */
+export type PaymentMethodCode = "card" | "bank_transfer";
+
+/**
+ * A gateway that can charge a currency for the platform right now, with the
+ * methods confirmed for it.
+ */
+export interface ChargingGateway {
+  /** Gateway id, e.g. "paystack". */
+  gateway: string;
+  /** Display name, e.g. "Paystack". */
+  label: string;
+  methods: PaymentMethodCode[];
+}
+
 export interface PlatformCurrency {
   /** ISO 4217, upper case. */
   code: string;
@@ -32,9 +47,37 @@ export interface PlatformCurrency {
   selectable: Record<CurrencyUse, boolean>;
   /** ISO 3166 alpha-2 countries this is the usual currency of. */
   suggested_for_countries: string[];
+  /**
+   * Gateways that can charge it for us right now. Empty when it can't be
+   * paid (it may still be listed for display).
+   */
+  gateways: ChargingGateway[];
 }
 
 const ISO_CODE = /^[A-Z]{3}$/;
+
+const METHODS: readonly PaymentMethodCode[] = ["card", "bank_transfer"];
+
+/** `gateways[]` made safe: rows without an id are dropped, unknown methods ignored. */
+export function normalizeGateways(raw: unknown): ChargingGateway[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ChargingGateway[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const g = row as Record<string, unknown>;
+    const id = typeof g.gateway === "string" ? g.gateway.trim().toLowerCase() : "";
+    if (!id || out.some((x) => x.gateway === id)) continue;
+    const label =
+      typeof g.label === "string" && g.label.trim()
+        ? g.label.trim()
+        : id.charAt(0).toUpperCase() + id.slice(1);
+    const methods = Array.isArray(g.methods)
+      ? METHODS.filter((m) => (g.methods as unknown[]).includes(m))
+      : [];
+    out.push({ gateway: id, label, methods });
+  }
+  return out;
+}
 
 /**
  * One row of the response, made safe to render. A row without a valid code
@@ -73,6 +116,7 @@ export function normalizeCurrency(raw: unknown): PlatformCurrency | null {
           .map((c) => c.trim().toUpperCase())
           .filter((c) => /^[A-Z]{2}$/.test(c))
       : [],
+    gateways: normalizeGateways(r.gateways),
   };
 }
 

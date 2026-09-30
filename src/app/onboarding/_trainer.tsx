@@ -1,6 +1,7 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
+import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
+import { PayoutChoice } from "./_payout";
 import { COUNTRY_NAME_TO_CODE, SESSION_MISSING, onboardingCurrency, trainerCountry } from "./_config";
 import { OnboardingCurrencyField } from "./_currency";
 
@@ -74,7 +75,7 @@ export function TrainerStep3({ data, setField, onUploadStart, onUploadEnd }: Ste
         />
         <UploadZone
           title="Public liability insurance"
-          hint="Minimum cover for in-person (e.g. ₦ 33,000k)"
+          hint="Required for in-person sessions"
           folder="teams/documents"
           value={data.doc_insurance as string | undefined}
           onUpload={(r) => setField("doc_insurance", r.url)}
@@ -176,14 +177,7 @@ export function TrainerStep5({ data, setField }: StepProps) {
   return (
     <>
       <StageHead crumb="Step 05 of 06, trainer track" title="Connect your payout." desc="Direct to your account. Binectics never holds your money." />
-      <RadioCards
-        selected={(data.payout as string) || "paystack"}
-        onSelect={(v) => setField("payout", v)}
-        options={[
-          { id: "paystack", title: "Paystack", desc: "Setup takes 4 minutes. Recommended for ZA + NG." },
-          { id: "stripe", title: "Stripe", desc: "For USD / EUR / GBP clients." },
-        ]}
-      />
+      <PayoutChoice data={data} setField={setField} />
     </>
   );
 }

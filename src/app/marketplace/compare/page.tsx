@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import type { Metadata } from "next";
-import { formatCurrency } from "@/utils/format";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 
 export const metadata: Metadata = {
@@ -13,7 +12,12 @@ export const metadata: Metadata = {
  * Marketplace Compare — side-by-side provider comparison table.
  * Proto: marketplace-compare.html
  * Topbar + shell max-w-320, comparison table with 3 provider columns,
- * rows: specialization, rate, rating, verified, next availability, format, location, cert, languages.
+ * rows: specialization, rating, verified, next availability, format, location, cert, languages.
+ *
+ * STATIC PROTOTYPE: the providers below are sample data and nothing links
+ * here. Their made-up rand rates were removed; a real compare view would
+ * load listings by id (GET /marketplace/listings/:id) and show each one's
+ * own price in its own currency.
  */
 
 const PROVIDERS = [
@@ -22,9 +26,6 @@ const PROVIDERS = [
     type: "Trainer · Cape Town",
     grad: "linear-gradient(135deg, oklch(0.85 0.04 40), oklch(0.72 0.06 90))",
     specialization: "Strength · running",
-    rateAmount: 1200,
-    rateCurrency: "ZAR",
-    rateUnit: "/ 60 min",
     rating: "4.9 · 312 reviews",
     verified: "Yes · 2027",
     nextAvail: "Tomorrow 08:00",
@@ -38,9 +39,6 @@ const PROVIDERS = [
     type: "Trainer · Cape Town",
     grad: "linear-gradient(135deg, oklch(0.85 0.04 100), oklch(0.72 0.06 150))",
     specialization: "Mobility · recovery",
-    rateAmount: 800,
-    rateCurrency: "ZAR",
-    rateUnit: "/ 60 min",
     rating: "4.9 · 142 reviews",
     verified: "Yes · 2027",
     nextAvail: "Today 17:00",
@@ -54,9 +52,6 @@ const PROVIDERS = [
     type: "Trainer · Cape Town",
     grad: "linear-gradient(135deg, oklch(0.85 0.04 160), oklch(0.72 0.06 210))",
     specialization: "Postnatal · strength",
-    rateAmount: 850,
-    rateCurrency: "ZAR",
-    rateUnit: "/ 60 min",
     rating: "5.0 · 64 reviews",
     verified: "Yes · 2027",
     nextAvail: "Thursday 09:00",
@@ -69,7 +64,6 @@ const PROVIDERS = [
 
 const ROWS: { label: string; key: keyof (typeof PROVIDERS)[0] }[] = [
   { label: "Specialization", key: "specialization" },
-  { label: "Rate", key: "rateAmount" },
   { label: "Rating", key: "rating" },
   { label: "Verified", key: "verified" },
   { label: "Next availability", key: "nextAvail" },
@@ -81,10 +75,6 @@ const ROWS: { label: string; key: keyof (typeof PROVIDERS)[0] }[] = [
 
 export default function MarketplaceComparePage() {
   const renderCell = (provider: (typeof PROVIDERS)[0], key: keyof (typeof PROVIDERS)[0]) => {
-    if (key === "rateAmount") {
-      return `${formatCurrency(provider.rateAmount, provider.rateCurrency)} ${provider.rateUnit}`;
-    }
-
     return provider[key];
   };
 

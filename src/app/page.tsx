@@ -8,11 +8,12 @@ import CountUp from "@/components/CountUp";
 import FaqAccordion from "@/components/FaqAccordion";
 import DashboardMosaic from "@/components/DashboardMosaic";
 import LandingPricing from "@/components/LandingPricing";
+import { GatewayStrip, PaidInPhrase } from "@/components/marketing/CurrencyFacts";
 
 export const metadata: Metadata = {
   title: "Binectics, the copilot your fitness business runs on",
   description:
-    "AI-drafted client summaries, weekly reports, and program updates, plus payments in 8 currencies and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
+    "AI-drafted client summaries, weekly reports, and program updates, plus payments in your local currency and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
   alternates: { canonical: "/" },
 };
 
@@ -36,12 +37,12 @@ const faqItems = [
   { q: "Does the AI send anything to my clients directly?", a: "No. Every AI output is a draft. Nothing reaches a client until you review it, edit it if you want, and press send. Sent reports carry an “AI-assisted, reviewed by you” note, and there is a full audit trail." },
   { q: "Is my client data used to train AI models?", a: "No. Generation runs only on your own clients’ data, scoped to your account, and is never used to train models or shared across providers without explicit opt-in. Voice notes are deleted after transcription." },
   { q: "How is Binectics different from a class-booking app?", a: "Class-booking apps point a member at one studio. Binectics is the rails underneath: an AI copilot for client work, payments, check-ins, client health, journals, plans, and reviews, for gyms, trainers, and dietitians, in one place." },
-  { q: "Which countries and currencies are supported?", a: "Payments run through Paystack, starting with Nigerian naira. More currencies open as each one is enabled on our payment account, and a price can only be set in a currency we can actually charge." },
+  { q: "Which countries and currencies are supported?", a: "Payments run through the payment providers we have integrated, in the currencies they can charge for us. More open as each one is enabled, and a price can only be set in a currency we can actually charge. The currencies open to you are listed when you set a price." },
   { q: "When can I start?", a: "Early access is open now. Founding-cohort providers get hands-on onboarding, early-access pricing that stays locked after launch, and a direct line to the team building the copilot. General availability follows in 2026." },
   { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents, business registration, certifications, identity, and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
-  { q: "Is my data secure?", a: "All data is encrypted at rest and in transit. Payment credentials are handled by PCI-compliant processors (Stripe, Paystack, Flutterwave), we never store card numbers. Infrastructure runs on Azure with SOC 2-aligned controls, automated backups, and region-isolated databases." },
-  { q: "Can I cancel or downgrade anytime?", a: "Yes. Downgrade from Studio to Starter at any time, your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Enterprise plans follow the terms in your service agreement." },
-  { q: "Can I bring my own payment processor?", a: "Yes, Studio and Enterprise plans let providers connect their own Paystack keys. Payments settle directly to your account; Binectics never holds funds." },
+  { q: "Is my data secure?", a: "All data is encrypted at rest and in transit. Payment credentials are handled by PCI-compliant payment processors, we never store card numbers. Infrastructure runs on Azure with SOC 2-aligned controls, automated backups, and region-isolated databases." },
+  { q: "Can I cancel or downgrade anytime?", a: "Yes. Move to the free plan at any time, your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Custom plans follow the terms in your service agreement." },
+  { q: "Can I bring my own payment processor?", a: "Yes. Providers connect their own account with a payment provider we support. Payments settle directly to your account; Binectics never holds funds." },
   { q: "How do team and multi-location plans work?", a: "Gym owners create an organization, invite staff with role and permission scopes, and manage multiple listings, each with its own facility details, amenities, gallery, and documents. Assignment rules route new clients to the right staff automatically." },
 ];
 
@@ -104,7 +105,7 @@ export default function Home() {
             <p className="text-[16px] sm:text-[19px] text-fg-2 max-w-[580px] mt-5 sm:mt-7 leading-relaxed">
               Whether you coach ten clients or run three locations, Binectics drafts the
               client summaries, weekly reports, and program updates from the data your
-              clients already log, and runs your payments in 8 currencies. You review,
+              clients already log, and runs your payments<PaidInPhrase />. You review,
               send, and get back to the floor.
             </p>
 
@@ -199,13 +200,7 @@ export default function Home() {
 
       {/* ═══ TRUST STRIP ═══ */}
       <div className="mx-auto max-w-360 px-5 sm:px-10">
-        <ScrollReveal stagger staggerInterval={60} className="grid grid-cols-5 border-b border-border">
-          {["Stripe", "Paystack", "Flutterwave", "Apple Pay", "Google Pay"].map((name, i) => (
-            <div key={name} className={`py-4 sm:py-7 px-1 sm:px-6 text-center text-fg-3 font-mono text-[10px] sm:text-[12px] uppercase tracking-[0.02em] sm:tracking-[0.04em] ${i < 4 ? "border-r border-border" : ""}`}>
-              {name}
-            </div>
-          ))}
-        </ScrollReveal>
+        <GatewayStrip />
       </div>
 
       {/* ═══ PRODUCT PREVIEW — Dashboard Mosaic ═══ */}
@@ -402,7 +397,7 @@ export default function Home() {
               Transparent pricing.
             </h2>
             <p className="text-[15px] sm:text-[17px] text-fg-2 mt-4 leading-relaxed">
-              Start free with three AI summaries a month. Upgrade when the drafts win you over, local pricing in 8 currencies, no lock-ins. Founding-cohort pricing stays locked after launch.
+              Start free with three AI summaries a month. Upgrade when the drafts win you over, priced in your local currency where we can charge it, no lock-ins. Founding-cohort pricing stays locked after launch.
             </p>
           </div>
         </ScrollReveal>

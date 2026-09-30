@@ -108,8 +108,6 @@ export interface PlatformMetricsOverview {
     primaryCurrency: string | null;
     primaryRevenueMinor: number;
     primaryAverageMinor: number;
-    totalRevenueUsdMinor: number;
-    averageValueUsdMinor: number;
     byCurrency: Array<{
       currency: string;
       count: number;
@@ -122,6 +120,17 @@ export interface PlatformMetricsOverview {
     payingUsers: number;
     conversionRate: number;
   };
+  /**
+   * Revenue from active paid memberships, one row per currency in that
+   * currency's MINOR unit, largest first. Never converted or summed across
+   * currencies: there are no FX rates. (The old USD rollups summed USD rows
+   * only and read 0 on an NGN platform; they are not read.)
+   */
+  revenue_by_currency?: Array<{
+    currency: string;
+    amount_minor: number;
+    count: number;
+  }>;
 }
 
 export interface FeedbackSummary {

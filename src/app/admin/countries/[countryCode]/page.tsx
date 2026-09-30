@@ -36,7 +36,7 @@ export default function AdminSingleCountryPage({
             South Africa · ZA
           </h1>
           <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-            Launched Mar 2024 · 4 cities · Paystack rails · ZAR primary
+            Launched Mar 2024 · 4 cities · Paystack rails
           </p>
         </div>
       </div>
@@ -45,7 +45,7 @@ export default function AdminSingleCountryPage({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {[
           { label: "Active members", value: "142,820", delta: "↑ 8.2% MoM" },
-          { label: "GMV · 30d", value: "R 14.2M", delta: "$ 768k USD equiv" },
+          { label: "GMV · 30d", value: "-", delta: "Sample data" },
           { label: "Providers", value: "2,148", delta: "98.4% verified" },
           { label: "Avg take rate", value: "5.0%", delta: "Locked policy" },
         ].map((kpi) => (
@@ -62,8 +62,8 @@ export default function AdminSingleCountryPage({
         <Card title="Operations">
           <InfoTable
             rows={[
-              { label: "Currency", val: "ZAR · auto-formats R 1,234.56" },
-              { label: "Payment rail", val: "Paystack · 99.97% uptime · 1.5% + R 1" },
+              { label: "Currency", val: "Managed in Currencies" },
+              { label: "Payment rail", val: "Paystack" },
               { label: "Tax authority", val: "SARS · we file payouts as 1099-equiv" },
               { label: "VAT", val: "15% · charged on member fee only" },
               { label: "Support hours", val: "06:00 - 22:00 SAST · 7 days" },
@@ -80,7 +80,7 @@ export default function AdminSingleCountryPage({
                 { label: "POPIA", val: <Pill variant="ok">Compliant · Jul 2021</Pill> },
                 { label: "FICA", val: <Pill variant="ok">Verified · provider KYC</Pill> },
                 { label: "Healthcare claims", val: "Banned for trainers · allowed for RDs" },
-                { label: "Insurance min", val: "R 500k liability for in-person" },
+                { label: "Insurance min", val: "Liability cover for in-person" },
                 { label: "Age min", val: "18 to book · 14 with guardian" },
               ].map((r) => (
                 <tr key={r.label}>

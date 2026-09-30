@@ -66,6 +66,49 @@ export function formatMinor(
   return formatCurrency(amountMinor / 10 ** exponent, upper || null, opts.locale);
 }
 
+/**
+ * The currencies a customer can be paid in right now: listed AND at least
+ * one gateway can charge them. Marketing counts and lists come from this.
+ */
+export function payableCurrencies(
+  list: readonly PlatformCurrency[] | null | undefined,
+): PlatformCurrency[] {
+  return (list ?? []).filter((c) => c.gateways.length > 0);
+}
+
+/**
+ * Which gateway charges which payable currencies, in list order:
+ * [{ label: "Paystack", codes: ["NGN"] }]. For "Paystack: NGN" copy.
+ */
+export function gatewayCurrencySummary(
+  list: readonly PlatformCurrency[] | null | undefined,
+): { gateway: string; label: string; codes: string[] }[] {
+  const out: { gateway: string; label: string; codes: string[] }[] = [];
+  for (const c of list ?? []) {
+    for (const g of c.gateways) {
+      let row = out.find((r) => r.gateway === g.gateway);
+      if (!row) {
+        row = { gateway: g.gateway, label: g.label, codes: [] };
+        out.push(row);
+      }
+      if (!row.codes.includes(c.code)) row.codes.push(c.code);
+    }
+  }
+  return out;
+}
+
+/**
+ * Marketing phrase for a set of currency codes: "NGN", "NGN and ZAR",
+ * "NGN, ZAR and KES", then "4 currencies". Empty for none, so the caller
+ * can drop the phrase instead of claiming a number.
+ */
+export function currencyListPhrase(codes: readonly string[]): string {
+  if (codes.length === 0) return "";
+  if (codes.length > 3) return `${codes.length} currencies`;
+  if (codes.length === 1) return codes[0];
+  return `${codes.slice(0, -1).join(", ")} and ${codes[codes.length - 1]}`;
+}
+
 /** "NGN · ₦, Nigerian Naira": how a picker labels a currency. */
 export function currencyLabel(c: Pick<PlatformCurrency, "code" | "name" | "symbol">): string {
   return c.symbol && c.symbol !== c.code

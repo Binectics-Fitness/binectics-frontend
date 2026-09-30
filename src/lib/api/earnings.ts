@@ -24,8 +24,8 @@ export interface OrgEarningsSummary {
     month: RevenueByCurrency;
   };
   all_time: {
+    /** Minor units per currency. Never summed across currencies (no FX). */
     by_currency: RevenueByCurrency;
-    total_usd_minor: number;
   };
 }
 

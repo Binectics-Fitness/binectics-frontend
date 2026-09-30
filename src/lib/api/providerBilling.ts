@@ -54,6 +54,10 @@ export interface ProviderBillingFeatures {
   white_label_enabled: boolean;
   custom_domain_enabled: boolean;
   branded_email_enabled: boolean;
+  forms_enabled?: boolean;
+  classes_enabled?: boolean;
+  loyalty_enabled?: boolean;
+  api_access_enabled?: boolean;
 }
 
 export interface ProviderBillingUsage {
@@ -106,6 +110,8 @@ export interface ProviderBillingStatus {
 export interface ProviderPlanPrice {
   amount_minor: number;
   currency: string;
+  /** ISO 4217 exponent of `currency` (the API sends it; older rows may not). */
+  minor_unit?: number;
 }
 
 export interface ProviderPlanOption {
@@ -125,6 +131,28 @@ export interface ProviderPlanOption {
    * customer cannot actually transact.
    */
   is_self_serve: boolean;
+}
+
+/**
+ * Who a catalogue is priced for. Mirrors the API's PlanAudience: `ALL` is the
+ * shared catalogue, the others override it per provider type.
+ */
+export type PlanAudience = "ALL" | "gym_owner" | "personal_trainer" | "dietitian";
+
+/**
+ * A row of the public GET /provider-billing/plans: the plan priced for the
+ * visitor's market, showing only prices the platform can charge.
+ */
+export interface PublicProviderPlanOption extends ProviderPlanOption {
+  /** The market the prices are for (after any fallback to GLOBAL). */
+  market_code: string;
+  /** Currency of the shown prices; null when none is shown. */
+  currency: string | null;
+  /**
+   * Why a price that exists isn't shown (its currency can't be charged right
+   * now). Null when every existing price is shown.
+   */
+  price_unavailable_reason: string | null;
 }
 
 export interface CheckoutSessionResult {
@@ -183,6 +211,26 @@ export const providerBillingApi = {
   listPlans(market?: string): Promise<ApiResponse<ProviderPlanOption[]>> {
     const qs = market ? `?market=${encodeURIComponent(market)}` : "";
     return apiClient.get<ProviderPlanOption[]>(`/provider-billing/plans${qs}`);
+  },
+
+  /**
+   * The public catalogue for a visitor: the market covering `country` (the
+   * API falls back to GLOBAL) and the provider type's own catalogue.
+   * Anonymous; for marketing and the pricing page.
+   */
+  listPublicPlans(params: {
+    country?: string | null;
+    audience?: PlanAudience;
+  }): Promise<ApiResponse<PublicProviderPlanOption[]>> {
+    const qs = new URLSearchParams();
+    const country = (params.country ?? "").trim().toUpperCase();
+    if (/^[A-Z]{2}$/.test(country)) qs.set("country", country);
+    if (params.audience) qs.set("audience", params.audience);
+    const q = qs.toString();
+    return apiClient.get<PublicProviderPlanOption[]>(
+      `/provider-billing/plans${q ? `?${q}` : ""}`,
+      false,
+    );
   },
 
   createCheckout(

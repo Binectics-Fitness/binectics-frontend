@@ -73,7 +73,7 @@ const EVENTS: Ev[] = [
 
 const STATS = [
   { label: "Sessions", value: "26", sub: "/32", delta: "+3 vs last week" },
-  { label: "Forecast", value: "R31.2k", delta: "+8% vs avg" },
+  { label: "Forecast", value: "-", delta: "Sample data" },
   { label: "First sessions", value: "2", delta: "" },
   { label: "Hours", value: "29.5", delta: "" },
 ];

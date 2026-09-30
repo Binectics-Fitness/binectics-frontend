@@ -16,6 +16,8 @@ export interface PlanCardPlan {
   featured?: boolean;
   ink?: boolean;
   badge?: string;
+  /** Where the CTA goes; defaults to sign-up. */
+  href?: string;
 }
 
 interface PlanCardProps {
@@ -90,7 +92,7 @@ export function PlanCard({ plan: p }: PlanCardProps) {
         {p.tagline}
       </p>
       <Link
-        href={p.ink ? "#" : "/login?mode=signup"}
+        href={p.href ?? (p.ink ? "/contact" : "/login?mode=signup")}
         className={`${p.featured ? "btn-primary-v2" : p.ink ? "btn-signal-v2" : "btn-ghost-v2"} w-full justify-center min-h-11`}
         style={p.ink ? { color: "oklch(0.18 0.05 148)" } : undefined}
       >

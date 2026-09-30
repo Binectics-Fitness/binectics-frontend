@@ -346,9 +346,10 @@ function OnboardingContent() {
           await teamsService.updateOrganization(orgId, patch);
         }
       } else if (currentStep === 5) {
-        // Payout gateway — use visual default ('paystack') if user never interacted
-        const payout = (stepData.payout as string) || 'paystack';
-        if (payout !== 'skip') {
+        // Payout gateway: saved only when the owner picked one from
+        // GET /payment-gateways. Nothing is preselected, so nothing is assumed.
+        const payout = stepData.payout as string | undefined;
+        if (payout && payout !== 'skip') {
           await teamsService.updateOrganization(orgId, {
             preferred_payout_gateway: payout,
           });
@@ -417,7 +418,7 @@ function OnboardingContent() {
           return "We couldn't save your session. Check your connection and try again.";
         }
       } else if (currentStep === 5) {
-        if (stepData.payout && orgId) {
+        if (stepData.payout && stepData.payout !== 'skip' && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
       }
@@ -479,7 +480,7 @@ function OnboardingContent() {
           return "We couldn't save your consultation. Check your connection and try again.";
         }
       } else if (currentStep === 6) {
-        if (stepData.payout && orgId) {
+        if (stepData.payout && stepData.payout !== 'skip' && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
       }

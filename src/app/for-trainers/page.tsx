@@ -59,7 +59,7 @@ const FEATURES = [
   {
     title: "Earnings dashboard",
     desc: "Per-client revenue breakdown, monthly trends, projected earnings, and payout timeline. Know exactly what is coming and when.",
-    stat: "R 38.4K avg monthly earnings (ZA)",
+    stat: "Each currency shown as it was paid",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
   {
@@ -361,8 +361,8 @@ export default function ForTrainersPage() {
           className="text-[16px] max-w-[52ch] leading-[1.5] mb-6"
           style={{ color: "var(--fg-2)" }}
         >
-          List your practice for free. We charge 4.9% on transactions -
-          nothing else. No monthly fee, no per-client charge.
+          List your practice for free. Paid plans are sized by how many
+          clients you work with. We take no cut of your payments.
         </p>
         <Link href="/pricing" className="btn-ghost-v2 lg">
           See full pricing
