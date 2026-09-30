@@ -221,45 +221,65 @@ describe("ConsultationAvailabilityManager, session price round-trip", () => {
     expect(savedPrice().priceMinor).toBe(2_500_000);
   });
 
-  it("un-sets the price when the field is cleared", async () => {
+  it("asks for a price or Free when the field is cleared, and saves nothing", async () => {
+    // The API stores a missing price as free, so an empty field would have
+    // published a free session nobody chose.
     const user = await renderPanel({ priceMinor: 199, currency: "NGN" });
     await user.clear(priceField());
-    expect(priceField().value).toBe("");
-
     await saveSession(user);
-    await waitFor(() => expect(svc.updateOwnType).toHaveBeenCalled());
-    // A PATCH leaves omitted fields alone, so clearing sends null.
-    expect(savedPrice().priceMinor).toBeNull();
-    expect(savedPrice().currency).toBeNull();
+    await waitFor(() =>
+      expect(screen.getByText("Enter a price, or choose Free.")).toBeInTheDocument(),
+    );
+    expect(svc.updateOwnType).not.toHaveBeenCalled();
   });
 
   it("rejects a price of exactly 0 out loud instead of dropping it", async () => {
-    // A typed 0 passed the "must be a positive amount" check and was then
-    // omitted from the payload: nothing saved, no error, no explanation.
     const user = await renderPanel();
     await user.type(priceField(), "0");
     expect(priceField().value).toBe("₦0");
 
     await saveSession(user);
     await waitFor(() =>
-      expect(
-        screen.getByText(/Session price must be a positive amount/),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("Enter a price above zero, or choose Free.")).toBeInTheDocument(),
     );
     expect(svc.createOwnType).not.toHaveBeenCalled();
     expect(svc.updateOwnType).not.toHaveBeenCalled();
   });
 
-  it("saves the rest of the settings when no price is set at all", async () => {
+  it("saves a free session, as a price of 0, when Free is chosen", async () => {
     const user = await renderPanel();
-    expect(priceField().value).toBe("");
+    await user.click(screen.getByRole("switch", { name: "Free" }));
+    expect(priceField()).toBeDisabled();
 
     await saveSession(user);
     await waitFor(() => expect(svc.createOwnType).toHaveBeenCalled());
-    expect(createdPayload().priceMinor).toBeUndefined();
-    expect(
-      screen.getByText("Session settings saved."),
-    ).toBeInTheDocument();
+    expect(createdPayload()).toMatchObject({ priceMinor: 0, currency: "NGN" });
+    expect(screen.getByText("Session settings saved.")).toBeInTheDocument();
+  });
+
+  it("shows the provider's own free session with Free chosen", async () => {
+    svc.getOwnTypes.mockResolvedValue({
+      success: true,
+      data: [savedType({ priceMinor: 0, currency: "NGN" })],
+    } as never);
+    await act(async () => {
+      render(<ConsultationAvailabilityManager description="Set your hours." />);
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("switch", { name: "Free" })).toHaveAttribute("aria-checked", "true"),
+    );
+  });
+
+  it("never chooses Free from an unpriced platform default", async () => {
+    svc.getTypes.mockResolvedValue({
+      success: true,
+      data: [savedType({ id: "platform", providerId: null })],
+    } as never);
+    await act(async () => {
+      render(<ConsultationAvailabilityManager description="Set your hours." />);
+    });
+    await waitFor(() => expect(svc.getTypes).toHaveBeenCalled());
+    expect(screen.getByRole("switch", { name: "Free" })).toHaveAttribute("aria-checked", "false");
   });
 });
 
@@ -311,6 +331,7 @@ describe("ConsultationAvailabilityManager, whose session is saved", () => {
 
   it("names a first session 1:1 session when there is no default either", async () => {
     const user = await renderPanel();
+    await user.type(priceField(), "15000");
     await saveSession(user);
     await waitFor(() => expect(svc.createOwnType).toHaveBeenCalled());
     expect(createdPayload().name).toBe("1:1 session");
@@ -318,6 +339,7 @@ describe("ConsultationAvailabilityManager, whose session is saved", () => {
 
   it("patches the new session on the next save instead of creating another", async () => {
     const user = await renderPanel();
+    await user.type(priceField(), "15000");
     await saveSession(user);
     await waitFor(() => expect(svc.createOwnType).toHaveBeenCalledTimes(1));
     await waitFor(() =>
@@ -342,6 +364,7 @@ describe("ConsultationAvailabilityManager, whose session is saved", () => {
       data: [savedType({ id: "dup-1", name: "1:1 session" })],
     } as never);
 
+    await user.type(priceField(), "15000");
     await saveSession(user);
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(

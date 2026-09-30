@@ -160,6 +160,9 @@ export default function ConsultationAvailabilityManager({
   // below only when prices can be set in it. Never a guessed "NGN".
   const [priceCurrency, setPriceCurrency] = useState<string>("");
   const [savedCurrency, setSavedCurrency] = useState<string | null>(null);
+  // Free is an explicit choice (a price of 0), as in onboarding and on
+  // mobile. An empty field is no answer, and Save asks for one.
+  const [priceFree, setPriceFree] = useState(false);
   const [isSavingSession, setIsSavingSession] = useState(false);
 
   // Exceptions state
@@ -228,7 +231,7 @@ export default function ConsultationAvailabilityManager({
   });
 
   /** Fill the form from a session type (the provider's own, or a default). */
-  const applySessionType = useCallback((type: ConsultationType) => {
+  const applySessionType = useCallback((type: ConsultationType, own: boolean) => {
     setSessionName(type.name);
     setSessionDescription(type.description || undefined);
     setSessionDuration(type.defaultDurationMinutes);
@@ -250,6 +253,10 @@ export default function ConsultationAvailabilityManager({
       setPriceCurrency(typeCurrency);
       setSavedCurrency(typeCurrency);
     }
+    // The provider's own session with no price is free (the API stores it
+    // as 0). A platform default's missing price is only "not chosen yet":
+    // Free is never chosen on the provider's behalf.
+    setPriceFree(own && !(type.priceMinor != null && type.priceMinor > 0));
   }, []);
 
   useEffect(() => {
@@ -266,7 +273,7 @@ export default function ConsultationAvailabilityManager({
       const active = (own.data ?? []).find((t) => t.isActive);
       if (active) {
         setOwnTypeId(active.id);
-        applySessionType(active);
+        applySessionType(active, true);
         setSessionLoadState("ready");
         return;
       }
@@ -278,7 +285,7 @@ export default function ConsultationAvailabilityManager({
         });
         if (cancelled) return;
         const first = fallback.success ? fallback.data?.[0] : undefined;
-        if (first) applySessionType(first);
+        if (first) applySessionType(first, false);
       }
       setSessionLoadState("ready");
     })();
@@ -311,16 +318,20 @@ export default function ConsultationAvailabilityManager({
       return;
     }
 
-    // Empty field → no price at all, never a zero one. A field with something
-    // in it must resolve to a positive amount: the SAME condition decides the
-    // error and the payload below, so a typed 0 is rejected out loud instead
-    // of passing validation and then being silently dropped from the request.
+    // A session is paid or free, never unpriced: the API stores a missing
+    // price as free, so an empty field would publish a free session nobody
+    // chose. Free is its own switch; a typed amount must be above zero.
     const hasPrice = priceDisplay.trim() !== "";
-    if (hasPrice && (priceMinor === null || priceMinor <= 0)) {
-      fail("Session price must be a positive amount (or left empty).");
+    if (!priceFree && hasPrice && (priceMinor === null || priceMinor <= 0)) {
+      fail("Enter a price above zero, or choose Free.");
       return;
     }
-    if (hasPrice && !activeCurrency) {
+    if (!priceFree && !hasPrice) {
+      fail("Enter a price, or choose Free.");
+      return;
+    }
+    // The API needs a currency with any price, a free one (0) included.
+    if (!activeCurrency) {
       fail("Choose the currency your session is priced in.");
       return;
     }
@@ -333,24 +344,22 @@ export default function ConsultationAvailabilityManager({
       bufferMinutes,
       minAdvanceNoticeMinutes: minAdvanceNoticeHours * 60,
     };
-    const price =
-      hasPrice && priceMinor !== null
-        ? { priceMinor, currency: activeCurrency }
-        : null;
+    const price = {
+      priceMinor: priceFree ? 0 : (priceMinor as number),
+      currency: activeCurrency,
+    };
 
     const res = ownTypeId
-      ? // Patch in place. A cleared field sends null, which removes the
-        // price; omitting it would leave the old one standing.
-        await consultationsService.updateOwnType(ownTypeId, {
+      ? await consultationsService.updateOwnType(ownTypeId, {
           ...settings,
-          ...(price ?? { priceMinor: null, currency: null }),
+          ...price,
         })
       : await consultationsService.createOwnType({
           name: sessionName.trim() || DEFAULT_SESSION_NAME,
           ...(sessionDescription ? { description: sessionDescription } : {}),
           ...settings,
           isActive: true,
-          ...(price ?? {}),
+          ...price,
         });
 
     if (res.success && res.data) {
@@ -1023,7 +1032,7 @@ export default function ConsultationAvailabilityManager({
                     </p>
                     <p className="mt-0.5 text-xs text-fg-3">
                       Shown on your listing and used for estimated earnings.
-                      Leave empty if you agree pricing per client.
+                      Choose Free if you don&apos;t charge for it.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1059,17 +1068,31 @@ export default function ConsultationAvailabilityManager({
                       />
                     </div>
                     <MoneyInput
-                      value={priceDisplay}
+                      value={priceFree ? "" : priceDisplay}
                       onChange={(display, minor) => {
                         setPriceDisplay(display);
                         setPriceMinor(minor);
                       }}
                       currency={activeCurrency}
-                      placeholder="Not set"
+                      placeholder={priceFree ? "Free" : "Not set"}
+                      disabled={priceFree}
                       aria-label="Session price"
                       // py-3 matches the height of the currency picker beside it.
-                      className="w-32 rounded-(--r-2) border border-border bg-bg px-3 py-3 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className="w-32 rounded-(--r-2) border border-border bg-bg px-3 py-3 text-sm disabled:opacity-50 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
                     />
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={priceFree}
+                      onClick={() => setPriceFree((v) => !v)}
+                      className={`shrink-0 rounded-full border px-4 py-3 text-sm transition-colors ${
+                        priceFree
+                          ? "border-ink bg-ink text-bg"
+                          : "border-border-2 bg-transparent text-fg-2"
+                      }`}
+                    >
+                      Free
+                    </button>
                   </div>
                 </div>
               </div>
