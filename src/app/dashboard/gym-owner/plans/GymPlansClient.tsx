@@ -23,6 +23,7 @@ import {
 } from "@/lib/types";
 import type { CreateOrgMembershipPlanRequest } from "@/lib/api/marketplace";
 import { ChipEditor } from "@/components/ds";
+import { planPerLabel as perLabel } from "@/lib/marketplace/planDisplay";
 import SearchableSelect from "@/components/SearchableSelect";
 
 const INPUT_STYLE = {
@@ -34,14 +35,6 @@ const INPUT_STYLE = {
 const INPUT_CLASS = "h-9 rounded-(--r-2) px-3 text-[13.5px]";
 const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
-/** "/ month" for 30d subscriptions, "/ year" for 365d, "once" for one-time. */
-function perLabel(plan: Pick<MarketplaceMembershipPlan, "plan_type" | "duration_days">): string {
-  if (plan.plan_type === MembershipPlanType.ONE_TIME) return "once";
-  if (plan.duration_days === 30 || plan.duration_days === 31) return "/ month";
-  if (plan.duration_days === 365 || plan.duration_days === 366) return "/ year";
-  if (plan.duration_days === 7) return "/ week";
-  return `/ ${plan.duration_days} days`;
-}
 
 /**
  * Membership plans backed by the org plans CRUD. Replaces the static

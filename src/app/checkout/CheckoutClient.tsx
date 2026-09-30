@@ -66,13 +66,16 @@ function CheckoutContent() {
         return;
       }
 
-      if (plansRes.success && plansRes.data) {
-        const selectedPlan = plansRes.data.find((p) => p._id === planId);
-        if (selectedPlan) {
-          setPlan(selectedPlan);
-        } else {
-          setError("Plan not found or no longer available");
-        }
+      // A failed plans read used to fall through to a blank page.
+      if (!plansRes.success || !plansRes.data) {
+        setError("We couldn't load this plan. Check your connection and try again.");
+        return;
+      }
+      const selectedPlan = plansRes.data.find((p) => p._id === planId);
+      if (selectedPlan) {
+        setPlan(selectedPlan);
+      } else {
+        setError("This plan isn't available anymore. Go back to the listing to choose another.");
       }
     } catch {
       setError("Failed to load checkout details");
@@ -223,7 +226,11 @@ function CheckoutContent() {
     );
   }
 
-  if (!listing || !plan || !user) return null;
+  // Loading has settled here; anything still missing is a failed read, not
+  // a reason to render nothing.
+  if (!listing || !plan || !user) {
+    return <DashboardLoading />;
+  }
 
   const displayName =
     typeof listing.professional_id === "object"
@@ -293,7 +300,7 @@ function CheckoutContent() {
                 )}
               </div>
 
-              {plan.features.length > 0 && (
+              {(plan.features?.length ?? 0) > 0 && (
                 <div className="border-t border-border pt-4 mb-4">
                   <p className="text-sm font-semibold text-fg mb-2">
                     Includes:
