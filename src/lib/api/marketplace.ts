@@ -40,6 +40,18 @@ export interface PlanCheckout {
   plan_id: string;
 }
 
+/**
+ * A listing's currency is the API's to derive (from the provider's own
+ * prices, else the organization's currency); it ignores one sent. Strip any
+ * `currency` a caller spreads in, so a listing write never claims one.
+ */
+export function withoutListingCurrency<T extends object>(data: T): Omit<T, "currency"> {
+  const { currency: _dropped, ...rest } = data as T & { currency?: unknown };
+  void _dropped;
+  return rest;
+}
+
+/** POST body for a new listing. There is no `currency`: the API derives it. */
 export interface CreateListingRequest {
   account_type: MarketplaceAccountType;
   headline: string;
@@ -57,7 +69,6 @@ export interface CreateListingRequest {
   contact_email?: string;
   lat?: number;
   lng?: number;
-  currency?: string;
   /** Minor units (kobo/cents) — see MarketplaceListing.price_from_minor. */
   price_from_minor?: number;
   price_label?: string;
@@ -81,7 +92,6 @@ export interface UpdateListingRequest {
   contact_email?: string;
   lat?: number;
   lng?: number;
-  currency?: string;
   /** Minor units (kobo/cents) — see MarketplaceListing.price_from_minor. */
   price_from_minor?: number;
   price_label?: string;
@@ -351,7 +361,7 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.post<MarketplaceListing>(
       "/marketplace/my-listing",
-      data,
+      withoutListingCurrency(data),
     );
   },
 
@@ -364,7 +374,7 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.patch<MarketplaceListing>(
       "/marketplace/my-listing",
-      data,
+      withoutListingCurrency(data),
     );
   },
 
@@ -544,7 +554,7 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.post<MarketplaceListing>(
       `/marketplace/organizations/${organizationId}/listing`,
-      data,
+      withoutListingCurrency(data),
     );
   },
 
@@ -562,7 +572,7 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.patch<MarketplaceListing>(
       `/marketplace/organizations/${organizationId}/listing`,
-      data,
+      withoutListingCurrency(data),
     );
   },
 
