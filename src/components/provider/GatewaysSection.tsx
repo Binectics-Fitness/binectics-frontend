@@ -10,6 +10,9 @@ import {
 import { usePaymentGateways } from "@/lib/queries/currencies";
 import { GATEWAY_NOT_SUPPORTED } from "@/lib/api/paymentGateways";
 import SearchableSelect from "@/components/SearchableSelect";
+import { toast } from "@/components/Toast";
+import { providerCurrencyMessage } from "@/lib/currencies/helpers";
+import { ProviderCurrenciesPanel } from "./ProviderCurrenciesPanel";
 
 /** "stripe" -> "Stripe", for a saved gateway the API no longer lists. */
 function titleCase(id: string): string {
@@ -35,8 +38,19 @@ const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
  * other gateway (Stripe or Flutterwave keys from before) is shown as no
  * longer supported, with Remove; the API refuses to save one
  * (GATEWAY_NOT_SUPPORTED) and still allows deleting it.
+ *
+ * A connected, active gateway also lists the currencies its account can take
+ * (ProviderCurrenciesPanel): the platform's, plus ones the provider adds and
+ * the API checks with the gateway. Used by gyms, trainers and dietitians:
+ * every org that sells membership plans can collect on its own keys.
  */
-export function GatewaysSection() {
+export function GatewaysSection({
+  title = "Payment gateways",
+  description = "Where your money settles. Your own keys are used for checkout instead of the platform\u2019s. Secret keys are encrypted and never shown again.",
+}: {
+  title?: string;
+  description?: string;
+} = {}) {
   const { currentOrg } = useOrganization();
   const orgId = currentOrg?._id;
   const { data: configs = [], isLoading } = useOrgPaymentConfigs(orgId);
@@ -86,15 +100,29 @@ export function GatewaysSection() {
       // yet. You can connect Paystack."); refresh the list it came from.
       setError(res.message || `You can't connect ${labelOf(gateway)} yet.`);
       void gateways.refetch();
+    } else if (res.code === "PROVIDER_ACCOUNT_CHECK_FAILED") {
+      // New keys re-check the currencies added on the account (5xx copy is
+      // hidden in production, so this keys off the code).
+      setError(providerCurrencyMessage(res, labelOf(gateway)));
     } else {
       setError(res.message || "Couldn't save the gateway. Check the keys and try again.");
     }
   };
 
+  const onRemove = async (id: string, label: string) => {
+    if (!window.confirm(`Remove the ${label} configuration? Checkout falls back to the platform's keys.`)) return;
+    const res = await remove.mutateAsync(id);
+    // 409 CURRENCY_LOCKED: plans or payments rest on a currency only this
+    // account can take. The server says what to do first.
+    if (res && res.success === false) {
+      toast.error(res.message || `We couldn't remove ${label}. Try again.`);
+    }
+  };
+
   return (
     <section id="gateways">
-      <h2 className="text-[16px] font-medium" style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>Payment gateways</h2>
-      <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>Where your money settles. Your own keys are used for checkout instead of the platform&rsquo;s. Secret keys are encrypted and never shown again.</p>
+      <h2 className="text-[16px] font-medium" style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>{title}</h2>
+      <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{description}</p>
       <div className="flex flex-col gap-3 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
         {isLoading && <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading gateways…</span>}
         {!isLoading && configs.length === 0 && !adding && (
@@ -107,7 +135,8 @@ export function GatewaysSection() {
           // Only judge "no longer supported" once the list has loaded.
           const legacy = gateways.isSuccess && !isSupported(c.gateway);
           return (
-            <div key={c.gateway} className="flex flex-wrap items-center gap-3 p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
+            <div key={c.gateway} className="flex flex-col p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
+            <div className="flex flex-wrap items-center gap-3">
               <span className="min-w-10 h-6.5 px-1.5 rounded-(--r-1) flex items-center justify-center text-[9px] font-bold uppercase" style={{ background: "var(--bg-2)", color: "var(--ink)", border: "1px solid var(--border)", fontFamily: "var(--font-mono)" }}>{label.slice(0, 2)}</span>
               <div className="flex-1 min-w-0">
                 <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{label}</div>
@@ -129,14 +158,19 @@ export function GatewaysSection() {
               <button
                 className="btn-ghost-v2 sm"
                 disabled={remove.isPending}
-                onClick={() => {
-                  if (window.confirm(`Remove the ${label} configuration? Checkout falls back to the platform's keys.`)) {
-                    void remove.mutateAsync(c.gateway);
-                  }
-                }}
+                onClick={() => void onRemove(c.gateway, label)}
               >
                 Remove
               </button>
+            </div>
+            {!legacy && c.is_active && gateways.isSuccess && orgId && (
+              <ProviderCurrenciesPanel
+                orgId={orgId}
+                gateway={c.gateway}
+                label={label}
+                currencies={c.currencies ?? []}
+              />
+            )}
             </div>
           );
         })}

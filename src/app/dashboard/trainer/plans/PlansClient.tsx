@@ -21,9 +21,9 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import SearchableSelect from "@/components/SearchableSelect";
-import { useCurrencies } from "@/lib/queries/currencies";
-import type { PlatformCurrency } from "@/lib/api/currencies";
-import { currencyOptions, isSelectable, writeErrorMessage } from "@/lib/currencies/helpers";
+import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
+import type { OrgPriceCurrency } from "@/lib/api/currencies";
+import { orgPriceCurrency, orgPriceOptions, providerRouteNote, writeErrorMessage } from "@/lib/currencies/helpers";
 
 // ─── Plan modal ─────────────────────────────────────────────────────────────
 
@@ -49,12 +49,15 @@ function PlanModal({
   mode,
   initial,
   currencies,
+  providerHint,
   onClose,
   onSave,
 }: {
   mode: ModalMode;
   initial: CreateOrgMembershipPlanRequest;
-  currencies: PlatformCurrency[] | undefined;
+  /** The org's membership price currencies (platform plus its own account). */
+  currencies: OrgPriceCurrency[] | undefined;
+  providerHint: string;
   onClose: () => void;
   /** Resolves an error message when the save was refused, else null. */
   onSave: (data: CreateOrgMembershipPlanRequest) => Promise<string | null>;
@@ -73,13 +76,15 @@ function PlanModal({
   const [featureInput, setFeatureInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  // Only currencies prices can be set in right now. Editing keeps the plan's
-  // saved one visible (the API accepts it unchanged), labelled as such.
-  const options = currencyOptions(
+  // Only currencies prices can be set in right now, including those only the
+  // org's own Paystack account can take. Editing keeps the plan's saved one
+  // visible (the API accepts it unchanged), labelled as such.
+  const options = orgPriceOptions(
     currencies,
-    "price",
     mode === "edit" ? initial.currency : undefined,
+    providerHint,
   );
+  const routeNote = providerRouteNote(form.currency, currencies, providerHint);
   const overlayRef = useRef<HTMLDivElement>(null);
   const { requestClose, dirtyProps, confirmationModal } =
     useUnsavedChangesGuard(onClose);
@@ -233,6 +238,9 @@ function PlanModal({
                 options={options}
                 placeholder={currencies ? (options.length ? "Choose currency" : "No currency available") : "Loading..."}
               />
+              {routeNote && (
+                <span className="text-[11.5px] leading-snug" style={{ color: "var(--fg-3)" }}>{routeNote}</span>
+              )}
             </div>
           </div>
 
@@ -449,7 +457,7 @@ export default function TrainerPlansClient() {
   // Fetched purely to derive per-plan member counts (see countMembersByPlan).
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
   const membersByPlan = countMembersByPlan(subscriptions);
-  const { all: currencies } = useCurrencies();
+  const { data: currencies, providerHint } = useOrgPriceCurrencies(orgId);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<{ mode: ModalMode; plan?: MarketplaceMembershipPlan } | null>(null);
 
@@ -612,6 +620,7 @@ export default function TrainerPlansClient() {
         <PlanModal
           mode={modal.mode}
           currencies={currencies}
+          providerHint={providerHint}
           initial={
             modal.plan
               ? {
@@ -628,9 +637,7 @@ export default function TrainerPlansClient() {
               : {
                   ...EMPTY_FORM,
                   // The org's default, only when prices can be set in it.
-                  currency: isSelectable(currentOrg?.currency, currencies, "price")
-                    ? currentOrg!.currency!.toUpperCase()
-                    : "",
+                  currency: orgPriceCurrency(currentOrg?.currency, currencies)?.code ?? "",
                 }
           }
           onClose={() => setModal(null)}

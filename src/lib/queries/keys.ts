@@ -127,6 +127,8 @@ export const queryKeys = {
     list: () => [...queryKeys.currencies.all, "list"] as const,
     admin: () => [...queryKeys.currencies.all, "admin"] as const,
     gateways: () => [...queryKeys.currencies.all, "gateways"] as const,
+    /** Membership price currencies for one org (platform + its own account). */
+    org: (orgId: string) => [...queryKeys.currencies.all, "org", orgId] as const,
   },
 
   pricing: {

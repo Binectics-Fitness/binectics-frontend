@@ -30,7 +30,10 @@ import { writeErrorMessage } from "@/lib/currencies/helpers";
 import {
   currencyPatch,
   describeInFlight,
+  describeProviderUsage,
   draftOf,
+  providerAccountsAllowed,
+  providerUsage,
   plural,
   reasonKey,
   sharedOffReasons,
@@ -53,12 +56,23 @@ const USE_LABEL: Record<AdminCurrencyUse, string> = {
   provider_billing: "Provider billing",
 };
 
+/** What a 409 CURRENCY_IN_USE `uses_lost` entry turns off, in words. */
+function lostUseLabel(u: string): string {
+  if (u === "provider_accounts") return "providers' own payment accounts";
+  return USE_LABEL[u as AdminCurrencyUse]?.toLowerCase() ?? u;
+}
+
 const METHOD_LABEL: Record<PaymentMethodCode, string> = {
   card: "Card",
   bank_transfer: "Bank transfer",
 };
 
-type Filter = "enabled" | "all";
+type Filter = "enabled" | "provider" | "all";
+
+/** Some org has it verified on its own active payment account. */
+function onProviderAccounts(c: AdminCurrency): boolean {
+  return providerUsage(c).organizations > 0;
+}
 
 function liveTotal(c: AdminCurrency): number {
   const l = c.usage.live;
@@ -145,6 +159,21 @@ function UsageCell({ currency }: { currency: AdminCurrency }) {
       <div>{plural(live, "price")}</div>
       <div style={{ color: u.in_flight_total > 0 ? "var(--ink)" : undefined }}>{u.in_flight_total} in progress</div>
       <div>{plural(u.historical.transactions, "payment")} recorded</div>
+      <ProviderUsageNote currency={currency} />
+    </div>
+  );
+}
+
+/** Provider-account usage under the platform usage, and whether it's allowed. */
+function ProviderUsageNote({ currency }: { currency: AdminCurrency }) {
+  const text = describeProviderUsage(providerUsage(currency));
+  const allowed = providerAccountsAllowed(currency);
+  if (!text && allowed) return null;
+  return (
+    <div className="mt-1 font-sans text-[11.5px] leading-snug max-w-[24ch]" style={{ color: "var(--fg-3)" }}>
+      {text ? `Providers' own accounts: ${text}` : null}
+      {text && !allowed ? ". " : null}
+      {!allowed ? "Providers can't add it" : null}
     </div>
   );
 }
@@ -274,7 +303,7 @@ function EditCurrencyModal({
           </p>
           <p className="text-[13.5px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
             {describeInFlight(inUse.inFlight) || "Some payments"} would be affected. This change turns off{" "}
-            {inUse.usesLost.map((u) => USE_LABEL[u as AdminCurrencyUse]?.toLowerCase() ?? u).join(", ") || "this currency"}.
+            {inUse.usesLost.map(lostUseLabel).join(", ") || "this currency"}.
           </p>
           <p className="text-[13.5px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
             Stopping new payments takes effect at once. Payments already in progress still complete in {currency.code}.
@@ -287,6 +316,21 @@ function EditCurrencyModal({
             checked={draft.platform_enabled}
             onChange={(v) => setDraft((d) => ({ ...d, platform_enabled: v }))}
           />
+
+          <div className="flex flex-col gap-1.5">
+            <Switch
+              label="Providers may add it"
+              checked={draft.provider_accounts_allowed}
+              onChange={(v) => setDraft((d) => ({ ...d, provider_accounts_allowed: v }))}
+            />
+            <p className="text-[12px] leading-relaxed pl-9.5" style={{ color: "var(--fg-3)" }}>
+              Providers who connect their own Paystack account can price membership plans in {currency.code} once
+              Paystack confirms it on their account, even when the platform can&apos;t take it. 1:1 sessions never use it.
+              {describeProviderUsage(providerUsage(currency))
+                ? ` In use now: ${describeProviderUsage(providerUsage(currency))}.`
+                : ""}
+            </p>
+          </div>
 
           <section className="flex flex-col gap-3">
             <div className={labelClass} style={{ color: "var(--fg-3)" }}>Payment providers</div>
@@ -415,11 +459,14 @@ export default function AdminCurrenciesPage() {
 
   const all = useMemo(() => data ?? [], [data]);
   const enabledCount = all.filter((c) => c.platform_enabled).length;
+  const providerCount = all.filter(onProviderAccounts).length;
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return all.filter(
       (c) =>
-        (filter === "all" || c.platform_enabled) &&
+        (filter === "all" ||
+          (filter === "enabled" && c.platform_enabled) ||
+          (filter === "provider" && onProviderAccounts(c))) &&
         (!q || c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)),
     );
   }, [all, filter, search]);
@@ -457,8 +504,16 @@ export default function AdminCurrenciesPage() {
           className="h-9 w-full sm:w-64 rounded-(--r-2) px-3 text-[13.5px]"
           style={inputStyle}
         />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <FilterPill label="Enabled" count={enabledCount} active={filter === "enabled"} onClick={() => setFilter("enabled")} />
+          {providerCount > 0 && (
+            <FilterPill
+              label="On providers' accounts"
+              count={providerCount}
+              active={filter === "provider"}
+              onClick={() => setFilter("provider")}
+            />
+          )}
           <FilterPill label="All" count={all.length} active={filter === "all"} onClick={() => setFilter("all")} />
         </div>
       </div>

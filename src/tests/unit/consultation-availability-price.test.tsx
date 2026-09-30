@@ -3,7 +3,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
 import { consultationsService } from "@/lib/api/consultations";
-import { currency } from "../setup/currencyFixtures";
+import { currency, orgPrice } from "../setup/currencyFixtures";
 
 /**
  * The money round-trip on the one surface where a saved price actually
@@ -47,8 +47,12 @@ const CURRENCIES = [
   currency("USD"),
   currency("GHS", { selectable: { price: false, charge_card: false } }),
 ];
+// The org's MEMBERSHIP list would add GHS on its own Paystack account; a
+// session price must never read it (bookings charge the platform account).
+const orgPriceCurrencies = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/queries/currencies", () => ({
   useCurrencies: () => ({ data: CURRENCIES, all: CURRENCIES, isLoading: false }),
+  useOrgPriceCurrencies: orgPriceCurrencies,
 }));
 
 const org = vi.hoisted(() => ({ currentOrg: { _id: "o1", currency: "NGN" } as { _id: string; currency?: string } | null }));
@@ -414,6 +418,20 @@ describe("ConsultationAvailabilityManager currency picker", () => {
     org.currentOrg = { _id: "o1", currency: "USD" };
     await renderPanel();
     expect((screen.getByLabelText("Price currency") as HTMLSelectElement).value).toBe("USD");
+  });
+
+  it("stays on platform currencies when the org's own Paystack account takes GHS", async () => {
+    orgPriceCurrencies.mockReturnValue({
+      data: [orgPrice("NGN"), orgPrice("USD"), orgPrice("GHS", { route: "provider" })],
+      isLoading: false,
+      isError: false,
+      providerHint: "Your Paystack account",
+    });
+    org.currentOrg = { _id: "o1", currency: "GHS" };
+    await renderPanel();
+    expect(options()).toEqual(["NGN", "USD"]);
+    expect(orgPriceCurrencies).not.toHaveBeenCalled();
+    expect(screen.getByText(/1:1 sessions are charged by Binectics/)).toBeInTheDocument();
   });
 
   it("asks for a currency when the org's default can't be priced in", async () => {

@@ -8,8 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
 import { teamsService } from "@/lib/api/teams";
 import { useCountries } from "@/lib/queries/utility";
-import { useCurrencies } from "@/lib/queries/currencies";
-import { currencyOptions, writeErrorMessage } from "@/lib/currencies/helpers";
+import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
+import { orgPriceOptions, writeErrorMessage } from "@/lib/currencies/helpers";
 import { UserRole } from "@/lib/types";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -84,7 +84,7 @@ export default function ProfileSettingsPage() {
   const [orgCurrency, setOrgCurrency] = useState<string>("");
   const [isSavingCurrency, setIsSavingCurrency] = useState(false);
   const { data: countries = [], isLoading: countriesLoading } = useCountries();
-  const { all: currencies } = useCurrencies();
+  const { data: currencies, providerHint } = useOrgPriceCurrencies(currentOrg?._id);
   const profileImagePreviewRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -492,7 +492,7 @@ export default function ProfileSettingsPage() {
                   name="orgCurrency"
                   value={orgCurrency}
                   onChange={(val) => setOrgCurrency(val)}
-                  options={currencyOptions(currencies, "price", currentOrg.currency)}
+                  options={orgPriceOptions(currencies, currentOrg.currency, providerHint)}
                   placeholder="Select currency"
                 />
               </div>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import SearchableSelect from "@/components/SearchableSelect";
-import { GatewaysSection } from "./GatewaysSection";
+import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection, ApiKeysSection } from "./TeamAccessSections";
 import { CoachingSection } from "./CoachingSection";
@@ -15,8 +15,8 @@ import {
 } from "@/lib/queries/teams";
 import { useCountries } from "@/lib/queries/utility";
 import { utilityService } from "@/lib/api/utility";
-import { useCurrencies } from "@/lib/queries/currencies";
-import { currencyOptions, writeErrorMessage } from "@/lib/currencies/helpers";
+import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
+import { orgPriceOptions, providerRouteNote, writeErrorMessage } from "@/lib/currencies/helpers";
 import { toast } from "@/components/Toast";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
@@ -174,7 +174,9 @@ export function SettingsClient() {
   const { data: org, isLoading } = useOrganizationDetails(orgId);
   const updateOrg = useUpdateOrganization();
   const { data: countries = [] } = useCountries();
-  const { all: currencies } = useCurrencies();
+  // Membership prices only: the org's default can be a currency its own
+  // Paystack account takes. Session prices keep the platform list.
+  const { data: currencies, providerHint } = useOrgPriceCurrencies(orgId);
 
   const timeZones = useMemo(() => getTimeZoneOptions(), []);
 
@@ -359,9 +361,9 @@ export function SettingsClient() {
             <SectionHeading title="Currency & locale" desc="How money and dates render across your dashboard and to your members." />
             <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <SelectField label="Default currency" value={form?.currency ?? ""} onChange={(v) => set("currency", v)} disabled={!form} hint="Used for new membership plans, listings, and revenue display."
+                <SelectField label="Default currency" value={form?.currency ?? ""} onChange={(v) => set("currency", v)} disabled={!form} hint={providerRouteNote(form?.currency, currencies, providerHint) ?? "Used for new membership plans, listings, and revenue display."}
                   placeholder="Choose currency"
-                  options={currencyOptions(currencies, "price", baseline?.currency)} />
+                  options={orgPriceOptions(currencies, baseline?.currency, providerHint)} />
                 <SelectField label="Time zone" value={form?.time_zone ?? ""} onChange={(v) => set("time_zone", v)} disabled={!form}
                   placeholder="Select time zone…"
                   options={timeZones.map((tz) => ({ label: tz.label, value: tz.value }))} />

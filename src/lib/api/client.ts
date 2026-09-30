@@ -29,6 +29,8 @@ interface RawResponseBody {
   in_flight?: unknown;
   /** Uses a change would switch off (CURRENCY_IN_USE). */
   uses_lost?: unknown;
+  /** What holds a provider-account currency in place (CURRENCY_LOCKED). */
+  locked_by?: unknown;
 }
 
 /**
@@ -36,7 +38,7 @@ interface RawResponseBody {
  * filter passes these through at the top level of the body (not under
  * `details`), so they are folded into `details` here where callers look.
  */
-const TOP_LEVEL_DETAIL_FIELDS = ["reasons", "in_flight", "uses_lost"] as const;
+const TOP_LEVEL_DETAIL_FIELDS = ["reasons", "in_flight", "uses_lost", "locked_by"] as const;
 
 function detailsOf(body: RawResponseBody): Record<string, unknown> | undefined {
   const out: Record<string, unknown> =
