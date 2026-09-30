@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOptionalOrganization } from "@/contexts/OrganizationContext";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
-import { trainerAccess } from "@/lib/workspaces";
+import { coachingGym, trainerAccess } from "@/lib/workspaces";
 
 /**
  * The role guard for a provider dashboard. The trainer dashboard also admits
@@ -25,4 +25,14 @@ export function useProviderAccess(role: UserRole) {
 /** Guard for every /dashboard/trainer page. */
 export function useTrainerAccess() {
   return useProviderAccess(UserRole.TRAINER);
+}
+
+/**
+ * The gym this trainer coaches at as its staff, or null for a trainer with a
+ * practice of their own. Their clients, sessions and payments are the gym's.
+ */
+export function useCoachingGym() {
+  const { user } = useAuth();
+  const orgs = useOptionalOrganization();
+  return coachingGym(orgs?.organizations, user?.id);
 }

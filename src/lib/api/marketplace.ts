@@ -951,6 +951,18 @@ export const marketplaceService = {
     );
   },
 
+  /** Assign a gym member to one of the gym's trainers, move them, or unassign (null). */
+  async assignMemberTrainer(
+    organizationId: string,
+    subscriptionId: string,
+    staffUserId: string | null,
+  ): Promise<ApiResponse<{ assigned_staff_user_id: string | null }>> {
+    return await apiClient.put<{ assigned_staff_user_id: string | null }>(
+      `/marketplace/organizations/${organizationId}/subscriptions/${subscriptionId}/assignee`,
+      { staff_user_id: staffUserId },
+    );
+  },
+
   async enrollMember(
     organizationId: string,
     data: EnrollMemberRequest,

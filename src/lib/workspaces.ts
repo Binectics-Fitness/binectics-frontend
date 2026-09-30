@@ -1,10 +1,9 @@
 import { AccountType } from "@/lib/types";
 
 /**
- * One person can own more than one workspace: a gym owner may also coach
- * clients themselves from a trainer workspace. The account keeps its gym
- * owner role, so the role alone no longer says which workspace a dashboard
- * is about. These helpers answer that from the workspaces the person has.
+ * Which workspace a dashboard works in, from the workspaces the person has.
+ * The role alone does not say: a trainer may coach from a workspace they own
+ * or, as a gym's staff trainer, from the gym's.
  */
 
 /** A dashboard that works inside one kind of workspace. */
@@ -22,7 +21,15 @@ export interface WorkspaceLike {
   owner_id: string;
   account_type?: AccountType | string;
   is_active?: boolean;
+  /** The person's team role code here ('owner' for their own). */
+  my_role_code?: string | null;
 }
+
+/**
+ * The team role that makes a gym's staff member one of its trainers
+ * ("Consultant / Trainer"). The API makes such an account a trainer.
+ */
+export const STAFF_TRAINER_ROLE_CODE = "consultant";
 
 function isLive(org: WorkspaceLike): boolean {
   return org.is_active !== false;
@@ -39,6 +46,33 @@ export function ownedWorkspace<T extends WorkspaceLike>(
   return (
     (organizations ?? []).find(
       (org) => org.account_type === type && org.owner_id === userId && isLive(org),
+    ) ?? null
+  );
+}
+
+/** What choosing a team role does, where it does more than set permissions. */
+export function teamRoleHint(code: string | null | undefined): string | null {
+  return code === STAFF_TRAINER_ROLE_CODE
+    ? "Gets the trainer dashboard and the coach app, and coaches the members you assign them."
+    : null;
+}
+
+/**
+ * The gym this person coaches at as one of its trainers, if any: a live gym
+ * someone else owns where their team role is the trainer role.
+ */
+export function coachingGym<T extends WorkspaceLike>(
+  organizations: readonly T[] | null | undefined,
+  userId: string | null | undefined,
+): T | null {
+  if (!userId) return null;
+  return (
+    (organizations ?? []).find(
+      (org) =>
+        isLive(org) &&
+        org.account_type === AccountType.GYM_OWNER &&
+        org.owner_id !== userId &&
+        org.my_role_code === STAFF_TRAINER_ROLE_CODE,
     ) ?? null
   );
 }
@@ -62,10 +96,12 @@ export function trainerAccess(
 /**
  * The workspace a dashboard should work in. It keeps the current one when it
  * is already the right kind, else prefers one the person owns, else any of
- * that kind they belong to (staff). The gym and dietitian dashboards never
- * fall back to a trainer workspace; with nothing of their kind they take any
- * other workspace (older records without a type). Null means there is
- * nothing better than what is selected now.
+ * that kind they belong to (staff). A gym's staff trainer, who has no
+ * trainer workspace, works in the gym's on the trainer dashboard. The gym
+ * and dietitian dashboards never fall back to a trainer workspace; with
+ * nothing of their kind they take any other workspace (older records
+ * without a type). Null means there is nothing better than what is
+ * selected now.
  */
 export function pickOrgForDashboard<T extends WorkspaceLike>(
   organizations: readonly T[] | null | undefined,
@@ -75,8 +111,11 @@ export function pickOrgForDashboard<T extends WorkspaceLike>(
   const orgs = (organizations ?? []).filter(isLive);
   const type = DASHBOARD_ACCOUNT_TYPE[kind];
   const ofKind = orgs.filter((org) => org.account_type === type);
-  const candidates =
-    ofKind.length > 0 || kind === "trainer"
+  // A gym's staff trainer has no trainer workspace: they coach in the gym's.
+  const staffGym = kind === "trainer" && ofKind.length === 0 ? coachingGym(orgs, opts.userId) : null;
+  const candidates = staffGym
+    ? [staffGym]
+    : ofKind.length > 0 || kind === "trainer"
       ? ofKind
       : orgs.filter((org) => org.account_type !== AccountType.PERSONAL_TRAINER);
   if (candidates.length === 0) return null;

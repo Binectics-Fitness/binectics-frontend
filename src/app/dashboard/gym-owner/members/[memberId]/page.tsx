@@ -10,6 +10,7 @@ import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
+import { TrainerCard } from "./TrainerCard";
 
 function getMemberName(sub: MembershipSubscription): string {
   if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
@@ -229,7 +230,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
         ))}
       </div>
 
-      {/* Subscription details + placeholders */}
+      {/* Subscription details + trainer */}
       <div className="grid lg:grid-cols-[3fr_2fr] gap-3.5">
         {/* Subscription detail */}
         <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
@@ -253,16 +254,17 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           </div>
         </div>
 
-        {/* Notes — not yet available */}
-        <div
-          className="rounded-(--r-3) p-5.5 flex flex-col items-center justify-center gap-2 min-h-[160px]"
-          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-        >
-          <p className="text-[14px] font-medium" style={{ color: "var(--fg-2)" }}>Notes</p>
-          <p className="text-[13px] text-center" style={{ color: "var(--fg-3)" }}>
-            No notes yet.
-          </p>
-        </div>
+        {/* Who coaches this member */}
+        <TrainerCard
+          organizationId={currentOrg!._id}
+          subscriptionId={subscription._id}
+          assignedUserId={subscription.assigned_staff_user_id ?? null}
+          canAssign={
+            subscription.status !== MembershipSubscriptionStatus.CANCELLED &&
+            subscription.status !== MembershipSubscriptionStatus.EXPIRED
+          }
+          onAssigned={(userId) => setSubscription((s) => (s ? { ...s, assigned_staff_user_id: userId } : s))}
+        />
       </div>
 
       {/* Activity — not yet available */}

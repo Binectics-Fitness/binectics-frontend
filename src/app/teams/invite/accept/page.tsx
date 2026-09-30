@@ -5,19 +5,23 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTeamInviteAccept } from "@/hooks/useTeams";
+import { UserRole } from "@/lib/types";
 
 type PageState = "loading" | "success" | "error" | "requires_login";
 
 function AcceptInvitationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshUser } = useAuth();
 
   const token = searchParams.get("token");
 
   const { status: acceptStatus, error: acceptError, acceptInvite } = useTeamInviteAccept();
   const [state, setState] = useState<PageState>("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  // Joining as a gym's trainer makes the account a trainer: take the fresh
+  // role before offering where to go.
+  const [joinedAsTrainer, setJoinedAsTrainer] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -41,12 +45,17 @@ function AcceptInvitationContent() {
   }, [authLoading, user, token]);
 
   useEffect(() => {
-    if (acceptStatus === "success") setState("success");
+    if (acceptStatus === "success") {
+      void refreshUser().then((fresh) => {
+        setJoinedAsTrainer(fresh?.role === UserRole.TRAINER);
+        setState("success");
+      });
+    }
     if (acceptStatus === "error") {
       setState("error");
       setErrorMessage(acceptError ?? "Failed to accept invitation.");
     }
-  }, [acceptStatus, acceptError]);
+  }, [acceptStatus, acceptError, refreshUser]);
 
   function handleLoginRedirect() {
     const returnUrl = encodeURIComponent(`/teams/invite/accept?token=${token}`);
@@ -135,15 +144,16 @@ function AcceptInvitationContent() {
             Invitation accepted
           </h2>
           <p className="mt-2 text-sm text-fg-2">
-            You&#39;ve successfully joined the organization. Head to your Team
-            dashboard to get started.
+            {joinedAsTrainer
+              ? "You've joined the team as a trainer. Your trainer dashboard shows the members assigned to you, and the Binectics app opens as your coach app."
+              : "You've successfully joined the organization. Head to your Team dashboard to get started."}
           </p>
         </div>
         <Link
-          href="/dashboard/team"
+          href={joinedAsTrainer ? "/dashboard/trainer" : "/dashboard/team"}
           className="rounded-(--r-2) bg-signal px-6 py-3 text-sm font-bold text-bg hover:bg-signal/90 transition-colors"
         >
-          Go to Team Dashboard
+          {joinedAsTrainer ? "Go to your trainer dashboard" : "Go to Team Dashboard"}
         </Link>
       </div>
     );
