@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { GatewayPartnerCards } from "@/components/marketing/CurrencyFacts";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 
@@ -16,12 +17,10 @@ export const metadata: Metadata = {
 const TIERS = [
   {
     label: "Payment partners",
-    desc: "The rails that move money across 50+ countries in local currency.",
-    partners: [
-      { name: "Stripe", role: "Card processing, subscription billing, and payouts for EU/US/UK markets." },
-      { name: "Paystack", role: "Naira payments, bank transfers, and USSD checkout across Nigeria and Ghana." },
-      { name: "Flutterwave", role: "Pan-African coverage including Kenya, South Africa, Tanzania, and 10+ markets." },
-    ],
+    desc: "The payment providers we run today, and the currencies each can charge.",
+    // Rendered from GET /currencies (GatewayPartnerCards), never a fixed list.
+    gateways: true,
+    partners: [] as { name: string; role: string }[],
   },
   {
     label: "Technology",
@@ -66,6 +65,7 @@ export default function PartnersPage() {
             {tier.label}.
           </h2>
           <p className="text-[15px] leading-[1.55] mb-5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>{tier.desc}</p>
+          {"gateways" in tier && tier.gateways ? <GatewayPartnerCards /> : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
             {tier.partners.map((p) => (
               <div key={p.name} className="rounded-(--r-3) p-6" style={{ background: "var(--bg-2)" }}>
@@ -74,6 +74,7 @@ export default function PartnersPage() {
               </div>
             ))}
           </div>
+          )}
         </section>
       ))}
 

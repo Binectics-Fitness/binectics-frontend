@@ -19,7 +19,7 @@ export default function AdminRefundsPage() {
           Refund queue
         </h1>
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          14 awaiting review · 3 over SLA · auto-approves under R 200 with 24h notice handled by the system
+          14 awaiting review · 3 over SLA · auto-approves small refunds with 24h notice handled by the system
         </p>
       </div>
 
@@ -29,7 +29,7 @@ export default function AdminRefundsPage() {
           { label: "Awaiting review", value: "14", delta: "↑ 2 since yesterday", deltaColor: "var(--signal-ink)" },
           { label: "Over SLA", value: "3", delta: "Decision due in 4h", valueColor: "var(--danger)", deltaColor: "oklch(0.45 0.16 75)" },
           { label: "Auto-approved · 30d", value: "218", delta: "86% of all refunds", deltaColor: "var(--signal-ink)" },
-          { label: "Total refunded · 30d", value: "$ 28.4k", delta: "0.6% of GMV", deltaColor: "var(--fg-3)" },
+          { label: "Total refunded · 30d", value: "-", delta: "Sample data", deltaColor: "var(--fg-3)" },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
             <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
@@ -120,14 +120,14 @@ export default function AdminRefundsPage() {
 
 /* ─── Data ──────────────────────────────────────────────────── */
 const REFUND_ROWS = [
-  { caseId: "REF-2026-04841", member: "Pier Botha", provider: "Iron Lab", sub: "Booking BIN-2026-040112", reason: "Cancellation UI showed 33h notice but actual was 8h. Discrepancy disputed.", sla: "SLA 1h 12m", slaVariant: "red" as const, amount: "R 1,200", action: "Approve", actionVariant: "primary" as const },
-  { caseId: "REF-2026-04839", member: "Aman R.", provider: "Apex Body, Manila", sub: "Booking BIN-2026-039841", reason: "Provider rejected refund · cites ToS §4.2. Member requests platform review.", sla: "SLA 14h", slaVariant: "warn" as const, amount: "₱ 3,400", action: null, actionVariant: undefined },
-  { caseId: "REF-2026-04835", member: "Halima D.", provider: "Lagos Lift Club", sub: "2× no-show", reason: "Trainer failed to show for 2 booked sessions. Provider hasn't responded in 48h.", sla: "SLA 22h", slaVariant: "warn" as const, amount: "₦ 28,000", action: "Auto-refund", actionVariant: "primary" as const },
-  { caseId: "REF-2026-04832", member: "Card •••• 4421", provider: "CrossPower Stuttgart", sub: "Stripe chargeback · 4855", reason: "Bank-initiated chargeback. Service not as described. Evidence due in 36h.", sla: "Evidence 36h", slaVariant: "red" as const, amount: "€ 89.00", action: "Defend", actionVariant: "primary" as const },
-  { caseId: "REF-2026-04828", member: "Folake A.", provider: "Dr Nadia Hassan", sub: "Plan not delivered", reason: "Intake completed but PDF plan never delivered after 5 business days.", sla: "SLA 18h", slaVariant: "warn" as const, amount: "₦ 165,000", action: null, actionVariant: undefined },
-  { caseId: "REF-2026-04825", member: "Marcus B.", provider: "Strathmore Strength", sub: "Duplicate charge", reason: "Charged twice for same day pass. Gateway acknowledged duplicate.", sla: "SLA 8h", slaVariant: "ok" as const, amount: "KSh 1,400", action: "Auto-refund", actionVariant: "primary" as const },
-  { caseId: "REF-2026-04822", member: "Reza M.", provider: "Multiple gyms", sub: "11 refunds / 30d", reason: "Refund abuse pattern. 11 requests this month against different providers.", sla: "SLA 24h", slaVariant: "ok" as const, amount: "د.إ 480", action: "Deny", actionVariant: "danger" as const },
-  { caseId: "REF-2026-04818", member: "Wei Chen", provider: "Velo Cycling", sub: "Plan downgrade", reason: "Member downgraded plan mid-cycle. Pro-rata adjustment needed.", sla: "SLA 22h", slaVariant: "ok" as const, amount: "R 380", action: "Approve", actionVariant: "primary" as const },
+  { caseId: "REF-2026-04841", member: "Pier Botha", provider: "Iron Lab", sub: "Booking BIN-2026-040112", reason: "Cancellation UI showed 33h notice but actual was 8h. Discrepancy disputed.", sla: "SLA 1h 12m", slaVariant: "red" as const, amount: "-", action: "Approve", actionVariant: "primary" as const },
+  { caseId: "REF-2026-04839", member: "Aman R.", provider: "Apex Body, Manila", sub: "Booking BIN-2026-039841", reason: "Provider rejected refund · cites ToS §4.2. Member requests platform review.", sla: "SLA 14h", slaVariant: "warn" as const, amount: "-", action: null, actionVariant: undefined },
+  { caseId: "REF-2026-04835", member: "Halima D.", provider: "Lagos Lift Club", sub: "2× no-show", reason: "Trainer failed to show for 2 booked sessions. Provider hasn't responded in 48h.", sla: "SLA 22h", slaVariant: "warn" as const, amount: "-", action: "Auto-refund", actionVariant: "primary" as const },
+  { caseId: "REF-2026-04832", member: "Card •••• 4421", provider: "CrossPower Stuttgart", sub: "Card chargeback · 4855", reason: "Bank-initiated chargeback. Service not as described. Evidence due in 36h.", sla: "Evidence 36h", slaVariant: "red" as const, amount: "-", action: "Defend", actionVariant: "primary" as const },
+  { caseId: "REF-2026-04828", member: "Folake A.", provider: "Dr Nadia Hassan", sub: "Plan not delivered", reason: "Intake completed but PDF plan never delivered after 5 business days.", sla: "SLA 18h", slaVariant: "warn" as const, amount: "-", action: null, actionVariant: undefined },
+  { caseId: "REF-2026-04825", member: "Marcus B.", provider: "Strathmore Strength", sub: "Duplicate charge", reason: "Charged twice for same day pass. Gateway acknowledged duplicate.", sla: "SLA 8h", slaVariant: "ok" as const, amount: "-", action: "Auto-refund", actionVariant: "primary" as const },
+  { caseId: "REF-2026-04822", member: "Reza M.", provider: "Multiple gyms", sub: "11 refunds / 30d", reason: "Refund abuse pattern. 11 requests this month against different providers.", sla: "SLA 24h", slaVariant: "ok" as const, amount: "-", action: "Deny", actionVariant: "danger" as const },
+  { caseId: "REF-2026-04818", member: "Wei Chen", provider: "Velo Cycling", sub: "Plan downgrade", reason: "Member downgraded plan mid-cycle. Pro-rata adjustment needed.", sla: "SLA 22h", slaVariant: "ok" as const, amount: "-", action: "Approve", actionVariant: "primary" as const },
 ];
 
 /* ─── Helpers ──────────────────────────────────────────────── */

@@ -7,7 +7,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
 import { teamsService } from "@/lib/api/teams";
-import { useCountries, usePlatformConfig } from "@/lib/queries/utility";
+import { useCountries } from "@/lib/queries/utility";
+import { useCurrencies } from "@/lib/queries/currencies";
+import { currencyOptions, writeErrorMessage } from "@/lib/currencies/helpers";
 import { UserRole } from "@/lib/types";
 import TagInput from "@/components/TagInput";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -82,12 +84,12 @@ export default function ProfileSettingsPage() {
   const [orgCurrency, setOrgCurrency] = useState<string>("");
   const [isSavingCurrency, setIsSavingCurrency] = useState(false);
   const { data: countries = [], isLoading: countriesLoading } = useCountries();
-  const { data: platformConfig } = usePlatformConfig();
+  const { all: currencies } = useCurrencies();
   const profileImagePreviewRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (currentOrg) {
-      setOrgCurrency(currentOrg.currency || "USD");
+      setOrgCurrency(currentOrg.currency || "");
     }
   }, [currentOrg]);
 
@@ -102,7 +104,7 @@ export default function ProfileSettingsPage() {
         toast.success("Default currency updated.");
         await refreshOrganizations();
       } else {
-        toast.error(res.message || "Failed to update currency");
+        toast.error(writeErrorMessage(res, "Failed to update currency"));
       }
     } catch {
       toast.error("An error occurred while updating currency");
@@ -490,12 +492,7 @@ export default function ProfileSettingsPage() {
                   name="orgCurrency"
                   value={orgCurrency}
                   onChange={(val) => setOrgCurrency(val)}
-                  options={(platformConfig?.currencies ?? [])
-                    .filter((c) => c.is_active)
-                    .map((c) => ({
-                      label: `${c.code}, ${c.name}`,
-                      value: c.code,
-                    }))}
+                  options={currencyOptions(currencies, "price", currentOrg.currency)}
                   placeholder="Select currency"
                 />
               </div>
@@ -505,7 +502,7 @@ export default function ProfileSettingsPage() {
                 disabled={
                   isSavingCurrency ||
                   !orgCurrency ||
-                  orgCurrency === (currentOrg.currency || "USD")
+                  orgCurrency === (currentOrg.currency || "")
                 }
                 className="h-12 rounded-lg bg-signal px-6 text-sm font-semibold text-ink transition-colors hover:bg-signal/85 disabled:cursor-not-allowed disabled:opacity-50"
               >

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const TIMELINE = [
   { when: "11 May · 14:32", title: "Booking placed", desc: "Card authorized · waiting on Sarah.", done: true },
-  { when: "11 May · 15:08", title: "Sarah confirmed", desc: "R 1,890.00 charged · confirmation sent to tunde@gmail.com.", done: true },
+  { when: "11 May · 15:08", title: "Sarah confirmed", desc: "Card charged · confirmation sent to tunde@gmail.com.", done: true },
   { when: "11 May · 15:09", title: "Added to your calendar", desc: "Google Calendar event created · auto-synced.", done: true },
   { when: "Tue · 19 May", title: "24h reminder", desc: "Last chance to reschedule free of charge." },
   { when: "Wed · 08:30", title: "Check in with your QR at Iron Lab Sea Point", desc: "QR code is on this page, bring a phone or screenshot." },
@@ -362,48 +362,10 @@ export default function BookingDetailPage() {
                   Charged to VISA &bull;&bull;&bull;&bull; 4421 on 11 May, 14:32 SAST
                 </span>
               </div>
-              {[
-                { k: "Session · 60 min", v: "R 1,200.00" },
-                { k: "Take-home program · 4 weeks", v: "R 600.00" },
-                { k: "Session recording", v: "Free" },
-                { k: "Platform fee · 5%", v: "R 90.00" },
-              ].map((r) => (
-                <div
-                  key={r.k}
-                  className="px-4.5 py-3 flex justify-between items-center text-[13.5px]"
-                  style={{ borderBottom: "1px solid var(--border)" }}
-                >
-                  <span
-                    className="font-mono text-[11.5px] uppercase"
-                    style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}
-                  >
-                    {r.k}
-                  </span>
-                  <span
-                    className="font-mono"
-                    style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
-                  >
-                    {r.v}
-                  </span>
-                </div>
-              ))}
-              <div
-                className="px-4.5 py-3 flex justify-between items-center"
-                style={{ background: "var(--bg-2)" }}
-              >
-                <span
-                  className="text-[14px] font-medium"
-                  style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}
-                >
-                  Total paid
-                </span>
-                <span
-                  className="font-mono text-[16px] font-medium"
-                  style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
-                >
-                  R 1,890.00
-                </span>
-              </div>
+              <p className="px-4.5 py-3.5 text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
+                The amount, in the provider&apos;s currency, is on your booking in{" "}
+                <Link href="/dashboard/bookings" style={{ color: "var(--ink)" }}>your bookings</Link>.
+              </p>
             </div>
 
             {/* Timeline */}

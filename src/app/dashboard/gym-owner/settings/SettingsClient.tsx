@@ -15,7 +15,9 @@ import {
 } from "@/lib/queries/teams";
 import { useCountries } from "@/lib/queries/utility";
 import { utilityService } from "@/lib/api/utility";
-import { SUPPORTED_CURRENCIES } from "@/lib/constants/regions";
+import { useCurrencies } from "@/lib/queries/currencies";
+import { currencyOptions, writeErrorMessage } from "@/lib/currencies/helpers";
+import { toast } from "@/components/Toast";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
 import {
@@ -112,7 +114,8 @@ function seedForm(org: Organization): SettingsForm {
     vat_registration_number: org.vat_registration_number ?? "",
     country: org.country ?? "",
     primary_email: org.primary_email ?? "",
-    currency: org.currency ?? "USD",
+    // No guessed default: an org without a currency picks one here.
+    currency: org.currency ?? "",
     time_zone: org.time_zone ?? "",
     first_day_of_week: org.first_day_of_week ?? LOCALE_DEFAULTS.first_day_of_week,
     date_format: org.date_format ?? LOCALE_DEFAULTS.date_format,
@@ -171,6 +174,7 @@ export function SettingsClient() {
   const { data: org, isLoading } = useOrganizationDetails(orgId);
   const updateOrg = useUpdateOrganization();
   const { data: countries = [] } = useCountries();
+  const { all: currencies } = useCurrencies();
 
   const timeZones = useMemo(() => getTimeZoneOptions(), []);
 
@@ -277,6 +281,10 @@ export function SettingsClient() {
       setSavedFlash(true);
       void refreshOrganizations();
       window.setTimeout(() => setSavedFlash(false), 2500);
+    } else {
+      // A refused currency says why (e.g. not enabled on our payment
+      // account yet), instead of a bare "Save failed".
+      toast.error(writeErrorMessage(res, "We couldn't save your settings. Try again."));
     }
   };
 
@@ -351,8 +359,9 @@ export function SettingsClient() {
             <SectionHeading title="Currency & locale" desc="How money and dates render across your dashboard and to your members." />
             <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <SelectField label="Default currency" value={form?.currency ?? "USD"} onChange={(v) => set("currency", v)} disabled={!form} hint="Used for new membership plans, listings, and revenue display."
-                  options={SUPPORTED_CURRENCIES.map((c) => ({ label: `${c.currencyCode} · ${c.symbol}, ${c.regionName}`, value: c.currencyCode }))} />
+                <SelectField label="Default currency" value={form?.currency ?? ""} onChange={(v) => set("currency", v)} disabled={!form} hint="Used for new membership plans, listings, and revenue display."
+                  placeholder="Choose currency"
+                  options={currencyOptions(currencies, "price", baseline?.currency)} />
                 <SelectField label="Time zone" value={form?.time_zone ?? ""} onChange={(v) => set("time_zone", v)} disabled={!form}
                   placeholder="Select time zone…"
                   options={timeZones.map((tz) => ({ label: tz.label, value: tz.value }))} />
@@ -431,7 +440,7 @@ export function SettingsClient() {
                     setPayout({ payout_day: day });
                   }} />
                 )}
-                <MoneyField label="Minimum payout" currency={form?.currency ?? "USD"} minor={form?.payout_schedule.minimum_payout_amount_minor ?? 0} onChange={(m) => setPayout({ minimum_payout_amount_minor: Math.max(0, m) })} disabled={!form} />
+                <MoneyField label="Minimum payout" currency={form?.currency ?? ""} minor={form?.payout_schedule.minimum_payout_amount_minor ?? 0} onChange={(m) => setPayout({ minimum_payout_amount_minor: Math.max(0, m) })} disabled={!form} />
                 <TextField label="Hold period (days, 0–30)" type="number" value={String(form?.payout_schedule.hold_period_days ?? 0)} onChange={(v) => setPayout({ hold_period_days: Math.min(30, Math.max(0, Number(v) || 0)) })} disabled={!form} />
               </div>
               <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>Earnings below the minimum roll over to the next run. The hold period applies before earnings become payable.</span>

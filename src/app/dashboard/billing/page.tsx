@@ -585,7 +585,7 @@ export default function ProviderBillingPage() {
                               ) : price ? (
                                 <div>
                                   <span className="text-[26px] font-medium" style={{ color: "var(--ink)" }}>
-                                    {fmtMoney(minorToMajor(price.amount_minor), price.currency)}
+                                    {fmtMoney(minorToMajor(price.amount_minor, price.currency), price.currency)}
                                   </span>
                                   <span className="text-sm" style={{ color: "var(--fg-3)" }}>
                                     /{interval}
@@ -683,7 +683,7 @@ export default function ProviderBillingPage() {
                                       value is unchanged and this conversion is the
                                       same one that was always here. The invoice's
                                       own currency must win. */}
-                                  {fmtMoney(minorToMajor(invoice.amount_due_minor), invoice.currency)}
+                                  {fmtMoney(minorToMajor(invoice.amount_due_minor, invoice.currency), invoice.currency)}
                                 </td>
                                 <td className="py-3 pr-4">
                                   <span

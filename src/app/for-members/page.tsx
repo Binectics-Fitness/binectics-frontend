@@ -346,8 +346,8 @@ export default function ForMembersPage() {
           style={{ color: "var(--fg-2)" }}
         >
           Members never pay Binectics. You pay your provider directly at
-          their listed price. We earn from the provider side, a 4.9%
-          transaction fee.
+          their listed price, in their currency. Providers pay us for
+          their plan, not a cut of yours.
         </p>
         <Link href="/pricing" className="btn-ghost-v2 lg">
           See provider pricing &rarr;

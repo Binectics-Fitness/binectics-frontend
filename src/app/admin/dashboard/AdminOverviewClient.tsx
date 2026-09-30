@@ -1,27 +1,14 @@
 "use client";
 
+import { formatPercent } from "@/lib/admin/percent";
 import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { adminService, type PlatformMetricsOverview, type FeedbackSummary } from "@/lib/api/admin";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { formatRevenue, revenueHeadline, revenueRows } from "@/lib/admin/revenue";
 
-const USD = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-
-/** Takes MINOR units (kobo/cents), as every `*Minor` figure on the response is. */
-function formatCur(amountMinor: number, currency: string): string {
-  const amount = minorToMajor(amountMinor);
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
-  } catch {
-    return `${currency} ${Math.round(amount).toLocaleString()}`;
-  }
-}
-
-function pct(rate: number): string {
-  const v = rate <= 1 ? rate * 100 : rate;
-  return `${v.toFixed(1)}%`;
-}
+const pct = formatPercent;
 
 export default function AdminOverviewClient() {
   const [metrics, setMetrics] = useState<PlatformMetricsOverview | null>(null);
@@ -62,10 +49,10 @@ export default function AdminOverviewClient() {
   }, [metrics]);
   const maxCountry = byCountry[0]?.count ?? 1;
 
-  const byCurrency = useMemo(() => {
-    const rows = metrics?.subscriptions.byCurrency ?? [];
-    return [...rows].sort((a, b) => b.totalMinor - a.totalMinor).slice(0, 8);
-  }, [metrics]);
+  // revenue_by_currency: one row per currency, never summed across them.
+  const revenue = useMemo(() => revenueRows(metrics), [metrics]);
+  const byCurrency = revenue.slice(0, 8);
+  const headline = revenueHeadline(revenue);
 
   /**
    * Takes MINOR units (kobo/cents) — every revenue figure on this response is
@@ -74,8 +61,9 @@ export default function AdminOverviewClient() {
    * currency formatter reads "₦12,345,600" instead of "₦123,456".
    */
   const revenueMoney = (amountMinor: number, currency: string | null) => {
-    const amount = minorToMajor(amountMinor);
-    if (!currency) return USD.format(amount);
+    // No revenue yet means no currency: show the bare number, not dollars.
+    if (!currency) return Math.round(amountMinor).toLocaleString();
+    const amount = minorToMajor(amountMinor, currency);
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",
@@ -91,11 +79,12 @@ export default function AdminOverviewClient() {
     ? [
         {
           l: "Subscription revenue",
-          v: revenueMoney(
-            metrics.subscriptions.primaryRevenueMinor,
-            metrics.subscriptions.primaryCurrency,
-          ),
-          d: `${revenueMoney(metrics.subscriptions.primaryAverageMinor, metrics.subscriptions.primaryCurrency)} avg`,
+          v: headline.value,
+          d:
+            headline.moreLabel ??
+            (revenue[0]
+              ? `${revenueMoney(metrics.subscriptions.primaryAverageMinor, metrics.subscriptions.primaryCurrency)} avg`
+              : "No revenue yet"),
         },
         { l: "Verified providers", v: metrics.verifiedProviders.total.toLocaleString(), d: `${metrics.verifiedProviders.distinctCountries} countries` },
         { l: "Active subscriptions", v: metrics.subscriptions.activeCount.toLocaleString(), d: "Currently active" },
@@ -170,7 +159,7 @@ export default function AdminOverviewClient() {
                       <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{c.currency}</div>
                       <div className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>{c.count} subscription{c.count === 1 ? "" : "s"}</div>
                     </div>
-                    <span className="font-mono text-[14px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatCur(c.totalMinor, c.currency)}</span>
+                    <span className="font-mono text-[14px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{formatRevenue(c)}</span>
                   </div>
                 ))
               )}

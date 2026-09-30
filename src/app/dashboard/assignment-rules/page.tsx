@@ -37,7 +37,9 @@ export default function AssignmentRulesPage() {
    * "($)" for every org in every market, so a Lagos gym typing 500 got a ₦500
    * rule presented as $500.
    */
-  const ruleCurrency = currentOrg?.currency ?? "USD";
+  // The org's own currency; no guess when it has none (the threshold is
+  // then refused on save with a pointer to Settings).
+  const ruleCurrency = currentOrg?.currency ?? "";
 
   const { rules, isLoading, error, loadRules, createRule, updateRule, deleteRule } =
     useAssignmentRules(orgId ?? "");
@@ -175,6 +177,11 @@ export default function AssignmentRulesPage() {
       .split(",")
       .map((id) => id.trim())
       .filter((id) => id);
+
+    if (minAmountMinor !== null && !ruleCurrency) {
+      setFormError("Choose your default currency in Settings before adding a minimum amount.");
+      return;
+    }
 
     const data: CreateAssignmentRuleRequest = {
       name: name.trim(),
@@ -389,7 +396,7 @@ export default function AssignmentRulesPage() {
                       <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
                         {rule.min_amount_minor
                           ? formatCurrency(
-                              minorToMajor(rule.min_amount_minor),
+                              minorToMajor(rule.min_amount_minor, rule.currency ?? ruleCurrency),
                               rule.currency ?? ruleCurrency,
                             )
                           : "-"}
@@ -548,7 +555,7 @@ export default function AssignmentRulesPage() {
                     className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
                     style={{ color: "var(--fg-3)" }}
                   >
-                    Min Amount ({ruleCurrency})
+                    Min Amount{ruleCurrency ? ` (${ruleCurrency})` : ""}
                   </label>
                   <MoneyInput
                     value={minAmountDisplay}
@@ -558,7 +565,7 @@ export default function AssignmentRulesPage() {
                       setMinAmountMinor(minor);
                     }}
                     placeholder="Optional"
-                    aria-label={`Min Amount (${ruleCurrency})`}
+                    aria-label={ruleCurrency ? `Min Amount (${ruleCurrency})` : "Min Amount"}
                     className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
                     style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
                   />

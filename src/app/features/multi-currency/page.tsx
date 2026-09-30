@@ -2,103 +2,54 @@ import Link from "next/link";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { CurrencyDemo } from "@/components/ds/CurrencyDemo";
+import {
+  CurrencyCoverageTable,
+  CurrencyKpis,
+  GatewayCards,
+} from "@/components/marketing/CurrencyFacts";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Multi-Currency Payments, Binectics",
   description:
-    "Accept payments in 14+ currencies through Stripe, Paystack, Flutterwave, and Razorpay. Clients pay locally, you receive in your settlement currency.",
+    "Get paid in your local currency. Clients pay at your price, in your currency, and the money settles to your own payment account.",
   keywords:
-    "multi-currency payments, fitness payments, gym payment processing, international payments, Paystack, Stripe, Flutterwave, Razorpay",
+    "multi-currency payments, fitness payments, gym payment processing, local currency payments",
 };
 
 const WORKFLOW = [
   {
     step: "01",
-    title: "Client pays in their currency",
-    desc: "A member in Lagos pays in NGN. A member in London pays in GBP. They see prices in their local currency, use their local payment methods, and never think about conversion.",
+    title: "You price in your currency",
+    desc: "Set each plan and session price in your own currency, from the currencies we can charge. Clients see that exact amount.",
   },
   {
     step: "02",
-    title: "We route to the best gateway",
-    desc: "Paystack for West Africa. Stripe for Europe and North America. Flutterwave for East Africa. Razorpay for India. The optimal gateway is selected automatically based on the payer's location.",
+    title: "The payment provider takes the payment",
+    desc: "Payments run through the payment providers we've integrated. A price can only be set in a currency we can actually charge, so every checkout completes.",
   },
   {
     step: "03",
-    title: "You receive in your currency",
-    desc: "Settlement hits your bank account in 1–3 business days, in your local currency. Platform fee already deducted. One clean number, no reconciliation needed.",
+    title: "It settles to your account",
+    desc: "The money goes to your own payment account, in the currency it was charged in. Binectics never holds it and takes no cut.",
   },
-];
-
-const GATEWAYS = [
-  {
-    name: "Stripe",
-    coverage: "40+ countries",
-    currencies: "USD, GBP, EUR, AED, CAD, AUD, and 130+ more",
-    settlement: "2 business days",
-    methods: "Cards, Apple Pay, Google Pay, bank debits, SEPA",
-  },
-  {
-    name: "Paystack",
-    coverage: "Nigeria, Ghana, South Africa, Kenya",
-    currencies: "NGN, GHS, ZAR, KES",
-    settlement: "Next business day",
-    methods: "Cards, bank transfer, USSD, mobile money",
-  },
-  {
-    name: "Flutterwave",
-    coverage: "30+ African countries",
-    currencies: "NGN, KES, GHS, TZS, UGX, ZAR, XOF, and more",
-    settlement: "2 business days",
-    methods: "Cards, mobile money, bank transfer, USSD, M-Pesa",
-  },
-  {
-    name: "Razorpay",
-    coverage: "India",
-    currencies: "INR",
-    settlement: "2 business days",
-    methods: "Cards, UPI, net banking, wallets, EMI",
-  },
-];
-
-const REGIONS = [
-  { flag: "🇿🇦", country: "South Africa", currency: "ZAR", gateway: "Paystack", settlement: "T+1" },
-  { flag: "🇳🇬", country: "Nigeria", currency: "NGN", gateway: "Paystack", settlement: "T+1" },
-  { flag: "🇰🇪", country: "Kenya", currency: "KES", gateway: "Flutterwave", settlement: "T+2" },
-  { flag: "🇬🇭", country: "Ghana", currency: "GHS", gateway: "Flutterwave", settlement: "T+2" },
-  { flag: "🇬🇧", country: "United Kingdom", currency: "GBP", gateway: "Stripe", settlement: "T+2" },
-  { flag: "🇺🇸", country: "United States", currency: "USD", gateway: "Stripe", settlement: "T+2" },
-  { flag: "🇦🇪", country: "UAE", currency: "AED", gateway: "Stripe", settlement: "T+3" },
-  { flag: "🇮🇳", country: "India", currency: "INR", gateway: "Razorpay", settlement: "T+2" },
-  { flag: "🇩🇪", country: "Germany", currency: "EUR", gateway: "Stripe", settlement: "T+2" },
-  { flag: "🇹🇿", country: "Tanzania", currency: "TZS", gateway: "Flutterwave", settlement: "T+2" },
 ];
 
 const FEATURES = [
-  { title: "Auto currency detection", desc: "We detect the payer's country from their IP and browser locale. Prices display in their local currency with no manual selection needed." },
-  { title: "Split settlement", desc: "Platform fee is auto-deducted before settlement. You see the gross, the fee, and the net, all on one payout line." },
-  { title: "Payout dashboard", desc: "Every payout listed with date, amount, bank, and status. Filter by period, export to CSV, or reconcile against your accounting software." },
+  { title: "Local currency pricing", desc: "Price in the currency your clients use. Only currencies we can charge are offered, so a price never fails at checkout." },
+  { title: "Payout dashboard", desc: "Every payment listed with date, amount, and status. Filter by period, export to CSV, or reconcile against your accounting software." },
   { title: "Invoice generation", desc: "Automatic branded invoices for every transaction. VAT number, tax breakdown, and provider details included. PDF download or email delivery." },
-  { title: "Tax-ready exports", desc: "Quarterly and annual revenue reports formatted for your local tax authority. SARS, HMRC, IRS, and FIRS templates available." },
-  { title: "Subscription billing", desc: "Auto-renewal with smart retry on failed payments. 3 retry attempts over 7 days with escalating notification to the member before cancellation." },
+  { title: "Subscription billing", desc: "Auto-renewal with retries on failed payments, and a notice to the member before anything lapses." },
   { title: "Refund management", desc: "Full or partial refunds from your dashboard. Refund hits the member's original payment method. No manual gateway login needed." },
-  { title: "Fraud protection", desc: "3D Secure on every card transaction. Velocity checks, device fingerprinting, and address verification through each gateway's built-in fraud tools." },
+  { title: "Fraud protection", desc: "3D Secure on card transactions, plus the payment provider's own fraud tools." },
 ];
 
 const FEE_BREAKDOWN = [
-  { item: "Binectics platform fee", rate: "4.9% of transaction" },
-  { item: "Gateway processing fee", rate: "Set by gateway (typically 1.4–2.9% + fixed)" },
-  { item: "Currency conversion", rate: "Handled by gateway at market rate" },
+  { item: "Binectics fee on payments", rate: "None" },
+  { item: "Payment provider fee", rate: "Set by the provider, shown at checkout" },
+  { item: "Currency conversion", rate: "None, you're paid in the currency charged" },
   { item: "Setup fee", rate: "None" },
   { item: "Monthly minimum", rate: "None" },
-  { item: "Chargeback fee", rate: "Passed through from gateway" },
-];
-
-const KPIS = [
-  { label: "Monthly processed", value: "$4.8M" },
-  { label: "Currencies supported", value: "14+" },
-  { label: "Avg settlement", value: "1.8 days" },
-  { label: "Countries active", value: "52" },
 ];
 
 export default function MultiCurrencyPage() {
@@ -129,9 +80,9 @@ export default function MultiCurrencyPage() {
           className="text-[17px] sm:text-[18px] max-w-[62ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          Accept payments from 52 countries through 4 regional gateways. We
-          handle routing, conversion, compliance, and settlement. You see
-          one clean number in your dashboard.
+          Accept payments in the currencies we can charge today, through
+          the payment providers we&rsquo;ve integrated. You see one clean
+          number in your dashboard.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup" className="btn-primary-v2 lg">
@@ -158,8 +109,8 @@ export default function MultiCurrencyPage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Pick a country to see how the checkout adapts, currency,
-          gateway, and payment methods all change automatically.
+          Pick a currency to see how checkout looks in it. Only currencies
+          we can charge today are shown.
         </p>
         <CurrencyDemo />
       </section>
@@ -214,50 +165,16 @@ export default function MultiCurrencyPage() {
           className="text-[28px] sm:text-[32px] font-medium mb-3"
           style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}
         >
-          Four gateways, zero config
+          Payment providers
         </h2>
         <p
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          We&rsquo;ve integrated each gateway so you don&rsquo;t have to.
-          No API keys to manage, no webhook URLs to configure. Sign up and
-          payments work.
+          The payment providers we run today and the currencies each can
+          charge. More open as each one is enabled.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {GATEWAYS.map((g) => (
-            <div
-              key={g.name}
-              className="rounded-(--r-3) p-6"
-              style={{ background: "var(--bg-2)" }}
-            >
-              <h3
-                className="text-[18px] font-medium mb-3"
-                style={{ color: "var(--ink)" }}
-              >
-                {g.name}
-              </h3>
-              <div className="space-y-1.5">
-                {[
-                  ["Coverage", g.coverage],
-                  ["Currencies", g.currencies],
-                  ["Settlement", g.settlement],
-                  ["Methods", g.methods],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex gap-3 text-[14px]">
-                    <span
-                      className="font-mono text-[12px] uppercase tracking-[0.02em] w-24 shrink-0 pt-0.5"
-                      style={{ color: "var(--fg-3)" }}
-                    >
-                      {label}
-                    </span>
-                    <span style={{ color: "var(--fg-2)" }}>{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        <GatewayCards />
       </section>
 
       {/* Regional coverage table */}
@@ -269,54 +186,14 @@ export default function MultiCurrencyPage() {
           className="text-[28px] sm:text-[32px] font-medium mb-6"
           style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}
         >
-          Regional coverage
+          Currency coverage
         </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-[14px]" style={{ color: "var(--fg-2)" }}>
-            <thead>
-              <tr
-                className="text-left font-mono text-[11px] uppercase tracking-[0.04em]"
-                style={{ color: "var(--fg-3)" }}
-              >
-                <th className="pb-3 pr-4 font-medium">Country</th>
-                <th className="pb-3 pr-4 font-medium">Currency</th>
-                <th className="pb-3 pr-4 font-medium">Gateway</th>
-                <th className="pb-3 font-medium">Settlement</th>
-              </tr>
-            </thead>
-            <tbody>
-              {REGIONS.map((r) => (
-                <tr
-                  key={r.country}
-                  style={{ borderTop: "1px solid var(--border)" }}
-                >
-                  <td className="py-3 pr-4">
-                    <span className="mr-2">{r.flag}</span>
-                    {r.country}
-                  </td>
-                  <td
-                    className="py-3 pr-4 font-mono text-[13px]"
-                    style={{ color: "var(--ink)" }}
-                  >
-                    {r.currency}
-                  </td>
-                  <td className="py-3 pr-4">{r.gateway}</td>
-                  <td
-                    className="py-3 font-mono text-[13px]"
-                    style={{ color: "var(--ink)" }}
-                  >
-                    {r.settlement}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <CurrencyCoverageTable />
         <p
           className="text-[13px] mt-4"
           style={{ color: "var(--fg-3)" }}
         >
-          +42 more countries supported via Stripe and Flutterwave.
+          More currencies open as each one is enabled on our payment account.
         </p>
       </section>
 
@@ -331,7 +208,7 @@ export default function MultiCurrencyPage() {
         >
           Built into every transaction
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {FEATURES.map((f) => (
             <div
               key={f.title}
@@ -403,31 +280,7 @@ export default function MultiCurrencyPage() {
         className="mx-auto max-w-280 px-5 sm:px-8 py-12"
         style={{ borderTop: "1px solid var(--border)" }}
       >
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {KPIS.map((k) => (
-            <div
-              key={k.label}
-              className="rounded-(--r-3) p-4.5"
-              style={{ background: "var(--bg-2)" }}
-            >
-              <div
-                className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
-                style={{ color: "var(--fg-3)" }}
-              >
-                {k.label}
-              </div>
-              <div
-                className="text-[24px] sm:text-[32px] font-medium mt-1"
-                style={{
-                  letterSpacing: "-0.024em",
-                  color: "var(--ink)",
-                }}
-              >
-                {k.value}
-              </div>
-            </div>
-          ))}
-        </div>
+        <CurrencyKpis />
       </section>
 
       {/* CTA */}
@@ -445,8 +298,8 @@ export default function MultiCurrencyPage() {
           className="text-[16px] sm:text-[17px] max-w-[46ch] mx-auto leading-[1.5] mb-7"
           style={{ color: "var(--fg-2)" }}
         >
-          Don&rsquo;t lose a sale because you can&rsquo;t accept their
-          currency. Start accepting payments from 52 countries today.
+          Price in your currency, get paid to your own account. Start
+          accepting payments today.
         </p>
         <Link href="/login?mode=signup" className="btn-primary-v2 lg">
           Get started free &rarr;

@@ -23,6 +23,30 @@ interface RawResponseBody {
   code?: unknown;
   errors?: Record<string, string[]>;
   details?: unknown;
+  /** Why a currency can't be used (CURRENCY_NOT_SELECTABLE). */
+  reasons?: unknown;
+  /** Payments in progress (CURRENCY_IN_USE). */
+  in_flight?: unknown;
+  /** Uses a change would switch off (CURRENCY_IN_USE). */
+  uses_lost?: unknown;
+}
+
+/**
+ * Structured fields a 4xx may carry beside its message. The API's exception
+ * filter passes these through at the top level of the body (not under
+ * `details`), so they are folded into `details` here where callers look.
+ */
+const TOP_LEVEL_DETAIL_FIELDS = ["reasons", "in_flight", "uses_lost"] as const;
+
+function detailsOf(body: RawResponseBody): Record<string, unknown> | undefined {
+  const out: Record<string, unknown> =
+    body.details && typeof body.details === "object"
+      ? { ...(body.details as Record<string, unknown>) }
+      : {};
+  for (const field of TOP_LEVEL_DETAIL_FIELDS) {
+    if (body[field] !== undefined) out[field] = body[field];
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 class ApiClient {
@@ -117,10 +141,7 @@ class ApiClient {
             : typeof body.code === "string"
               ? body.code
               : undefined,
-        details:
-          body.details && typeof body.details === "object"
-            ? (body.details as Record<string, unknown>)
-            : undefined,
+        details: detailsOf(body),
         status: response.status,
       };
     }

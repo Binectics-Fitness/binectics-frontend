@@ -3,6 +3,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import type { Metadata } from "next";
+import { PayableCurrencyCount } from "@/components/marketing/CurrencyFacts";
 
 export const metadata: Metadata = {
   title: "About",
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
  */
 
 const STATS = [
-  { v: "8", l: "Currencies at launch" },
-  { v: <>50<small className="font-mono text-[16px] font-normal ml-0.5" style={{ color: "var(--fg-3)" }}>+</small></>, l: "Countries with payment support" },
+  { v: <PayableCurrencyCount />, l: "Currencies you can be paid in today" },
+  { v: <>50<small className="font-mono text-[16px] font-normal ml-0.5" style={{ color: "var(--fg-3)" }}>+</small></>, l: "Countries on the platform" },
   { v: <>100<small className="font-mono text-[16px] font-normal ml-0.5" style={{ color: "var(--fg-3)" }}>%</small></>, l: "AI drafts human-reviewed before send" },
   { v: "0", l: "Card numbers stored on our servers" },
 ];
@@ -31,7 +32,7 @@ const PRINCIPLES = [
 
 const TEAM = [
   { name: "Provider success", role: "Onboarding · verification", bio: "Hand-holds every founding-cohort provider onto the platform and reviews every verification document personally.", grad: "linear-gradient(135deg, oklch(0.84 0.05 60), oklch(0.7 0.08 40))" },
-  { name: "Payments engineering", role: "Stripe · Paystack · Flutterwave", bio: "Believes payments should be boring. Three rails, eight currencies, settlement directly to provider accounts.", grad: "linear-gradient(135deg, oklch(0.84 0.04 248), oklch(0.7 0.06 220))" },
+  { name: "Payments engineering", role: "Payments and settlement", bio: "Believes payments should be boring. Every payment settles directly to the provider's own account, in the provider's own currency.", grad: "linear-gradient(135deg, oklch(0.84 0.04 248), oklch(0.7 0.06 220))" },
   { name: "Copilot & nutrition product", role: "AI drafts · meal plans", bio: "Builds the drafting engine and the meal-plan tools, designed so no client message ever sends without human review.", grad: "linear-gradient(135deg, oklch(0.86 0.04 300), oklch(0.74 0.06 280))" },
   { name: "Design", role: "Design system · product chrome", bio: "One signal color, 1px hairlines, no shadows. The calm is deliberate.", grad: "linear-gradient(135deg, oklch(0.84 0.04 120), oklch(0.7 0.06 100))" },
 ];

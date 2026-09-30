@@ -28,6 +28,30 @@ import type {
 
 // ==================== REQUEST TYPES ====================
 
+/** POST /marketplace/listings/:id/plans/:planId/checkout. */
+export interface PlanCheckout {
+  reference: string;
+  /** What subscribe expects as `payment_reference` ("paystack_<reference>"). */
+  payment_reference: string;
+  access_code: string;
+  authorization_url: string | null;
+  amount_minor: number;
+  currency: string;
+  plan_id: string;
+}
+
+/**
+ * A listing's currency is the API's to derive (from the provider's own
+ * prices, else the organization's currency); it ignores one sent. Strip any
+ * `currency` a caller spreads in, so a listing write never claims one.
+ */
+export function withoutListingCurrency<T extends object>(data: T): Omit<T, "currency"> {
+  const { currency: _dropped, ...rest } = data as T & { currency?: unknown };
+  void _dropped;
+  return rest;
+}
+
+/** POST body for a new listing. There is no `currency`: the API derives it. */
 export interface CreateListingRequest {
   account_type: MarketplaceAccountType;
   headline: string;
@@ -45,7 +69,6 @@ export interface CreateListingRequest {
   contact_email?: string;
   lat?: number;
   lng?: number;
-  currency?: string;
   /** Minor units (kobo/cents) — see MarketplaceListing.price_from_minor. */
   price_from_minor?: number;
   price_label?: string;
@@ -69,7 +92,6 @@ export interface UpdateListingRequest {
   contact_email?: string;
   lat?: number;
   lng?: number;
-  currency?: string;
   /** Minor units (kobo/cents) — see MarketplaceListing.price_from_minor. */
   price_from_minor?: number;
   price_label?: string;
@@ -339,7 +361,7 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.post<MarketplaceListing>(
       "/marketplace/my-listing",
-      data,
+      withoutListingCurrency(data),
     );
   },
 
@@ -352,7 +374,7 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.patch<MarketplaceListing>(
       "/marketplace/my-listing",
-      data,
+      withoutListingCurrency(data),
     );
   },
 
@@ -532,7 +554,7 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.post<MarketplaceListing>(
       `/marketplace/organizations/${organizationId}/listing`,
-      data,
+      withoutListingCurrency(data),
     );
   },
 
@@ -550,7 +572,7 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MarketplaceListing>> {
     return await apiClient.patch<MarketplaceListing>(
       `/marketplace/organizations/${organizationId}/listing`,
-      data,
+      withoutListingCurrency(data),
     );
   },
 
@@ -747,6 +769,23 @@ export const marketplaceService = {
   // ─── Membership Subscriptions ───
 
   /**
+   * Start paying for a paid plan. The API initialises the Paystack
+   * transaction for the plan's own price and currency (with the gym's own
+   * key when it has one) and returns what the browser opens. Once paid, the
+   * member subscribes with `payment_reference` through
+   * subscribeToListingPlan. The API refuses a currency it can't charge.
+   */
+  async startPlanCheckout(
+    listingId: string,
+    planId: string,
+  ): Promise<ApiResponse<PlanCheckout>> {
+    return await apiClient.post<PlanCheckout>(
+      `/marketplace/listings/${listingId}/plans/${planId}/checkout`,
+      {},
+    );
+  },
+
+  /**
    * @param amountPaidMinor What was charged, in the currency's MINOR unit
    *   (kobo/cents) — the same unit as `plan.price_minor`, which the API
    *   compares it against. Passing a major-unit amount here would record a
@@ -933,14 +972,6 @@ export const marketplaceService = {
   ): Promise<ApiResponse<void>> {
     return await apiClient.delete(
       `/marketplace/organizations/${organizationId}/payment-config/${gateway}`,
-    );
-  },
-
-  async getListingPaymentConfig(
-    listingId: string,
-  ): Promise<ApiResponse<{ paystack_public_key: string | null }>> {
-    return await apiClient.get(
-      `/marketplace/listings/${listingId}/payment-config`,
     );
   },
 

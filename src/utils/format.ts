@@ -1,5 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
-import { displayFractionDigits } from "@/lib/constants/regions";
+import { displayFractionDigits } from "@/lib/money/currencyUnits";
 
 /**
  * Formatting Utilities
@@ -99,17 +99,28 @@ export function signedChange(value: number | undefined | null): string {
 }
 
 /**
- * Format a number as currency string.
+ * Format a MAJOR-unit amount as a currency string.
  *
  * Uses `currencyDisplay: "narrowSymbol"` so currencies render with their
  * native short symbol (e.g. NGN -> ₦, GBP -> £, INR -> ₹) instead of the
  * ISO code. Falls back to the standard symbol when no narrow form exists.
+ *
+ * Pass the amount's own currency. There is no default: a record with no
+ * currency renders as a plain number rather than being dressed up as
+ * dollars. Any ISO code formats, including ones no longer offered.
  */
 export function formatCurrency(
   amount: number,
-  currency: string = "USD",
+  currency: string | null | undefined,
   locale: string = "en-US",
 ): string {
+  if (!currency) {
+    const plain = displayFractionDigits(amount, "");
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: plain,
+      maximumFractionDigits: plain,
+    }).format(amount);
+  }
   // Decimals decided per currency + whether the amount is whole — never by
   // magnitude (which rendered ₦25,000 next to ₦475.00). Round prices stay clean
   // ("$1,200"); fractional amounts keep their cents ("$12.50").
@@ -139,7 +150,7 @@ export function formatCurrency(
 
 export function formatSignedCurrency(
   amount: number,
-  currency: string = "USD",
+  currency: string | null | undefined,
   locale: string = "en-US",
   options?: { showPlus?: boolean },
 ): string {

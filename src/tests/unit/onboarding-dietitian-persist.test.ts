@@ -16,21 +16,21 @@ describe("dietitian onboarding: what each step persists", () => {
   it("treats the untouched country select as its default, so the default is saved too", () => {
     // The step 1 select shows "Nigeria" without writing data.country.
     expect(dietitianCountry({})).toBe("Nigeria");
-    const { profile, currency } = dietitianLocationPatch({ fullName: "Dr Nadia Hassan" });
+    const { profile } = dietitianLocationPatch({ fullName: "Dr Nadia Hassan" });
     expect(profile).toEqual({ first_name: "Nadia", last_name: "Hassan", country_code: "NG" });
-    expect(currency).toBe("NGN");
   });
 
-  it("saves city and country code from step 1 and prices the workspace in that country's currency", () => {
-    const { profile, currency } = dietitianLocationPatch({ fullName: "Thandi", city: " Cape Town ", country: "South Africa" });
+  it("saves city and country code from step 1 and the currency chosen there", () => {
+    const { profile, currency } = dietitianLocationPatch({ fullName: "Thandi", city: " Cape Town ", country: "South Africa", currency: "ZAR" });
     expect(profile).toEqual({ first_name: "Thandi", city: "Cape Town", country_code: "ZA" });
     expect(currency).toBe("ZAR");
-    expect(dietitianCurrency({ country: "United Kingdom" })).toBe("GBP");
+    // The country alone decides nothing.
+    expect(dietitianCurrency({ country: "United Kingdom" })).toBeNull();
   });
 
   it("turns a price into the dietitian's own session, in the step 1 currency", () => {
     expect(
-      dietitianSessionPatch({ country: "Kenya", sessionPriceMinor: 350000, sessionDuration: "45 min" }),
+      dietitianSessionPatch({ country: "Kenya", currency: "KES", sessionPriceMinor: 350000, sessionDuration: "45 min" }),
     ).toEqual({
       name: "1:1 session",
       defaultDurationMinutes: 45,
@@ -40,13 +40,13 @@ describe("dietitian onboarding: what each step persists", () => {
   });
 
   it("saves Free as a price of 0, over any price typed before it", () => {
-    expect(dietitianSessionPatch({ sessionFree: true })).toEqual({
+    expect(dietitianSessionPatch({ currency: "NGN", sessionFree: true })).toEqual({
       name: "1:1 session",
       defaultDurationMinutes: 60,
       priceMinor: 0,
       currency: "NGN",
     });
-    expect(dietitianSessionPatch({ sessionFree: true, sessionPriceMinor: 900000 })?.priceMinor).toBe(0);
+    expect(dietitianSessionPatch({ currency: "NGN", sessionFree: true, sessionPriceMinor: 900000 })?.priceMinor).toBe(0);
   });
 
   it("creates nothing when neither a price nor Free was given: set up later is not free", () => {

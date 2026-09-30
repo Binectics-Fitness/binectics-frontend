@@ -23,7 +23,7 @@ const ROLES = [
   {
     title: "Staff engineer · payments",
     team: "Engineering · Remote · ZA / NG / EU",
-    desc: "Own the payments substrate · Stripe, Paystack, Flutterwave, M-Pesa.",
+    desc: "Own the payments substrate across every payment provider we run.",
   },
   {
     title: "Trust & safety lead",

@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { useCurrencyList } from "@/lib/queries/currencies";
+import type { PlatformCurrency } from "@/lib/api/currencies";
+import { currencyListPhrase, payableCurrencies } from "@/lib/currencies/helpers";
 
 const NS = "http://www.w3.org/2000/svg";
 
@@ -25,6 +28,7 @@ const ARTERY_PATHS = [
 const HUBS = [
   {
     id: "london",
+    country: "GB",
     cx: 88,
     cy: 152,
     r: 6,
@@ -34,11 +38,10 @@ const HUBS = [
     brand: false,
     tipTranslate: "19, 60",
     tipTitle: "London · GB",
-    stats: ["GBP", "Stripe rails"],
-    live: "Apple Pay · Google Pay",
   },
   {
     id: "lagos",
+    country: "NG",
     cx: 252,
     cy: 244,
     r: 7,
@@ -48,11 +51,10 @@ const HUBS = [
     brand: false,
     tipTranslate: "183, 151",
     tipTitle: "Lagos · NG",
-    stats: ["NGN", "Paystack · Flutterwave"],
-    live: "Launch market",
   },
   {
     id: "dubai",
+    country: "AE",
     cx: 408,
     cy: 198,
     r: 6,
@@ -62,11 +64,10 @@ const HUBS = [
     brand: false,
     tipTranslate: "339, 106",
     tipTitle: "Dubai · AE",
-    stats: ["AED", "Stripe rails"],
-    live: "Launch market",
   },
   {
     id: "capetown",
+    country: "ZA",
     cx: 184,
     cy: 408,
     r: 6,
@@ -76,11 +77,10 @@ const HUBS = [
     brand: false,
     tipTranslate: "115, 316",
     tipTitle: "Cape Town · ZA",
-    stats: ["ZAR", "Paystack rails"],
-    live: "Launch market",
   },
   {
     id: "nairobi",
+    country: "KE",
     cx: 388,
     cy: 360,
     r: 6.5,
@@ -90,10 +90,23 @@ const HUBS = [
     brand: true,
     tipTranslate: "319, 268",
     tipTitle: "Nairobi · KE",
-    stats: ["KES", "Paystack · Flutterwave"],
-    live: "M-Pesa ready",
   },
 ];
+
+/**
+ * A hub's tooltip lines from the currency list: the currency usual in its
+ * country and who can charge it, or nothing when the platform doesn't list
+ * one. Exported for tests.
+ */
+export function hubStats(
+  country: string,
+  list: readonly PlatformCurrency[] | null | undefined,
+): { stats: string[]; live: string | null } {
+  const c = (list ?? []).find((x) => x.suggested_for_countries.includes(country));
+  if (!c) return { stats: [], live: null };
+  if (c.gateways.length === 0) return { stats: [c.code], live: "Coming soon" };
+  return { stats: [c.code, c.gateways.map((g) => g.label).join(" · ")], live: "Payments live" };
+}
 
 /* ── minor nodes ── */
 const MINOR_NODES = [
@@ -132,6 +145,8 @@ const SECONDARY_EDGES = [
 ];
 
 export default function HeartbeatMotion() {
+  const { data: currencyList } = useCurrencyList();
+  const payablePhrase = currencyListPhrase(payableCurrencies(currencyList).map((c) => c.code));
   const pulseLayerRef = useRef<SVGGElement>(null);
   const hubDotsRef = useRef<Map<string, SVGCircleElement>>(new Map());
   const timeoutIds = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -445,7 +460,7 @@ export default function HeartbeatMotion() {
         <g ref={pulseLayerRef} />
 
         {/* hub groups */}
-        {HUBS.map((hub) => (
+        {HUBS.map((hub) => ({ ...hub, ...hubStats(hub.country, currencyList) })).map((hub) => (
           <g key={hub.id} className="hb-hub-group" data-city={hub.label}>
             <circle
               className="hb-hub-dot"
@@ -500,14 +515,16 @@ export default function HeartbeatMotion() {
                   {stat}
                 </text>
               ))}
-              <text
-                x="12"
-                y={44 + hub.stats.length * 14}
-                className="hb-tip-stat"
-              >
-                <tspan className="hb-tip-accent">{"●"}</tspan>{" "}
-                {hub.live}
-              </text>
+              {hub.live && (
+                <text
+                  x="12"
+                  y={44 + hub.stats.length * 14}
+                  className="hb-tip-stat"
+                >
+                  <tspan className="hb-tip-accent">{"●"}</tspan>{" "}
+                  {hub.live}
+                </text>
+              )}
             </g>
           </g>
         ))}
@@ -520,20 +537,22 @@ export default function HeartbeatMotion() {
         </span>
       </div>
 
-      {/* Legend */}
-      <div className="hb-legend">
-        <div className="hb-row">
-          <span
-            style={{
-              fontFeatureSettings: "'tnum'",
-              color: "var(--hb-ink)",
-              fontWeight: 600,
-            }}
-          >
-            8 currencies
-          </span>
+      {/* Legend: what we can charge today, from GET /currencies */}
+      {payablePhrase && (
+        <div className="hb-legend">
+          <div className="hb-row">
+            <span
+              style={{
+                fontFeatureSettings: "'tnum'",
+                color: "var(--hb-ink)",
+                fontWeight: 600,
+              }}
+            >
+              Paid in {payablePhrase}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

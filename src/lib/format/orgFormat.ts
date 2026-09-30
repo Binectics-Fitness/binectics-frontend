@@ -34,7 +34,11 @@ export interface OrgFormatPrefs {
   dateFormat: DateFormat;
   timeFormat: TimeFormat;
   numberFormat: NumberFormat;
-  currency: string;
+  /**
+   * The org's default currency, or null when it has not chosen one. There is
+   * no platform fallback: guessing USD dressed naira amounts up as dollars.
+   */
+  currency: string | null;
 }
 
 /** Saved date_format token → date-fns pattern. */
@@ -82,7 +86,7 @@ export function resolveOrgFormatPrefs(
     dateFormat: org?.date_format ?? LOCALE_DEFAULTS.date_format,
     timeFormat: org?.time_format ?? LOCALE_DEFAULTS.time_format,
     numberFormat: org?.number_format ?? LOCALE_DEFAULTS.number_format,
-    currency: org?.currency ?? "USD",
+    currency: org?.currency || null,
   };
 }
 

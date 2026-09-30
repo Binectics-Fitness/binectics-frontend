@@ -14,11 +14,12 @@
  *
  * Conventions inherited rather than reinvented:
  *   - the minor↔major conversion is imported from minorMoney
- *     (minorToMajor / majorToMinor), so the ×100 factor exists once for
- *     both the read and the write side.
+ *     (minorToMajor / majorToMinor), so the currency's ISO exponent is
+ *     applied once for both the read and the write side.
  *   - how many decimals a currency admits comes from
- *     currencyFractionDigits() in lib/constants/regions — NGN/KES/JPY/…
- *     are whole-unit, so their inputs refuse a decimal point outright —
+ *     currencyFractionDigits() in lib/money/currencyUnits — JPY/RWF have no
+ *     minor unit and NGN/KES are displayed whole, so their inputs refuse a
+ *     decimal point outright —
  *     and how many to *render* for a given amount from
  *     displayFractionDigits(), the same rule formatCurrency() applies.
  *   - the symbol, its spacing and its position (prefix in en-US, suffix in
@@ -30,13 +31,14 @@
  */
 
 import {
+  currencyExponent,
   currencyFractionDigits,
   displayFractionDigits,
-} from "@/lib/constants/regions";
+} from "@/lib/money/currencyUnits";
 import {
   majorToMinor,
   minorToMajor,
-  MAX_SAFE_MAJOR,
+  maxSafeMajor,
 } from "@/lib/money/minorMoney";
 
 export interface MoneyInputOptions {
@@ -148,14 +150,20 @@ function isSignificant(
 }
 
 /**
- * How many integer digits a field will hold. 13 is not arbitrary: it is the
- * largest width whose minor value (13 digits + 2 fraction digits) still fits
- * Number.MAX_SAFE_INTEGER, so no amount the field accepts can lose precision
- * on the way to `priceMinor`. Without a cap, a 17-digit entry rewrote the
- * digit the user had just typed (…111 became …112) and a 20-digit one
- * serialised into the request body as 1.1111111111111111e+21.
+ * How many integer digits a field will hold for a two-decimal currency. 13
+ * is not arbitrary: it is the largest width whose minor value (13 digits + 2
+ * fraction digits) still fits Number.MAX_SAFE_INTEGER, so no amount the
+ * field accepts can lose precision on the way to `priceMinor`. Without a
+ * cap, a 17-digit entry rewrote the digit the user had just typed (…111
+ * became …112) and a 20-digit one serialised into the request body as
+ * 1.1111111111111111e+21.
  */
 export const MAX_INTEGER_DIGITS = 13;
+
+/** The same cap for any currency: 15 digits of minor value, less its exponent. */
+export function maxIntegerDigits(currency: string): number {
+  return MAX_INTEGER_DIGITS + 2 - currencyExponent(currency);
+}
 
 /**
  * Reduce arbitrary text to its numeric core: digits, at most one decimal
@@ -169,6 +177,7 @@ export function extractNumeric(
   opts: MoneyInputOptions,
 ): { digits: string; negative: boolean } {
   const fractionDigits = currencyFractionDigits(opts.currency);
+  const intCap = maxIntegerDigits(opts.currency);
   const seps = separatorsFor(opts.locale ?? DEFAULT_LOCALE);
 
   // Only a *leading* minus is a sign. A minus anywhere counted as one turned
@@ -189,7 +198,7 @@ export function extractNumeric(
         // A leading zero is a placeholder, not a digit: "0" then "6" is 6,
         // and a pasted run of zeros must not consume the width cap.
         intPart = ch;
-      } else if (intPart.length < MAX_INTEGER_DIGITS) {
+      } else if (intPart.length < intCap) {
         intPart += ch;
       }
       continue;
@@ -259,7 +268,7 @@ export function parseMoneyMajor(
   if (digits === "" || digits === ".") return null;
   const value = Number(digits);
   if (!Number.isFinite(value)) return null;
-  if (Math.abs(value) > MAX_SAFE_MAJOR) return null;
+  if (Math.abs(value) > maxSafeMajor(opts.currency)) return null;
   return negative ? -value : value;
 }
 
@@ -277,7 +286,7 @@ export function parseMoneyMinor(
 ): number | null {
   const major = parseMoneyMajor(raw, opts);
   if (major === null) return null;
-  const minor = majorToMinor(major);
+  const minor = majorToMinor(major, opts.currency);
   return Number.isSafeInteger(minor) ? minor : null;
 }
 
@@ -309,7 +318,7 @@ export function formatMinorForInput(
   opts: MoneyInputOptions,
 ): string {
   if (minor === null || minor === undefined) return "";
-  const major = minorToMajor(minor);
+  const major = minorToMajor(minor, opts.currency);
   const digits = displayFractionDigits(major, opts.currency);
   return formatMoneyInput(major.toFixed(digits), opts);
 }

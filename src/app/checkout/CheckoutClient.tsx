@@ -1,271 +1,33 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { marketplaceService } from "@/lib/api/marketplace";
-import { openPaystack } from "@/lib/payments/paystackInline";
-import {
-  getPaymentGateway,
-  getStripe,
-  formatPrice,
-  getGatewayDisplayName,
-  generateTxRef,
-  buildPaystackConfig,
-  buildFlutterwaveConfig,
-} from "@/lib/api/payment";
+import { openPaystackCheckout, PaystackUnavailableError } from "@/lib/payments/paystackInline";
+import { clearPendingCheckout, savePendingCheckout } from "@/lib/payments/pendingCheckout";
+import { formatMinor, writeErrorMessage } from "@/lib/currencies/helpers";
 import type {
   MarketplaceListing,
   MarketplaceMembershipPlan,
 } from "@/lib/types";
-import { PaymentGateway, MembershipPlanType } from "@/lib/types";
-import { minorToMajor } from "@/lib/money/minorMoney";
+import { MembershipPlanType } from "@/lib/types";
 import DashboardLoading from "@/components/DashboardLoading";
 import { Button } from "@/components/Button";
 
-import {
-  CardElement,
-  Elements,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
-
-// ==================== STRIPE CARD FORM ====================
-
-function StripeCardForm({
-  amount,
-  currency,
-  planName,
-  onSuccess,
-  onError,
-  isProcessing,
-  setIsProcessing,
-}: {
-  amount: number;
-  currency: string;
-  planName: string;
-  onSuccess: (ref: string) => void;
-  onError: (msg: string) => void;
-  isProcessing: boolean;
-  setIsProcessing: (v: boolean) => void;
-}) {
-  const stripe = useStripe();
-  const elements = useElements();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setIsProcessing(true);
-    try {
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) {
-        onError("Card element not found");
-        return;
-      }
-
-      const { error, paymentMethod } = await stripe.createPaymentMethod({
-        type: "card",
-        card: cardElement,
-      });
-
-      if (error) {
-        onError(error.message ?? "Payment failed");
-      } else if (paymentMethod) {
-        onSuccess(`stripe_pm_${paymentMethod.id}`);
-      }
-    } catch {
-      onError("An unexpected error occurred");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="border border-border rounded-(--r-2) p-4 bg-bg">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: "16px",
-                color: "oklch(0.16 0.01 80)",
-                "::placeholder": { color: "oklch(0.72 0.005 80)" },
-              },
-              invalid: { color: "oklch(0.58 0.18 25)" },
-            },
-          }}
-        />
-      </div>
-      <Button
-        type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full"
-      >
-        {isProcessing
-          ? "Processing..."
-          : `Pay ${formatPrice(amount, currency)}`}
-      </Button>
-    </form>
-  );
-}
-
-// ==================== PAYSTACK BUTTON ====================
-
-function PaystackButton({
-  amount,
-  currency,
-  email,
-  onSuccess,
-  onError,
-  isProcessing,
-  setIsProcessing,
-  publicKeyOverride,
-}: {
-  amount: number;
-  currency: string;
-  email: string;
-  onSuccess: (ref: string) => void;
-  onError: (msg: string) => void;
-  isProcessing: boolean;
-  setIsProcessing: (v: boolean) => void;
-  publicKeyOverride?: string | null;
-}) {
-  const reference = generateTxRef("PS");
-  const config = buildPaystackConfig({ amount, currency, email, reference });
-
-  // Use provider's key if available, otherwise fall back to platform key
-  const effectivePublicKey = publicKeyOverride || config?.publicKey;
-
-  const handleClick = () => {
-    if (!effectivePublicKey || !config) {
-      onError("Paystack is not configured");
-      return;
-    }
-    setIsProcessing(true);
-    // config.amount is already in the smallest unit (buildPaystackConfig
-    // scales it); the popup loader is the one the booking payment uses.
-    openPaystack({
-      key: effectivePublicKey,
-      email: config.email,
-      amountMinor: config.amount,
-      currency: config.currency,
-      reference: config.reference,
-    })
-      .then((result) => {
-        setIsProcessing(false);
-        if (result.closed === "callback") onSuccess(`paystack_${result.reference}`);
-      })
-      .catch((err: unknown) => {
-        setIsProcessing(false);
-        onError(err instanceof Error ? err.message : "Failed to load Paystack script");
-      });
-  };
-
-  return (
-    <Button
-      onClick={handleClick}
-      disabled={isProcessing || !effectivePublicKey}
-      className="w-full"
-    >
-      {isProcessing
-        ? "Processing..."
-        : `Pay ${formatPrice(amount, currency)} with Paystack`}
-    </Button>
-  );
-}
-
-// ==================== FLUTTERWAVE BUTTON ====================
-
-function FlutterwaveButton({
-  amount,
-  currency,
-  email,
-  name,
-  planName,
-  onSuccess,
-  onError,
-  isProcessing,
-  setIsProcessing,
-}: {
-  amount: number;
-  currency: string;
-  email: string;
-  name: string;
-  planName: string;
-  onSuccess: (ref: string) => void;
-  onError: (msg: string) => void;
-  isProcessing: boolean;
-  setIsProcessing: (v: boolean) => void;
-}) {
-  const handleClick = async () => {
-    const txRef = generateTxRef("FW");
-    const config = buildFlutterwaveConfig({
-      amount,
-      currency,
-      email,
-      name,
-      planName,
-      txRef,
-    });
-
-    if (!config) {
-      onError("Flutterwave is not configured");
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      // Dynamic import to avoid SSR issues
-      const { closePaymentModal } = await import("flutterwave-react-v3");
-
-      // Use the Flutterwave inline script approach
-      const FlutterwaveCheckout = (window as unknown as Record<string, unknown>)
-        .FlutterwaveCheckout as
-        | ((config: Record<string, unknown>) => void)
-        | undefined;
-
-      if (typeof FlutterwaveCheckout === "function") {
-        FlutterwaveCheckout({
-          ...config,
-          callback: (response: Record<string, unknown>) => {
-            closePaymentModal();
-            if (
-              response.status === "successful" ||
-              response.status === "completed"
-            ) {
-              onSuccess(
-                `flutterwave_${String(response.transaction_id || response.tx_ref || txRef)}`,
-              );
-            } else {
-              onError("Payment was not successful");
-            }
-            setIsProcessing(false);
-          },
-          onclose: () => {
-            setIsProcessing(false);
-          },
-        });
-      } else {
-        // Fallback: redirect-based approach
-        onSuccess(`flutterwave_${txRef}`);
-        setIsProcessing(false);
-      }
-    } catch {
-      onError("Failed to initialize Flutterwave");
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <Button onClick={handleClick} disabled={isProcessing} className="w-full">
-      {isProcessing
-        ? "Processing..."
-        : `Pay ${formatPrice(amount, currency)} with Flutterwave`}
-    </Button>
-  );
-}
+/**
+ * Plan checkout.
+ *
+ * The API starts the payment (POST .../plans/:planId/checkout) at the plan's
+ * own price and currency, with the gym's own Paystack key when it has one,
+ * and returns an access code. The browser only resumes that transaction in
+ * Paystack's popup; it never names an amount, a currency or a key. Once the
+ * popup reports success, the member subscribes with the returned
+ * payment_reference and the API verifies the charge before activating.
+ *
+ * Paystack is the only gateway the API takes member payments through, so
+ * there is no Stripe or Flutterwave path here.
+ */
 
 // ==================== CHECKOUT CONTENT ====================
 
@@ -283,13 +45,8 @@ function CheckoutContent() {
   const [error, setError] = useState("");
   const [paymentError, setPaymentError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [providerPaystackKey, setProviderPaystackKey] = useState<string | null>(
-    null,
-  );
-
-  const gateway = plan
-    ? getPaymentGateway(plan.currency)
-    : PaymentGateway.STRIPE;
+  // One checkout at a time: a second click while the popup is up is ignored.
+  const inFlight = useRef(false);
 
   const loadCheckoutData = useCallback(async () => {
     if (!listingId || !planId) return;
@@ -297,10 +54,9 @@ function CheckoutContent() {
     setLoading(true);
     setError("");
     try {
-      const [listingRes, plansRes, paymentConfigRes] = await Promise.all([
+      const [listingRes, plansRes] = await Promise.all([
         marketplaceService.getListingById(listingId),
         marketplaceService.getPublicListingPlans(listingId),
-        marketplaceService.getListingPaymentConfig(listingId),
       ]);
 
       if (listingRes.success && listingRes.data) {
@@ -310,19 +66,16 @@ function CheckoutContent() {
         return;
       }
 
-      if (plansRes.success && plansRes.data) {
-        const selectedPlan = plansRes.data.find((p) => p._id === planId);
-        if (selectedPlan) {
-          setPlan(selectedPlan);
-        } else {
-          setError("Plan not found or no longer available");
-        }
+      // A failed plans read used to fall through to a blank page.
+      if (!plansRes.success || !plansRes.data) {
+        setError("We couldn't load this plan. Check your connection and try again.");
+        return;
       }
-
-      if (paymentConfigRes.success && paymentConfigRes.data) {
-        setProviderPaystackKey(
-          paymentConfigRes.data.paystack_public_key || null,
-        );
+      const selectedPlan = plansRes.data.find((p) => p._id === planId);
+      if (selectedPlan) {
+        setPlan(selectedPlan);
+      } else {
+        setError("This plan isn't available anymore. Go back to the listing to choose another.");
       }
     } catch {
       setError("Failed to load checkout details");
@@ -342,44 +95,71 @@ function CheckoutContent() {
     }
   }, [user, authLoading, listingId, planId, loadCheckoutData, router]);
 
-  const handlePaymentSuccess = async (paymentReference: string) => {
-    if (!listing || !plan) return;
-
+  /**
+   * Start the server's checkout, open it, then subscribe with the reference
+   * it returned. The popup's success is not proof of payment: subscribe
+   * verifies the charge with the gateway before activating anything.
+   */
+  const handlePay = async () => {
+    if (!listing || !plan || inFlight.current) return;
+    inFlight.current = true;
     setIsProcessing(true);
     setPaymentError("");
-
     try {
+      const started = await marketplaceService.startPlanCheckout(listing._id, plan._id);
+      if (!started.success || !started.data?.access_code) {
+        setPaymentError(writeErrorMessage(started, "We couldn't start the payment. Please try again."));
+        return;
+      }
+      const checkout = started.data;
+      // Kept for this tab in case the checkout has to finish on
+      // /payments/return after Paystack's hosted page.
+      savePendingCheckout({
+        reference: checkout.reference,
+        payment_reference: checkout.payment_reference,
+        listing_id: listing._id,
+        plan_id: plan._id,
+        amount_minor: checkout.amount_minor,
+      });
+      let result;
+      try {
+        result = await openPaystackCheckout(checkout.access_code);
+      } catch (err) {
+        if (err instanceof PaystackUnavailableError && checkout.authorization_url) {
+          // The popup can't load here; the hosted page charges the same
+          // server-started transaction and comes back to /payments/return.
+          window.location.assign(checkout.authorization_url);
+          return;
+        }
+        setPaymentError(err instanceof Error ? err.message : "Could not open the payment.");
+        return;
+      }
+      if (result.closed === "dismissed") return;
+
       const res = await marketplaceService.subscribeToListingPlan(
         listing._id,
         plan._id,
-        paymentReference,
-        // Already minor units — the same unit the API compares against
-        // plan.price_minor, so nothing is scaled on the way out.
-        plan.price_minor,
+        checkout.payment_reference,
+        // What the server charged, in minor units; the API checks it
+        // against the plan and the gateway's own record.
+        checkout.amount_minor,
       );
-
       if (res.success) {
-        router.push(
-          `/checkout/success?listing=${listing._id}&plan=${plan._id}`,
-        );
+        clearPendingCheckout();
+        router.push(`/checkout/success?listing=${listing._id}&plan=${plan._id}`);
       } else {
         setPaymentError(
-          res.message ||
-            "Failed to activate subscription. Please contact support.",
+          res.message
+            ? `${res.message} Your payment reference is ${checkout.reference}.`
+            : `Your payment went through but the subscription didn't activate. Contact support with reference ${checkout.reference}.`,
         );
       }
     } catch {
-      setPaymentError(
-        "Payment was processed but subscription activation failed. Please contact support with your payment reference.",
-      );
+      setPaymentError("Something went wrong. Please try again.");
     } finally {
+      inFlight.current = false;
       setIsProcessing(false);
     }
-  };
-
-  const handlePaymentError = (msg: string) => {
-    setPaymentError(msg);
-    setIsProcessing(false);
   };
 
   // Handle free plans
@@ -418,9 +198,8 @@ function CheckoutContent() {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center p-4">
         <div className="bg-bg rounded-(--r-3) p-6 sm:p-8 max-w-md w-full text-center border border-border">
-          <div className="text-5xl mb-4">🛒</div>
           <h2 className="text-2xl font-bold text-ink mb-2">
-            No Plan Selected
+            No plan selected
           </h2>
           <p className="text-fg-2 mb-6">
             Please select a plan from a provider&apos;s profile to proceed.
@@ -437,9 +216,8 @@ function CheckoutContent() {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center p-4">
         <div className="bg-bg rounded-(--r-3) p-6 sm:p-8 max-w-md w-full text-center border border-border">
-          <div className="text-5xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-ink mb-2">
-            Checkout Error
+            Checkout error
           </h2>
           <p className="text-fg-2 mb-6">{error}</p>
           <Button onClick={() => router.back()}>Go Back</Button>
@@ -448,7 +226,11 @@ function CheckoutContent() {
     );
   }
 
-  if (!listing || !plan || !user) return null;
+  // Loading has settled here; anything still missing is a failed read, not
+  // a reason to render nothing.
+  if (!listing || !plan || !user) {
+    return <DashboardLoading />;
+  }
 
   const displayName =
     typeof listing.professional_id === "object"
@@ -456,12 +238,7 @@ function CheckoutContent() {
       : listing.headline;
 
   const isFree = plan.price_minor === 0;
-  /**
-   * MAJOR units for the gateway widgets. Each of the three takes a major-unit
-   * amount and applies its own gateway's scaling (buildPaystackConfig does the
-   * ×100 itself), so handing them `price_minor` would charge 100× the plan.
-   */
-  const priceMajor = minorToMajor(plan.price_minor);
+  const priceLabel = formatMinor(plan.currency, plan.price_minor);
 
   return (
     <div className="min-h-screen bg-bg py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -515,19 +292,15 @@ function CheckoutContent() {
                     {plan.duration_days} days
                   </span>
                 </div>
-                {gateway !== PaymentGateway.STRIPE && !isFree && (
+                {!isFree && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-fg-2">
-                      Payment via
-                    </span>
-                    <span className="font-medium text-fg">
-                      {getGatewayDisplayName(gateway)}
-                    </span>
+                    <span className="text-fg-2">Payment via</span>
+                    <span className="font-medium text-fg">Paystack</span>
                   </div>
                 )}
               </div>
 
-              {plan.features.length > 0 && (
+              {(plan.features?.length ?? 0) > 0 && (
                 <div className="border-t border-border pt-4 mb-4">
                   <p className="text-sm font-semibold text-fg mb-2">
                     Includes:
@@ -550,7 +323,7 @@ function CheckoutContent() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-fg">Total</span>
                   <span className="text-2xl font-black text-ink">
-                    {isFree ? "Free" : formatPrice(minorToMajor(plan.price_minor), plan.currency)}
+                    {isFree ? "Free" : priceLabel}
                   </span>
                 </div>
               </div>
@@ -565,7 +338,7 @@ function CheckoutContent() {
               </h2>
 
               {paymentError && (
-                <div className="bg-danger-soft border border-danger text-danger px-4 py-3 rounded-(--r-2) mb-6 text-sm">
+                <div role="alert" className="bg-danger-soft border border-danger text-danger px-4 py-3 rounded-(--r-2) mb-6 text-sm">
                   {paymentError}
                 </div>
               )}
@@ -588,46 +361,13 @@ function CheckoutContent() {
                 </div>
               ) : (
                 <>
-                  {gateway === PaymentGateway.STRIPE && (
-                    <Elements stripe={getStripe()}>
-                      <StripeCardForm
-                        amount={priceMajor}
-                        currency={plan.currency}
-                        planName={plan.name}
-                        onSuccess={handlePaymentSuccess}
-                        onError={handlePaymentError}
-                        isProcessing={isProcessing}
-                        setIsProcessing={setIsProcessing}
-                      />
-                    </Elements>
-                  )}
-
-                  {gateway === PaymentGateway.PAYSTACK && (
-                    <PaystackButton
-                      amount={priceMajor}
-                      currency={plan.currency}
-                      email={user.email}
-                      onSuccess={handlePaymentSuccess}
-                      onError={handlePaymentError}
-                      isProcessing={isProcessing}
-                      setIsProcessing={setIsProcessing}
-                      publicKeyOverride={providerPaystackKey}
-                    />
-                  )}
-
-                  {gateway === PaymentGateway.FLUTTERWAVE && (
-                    <FlutterwaveButton
-                      amount={priceMajor}
-                      currency={plan.currency}
-                      email={user.email}
-                      name={`${user.first_name} ${user.last_name}`}
-                      planName={plan.name}
-                      onSuccess={handlePaymentSuccess}
-                      onError={handlePaymentError}
-                      isProcessing={isProcessing}
-                      setIsProcessing={setIsProcessing}
-                    />
-                  )}
+                  <Button
+                    onClick={() => void handlePay()}
+                    disabled={isProcessing}
+                    className="w-full"
+                  >
+                    {isProcessing ? "Processing..." : `Pay ${priceLabel} with Paystack`}
+                  </Button>
 
                   <p className="text-xs text-fg-3 mt-4 text-center">
                     Your payment is processed securely. We never store your card

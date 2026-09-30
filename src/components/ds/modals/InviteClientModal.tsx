@@ -328,7 +328,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
                 }}
                 placeholder="Select a plan…"
                 options={plans.map((p) => ({
-                  label: `${p.name}, ${formatCurrency(minorToMajor(p.price_minor), p.currency)}`,
+                  label: `${p.name}, ${formatCurrency(minorToMajor(p.price_minor, p.currency), p.currency)}`,
                   value: p._id,
                 }))}
               />
@@ -363,7 +363,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
                 <>
                   We&apos;ll generate a one-time account for{" "}
                   <span style={{ color: "var(--fg-2)" }}>
-                    {formatCurrency(minorToMajor(selectedPlan.price_minor), selectedPlan.currency)}
+                    {formatCurrency(minorToMajor(selectedPlan.price_minor, selectedPlan.currency), selectedPlan.currency)}
                   </span>
                   . The membership activates automatically once the member transfers.
                 </>
@@ -379,7 +379,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
                   <label className={labelClass}>Amount paid</label>
                   <MoneyInput
                     value={form.amount_paid_display}
-                    currency={selectedPlan?.currency ?? currentOrg?.currency ?? "USD"}
+                    currency={selectedPlan?.currency ?? currentOrg?.currency ?? ""}
                     aria-label="Amount paid"
                     onChange={(display, minor) =>
                       setForm((f) => ({
@@ -513,7 +513,7 @@ function TransferDetails({
       <p className="text-[13px]" style={{ color: "var(--fg-2)" }}>
         Ask {email || "the member"} to transfer{" "}
         <span style={{ color: "var(--ink)", fontWeight: 500 }}>
-          {formatCurrency(minorToMajor(transfer.amount_minor), transfer.currency)}
+          {formatCurrency(minorToMajor(transfer.amount_minor, transfer.currency), transfer.currency)}
         </span>{" "}
         into this account. The membership activates automatically once the payment
         arrives.
@@ -556,7 +556,7 @@ function TransferDetails({
           <div>
             <span className={rowLabel}>Amount</span>
             <span className="mt-1 block text-[13.5px]" style={{ color: "var(--fg-2)" }}>
-              {formatCurrency(minorToMajor(transfer.amount_minor), transfer.currency)}
+              {formatCurrency(minorToMajor(transfer.amount_minor, transfer.currency), transfer.currency)}
             </span>
           </div>
           {transfer.account_name && (

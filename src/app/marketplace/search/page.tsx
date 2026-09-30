@@ -1,33 +1,50 @@
 "use client";
 
+import { Suspense, useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
-import { formatCurrency } from "@/utils/format";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
+import { useSearchListings } from "@/lib/queries/marketplace";
+import { useCurrencyList } from "@/lib/queries/currencies";
+import { listingDisplayName, listingPriceFrom } from "@/lib/marketplace/listingDisplay";
 
 /**
- * Marketplace Search Results — search results grid with search bar.
- * Proto: marketplace-search-results.html
- * Topbar + search input + 2-col result cards with avatar, name, desc, pills.
- * "use client" for search input interactivity.
+ * Marketplace search results (proto: marketplace-search-results.html).
+ * Results come from GET /marketplace/listings (the same search as
+ * /marketplace); each card's price is the listing's own "from" price in its
+ * own currency, or nothing. It used to render eight made-up providers with
+ * rand prices.
  */
 
-const RESULTS = [
-  { name: "Thandi Nkosi", desc: "postnatal specialist · Sea Point", amount: 850, currency: "ZAR", unit: "", rating: "4.8", hue: 0 },
-  { name: "Sarah Okafor", desc: "strength + postnatal · CBD", amount: 1200, currency: "ZAR", unit: "", rating: "4.9", hue: 45 },
-  { name: "Camilla Lapwing", desc: "postnatal pilates · Camps Bay", amount: 950, currency: "ZAR", unit: "", rating: "4.8", hue: 90 },
-  { name: "Iron Lab", desc: "group postnatal class · Wed 10am", amount: 280, currency: "ZAR", unit: "", rating: "4.9", hue: 135 },
-  { name: "Dr Nadia Hassan", desc: "postnatal nutrition · online", amount: 950, currency: "ZAR", unit: "", rating: "4.8", hue: 180 },
-  { name: "Studio Move", desc: "postnatal yoga · Woodstock", amount: 200, currency: "ZAR", unit: "/class", rating: "4.9", hue: 225 },
-  { name: "Marcus Bell", desc: "postnatal mobility · home visits", amount: 800, currency: "ZAR", unit: "", rating: "4.8", hue: 270 },
-  { name: "Olive & Oak", desc: "mom & baby classes · Sea Point", amount: 320, currency: "ZAR", unit: "", rating: "4.9", hue: 315 },
-];
+const HUES = [0, 45, 90, 135, 180, 225, 270, 315];
 
 function SearchIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
 }
 
 export default function MarketplaceSearchPage() {
+  return (
+    <Suspense fallback={null}>
+      <MarketplaceSearch />
+    </Suspense>
+  );
+}
+
+function MarketplaceSearch() {
+  const params = useSearchParams();
+  const [draft, setDraft] = useState(() => params.get("q") ?? "");
+  const [q, setQ] = useState(draft);
+  const { data, isPending, isError } = useSearchListings({ q: q.trim() || undefined, limit: 20 });
+  const { data: currencies } = useCurrencyList();
+  const results = data?.listings ?? [];
+  const total = data?.pagination.total ?? results.length;
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setQ(draft);
+  };
+
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh" }}>
       {/* Topbar */}
@@ -44,41 +61,55 @@ export default function MarketplaceSearchPage() {
       <div className="mx-auto max-w-320 px-5 sm:px-8 py-8">
         {/* Search bar */}
         <div className="mb-6">
-          <div className="flex gap-2 items-center rounded-(--r-3) px-3.5 py-2.5 max-w-140" style={{ background: "var(--bg)", border: "1px solid var(--border-2)" }}>
+          <form onSubmit={onSubmit} role="search" className="flex gap-2 items-center rounded-(--r-3) px-3.5 py-2.5 max-w-140" style={{ background: "var(--bg)", border: "1px solid var(--border-2)" }}>
             <span style={{ color: "var(--fg-3)" }}><SearchIcon /></span>
             <input
-              defaultValue="postnatal strength · cape town"
-              className="flex-1 border-0 outline-0 text-[14px]"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Search providers"
+              aria-label="Search providers"
+              className="flex-1 min-w-0 border-0 outline-0 text-[14px]"
               style={{ background: "transparent", font: "inherit" }}
             />
-            <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>&#8984; K</span>
-          </div>
+          </form>
           <p className="mt-3 text-[13.5px]" style={{ color: "var(--fg-3)" }}>
-            8 providers · sorted by relevance · <Link href="#" style={{ color: "var(--ink)" }}>filter by price</Link>
+            {isPending ? "Searching" : isError ? "Search is unavailable right now" : `${total} provider${total === 1 ? "" : "s"}`}
           </p>
         </div>
 
         {/* Results grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {RESULTS.map((r) => (
-            <Link
-              key={r.name}
-              href="/marketplace"
-              className="flex gap-3.5 rounded-(--r-3) p-4.5"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", textDecoration: "none", color: "inherit" }}
-            >
-              <div className="w-16 h-16 rounded-(--r-2) shrink-0" style={{ background: `linear-gradient(135deg, oklch(0.86 0.04 ${r.hue}), oklch(0.74 0.06 ${r.hue + 30}))` }} />
-              <div className="flex-1">
-                <div className="text-[15px] font-medium mb-1" style={{ color: "var(--ink)" }}>{r.name}</div>
-                <div className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>{r.desc} · {formatCurrency(r.amount, r.currency)}{r.unit}</div>
-                <div className="flex flex-wrap gap-1.5 mt-2.5">
-                  <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>&#9733; {r.rating}</span>
-                  <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>verified</span>
-                  <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>in 3 days</span>
+          {results.map((l, i) => {
+            const price = listingPriceFrom(l, currencies);
+            const hue = HUES[i % HUES.length];
+            const verified = l.verification_badge && l.verification_badge !== "none";
+            const sub = [l.specialties?.[0], l.city].filter(Boolean).join(" · ") || l.headline;
+            return (
+              <Link
+                key={l._id}
+                href={`/marketplace/${l._id}`}
+                className="flex gap-3.5 rounded-(--r-3) p-4.5"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", textDecoration: "none", color: "inherit" }}
+              >
+                <div className="w-16 h-16 rounded-(--r-2) shrink-0" style={{ background: `linear-gradient(135deg, oklch(0.86 0.04 ${hue}), oklch(0.74 0.06 ${hue + 30}))` }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[15px] font-medium mb-1" style={{ color: "var(--ink)" }}>{listingDisplayName(l)}</div>
+                  <div className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
+                    {sub}
+                    {price ? ` · ${price}` : ""}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2.5">
+                    {l.review_count > 0 && (
+                      <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>&#9733; {l.average_rating.toFixed(1)}</span>
+                    )}
+                    {verified && (
+                      <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>verified</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>

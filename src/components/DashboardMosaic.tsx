@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { fillDemoMoney, useDemoMoney } from "@/components/marketing/CurrencyFacts";
+import { useCurrencyList } from "@/lib/queries/currencies";
+import { gatewayCurrencySummary, payableCurrencies } from "@/lib/currencies/helpers";
 
 function useVisibleOnTouch(
   ref: React.RefObject<HTMLDivElement | null>,
@@ -507,7 +510,7 @@ function ParticleField() {
 const TRAINER_STATS = [
   { label: "Sessions · this week", value: "28", unit: "/ 32 slots", delta: "88% utilization" },
   { label: "Active clients", value: "42", delta: "+ 3 this month" },
-  { label: "Earnings · MTD", value: "R 38,400", delta: "↑ 14% vs apr" },
+  { label: "Earnings · MTD", value: "{{38400}}", delta: "↑ 14% vs apr" },
   { label: "Rating · last 30d", value: "4.9", delta: "No change", steady: true },
 ];
 
@@ -522,6 +525,8 @@ const SESSIONS: Array<{ time: string; initials: string; name: string; meta: stri
 ];
 
 function DashboardPreview() {
+  // Sample amounts in a currency we can charge (GET /currencies).
+  const money = useDemoMoney();
   return (
     <div className="dash-preview" aria-hidden="true">
       <div className="dash-shell">
@@ -596,7 +601,7 @@ function DashboardPreview() {
             <div className="dash-el" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", transitionDelay: "100ms" }}>
               <div>
                 <div style={{ fontSize: 30, letterSpacing: "-0.02em", fontWeight: 500 }}>Today, Sarah</div>
-                <div style={{ color: "var(--fg-3)", fontSize: 13.5, marginTop: 6 }}>Mon · May 11 · 6 sessions · R 7,200 forecast</div>
+                <div style={{ color: "var(--fg-3)", fontSize: 13.5, marginTop: 6 }}>Mon · May 11 · 6 sessions · {money(7200)} forecast</div>
               </div>
             </div>
 
@@ -608,7 +613,7 @@ function DashboardPreview() {
                 }}>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--fg-3)" }}>{stat.label}</div>
                   <div style={{ fontSize: 28, letterSpacing: "-0.02em", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
-                    {stat.value}
+                    {fillDemoMoney(stat.value, money)}
                     {stat.unit && <small style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-3)", fontWeight: 400, marginLeft: 4 }}>{stat.unit}</small>}
                   </div>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: stat.steady ? "var(--fg-3)" : "var(--signal-ink)" }}>{stat.delta}</div>
@@ -1132,8 +1137,15 @@ function Row2VerifyCard() {
 // ─── Row 2: Global Reach ───────────────────────────────────────────
 
 function Row2GlobalCard() {
+  // Currency and payment-provider counts come from GET /currencies.
+  const { data: currencyList } = useCurrencyList();
+  const stats: [string, string][] = [["50+", "Countries"]];
+  if (currencyList && currencyList.length > 0) {
+    stats.push([String(payableCurrencies(currencyList).length), "Currencies"]);
+    stats.push([String(gatewayCurrencySummary(currencyList).length), "Payment providers"]);
+  }
   return (
-    <div className="bento-card bento-r2 bento-r2-global" role="img" aria-label="Global reach across 50+ countries with multiple payment rails">
+    <div className="bento-card bento-r2 bento-r2-global" role="img" aria-label="Global reach across 50+ countries">
       <WaveBackground id="gl-grad" stops={[["0%", "var(--trainer)"], ["50%", "var(--signal)"], ["100%", "var(--trainer)"]]} />
       <svg className="meridian-bg" viewBox="0 0 400 600" fill="none" aria-hidden="true">
         {[60, 120, 180, 220, 280, 340].map((x, i) => (
@@ -1156,7 +1168,7 @@ function Row2GlobalCard() {
             <div className="globe-more">+42 more</div>
           </div>
           <div className="globe-stats" style={{ display: "flex", gap: 32, justifyContent: "center" }}>
-            {[["50+", "Countries"], ["12", "Currencies"], ["3", "Payment rails"]].map(([val, label]) => (
+            {stats.map(([val, label]) => (
               <div key={label} style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 500, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>{val}</div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--fg-3)", marginTop: 4 }}>{label}</div>
@@ -1172,7 +1184,7 @@ function Row2GlobalCard() {
 // ─── Row 3: Gym Owner Analytics ───────────────────────────────────────
 
 const R3_KPIS = [
-  { label: "Revenue · 30d", value: "R 1,084,200", suffix: " ZAR", delta: "↑ 12.4% vs prev", down: false, spark: [30,45,38,60,52,64,70,58,72,80,68,90] },
+  { label: "Revenue · 30d", value: "{{1084200}}", delta: "↑ 12.4% vs prev", down: false, spark: [30,45,38,60,52,64,70,58,72,80,68,90] },
   { label: "Active members", value: "1,284", delta: "↑ 38 net new", down: false, spark: [50,55,60,58,64,68,72,75,78,80,82,86] },
   { label: "Check‑ins · today", value: "412", suffix: "/ 1,284", delta: "32% attendance", down: false, spark: [12,28,48,70,88,96,78,60,38,28,18,8] },
   { label: "Churn · 30d", value: "2.1", suffix: "%", delta: "↓ 0.4 pts", down: true, spark: [60,52,58,48,44,50,42,38,32,36,28,22] },
@@ -1183,19 +1195,19 @@ const R3_LIVE = [
   { dot: "signal", name: "", text: "New subscription · Studio monthly · Jamal S.", ts: "2m" },
   { dot: "warn", name: "Coach Themba", text: "running 4m late · 18:00 class", ts: "4m" },
   { dot: "signal", name: "", text: "Class booked · Olympic basics · Tue 19:00", ts: "8m" },
-  { dot: "danger", name: "", text: "Refund request · R 850 · Pier B. · awaiting review", ts: "14m" },
+  { dot: "danger", name: "", text: "Refund request · {{850}} · Pier B. · awaiting review", ts: "14m" },
   { dot: "signal", name: "", text: "14 members checked in at Foreshore in last 20m", ts: "22m" },
-  { dot: "signal", name: "", text: "Auto‑payout posted · R 84,200 → ABSA •••2241", ts: "1h" },
+  { dot: "signal", name: "", text: "Auto‑payout posted · {{84200}} → ABSA •••2241", ts: "1h" },
 ];
 
 const R3_MEMBERS = [
-  { init: "JS", name: "Jamal Sutherland", plan: "Studio · monthly", loc: "Sea Point", joined: "May 02 · 09:14", status: "Active", sType: "signal", ltv: "R 850" },
-  { init: "LM", name: "Linda Mokoena", plan: "Pro · annual", loc: "Foreshore", joined: "May 01 · 18:22", status: "Active", sType: "signal", ltv: "R 9,200" },
-  { init: "WC", name: "Wei Chen", plan: "Studio · monthly", loc: "Sea Point", joined: "Apr 30 · 12:08", status: "Active", sType: "signal", ltv: "R 1,700" },
-  { init: "PB", name: "Pier Botha", plan: "Day pass", loc: "Woodstock", joined: "Apr 28 · 07:42", status: "Refund req.", sType: "danger", ltv: "R 180" },
-  { init: "TN", name: "Thandi Nkosi", plan: "Studio · monthly", loc: "Camps Bay", joined: "Apr 27 · 16:30", status: "Active", sType: "signal", ltv: "R 2,550" },
-  { init: "AA", name: "Aisha Adams", plan: "Pro · annual", loc: "Sea Point", joined: "Apr 26 · 14:11", status: "Active", sType: "signal", ltv: "R 9,200" },
-  { init: "MK", name: "Mike Khumalo", plan: "Studio · monthly", loc: "Foreshore", joined: "Apr 25 · 19:48", status: "Payment retry", sType: "warn", ltv: "R 0" },
+  { init: "JS", name: "Jamal Sutherland", plan: "Studio · monthly", loc: "Sea Point", joined: "May 02 · 09:14", status: "Active", sType: "signal", ltv: "{{850}}" },
+  { init: "LM", name: "Linda Mokoena", plan: "Pro · annual", loc: "Foreshore", joined: "May 01 · 18:22", status: "Active", sType: "signal", ltv: "{{9200}}" },
+  { init: "WC", name: "Wei Chen", plan: "Studio · monthly", loc: "Sea Point", joined: "Apr 30 · 12:08", status: "Active", sType: "signal", ltv: "{{1700}}" },
+  { init: "PB", name: "Pier Botha", plan: "Day pass", loc: "Woodstock", joined: "Apr 28 · 07:42", status: "Refund req.", sType: "danger", ltv: "{{180}}" },
+  { init: "TN", name: "Thandi Nkosi", plan: "Studio · monthly", loc: "Camps Bay", joined: "Apr 27 · 16:30", status: "Active", sType: "signal", ltv: "{{2550}}" },
+  { init: "AA", name: "Aisha Adams", plan: "Pro · annual", loc: "Sea Point", joined: "Apr 26 · 14:11", status: "Active", sType: "signal", ltv: "{{9200}}" },
+  { init: "MK", name: "Mike Khumalo", plan: "Studio · monthly", loc: "Foreshore", joined: "Apr 25 · 19:48", status: "Payment retry", sType: "warn", ltv: "{{0}}" },
 ];
 
 const R3_CLASSES = [
@@ -1220,6 +1232,7 @@ const R3_STATUS: Record<string, React.CSSProperties> = {
 };
 
 function R3CheckoutCard({ step }: { step: number }) {
+  const money = useDemoMoney();
   return (
     <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
       {/* Screen 0: Plan Selection */}
@@ -1228,8 +1241,8 @@ function R3CheckoutCard({ step }: { step: number }) {
         <div style={{ fontSize: 18, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--ink)", marginTop: 6 }}>Choose a plan</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
           {[
-            { name: "Studio Monthly", price: "₦ 12,500", per: "/ 30d", active: true, features: ["All equipment", "Group classes", "Locker access"] },
-            { name: "Pro Annual", price: "₦ 108,000", per: "/ 365d", active: false, features: ["Everything in Studio", "PT 2×/wk"] },
+            { name: "Studio Monthly", price: money(12500), per: "/ 30d", active: true, features: ["All equipment", "Group classes", "Locker access"] },
+            { name: "Pro Annual", price: money(108000), per: "/ 365d", active: false, features: ["Everything in Studio", "PT 2×/wk"] },
           ].map((p) => (
             <div key={p.name} style={{ border: p.active ? "1.5px solid var(--ink)" : "1px solid var(--border)", borderRadius: "var(--r-3)", padding: "12px 14px", background: p.active ? "var(--bg-2)" : "var(--bg)" }}>
               <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{p.name}</div>
@@ -1263,7 +1276,7 @@ function R3CheckoutCard({ step }: { step: number }) {
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", fontSize: 13, fontWeight: 500 }}>
             <span style={{ color: "var(--ink)" }}>Due today</span>
-            <span style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>₦ 12,500</span>
+            <span style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{money(12500)}</span>
           </div>
         </div>
         <div style={{ borderRadius: "var(--r-3)", border: "1px solid var(--border)", padding: "10px 12px", marginTop: 10 }}>
@@ -1273,7 +1286,7 @@ function R3CheckoutCard({ step }: { step: number }) {
             •••• 4242
           </div>
         </div>
-        <div style={{ height: 36, borderRadius: "var(--r-2)", background: "var(--signal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 500, color: "var(--ink)", marginTop: 12 }}>Pay ₦ 12,500</div>
+        <div style={{ height: 36, borderRadius: "var(--r-2)", background: "var(--signal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 500, color: "var(--ink)", marginTop: 12 }}>Pay {money(12500)}</div>
         <div style={{ textAlign: "center", fontSize: 10, color: "var(--fg-3)", marginTop: 6 }}>Cancel any time · 24‑hr review window</div>
       </div>
 
@@ -1295,7 +1308,7 @@ function R3CheckoutCard({ step }: { step: number }) {
           <div style={{ fontSize: 16, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--ink)", textAlign: "center" }}>Subscription Activated!</div>
           <div style={{ fontSize: 11.5, color: "var(--fg-3)", textAlign: "center" }}>You now have access to all included services.</div>
           <div style={{ width: "100%", borderRadius: "var(--r-3)", background: "var(--bg-2)", padding: "12px 14px", marginTop: 4 }}>
-            {[["Plan", "Studio Monthly"], ["Amount", "₦ 12,500"], ["Duration", "30 days"]].map(([label, value]) => (
+            {[["Plan", "Studio Monthly"], ["Amount", money(12500)], ["Duration", "30 days"]].map(([label, value]) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 11.5 }}>
                 <span style={{ color: "var(--fg-3)" }}>{label}</span>
                 <span style={{ color: "var(--ink)", fontWeight: 500 }}>{value}</span>
@@ -1310,6 +1323,7 @@ function R3CheckoutCard({ step }: { step: number }) {
 }
 
 function Row3DashCard() {
+  const money = useDemoMoney();
   const [step, setStep] = useState(0);
   const timerIds = useRef<number[]>([]);
   const hoveringRef = useRef(false);
@@ -1382,7 +1396,7 @@ function Row3DashCard() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, paddingBottom: 4 }}>
                   <div>
                     <div style={{ fontSize: 30, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--ink)" }}>Good morning, Lerato</div>
-                    <div style={{ fontSize: 13.5, marginTop: 6, color: "var(--fg-3)" }}>Here&apos;s how Iron Lab is doing, all 4 locations · ZAR</div>
+                    <div style={{ fontSize: 13.5, marginTop: 6, color: "var(--fg-3)" }}>Here&apos;s how Iron Lab is doing, all 4 locations{money.code ? ` · ${money.code}` : ""}</div>
                   </div>
                   <div className="r3-time-filter">
                     {["1D", "7D", "30D", "QTD", "YTD", "Custom"].map((t, i) => (
@@ -1397,7 +1411,7 @@ function Row3DashCard() {
                     <div key={kpi.label} className="r3-el" style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 110, borderRadius: "var(--r-3)", padding: "16px 18px", background: "var(--bg)", border: "1px solid var(--border)" }}>
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--fg-3)" }}>{kpi.label}</div>
                       <div style={{ fontSize: 32, fontWeight: 500, lineHeight: 1, letterSpacing: "-0.022em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                        {kpi.value}{kpi.suffix && <small style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 400, marginLeft: 4, color: "var(--fg-3)" }}>{kpi.suffix}</small>}
+                        {fillDemoMoney(kpi.value, money)}{kpi.suffix && <small style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 400, marginLeft: 4, color: "var(--fg-3)" }}>{kpi.suffix}</small>}
                       </div>
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: kpi.down ? "var(--danger)" : "var(--signal-ink)" }}>{kpi.delta}</div>
                       <div className="r3-spark" style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 28 }}>
@@ -1416,7 +1430,7 @@ function Row3DashCard() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--border)" }}>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 500, letterSpacing: "-0.005em", color: "var(--ink)" }}>Revenue · last 30 days</div>
-                        <div style={{ fontSize: 12, color: "var(--fg-3)" }}>ZAR · all locations</div>
+                        <div style={{ fontSize: 12, color: "var(--fg-3)" }}>{money.code ? `${money.code} · ` : ""}all locations</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ display: "inline-flex", alignItems: "center", height: 24, padding: "0 8px", borderRadius: "var(--r-1)", fontSize: 12, fontWeight: 500, background: "var(--bg-3)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>All locations</span>
@@ -1431,14 +1445,14 @@ function Row3DashCard() {
                           <path className="r3-chart-fill" d="M 0 160 L 22 158 L 44 142 L 66 144 L 88 128 L 110 120 L 132 110 L 154 108 L 176 92 L 198 100 L 220 84 L 242 76 L 264 80 L 286 68 L 308 62 L 330 70 L 352 54 L 374 48 L 396 56 L 418 42 L 440 38 L 462 46 L 484 32 L 506 28 L 528 36 L 550 22 L 572 30 L 600 18 L 600 220 L 0 220 Z" fill="oklch(0.94 0.04 148)" />
                           <path className="r3-chart-line" d="M 0 160 L 22 158 L 44 142 L 66 144 L 88 128 L 110 120 L 132 110 L 154 108 L 176 92 L 198 100 L 220 84 L 242 76 L 264 80 L 286 68 L 308 62 L 330 70 L 352 54 L 374 48 L 396 56 L 418 42 L 440 38 L 462 46 L 484 32 L 506 28 L 528 36 L 550 22 L 572 30 L 600 18" fill="none" stroke="oklch(0.55 0.16 148)" strokeWidth="2" />
                           <circle cx="600" cy="18" r="4" fill="oklch(0.55 0.16 148)" />
-                          <g fontFamily="var(--font-mono)" fontSize="10" fill="oklch(0.55 0.008 80)"><text x="6" y="14">R 50k</text><text x="6" y="64">R 38k</text><text x="6" y="114">R 26k</text><text x="6" y="164">R 14k</text></g>
+                          <g fontFamily="var(--font-mono)" fontSize="10" fill="oklch(0.55 0.008 80)"><text x="6" y="14">{money(50000, { compact: true })}</text><text x="6" y="64">{money(38000, { compact: true })}</text><text x="6" y="114">{money(26000, { compact: true })}</text><text x="6" y="164">{money(14000, { compact: true })}</text></g>
                           <g fontFamily="var(--font-mono)" fontSize="10" fill="oklch(0.55 0.008 80)" textAnchor="middle"><text x="50" y="212">Apr 14</text><text x="200" y="212">Apr 21</text><text x="350" y="212">Apr 28</text><text x="500" y="212">May 05</text><text x="580" y="212">today</text></g>
                         </svg>
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 16, padding: "0 18px 14px", fontSize: 12, color: "var(--fg-2)" }}>
-                      <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, marginRight: 6, verticalAlign: "middle", background: "oklch(0.55 0.16 148)" }} />This period · R 1.08M</span>
-                      <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, marginRight: 6, verticalAlign: "middle", background: "oklch(0.72 0.008 80)" }} />Previous · R 964k</span>
+                      <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, marginRight: 6, verticalAlign: "middle", background: "oklch(0.55 0.16 148)" }} />This period · {money(1080000, { compact: true })}</span>
+                      <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, marginRight: 6, verticalAlign: "middle", background: "oklch(0.72 0.008 80)" }} />Previous · {money(964000, { compact: true })}</span>
                     </div>
                   </div>
 
@@ -1457,7 +1471,7 @@ function Row3DashCard() {
                       {R3_LIVE.map((row, i) => (
                         <div key={i} style={{ display: "flex", gap: 12, padding: "10px 18px", alignItems: "flex-start" }}>
                           <span className="r3-live-dot" style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, marginTop: 7, ...R3_DOT[row.dot] }} />
-                          <span style={{ fontSize: 13, flex: 1, color: "var(--ink)" }}>{row.name && <strong style={{ fontWeight: 500 }}>{row.name}</strong>}{row.name ? " " : ""}{row.text}</span>
+                          <span style={{ fontSize: 13, flex: 1, color: "var(--ink)" }}>{row.name && <strong style={{ fontWeight: 500 }}>{row.name}</strong>}{row.name ? " " : ""}{fillDemoMoney(row.text, money)}</span>
                           <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, flexShrink: 0, color: "var(--fg-3)" }}>{row.ts}</span>
                         </div>
                       ))}
@@ -1501,7 +1515,7 @@ function Row3DashCard() {
                                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor" }} />{m.status}
                               </span>
                             </td>
-                            <td style={{ padding: "12px 18px", textAlign: "right", borderBottom: idx < R3_MEMBERS.length - 1 ? "1px solid var(--border)" : "none", fontFamily: "var(--font-mono)", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{m.ltv}</td>
+                            <td style={{ padding: "12px 18px", textAlign: "right", borderBottom: idx < R3_MEMBERS.length - 1 ? "1px solid var(--border)" : "none", fontFamily: "var(--font-mono)", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fillDemoMoney(m.ltv, money)}</td>
                           </tr>
                         ))}
                       </tbody>

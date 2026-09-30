@@ -42,6 +42,7 @@ const SIDEBAR: { label: string; items: SideItem[] }[] = [
   { label: "Platform", items: [
     { name: "Countries", href: "/admin/countries", icon: <I><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></I> },
     { name: "Payments", href: "/admin/payments", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
+    { name: "Currencies", href: "/admin/currencies", icon: <I><circle cx="12" cy="12" r="9"/><path d="M15 9.5a3 3 0 0 0-3-1.5c-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2a3 3 0 0 1-3-1.5M12 6.5v1.5M12 16v1.5"/></I> },
     { name: "Plans", href: "/admin/plans", icon: <I><path d="M4 7h16M4 12h16M4 17h10"/><rect x="2" y="4" width="20" height="16" rx="2"/></I> },
     { name: "Users", href: "/admin/users", icon: <I><circle cx="9" cy="8" r="4"/><circle cx="17" cy="10" r="3"/><path d="M2 21a7 7 0 0 1 14 0M14 21a5 5 0 0 1 10 0"/></I> },
     { name: "Analytics", href: "/admin/analytics", icon: <I d="M3 3v18h18M7 14l4-4 3 3 5-7" /> },

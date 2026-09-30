@@ -1,9 +1,15 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TrainerStep1, TrainerStep4, TrainerStep6 } from "@/app/onboarding/_trainer";
 import { trainerSessionPatch } from "@/app/onboarding/_config";
+import { SEEDED_CURRENCIES } from "../setup/currencyFixtures";
+
+// NGN is the only currency prices can be set in (the seeded state).
+vi.mock("@/lib/queries/currencies", () => ({
+  useCurrencies: () => ({ data: SEEDED_CURRENCIES, all: SEEDED_CURRENCIES, isError: false }),
+}));
 
 const latest: Record<string, unknown> = {};
 
@@ -48,12 +54,33 @@ describe("trainer preview", () => {
 
 describe("trainer basics step", () => {
   it("clears prices typed in the old currency when the country changes", async () => {
-    render(<Harness Step={TrainerStep1} initial={{ country: "Nigeria", price1on1: "₦45,000", price1on1Minor: 4500000 }} />);
+    render(<Harness Step={TrainerStep1} initial={{ country: "Nigeria", currency: "NGN", price1on1: "₦45,000", price1on1Minor: 4500000 }} />);
     expect(screen.getByLabelText("City")).toBeInTheDocument();
     await userEvent.click(screen.getByLabelText("Country"));
     await userEvent.click(await screen.findByText("Kenya"));
     expect(latest.country).toBe("Kenya");
+    // KES can't be charged yet, so there is no suggestion and no fallback.
+    expect(latest.currency).toBe("");
     expect(latest.price1on1Minor).toBeNull();
     expect(latest.price1on1).toBe("");
+  });
+
+  it("suggests the country's currency when it can be charged", () => {
+    render(<Harness Step={TrainerStep1} initial={{ country: "Nigeria" }} />);
+    expect(latest.currency).toBe("NGN");
+  });
+
+  it("offers only currencies prices can be set in, and keeps a pick across country changes", async () => {
+    render(<Harness Step={TrainerStep1} initial={{ country: "Kenya" }} />);
+    expect(latest.currency).toBeFalsy();
+    await userEvent.click(screen.getByLabelText("Currency you charge in"));
+    expect(screen.queryByText(/KES/)).toBeNull();
+    expect(screen.queryByText(/USD/)).toBeNull();
+    await userEvent.click(await screen.findByText(/NGN/));
+    expect(latest.currency).toBe("NGN");
+    expect(latest.currencyPicked).toBe(true);
+    await userEvent.click(screen.getByLabelText("Country"));
+    await userEvent.click(await screen.findByText("United States"));
+    expect(latest.currency).toBe("NGN");
   });
 });

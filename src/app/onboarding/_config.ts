@@ -1,5 +1,4 @@
 import { UserRole, MembershipSubscriptionStatus } from "@/lib/types";
-import type { CurrencyCode } from "@/lib/constants/regions";
 export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
 export const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
@@ -14,15 +13,25 @@ export const COUNTRY_NAME_TO_CODE: Record<string, string> = {
   "United Kingdom": "GB",
 };
 
-/** Suggested default currency for the onboarding country choices. */
-export const COUNTRY_NAME_TO_CURRENCY: Record<string, CurrencyCode> = {
-  "South Africa": "ZAR",
-  Nigeria: "NGN",
-  Kenya: "KES",
-  Ghana: "USD", // GHS not supported yet
-  "United States": "USD",
-  "United Kingdom": "GBP",
-};
+/**
+ * The currency a provider track prices in: what step 1's currency field
+ * holds (the country's suggestion, or the person's own pick), or null when
+ * none has been chosen. A country never decides it on its own, and there is
+ * no USD fallback; see OnboardingCurrencyField.
+ */
+export function onboardingCurrency(data: Record<string, unknown>): string | null {
+  const c = data.currency;
+  return typeof c === "string" && /^[A-Z]{3}$/.test(c) ? c : null;
+}
+
+/** Set when Continue was pressed on step 1 with no currency chosen. */
+export const CURRENCY_MISSING = "currencyMissing";
+
+/** True on a provider track's step 1 while it has no currency. */
+export function currencyStepUnanswered(role: RoleId | null, step: number, data: Record<string, unknown>): boolean {
+  if (role !== "trainer" && role !== "dietitian" && role !== "gym") return false;
+  return step === 1 && onboardingCurrency(data) === null;
+}
 
 /** Maps the account's server-side role to the onboarding RoleId, or null
  *  if the account has no resolvable role yet (or an unrecognized one). */
@@ -61,7 +70,7 @@ export function trainerCountry(data: Record<string, unknown>): string {
 /** What step 1 of the trainer track persists to the profile and the workspace. */
 export function trainerLocationPatch(data: Record<string, unknown>): {
   profile: { first_name?: string; last_name?: string; city?: string; country_code?: string };
-  currency: CurrencyCode;
+  currency: string | null;
 } {
   const profile: { first_name?: string; last_name?: string; city?: string; country_code?: string } = {};
   if (data.firstName) profile.first_name = data.firstName as string;
@@ -71,7 +80,7 @@ export function trainerLocationPatch(data: Record<string, unknown>): {
   const country = trainerCountry(data);
   const code = COUNTRY_NAME_TO_CODE[country];
   if (code) profile.country_code = code;
-  return { profile, currency: COUNTRY_NAME_TO_CURRENCY[country] ?? "USD" };
+  return { profile, currency: onboardingCurrency(data) };
 }
 
 /**
@@ -118,7 +127,7 @@ export interface OwnSessionPatch {
   name: string;
   defaultDurationMinutes: number;
   priceMinor: number;
-  currency: CurrencyCode;
+  currency: string;
 }
 
 /**
@@ -129,12 +138,15 @@ export interface OwnSessionPatch {
 export function trainerSessionPatch(data: Record<string, unknown>): OwnSessionPatch | null {
   if (data[SESSION_FIELDS.trainer.later] === true) return null;
   const priceMinor = sessionPriceMinor(data.price1on1Minor, data.price1on1Free);
-  if (priceMinor === null) return null;
+  const currency = onboardingCurrency(data);
+  // Step 1 will not continue without a currency, so this only guards data
+  // that skipped it; a price with no currency is never guessed at.
+  if (priceMinor === null || currency === null) return null;
   return {
     name: "1:1 session",
     defaultDurationMinutes: sessionMinutes(data.duration),
     priceMinor,
-    currency: COUNTRY_NAME_TO_CURRENCY[trainerCountry(data)] ?? "USD",
+    currency,
   };
 }
 
@@ -154,9 +166,9 @@ export function dietitianCountry(data: Record<string, unknown>): string {
   return (data.country as string) || DIETITIAN_DEFAULT_COUNTRY;
 }
 
-/** The currency a dietitian's workspace and consultation price are in. */
-export function dietitianCurrency(data: Record<string, unknown>): CurrencyCode {
-  return COUNTRY_NAME_TO_CURRENCY[dietitianCountry(data)] ?? "USD";
+/** The currency a dietitian's workspace and consultation price are in, once chosen. */
+export function dietitianCurrency(data: Record<string, unknown>): string | null {
+  return onboardingCurrency(data);
 }
 
 /**
@@ -167,7 +179,7 @@ export function dietitianCurrency(data: Record<string, unknown>): CurrencyCode {
  */
 export function dietitianLocationPatch(data: Record<string, unknown>): {
   profile: { first_name?: string; last_name?: string; city?: string; country_code?: string };
-  currency: CurrencyCode;
+  currency: string | null;
 } {
   const profile: { first_name?: string; last_name?: string; city?: string; country_code?: string } = {};
   const fullName = ((data.fullName as string) || "").replace(/^(Dr\.?|Prof\.?)\s*/i, "").trim();
@@ -193,12 +205,13 @@ export function dietitianLocationPatch(data: Record<string, unknown>): {
 export function dietitianSessionPatch(data: Record<string, unknown>): OwnSessionPatch | null {
   if (data[SESSION_FIELDS.dietitian.later] === true) return null;
   const priceMinor = sessionPriceMinor(data.sessionPriceMinor, data.sessionFree);
-  if (priceMinor === null) return null;
+  const currency = dietitianCurrency(data);
+  if (priceMinor === null || currency === null) return null;
   return {
     name: DIETITIAN_SESSION_NAME,
     defaultDurationMinutes: sessionMinutes(data.sessionDuration),
     priceMinor,
-    currency: dietitianCurrency(data),
+    currency,
   };
 }
 
