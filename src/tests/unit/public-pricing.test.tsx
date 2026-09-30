@@ -112,6 +112,9 @@ describe("planPriceView", () => {
     expect(hasYearlyPrices(CATALOGUE)).toBe(true);
     expect(planFeatureLines(CATALOGUE[1])).toContain("Up to 250 active members");
     expect(planFeatureLines(CATALOGUE[2])).toContain("Unlimited active members");
+    expect(planFeatureLines(CATALOGUE[0])).toEqual(
+      expect.arrayContaining(["Up to 10 active members", "No staff seats", "1 marketplace listing"]),
+    );
   });
 });
 

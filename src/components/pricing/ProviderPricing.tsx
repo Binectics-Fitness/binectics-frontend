@@ -103,7 +103,7 @@ export function toCards(
     const saving = view.interval === "year" ? yearlySavingPercent(plan) : null;
     return {
       name: plan.name,
-      meta: custom ? "Talk to us" : free ? "Start here" : "Self-serve",
+      meta: custom ? "For larger teams" : free ? "Start here" : "Self-serve",
       price: view.price,
       priceSub: view.priceSub,
       text: view.text,

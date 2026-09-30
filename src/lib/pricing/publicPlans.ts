@@ -125,10 +125,11 @@ export const FEATURE_LABELS: readonly { key: keyof ProviderBillingFeatures; labe
   { key: "api_access_enabled", label: "API access" },
 ];
 
-/** "Up to 250 active members", "Unlimited staff seats", "No staff seats". */
+/** "Up to 250 active members", "1 marketplace listing", "Unlimited staff seats", "No staff seats". */
 export function limitLine(value: number | null | undefined, noun: string): string {
   if (value === null || value === undefined) return `Unlimited ${noun}`;
   if (value === 0) return `No ${noun}`;
+  if (value === 1) return `1 ${noun.replace(/s$/, "")}`;
   return `Up to ${value.toLocaleString("en")} ${noun}`;
 }
 
