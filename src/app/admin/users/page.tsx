@@ -8,6 +8,7 @@ import { toast } from "@/components/Toast";
 import { adminService, type PlatformMetricsOverview, type AdminUserSuspensionResult } from "@/lib/api/admin";
 import { formatCurrency } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { revenueHeadline, revenueRows } from "@/lib/admin/revenue";
 
 interface SuspendActionState {
   userId: string;
@@ -168,10 +169,11 @@ export default function AdminUsersPage() {
           {
             label: "Active subscriptions",
             value: loading ? "-" : (metrics?.subscriptions.activeCount.toLocaleString() ?? "0"),
-            delta:
-              metrics?.subscriptions.totalRevenueUsdMinor != null
-                ? `${formatCurrency(minorToMajor(metrics.subscriptions.totalRevenueUsdMinor, "USD"), "USD")} total`
-                : "-",
+            delta: (() => {
+              // Largest currency's revenue; others counted, never summed.
+              const r = revenueHeadline(revenueRows(metrics));
+              return r.value === "-" ? "-" : `${r.value} total${r.moreLabel ? `, ${r.moreLabel}` : ""}`;
+            })(),
           },
         ].map((kpi) => (
           <div

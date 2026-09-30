@@ -5,6 +5,7 @@ import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { adminService, type PlatformMetricsOverview } from "@/lib/api/admin";
 import { formatCurrency } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { revenueHeadline, revenueRows } from "@/lib/admin/revenue";
 
 /**
  * Platform analytics from GET /admin/metrics/overview: verified providers by
@@ -20,13 +21,15 @@ export function AnalyticsClient() {
     },
   });
 
+  // Revenue per currency, never summed across currencies (no FX rates).
+  const revenue = revenueHeadline(revenueRows(metrics));
   const kpis = metrics
     ? [
         { label: "Verified providers", value: metrics.verifiedProviders.total.toLocaleString(), delta: `${metrics.verifiedProviders.distinctCountries} countries` },
-        // Every revenue figure here is MINOR units (cents) — formatCurrency
-        // takes major, so each one goes through minorToMajor first.
-        { label: "Active subscriptions", value: metrics.subscriptions.activeCount.toLocaleString(), delta: `avg ${formatCurrency(minorToMajor(metrics.subscriptions.averageValueUsdMinor, "USD"), "USD")}` },
-        { label: "Subscription revenue", value: formatCurrency(minorToMajor(metrics.subscriptions.totalRevenueUsdMinor, "USD"), "USD"), delta: "USD equivalent" },
+        // Revenue is MINOR units per currency; the headline is the largest
+        // currency, the table below lists each one.
+        { label: "Active subscriptions", value: metrics.subscriptions.activeCount.toLocaleString(), delta: "Currently active" },
+        { label: "Subscription revenue", value: revenue.value, delta: revenue.moreLabel ?? (revenue.value === "-" ? "No revenue yet" : "One currency") },
         // conversionRate is already a percentage server-side (rounded to 1dp) — no rescaling.
         { label: "Free → paid conversion", value: `${metrics.conversion.conversionRate.toFixed(1)}%`, delta: `${metrics.conversion.payingUsers.toLocaleString()} of ${metrics.conversion.totalUsers.toLocaleString()} users` },
       ]
