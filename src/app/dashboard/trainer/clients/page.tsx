@@ -7,6 +7,7 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile } from "@/lib/api/progress";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { ClientGoalsCell } from "@/components/clients/ClientGoalsCell";
 import {
   InviteClientModal,
   type InviteClientResult,
@@ -251,9 +252,7 @@ export default function TrainerClientsPage() {
                       </Link>
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
-                        {c.goals?.length ? c.goals.slice(0, 2).join(" · ") : "-"}
-                      </span>
+                      <ClientGoalsCell goals={c.goals} />
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                       <StatusBadge status={c.is_active ? "Active" : "Paused"} />
