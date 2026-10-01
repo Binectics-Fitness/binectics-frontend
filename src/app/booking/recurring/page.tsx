@@ -1,6 +1,7 @@
 "use client";
 
 import { repeatBlockedForPaid } from "@/lib/bookings/recurring";
+import { localDayKey, localTimeKey } from "@/lib/bookings/slots";
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,6 +13,7 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   consultationsService,
+  type ConsultationSlot,
   type ConsultationType,
 } from "@/lib/api/consultations";
 import type { MarketplaceListing } from "@/lib/types";
@@ -111,13 +113,13 @@ function addByCadence(date: Date, cadence: RecurrenceCadence): Date {
 
 function formatOccurrenceLabel(date: Date, hour: number, minute: number): string {
   const d = new Date(date);
-  d.setHours(hour, minute, 0, 0);
+  const hasTime = Number.isFinite(hour) && Number.isFinite(minute);
+  if (hasTime) d.setHours(hour, minute, 0, 0);
   return d.toLocaleString(undefined, {
     weekday: "short",
     day: "2-digit",
     month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
+    ...(hasTime ? { hour: "2-digit", minute: "2-digit" } : {}),
   });
 }
 
@@ -146,12 +148,20 @@ function RecurringBookingInner() {
   const [cadence, setCadence] = useState<RecurrenceCadence>(RecurrenceCadence.WEEKLY);
   const [endMode] = useState<RecurrenceEndMode>(RecurrenceEndMode.AFTER_COUNT);
   const [sessionCount, setSessionCount] = useState("12");
-  const [time, setTime] = useState("08:30");
+  // Empty until picked: the first open time on offer is used.
+  const [time, setTime] = useState("");
   const [notes, setNotes] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSummary, setSubmitSummary] = useState<{ success: number; failed: number } | null>(null);
+  // Each occurrence the API refused, with its reason ("That time isn't
+  // available..." on a day the provider doesn't offer it, a 409 when taken).
+  const [failures, setFailures] = useState<Array<{ label: string; message: string }>>([]);
+
+  const [slots, setSlots] = useState<ConsultationSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!listingId) return;
@@ -222,22 +232,70 @@ function RecurringBookingInner() {
     return list;
   }, [sessionCount, startDate, weekday, cadence]);
 
-  const [hour, minute] = useMemo(() => {
-    const [h, m] = time.split(":");
-    return [Number(h), Number(m)];
-  }, [time]);
+  // The API only books a start the provider offers for the session type, so
+  // the times on offer are the open slots on the first occurrence's day. A
+  // later occurrence can still be refused (a blocked day, a taken slot);
+  // those are listed one by one after submitting.
+  const firstDay = occurrences[0] ? localDayKey(occurrences[0]) : null;
+  const providerId = listing ? providerIdFromListing(listing) : null;
+
+  useEffect(() => {
+    if (!providerId || !selectedTypeId || !firstDay) return;
+    let cancelled = false;
+    (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setSlotsLoading(true);
+      setSlotsError(null);
+      try {
+        const res = await consultationsService.getProviderSlots(providerId, {
+          consultationTypeId: selectedTypeId,
+          dateFrom: firstDay,
+          dateTo: firstDay,
+        });
+        if (cancelled) return;
+        if (!res.success) {
+          setSlots([]);
+          setSlotsError(res.message ?? "Couldn't load open times. Try again.");
+          return;
+        }
+        setSlots(res.data ?? []);
+      } catch {
+        if (cancelled) return;
+        setSlots([]);
+        setSlotsError("Couldn't load open times. Try again.");
+      } finally {
+        if (!cancelled) setSlotsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [providerId, selectedTypeId, firstDay]);
 
   const timeOptions = useMemo(() => {
-    const options = [
-      { label: "06:00", value: "06:00" },
-      { label: "07:00", value: "07:00" },
-      { label: "08:30", value: "08:30" },
-      { label: "10:00", value: "10:00" },
-      { label: "17:00", value: "17:00" },
-      { label: "18:00", value: "18:00" },
-    ];
+    const seen = new Set<string>();
+    const options: Array<{ label: string; value: string }> = [];
+    for (const slot of slots) {
+      if (!slot.isAvailable) continue;
+      const key = localTimeKey(slot.startsAt);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      options.push({ label: key, value: key });
+    }
     return options;
-  }, []);
+  }, [slots]);
+
+  // The picked time if that day still offers it, else its first open time.
+  const effectiveTime = timeOptions.some((o) => o.value === time)
+    ? time
+    : (timeOptions[0]?.value ?? "");
+
+  const [hour, minute] = useMemo(() => {
+    if (!effectiveTime) return [Number.NaN, Number.NaN];
+    const [h, m] = effectiveTime.split(":");
+    return [Number(h), Number(m)];
+  }, [effectiveTime]);
 
   /**
    * Multiplied in MINOR units and converted once at the end. Scaling first
@@ -258,6 +316,8 @@ function RecurringBookingInner() {
     listing &&
       selectedTypeId &&
       !paidSession &&
+      !slotsLoading &&
+      Boolean(effectiveTime) &&
       occurrences.length > 0 &&
       Number.isFinite(hour) &&
       Number.isFinite(minute),
@@ -269,9 +329,11 @@ function RecurringBookingInner() {
     setSubmitting(true);
     setSubmitError(null);
     setSubmitSummary(null);
+    setFailures([]);
 
     let success = 0;
     let failed = 0;
+    const refused: Array<{ label: string; message: string }> = [];
 
     for (const date of occurrences) {
       const startsAt = new Date(date);
@@ -287,13 +349,24 @@ function RecurringBookingInner() {
         });
 
         if (res.success) success += 1;
-        else failed += 1;
-      } catch {
+        else {
+          failed += 1;
+          refused.push({
+            label: formatOccurrenceLabel(date, hour, minute),
+            message: res.message ?? "Couldn't book this one.",
+          });
+        }
+      } catch (error) {
         failed += 1;
+        refused.push({
+          label: formatOccurrenceLabel(date, hour, minute),
+          message: error instanceof Error ? error.message : "Couldn't book this one.",
+        });
       }
     }
 
     setSubmitting(false);
+    setFailures(refused);
 
     if (success > 0) {
       setSubmitSummary({ success, failed });
@@ -303,7 +376,7 @@ function RecurringBookingInner() {
       return;
     }
 
-    setSubmitError("Could not create recurring bookings. Please try another slot or cadence.");
+    setSubmitError("None of these sessions could be booked. Pick another time, day or cadence.");
   };
 
   if (loadingMeta) {
@@ -398,12 +471,22 @@ function RecurringBookingInner() {
 
             <div className="flex flex-col gap-1.5">
               <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Time</label>
-              <SearchableSelect
-                value={time}
-                onChange={setTime}
-                options={timeOptions}
-                placeholder="Select time"
-              />
+              {slotsLoading ? (
+                <div className="py-2.75 text-[13px]" style={{ color: "var(--fg-3)" }}>Loading open times...</div>
+              ) : slotsError ? (
+                <div className="py-2.75 text-[13px]" style={{ color: "var(--danger)" }}>{slotsError}</div>
+              ) : timeOptions.length === 0 ? (
+                <div className="py-2.75 text-[13px]" style={{ color: "var(--fg-3)" }} data-testid="recurring-no-times">
+                  No open times on the first session&apos;s day. Pick another start date or day.
+                </div>
+              ) : (
+                <SearchableSelect
+                  value={effectiveTime}
+                  onChange={setTime}
+                  options={timeOptions}
+                  placeholder="Select time"
+                />
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -479,8 +562,22 @@ function RecurringBookingInner() {
 
           {submitSummary && submitSummary.failed > 0 && (
             <div className="mt-3 rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--bg-2)", color: "var(--ink)", border: "1px solid var(--border)" }}>
-              Created {submitSummary.success} booking{submitSummary.success === 1 ? "" : "s"}; failed {submitSummary.failed}. You can retry with a different time.
+              Booked {submitSummary.success} of {submitSummary.success + submitSummary.failed}. The rest weren&apos;t booked; you can book them one at a time.{" "}
+              <Link href="/dashboard/bookings" className="underline" style={{ color: "var(--ink)" }}>
+                See my bookings
+              </Link>
             </div>
+          )}
+
+          {failures.length > 0 && (
+            <ul className="mt-3 flex flex-col gap-1" data-testid="recurring-failures">
+              {failures.map((f, index) => (
+                <li key={`${f.label}-${index}`} className="flex flex-col sm:flex-row sm:justify-between gap-0.5 sm:gap-3 font-mono text-[12.5px]">
+                  <span style={{ color: "var(--ink)" }}>{f.label}</span>
+                  <span style={{ color: "var(--danger)" }}>{f.message}</span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>
