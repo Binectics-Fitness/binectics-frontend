@@ -13,7 +13,7 @@ describe("resolveNotificationLink", () => {
   it("routes /dashboard/consultations to trainer consultations", () => {
     expect(
       resolveNotificationLink("/dashboard/consultations", UserRole.TRAINER),
-    ).toBe("/dashboard/trainer/consultations");
+    ).toBe("/dashboard/trainer/sessions");
   });
 
   it("routes /dashboard/consultations to dietitian consultations", () => {
@@ -25,7 +25,7 @@ describe("resolveNotificationLink", () => {
   it("routes /dashboard/consultations to gym-owner consultations", () => {
     expect(
       resolveNotificationLink("/dashboard/consultations", UserRole.GYM_OWNER),
-    ).toBe("/dashboard/gym-owner/consultations");
+    ).toBe("/dashboard/gym-owner/schedule");
   });
 
   it("routes /dashboard/consultations to the bookings page for USER role", () => {
@@ -36,13 +36,13 @@ describe("resolveNotificationLink", () => {
     ).toBe("/dashboard/bookings");
   });
 
-  it("preserves query params on consultations remap", () => {
+  it("drops query params the remapped page cannot use", () => {
     expect(
       resolveNotificationLink(
         "/dashboard/consultations?bookingId=abc",
         UserRole.TRAINER,
       ),
-    ).toBe("/dashboard/trainer/consultations?bookingId=abc");
+    ).toBe("/dashboard/trainer/sessions");
   });
 
   // ── Role-specific clients ─────────────────────────────────
@@ -58,14 +58,14 @@ describe("resolveNotificationLink", () => {
         "/dashboard/clients?clientId=xyz",
         UserRole.DIETITIAN,
       ),
-    ).toBe("/dashboard/dietitian/clients?clientId=xyz");
+    ).toBe("/dashboard/dietitian/clients");
   });
 
   // ── Role-specific reviews ─────────────────────────────────
   it("routes review links to the gym-owner reviews page, and to notifications for roles without one", () => {
     expect(
       resolveNotificationLink("/dashboard/reviews?id=r1", UserRole.GYM_OWNER),
-    ).toBe("/dashboard/gym-owner/reviews?id=r1");
+    ).toBe("/dashboard/gym-owner/reviews");
     // /dashboard/trainer/reviews and /dashboard/dietitian/reviews do not
     // exist; neither does a bare member reviews page.
     expect(
@@ -119,9 +119,9 @@ describe("resolveNotificationLink", () => {
     );
   });
 
-  it("routes /dashboard/professionals to notifications (no /dashboard index page)", () => {
+  it("routes a client invitation (/dashboard/professionals) to the member's Requests", () => {
     expect(resolveNotificationLink("/dashboard/professionals")).toBe(
-      "/dashboard/notifications",
+      "/dashboard/member/requests",
     );
   });
 
@@ -131,12 +131,13 @@ describe("resolveNotificationLink", () => {
       resolveNotificationLink("/dashboard/dietitian/clients?profileId=abc"),
     ).toBe("/dashboard/dietitian/clients?profileId=abc");
 
+    // These two never had pages; they now land where the content is.
     expect(resolveNotificationLink("/dashboard/nutrition/plan1")).toBe(
-      "/dashboard/nutrition/plan1",
+      "/dashboard/member/meal-plans/plan1",
     );
 
     expect(resolveNotificationLink("/dashboard/subscriptions?id=s1")).toBe(
-      "/dashboard/subscriptions?id=s1",
+      "/dashboard/member/billing",
     );
 
     expect(resolveNotificationLink("/dashboard/settings")).toBe(

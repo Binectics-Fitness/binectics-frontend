@@ -4,6 +4,7 @@ import {
   REGION_COOKIE,
   REGION_OVERRIDE_COOKIE,
 } from "@/lib/constants/regions";
+import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
 
 // Routes that require authentication
 const protectedRoutes = [
@@ -64,6 +65,14 @@ function detectCountry(request: NextRequest): string {
   return "US";
 }
 
+function isPrefetchRequest(request: NextRequest): boolean {
+  return (
+    request.headers.get("next-router-prefetch") !== null ||
+    request.headers.get("purpose") === "prefetch" ||
+    (request.headers.get("sec-purpose") ?? "").includes("prefetch")
+  );
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("access_token")?.value;
@@ -100,6 +109,17 @@ export function middleware(request: NextRequest) {
       const dashMap: Record<string, string> = { USER: "/dashboard/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
       return withRegion(NextResponse.redirect(new URL(dashMap[role] || "/dashboard/member", request.url)));
     }
+  }
+
+  // Addresses the API hands out that no page answers (notification links,
+  // email buttons, the post-checkout button): send them to the page that
+  // does for this role. Signed-out visitors log in first and come back here.
+  if (token && !isPrefetchRequest(request)) {
+    const target = legacyLinkTarget(pathname, request.nextUrl.search, request.cookies.get("user_role")?.value);
+    if (target) return withRegion(NextResponse.redirect(new URL(target, request.url)));
+  }
+  if (!token && pathname === "/search") {
+    return withRegion(NextResponse.redirect(new URL("/marketplace", request.url)));
   }
 
   // Check if the current route is protected

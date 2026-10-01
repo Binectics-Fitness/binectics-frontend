@@ -1,4 +1,5 @@
 import { UserRole } from "@/lib/types";
+import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
 
 /**
  * Resolves the backend-generated notification action URL into a
@@ -13,6 +14,12 @@ export function resolveNotificationLink(
 
   // Strip any leading / trailing whitespace
   const url = actionUrl.trim();
+
+  // Addresses no page answers: the same role-aware table the middleware
+  // uses for emailed links, so a tap goes straight to the right page.
+  const [path, query = ""] = url.split("?");
+  const target = legacyLinkTarget(path, query ? `?${query}` : "", userRole);
+  if (target) return target;
 
   // ── Role-scoped route prefix ──────────────────────────────
   const rolePrefix: Record<string, string> = {
