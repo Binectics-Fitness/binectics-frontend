@@ -123,7 +123,7 @@ function SuccessContent() {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <Button
-            onClick={() => router.push("/dashboard/subscriptions")}
+            onClick={() => router.push("/dashboard/member/billing")}
             className="flex-1"
           >
             View My Subscriptions
