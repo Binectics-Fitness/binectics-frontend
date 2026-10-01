@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.binectics.app",
+      "sha256_cert_fingerprints": [
+        "E6:62:CD:8C:00:6F:DE:D7:60:1C:B5:B3:8A:C4:EB:7E:CC:64:29:3A:28:31:5C:D9:AC:C7:46:7C:DE:96:2A:8A"
+      ]
+    }
+  }
+]

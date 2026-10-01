@@ -1,5 +1,6 @@
 "use client";
 
+import { repeatBlockedForPaid } from "@/lib/bookings/recurring";
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -244,13 +245,22 @@ function RecurringBookingInner() {
    * exists to avoid; an integer count of kobo times an integer count of
    * sessions stays exact.
    */
-  const totalAmountMinor = useMemo(() => {
-    const unitMinor = listing?.price_from_minor ?? 0;
-    return unitMinor * occurrences.length;
-  }, [listing?.price_from_minor, occurrences.length]);
+  const selectedType = types.find((t) => t.id === selectedTypeId);
+  // The session's own price, not the listing's "from" price.
+  const unitPriceMinor = selectedType?.priceMinor ?? 0;
+  const totalAmountMinor = unitPriceMinor * occurrences.length;
+  // A paid session is a 30-minute hold that has to be paid on its own, so
+  // repeating one would leave unpaid holds that lapse. Free sessions only,
+  // as on the app.
+  const paidSession = repeatBlockedForPaid(selectedType);
 
   const canSubmit = Boolean(
-    listing && selectedTypeId && occurrences.length > 0 && Number.isFinite(hour) && Number.isFinite(minute),
+    listing &&
+      selectedTypeId &&
+      !paidSession &&
+      occurrences.length > 0 &&
+      Number.isFinite(hour) &&
+      Number.isFinite(minute),
   );
 
   const handleCreateRecurring = async () => {
@@ -315,10 +325,9 @@ function RecurringBookingInner() {
   }
 
   const name = providerName(listing);
-  const unitPriceMinor = listing.price_from_minor ?? 0;
-  // The listing's own currency. A listing without one shows bare amounts
-  // rather than borrowing some other country's symbol.
-  const currency = listing.currency ?? "";
+  // The session's currency, else the listing's. Without either, bare
+  // amounts rather than some other country's symbol.
+  const currency = selectedType?.currency ?? listing.currency ?? "";
 
   return (
     <div style={{ background: "var(--bg-2)", minHeight: "100vh" }}>
@@ -452,6 +461,15 @@ function RecurringBookingInner() {
               {submitting ? "Creating bookings..." : "Create recurring bookings"}
             </button>
           </div>
+
+          {paidSession && (
+            <div className="mt-3 rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--bg-2)", color: "var(--fg-2)", border: "1px solid var(--border)" }}>
+              Paid sessions are booked and paid one at a time, so this one can&apos;t repeat.{" "}
+              <Link href={`/booking?listingId=${listing._id}&consultationTypeId=${selectedTypeId ?? ""}`} className="underline" style={{ color: "var(--ink)" }}>
+                Book it once
+              </Link>
+            </div>
+          )}
 
           {submitError && (
             <div className="mt-3 rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid oklch(0.92 0.05 25)" }}>
