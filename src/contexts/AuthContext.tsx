@@ -12,6 +12,11 @@ import { authService } from "@/lib/api/auth";
 import { getDashboardRoute, getLoginRoute, getOnboardingRoute } from "@/lib/constants/routes";
 import { tokenStorage } from "@/lib/utils/storage";
 import SessionModal from "@/components/SessionModal";
+import {
+  ACCOUNT_STATE_ROUTES,
+  routeForLoginFailure,
+  safeRedirectPath,
+} from "@/lib/routing/accountState";
 import type { User, LoginRequest, RegisterRequest } from "@/lib/types";
 
 interface AuthContextType {
@@ -35,7 +40,11 @@ interface AuthContextType {
     error?: string;
     errors?: Record<string, string[]>;
   }>;
-  logout: () => Promise<void>;
+  /**
+   * Sign out and hard-navigate to the login page, or to `to` (a same-origin
+   * path) when given — e.g. /account-deleted after deleting the account.
+   */
+  logout: (options?: { to?: string }) => Promise<void>;
   updateUser: (user: User) => void;
 }
 
@@ -206,8 +215,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Token refreshed successfully - re-trigger session monitoring
       setSessionEpoch((e) => e + 1);
     } else {
-      // Token refresh failed - force logout
-      await logout();
+      // Token refresh failed: the session is over. Say so rather than
+      // dropping the user on a bare login form, and bring them back here
+      // once they sign in again.
+      const here = `${window.location.pathname}${window.location.search}`;
+      await logout({
+        to: `${ACCOUNT_STATE_ROUTES.SESSION_EXPIRED}?redirect=${encodeURIComponent(here)}`,
+      });
     }
   };
 
@@ -270,6 +284,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
 
+      // Suspended (correct password), locked out after repeated failures,
+      // or rate-limited: each has its own page with the real details.
+      const destination = routeForLoginFailure(response);
+      if (destination) {
+        router.push(destination);
+        return {
+          success: false,
+          error: response.message || "You can't sign in right now.",
+        };
+      }
+
       return {
         success: false,
         error: response.message || "Login failed",
@@ -318,8 +343,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const logout = async (options?: { to?: string }) => {
     const userRole = user?.role;
+    // `logout` is also passed straight to onClick handlers, so `options` may
+    // be an event: only a same-origin path string counts.
+    const to =
+      typeof options?.to === "string" ? safeRedirectPath(options.to) : null;
 
     // Best-effort: stop this browser receiving the account's pushes.
     void import("@/lib/push/push").then(({ teardownPush }) => teardownPush());
@@ -334,7 +363,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // strand a blank dashboard; a full load lands on a clean login page
     // (or, if the server logout failed and the cookie survived, reboots
     // into a recovered session instead of a half-dead one).
-    window.location.assign(getLoginRoute(userRole));
+    window.location.assign(to ?? getLoginRoute(userRole));
   };
 
   const updateUser = (updatedUser: User) => {
