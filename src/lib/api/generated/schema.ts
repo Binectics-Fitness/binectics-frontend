@@ -62,15 +62,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get all supported currencies (including inactive) */
-        get: operations["AdminController_getSupportedCurrencies"];
-        /** Update the full list of supported currencies */
-        put: operations["AdminController_updateSupportedCurrencies"];
+        /** Currencies with effective status, gateway state and usage */
+        get: operations["AdminController_getCurrencies"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/currencies/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change one currency: platform switch, provider-accounts switch, gateway account enablement, methods, name, symbol, notes */
+        patch: operations["AdminController_updateCurrency"];
         trace?: never;
     };
     "/api/v1/admin/feedback/summary": {
@@ -262,10 +278,81 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Platform KPI overview: verified providers by country, subscription value, free→paid conversion */
+        /**
+         * Platform KPI overview: verified providers by country, subscription value, free→paid conversion
+         * @description Revenue is revenue_by_currency: [{ currency, amount_minor, count }], largest first, never converted. subscriptions.totalRevenueUsdMinor and averageValueUsdMinor are deprecated: they sum USD-priced rows only (no FX), not a USD equivalent.
+         */
         get: operations["AdminController_getPlatformMetrics"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/provider-billing/grants/{grantId}/overage-invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Raise the seat-overage invoice for a grant’s term */
+        post: operations["AdminProviderBillingController_raiseOverage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/provider-billing/grants/{grantId}/overage-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the overage invoice would say, without raising it */
+        get: operations["AdminProviderBillingController_previewOverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/provider-billing/grants/uncapped": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every current grant with uncapped access */
+        get: operations["AdminProviderBillingController_listUncapped"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/provider-billing/invoices/{invoiceId}/settle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record payment received outside a gateway */
+        post: operations["AdminProviderBillingController_settleInvoice"];
         delete?: never;
         options?: never;
         head?: never;
@@ -302,6 +389,41 @@ export interface paths {
         post?: never;
         /** Delete a billing market rule (GLOBAL is locked) */
         delete: operations["AdminProviderBillingController_deleteMarket"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/provider-billing/organizations/{organizationId}/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An organization’s grant history, newest term first */
+        get: operations["AdminProviderBillingController_listGrants"];
+        put?: never;
+        /** Issue a negotiated grant (contract or comp) to an organization */
+        post: operations["AdminProviderBillingController_issueGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/provider-billing/organizations/{organizationId}/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An organization’s invoices, newest first */
+        get: operations["AdminProviderBillingController_listInvoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -693,7 +815,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Verify OTP and activate account */
+        /** Verify OTP, activate the account, and sign in */
         post: operations["AuthController_verifyOtp"];
         delete?: never;
         options?: never;
@@ -888,6 +1010,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/consultations/bookings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one booking, as its client or its provider */
+        get: operations["ConsultationsController_getBooking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/consultations/bookings/{id}/cancel": {
         parameters: {
             query?: never;
@@ -939,6 +1078,23 @@ export interface paths {
         patch: operations["ConsultationsController_markNoShow"];
         trace?: never;
     };
+    "/api/v1/consultations/bookings/{id}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open the gateway checkout for a held booking, for the booking's own price */
+        post: operations["BookingPaymentsController_startPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/consultations/bookings/{id}/reschedule": {
         parameters: {
             query?: never;
@@ -954,6 +1110,23 @@ export interface paths {
         head?: never;
         /** Reschedule a booking */
         patch: operations["ConsultationsController_rescheduleBooking"];
+        trace?: never;
+    };
+    "/api/v1/consultations/bookings/{id}/verify-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify a booking payment with the gateway and confirm the booking */
+        post: operations["BookingPaymentsController_verifyPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/consultations/catalog": {
@@ -1077,6 +1250,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/consultations/provider/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's own session types, archived included */
+        get: operations["ConsultationsController_getOwnTypes"];
+        put?: never;
+        /** Create a session type you sell */
+        post: operations["ConsultationsController_createOwnType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/consultations/provider/types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Archive a session type you sell */
+        delete: operations["ConsultationsController_archiveOwnType"];
+        options?: never;
+        head?: never;
+        /** Update a session type you sell (name, length, price) */
+        patch: operations["ConsultationsController_updateOwnType"];
+        trace?: never;
+    };
     "/api/v1/consultations/providers/{providerId}/slots": {
         parameters: {
             query?: never;
@@ -1101,10 +1310,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List consultation types */
+        /** List consultation types: a provider's bookable types with providerId, platform defaults without */
         get: operations["ConsultationsController_getTypes"];
         put?: never;
-        /** Create consultation type (provider/admin) */
+        /** Create a consultation type: your own as a provider, a platform default as an admin */
         post: operations["ConsultationsController_createType"];
         delete?: never;
         options?: never;
@@ -1122,12 +1331,29 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Archive consultation type (owner/provider) */
+        /** Archive a consultation type: your own, or a platform default as an admin */
         delete: operations["ConsultationsController_deleteType"];
         options?: never;
         head?: never;
-        /** Update consultation type (admin) */
+        /** Update a platform default consultation type (admin) */
         patch: operations["ConsultationsController_updateType"];
+        trace?: never;
+    };
+    "/api/v1/currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Currencies offered on the platform and what each can be used for */
+        get: operations["CurrenciesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/feedback": {
@@ -1650,6 +1876,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/listings/{id}/plans/{planId}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open the gateway checkout for a plan, at the plan's own price */
+        post: operations["MarketplaceController_startPlanCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/listings/{id}/request": {
         parameters: {
             query?: never;
@@ -1961,6 +2204,57 @@ export interface paths {
         patch: operations["MarketplaceMyListingsController_updateFacilityItem"];
         trace?: never;
     };
+    "/api/v1/marketplace/my-listings/{listingId}/gallery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload gallery images to your solo listing */
+        post: operations["MarketplaceMyListingsController_uploadGalleryImages"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-listings/{listingId}/gallery/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Delete one gallery image from your solo listing */
+        patch: operations["MarketplaceMyListingsController_deleteGalleryImage"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-listings/{listingId}/gallery/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Reorder gallery images on your solo listing */
+        patch: operations["MarketplaceMyListingsController_reorderGalleryImages"];
+        trace?: never;
+    };
     "/api/v1/marketplace/my-listings/{listingId}/slug": {
         parameters: {
             query?: never;
@@ -1976,6 +2270,23 @@ export interface paths {
         head?: never;
         /** Change the public URL slug for a listing (kebab-case, 3-80 chars, must be unique) */
         patch: operations["MarketplaceMyListingsController_updateSlug"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The professionals and gyms the current user already belongs to, with the listings that open their profiles */
+        get: operations["MarketplaceController_getMyProviders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/my-requests": {
@@ -2307,6 +2618,40 @@ export interface paths {
         patch: operations["MarketplaceOrgController_unpublishListing"];
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a member to free their seat. Billing-only — the member keeps their account and data. Refused while a live subscription still entitles them. */
+        post: operations["MarketplaceOrgController_archiveMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived member, taking a seat back. Subject to the seat quota, like any enrolment. */
+        post: operations["MarketplaceOrgController_restoreMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/payment-config": {
         parameters: {
             query?: never;
@@ -2337,6 +2682,66 @@ export interface paths {
         post?: never;
         /** Remove a payment gateway configuration */
         delete: operations["MarketplaceOrgController_deletePaymentConfig"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/payment-config/{gateway}/currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify a currency on the org's own payment account and allow membership prices in it
+         * @description Checked with the gateway using the org's own secret key (Paystack: GET /balance). 400 PROVIDER_CURRENCY_NOT_ON_ACCOUNT when the account doesn't have it; 400 PROVIDER_CURRENCY_UNKNOWN / PROVIDER_CURRENCY_UNSUPPORTED / PROVIDER_CURRENCY_BLOCKED / PROVIDER_ACCOUNT_MISSING; 502 PROVIDER_ACCOUNT_CHECK_FAILED.
+         */
+        post: operations["MarketplaceOrgController_verifyProviderCurrency"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/payment-config/{gateway}/currencies/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a verified currency from the org's own payment account
+         * @description 409 CURRENCY_LOCKED (with locked_by counts) while active plans or payments in progress depend on it.
+         */
+        delete: operations["MarketplaceOrgController_removeProviderCurrency"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/payment-config/{gateway}/currencies/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-verify every currency stored for this gateway on the org's own account
+         * @description One gateway call. Currencies no longer on the account are removed, except ones prices or payments depend on, which are kept and listed in missing_on_account. 502 PROVIDER_ACCOUNT_CHECK_FAILED when the gateway could not be asked (nothing changes).
+         */
+        post: operations["MarketplaceOrgController_refreshProviderCurrencies"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2411,6 +2816,26 @@ export interface paths {
         head?: never;
         /** Deactivate organization membership plan */
         patch: operations["MarketplaceOrgController_deactivatePlan"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/price-currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Currencies this org's membership prices can use
+         * @description Platform-enabled currencies plus those verified on the org's own payment account, each with selectable, route (platform | provider | null), reasons, and payable.card / payable.bank_transfer.
+         */
+        get: operations["MarketplaceOrgController_getPriceCurrencies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/requests": {
@@ -2508,6 +2933,23 @@ export interface paths {
         /** Get a single membership subscription by ID */
         get: operations["MarketplaceOrgController_getOrgSubscriptionById"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/assignee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Assign a gym member to a staff member (a trainer), move them, or unassign them */
+        put: operations["GymStaffAssignmentController_assign"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2789,6 +3231,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/my-programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List my assigned programs */
+        get: operations["ProgramsClientController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/{instanceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one of my programs with its current agenda */
+        get: operations["ProgramsClientController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/{instanceId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent days of one program, grouped by day (done, late, skipped, missed) */
+        get: operations["ProgramsClientController_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/agenda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's tasks across all my active programs */
+        get: operations["ProgramsClientController_agenda"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/occurrences/{occurrenceId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a task done */
+        post: operations["ProgramsClientController_complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/occurrences/{occurrenceId}/form": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete a form task by submitting its form */
+        post: operations["ProgramsClientController_submitForm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/occurrences/{occurrenceId}/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log a measurement value for a task */
+        post: operations["ProgramsClientController_log"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/occurrences/{occurrenceId}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Skip a task */
+        post: operations["ProgramsClientController_skip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications": {
         parameters: {
             query?: never;
@@ -2971,10 +3549,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List/search my protocols */
+        /**
+         * List/search my protocols
+         * @deprecated
+         */
         get: operations["NutritionController_listProtocols"];
         put?: never;
-        /** Create a protocol */
+        /**
+         * Retired: returns 410. Create a Program instead.
+         * @deprecated
+         */
         post: operations["NutritionController_createProtocol"];
         delete?: never;
         options?: never;
@@ -2989,16 +3573,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get one protocol */
+        /**
+         * Get one protocol
+         * @deprecated
+         */
         get: operations["NutritionController_getProtocol"];
         put?: never;
         post?: never;
-        /** Archive a protocol (soft delete) */
+        /**
+         * Archive a protocol (soft delete)
+         * @deprecated
+         */
         delete: operations["NutritionController_archiveProtocol"];
         options?: never;
         head?: never;
-        /** Update a protocol */
+        /**
+         * Retired: returns 410. Convert the protocol, then edit the program.
+         * @deprecated
+         */
         patch: operations["NutritionController_updateProtocol"];
+        trace?: never;
+    };
+    "/api/v1/nutrition/protocols/{protocolId}/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Convert a protocol into a draft Program (idempotent: converting again returns the same draft) */
+        post: operations["NutritionController_convertProtocol"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/onboarding/dismiss": {
@@ -3027,6 +3637,316 @@ export interface paths {
         };
         /** Get provider onboarding status */
         get: operations["OnboardingController_getStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding/walkthrough/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hide the onboarding walkthrough (does not mark setup complete; reversible via reopen) */
+        post: operations["OnboardingController_dismissWalkthrough"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding/walkthrough/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bring the onboarding walkthrough back after it was dismissed */
+        post: operations["OnboardingController_reopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment-gateways": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payment gateways we run, whether providers can connect their own keys, and the currencies each can charge */
+        get: operations["PaymentGatewaysController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List my program templates, each with phase_count, task_count and duration_days of its latest version */
+        get: operations["ProgramsController_list"];
+        put?: never;
+        /** Create a program (protocol) template draft. 403 PROGRAM_ORG_FORBIDDEN when organization_id is not an org the caller owns or actively belongs to */
+        post: operations["ProgramsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a program template with its latest version */
+        get: operations["ProgramsController_get"];
+        put?: never;
+        post?: never;
+        /** Archive a program template */
+        delete: operations["ProgramsController_archive"];
+        options?: never;
+        head?: never;
+        /** Edit the draft (forks a new version if the latest is published) */
+        patch: operations["ProgramsController_update"];
+        trace?: never;
+    };
+    "/api/v1/programs/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign a published program to a client */
+        post: operations["ProgramsController_assign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/{id}/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List client assignments of this program */
+        get: operations["ProgramsController_assignments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/{id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Copy a program (its latest version) into a new draft named "<name> (copy)" */
+        post: operations["ProgramsController_duplicate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish the current draft version (freezes it). 400 PROGRAM_EMPTY / PROGRAM_TASK_MISSING_CONTENT / PROGRAM_TOO_MANY_TASKS when it cannot be followed */
+        post: operations["ProgramsController_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/clients/{clientProfileId}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One client's programs from my side (progress, adherence) and what they have on Today from me */
+        get: operations["ProgramsController_clientOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/clients/{clientProfileId}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One-off tasks I have sent this client */
+        get: operations["ProgramsController_listTasks"];
+        put?: never;
+        /** Send a client a one-off task (a form or an instruction), due by a date */
+        post: operations["ProgramsController_sendTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/clients/{clientProfileId}/tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Withdraw a one-off task the client has not acted on */
+        delete: operations["ProgramsController_withdrawTask"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/instances/{instanceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a client's program with an adherence summary */
+        get: operations["ProgramsController_instanceDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/instances/{instanceId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel a client's program */
+        post: operations["ProgramsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/instances/{instanceId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete a client's program */
+        post: operations["ProgramsController_complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/instances/{instanceId}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause a client's program */
+        post: operations["ProgramsController_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/instances/{instanceId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume a client's program */
+        post: operations["ProgramsController_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/provider/attention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who needs me: forms my clients submitted and tasks they missed, newest first */
+        get: operations["ProgramsController_attention"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3193,6 +4113,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/progress/clients/{profileId}/diet-plans/from-template/{templateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign a template meal plan to a client (server-side copy that keeps the plan's day structure) */
+        post: operations["ProgressController_copyDietPlanTemplateToClient"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/progress/clients/{profileId}/journals": {
         parameters: {
             query?: never;
@@ -3236,10 +4173,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List active recommendations for a client profile */
+        /**
+         * List active recommendations for a client profile
+         * @deprecated
+         */
         get: operations["ProgressController_getRecommendations"];
         put?: never;
-        /** Create a recommendation for a client */
+        /**
+         * Retired: returns 410. Send a message or a one-off task instead.
+         * @deprecated
+         */
         post: operations["ProgressController_createRecommendation"];
         delete?: never;
         options?: never;
@@ -3254,15 +4197,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a specific recommendation */
+        /**
+         * Get a specific recommendation
+         * @deprecated
+         */
         get: operations["ProgressController_getRecommendationById"];
         put?: never;
         post?: never;
-        /** Deactivate a recommendation (soft delete) */
+        /**
+         * Deactivate a recommendation (soft delete)
+         * @deprecated
+         */
         delete: operations["ProgressController_deactivateRecommendation"];
         options?: never;
         head?: never;
-        /** Update a recommendation */
+        /**
+         * Retired: returns 410.
+         * @deprecated
+         */
         patch: operations["ProgressController_updateRecommendation"];
         trace?: never;
     };
@@ -3646,6 +4598,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/progress/my-diet-plans/{planId}/viewed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record that I opened this plan (view telemetry, own plans only) */
+        post: operations["ProgressController_markMyDietPlanViewed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/progress/my-invitations": {
         parameters: {
             query?: never;
@@ -3738,7 +4707,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List my active recommendations across all profiles (as fitness member) */
+        /**
+         * List my active recommendations across all profiles (as fitness member)
+         * @deprecated
+         */
         get: operations["ProgressController_getMyRecommendations"];
         put?: never;
         post?: never;
@@ -3755,7 +4727,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a specific recommendation assigned to me (as fitness member) */
+        /**
+         * Get a specific recommendation assigned to me (as fitness member)
+         * @deprecated
+         */
         get: operations["ProgressController_getMyRecommendationById"];
         put?: never;
         post?: never;
@@ -3927,10 +4902,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List recommendations for a client in an organization */
+        /**
+         * List recommendations for a client in an organization
+         * @deprecated
+         */
         get: operations["ProgressController_getRecommendationsInOrg"];
         put?: never;
-        /** Create a recommendation within an organization */
+        /**
+         * Retired: returns 410. Send a message or a one-off task instead.
+         * @deprecated
+         */
         post: operations["ProgressController_createRecommendationInOrg"];
         delete?: never;
         options?: never;
@@ -3952,7 +4933,10 @@ export interface paths {
         delete: operations["ProgressController_deactivateRecommendationInOrg"];
         options?: never;
         head?: never;
-        /** Update a recommendation within an organization */
+        /**
+         * Retired: returns 410.
+         * @deprecated
+         */
         patch: operations["ProgressController_updateRecommendationInOrg"];
         trace?: never;
     };
@@ -4292,8 +5276,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List active provider plans with pricing for the given market
-         * @description Anonymous/marketing pricing. Signed-in orgs should use GET organizations/:organizationId/plans instead, which resolves the audience server-side rather than trusting the query parameter.
+         * List active provider plans with pricing for a market or country
+         * @description Anonymous/marketing pricing. Signed-in orgs should use GET organizations/:organizationId/plans instead, which resolves the audience server-side rather than trusting the query parameter. Market: `market` if given, else the market covering `country`, else GLOBAL. Only prices chargeable for provider billing are shown; a market with none falls back to GLOBAL, and if GLOBAL has none either prices are null with price_unavailable_reason. Each row carries the market_code it was priced for.
          */
         get: operations["ProviderBillingController_listPlans"];
         put?: never;
@@ -4504,7 +5488,8 @@ export interface paths {
         get: operations["TeamsController_getOrganization"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Remove an untouched onboarding workspace (owner only) and return the account to a plain member, so the role can be chosen again */
+        delete: operations["TeamsController_abandonOnboardingWorkspace"];
         options?: never;
         head?: never;
         /** Update organization settings (Admin only) */
@@ -5154,6 +6139,25 @@ export interface components {
              */
             value: Record<string, never>;
         };
+        ArchiveMemberDto: {
+            /**
+             * @description Why the member is being archived. Recorded on the roster event for the audit trail an invoice dispute is settled with — internal, not shown to the member.
+             * @example Left the gym in March
+             */
+            reason?: string;
+        };
+        AssignProgramDto: {
+            /** @description ClientProfile id to assign the program to */
+            client_profile_id: string;
+            /** @description ISO start date; defaults to now */
+            start_date?: string;
+            /** @example Africa/Lagos */
+            timezone?: string;
+        };
+        AssignStaffDto: {
+            /** @description The team member to coach this gym member, or null to unassign them. */
+            staff_user_id: string | null;
+        };
         AvailabilityRuleInputDto: {
             /** @example 1 */
             dayOfWeek: number;
@@ -5384,10 +6388,19 @@ export interface components {
              */
             priceMinor?: number;
             /**
+             * @description Required for an admin's platform type. A provider's own type takes the role from their account; if sent, it must match.
              * @example DIETITIAN
              * @enum {string}
              */
-            providerRole: "DIETITIAN" | "PERSONAL_TRAINER" | "OTHER";
+            providerRole?: "DIETITIAN" | "PERSONAL_TRAINER" | "OTHER";
+        };
+        CreateDietDayDto: {
+            /**
+             * @example monday
+             * @enum {string}
+             */
+            day_of_week: "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday" | "every_day";
+            meals: components["schemas"]["CreateDietMealDto"][];
         };
         CreateDietMealDto: {
             /** @example 380 */
@@ -5415,12 +6428,15 @@ export interface components {
             title: string;
         };
         CreateDietPlanDto: {
+            /** @description Day-structured meals (MEAL_PLAN_WEEKLY_SPEC). Max 8 entries. */
+            days?: components["schemas"]["CreateDietDayDto"][];
             /** @enum {string} */
             delivery_type: "platform" | "document";
             /** @example 1800 kcal/day target with macro split */
             description?: string;
             /** @example Client is lactose intolerant */
             dietitian_notes?: string;
+            /** @description Legacy flat meal list. Prefer `days`; if both are sent, `days` wins. On a plan that already has weekday structure, sending only `meals` is rejected so an old editor cannot flatten the week. */
             meals?: components["schemas"]["CreateDietMealDto"][];
             /** @example Week 1 — Calorie Deficit Plan */
             title: string;
@@ -5583,7 +6599,10 @@ export interface components {
             contact_phone?: string;
             /** @example CA */
             country_code?: string;
-            /** @example USD */
+            /**
+             * @deprecated
+             * @description Ignored. The listing's currency is derived from the provider's prices.
+             */
             currency?: string;
             /**
              * @description Gym facilities (gym_owner listings)
@@ -5677,6 +6696,11 @@ export interface components {
              * @enum {string}
              */
             type: "connection" | "inquiry";
+        };
+        CreateMarketplaceReviewDto: {
+            comment?: string;
+            /** @example 5 */
+            rating: number;
         };
         CreateMealFeedbackDto: {
             /** @example 450 */
@@ -5806,16 +6830,27 @@ export interface components {
              */
             price_minor: number;
         };
-        CreateProtocolDto: {
-            /** @example PCOS */
+        CreateProgramTemplateDto: {
+            /**
+             * @description Days after its scheduled day a task can still be completed (0 = same day only)
+             * @example 1
+             */
+            catch_up_days?: number;
+            /** @example Gut health */
             category?: string;
-            /** @example A 12-week staged plan for newly diagnosed PCOS clients. */
-            description?: string;
-            /** @example 12 */
-            durationWeeks?: number;
-            /** @example PCOS nutrition protocol */
+            cautions?: string;
+            /** @example 84 */
+            duration_days?: number;
+            goal_statement?: string;
+            goals?: components["schemas"]["ProgramGoalDefDto"][];
+            indications?: string;
+            /** @example standard */
+            intensity?: string;
+            /** @example 12-week gut reset */
             name: string;
-            steps?: components["schemas"]["ProtocolStepDto"][];
+            /** @description Org id for an org-scoped template */
+            organization_id?: string;
+            phases?: components["schemas"]["ProgramPhaseDto"][];
         };
         CreateProviderResponseDto: {
             message: string;
@@ -5872,7 +6907,6 @@ export interface components {
              */
             type: "TEXT" | "TEXTAREA" | "MULTIPLE_CHOICE" | "CHECKBOX" | "SELECT" | "DATE" | "NUMBER" | "EMAIL" | "PHONE" | "RATING";
         };
-        CreateRecommendationDto: Record<string, never>;
         CreateReviewDto: {
             comment?: string;
             rating: number;
@@ -5936,16 +6970,6 @@ export interface components {
             /** @example Client fatigues quickly — keep rest periods longer */
             trainer_notes?: string;
         };
-        CurrencyItemDto: {
-            /** @example USD */
-            code: string;
-            /** @example true */
-            is_active: boolean;
-            /** @example US Dollar */
-            name: string;
-            /** @example $ */
-            symbol: string;
-        };
         DeleteAccountDto: {
             /** @description Current password, required to confirm */
             current_password: string;
@@ -5986,6 +7010,12 @@ export interface components {
             first_name?: string;
             /** @description Last name of the member. Required when no Binectics account exists for the email — used to provision a placeholder account. */
             last_name?: string;
+            /**
+             * @description How payment is collected. MANUAL (default): money taken off-platform, subscription active immediately. PAYSTACK_TRANSFER: open a one-time Paystack transfer account for the plan price; the response carries the account details and the subscription stays PENDING_PAYMENT until the charge.success webhook confirms the transfer.
+             * @default manual
+             * @enum {string}
+             */
+            payment_mode: "manual" | "paystack_transfer";
             /** @description URL of an uploaded picture of the payment receipt / proof (e.g. Cloudinary URL) */
             payment_proof_url?: string;
             /** @description External payment reference */
@@ -6004,9 +7034,53 @@ export interface components {
              */
             status: "active" | "pending_payment";
         };
+        EnrollMemberResponseDto: {
+            data: components["schemas"]["EnrollMemberResultDto"];
+            /** @example true */
+            success: boolean;
+        };
+        EnrollMemberResultDto: {
+            /** @description The created or updated membership subscription. */
+            subscription: Record<string, never>;
+            /** @description Present only for a paystack_transfer enrolment — the account to display so the member can pay. */
+            transfer_account?: components["schemas"]["EnrollTransferAccountDto"];
+            /**
+             * @description True when a placeholder account was provisioned for the email (no prior Binectics account).
+             * @example false
+             */
+            user_created: boolean;
+        };
+        EnrollTransferAccountDto: {
+            /** @example BINECTICS / IRON LAB */
+            account_name?: string;
+            /**
+             * @description One-time NUBAN the member transfers into.
+             * @example 0123456789
+             */
+            account_number: string;
+            /**
+             * @description Amount to transfer, in the currency's minor unit.
+             * @example 100000
+             */
+            amount_minor: number;
+            /** @example Wema Bank */
+            bank_name?: string;
+            /** @example NGN */
+            currency: string;
+            /**
+             * @description ISO timestamp after which the account stops accepting the transfer; null if none.
+             * @example 2026-08-07T12:00:00.000Z
+             */
+            expires_at?: string | null;
+            /**
+             * @description Gateway reference this charge is bound to.
+             * @example txf-abc123
+             */
+            reference: string;
+        };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "MAIL_SEND_FAILED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "MAIL_SEND_FAILED";
             /** @example Validation failed */
             message: Record<string, never>;
             /** @example POST */
@@ -6032,6 +7106,14 @@ export interface components {
             region_name: string;
             /** @example ip_header */
             source: string;
+        };
+        GrantQuotaLimitsDto: {
+            /** @example 20 */
+            max_listings: number;
+            /** @example 100 */
+            max_membership_plans: number;
+            /** @example 50 */
+            max_staff_members: number;
         };
         ImageMetadataResponseDto: {
             createdAt: string;
@@ -6094,6 +7176,57 @@ export interface components {
             /** @description TeamRole _id to assign to the invited member */
             team_role_id: string;
         };
+        IssueGrantDto: {
+            /** @example 250000000 */
+            amount_minor: number;
+            /**
+             * @default offline_invoice
+             * @example offline_invoice
+             * @enum {string}
+             */
+            billing_method: "gateway" | "offline_invoice";
+            /** @example NGN */
+            currency: string;
+            /**
+             * @example year
+             * @enum {string}
+             */
+            interval: "month" | "year";
+            /**
+             * @default false
+             * @example false
+             */
+            is_uncapped: boolean;
+            /** @example Signed 12-month contract, 5k seats, PO #4471 */
+            note?: string;
+            /** @example 50000 */
+            overage_per_seat_minor?: number;
+            /**
+             * @example enterprise
+             * @enum {string}
+             */
+            plan_code: "free" | "pro" | "enterprise";
+            /**
+             * @example {
+             *       "max_listings": 20,
+             *       "max_membership_plans": 100,
+             *       "max_staff_members": 50
+             *     }
+             */
+            quota_limits?: components["schemas"]["GrantQuotaLimitsDto"];
+            /** @example 5000 */
+            seat_cap: number;
+            /**
+             * @default contract
+             * @example contract
+             * @enum {string}
+             */
+            source: "self_serve" | "contract" | "comp";
+            /** @example 2027-09-01T00:00:00.000Z */
+            term_end?: string;
+            /** @example 2026-09-01T00:00:00.000Z */
+            term_start?: string;
+        };
         KioskSettingsDto: {
             /** @example true */
             auto_sleep: boolean;
@@ -6126,6 +7259,13 @@ export interface components {
              * @example false
              */
             rememberMe: boolean;
+        };
+        LogOccurrenceDto: {
+            /**
+             * @description Measured value for this occurrence
+             * @example 72.5
+             */
+            value: number;
         };
         MarkSubscriptionPaidDto: {
             /** @description URL to uploaded payment proof image */
@@ -6170,11 +7310,54 @@ export interface components {
              */
             payout_day?: number;
         };
-        ProtocolStepDto: {
-            /** @example Swap sugary drinks for water; audit snack labels together. */
+        ProgramBlockDto: {
+            /**
+             * @default once
+             * @enum {string}
+             */
+            cadence: "once" | "daily" | "weekly" | "n_per_week" | "custom";
             detail?: string;
-            /** @example Week 1-2: Eliminate refined sugar */
-            title: string;
+            /** @example 28 */
+            duration_days?: number;
+            /** @description Form id for a form block; the task completes on submission */
+            form_id?: string;
+            /** @description DietPlan id for a meal_plan block */
+            meal_plan_id?: string;
+            /** @example weight_kg */
+            metric?: string;
+            /** @example 0 */
+            order: number;
+            /** @example 0 */
+            start_offset_days?: number;
+            /** @example 3 */
+            times_per_week?: number;
+            /** @example Drink 2.5L of water */
+            title?: string;
+            /** @enum {string} */
+            type: "instruction" | "habit" | "meal_plan" | "workout_plan" | "form" | "measurement" | "supplement" | "milestone" | "education";
+            /** @description WorkoutPlan id for a workout_plan block */
+            workout_plan_id?: string;
+        };
+        ProgramGoalDefDto: {
+            /** @enum {string} */
+            direction: "reach" | "reduce" | "maintain";
+            /** @example Reduce bloating */
+            label: string;
+            /** @example symptom_score */
+            metric?: string;
+            /** @example 2 */
+            target?: number;
+            /** @example 84 */
+            target_offset_days?: number;
+        };
+        ProgramPhaseDto: {
+            blocks: components["schemas"]["ProgramBlockDto"][];
+            /** @example 28 */
+            duration_days?: number;
+            /** @example Remove */
+            name: string;
+            /** @example 0 */
+            order: number;
         };
         QuestionOptionDto: {
             /**
@@ -6287,6 +7470,26 @@ export interface components {
         SendMessageDto: {
             body: string;
         };
+        SendOneOffTaskDto: {
+            /** @description Note shown with the task */
+            detail?: string;
+            /**
+             * @description Due day (YYYY-MM-DD) in the client's timezone; defaults to today
+             * @example 2026-10-02
+             */
+            due_date?: string;
+            /** @description Required for form tasks */
+            form_id?: string;
+            /**
+             * @description Client's timezone, used only when this is the client's first one-off task
+             * @example Africa/Lagos
+             */
+            timezone?: string;
+            /** @description Required for instruction tasks; a form task defaults to the form title */
+            title?: string;
+            /** @enum {string} */
+            type: "form" | "instruction";
+        };
         SetGymSuspensionDto: {
             reason?: string;
         };
@@ -6300,7 +7503,17 @@ export interface components {
         SetProviderAvailabilityDto: {
             rules: components["schemas"]["AvailabilityRuleInputDto"][];
         };
+        SettleInvoiceDto: {
+            /** @example 1400000 */
+            amount_minor: number;
+            /** @example Bank transfer ref 8891 / PO #4471 */
+            reference?: string;
+        };
         SetUserSuspensionDto: {
+            reason?: string;
+        };
+        SkipOccurrenceDto: {
+            /** @example Travelling */
             reason?: string;
         };
         StartThreadDto: {
@@ -6409,9 +7622,33 @@ export interface components {
             /** @enum {string} */
             providerRole?: "DIETITIAN" | "PERSONAL_TRAINER" | "OTHER";
         };
+        UpdateCurrencyDto: {
+            gateways?: components["schemas"]["UpdateCurrencyGatewayDto"][];
+            /** @example Nigerian Naira */
+            name?: string;
+            /** @example Waiting on Paystack to enable GHS */
+            notes?: string | null;
+            platform_enabled?: boolean;
+            /** @description Whether providers who connect their own gateway account may price and collect membership plans in this currency when the platform cannot. Turning it off with provider-account payments in progress needs stop_new_payments (409 CURRENCY_IN_USE otherwise). */
+            provider_accounts_allowed?: boolean;
+            /** @description Confirms turning a currency off while payments in it are in progress. New payments stop at once; those in progress still complete. */
+            stop_new_payments?: boolean;
+            /** @example ₦ */
+            symbol?: string;
+        };
+        UpdateCurrencyGatewayDto: {
+            /** @description Whether this currency is switched on for OUR account with the gateway. */
+            account_enabled?: boolean;
+            /** @example paystack */
+            gateway: string;
+            /** @description Methods confirmed on our account for this currency. */
+            methods?: ("card" | "bank_transfer")[];
+        };
         UpdateDietPlanDto: {
+            days?: components["schemas"]["CreateDietDayDto"][];
             description?: string;
             dietitian_notes?: string;
+            /** @description Legacy flat meal list. Rejected on a plan with weekday structure (send `days` instead) so an old editor cannot flatten the week. */
             meals?: components["schemas"]["CreateDietMealDto"][];
             /**
              * @description Only ACTIVE or INACTIVE allowed via update. Use DELETE to archive.
@@ -6566,6 +7803,10 @@ export interface components {
              */
             contact_phone?: string;
             country_code?: string;
+            /**
+             * @deprecated
+             * @description Ignored. The listing's currency is derived from the provider's prices.
+             */
             currency?: string;
             /** @description Gym facilities (gym_owner listings) */
             facilities?: string[];
@@ -6607,6 +7848,11 @@ export interface components {
             /** @description Limit to a specific org (omit for global reward). */
             organization_id?: string;
             points_cost?: number;
+        };
+        UpdateMarketplaceReviewDto: {
+            comment?: string;
+            /** @example 4 */
+            rating?: number;
         };
         UpdateMemberDto: {
             /** @enum {string} */
@@ -6751,8 +7997,12 @@ export interface components {
             company_name?: string;
             /** @example NG */
             country_code?: string;
-            /** @example 1990-05-15 */
-            date_of_birth?: Record<string, never>;
+            /**
+             * Format: date
+             * @description ISO 8601 date (YYYY-MM-DD). null clears it.
+             * @example 1990-05-15
+             */
+            date_of_birth?: string | null;
             /** @example John */
             first_name?: string;
             /**
@@ -6793,16 +8043,25 @@ export interface components {
              */
             preferred_training_times?: string[];
         };
-        UpdateProtocolDto: {
-            /** @example PCOS */
+        UpdateProgramTemplateDto: {
+            /**
+             * @description Days after its scheduled day a task can still be completed (0 = same day only)
+             * @example 1
+             */
+            catch_up_days?: number;
+            /** @example Gut health */
             category?: string;
-            /** @example A 12-week staged plan for newly diagnosed PCOS clients. */
-            description?: string;
-            /** @example 12 */
-            durationWeeks?: number;
-            /** @example PCOS nutrition protocol */
+            cautions?: string;
+            /** @example 84 */
+            duration_days?: number;
+            goal_statement?: string;
+            goals?: components["schemas"]["ProgramGoalDefDto"][];
+            indications?: string;
+            /** @example standard */
+            intensity?: string;
+            /** @example 12-week gut reset */
             name?: string;
-            steps?: components["schemas"]["ProtocolStepDto"][];
+            phases?: components["schemas"]["ProgramPhaseDto"][];
         };
         UpdateProviderPlanDto: Record<string, never>;
         UpdateQuestionDto: {
@@ -6857,13 +8116,9 @@ export interface components {
              */
             type?: "TEXT" | "TEXTAREA" | "MULTIPLE_CHOICE" | "CHECKBOX" | "SELECT" | "DATE" | "NUMBER" | "EMAIL" | "PHONE" | "RATING";
         };
-        UpdateRecommendationDto: Record<string, never>;
         UpdateReviewDto: {
             comment?: string;
             rating?: number;
-        };
-        UpdateSupportedCurrenciesDto: {
-            currencies: components["schemas"]["CurrencyItemDto"][];
         };
         UpdateTeamRoleDto: {
             /** @example senior_trainer */
@@ -6907,7 +8162,7 @@ export interface components {
         UpsertBillingMarketRuleDto: Record<string, never>;
         UpsertPaymentConfigDto: {
             /**
-             * @description The payment gateway to configure.
+             * @description The payment gateway to configure. Only gateways GET /payment-gateways lists with provider_keys_supported are accepted; any other is refused with 400 GATEWAY_NOT_SUPPORTED.
              * @example paystack
              * @enum {string}
              */
@@ -6941,6 +8196,13 @@ export interface components {
              * @example 123456
              */
             otp: string;
+        };
+        VerifyProviderCurrencyDto: {
+            /**
+             * @description ISO 4217 code to verify on your own payment account.
+             * @example GHS
+             */
+            code: string;
         };
     };
     responses: never;
@@ -7016,7 +8278,7 @@ export interface operations {
             };
         };
     };
-    AdminController_getSupportedCurrencies: {
+    AdminController_getCurrencies: {
         parameters: {
             query?: never;
             header?: never;
@@ -7033,16 +8295,18 @@ export interface operations {
             };
         };
     };
-    AdminController_updateSupportedCurrencies: {
+    AdminController_updateCurrency: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                code: string;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateSupportedCurrenciesDto"];
+                "application/json": components["schemas"]["UpdateCurrencyDto"];
             };
         };
         responses: {
@@ -7313,6 +8577,84 @@ export interface operations {
             };
         };
     };
+    AdminProviderBillingController_raiseOverage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminProviderBillingController_previewOverage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminProviderBillingController_listUncapped: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminProviderBillingController_settleInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoiceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettleInvoiceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminProviderBillingController_listMarkets: {
         parameters: {
             query?: never;
@@ -7357,6 +8699,67 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminProviderBillingController_listGrants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminProviderBillingController_issueGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueGrantDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminProviderBillingController_listInvoices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
             };
             cookie?: never;
         };
@@ -8152,6 +9555,25 @@ export interface operations {
             };
         };
     };
+    ConsultationsController_getBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ConsultationsController_cancelBooking: {
         parameters: {
             query?: never;
@@ -8217,6 +9639,25 @@ export interface operations {
             };
         };
     };
+    BookingPaymentsController_startPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ConsultationsController_rescheduleBooking: {
         parameters: {
             query?: never;
@@ -8231,6 +9672,25 @@ export interface operations {
                 "application/json": components["schemas"]["RescheduleBookingDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BookingPaymentsController_verifyPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -8413,6 +9873,86 @@ export interface operations {
             };
         };
     };
+    ConsultationsController_getOwnTypes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsultationsController_createOwnType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateConsultationTypeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsultationsController_archiveOwnType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsultationsController_updateOwnType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateConsultationTypeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ConsultationsController_getProviderSlots: {
         parameters: {
             query?: {
@@ -8440,6 +9980,8 @@ export interface operations {
         parameters: {
             query?: {
                 includeInactive?: boolean;
+                /** @description The provider being booked: their own active types, or their role's platform defaults until they have set some up */
+                providerId?: string;
             };
             header?: never;
             path?: never;
@@ -8509,6 +10051,23 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateConsultationTypeDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CurrenciesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -9694,6 +11253,26 @@ export interface operations {
             };
         };
     };
+    MarketplaceController_startPlanCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceController_createRequest: {
         parameters: {
             query?: never;
@@ -9750,7 +11329,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateReviewDto"];
+                "application/json": components["schemas"]["CreateMarketplaceReviewDto"];
             };
         };
         responses: {
@@ -10218,6 +11797,77 @@ export interface operations {
             };
         };
     };
+    MarketplaceMyListingsController_uploadGalleryImages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    files: string[];
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceMyListingsController_deleteGalleryImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteListingGalleryImageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceMyListingsController_reorderGalleryImages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderListingGalleryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceMyListingsController_updateSlug: {
         parameters: {
             query?: never;
@@ -10232,6 +11882,23 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateListingSlugDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceController_getMyProviders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -10774,6 +12441,50 @@ export interface operations {
             };
         };
     };
+    MarketplaceOrgController_archiveMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberUserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveMemberDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_restoreMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberUserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceOrgController_getPaymentConfigs: {
         parameters: {
             query?: never;
@@ -10829,6 +12540,71 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_verifyProviderCurrency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                gateway: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyProviderCurrencyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_removeProviderCurrency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                gateway: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_refreshProviderCurrencies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                gateway: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -10982,6 +12758,25 @@ export interface operations {
             };
         };
     };
+    MarketplaceOrgController_getPriceCurrencies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceOrgController_getRequests: {
         parameters: {
             query?: {
@@ -11102,6 +12897,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GymStaffAssignmentController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignStaffDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -11258,11 +13077,14 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Member enrolled. For payment_mode=paystack_transfer, data.transfer_account carries the one-time account to display. */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EnrollMemberResponseDto"];
+                };
             };
         };
     };
@@ -11315,7 +13137,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateReviewDto"];
+                "application/json": components["schemas"]["UpdateMarketplaceReviewDto"];
             };
         };
         responses: {
@@ -11505,13 +13327,175 @@ export interface operations {
             };
         };
     };
+    ProgramsClientController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsClientController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsClientController_history: {
+        parameters: {
+            query: {
+                days: string;
+            };
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsClientController_agenda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsClientController_complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                occurrenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsClientController_submitForm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                occurrenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitFormResponseDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsClientController_log: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                occurrenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogOccurrenceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsClientController_skip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                occurrenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkipOccurrenceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     NotificationsController_getNotifications: {
         parameters: {
             query?: {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "STAFF_CLIENT_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;
@@ -11838,13 +13822,10 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateProtocolDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            201: {
+            /** @description PROTOCOLS_RETIRED */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11894,18 +13875,32 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PROTOCOLS_RETIRED */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NutritionController_convertProtocol: {
+        parameters: {
+            query?: never;
+            header?: never;
             path: {
                 protocolId: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateProtocolDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11933,6 +13928,433 @@ export interface operations {
     OnboardingController_getStatus: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OnboardingController_dismissWalkthrough: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OnboardingController_reopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PaymentGatewaysController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_list: {
+        parameters: {
+            query: {
+                includeArchived: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProgramTemplateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProgramTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignProgramDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_assignments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_duplicate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_clientOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clientProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_listTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clientProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_sendTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clientProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendOneOffTaskDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_withdrawTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clientProfileId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_instanceDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_pause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_attention: {
+        parameters: {
+            query: {
+                days: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -12246,6 +14668,26 @@ export interface operations {
             };
         };
     };
+    ProgressController_copyDietPlanTemplateToClient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+                templateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProgressController_getClientJournalEntries: {
         parameters: {
             query?: {
@@ -12359,18 +14801,13 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                profileId: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRecommendationDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            201: {
+            /** @description RECOMMENDATIONS_RETIRED */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12422,19 +14859,13 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                profileId: string;
-                recommendationId: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateRecommendationDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            200: {
+            /** @description RECOMMENDATIONS_RETIRED */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12999,6 +15430,25 @@ export interface operations {
             };
         };
     };
+    ProgressController_markMyDietPlanViewed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProgressController_getMyPendingInvitations: {
         parameters: {
             query?: never;
@@ -13391,19 +15841,13 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                organizationId: string;
-                profileId: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRecommendationDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            201: {
+            /** @description RECOMMENDATIONS_RETIRED */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13436,20 +15880,13 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                organizationId: string;
-                profileId: string;
-                recommendationId: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateRecommendationDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            200: {
+            /** @description RECOMMENDATIONS_RETIRED */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13895,6 +16332,8 @@ export interface operations {
                 market?: string;
                 /** @description Provider type to price for. Omitted or unrecognised falls back to the shared ALL catalogue. */
                 audience?: "ALL" | "gym_owner" | "personal_trainer" | "dietitian";
+                /** @description ISO 3166-1 alpha-2 country of the visitor, e.g. NG. Ignored when market is given. */
+                country?: string;
             };
             header?: never;
             path?: never;
@@ -14188,6 +16627,25 @@ export interface operations {
         };
     };
     TeamsController_getOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_abandonOnboardingWorkspace: {
         parameters: {
             query?: never;
             header?: never;
