@@ -103,7 +103,7 @@ export interface AdminUserSuspensionResult {
     last_name: string;
     email: string;
     is_suspended: boolean;
-    suspension_reason?: string;
+    suspension_reason?: string | null;
   };
   cascaded: {
     listingsSuspended: number;
@@ -291,6 +291,133 @@ export interface AdminPaginated<T> {
   limit: number;
 }
 
+// ─── Review moderation & user accounts ─────────────────────────────────────
+// Hand-written to match the API (binectics-api feat/admin-reviews-users)
+// until that PR merges and the generated schema carries them.
+
+export type AdminReviewStatus = "VISIBLE" | "HIDDEN" | "REMOVED";
+export type AdminReviewReportStatus = "OPEN" | "RESOLVED" | "DISMISSED";
+export type AdminReviewReportAction = "dismiss" | "hide_review";
+
+export interface AdminPersonRef {
+  id: string;
+  name: string;
+  email: string | null;
+}
+
+export interface AdminReviewView {
+  id: string;
+  rating: number;
+  comment: string | null;
+  status: AdminReviewStatus;
+  target_type: string;
+  target_id: string;
+  created_at: string | null;
+  author: AdminPersonRef | null;
+  listing: {
+    id: string;
+    headline: string | null;
+    slug: string | null;
+    account_type: string | null;
+  } | null;
+  provider: AdminPersonRef | null;
+}
+
+export interface AdminReviewReport {
+  id: string;
+  status: AdminReviewReportStatus;
+  reason: string;
+  details: string | null;
+  created_at: string | null;
+  reporter: AdminPersonRef | null;
+  review_id: string;
+  review: AdminReviewView | null;
+  resolution: {
+    action: AdminReviewReportAction | null;
+    note: string | null;
+    resolved_at: string | null;
+    resolved_by: AdminPersonRef | null;
+  } | null;
+}
+
+export interface AdminReviewReportFilters {
+  status?: "open" | "resolved";
+  page?: number;
+  limit?: number;
+}
+
+export interface AdminUserRole {
+  code: string;
+  name: string;
+}
+
+export interface AdminUserListItem {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  profile_picture: string | null;
+  role: AdminUserRole | null;
+  is_admin: boolean;
+  is_suspended: boolean;
+  is_email_verified: boolean;
+  is_placeholder: boolean;
+  last_login: string | null;
+  created_at: string | null;
+}
+
+export interface AdminUserDetail extends AdminUserListItem {
+  other_name: string | null;
+  username: string | null;
+  phone_number: string | null;
+  country_code: string | null;
+  city: string | null;
+  email_verified_at: string | null;
+  is_phone_number_verified: boolean;
+  phone_number_verified_at: string | null;
+  is_onboarding_complete: boolean;
+  must_change_password: boolean;
+  account_type_from_team: boolean;
+  admin_permissions: string[];
+  suspension_reason: string | null;
+  updated_at: string | null;
+  listings: Array<{
+    id: string;
+    headline: string | null;
+    slug: string | null;
+    account_type: string | null;
+    is_published: boolean;
+    is_suspended: boolean;
+    organization_id: string | null;
+  }>;
+  organizations: Array<{
+    id: string;
+    name: string;
+    account_type: string | null;
+    is_active: boolean;
+  }>;
+  team_memberships: Array<{
+    organization_id: string;
+    organization_name: string | null;
+    team_role: string | null;
+    status: string;
+    joined_at: string | null;
+  }>;
+  counts: {
+    bookings_as_client: number;
+    bookings_as_provider: number;
+    client_profiles_as_client: number;
+    client_profiles_as_provider: number;
+  };
+}
+
+export interface AdminUserFilters {
+  q?: string;
+  role?: string;
+  page?: number;
+  limit?: number;
+}
+
 function toQueryString(params: Record<string, unknown>): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -316,8 +443,68 @@ class AdminService {
 
   async unsuspendUser(
     userId: string,
-  ): Promise<ApiResponse<{ _id: string; is_suspended: boolean }>> {
+  ): Promise<ApiResponse<AdminUserSuspensionResult["user"]>> {
     return apiClient.patch(`/admin/users/${userId}/unsuspend`);
+  }
+
+  /** Search by email or name (case-insensitive), optional role, newest first. */
+  async listUsers(
+    filters: AdminUserFilters = {},
+  ): Promise<ApiResponse<AdminPaginated<AdminUserListItem>>> {
+    return apiClient.get<AdminPaginated<AdminUserListItem>>(
+      `/admin/users${toQueryString(filters as Record<string, unknown>)}`,
+    );
+  }
+
+  async getUser(userId: string): Promise<ApiResponse<AdminUserDetail>> {
+    return apiClient.get<AdminUserDetail>(
+      `/admin/users/${encodeURIComponent(userId)}`,
+    );
+  }
+
+  // ─── Review moderation ──────────────────────────────────────────────────
+
+  async listReviewReports(
+    filters: AdminReviewReportFilters = {},
+  ): Promise<ApiResponse<AdminPaginated<AdminReviewReport>>> {
+    return apiClient.get<AdminPaginated<AdminReviewReport>>(
+      `/admin/review-reports${toQueryString(filters as Record<string, unknown>)}`,
+    );
+  }
+
+  async getReview(
+    reviewId: string,
+  ): Promise<ApiResponse<{ review: AdminReviewView; reports: AdminReviewReport[] }>> {
+    return apiClient.get<{ review: AdminReviewView; reports: AdminReviewReport[] }>(
+      `/admin/reviews/${encodeURIComponent(reviewId)}`,
+    );
+  }
+
+  /**
+   * Close a report. `hide_review` hides the review and closes every open
+   * report on it; a report already closed is refused (409).
+   */
+  async resolveReviewReport(
+    reportId: string,
+    action: AdminReviewReportAction,
+    note?: string,
+  ): Promise<ApiResponse<AdminReviewReport>> {
+    return apiClient.patch<AdminReviewReport>(
+      `/admin/review-reports/${encodeURIComponent(reportId)}`,
+      { action, ...(note ? { note } : {}) },
+    );
+  }
+
+  /** Hide or restore a review. A review its author removed is refused (409). */
+  async setReviewStatus(
+    reviewId: string,
+    status: "VISIBLE" | "HIDDEN",
+    note?: string,
+  ): Promise<ApiResponse<{ review: AdminReviewView; reports_closed: number }>> {
+    return apiClient.patch<{ review: AdminReviewView; reports_closed: number }>(
+      `/admin/reviews/${encodeURIComponent(reviewId)}/status`,
+      { status, ...(note ? { note } : {}) },
+    );
   }
 
   async getPlatformMetrics(): Promise<ApiResponse<PlatformMetricsOverview>> {
