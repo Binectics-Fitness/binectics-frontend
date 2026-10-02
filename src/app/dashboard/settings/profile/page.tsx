@@ -18,6 +18,9 @@ import { toast } from "@/components/Toast";
 import {
   profileSettingsSchema,
   type ProfileSettingsFormData,
+  DATE_OF_BIRTH_MIN,
+  dateOfBirthInput,
+  todayYmd,
 } from "@/lib/schemas/settings";
 
 const FITNESS_GOAL_SUGGESTIONS = [
@@ -134,6 +137,7 @@ export default function ProfileSettingsPage() {
     watch,
     setValue,
     reset,
+    setError,
     formState: { errors },
   } = useForm<ProfileSettingsFormData>({
     resolver: zodResolver(profileSettingsSchema),
@@ -143,6 +147,7 @@ export default function ProfileSettingsPage() {
       email: user?.email || "",
       phone: user?.phone_number || "",
       country: user?.country_code || "",
+      dateOfBirth: dateOfBirthInput(user?.date_of_birth),
       fitnessGoals: (user?.fitness_goals || []) as string[],
       preferences: (user?.preferred_activities || []) as string[],
     },
@@ -159,6 +164,7 @@ export default function ProfileSettingsPage() {
       email: user.email || "",
       phone: user.phone_number || "",
       country: user.country_code || "",
+      dateOfBirth: dateOfBirthInput(user.date_of_birth),
       fitnessGoals: (user.fitness_goals || []) as string[],
       preferences: (user.preferred_activities || []) as string[],
     });
@@ -180,13 +186,25 @@ export default function ProfileSettingsPage() {
         preferred_activities: data.preferences,
       };
 
+      // Send date_of_birth only when it changed: the day as typed, or null
+      // when a saved value was emptied.
+      const savedDob = dateOfBirthInput(user?.date_of_birth);
+      const nextDob = data.dateOfBirth ?? "";
+      if (nextDob !== savedDob) {
+        payload.date_of_birth = nextDob === "" ? null : nextDob;
+      }
+
       const res = await authService.updateProfile(payload);
 
       if (res.success && res.data) {
         updateUser(res.data);
         toast.success("Profile saved successfully!");
       } else {
-        toast.error(res.message || "Failed to save profile");
+        const message = res.message || "Failed to save profile";
+        if (/date_of_birth/i.test(message)) {
+          setError("dateOfBirth", { type: "server", message });
+        }
+        toast.error(message);
       }
     } catch (error) {
       console.error("Save error:", error);
@@ -431,7 +449,35 @@ export default function ProfileSettingsPage() {
               placeholder="+1 (555) 000-0000"
             />
           </div>
-          <div className="md:col-span-2">
+          <div>
+            <label
+              htmlFor="profile-date-of-birth"
+              className="block text-sm font-medium text-fg-2 mb-2"
+            >
+              Date of birth
+            </label>
+            <input
+              id="profile-date-of-birth"
+              type="date"
+              min={DATE_OF_BIRTH_MIN}
+              max={todayYmd()}
+              {...registerField("dateOfBirth")}
+              aria-invalid={errors.dateOfBirth ? true : undefined}
+              aria-describedby={
+                errors.dateOfBirth ? "profile-date-of-birth-error" : undefined
+              }
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
+            />
+            {errors.dateOfBirth && (
+              <p
+                id="profile-date-of-birth-error"
+                className="mt-1 text-sm text-red-500"
+              >
+                {errors.dateOfBirth.message}
+              </p>
+            )}
+          </div>
+          <div>
             <label className="block text-sm font-medium text-fg-2 mb-2">
               Country
             </label>
