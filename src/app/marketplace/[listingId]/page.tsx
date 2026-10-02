@@ -13,6 +13,7 @@ import { planPerLabel } from "@/lib/marketplace/planDisplay";
 import { useAuth } from "@/contexts/AuthContext";
 import { ListingClassesSection } from "@/components/classes/ListingClassesSection";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
+import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
 import type { MembershipPlanType } from "@/lib/types";
 
 /* ─── Icons ──────────────────────────────────────────────── */
@@ -270,10 +271,7 @@ export default function ProviderPage() {
               <span>By {ownerName}</span>
             </div>
             <div className="flex gap-2">
-              <button className="btn-ghost-v2 sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z" /></svg>
-                Save
-              </button>
+              <SaveListingButton listingId={listing._id} listingName={name} variant="button" />
               <button className="btn-ghost-v2 sm">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8" /><path d="m17 8-5-5-5 5M12 3v12" /></svg>
                 Share

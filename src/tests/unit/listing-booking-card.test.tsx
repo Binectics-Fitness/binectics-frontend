@@ -19,6 +19,10 @@ vi.mock("@/contexts/AuthContext", () => ({
 vi.mock("@/components/MarketplaceAuthCluster", () => ({
   MarketplaceAuthCluster: () => null,
 }));
+// The save toggle has its own tests (save-listing-button.test.tsx).
+vi.mock("@/components/marketplace/SaveListingButton", () => ({
+  SaveListingButton: () => null,
+}));
 
 const NGN: PlatformCurrency = {
   code: "NGN",

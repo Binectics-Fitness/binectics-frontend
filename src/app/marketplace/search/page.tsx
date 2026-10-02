@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
+import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
 import { useSearchListings } from "@/lib/queries/marketplace";
 import { useCurrencyList } from "@/lib/queries/currencies";
 import { listingDisplayName, listingPriceFrom } from "@/lib/marketplace/listingDisplay";
@@ -84,30 +85,33 @@ function MarketplaceSearch() {
             const hue = HUES[i % HUES.length];
             const verified = l.verification_badge && l.verification_badge !== "none";
             const sub = [l.specialties?.[0], l.city].filter(Boolean).join(" · ") || l.headline;
+            const name = listingDisplayName(l);
             return (
-              <Link
-                key={l._id}
-                href={`/marketplace/${l._id}`}
-                className="flex gap-3.5 rounded-(--r-3) p-4.5"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", textDecoration: "none", color: "inherit" }}
-              >
-                <div className="w-16 h-16 rounded-(--r-2) shrink-0" style={{ background: `linear-gradient(135deg, oklch(0.86 0.04 ${hue}), oklch(0.74 0.06 ${hue + 30}))` }} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[15px] font-medium mb-1" style={{ color: "var(--ink)" }}>{listingDisplayName(l)}</div>
-                  <div className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
-                    {sub}
-                    {price ? ` · ${price}` : ""}
+              <div key={l._id} className="relative">
+                <Link
+                  href={`/marketplace/${l._id}`}
+                  className="flex gap-3.5 rounded-(--r-3) p-4.5 pr-14 sm:pr-12 h-full"
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", textDecoration: "none", color: "inherit" }}
+                >
+                  <div className="w-16 h-16 rounded-(--r-2) shrink-0" style={{ background: `linear-gradient(135deg, oklch(0.86 0.04 ${hue}), oklch(0.74 0.06 ${hue + 30}))` }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[15px] font-medium mb-1" style={{ color: "var(--ink)" }}>{name}</div>
+                    <div className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>
+                      {sub}
+                      {price ? ` · ${price}` : ""}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2.5">
+                      {l.review_count > 0 && (
+                        <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>&#9733; {l.average_rating.toFixed(1)}</span>
+                      )}
+                      {verified && (
+                        <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>verified</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 mt-2.5">
-                    {l.review_count > 0 && (
-                      <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>&#9733; {l.average_rating.toFixed(1)}</span>
-                    )}
-                    {verified && (
-                      <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>verified</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
+                </Link>
+                <SaveListingButton listingId={l._id} listingName={name} className="absolute top-3 right-3" />
+              </div>
             );
           })}
         </div>
