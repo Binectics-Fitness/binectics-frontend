@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { showAlert } from "@/lib/ui/dialogs";
 import { authService } from "@/lib/api/auth";
+import { ACCOUNT_STATE_ROUTES } from "@/lib/routing/accountState";
 import {
   changePasswordSchema,
   type ChangePasswordFormData,
@@ -33,8 +34,9 @@ export default function AccountSettingsPage() {
       );
       return;
     }
-    // The server has already killed the session — clear local state too.
-    await logout();
+    // The server has already killed the session — clear local state too,
+    // then confirm what happened instead of a bare login form.
+    await logout({ to: ACCOUNT_STATE_ROUTES.DELETED });
   };
 
   const {
