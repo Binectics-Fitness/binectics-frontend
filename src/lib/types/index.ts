@@ -49,7 +49,13 @@ export interface User {
   preferred_training_times?: string[];
   preferred_training_days?: string[];
   other_name?: string;
-  date_of_birth?: string;
+  /**
+   * Read back as an ISO timestamp (stored as a Date; the day is its first 10
+   * characters). PATCH /auth/profile takes a strict 'YYYY-MM-DD' string, or
+   * null to clear it; send the day, never a Date or a full timestamp. No web
+   * form edits it today; the mobile app does.
+   */
+  date_of_birth?: string | null;
   /**
    * When true, the user must change their password before accessing
    * any other authenticated route (used for seeded/temporary credentials).

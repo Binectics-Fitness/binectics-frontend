@@ -17,6 +17,7 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { bookingLabel, formatClock } from "@/lib/bookings/labels";
 import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
 import { PayBookingButton } from "@/components/bookings/PayBookingButton";
+import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingModal";
 import { bookingPaymentState, isPayable } from "@/lib/bookings/paymentState";
 
 type TabKey = "upcoming" | "past" | "cancelled";
@@ -602,22 +603,21 @@ export default function MyBookingsPage() {
 
       {selected && (
         <>
-          <RescheduleModal
+          <RescheduleBookingModal
             key={`reschedule-${selected.id}-${rescheduleOpen}`}
             open={rescheduleOpen}
             booking={selected}
-            loading={actionLoading}
             onClose={() => setRescheduleOpen(false)}
             onConfirm={async (startsAt, reason) => {
               setActionLoading(true);
               try {
-                await consultationsService.rescheduleBooking(selected.id, { startsAt, reason });
-                toast.success("Booking rescheduled");
-                setRescheduleOpen(false);
-                await loadBookings(activeTab);
-              } catch (err) {
-                const message = err instanceof Error ? err.message : "Failed to reschedule";
-                toast.error(message);
+                const res = await consultationsService.rescheduleBooking(selected.id, { startsAt, reason });
+                if (res.success) {
+                  toast.success("Booking rescheduled");
+                  setRescheduleOpen(false);
+                  await loadBookings(activeTab);
+                }
+                return res;
               } finally {
                 setActionLoading(false);
               }
@@ -632,7 +632,12 @@ export default function MyBookingsPage() {
             onConfirm={async (reason) => {
               setActionLoading(true);
               try {
-                await consultationsService.cancelBooking(selected.id, { reason });
+                // apiClient reports a refusal as success: false, not a throw.
+                const res = await consultationsService.cancelBooking(selected.id, { reason });
+                if (!res.success) {
+                  toast.error(res.message ?? "Failed to cancel");
+                  return;
+                }
                 toast.success("Booking cancelled");
                 setCancelOpen(false);
                 await loadBookings(activeTab);
@@ -647,78 +652,6 @@ export default function MyBookingsPage() {
         </>
       )}
     </div>
-  );
-}
-
-function RescheduleModal({
-  open,
-  booking,
-  loading,
-  onClose,
-  onConfirm,
-}: {
-  open: boolean;
-  booking: ConsultationBooking;
-  loading: boolean;
-  onClose: () => void;
-  onConfirm: (startsAt: string, reason?: string) => void;
-}) {
-  const isoLocal = (d: Date) => {
-    const tz = d.getTimezoneOffset();
-    const adj = new Date(d.getTime() - tz * 60000);
-    return adj.toISOString().slice(0, 16);
-  };
-  const [value, setValue] = useState(() => isoLocal(new Date(booking.startsAt)));
-  const [reason, setReason] = useState("");
-
-  return (
-    <ActionModal
-      open={open}
-      onClose={onClose}
-      title="Reschedule booking"
-      description="Pick a new date and time. We'll notify your provider."
-      footer={
-        <>
-          <button type="button" onClick={onClose} className="btn-ghost-v2" disabled={loading}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => onConfirm(new Date(value).toISOString(), reason || undefined)}
-            disabled={loading || !value}
-            className="btn-primary-v2 disabled:opacity-40"
-          >
-            {loading ? "Saving..." : "Confirm reschedule"}
-          </button>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <div>
-          <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
-            New start time
-          </label>
-          <input
-            type="datetime-local"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
-            Reason (optional)
-          </label>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            rows={3}
-            className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
-            placeholder="Anything your provider should know?"
-          />
-        </div>
-      </div>
-    </ActionModal>
   );
 }
 

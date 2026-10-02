@@ -154,7 +154,10 @@ export interface AdherenceSummary {
   missed: number;
   skipped: number;
   pending: number;
-  /** done / (done + missed), rounded; null until anything is actionable. */
+  /**
+   * done / (done + missed + skipped), rounded: a skipped task counts against
+   * adherence like a missed one. null until anything is actionable.
+   */
   adherence_pct: number | null;
 }
 
@@ -244,7 +247,10 @@ export interface ClientProgramSummary {
     last_7_days: { scheduled: number; done: number; done_late: number; skipped: number; missed: number; open: number };
   };
   counts: { done: number; missed: number; skipped: number; pending: number };
-  /** done / (done + missed); null until anything was due. */
+  /**
+   * done / (done + missed + skipped): a skipped task counts against
+   * adherence like a missed one. null until anything was due.
+   */
   adherence_pct: number | null;
 }
 

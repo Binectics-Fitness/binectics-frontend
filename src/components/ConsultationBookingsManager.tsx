@@ -1,10 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import DashboardLoading from "@/components/DashboardLoading";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { dualTimezoneLabel, formatLocal } from "@/utils/format";
 import { UserRole } from "@/lib/types";
+import { isSlotRefusal, localDayKey } from "@/lib/bookings/slots";
 import {
   bookingTypeName,
   consultationsService,
@@ -131,10 +138,8 @@ export default function ConsultationBookingsManager({
     setRescheduleSlots([]);
     setRescheduleLoadingSlots(true);
 
-    const dateFrom = new Date().toISOString().slice(0, 10);
-    const dateTo = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10);
+    const dateFrom = localDayKey(new Date());
+    const dateTo = localDayKey(new Date(Date.now() + 14 * 86400000));
 
     const res = await consultationsService.getProviderSlots(
       booking.providerId,
@@ -176,29 +181,22 @@ export default function ConsultationBookingsManager({
       await loadBookings();
       setMessage({ text: "Booking rescheduled.", type: "success" });
     } else {
-      const msg = (res.message ?? "Failed to reschedule.").toLowerCase();
-      const isConflict =
-        msg.includes("conflict") ||
-        msg.includes("taken") ||
-        msg.includes("unavailable") ||
-        msg.includes("already booked") ||
-        msg.includes("no longer available") ||
-        msg.includes("slot");
-      if (isConflict) {
+      if (isSlotRefusal(res)) {
         setRescheduleSelectedSlot(null);
         setMessage({
-          text: "That slot was just taken. Pick another time.",
+          text:
+            res.status === 409
+              ? "That slot was just taken. Pick another time."
+              : (res.message ?? "That time isn't available. Pick another."),
           type: "error",
         });
         if (rescheduleTarget) {
-          const now = new Date();
-          const twoWeeks = new Date(now.getTime() + 14 * 86400000);
           const fresh = await consultationsService.getProviderSlots(
             rescheduleTarget.providerId,
             {
               consultationTypeId: rescheduleTarget.consultationTypeId,
-              dateFrom: now.toISOString(),
-              dateTo: twoWeeks.toISOString(),
+              dateFrom: localDayKey(new Date()),
+              dateTo: localDayKey(new Date(Date.now() + 14 * 86400000)),
             },
           );
           if (fresh.success && fresh.data) {
@@ -240,7 +238,6 @@ export default function ConsultationBookingsManager({
 
   if (isLoading) return <DashboardLoading />;
   if (!isAuthorized) return null;
-
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -338,10 +335,8 @@ export default function ConsultationBookingsManager({
                     "bg-signal-soft text-signal-ink",
                   [ConsultationBookingStatus.PENDING]:
                     "bg-(--warn-soft,oklch(0.96_0.06_75)) text-(--warn)",
-                  [ConsultationBookingStatus.COMPLETED]:
-                    "bg-bg-2 text-fg-2",
-                  [ConsultationBookingStatus.CANCELLED]:
-                    "bg-bg-2 text-fg-3",
+                  [ConsultationBookingStatus.COMPLETED]: "bg-bg-2 text-fg-2",
+                  [ConsultationBookingStatus.CANCELLED]: "bg-bg-2 text-fg-3",
                   [ConsultationBookingStatus.NO_SHOW]:
                     "bg-danger-soft text-danger",
                 };
@@ -358,11 +353,11 @@ export default function ConsultationBookingsManager({
                         </p>
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                            statusStyles[booking.status] ??
-                            "bg-bg-2 text-fg-3"
+                            statusStyles[booking.status] ?? "bg-bg-2 text-fg-3"
                           }`}
                         >
-                          {booking.status === ConsultationBookingStatus.PENDING && booking.payment
+                          {booking.status ===
+                            ConsultationBookingStatus.PENDING && booking.payment
                             ? "AWAITING PAYMENT"
                             : booking.status.replace("_", " ")}
                         </span>
@@ -377,7 +372,10 @@ export default function ConsultationBookingsManager({
                         </span>
                         {booking.clientTimezone && (
                           <span className="inline-flex items-center gap-1.5">
-                            <Globe2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            <Globe2
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
                             {booking.clientTimezone}
                           </span>
                         )}
