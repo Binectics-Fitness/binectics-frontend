@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { adminService } from "@/lib/api/admin";
 import {
   MarketplaceVerificationBadge,
   type MarketplaceListing,
@@ -105,30 +107,27 @@ export default function AdminListingsPage() {
   const loadListings = async () => {
     setLoading(true);
     setError(null);
-    try {
-      const res = await marketplaceService.getAdminGymListings();
+    const res = await adminService.listListings();
+    if (res.success) {
       setListings(res.data ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load listings");
+    } else {
+      setError(res.message || "Failed to load listings");
       setListings([]);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     let isMounted = true;
     void (async () => {
-      try {
-        const res = await marketplaceService.getAdminGymListings();
-        if (!isMounted) return;
+      const res = await adminService.listListings();
+      if (!isMounted) return;
+      if (res.success) {
         setListings(res.data ?? []);
-      } catch (err) {
-        if (!isMounted) return;
-        setError(err instanceof Error ? err.message : "Failed to load listings");
-      } finally {
-        if (isMounted) setLoading(false);
+      } else {
+        setError(res.message || "Failed to load listings");
       }
+      setLoading(false);
     })();
     return () => {
       isMounted = false;
@@ -227,7 +226,8 @@ export default function AdminListingsPage() {
           Listings
         </h1>
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          Moderation queue for gym listings from /admin/gyms.
+          Every gym, trainer and dietitian listing. Open one to see its owner
+          and documents.
         </p>
       </div>
 
@@ -378,9 +378,13 @@ export default function AdminListingsPage() {
                             {initialsFor(provider)}
                           </span>
                           <div>
-                            <div className="font-medium" style={{ color: "var(--ink)" }}>
+                            <Link
+                              href={`/admin/listings/${l._id}`}
+                              className="font-medium hover:underline"
+                              style={{ color: "var(--ink)" }}
+                            >
                               {provider}
-                            </div>
+                            </Link>
                             <div
                               className="font-mono text-[10.5px]"
                               style={{ color: "var(--fg-3)" }}
@@ -457,10 +461,14 @@ export default function AdminListingsPage() {
                                 onClick={async () => {
                                   setActionLoading(true);
                                   try {
-                                    await marketplaceService.awardGymBadge(l._id, {
+                                    const res = await marketplaceService.awardGymBadge(l._id, {
                                       verification_badge:
                                         MarketplaceVerificationBadge.VERIFIED,
                                     });
+                                    if (!res.success) {
+                                      toast.error(res.message || "Failed to award badge");
+                                      return;
+                                    }
                                     toast.success("Verification badge awarded");
                                     await loadListings();
                                   } catch (err) {
@@ -518,10 +526,14 @@ export default function AdminListingsPage() {
                 if (!suspendTarget) return;
                 setActionLoading(true);
                 try {
-                  await marketplaceService.suspendGym(
+                  const res = await marketplaceService.suspendGym(
                     suspendTarget._id,
                     suspendReason.trim() ? { reason: suspendReason.trim() } : undefined,
                   );
+                  if (!res.success) {
+                    toast.error(res.message || "Failed to suspend");
+                    return;
+                  }
                   toast.success("Listing suspended");
                   setSuspendTarget(null);
                   await loadListings();
@@ -580,7 +592,11 @@ export default function AdminListingsPage() {
                 if (!unsuspendTarget) return;
                 setActionLoading(true);
                 try {
-                  await marketplaceService.unsuspendGym(unsuspendTarget._id);
+                  const res = await marketplaceService.unsuspendGym(unsuspendTarget._id);
+                  if (!res.success) {
+                    toast.error(res.message || "Failed to unsuspend");
+                    return;
+                  }
                   toast.success("Listing unsuspended");
                   setUnsuspendTarget(null);
                   await loadListings();
