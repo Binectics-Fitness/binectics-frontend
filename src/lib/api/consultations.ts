@@ -152,6 +152,13 @@ export interface ConsultationBooking {
   clientFirstName?: string;
   clientLastName?: string;
   providerId: string;
+  /**
+   * The provider's name. Only the single read (GET bookings/:id) sends it,
+   * along with both client names. Hand-written until the API change that
+   * adds it is in the generated schema.
+   */
+  providerFirstName?: string;
+  providerLastName?: string;
   consultationTypeId: string;
   /**
    * The session type's name, resolved by the API. Missing from older API
@@ -176,6 +183,23 @@ export interface ConsultationBooking {
     amountMinor?: number | null;
     currency?: string | null;
     expiresAt?: string;
+  };
+  /**
+   * What a priced session was booked at, in every status. Absent for a free
+   * session. Display only: it neither starts nor proves a payment.
+   */
+  price?: {
+    amountMinor: number;
+    currency: string;
+  };
+  /**
+   * Only on the single read (GET bookings/:id), and only once the charge has
+   * settled: the gateway reference and when the money moved (from the
+   * ledger; null when the API knows it was paid but not when).
+   */
+  receipt?: {
+    reference: string;
+    paidAt: string | null;
   };
   /**
    * Only on the response to verify-payment: what the gateway said about

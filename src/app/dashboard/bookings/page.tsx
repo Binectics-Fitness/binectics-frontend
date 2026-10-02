@@ -19,6 +19,7 @@ import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
 import { PayBookingButton } from "@/components/bookings/PayBookingButton";
 import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingModal";
 import { bookingPaymentState, isPayable } from "@/lib/bookings/paymentState";
+import { hasPaidReceipt, receiptHref } from "@/lib/bookings/receipt";
 
 type TabKey = "upcoming" | "past" | "cancelled";
 
@@ -157,6 +158,15 @@ function BookingRow({
           </span>
         </div>
       </button>
+
+      {/* A sibling of the row, not a child: a button cannot contain a link. */}
+      {hasPaidReceipt(booking) && (
+        <div className="flex justify-end px-5 pb-4 -mt-1">
+          <Link href={receiptHref(booking.id)} className="btn-ghost-v2 sm" data-testid="booking-receipt-link">
+            Receipt
+          </Link>
+        </div>
+      )}
 
       {/* A sibling of the row, not a child: a button cannot contain a button.
           Hidden where the panel below already offers the payment. */}
