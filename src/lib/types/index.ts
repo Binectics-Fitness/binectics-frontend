@@ -50,10 +50,10 @@ export interface User {
   preferred_training_days?: string[];
   other_name?: string;
   /**
-   * Read back as an ISO timestamp (stored as a Date; the day is its first 10
-   * characters). PATCH /auth/profile takes a strict 'YYYY-MM-DD' string, or
-   * null to clear it; send the day, never a Date or a full timestamp. No web
-   * form edits it today; the mobile app does.
+   * A plain 'YYYY-MM-DD' day, or null when unset. PATCH /auth/profile takes
+   * the same strict 'YYYY-MM-DD' string, or null to clear it; send the day,
+   * never a Date or a full timestamp. Edited on web in Settings > Profile
+   * and in the mobile app.
    */
   date_of_birth?: string | null;
   /**
