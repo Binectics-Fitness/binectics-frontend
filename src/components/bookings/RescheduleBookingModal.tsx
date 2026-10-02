@@ -22,9 +22,15 @@ export function RescheduleBookingModal({
   booking,
   onClose,
   onConfirm,
+  audience = "client",
 }: {
   open: boolean;
   booking: ConsultationBooking;
+  /**
+   * Who is moving the booking, for the copy only: the slots offered and the
+   * request sent are the same either way.
+   */
+  audience?: "client" | "provider";
   onClose: () => void;
   /** Sends the reschedule. The modal shows the API's message on failure. */
   onConfirm: (
@@ -110,7 +116,11 @@ export function RescheduleBookingModal({
       open={open}
       onClose={onClose}
       title="Reschedule booking"
-      description="Pick one of your provider's open times. We'll let them know."
+      description={
+        audience === "provider"
+          ? "Pick one of your open times for this session. We'll let your client know."
+          : "Pick one of your provider's open times. We'll let them know."
+      }
       footer={
         <>
           <button type="button" onClick={onClose} className="btn-ghost-v2" disabled={saving}>
@@ -201,7 +211,9 @@ export function RescheduleBookingModal({
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
-            placeholder="Anything your provider should know?"
+            placeholder={
+              audience === "provider" ? "Anything your client should know?" : "Anything your provider should know?"
+            }
           />
         </div>
         {error && (
