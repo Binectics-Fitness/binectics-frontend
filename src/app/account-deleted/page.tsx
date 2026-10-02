@@ -26,7 +26,7 @@ export default function AccountDeletedPage() {
       rows={[
         {
           label: "Removed",
-          value: "Name, email, phone, photo, date of birth and fitness preferences",
+          value: "Name, email, phone, date of birth and fitness preferences",
         },
         { label: "Teams", value: "You've left every team you were on" },
         { label: "Memberships", value: "Gym memberships won't renew" },
