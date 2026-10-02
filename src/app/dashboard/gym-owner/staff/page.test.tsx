@@ -103,6 +103,33 @@ describe("Staff List Page", () => {
     });
   });
 
+  it("links each member to their detail page", async () => {
+    vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
+      success: true,
+      data: [
+        {
+          _id: "member-1",
+          status: "active",
+          user_id: { first_name: "John", last_name: "Doe", email: "john@example.com" },
+          team_role_id: { _id: "role-1", name: "Trainer" },
+          created_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+        },
+      ],
+      message: "Success",
+    });
+    vi.mocked(teamsService.teamsService.getInvitations).mockResolvedValue({
+      success: true,
+      data: [],
+      message: "Success",
+    });
+
+    renderWithProviders(<StaffPage />);
+
+    const link = (await screen.findAllByRole("link", { name: "John Doe" }))[0];
+    expect(link).toHaveAttribute("href", "/dashboard/gym-owner/staff/member-1");
+  });
+
   it("should display pending invitations in sidebar", async () => {
     vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({
       success: true,
