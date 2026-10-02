@@ -46,7 +46,6 @@ export type CreateProviderResponseDto = Schemas["CreateProviderResponseDto"];
 /* ── Reference data ────────────────────────────────────────────────────── */
 export type CountryDto = Schemas["CountryDto"];
 export type CityDto = Schemas["CityDto"];
-export type CurrencyItemDto = Schemas["CurrencyItemDto"];
 
 /* ── Error envelope ────────────────────────────────────────────────────── */
 export type ErrorResponseDto = Schemas["ErrorResponseDto"];
