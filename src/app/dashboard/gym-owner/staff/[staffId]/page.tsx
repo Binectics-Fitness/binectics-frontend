@@ -18,7 +18,7 @@ import {
   type TeamRole,
 } from "@/lib/api/teams";
 import { marketplaceService } from "@/lib/api/marketplace";
-import type { MembershipSubscription } from "@/lib/types";
+import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
 import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { STAFF_TRAINER_ROLE_CODE } from "@/lib/workspaces";
@@ -54,9 +54,25 @@ function subscriberPlan(sub: MembershipSubscription): string | null {
   return null;
 }
 
+/**
+ * Memberships that still count as members. The API ends a trainer's link to
+ * a member once their membership ends, so an ended one with a leftover
+ * assignment is no longer the trainer's client. Same set as my-providers.
+ */
+const LIVE_STATUSES: ReadonlySet<string> = new Set([
+  MembershipSubscriptionStatus.ACTIVE,
+  MembershipSubscriptionStatus.PAUSED,
+  MembershipSubscriptionStatus.PAST_DUE,
+]);
+
 /** The gym members assigned to this staff user (ids may arrive as strings or ObjectIds). */
 function assignedTo(subs: readonly MembershipSubscription[], userId: string): MembershipSubscription[] {
-  return subs.filter((s) => s.assigned_staff_user_id != null && String(s.assigned_staff_user_id) === userId);
+  return subs.filter(
+    (s) =>
+      s.assigned_staff_user_id != null &&
+      String(s.assigned_staff_user_id) === userId &&
+      LIVE_STATUSES.has(s.status),
+  );
 }
 
 type AssignedState =

@@ -136,6 +136,25 @@ describe("Gym staff detail page", () => {
     expect(link).toHaveAttribute("href", "/dashboard/gym-owner/members/s-1");
   });
 
+  it("leaves out members whose membership has ended", async () => {
+    subsApi.mockResolvedValue({
+      success: true,
+      data: [
+        sub("s-1", "Ada", "u-1"),
+        sub("s-2", "Bola", "u-1", "past_due"),
+        sub("s-3", "Chidi", "u-1", "cancelled"),
+        sub("s-4", "Dayo", "u-1", "expired"),
+      ],
+    } as never);
+    renderPage();
+
+    expect((await screen.findAllByText("Ada Member")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Bola Member").length).toBeGreaterThan(0);
+    expect(screen.queryAllByText("Chidi Member")).toHaveLength(0);
+    expect(screen.queryAllByText("Dayo Member")).toHaveLength(0);
+    expect(screen.getAllByText("Assigned members · 2").length).toBeGreaterThan(0);
+  });
+
   it("says so when a trainer has nobody assigned", async () => {
     renderPage();
     expect((await screen.findAllByText("No members assigned yet.")).length).toBeGreaterThan(0);
