@@ -1,6 +1,7 @@
 "use client";
 
 import { minorToMajor } from "@/lib/money/minorMoney";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import {
@@ -202,7 +203,13 @@ export default function AdminPaymentsPage() {
                   return (
                     <DSTableRow key={tx._id} last={i === data.items.length - 1}>
                       <DSTableTd className="whitespace-nowrap">
-                        {formatWhen(tx.occurred_at)}
+                        <Link
+                          href={`/admin/payments/${tx._id}`}
+                          className="hover:underline"
+                          style={{ color: "var(--ink)" }}
+                        >
+                          {formatWhen(tx.occurred_at)}
+                        </Link>
                       </DSTableTd>
                       <DSTableTd>
                         <div style={{ color: "var(--ink)" }}>{payer.name}</div>
