@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { resolve } from "path";
+import { REMOVED_PAGE_REDIRECTS } from "./src/lib/routing/removedPages";
 
 const nextConfig: NextConfig = {
   turbopack: { root: resolve(import.meta.dirname ?? ".") },
@@ -98,6 +99,7 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: true,
       },
+      ...REMOVED_PAGE_REDIRECTS,
     ];
   },
 };
