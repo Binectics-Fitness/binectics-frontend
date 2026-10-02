@@ -1,102 +1,380 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import SearchableSelect from "@/components/SearchableSelect";
+import { toast } from "@/components/Toast";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import {
+  MemberStatus,
+  teamsService,
+  type OrganizationMember,
+  type TeamRole,
+} from "@/lib/api/teams";
+import { marketplaceService } from "@/lib/api/marketplace";
+import type { MembershipSubscription } from "@/lib/types";
+import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { STAFF_TRAINER_ROLE_CODE } from "@/lib/workspaces";
+import {
+  MEMBER_STATUS_STYLE,
+  memberDisplayEmail,
+  memberDisplayName,
+  memberInitials,
+  memberRoleLabel,
+  memberUserId,
+} from "../staffFilters";
 
-const KPIS = [
-  { label: "Classes this week", value: "12", delta: "82% utilization" },
-  { label: "Member rating", value: "4.9", delta: "142 reviews" },
-  { label: "Payout · MTD", value: "-", delta: "Sample data" },
-  { label: "Cert renewal", value: "14 Jun 2026", delta: "21 days · USAW L2", warn: true, small: true },
-];
+const STAFF_HREF = "/dashboard/gym-owner/staff";
 
-const ROLE_ROWS = [
-  { key: "Role", value: "Coach · senior" },
-  { key: "Locations", value: "Sea Point · Foreshore" },
-  { key: "Classes", value: "Olympic · Strength · Mobility" },
-  { key: "1-on-1", value: "Yes" },
-  { key: "Payroll", value: "Contractor · monthly" },
-  { key: "Permissions", value: "Schedule own · view members · message clients" },
-];
+function roleCode(m: OrganizationMember): string | null {
+  return typeof m.team_role_id === "object" && m.team_role_id !== null ? m.team_role_id.code : null;
+}
 
-const CERTS = [
-  { name: "USAW Level 2", field: "Olympic weightlifting", status: "Renews 14 Jun", warn: true },
-  { name: "NSCA-CSCS", field: "Strength & conditioning", status: "Valid · 2028", warn: false },
-  { name: "CPR + First Aid", field: "Resuscitation Council SA", status: "Valid · 2027", warn: false },
-];
+function roleId(m: OrganizationMember): string {
+  return typeof m.team_role_id === "object" && m.team_role_id !== null ? m.team_role_id._id : m.team_role_id;
+}
+
+function subscriberName(sub: MembershipSubscription): string {
+  if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
+    const name = `${sub.member_user_id.first_name ?? ""} ${sub.member_user_id.last_name ?? ""}`.trim();
+    return name || sub.member_user_id.email;
+  }
+  return "Member";
+}
+
+function subscriberPlan(sub: MembershipSubscription): string | null {
+  if (typeof sub.plan_id === "object" && sub.plan_id !== null) return sub.plan_id.name;
+  return null;
+}
+
+/** The gym members assigned to this staff user (ids may arrive as strings or ObjectIds). */
+function assignedTo(subs: readonly MembershipSubscription[], userId: string): MembershipSubscription[] {
+  return subs.filter((s) => s.assigned_staff_user_id != null && String(s.assigned_staff_user_id) === userId);
+}
+
+type AssignedState =
+  | { kind: "loading" }
+  | { kind: "error"; message: string }
+  | { kind: "ready"; subs: MembershipSubscription[] };
+
+/** A fetched result, tagged with the trainer it was fetched for. */
+type AssignedResult = { userId: string } & ({ kind: "error"; message: string } | { kind: "ready"; subs: MembershipSubscription[] });
 
 export default function GymSingleStaffPage({ params }: { params: Promise<{ staffId: string }> }) {
   const { staffId } = React.use(params);
-  void staffId;
+  const router = useRouter();
+  const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const { user } = useAuth();
+  const { fmtDate } = useOrgFormat();
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
+
+  const [member, setMember] = useState<OrganizationMember | null>(null);
+  const [roles, setRoles] = useState<TeamRole[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [savingRole, setSavingRole] = useState(false);
+  const [assignedResult, setAssignedResult] = useState<AssignedResult | null>(null);
+
+  const orgId = currentOrg?._id;
+
+  useEffect(() => {
+    if (orgLoading || !orgId) return;
+    let active = true;
+    const run = async () => {
+      setLoading(true);
+      try {
+        // Roles only feed the role picker; a failure there shouldn't hide the profile.
+        const [res, rolesRes] = await Promise.all([
+          teamsService.getMembers(orgId),
+          teamsService.getRoles(orgId).catch(() => null),
+        ]);
+        if (!active) return;
+        if (!res.success || !res.data) {
+          setError(res.message || "We couldn't load this staff member.");
+          return;
+        }
+        const found = res.data.find((m) => m._id === staffId) ?? null;
+        setMember(found);
+        setNotFound(!found);
+        setError(null);
+        if (rolesRes?.success && rolesRes.data) setRoles(rolesRes.data);
+      } catch {
+        if (active) setError("We couldn't load this staff member. Try again shortly.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void run();
+    return () => {
+      active = false;
+    };
+  }, [orgId, orgLoading, staffId]);
+
+  const uid = member ? memberUserId(member) : null;
+  const isTrainer = member ? roleCode(member) === STAFF_TRAINER_ROLE_CODE : false;
+
+  // A staff trainer's clients are the gym members assigned to them. The org
+  // subscriptions list already carries `assigned_staff_user_id`.
+  useEffect(() => {
+    if (!orgId || !uid || !isTrainer) return;
+    let active = true;
+    const failed = "We couldn't load their assigned members.";
+    void marketplaceService
+      .getOrgMembershipSubscriptions(orgId)
+      .then((res) => {
+        if (!active) return;
+        setAssignedResult(
+          res.success && res.data
+            ? { userId: uid, kind: "ready", subs: assignedTo(res.data, uid) }
+            : { userId: uid, kind: "error", message: res.message || failed },
+        );
+      })
+      .catch(() => {
+        if (active) setAssignedResult({ userId: uid, kind: "error", message: failed });
+      });
+    return () => {
+      active = false;
+    };
+  }, [orgId, uid, isTrainer]);
+
+  const assigned: AssignedState =
+    assignedResult && assignedResult.userId === uid ? assignedResult : { kind: "loading" };
+
+  // Same authority the Team page uses for role changes and removals.
+  const canManage = !!currentOrg && (currentOrg.is_owner === true || currentOrg.can_manage_organization === true);
+  const isSelf = !!uid && uid === user?.id;
+  const canEdit = canManage && !isSelf;
+
+  const roleOptions = useMemo(() => roles.map((r) => ({ label: r.name, value: r._id })), [roles]);
+
+  async function changeRole(nextRoleId: string) {
+    if (!member || !orgId || nextRoleId === roleId(member)) return;
+    setSavingRole(true);
+    const res = await teamsService.updateMember(orgId, member._id, { team_role_id: nextRoleId });
+    setSavingRole(false);
+    if (!res.success) {
+      toast.error(res.message || "Could not update member role.");
+      return;
+    }
+    const nextRole = roles.find((r) => r._id === nextRoleId);
+    setMember((m) => (m ? { ...m, team_role_id: nextRole ?? res.data?.team_role_id ?? nextRoleId } : m));
+    toast.success(nextRole ? `Role changed to ${nextRole.name}.` : "Role updated.");
+  }
+
+  function confirmRemove() {
+    if (!member || !orgId) return;
+    const name = memberDisplayName(member);
+    requestConfirmation({
+      title: `Remove ${name} from your team?`,
+      description: "They lose access to this workspace straight away. You can invite them again later.",
+      confirmLabel: "Remove",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        const res = await teamsService.removeMember(orgId, member._id);
+        if (!res.success) {
+          toast.error(res.message || "Could not remove member.");
+          return;
+        }
+        toast.success(`${name} was removed from your team.`);
+        router.push(STAFF_HREF);
+      },
+    });
+  }
+
+  if (!currentOrg && !orgLoading) {
+    return (
+      <GymDashboardShell activeItem="Staff" crumb="Staff">
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
+          Select an organization to view its staff.
+        </div>
+      </GymDashboardShell>
+    );
+  }
+
+  if (loading) {
+    return (
+      <GymDashboardShell activeItem="Staff" crumb="Staff">
+        <AsyncSpinner size="page" label="Loading staff member" />
+      </GymDashboardShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <GymDashboardShell activeItem="Staff" crumb="Staff">
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+          <div className="font-medium">Couldn&apos;t load this staff member</div>
+          <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
+        </div>
+      </GymDashboardShell>
+    );
+  }
+
+  if (notFound || !member) {
+    return (
+      <GymDashboardShell activeItem="Staff" crumb="Not found">
+        <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
+          <p className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Staff member not found</p>
+          <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>
+            They may have been removed from your team, or the link is invalid.
+          </p>
+          <Link href={STAFF_HREF} className="btn-ghost-v2 mt-2">
+            Back to staff
+          </Link>
+        </div>
+      </GymDashboardShell>
+    );
+  }
+
+  const name = memberDisplayName(member);
+  const email = memberDisplayEmail(member);
+  const role = memberRoleLabel(member);
+  const st = MEMBER_STATUS_STYLE[member.status];
+  const joined = member.joined_at ?? member.created_at;
+  const canMessage = member.status === MemberStatus.ACTIVE && !!uid && !isSelf;
+
+  const details: { label: string; value: React.ReactNode }[] = [
+    { label: "Email", value: email || "-" },
+    {
+      label: "Role",
+      value:
+        canEdit && roleOptions.length > 0 ? (
+          <div className="max-w-[260px]">
+            <SearchableSelect
+              id="staff-role"
+              name="team_role_id"
+              value={roleId(member)}
+              onChange={(value) => void changeRole(value)}
+              options={roleOptions}
+              placeholder={role}
+              disabled={savingRole}
+            />
+          </div>
+        ) : (
+          role
+        ),
+    },
+    {
+      label: "Status",
+      value: (
+        <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st?.color, background: st?.bg, border: `1px solid ${st?.color ?? "var(--border)"}` }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />
+          {st?.label ?? member.status}
+        </span>
+      ),
+    },
+    { label: "Joined", value: joined ? fmtDate(joined) : "-" },
+  ];
 
   return (
-    <GymDashboardShell activeItem="Staff" crumb="Themba Mokoena">
+    <GymDashboardShell activeItem="Staff" crumb={name}>
+      <Link href={STAFF_HREF} className="text-[13px] self-start hover:underline" style={{ color: "var(--fg-3)" }}>
+        &larr; All staff
+      </Link>
+
       {/* Profile header */}
       <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
-        <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-(--r-3) flex-shrink-0" style={{ background: "linear-gradient(135deg, var(--trainer-soft), var(--bg-3))" }} />
-        <div className="flex-1">
-          <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Themba Mokoena</h1>
-          <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>Olympic specialist &middot; joined 18 Aug 2024 &middot; contractor</p>
+        <span className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-(--r-3) flex items-center justify-center text-[20px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
+          {memberInitials(name)}
+        </span>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>{name}</h1>
+          <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
+            {role}
+            {joined ? ` · joined ${fmtDate(joined)}` : ""}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <button className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Message</button>
-          <button className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Edit role</button>
+        {canMessage && (
+          <StartConversationButton recipientUserId={uid!} messagesHref="/dashboard/gym-owner/messages" label="Message" />
+        )}
+      </div>
+
+      {/* Details */}
+      <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <h3 className="text-[15px] font-medium mb-4" style={{ color: "var(--ink)" }}>Details</h3>
+        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+          {details.map((row) => (
+            <div key={row.label}>
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mb-0.5" style={{ color: "var(--fg-3)" }}>{row.label}</div>
+              <div className="text-[13.5px]" style={{ color: "var(--ink)" }}>{row.value}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        {KPIS.map((k) => (
-          <div key={k.label} className="rounded-(--r-3) p-3.5 px-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-            <div className={`font-medium tracking-[-0.02em] tabular-nums mt-1 ${k.small ? "text-[18px]" : "text-[24px]"}`} style={{ color: k.warn ? "var(--warn)" : "var(--ink)" }}>{k.value}</div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: k.warn ? "var(--warn)" : "var(--signal-ink)" }}>{k.delta}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Role & Scope + Certifications */}
-      <div className="grid lg:grid-cols-2 gap-3.5">
+      {/* A staff trainer's assigned members */}
+      {isTrainer && (
         <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Role &amp; scope</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[460px] border-collapse text-[13.5px]">
-              <tbody>
-                {ROLE_ROWS.map((r) => (
-                  <tr key={r.key}>
-                    <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}><strong style={{ color: "var(--ink)" }}>{r.key}</strong></td>
-                    <td className="px-3.5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>{r.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <h3 className="text-[15px] font-medium mb-1" style={{ color: "var(--ink)" }}>
+            Assigned members{assigned.kind === "ready" ? ` · ${assigned.subs.length}` : ""}
+          </h3>
+          <p className="text-[13px] mb-3.5" style={{ color: "var(--fg-3)" }}>
+            Gym members you&apos;ve assigned to {name}. Assign or move a member from their page.
+          </p>
+          {assigned.kind === "loading" ? (
+            <AsyncSpinner label="Loading assigned members" />
+          ) : assigned.kind === "error" ? (
+            <div className="text-[13px]" style={{ color: "var(--danger)" }}>{assigned.message}</div>
+          ) : assigned.subs.length === 0 ? (
+            <EmptySlate message="No members assigned yet." hint="Open a member from Members and choose this trainer." mt="mt-0" />
+          ) : (
+            <div className="flex flex-col gap-2">
+              {assigned.subs.map((sub) => {
+                const meta = membershipStatusMeta(sub.status);
+                const plan = subscriberPlan(sub);
+                return (
+                  <Link
+                    key={sub._id}
+                    href={`/dashboard/gym-owner/members/${sub._id}`}
+                    className="flex justify-between items-center gap-3 p-2.5 px-3.5 rounded-(--r-2) hover:underline"
+                    style={{ background: "var(--bg-2)" }}
+                  >
+                    <div className="min-w-0">
+                      <div className="text-[13.5px] font-medium truncate" style={{ color: "var(--ink)" }}>{subscriberName(sub)}</div>
+                      {plan && (
+                        <div className="font-mono text-[11px] mt-0.5 truncate" style={{ color: "var(--fg-3)" }}>{plan}</div>
+                      )}
+                    </div>
+                    <span className="font-mono text-[10.5px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em] shrink-0" style={{ background: meta.background, color: meta.color }}>
+                      {meta.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
+      )}
 
-        <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Certifications &middot; 3</h3>
-          <div className="flex flex-col gap-2.5">
-            {CERTS.map((c) => (
-              <div key={c.name} className="flex justify-between items-center p-2.5 px-3.5 rounded-(--r-2)" style={{ background: "var(--bg-2)" }}>
-                <div>
-                  <strong className="text-[13.5px]" style={{ color: "var(--ink)" }}>{c.name}</strong>
-                  <br />
-                  <span className="font-mono text-[10.5px] uppercase" style={{ color: "var(--fg-3)" }}>{c.field}</span>
-                </div>
-                <span
-                  className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]"
-                  style={c.warn
-                    ? { background: "var(--trainer-soft)", color: "var(--warn)" }
-                    : { background: "var(--signal-soft)", color: "var(--signal-ink)" }
-                  }
-                >
-                  {c.status}
-                </span>
-              </div>
-            ))}
+      {/* Remove */}
+      {canEdit && (
+        <div className="rounded-(--r-3) p-5.5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <div>
+            <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Remove from team</h3>
+            <p className="text-[13px] mt-0.5" style={{ color: "var(--fg-3)" }}>
+              {name} will no longer have access to this workspace.
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={confirmRemove}
+            className="rounded-(--r-2) border px-3.5 py-2 text-[13px] min-h-11 cursor-pointer"
+            style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent" }}
+          >
+            Remove from team
+          </button>
         </div>
-      </div>
+      )}
+
+      {confirmationModal}
     </GymDashboardShell>
   );
 }
