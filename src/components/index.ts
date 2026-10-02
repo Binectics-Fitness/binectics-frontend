@@ -22,7 +22,6 @@ export { ContactForm } from "./ContactForm";
 
 // Layout Components (default exports)
 export { default as Navbar } from "./Navbar";
-export { default as Footer } from "./Footer";
 export { default as MobileNav } from "./MobileNav";
 export { default as ConditionalLayout } from "./ConditionalLayout";
 
@@ -31,17 +30,12 @@ export { default as CookieConsent } from "./CookieConsent";
 export { default as CookieSettings } from "./CookieSettings";
 
 // Dashboard Components (default exports)
-export { default as DashboardSidebar } from "./DashboardSidebar";
 export { default as DashboardLoading } from "./DashboardLoading";
-export { default as TrainerSidebar } from "./TrainerSidebar";
 
 // Loading Components
 export { LoadingSpinner } from "./LoadingSpinner";
 export type { default as LoadingSpinnerDefault } from "./LoadingSpinner";
 export { CardSkeleton } from "./CardSkeleton";
-export { default as DietitianSidebar } from "./DietitianSidebar";
-export { default as GymOwnerSidebar } from "./GymOwnerSidebar";
-export { default as AdminSidebar } from "./AdminSidebar";
 export { default as OnboardingBanner } from "./OnboardingBanner";
 
 // Notification Components

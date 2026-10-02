@@ -48,7 +48,6 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/gym-owner/staff",
   useSearchParams: () => new URLSearchParams(),
 }));
-vi.mock("@/components/GymOwnerSidebar", () => ({ default: () => null }));
 
 describe("Staff List Page", () => {
   beforeEach(() => {
