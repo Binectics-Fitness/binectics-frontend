@@ -4,7 +4,11 @@
  */
 
 import { apiClient } from "./client";
-import type { ApiResponse } from "@/lib/types";
+import type {
+  ApiResponse,
+  MarketplaceListing,
+  MarketplaceVerificationBadge,
+} from "@/lib/types";
 
 // ==================== TYPES ====================
 
@@ -255,6 +259,113 @@ export interface AdminTransaction {
   gateway_reference?: string;
 }
 
+/** A person as the admin reads it on a populated ref. */
+export interface AdminPersonRef {
+  _id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+}
+
+/**
+ * Small linked ledger row: a refund's original, or one of a row's refunds.
+ * Amounts are minor units of `currency`.
+ */
+export interface AdminLinkedTransaction {
+  _id: string;
+  type: string;
+  direction: "credit" | "debit";
+  status: string;
+  amount_minor: number;
+  currency: string;
+  occurred_at: string;
+  gateway_reference?: string;
+}
+
+/**
+ * GET /admin/transactions/:id. Hand-written until the API PR adding the
+ * endpoint merges and the generated schema picks it up.
+ */
+export interface AdminTransactionDetail {
+  transaction: Omit<AdminTransaction, "user_id" | "organization_id"> & {
+    user_id: AdminPersonRef | null;
+    organization_id: { _id: string; name?: string } | null;
+    recorded_by?: AdminPersonRef | null;
+    reference_type: string;
+    reference_id: string;
+    proof_url?: string;
+    note?: string;
+    reverses_transaction_id?: string;
+    fx_rate_to_usd?: number;
+    amount_usd_minor?: number;
+    created_at?: string;
+  };
+  /** Set when reference_type is consultation_booking and the booking exists. */
+  booking: {
+    _id: string;
+    client_user_id?: string;
+    provider_id?: AdminPersonRef | string | null;
+    organization_id?: string | null;
+    consultation_type_id?: { _id: string; name?: string } | string | null;
+    starts_at?: string;
+    ends_at?: string;
+    status?: string;
+    amount_minor?: number;
+    currency?: string;
+    payment_reference?: string;
+  } | null;
+  /** Set when reference_type is membership_subscription and it exists. */
+  subscription: {
+    _id: string;
+    organization_id?: string;
+    plan_id?: { _id: string; name?: string } | string | null;
+    listing_id?: string | null;
+    member_user_id?: string;
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+    amount_paid_minor?: number;
+    currency?: string;
+    payment_reference?: string;
+    auto_renew?: boolean;
+  } | null;
+  /** For platform-subscription rows: the organization paying Binectics. */
+  billed_organization: { _id: string; name?: string } | null;
+  reverses: AdminLinkedTransaction | null;
+  reversed_by: AdminLinkedTransaction[];
+}
+
+/** A supporting document as GET /admin/listings/:id returns it. */
+export interface AdminListingDocument {
+  _id: string;
+  file_name: string;
+  file_url: string;
+  mime_type: string;
+  file_size: number;
+  uploaded_by?: string;
+  created_at?: string;
+}
+
+/**
+ * GET /admin/listings/:id: any account type, with owner, organization and
+ * badge awarder populated and its documents inline. Hand-written until the
+ * API PR merges.
+ */
+export interface AdminListingDetail
+  extends Omit<
+    MarketplaceListing,
+    "professional_id" | "organization_id" | "badge_awarded_by" | "verification_badge"
+  > {
+  professional_id:
+    | (AdminPersonRef & { is_suspended?: boolean })
+    | string
+    | null;
+  organization_id: { _id: string; name?: string; logo?: string } | string | null;
+  badge_awarded_by?: AdminPersonRef | string | null;
+  verification_badge: MarketplaceVerificationBadge;
+  documents: AdminListingDocument[];
+}
+
 export interface AdminTransactionFilters {
   page?: number;
   limit?: number;
@@ -398,6 +509,31 @@ class AdminService {
   ): Promise<ApiResponse<AdminPaginated<AdminTransaction>>> {
     return apiClient.get<AdminPaginated<AdminTransaction>>(
       `/admin/transactions${toQueryString(filters as Record<string, unknown>)}`,
+    );
+  }
+
+  /** One ledger row with what it points at (GET /admin/transactions/:id). */
+  async getTransaction(
+    transactionId: string,
+  ): Promise<ApiResponse<AdminTransactionDetail>> {
+    return apiClient.get<AdminTransactionDetail>(
+      `/admin/transactions/${encodeURIComponent(transactionId)}`,
+    );
+  }
+
+  // ─── Listings ───────────────────────────────────────────────────────────
+
+  /** Every listing, all account types (GET /admin/listings). */
+  async listListings(): Promise<ApiResponse<MarketplaceListing[]>> {
+    return apiClient.get<MarketplaceListing[]>("/admin/listings");
+  }
+
+  /** One listing with owner and documents (GET /admin/listings/:id). */
+  async getListing(
+    listingId: string,
+  ): Promise<ApiResponse<AdminListingDetail>> {
+    return apiClient.get<AdminListingDetail>(
+      `/admin/listings/${encodeURIComponent(listingId)}`,
     );
   }
 
