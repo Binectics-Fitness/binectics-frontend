@@ -4,197 +4,157 @@ import { formatPercent } from "@/lib/admin/percent";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { ActionModal } from "@/components/ds/ActionModal";
-import { toast } from "@/components/Toast";
-import { adminService, type PlatformMetricsOverview, type AdminUserSuspensionResult } from "@/lib/api/admin";
-import { formatCurrency } from "@/utils/format";
-import { minorToMajor } from "@/lib/money/minorMoney";
+import {
+  AsyncSpinner,
+  EmptySlate,
+  FilterPill,
+  StatusPill,
+  DSTable,
+  DSTableHead,
+  DSTableTh,
+  DSTableRow,
+  DSTableTd,
+} from "@/components/ds";
+import {
+  adminService,
+  type AdminPaginated,
+  type AdminUserListItem,
+  type PlatformMetricsOverview,
+} from "@/lib/api/admin";
 import { revenueHeadline, revenueRows } from "@/lib/admin/revenue";
+import { formatAdminDate, roleLabel } from "@/lib/admin/moderation";
 
-interface SuspendActionState {
-  userId: string;
-  reason: string;
+const PAGE_SIZE = 25;
+const SEARCH_DEBOUNCE_MS = 300;
+
+const ROLE_FILTERS = [
+  { value: "", label: "All" },
+  { value: "fitness_member", label: "Members" },
+  { value: "personal_trainer", label: "Trainers" },
+  { value: "dietitian", label: "Dietitians" },
+  { value: "gym_owner", label: "Gym owners" },
+];
+
+function initials(u: AdminUserListItem): string {
+  const s = `${u.first_name.charAt(0)}${u.last_name.charAt(0)}`.toUpperCase();
+  return s || u.email.charAt(0).toUpperCase() || "?";
 }
 
 export default function AdminUsersPage() {
   const [metrics, setMetrics] = useState<PlatformMetricsOverview | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+
+  const [query, setQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [role, setRole] = useState("");
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState<AdminPaginated<AdminUserListItem> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lookupUserId, setLookupUserId] = useState("");
-  const [suspendOpen, setSuspendOpen] = useState(false);
-  const [unsuspendOpen, setUnsuspendOpen] = useState(false);
-  const [suspendState, setSuspendState] = useState<SuspendActionState>({ userId: "", reason: "" });
-  const [actionLoading, setActionLoading] = useState(false);
-  const [lastResult, setLastResult] = useState<AdminUserSuspensionResult | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
+    let active = true;
     void (async () => {
-      try {
-        const res = await adminService.getPlatformMetrics();
-        if (!isMounted) return;
-        setMetrics(res.data ?? null);
-      } catch (err) {
-        if (!isMounted) return;
-        setError(err instanceof Error ? err.message : "Failed to load metrics");
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+      const res = await adminService.getPlatformMetrics();
+      if (!active) return;
+      if (res.success) setMetrics(res.data ?? null);
+      setMetricsLoading(false);
     })();
     return () => {
-      isMounted = false;
+      active = false;
     };
   }, []);
 
-  const reloadMetrics = async () => {
-    setLoading(true);
-    try {
-      const res = await adminService.getPlatformMetrics();
-      setMetrics(res.data ?? null);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load metrics");
-    } finally {
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setDebounced(query.trim());
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(t);
+  }, [query]);
+
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      setLoading(true);
+      const res = await adminService.listUsers({
+        q: debounced || undefined,
+        role: role || undefined,
+        page,
+        limit: PAGE_SIZE,
+      });
+      if (!active) return;
+      if (res.success && res.data) {
+        setData(res.data);
+        setError(null);
+      } else {
+        setError(res.message || "We couldn't load users.");
+      }
       setLoading(false);
-    }
-  };
+    };
+    const kick = window.setTimeout(() => void run(), 0);
+    return () => {
+      active = false;
+      window.clearTimeout(kick);
+    };
+  }, [debounced, role, page]);
 
-  const handleSuspend = async () => {
-    if (!suspendState.userId.trim()) return;
-    setActionLoading(true);
-    try {
-      const res = await adminService.suspendUser(
-        suspendState.userId.trim(),
-        suspendState.reason.trim() || undefined,
-      );
-      toast.success(`Suspended ${res.data?.user.email ?? suspendState.userId}`);
-      setLastResult(res.data ?? null);
-      setSuspendOpen(false);
-      setSuspendState({ userId: "", reason: "" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to suspend user");
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
 
-  const handleUnsuspend = async () => {
-    if (!lookupUserId.trim()) return;
-    setActionLoading(true);
-    try {
-      await adminService.unsuspendUser(lookupUserId.trim());
-      toast.success(`Reinstated ${lookupUserId}`);
-      setUnsuspendOpen(false);
-      setLookupUserId("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to unsuspend user");
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const kpis = [
+    {
+      label: "Total users",
+      value: metricsLoading ? "-" : (metrics?.conversion.totalUsers.toLocaleString() ?? "-"),
+      delta: "excludes suspended accounts",
+    },
+    {
+      label: "Paying users",
+      value: metricsLoading ? "-" : (metrics?.conversion.payingUsers.toLocaleString() ?? "-"),
+      delta:
+        metrics?.conversion.conversionRate != null
+          ? `${formatPercent(metrics.conversion.conversionRate)} conversion`
+          : "-",
+    },
+    {
+      label: "Verified providers",
+      value: metricsLoading ? "-" : (metrics?.verifiedProviders.total.toLocaleString() ?? "-"),
+      delta: `${metrics?.verifiedProviders.distinctCountries ?? 0} countries`,
+    },
+    {
+      label: "Active subscriptions",
+      value: metricsLoading ? "-" : (metrics?.subscriptions.activeCount.toLocaleString() ?? "-"),
+      delta: (() => {
+        // Largest currency's revenue; others counted, never summed.
+        const r = revenueHeadline(revenueRows(metrics));
+        return r.value === "-" ? "-" : `${r.value} total${r.moreLabel ? `, ${r.moreLabel}` : ""}`;
+      })(),
+    },
+  ];
 
   return (
-    <AdminDashboardShell
-      activeItem="Users"
-      crumb="Users"
-      actions={
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setSuspendState({ userId: lookupUserId, reason: "" });
-              setSuspendOpen(true);
-            }}
-            className="btn-ghost-v2"
-          >
-            Suspend user
-          </button>
-          <button
-            type="button"
-            onClick={() => setUnsuspendOpen(true)}
-            className="btn-primary-v2"
-            disabled={!lookupUserId.trim()}
-          >
-            Unsuspend user
-          </button>
-        </div>
-      }
-    >
+    <AdminDashboardShell activeItem="Users" crumb="Users">
       <div>
         <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
           Users
         </h1>
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          Lookup, suspend, and reinstate user accounts. Metrics from /admin/metrics/overview.
+          Search by email or name, then open an account to see its details or suspend it.
         </p>
       </div>
 
-      {error && (
-        <div
-          className="rounded-(--r-3) p-4 text-[13px]"
-          style={{
-            background: "var(--danger-soft)",
-            border: "1px solid oklch(0.92 0.05 25)",
-            color: "var(--danger)",
-          }}
-        >
-          <div className="font-medium">Couldn&apos;t load metrics</div>
-          <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
-          <button type="button" onClick={reloadMetrics} className="btn-ghost-v2 sm mt-2">
-            Try again
-          </button>
-        </div>
-      )}
-
-      {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          {
-            label: "Total users",
-            value: loading ? "-" : (metrics?.conversion.totalUsers.toLocaleString() ?? "0"),
-            delta: "all platform members",
-          },
-          {
-            label: "Paying users",
-            value: loading ? "-" : (metrics?.conversion.payingUsers.toLocaleString() ?? "0"),
-            delta:
-              metrics?.conversion.conversionRate != null
-                ? `${formatPercent(metrics.conversion.conversionRate)} conversion`
-                : "-",
-          },
-          {
-            label: "Verified providers",
-            value: loading ? "-" : (metrics?.verifiedProviders.total.toLocaleString() ?? "0"),
-            delta: `${metrics?.verifiedProviders.distinctCountries ?? 0} countries`,
-          },
-          {
-            label: "Active subscriptions",
-            value: loading ? "-" : (metrics?.subscriptions.activeCount.toLocaleString() ?? "0"),
-            delta: (() => {
-              // Largest currency's revenue; others counted, never summed.
-              const r = revenueHeadline(revenueRows(metrics));
-              return r.value === "-" ? "-" : `${r.value} total${r.moreLabel ? `, ${r.moreLabel}` : ""}`;
-            })(),
-          },
-        ].map((kpi) => (
+        {kpis.map((kpi) => (
           <div
             key={kpi.label}
             className="rounded-(--r-3) p-[14px_16px]"
             style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
           >
-            <div
-              className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
-              style={{ color: "var(--fg-3)" }}
-            >
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
               {kpi.label}
             </div>
             <div
               className="text-[22px] font-medium mt-1"
-              style={{
-                color: "var(--ink)",
-                letterSpacing: "-0.018em",
-                fontVariantNumeric: "tabular-nums",
-              }}
+              style={{ color: "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}
             >
               {kpi.value}
             </div>
@@ -205,323 +165,147 @@ export default function AdminUsersPage() {
         ))}
       </div>
 
-      {/* Lookup */}
-      <div
-        className="rounded-(--r-3) p-5"
-        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-      >
-        <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-          User lookup
-        </div>
-        <div className="text-[14px] mt-1 mb-3.5" style={{ color: "var(--ink)" }}>
-          Enter a user ID to suspend or reinstate. Open the user&apos;s profile to view their full record.
-        </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <input
-            type="text"
-            value={lookupUserId}
-            onChange={(e) => setLookupUserId(e.target.value)}
-            placeholder="USR_xxxxxxx"
-            className="h-10 px-3 rounded-(--r-2) text-[13.5px] flex-1 min-w-[260px]"
-            style={{
-              border: "1px solid var(--border)",
-              background: "var(--bg-2)",
-              color: "var(--ink)",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          />
-          <Link
-            href={lookupUserId.trim() ? `/admin/users/${lookupUserId.trim()}` : "#"}
-            className="btn-ghost-v2 sm"
-            aria-disabled={!lookupUserId.trim()}
-            style={{ opacity: lookupUserId.trim() ? 1 : 0.4, pointerEvents: lookupUserId.trim() ? "auto" : "none" }}
-          >
-            Open profile
-          </Link>
-          <button
-            type="button"
-            onClick={() => {
-              setSuspendState({ userId: lookupUserId, reason: "" });
-              setSuspendOpen(true);
-            }}
-            disabled={!lookupUserId.trim()}
-            className="btn-ghost-v2 sm"
-            style={{ color: "var(--danger)", opacity: lookupUserId.trim() ? 1 : 0.4 }}
-          >
-            Suspend
-          </button>
-          <button
-            type="button"
-            onClick={() => setUnsuspendOpen(true)}
-            disabled={!lookupUserId.trim()}
-            className="btn-ghost-v2 sm"
-            style={{ opacity: lookupUserId.trim() ? 1 : 0.4 }}
-          >
-            Unsuspend
-          </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search email, name or user ID"
+          aria-label="Search users"
+          maxLength={100}
+          className="h-9 px-3 rounded-(--r-2) text-[13.5px] flex-1 min-w-0 sm:min-w-[260px] sm:max-w-[420px]"
+          style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" }}
+        />
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {ROLE_FILTERS.map((f) => (
+            <FilterPill
+              key={f.value || "all"}
+              label={f.label}
+              active={role === f.value}
+              onClick={() => {
+                setRole(f.value);
+                setPage(1);
+              }}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Last action */}
-      {lastResult && (
+      {error ? (
         <div
-          className="rounded-(--r-3) p-5"
-          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+          role="alert"
+          className="rounded-(--r-3) p-4 text-[13px]"
+          style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}
         >
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-            Last suspension
+          <div className="font-medium">Couldn&apos;t load users</div>
+          <div className="mt-1" style={{ color: "var(--ink)" }}>
+            {error}
           </div>
-          <div className="text-[14px] mt-1" style={{ color: "var(--ink)" }}>
-            <span className="font-medium">
-              {lastResult.user.first_name} {lastResult.user.last_name}
-            </span>
-            <span className="font-mono text-[12px] ml-2" style={{ color: "var(--fg-3)" }}>
-              {lastResult.user.email}
-            </span>
+        </div>
+      ) : null}
+
+      {loading && !data ? (
+        <AsyncSpinner />
+      ) : !error && data && data.items.length === 0 ? (
+        <EmptySlate
+          message="No users match"
+          hint={debounced || role ? "Try a shorter search or another role." : undefined}
+        />
+      ) : !error && data ? (
+        <>
+          <div
+            className="rounded-(--r-3)"
+            style={{ background: "var(--bg)", border: "1px solid var(--border)", opacity: loading ? 0.6 : 1 }}
+          >
+            <DSTable minWidth={760}>
+              <DSTableHead>
+                <DSTableTh>User</DSTableTh>
+                <DSTableTh>Role</DSTableTh>
+                <DSTableTh>Joined</DSTableTh>
+                <DSTableTh>Last login</DSTableTh>
+                <DSTableTh>Status</DSTableTh>
+              </DSTableHead>
+              <tbody>
+                {data.items.map((u, i) => (
+                  <DSTableRow key={u.id} last={i === data.items.length - 1}>
+                    <DSTableTd>
+                      <Link
+                        href={`/admin/users/${u.id}`}
+                        className="flex items-center gap-2.5 no-underline"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        <span
+                          aria-hidden
+                          className="w-8 h-8 rounded-full shrink-0 inline-flex items-center justify-center font-mono text-[11px]"
+                          style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}
+                        >
+                          {initials(u)}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-[13.5px] font-medium truncate">
+                            {`${u.first_name} ${u.last_name}`.trim() || "Unnamed user"}
+                          </span>
+                          <span className="block font-mono text-[11.5px] truncate" style={{ color: "var(--fg-3)" }}>
+                            {u.email}
+                          </span>
+                        </span>
+                      </Link>
+                    </DSTableTd>
+                    <DSTableTd className="text-[13px]">
+                      {roleLabel(u.role?.code)}
+                      {u.is_admin ? (
+                        <span className="font-mono text-[10.5px] uppercase ml-1.5" style={{ color: "var(--fg-3)" }}>
+                          admin
+                        </span>
+                      ) : null}
+                    </DSTableTd>
+                    <DSTableTd className="whitespace-nowrap text-[12.5px]">{formatAdminDate(u.created_at)}</DSTableTd>
+                    <DSTableTd className="whitespace-nowrap text-[12.5px]">
+                      {u.last_login ? formatAdminDate(u.last_login) : "Never"}
+                    </DSTableTd>
+                    <DSTableTd>
+                      {u.is_suspended ? (
+                        <StatusPill variant="cancelled" label="Suspended" />
+                      ) : u.is_placeholder ? (
+                        <StatusPill variant="pending" label="Invited" />
+                      ) : (
+                        <StatusPill variant="confirmed" label="Active" />
+                      )}
+                    </DSTableTd>
+                  </DSTableRow>
+                ))}
+              </tbody>
+            </DSTable>
           </div>
-          {lastResult.user.suspension_reason && (
-            <div className="text-[13px] mt-2" style={{ color: "var(--fg-2)" }}>
-              Reason: {lastResult.user.suspension_reason}
+
+          <div className="flex items-center justify-between text-[13px]">
+            <div style={{ color: "var(--fg-3)" }}>
+              {data.total.toLocaleString()} user{data.total === 1 ? "" : "s"}
             </div>
-          )}
-          <div className="mt-3 grid grid-cols-3 gap-3">
-            {[
-              { label: "Listings suspended", value: lastResult.cascaded.listingsSuspended },
-              { label: "Subscriptions cancelled", value: lastResult.cascaded.subscriptionsCancelled },
-              { label: "Bookings cancelled", value: lastResult.cascaded.bookingsCancelled },
-            ].map((c) => (
-              <div
-                key={c.label}
-                className="rounded-(--r-2) p-3"
-                style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn-ghost-v2 sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                <div
-                  className="font-mono text-[10px] uppercase tracking-[0.04em]"
-                  style={{ color: "var(--fg-3)" }}
-                >
-                  {c.label}
-                </div>
-                <div
-                  className="text-[18px] font-medium mt-0.5"
-                  style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
-                >
-                  {c.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Country breakdown */}
-      {metrics?.verifiedProviders.byCountry && metrics.verifiedProviders.byCountry.length > 0 && (
-        <div
-          className="rounded-(--r-3) overflow-hidden"
-          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-        >
-          <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-              Verified providers by country
+                Previous
+              </button>
+              <span style={{ color: "var(--fg-3)" }}>
+                Page {data.page} of {totalPages}
+              </span>
+              <button
+                type="button"
+                className="btn-ghost-v2 sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </button>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  {["Country", "Verified providers"].map((h, i) => (
-                    <th
-                      key={h}
-                      className={`font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 ${i === 1 ? "text-right" : "text-left"}`}
-                      style={{
-                        color: "var(--fg-3)",
-                        borderBottom: "1px solid var(--border)",
-                        background: "var(--bg-2)",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {metrics.verifiedProviders.byCountry.map((row) => (
-                  <tr key={row.country_code}>
-                    <td className="py-2.5 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <span
-                        className="font-mono text-[11.5px] uppercase tracking-[0.04em]"
-                        style={{ color: "var(--ink)" }}
-                      >
-                        {row.country_code}
-                      </span>
-                    </td>
-                    <td
-                      className="py-2.5 px-4.5 text-right font-mono"
-                      style={{
-                        borderBottom: "1px solid var(--border)",
-                        color: "var(--ink)",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {row.count}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Revenue by currency */}
-      {metrics?.subscriptions.byCurrency && metrics.subscriptions.byCurrency.length > 0 && (
-        <div
-          className="rounded-(--r-3) overflow-hidden"
-          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-        >
-          <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-              Subscription revenue by currency
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  {["Currency", "Count", "Total", "Average"].map((h, i) => (
-                    <th
-                      key={h}
-                      className={`font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 ${i === 0 ? "text-left" : "text-right"}`}
-                      style={{
-                        color: "var(--fg-3)",
-                        borderBottom: "1px solid var(--border)",
-                        background: "var(--bg-2)",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {metrics.subscriptions.byCurrency.map((row) => (
-                  <tr key={row.currency}>
-                    <td className="py-2.5 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <span
-                        className="font-mono text-[11.5px] uppercase tracking-[0.04em]"
-                        style={{ color: "var(--ink)" }}
-                      >
-                        {row.currency}
-                      </span>
-                    </td>
-                    {/* Count is a plain integer; totalMinor/averageMinor are MINOR
-                        units, so they go through formatCurrency(minorToMajor(…))
-                        rather than a bare toLocaleString — which rendered kobo
-                        as if it were naira. */}
-                    {[
-                      row.count.toLocaleString(),
-                      formatCurrency(minorToMajor(row.totalMinor, row.currency), row.currency),
-                      formatCurrency(minorToMajor(row.averageMinor, row.currency), row.currency),
-                    ].map((v, i) => (
-                      <td
-                        key={i}
-                        className="py-2.5 px-4.5 text-right font-mono"
-                        style={{
-                          borderBottom: "1px solid var(--border)",
-                          color: "var(--ink)",
-                          fontVariantNumeric: "tabular-nums",
-                        }}
-                      >
-                        {v}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      <ActionModal
-        key={`suspend-${suspendOpen}`}
-        open={suspendOpen}
-        onClose={() => setSuspendOpen(false)}
-        title="Suspend user"
-        description="Suspending cascades to listings, subscriptions, and bookings."
-        footer={
-          <>
-            <button type="button" onClick={() => setSuspendOpen(false)} className="btn-ghost-v2" disabled={actionLoading}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSuspend}
-              disabled={actionLoading || !suspendState.userId.trim()}
-              className="btn-primary-v2 disabled:opacity-40"
-              style={{ background: "var(--danger)", color: "white" }}
-            >
-              {actionLoading ? "Suspending..." : "Confirm suspension"}
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
-              User ID
-            </label>
-            <input
-              type="text"
-              value={suspendState.userId}
-              onChange={(e) => setSuspendState((s) => ({ ...s, userId: e.target.value }))}
-              className="h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
-              placeholder="USR_xxxxxxx"
-              style={{ fontVariantNumeric: "tabular-nums" }}
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
-              Reason (optional)
-            </label>
-            <textarea
-              value={suspendState.reason}
-              onChange={(e) => setSuspendState((s) => ({ ...s, reason: e.target.value }))}
-              rows={3}
-              className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
-              placeholder="Logged for the user record."
-            />
-          </div>
-        </div>
-      </ActionModal>
-
-      <ActionModal
-        key={`unsuspend-${unsuspendOpen}`}
-        open={unsuspendOpen}
-        onClose={() => setUnsuspendOpen(false)}
-        title="Reinstate user"
-        description={`This will lift the suspension on ${lookupUserId || "the selected user"}.`}
-        footer={
-          <>
-            <button type="button" onClick={() => setUnsuspendOpen(false)} className="btn-ghost-v2" disabled={actionLoading}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleUnsuspend}
-              disabled={actionLoading || !lookupUserId.trim()}
-              className="btn-primary-v2 disabled:opacity-40"
-            >
-              {actionLoading ? "Reinstating..." : "Confirm reinstate"}
-            </button>
-          </>
-        }
-      >
-        <div className="text-[13.5px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
-          Reinstating restores the user&apos;s account but does not automatically restore their listings or subscriptions.
-        </div>
-      </ActionModal>
+        </>
+      ) : null}
     </AdminDashboardShell>
   );
 }
