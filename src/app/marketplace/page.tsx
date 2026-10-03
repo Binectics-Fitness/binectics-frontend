@@ -10,6 +10,7 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { formatCurrency } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
+import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
 
 /* ─── Types (from API response) ──────────────────────────── */
 
@@ -113,9 +114,6 @@ const SORT_OPTIONS: { label: string; value: "rating" | "newest" | "nearest" }[] 
 
 function Star() {
   return <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 7 7 .8-5.3 4.7L18 22l-6-4-6 4 1.3-7.5L2 9.8 9 9z" /></svg>;
-}
-function Heart() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z" /></svg>;
 }
 function Search() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
@@ -366,98 +364,98 @@ export default function MarketplacePage() {
                 const photoUrl = l.photos?.[0] || l.profile_image;
 
                 return (
-                  <Link
-                    href={`/marketplace/${l._id}`}
-                    key={l._id}
-                    className={`block border border-border rounded-(--r-3) bg-bg overflow-hidden cursor-pointer hover:border-ink ${isFeatured ? "sm:col-span-2" : ""}`}
-                    style={{ transition: "border-color 120ms" }}
-                  >
-                    {/* Photo / Placeholder */}
-                    <div
-                      className={`relative ${isFeatured ? "aspect-video" : "aspect-4/3"}`}
-                      style={{
-                        background: photoUrl ? undefined : bg,
-                        borderBottom: "1px solid var(--border)",
-                      }}
+                  <div key={l._id} className={`relative ${isFeatured ? "sm:col-span-2" : ""}`}>
+                    <Link
+                      href={`/marketplace/${l._id}`}
+                      className="block h-full border border-border rounded-(--r-3) bg-bg overflow-hidden cursor-pointer hover:border-ink"
+                      style={{ transition: "border-color 120ms" }}
                     >
-                      {photoUrl && (
-                        <Image
-                          src={photoUrl}
-                          alt={name}
-                          fill
-                          className="object-cover"
-                          sizes={isFeatured ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 100vw, 33vw"}
-                        />
-                      )}
-                      <div className="absolute top-2.5 left-2.5 flex gap-1.5">
-                        <span className={`inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium border ${tb.cls}`} style={{ color: tb.color }}>{tb.label}</span>
-                        {isVerified && (
-                          <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-signal-soft border border-[oklch(0.88_0.05_148)]" style={{ color: "var(--signal-ink)" }}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-current" />Verified
+                      {/* Photo / Placeholder */}
+                      <div
+                        className={`relative ${isFeatured ? "aspect-video" : "aspect-4/3"}`}
+                        style={{
+                          background: photoUrl ? undefined : bg,
+                          borderBottom: "1px solid var(--border)",
+                        }}
+                      >
+                        {photoUrl && (
+                          <Image
+                            src={photoUrl}
+                            alt={name}
+                            fill
+                            className="object-cover"
+                            sizes={isFeatured ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 100vw, 33vw"}
+                          />
+                        )}
+                        <div className="absolute top-2.5 left-2.5 flex gap-1.5">
+                          <span className={`inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium border ${tb.cls}`} style={{ color: tb.color }}>{tb.label}</span>
+                          {isVerified && (
+                            <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-signal-soft border border-[oklch(0.88_0.05_148)]" style={{ color: "var(--signal-ink)" }}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-current" />Verified
+                            </span>
+                          )}
+                          {isFeatured && (
+                            <span className="inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-ink border border-ink" style={{ color: "var(--bg)" }}>Featured</span>
+                          )}
+                        </div>
+                        {!photoUrl && (
+                          <span className="absolute bottom-2.5 left-3 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+                            {type} · {name}
                           </span>
                         )}
-                        {isFeatured && (
-                          <span className="inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-ink border border-ink" style={{ color: "var(--bg)" }}>Featured</span>
-                        )}
                       </div>
-                      <div className="absolute top-2.5 right-2.5 w-10 h-10 sm:w-7 sm:h-7 rounded-full flex items-center justify-center backdrop-blur-sm" style={{ background: "oklch(0.985 0.005 85 / 0.85)", color: "var(--fg-2)" }}>
-                        <Heart />
-                      </div>
-                      {!photoUrl && (
-                        <span className="absolute bottom-2.5 left-3 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-                          {type} · {name}
-                        </span>
-                      )}
-                    </div>
 
-                    {/* Body */}
-                    {isFeatured ? (
-                      <div className="p-3.5 flex flex-col sm:flex-row justify-between items-start gap-3">
-                        <div className="flex flex-col gap-1.5">
-                          <div className="text-[22px] font-medium" style={{ letterSpacing: "-0.014em", color: "var(--ink)" }}>{name}</div>
-                          <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{l.review_count} reviews · {sub}</div>
+                      {/* Body */}
+                      {isFeatured ? (
+                        <div className="p-3.5 flex flex-col sm:flex-row justify-between items-start gap-3">
+                          <div className="flex flex-col gap-1.5">
+                            <div className="text-[22px] font-medium" style={{ letterSpacing: "-0.014em", color: "var(--ink)" }}>{name}</div>
+                            <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{l.review_count} reviews · {sub}</div>
+                            <div className="flex flex-wrap gap-1.25 mt-1">
+                              {tags.map((t) => (
+                                <span key={t} className="inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border border-border" style={{ color: "var(--fg-2)" }}>{t}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1.5 items-end text-right">
+                            <div className="flex items-center gap-1.5 text-[12.5px]">
+                              <span style={{ color: "var(--ink)" }}><Star /></span>
+                              <span style={{ color: "var(--ink)", fontWeight: 500 }}>{l.average_rating || "–"}</span>
+                            </div>
+                            <span className="font-mono text-[16px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
+                              {price} <small className="text-[13px] font-normal" style={{ color: "var(--fg-3)" }}>/ {per}</small>
+                            </span>
+                            <span className="btn-primary-v2 sm">View profile →</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-3.5 flex flex-col gap-1.5">
+                          <div className="flex items-center gap-1.5 text-[12.5px]" style={{ color: "var(--fg-2)" }}>
+                            <span style={{ color: "var(--ink)" }}><Star /></span>
+                            <span style={{ color: "var(--ink)", fontWeight: 500 }}>{l.average_rating || "–"}</span>
+                            <span>· {l.review_count} reviews</span>
+                          </div>
+                          <div className="text-[16px] font-medium" style={{ letterSpacing: "-0.014em", color: "var(--ink)" }}>{name}</div>
+                          <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{sub}</div>
                           <div className="flex flex-wrap gap-1.25 mt-1">
                             {tags.map((t) => (
                               <span key={t} className="inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border border-border" style={{ color: "var(--fg-2)" }}>{t}</span>
                             ))}
                           </div>
-                        </div>
-                        <div className="flex flex-col gap-1.5 items-end text-right">
-                          <div className="flex items-center gap-1.5 text-[12.5px]">
-                            <span style={{ color: "var(--ink)" }}><Star /></span>
-                            <span style={{ color: "var(--ink)", fontWeight: 500 }}>{l.average_rating || "–"}</span>
+                          <div className="flex justify-between items-center mt-2 pt-3 border-t border-border">
+                            <span className="font-mono text-[13.5px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
+                              {price} <small className="font-normal" style={{ color: "var(--fg-3)" }}>/ {per}</small>
+                            </span>
+                            <span className="font-mono text-[11.5px]" style={{ color: status.muted ? "var(--fg-3)" : "var(--signal-ink)" }}>
+                              {status.text}
+                            </span>
                           </div>
-                          <span className="font-mono text-[16px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
-                            {price} <small className="text-[13px] font-normal" style={{ color: "var(--fg-3)" }}>/ {per}</small>
-                          </span>
-                          <span className="btn-primary-v2 sm">View profile →</span>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="p-3.5 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 text-[12.5px]" style={{ color: "var(--fg-2)" }}>
-                          <span style={{ color: "var(--ink)" }}><Star /></span>
-                          <span style={{ color: "var(--ink)", fontWeight: 500 }}>{l.average_rating || "–"}</span>
-                          <span>· {l.review_count} reviews</span>
-                        </div>
-                        <div className="text-[16px] font-medium" style={{ letterSpacing: "-0.014em", color: "var(--ink)" }}>{name}</div>
-                        <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{sub}</div>
-                        <div className="flex flex-wrap gap-1.25 mt-1">
-                          {tags.map((t) => (
-                            <span key={t} className="inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border border-border" style={{ color: "var(--fg-2)" }}>{t}</span>
-                          ))}
-                        </div>
-                        <div className="flex justify-between items-center mt-2 pt-3 border-t border-border">
-                          <span className="font-mono text-[13.5px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
-                            {price} <small className="font-normal" style={{ color: "var(--fg-3)" }}>/ {per}</small>
-                          </span>
-                          <span className="font-mono text-[11.5px]" style={{ color: status.muted ? "var(--fg-3)" : "var(--signal-ink)" }}>
-                            {status.text}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </Link>
+                      )}
+                    </Link>
+                    {/* Outside the link: a button can't sit inside an <a>. */}
+                    <SaveListingButton listingId={l._id} listingName={name} className="absolute top-2.5 right-2.5" />
+                  </div>
                 );
               })}
             </div>

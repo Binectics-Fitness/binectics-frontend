@@ -21,6 +21,7 @@ function I({ children, d }: { children?: React.ReactNode; d?: string }) {
 const NAV_LINKS = [
   { label: "Home",        href: "/dashboard/member" },
   { label: "Marketplace", href: "/marketplace" },
+  { label: "Saved",       href: "/dashboard/saved-providers" },
   { label: "Bookings",    href: "/dashboard/bookings" },
   { label: "Messages",    href: "/dashboard/messages" },
   { label: "Meal plans",  href: "/dashboard/member/meal-plans" },

@@ -340,6 +340,24 @@ export interface FeaturedListingsResult {
 
 // ==================== SERVICE ====================
 
+// ==================== SAVED PROVIDERS ====================
+//
+// Hand-written until the API PR (feat/saved-providers) merges and the
+// generated schema catches up. Contract: /marketplace/saved, signed in.
+
+/** A saved listing: the same card fields Explore returns, plus when it was saved. */
+export type SavedListingCard = MarketplaceListing & {
+  organization?: { _id: string; name: string; logo?: string } | null;
+  professional?: { _id: string; first_name: string; last_name: string; profile_picture?: string } | null;
+  saved_at: string;
+};
+
+export interface SavedListingState {
+  listing_id: string;
+  saved: boolean;
+  saved_at?: string;
+}
+
 export const marketplaceService = {
   // ─── Public ───
 
@@ -397,6 +415,32 @@ export const marketplaceService = {
   },
 
   // ─── Client Actions (Authenticated) ───
+
+  // Saved providers. Any role; the API caps a user at 500.
+
+  /** The user's saved listings, newest first; unpublished/suspended ones are left out. */
+  async getSavedListings(): Promise<ApiResponse<SavedListingCard[]>> {
+    return await apiClient.get<SavedListingCard[]>("/marketplace/saved");
+  },
+
+  /** Just the ids of every saved listing, for showing saved state on cards. */
+  async getSavedListingIds(): Promise<ApiResponse<string[]>> {
+    return await apiClient.get<string[]>("/marketplace/saved/ids");
+  },
+
+  /** Idempotent: saving an already-saved listing succeeds. */
+  async saveListing(listingId: string): Promise<ApiResponse<SavedListingState>> {
+    return await apiClient.put<SavedListingState>(
+      `/marketplace/saved/${encodeURIComponent(listingId)}`,
+    );
+  },
+
+  async unsaveListing(listingId: string): Promise<ApiResponse<SavedListingState>> {
+    return await apiClient.delete<SavedListingState>(
+      `/marketplace/saved/${encodeURIComponent(listingId)}`,
+    );
+  },
+
 
   async sendRequest(
     listingId: string,
