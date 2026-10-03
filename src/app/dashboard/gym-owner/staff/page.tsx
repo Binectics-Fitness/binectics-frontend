@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { AddStaffModal } from "@/components/ds/modals/AddStaffModal";
@@ -14,6 +15,9 @@ import {
   filterMembers,
   statusCounts,
   type StatusFilter,
+  memberUserId,
+  memberInitials as initials,
+  MEMBER_STATUS_STYLE as STATUS_STYLE,
 } from "./staffFilters";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -30,12 +34,6 @@ function memberEmail(m: OrganizationMember): string | null {
   return null;
 }
 
-/** The staff member's user id, only when the reference is populated. */
-function memberUserId(m: OrganizationMember): string | null {
-  if (typeof m.user_id === "object" && m.user_id !== null) return m.user_id._id;
-  return null;
-}
-
 function roleName(m: OrganizationMember): string {
   if (typeof m.team_role_id === "object" && m.team_role_id !== null) return m.team_role_id.name;
   return "Member";
@@ -46,22 +44,6 @@ function inviteRoleName(inv: TeamInvitation): string | null {
   return null;
 }
 
-function initials(name: string): string {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase() ?? "")
-      .join("") || "?"
-  );
-}
-
-const STATUS_STYLE: Record<MemberStatus, { color: string; bg: string; label: string }> = {
-  [MemberStatus.ACTIVE]: { color: "var(--signal-ink)", bg: "var(--signal-soft)", label: "Active" },
-  [MemberStatus.PENDING]: { color: "oklch(0.42 0.13 75)", bg: "var(--trainer-soft)", label: "Pending" },
-  [MemberStatus.INACTIVE]: { color: "var(--fg-3)", bg: "var(--bg-2)", label: "Inactive" },
-};
 
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -220,7 +202,13 @@ export default function GymStaffPage() {
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(name)}</span>
                   <div className="min-w-0">
-                    <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{name}</div>
+                    <Link
+                      href={`/dashboard/gym-owner/staff/${m._id}`}
+                      className="block text-[14px] font-medium hover:underline"
+                      style={{ color: "var(--ink)" }}
+                    >
+                      {name}
+                    </Link>
                     <div className="font-mono text-[12px] truncate mt-0.5" style={{ color: "var(--fg-3)" }}>
                       {roleName(m)}{email ? ` · ${email}` : ""}
                     </div>

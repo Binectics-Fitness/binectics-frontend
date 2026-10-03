@@ -85,3 +85,30 @@ export function statusCounts(
     Inactive: members.filter((m) => m.status === MemberStatus.INACTIVE).length,
   };
 }
+
+/** The staff member's user id, only when the reference is populated. */
+export function memberUserId(m: OrganizationMember): string | null {
+  if (typeof m.user_id === "object" && m.user_id !== null) return m.user_id._id;
+  return null;
+}
+
+export function memberInitials(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("") || "?"
+  );
+}
+
+/** Pill colours for a team member's status, shared by the roster and the detail page. */
+export const MEMBER_STATUS_STYLE: Record<
+  MemberStatus,
+  { color: string; bg: string; label: string }
+> = {
+  [MemberStatus.ACTIVE]: { color: "var(--signal-ink)", bg: "var(--signal-soft)", label: "Active" },
+  [MemberStatus.PENDING]: { color: "oklch(0.42 0.13 75)", bg: "var(--trainer-soft)", label: "Pending" },
+  [MemberStatus.INACTIVE]: { color: "var(--fg-3)", bg: "var(--bg-2)", label: "Inactive" },
+};
