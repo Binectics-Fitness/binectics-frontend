@@ -4,7 +4,11 @@ import userEvent from "@testing-library/user-event";
 import MyBookingsPage from "@/app/dashboard/bookings/page";
 import { consultationsService, ConsultationBookingStatus, type ConsultationBooking } from "@/lib/api/consultations";
 
-vi.mock("next/link", () => ({ default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...rest }: { children: React.ReactNode; href: string } & Record<string, unknown>) => (
+    <a href={href} {...rest}>{children}</a>
+  ),
+}));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { email: "ngozi@example.com" } }) }));
 vi.mock("@/components/classes/MyClassBookingsCard", () => ({ MyClassBookingsCard: () => null }));
 vi.mock("@/components/BinecticsLogo", () => ({ BinecticsLockup: () => <span>Binectics</span> }));
@@ -79,5 +83,20 @@ describe("bookings page", () => {
     for (const button of screen.getAllByTestId("pay-booking")) {
       expect(button).toHaveTextContent(/^Pay ₦/);
     }
+  });
+  it("links a paid booking to its receipt, and never a free session or an unpaid hold", async () => {
+    const paidBooking: ConsultationBooking = {
+      ...hold,
+      id: "paid-1",
+      status: ConsultationBookingStatus.CONFIRMED,
+      payment: undefined,
+      price: { amountMinor: 2500000, currency: "NGN" },
+    };
+    list.mockResolvedValue(ok([free, hold, paidBooking]));
+    render(<MyBookingsPage />);
+    const links = await screen.findAllByTestId("booking-receipt-link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/booking/paid-1/receipt");
+    expect(links[0]).toHaveTextContent("Receipt");
   });
 });

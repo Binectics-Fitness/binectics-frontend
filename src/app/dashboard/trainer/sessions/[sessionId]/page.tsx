@@ -1,123 +1,248 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import { AsyncSpinner, BookingStatusBadge } from "@/components/ds";
+import { BookingActionsPanel } from "@/components/BookingActionsPanel";
+import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingModal";
+import { toast } from "@/components/Toast";
+import { consultationsService, type ConsultationBooking } from "@/lib/api/consultations";
+import {
+  clientDisplayName,
+  clientInitials,
+  durationMins,
+  isActionable,
+} from "@/lib/consultations/bookingActions";
+import { bookingAmountLabel, bookingMoneyState, receiptHref } from "@/lib/bookings/receipt";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
+
+type LoadState =
+  | { kind: "loading" }
+  | { kind: "ready"; booking: ConsultationBooking }
+  | { kind: "missing" }
+  | { kind: "error"; message: string };
+
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{label}</div>
+      <div className="text-[13.5px] leading-relaxed" style={{ color: "var(--ink)" }}>{children}</div>
+    </div>
+  );
+}
 
 /**
- * Trainer Single Session — Linda · 21 May
- * Hardcoded to match trainer-single-session.html prototype.
- * Dynamic route params are Promises in Next.js 16 — use React.use(params).
+ * One session, for the trainer it is with, from GET
+ * /consultations/bookings/:id (a 404 for anyone but its client and its
+ * provider). Actions are the provider endpoints the sessions list already
+ * used: complete, no-show and cancel through BookingActionsPanel, and
+ * reschedule through the slot picker clients use, so a new time is always
+ * one the trainer offers.
+ *
+ * Workout logs, PRs and sets have no backend for a booking, so they are not
+ * shown.
  */
+export default function TrainerSessionDetailPage({ params }: { params: Promise<{ sessionId: string }> }) {
+  const { sessionId } = React.use(params);
+  const { fmtDateTime, fmtTime } = useOrgFormat();
+  const [state, setState] = useState<LoadState>({ kind: "loading" });
+  // Wall-clock snapshot for the actions' past/future checks, taken on load.
+  const [now, setNow] = useState(0);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
-const KPIS = [
-  { label: "Top set · back squat", value: "92.5 kg", delta: "↑ PR from 90 kg" },
-  { label: "Volume · session", value: "14,820 kg", delta: "Above avg" },
-  { label: "RPE · avg", value: "8.2", delta: "On target" },
-  { label: "Duration", value: "62 min", delta: "Started 18:02" },
-];
+  const load = useCallback(async () => {
+    try {
+      const res = await consultationsService.getBooking(sessionId);
+      setNow(Date.now());
+      if (res.success && res.data) {
+        setState({ kind: "ready", booking: res.data });
+      } else if (res.status === 404 || res.status === 403 || res.status === 400) {
+        setState({ kind: "missing" });
+      } else {
+        setState({ kind: "error", message: res.message ?? "We couldn't load this session. Try again shortly." });
+      }
+    } catch {
+      setState({ kind: "error", message: "We couldn't load this session. Try again shortly." });
+    }
+  }, [sessionId]);
 
-const SETS = [
-  { exercise: "Back squat", set: "1", weight: "75 kg", reps: "5", rpe: "7" },
-  { exercise: "Back squat", set: "2", weight: "82.5 kg", reps: "5", rpe: "7.5" },
-  { exercise: "Back squat", set: "3", weight: "87.5 kg", reps: "5", rpe: "8" },
-  { exercise: "Back squat", set: "4 · PR", weight: "92.5 kg", reps: "3", rpe: "9" },
-  { exercise: "Romanian deadlift", set: "1", weight: "65 kg", reps: "8", rpe: "7" },
-  { exercise: "Romanian deadlift", set: "2", weight: "65 kg", reps: "8", rpe: "7.5" },
-  { exercise: "Bulgarian split squat", set: "1", weight: "20 kg DB", reps: "10/leg", rpe: "7" },
-  { exercise: "Plank · weighted", set: "1", weight: "10 kg", reps: "45 s", rpe: "-" },
-];
+  useEffect(() => {
+    const kick = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(kick);
+  }, [load]);
 
-export default function SingleSessionPage({ params }: { params: Promise<{ sessionId: string }> }) {
-  React.use(params);
+  const booking = state.kind === "ready" ? state.booking : null;
+  const name = booking ? clientDisplayName(booking) : "Session";
 
   return (
     <TrainerDashboardShell
       activeItem="Calendar"
-      crumb="Calendar"
-      actions={<><button className="btn-ghost-v2 sm">Reschedule</button><button className="btn-primary-v2 sm">Open client</button></>}
+      crumb="Session"
+      actions={
+        booking && isActionable(booking.status) ? (
+          <button type="button" className="btn-ghost-v2 sm" onClick={() => setRescheduleOpen(true)}>
+            Reschedule
+          </button>
+        ) : undefined
+      }
     >
-      {/* Breadcrumb override */}
       <div className="text-[13px] -mt-2 mb-1" style={{ color: "var(--fg-3)" }}>
-        <Link href="/dashboard/trainer/sessions" className="hover:underline" style={{ color: "var(--fg-3)", textDecoration: "none" }}>Sessions log</Link>
+        <Link href="/dashboard/trainer/sessions" className="hover:underline" style={{ color: "var(--fg-3)", textDecoration: "none" }}>
+          Sessions log
+        </Link>
         <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
-        <span className="font-medium" style={{ color: "var(--ink)" }}>Linda · 21 May</span>
+        <span className="font-medium" style={{ color: "var(--ink)" }}>{name}</span>
       </div>
 
-      {/* Page head */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-2">
-        <div>
-          <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>Session &middot; Linda Mokoena</h1>
-          <p className="text-[13.5px] mt-1.5 flex items-center gap-2" style={{ color: "var(--fg-3)" }}>
-            Wed 21 May &middot; 18:00–19:00 &middot; Sea Point &middot; 1-on-1 &middot;{" "}
-            <span className="inline-flex font-mono text-[10px] px-2 py-[2px] rounded-full uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>Completed</span>
+      {state.kind === "loading" && (
+        <div className="rounded-(--r-3) p-8" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <AsyncSpinner label="Loading session" />
+        </div>
+      )}
+
+      {state.kind === "missing" && (
+        <div className="rounded-(--r-3) p-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }} role="alert">
+          <h1 className="text-[20px] font-medium" style={{ color: "var(--ink)" }}>Session not found</h1>
+          <p className="text-[13.5px] mt-2" style={{ color: "var(--fg-2)" }}>
+            This session doesn&apos;t exist or isn&apos;t one of yours.
           </p>
+          <Link href="/dashboard/trainer/sessions" className="btn-ghost-v2 sm mt-4 inline-flex">Back to sessions</Link>
         </div>
-      </div>
+      )}
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        {KPIS.map((kpi) => (
-          <div key={kpi.label} className="flex flex-col gap-1 rounded-(--r-3) px-4 py-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
-            <div className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{kpi.value}</div>
-            <div className="font-mono text-[11px]" style={{ color: "var(--signal-ink)" }}>{kpi.delta}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Sets table + Coach notes — 2fr 1fr */}
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3.5">
-        {/* Sets logged */}
-        <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <div className="px-5.5 py-4">
-            <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Sets logged</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[13.5px] min-w-[500px]">
-              <thead>
-                <tr>
-                  {["Exercise", "Set", "Weight", "Reps", "RPE"].map((h) => (
-                    <th key={h} className="text-left font-medium font-mono text-[10.5px] uppercase tracking-[0.04em] px-3.5 py-2.5" style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {SETS.map((s, idx) => (
-                  <tr key={`${s.exercise}-${s.set}`} className="hover:bg-bg-2">
-                    <td className="px-3.5 py-3" style={{ borderBottom: idx < SETS.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}><strong className="font-medium">{s.exercise}</strong></td>
-                    <td className="px-3.5 py-3" style={{ borderBottom: idx < SETS.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)" }}>{s.set}</td>
-                    <td className="px-3.5 py-3 font-mono" style={{ borderBottom: idx < SETS.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.weight}</td>
-                    <td className="px-3.5 py-3 font-mono" style={{ borderBottom: idx < SETS.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.reps}</td>
-                    <td className="px-3.5 py-3 font-mono" style={{ borderBottom: idx < SETS.length - 1 ? "1px solid var(--border)" : "none", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.rpe}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {state.kind === "error" && (
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }} role="alert">
+          {state.message}
+          <button type="button" className="btn-ghost-v2 sm ml-3" onClick={() => void load()}>Try again</button>
         </div>
+      )}
 
-        {/* Right column: Coach notes + Next session */}
-        <div className="flex flex-col gap-3.5">
-          {/* Coach notes */}
-          <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Coach notes</h3>
-            <p className="text-[13px] leading-relaxed mb-3" style={{ color: "var(--fg-2)" }}>
-              &ldquo;PR day, Linda hit 92.5 squat clean. Energy good, sleep noted 8h. Form started to break on rep 4 of working set, called it. Schedule deload week 9.&rdquo;
-            </p>
-            <button className="btn-ghost-v2 sm">Edit note</button>
+      {booking && (
+        <>
+          <div className="flex items-center gap-3.5">
+            <span className="w-11 h-11 rounded-full flex items-center justify-center text-[14px] font-semibold shrink-0" style={{ background: "var(--trainer-soft)", color: "var(--trainer)" }}>
+              {clientInitials(booking)}
+            </span>
+            <div className="min-w-0">
+              <h1 className="text-[26px] sm:text-[30px] font-medium" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
+                {name}
+              </h1>
+              <p className="text-[13.5px] mt-1 flex flex-wrap items-center gap-2" style={{ color: "var(--fg-3)" }}>
+                <span>{booking.consultationTypeName || "Consultation"}</span>
+                <span>&middot;</span>
+                <span>{fmtDateTime(booking.startsAt)} – {fmtTime(booking.endsAt)}</span>
+                <span>&middot;</span>
+                <span>{durationMins(booking)} min</span>
+                <BookingStatusBadge status={booking.status} />
+              </p>
+            </div>
           </div>
 
-          {/* Next session */}
-          <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Next session</h3>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
-              <strong className="font-medium" style={{ color: "var(--ink)" }}>Mon 26 May · 18:00</strong><br />
-              Upper body &middot; pause bench focus.
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3.5">
+            <div className="flex flex-col gap-3.5">
+              <Card title="Details">
+                <div className="flex flex-col gap-4">
+                  <DetailRow label="Client notes">{booking.notes?.trim() || "No notes from the client."}</DetailRow>
+                  {booking.completionNote && <DetailRow label="Completion note">{booking.completionNote}</DetailRow>}
+                  {booking.cancelReason && (
+                    <DetailRow label={`Cancelled${booking.cancelledBy ? ` by ${booking.cancelledBy.toLowerCase()}` : ""}`}>
+                      {booking.cancelReason}
+                    </DetailRow>
+                  )}
+                  <DetailRow label="Time zones">
+                    Yours {booking.providerTimezone}
+                    {booking.clientTimezone && booking.clientTimezone !== booking.providerTimezone
+                      ? ` · client ${booking.clientTimezone}`
+                      : ""}
+                  </DetailRow>
+                </div>
+              </Card>
+
+              <Card title="Actions">
+                {/* Remounted per load so a draft cancel reason can't outlive an action. */}
+                <BookingActionsPanel key={`${booking.id}-${booking.status}`} booking={booking} now={now} onActionComplete={load} />
+              </Card>
+            </div>
+
+            <Card title="Payment">
+              <PaymentSummary booking={booking} fmtDateTime={fmtDateTime} />
+            </Card>
           </div>
-        </div>
-      </div>
+
+          <RescheduleBookingModal
+            key={`reschedule-${booking.id}-${booking.startsAt}-${rescheduleOpen}`}
+            open={rescheduleOpen}
+            booking={booking}
+            audience="provider"
+            onClose={() => setRescheduleOpen(false)}
+            onConfirm={async (startsAt, reason) => {
+              const res = await consultationsService.rescheduleBooking(booking.id, { startsAt, reason });
+              if (res.success) {
+                toast.success("Session rescheduled.");
+                setRescheduleOpen(false);
+                await load();
+              }
+              return res;
+            }}
+          />
+        </>
+      )}
     </TrainerDashboardShell>
+  );
+}
+
+function PaymentSummary({
+  booking,
+  fmtDateTime,
+}: {
+  booking: ConsultationBooking;
+  fmtDateTime: (d: string | Date | null | undefined) => string;
+}) {
+  const money = bookingMoneyState(booking);
+  const amount = bookingAmountLabel(booking);
+
+  if (money === "free") {
+    return <p className="text-[13.5px]" style={{ color: "var(--fg-2)" }} data-testid="payment-state">Free session. Nothing to pay.</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-3 text-[13.5px]" data-testid="payment-state">
+      <div className="flex justify-between items-baseline gap-3">
+        <span style={{ color: "var(--fg-2)" }}>
+          {money === "paid" ? "Paid" : money === "awaiting_payment" ? "Awaiting payment" : "Not paid"}
+        </span>
+        <span className="font-mono text-[17px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{amount}</span>
+      </div>
+      {money === "paid" && (
+        <>
+          <div style={{ color: "var(--fg-3)" }}>
+            {booking.receipt?.paidAt ? `Paid ${fmtDateTime(booking.receipt.paidAt)}` : "Payment date not recorded."}
+          </div>
+          {booking.receipt?.reference && (
+            <div className="font-mono text-[12px] break-all" style={{ color: "var(--fg-3)" }}>Ref {booking.receipt.reference}</div>
+          )}
+          <Link href={receiptHref(booking.id)} className="btn-ghost-v2 sm self-start">Receipt</Link>
+        </>
+      )}
+      {money === "awaiting_payment" && (
+        <div style={{ color: "var(--fg-3)" }}>
+          The client hasn&apos;t paid yet.
+          {booking.payment?.expiresAt ? ` The slot is held until ${fmtDateTime(booking.payment.expiresAt)}, then released.` : ""}
+        </div>
+      )}
+      {money === "unpaid" && (
+        <div style={{ color: "var(--fg-3)" }}>No payment was recorded for this session.</div>
+      )}
+    </div>
   );
 }

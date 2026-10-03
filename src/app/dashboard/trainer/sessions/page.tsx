@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
-import { AsyncSpinner, BookingStatusBadge, Drawer } from "@/components/ds";
-import { BookingActionsPanel } from "@/components/BookingActionsPanel";
+import { AsyncSpinner, BookingStatusBadge } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import {
@@ -12,11 +13,7 @@ import {
   ConsultationBookingStatus,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
-import {
-  clientDisplayName,
-  clientInitials,
-  durationMins,
-} from "@/lib/consultations/bookingActions";
+import { clientDisplayName, durationMins } from "@/lib/consultations/bookingActions";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { buildSessionsCsv } from "./sessions-csv";
 
@@ -48,17 +45,13 @@ function bucketOf(status: ConsultationBookingStatus): Exclude<StatusFilter, "All
   }
 }
 
-function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{label}</div>
-      <div className="text-[13.5px]" style={{ color: "var(--ink)" }}>{children}</div>
-    </div>
-  );
+function sessionHref(id: string): string {
+  return `/dashboard/trainer/sessions/${encodeURIComponent(id)}`;
 }
 
 export default function TrainerSessionsListPage() {
-  const { fmtDateTime, fmtTime } = useOrgFormat();
+  const router = useRouter();
+  const { fmtDateTime } = useOrgFormat();
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [typesById, setTypesById] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
@@ -67,11 +60,6 @@ export default function TrainerSessionsListPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  // Wall-clock snapshot for past/future checks — refreshed on load and on row
-  // click, never read via Date.now() during render.
-  const [now, setNow] = useState(0);
 
   const load = useCallback(async () => {
     const nowDate = new Date();
@@ -102,7 +90,6 @@ export default function TrainerSessionsListPage() {
       setTypesById(typesRes.value.data);
     }
     // A failed request must never render as "no sessions".
-    setNow(Date.now());
     setError(bookingsOk ? null : "We couldn't load your sessions. Try again shortly.");
   }, [timeRange]);
 
@@ -160,16 +147,6 @@ export default function TrainerSessionsListPage() {
       );
     });
   }, [bookings, clientFilter, query, statusFilter, typesById]);
-
-  const selected = useMemo(
-    () => bookings.find((b) => b.id === selectedId) ?? null,
-    [bookings, selectedId],
-  );
-
-  const afterAction = async () => {
-    setSelectedId(null);
-    await load();
-  };
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -272,14 +249,21 @@ export default function TrainerSessionsListPage() {
                     <tr
                       key={s.id}
                       className="hover:bg-[var(--bg-2)] cursor-pointer"
-                      onClick={() => {
-                        setNow(Date.now());
-                        setSelectedId(s.id);
-                      }}
+                      onClick={() => router.push(sessionHref(s.id))}
                       style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}
                     >
                       <td className="px-3.5 py-3 font-mono" style={{ color: "var(--fg-2)" }}>{fmtDateTime(s.startsAt)}</td>
-                      <td className="px-3.5 py-3 font-medium" style={{ color: "var(--ink)" }}>{label}</td>
+                      <td className="px-3.5 py-3 font-medium" style={{ color: "var(--ink)" }}>
+                        {/* The row is clickable; the link is the keyboard and middle-click route. */}
+                        <Link
+                          href={sessionHref(s.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:underline"
+                          style={{ color: "var(--ink)", textDecoration: "none" }}
+                        >
+                          {label}
+                        </Link>
+                      </td>
                       <td className="px-3.5 py-3" style={{ color: "var(--ink)" }}>{typeLabel}</td>
                       <td className="px-3.5 py-3 font-mono" style={{ color: "var(--ink)" }}>{durationMins(s)} min</td>
                       <td className="px-3.5 py-3 font-mono text-[12.5px]" style={{ color: "var(--ink)" }}>{note}</td>
@@ -301,46 +285,6 @@ export default function TrainerSessionsListPage() {
           </table>
         </div>
       </div>
-
-      {/* Detail drawer */}
-      <Drawer open={selected != null} onClose={() => setSelectedId(null)} title="Session" width={420}>
-        {selected && (
-          <div className="flex flex-col gap-4 p-1">
-            <div className="flex items-center gap-3">
-              <span className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0" style={{ background: "var(--trainer-soft)", color: "var(--trainer)" }}>
-                {clientInitials(selected)}
-              </span>
-              <div>
-                <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>{clientDisplayName(selected)}</div>
-                <div className="mt-1"><BookingStatusBadge status={selected.status} /></div>
-              </div>
-            </div>
-
-            <DetailRow label="Type">{bookingTypeName(selected, typesById) ?? "Consultation"}</DetailRow>
-            <DetailRow label="When">
-              {fmtDateTime(selected.startsAt)} – {fmtTime(selected.endsAt)}
-              <span className="font-mono text-[11.5px] ml-2" style={{ color: "var(--fg-3)" }}>({durationMins(selected)} min)</span>
-            </DetailRow>
-            {selected.notes && <DetailRow label="Client notes">{selected.notes}</DetailRow>}
-            {selected.completionNote && <DetailRow label="Completion note">{selected.completionNote}</DetailRow>}
-            {selected.cancelReason && (
-              <DetailRow label={`Cancelled${selected.cancelledBy ? ` by ${selected.cancelledBy.toLowerCase()}` : ""}`}>
-                {selected.cancelReason}
-              </DetailRow>
-            )}
-
-            <div style={{ borderTop: "1px solid var(--border)" }} />
-
-            {/* Remounted per booking so a draft cancel reason can't leak. */}
-            <BookingActionsPanel
-              key={selected.id}
-              booking={selected}
-              now={now}
-              onActionComplete={afterAction}
-            />
-          </div>
-        )}
-      </Drawer>
     </TrainerDashboardShell>
   );
 }
