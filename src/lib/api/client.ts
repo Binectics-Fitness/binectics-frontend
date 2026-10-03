@@ -4,8 +4,12 @@
  */
 
 import type { ApiResponse } from "@/lib/types";
-import { clearAuthStorage } from "@/lib/utils/storage";
+import { clearAuthStorage, userStorage } from "@/lib/utils/storage";
 import { isAuthRoute } from "@/lib/constants/routes";
+import {
+  ACCOUNT_STATE_ROUTES,
+  isAccountStateRoute,
+} from "@/lib/routing/accountState";
 
 // Default to the same-origin path served by the netlify.toml proxy. The API
 // must be same-origin in production so the httpOnly auth cookies are
@@ -31,6 +35,12 @@ interface RawResponseBody {
   uses_lost?: unknown;
   /** What holds a provider-account currency in place (CURRENCY_LOCKED). */
   locked_by?: unknown;
+  /** Why the account was suspended, or null (AUTH_ACCOUNT_SUSPENDED). */
+  suspension_reason?: unknown;
+  /** When the account was suspended, or null (AUTH_ACCOUNT_SUSPENDED). */
+  suspended_at?: unknown;
+  /** Seconds until sign-in reopens (AUTH_ACCOUNT_LOCKED). */
+  retry_after_seconds?: unknown;
 }
 
 /**
@@ -38,9 +48,20 @@ interface RawResponseBody {
  * filter passes these through at the top level of the body (not under
  * `details`), so they are folded into `details` here where callers look.
  */
-const TOP_LEVEL_DETAIL_FIELDS = ["reasons", "in_flight", "uses_lost", "locked_by"] as const;
+const TOP_LEVEL_DETAIL_FIELDS = [
+  "reasons",
+  "in_flight",
+  "uses_lost",
+  "locked_by",
+  "suspension_reason",
+  "suspended_at",
+  "retry_after_seconds",
+] as const;
 
-function detailsOf(body: RawResponseBody): Record<string, unknown> | undefined {
+function detailsOf(
+  body: RawResponseBody,
+  response: Response,
+): Record<string, unknown> | undefined {
   const out: Record<string, unknown> =
     body.details && typeof body.details === "object"
       ? { ...(body.details as Record<string, unknown>) }
@@ -48,7 +69,21 @@ function detailsOf(body: RawResponseBody): Record<string, unknown> | undefined {
   for (const field of TOP_LEVEL_DETAIL_FIELDS) {
     if (body[field] !== undefined) out[field] = body[field];
   }
+  // The throttler's 429 says when to retry in a header, not the body. Only
+  // the delta-seconds form is used; an HTTP-date is ignored.
+  if (response.status === 429 && out.retry_after_seconds === undefined) {
+    const header = response.headers.get("retry-after");
+    if (header && /^\d+$/.test(header.trim())) {
+      out.retry_after_seconds = Number(header.trim());
+    }
+  }
   return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** Pages where a 401 must not trigger a redirect: the sign-in pages, and the
+ *  account-state pages a refused or ended session lands on. */
+function staysPut(pathname: string): boolean {
+  return isAuthRoute(pathname) || isAccountStateRoute(pathname);
 }
 
 class ApiClient {
@@ -106,13 +141,21 @@ class ApiClient {
           return this.handleResponse<T>(retryResponse);
         }
 
-        // Refresh failed — clear auth and redirect
+        // Refresh failed — clear auth and redirect. Someone who was signed
+        // in (a cached user) had their session expire: say so, and offer to
+        // bring them back here after signing in. Anyone else just signs in.
+        const hadSession = userStorage.get() !== null;
         clearAuthStorage();
         if (
           typeof window !== "undefined" &&
-          !isAuthRoute(window.location.pathname)
+          !staysPut(window.location.pathname)
         ) {
-          window.location.replace("/login");
+          const here = `${window.location.pathname}${window.location.search}`;
+          window.location.replace(
+            hadSession
+              ? `${ACCOUNT_STATE_ROUTES.SESSION_EXPIRED}?redirect=${encodeURIComponent(here)}`
+              : "/login",
+          );
           return new Promise<ApiResponse<T>>(() => {});
         }
       } else if (response.status === 401) {
@@ -120,7 +163,7 @@ class ApiClient {
         clearAuthStorage();
         if (
           typeof window !== "undefined" &&
-          !isAuthRoute(window.location.pathname)
+          !staysPut(window.location.pathname)
         ) {
           window.location.replace("/login");
           return new Promise<ApiResponse<T>>(() => {});
@@ -143,7 +186,7 @@ class ApiClient {
             : typeof body.code === "string"
               ? body.code
               : undefined,
-        details: detailsOf(body),
+        details: detailsOf(body, response),
         status: response.status,
       };
     }

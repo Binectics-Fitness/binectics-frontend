@@ -80,3 +80,120 @@ describe("apiClient.handleResponse (via get)", () => {
     expect(res.data).toEqual({ id: 7, name: "fit" });
   });
 });
+
+function withHeaders(res: Response, headers: Record<string, string>): Response {
+  const lower = Object.fromEntries(
+    Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]),
+  );
+  return {
+    ...res,
+    headers: {
+      get: (name: string) =>
+        lower[name.toLowerCase()] ??
+        (name.toLowerCase() === "content-type" ? "application/json" : null),
+    },
+  } as unknown as Response;
+}
+
+describe("apiClient sign-in refusal details", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("surfaces a suspension's reason and date in details", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse(403, {
+        code: "AUTH_ACCOUNT_SUSPENDED",
+        message: ["Your account has been suspended"],
+        suspension_reason: "Fraudulent bookings",
+        suspended_at: "2026-09-14T10:30:00.000Z",
+      }),
+    );
+
+    const res = await apiClient.post("/auth/login", {}, false);
+
+    expect(res.code).toBe("AUTH_ACCOUNT_SUSPENDED");
+    expect(res.status).toBe(403);
+    expect(res.details).toEqual({
+      suspension_reason: "Fraudulent bookings",
+      suspended_at: "2026-09-14T10:30:00.000Z",
+    });
+  });
+
+  it("reads a 429's Retry-After header into details.retry_after_seconds", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      withHeaders(jsonResponse(429, { message: "Too Many Requests" }), {
+        "Retry-After": "42",
+      }),
+    );
+
+    const res = await apiClient.post("/auth/login", {}, false);
+
+    expect(res.status).toBe(429);
+    expect(res.details).toEqual({ retry_after_seconds: 42 });
+  });
+
+  it("ignores a Retry-After that isn't a number of seconds", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      withHeaders(jsonResponse(429, { message: "Too Many Requests" }), {
+        "Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT",
+      }),
+    );
+
+    const res = await apiClient.post("/auth/login", {}, false);
+
+    expect(res.details).toBeUndefined();
+  });
+});
+
+describe("apiClient session expiry redirect", () => {
+  let replace: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    replace = vi.fn();
+    vi.stubGlobal("location", {
+      pathname: "/dashboard/member",
+      search: "?tab=plans",
+      replace,
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
+
+  it("sends a signed-in user whose refresh fails to /session-expired, remembering the page", async () => {
+    localStorage.setItem("user", JSON.stringify({ id: "u1" }));
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(401, { message: "Unauthorized" }));
+
+    void apiClient.get("/auth/profile");
+    await vi.waitFor(() => expect(replace).toHaveBeenCalled());
+
+    expect(replace).toHaveBeenCalledWith(
+      "/session-expired?redirect=%2Fdashboard%2Fmember%3Ftab%3Dplans",
+    );
+    expect(localStorage.getItem("user")).toBeNull();
+  });
+
+  it("sends someone who was never signed in to /login", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(401, { message: "Unauthorized" }));
+
+    void apiClient.get("/auth/profile");
+    await vi.waitFor(() => expect(replace).toHaveBeenCalled());
+
+    expect(replace).toHaveBeenCalledWith("/login");
+  });
+
+  it("stays put on an account-state page", async () => {
+    vi.stubGlobal("location", { pathname: "/session-expired", search: "", replace });
+    localStorage.setItem("user", JSON.stringify({ id: "u1" }));
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(401, { message: "Unauthorized" }));
+
+    const res = await apiClient.get("/auth/profile");
+
+    expect(res.status).toBe(401);
+    expect(replace).not.toHaveBeenCalled();
+  });
+});
