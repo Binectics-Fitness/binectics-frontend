@@ -85,6 +85,20 @@ export function legacyLinkTarget(
       role,
     );
   }
+  if (path === "/dashboard/calendar") {
+    // A removed page that showed an invented calendar; each role's real
+    // schedule instead.
+    return pick(
+      {
+        USER: "/dashboard/bookings",
+        TRAINER: "/dashboard/trainer/sessions",
+        DIETITIAN: "/dashboard/dietitian/calendar",
+        GYM_OWNER: "/dashboard/gym-owner/schedule",
+        ADMIN: "/admin/dashboard",
+      },
+      role,
+    );
+  }
   if (path === "/dashboard/reviews") {
     return pick(
       {

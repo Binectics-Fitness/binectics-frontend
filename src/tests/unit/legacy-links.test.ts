@@ -28,6 +28,12 @@ describe("legacyLinkTarget", () => {
     ["/dashboard/progress", "USER", "/dashboard/member"],
     ["/dashboard/team/abc", "GYM_OWNER", "/dashboard/team"],
     ["/search", "USER", "/marketplace"],
+    ["/dashboard/calendar", "TRAINER", "/dashboard/trainer/sessions"],
+    ["/dashboard/calendar", "DIETITIAN", "/dashboard/dietitian/calendar"],
+    ["/dashboard/calendar", "GYM_OWNER", "/dashboard/gym-owner/schedule"],
+    ["/dashboard/calendar", "USER", "/dashboard/bookings"],
+    ["/dashboard/calendar", "ADMIN", "/admin/dashboard"],
+    ["/dashboard/calendar/", undefined, "/dashboard/bookings"],
   ])("%s for %s goes to %s", (path, role, target) => {
     expect(legacyLinkTarget(path, "", role)).toBe(target);
   });

@@ -15,7 +15,7 @@ import { useNotificationCount } from "@/hooks/useNotificationCount";
  * back to polling — so the badge stays live without the page reloading.
  *
  * `NotificationBell` (components/NotificationBell.tsx) is the full-width
- * sidebar-row variant used by AppSidebar; this one is the 32px icon button
+ * sidebar-row variant; this one is the 32px icon button
  * that matches the other controls in the dashboard headers.
  */
 export function ShellNotificationBell() {
