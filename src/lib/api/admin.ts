@@ -299,7 +299,7 @@ export type AdminReviewStatus = "VISIBLE" | "HIDDEN" | "REMOVED";
 export type AdminReviewReportStatus = "OPEN" | "RESOLVED" | "DISMISSED";
 export type AdminReviewReportAction = "dismiss" | "hide_review";
 
-export interface AdminPersonRef {
+export interface AdminReviewPersonRef {
   id: string;
   name: string;
   email: string | null;
@@ -313,14 +313,14 @@ export interface AdminReviewView {
   target_type: string;
   target_id: string;
   created_at: string | null;
-  author: AdminPersonRef | null;
+  author: AdminReviewPersonRef | null;
   listing: {
     id: string;
     headline: string | null;
     slug: string | null;
     account_type: string | null;
   } | null;
-  provider: AdminPersonRef | null;
+  provider: AdminReviewPersonRef | null;
 }
 
 export interface AdminReviewReport {
@@ -329,14 +329,14 @@ export interface AdminReviewReport {
   reason: string;
   details: string | null;
   created_at: string | null;
-  reporter: AdminPersonRef | null;
+  reporter: AdminReviewPersonRef | null;
   review_id: string;
   review: AdminReviewView | null;
   resolution: {
     action: AdminReviewReportAction | null;
     note: string | null;
     resolved_at: string | null;
-    resolved_by: AdminPersonRef | null;
+    resolved_by: AdminReviewPersonRef | null;
   } | null;
 }
 
