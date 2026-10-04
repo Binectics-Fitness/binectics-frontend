@@ -23,6 +23,7 @@ import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import type { UserRole } from "@/lib/types";
 import { ROLE_LABEL, fullName, nameInitials, personInitials, shortName } from "@/lib/identity";
 import { pickOrgForDashboard, type DashboardKind } from "@/lib/workspaces";
+import { toneColors, type Tone } from "@/lib/ui/tones";
 
 /** Shared 15px stroked icon used by every provider sidebar nav item. */
 export function SidebarIcon({ children, d }: { children?: ReactNode; d?: string }) {
@@ -38,18 +39,23 @@ export interface NavItem {
   href: string;
   icon: ReactNode;
   badge?: string;
+  /** What the count means (lib/ui/tones). Neutral unless set. */
+  badgeTone?: Tone;
 }
 export interface NavSection {
   label: string;
   items: NavItem[];
 }
 
-/** Sets a count badge on the nav item called `name`; zero clears it. */
-export function withNavBadge(sections: NavSection[], name: string, count: number): NavSection[] {
+/**
+ * Sets a count badge on the nav item called `name`; zero clears it. The
+ * count's tone says what it means: requests waiting on the provider are warn.
+ */
+export function withNavBadge(sections: NavSection[], name: string, count: number, tone: Tone = "neutral"): NavSection[] {
   if (count <= 0) return sections;
   return sections.map((s) => ({
     ...s,
-    items: s.items.map((item) => (item.name === name ? { ...item, badge: String(count) } : item)),
+    items: s.items.map((item) => (item.name === name ? { ...item, badge: String(count), badgeTone: tone } : item)),
   }));
 }
 
@@ -119,7 +125,14 @@ function ProviderSidebar({ activeItem, config }: { activeItem: string; config: P
             return (
               <Link key={item.name} href={item.href} className={`flex items-center gap-2.5 py-1.75 px-2 rounded-(--r-2) text-[13.5px] ${isActive ? "bg-bg-3 font-medium" : "hover:bg-bg-2"}`} style={{ color: isActive ? "var(--ink)" : "var(--fg-2)" }}>
                 {item.icon}<span className="flex-1">{item.name}</span>
-                {item.badge && <span className="ml-auto font-mono text-[11px] px-1.5 py-px rounded-full bg-bg-2" style={{ color: "var(--fg-3)" }}>{item.badge}</span>}
+                {item.badge && (
+                  <span
+                    className="ml-auto font-mono text-[11px] px-1.5 py-px rounded-full"
+                    style={{ background: toneColors(item.badgeTone).fill, color: toneColors(item.badgeTone).ink }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
