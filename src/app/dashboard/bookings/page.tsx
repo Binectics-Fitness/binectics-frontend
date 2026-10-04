@@ -4,7 +4,8 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { StatusPill } from "@/components/ds/StatusPill";
-import { AsyncSpinner } from "@/components/ds";
+import { AsyncSpinner, IconTile } from "@/components/ds";
+import { CalendarClock } from "lucide-react";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import {
@@ -225,6 +226,7 @@ function EmptyState({ tab }: { tab: TabKey }) {
       className="rounded-(--r-3) p-10 text-center"
       style={{ border: "1px dashed var(--border-2)", background: "var(--bg)" }}
     >
+      <IconTile icon={CalendarClock} size="lg" className="mb-4" />
       <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
         {c.title}
       </div>

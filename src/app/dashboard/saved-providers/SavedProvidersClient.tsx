@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { AsyncSpinner } from "@/components/ds";
+import { AsyncSpinner, IconTile } from "@/components/ds";
 import { providerTone, toneColors } from "@/lib/ui/tones";
 import { toast } from "@/components/Toast";
 import { useSavedListings, useToggleSavedListing } from "@/lib/queries/savedListings";
@@ -65,9 +65,9 @@ export function SavedProvidersClient() {
         </div>
       ) : saved.length === 0 ? (
         <div className="rounded-(--r-3) flex flex-col items-center text-center px-6 py-14 mt-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>
+          <IconTile size="lg" className="mb-4">
             <HeartIcon />
-          </div>
+          </IconTile>
           <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>Nothing saved yet</h2>
           <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
             Tap the heart on a gym, trainer, or dietitian in the marketplace and they&apos;ll show up here so you can come back to them.
