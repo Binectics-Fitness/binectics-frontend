@@ -6,7 +6,7 @@ import { StartConversationButton } from "@/components/messaging/StartConversatio
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { IconTile } from "@/components/ds/IconTile";
-import { CalendarClock } from "lucide-react";
+import { Building2, CalendarClock } from "lucide-react";
 import { bookingLabel } from "@/lib/bookings/labels";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { bookingPaymentStateTone } from "@/lib/ui/statusTones";
@@ -241,13 +241,7 @@ function MemberHomeContent() {
                 ? formatStartDate(snapshot.nextBooking.startsAt)
                 : "None booked"
           }
-          delta={
-            snapshot.nextBooking
-              ? snapshot.nextBooking.status === ConsultationBookingStatus.CONFIRMED
-                ? "Confirmed"
-                : "Pending"
-              : "Book a session"
-          }
+          delta={snapshot.nextBooking ? bookingLabel(snapshot.nextBooking) : "Book a session"}
           deltaColor="var(--fg-3)"
           small
         />
@@ -293,7 +287,9 @@ function MemberHomeContent() {
                     className="flex items-center justify-between gap-3 p-4 rounded-(--r-2)"
                     style={{ background: "var(--bg-2)" }}
                   >
-                    <div style={{ minWidth: 0 }}>
+                    {/* The row is about a gym: its tile takes the gym accent. */}
+                    <IconTile icon={Building2} tone="gym" />
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <div
                         style={{
                           fontSize: 15,

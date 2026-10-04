@@ -1,6 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { StatusPill } from "@/components/ds/StatusPill";
+import { bookingStatusTone } from "@/lib/ui/statusTones";
 import {
   classBookingsService,
   type ClassBooking,
@@ -57,7 +59,7 @@ export function MyClassBookingsCard() {
               <div className="flex items-center gap-2">
                 <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{c?.name ?? "Class"}</span>
                 {b.status === "waitlisted" && (
-                  <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={{ background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" }}>Waitlist</span>
+                  <StatusPill tone={bookingStatusTone(b.status)} label="Waitlist" />
                 )}
               </div>
               <div className="font-mono text-[11px] mt-0.5" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
