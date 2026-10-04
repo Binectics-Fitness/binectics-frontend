@@ -1,21 +1,27 @@
 import type { AdminReviewReport, AdminReviewStatus, AdminReviewView } from "@/lib/api/admin";
+import type { Tone } from "@/lib/ui/tones";
 
-type PillVariant = "confirmed" | "pending" | "done" | "cancelled";
-
-/** A review's public state, as the moderation pages label it. */
-export const REVIEW_STATUS_PILL: Record<AdminReviewStatus, { variant: PillVariant; label: string }> = {
-  VISIBLE: { variant: "confirmed", label: "Public" },
-  HIDDEN: { variant: "cancelled", label: "Hidden" },
-  REMOVED: { variant: "done", label: "Removed by author" },
+/**
+ * A review's public state, as the moderation pages label it. Hidden is a
+ * moderation block (danger); removed by its own author is neutral.
+ */
+export const REVIEW_STATUS_PILL: Record<AdminReviewStatus, { tone: Tone; label: string }> = {
+  VISIBLE: { tone: "success", label: "Public" },
+  HIDDEN: { tone: "danger", label: "Hidden" },
+  REMOVED: { tone: "neutral", label: "Removed by author" },
 };
 
-/** A report's state, including what the admin did when it was closed. */
-export function reportPill(report: AdminReviewReport): { variant: PillVariant; label: string } {
-  if (report.status === "OPEN") return { variant: "pending", label: "Open" };
+/**
+ * A report's state, including what the admin did when it was closed. An open
+ * report is waiting on an admin (warn); a closed one is settled, so it is
+ * neutral either way, the label says which way it went.
+ */
+export function reportPill(report: AdminReviewReport): { tone: Tone; label: string } {
+  if (report.status === "OPEN") return { tone: "warn", label: "Open" };
   if (report.resolution?.action === "hide_review" || report.status === "RESOLVED") {
-    return { variant: "cancelled", label: "Review hidden" };
+    return { tone: "neutral", label: "Review hidden" };
   }
-  return { variant: "done", label: "Dismissed" };
+  return { tone: "neutral", label: "Dismissed" };
 }
 
 /** "★★★☆☆" for a 1-5 rating; the number is always shown beside it. */

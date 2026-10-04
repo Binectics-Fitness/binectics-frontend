@@ -191,12 +191,12 @@ export function ListingDetailClient({ listingId }: { listingId: string }) {
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <StatusPill
-                variant={listing.is_published ? "confirmed" : "done"}
+                tone={listing.is_published ? "success" : "neutral"}
                 label={listing.is_published ? "Published" : "Unpublished"}
               />
-              {listing.is_suspended ? <StatusPill variant="cancelled" label="Suspended" /> : null}
+              {listing.is_suspended ? <StatusPill tone="danger" label="Suspended" /> : null}
               <StatusPill
-                variant={hasBadge ? "confirmed" : "pending"}
+                tone={hasBadge ? "success" : "neutral"}
                 label={BADGE_LABEL[listing.verification_badge] ?? listing.verification_badge}
               />
               <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>

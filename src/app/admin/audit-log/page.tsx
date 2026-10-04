@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import type { Tone } from "@/lib/ui/tones";
 import {
   AsyncSpinner,
   EmptySlate,
@@ -29,10 +30,11 @@ const LEVEL_FILTERS = [
   { value: "error", label: "Error" },
 ];
 
-const LEVEL_VARIANT: Record<string, "done" | "pending" | "cancelled"> = {
-  log: "done",
-  warn: "pending",
-  error: "cancelled",
+/** Info is neutral, a warning is warn, an error is something that failed. */
+const LEVEL_TONE: Record<string, Tone> = {
+  log: "neutral",
+  warn: "warn",
+  error: "danger",
 };
 
 const LEVEL_LABEL: Record<string, string> = {
@@ -219,7 +221,7 @@ export default function AdminAuditLogPage() {
                     </DSTableTd>
                     <DSTableTd>
                       <StatusPill
-                        variant={LEVEL_VARIANT[e.level] ?? "done"}
+                        tone={LEVEL_TONE[e.level] ?? "neutral"}
                         label={LEVEL_LABEL[e.level] ?? e.level}
                       />
                     </DSTableTd>

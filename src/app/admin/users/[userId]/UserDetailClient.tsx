@@ -148,11 +148,11 @@ export function UserDetailClient({ userId }: { userId: string }) {
           {user ? (
             <p className="text-[13.5px] mt-1.5 flex flex-wrap items-center gap-2" style={{ color: "var(--fg-3)" }}>
               {user.is_suspended ? (
-                <StatusPill variant="cancelled" label="Suspended" />
+                <StatusPill tone="danger" label="Suspended" />
               ) : user.is_placeholder ? (
-                <StatusPill variant="pending" label="Invited, not claimed" />
+                <StatusPill tone="warn" label="Invited, not claimed" />
               ) : (
-                <StatusPill variant="confirmed" label="Active" />
+                <StatusPill tone="success" label="Active" />
               )}
               <span className="font-mono text-[12px]">{user.id}</span>
               <span>· joined {formatAdminDate(user.created_at)}</span>
@@ -348,11 +348,11 @@ export function UserDetailClient({ userId }: { userId: string }) {
                         {roleLabel(l.account_type)}
                       </span>
                       {l.is_suspended ? (
-                        <StatusPill variant="cancelled" label="Suspended" />
+                        <StatusPill tone="danger" label="Suspended" />
                       ) : l.is_published ? (
-                        <StatusPill variant="confirmed" label="Published" />
+                        <StatusPill tone="success" label="Published" />
                       ) : (
-                        <StatusPill variant="done" label="Draft" />
+                        <StatusPill tone="neutral" label="Draft" />
                       )}
                     </li>
                   ))}
@@ -374,7 +374,7 @@ export function UserDetailClient({ userId }: { userId: string }) {
                         <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
                           {roleLabel(o.account_type)}
                         </span>
-                        {!o.is_active ? <StatusPill variant="done" label="Inactive" /> : null}
+                        {!o.is_active ? <StatusPill tone="neutral" label="Inactive" /> : null}
                       </li>
                     ))}
                   </ul>

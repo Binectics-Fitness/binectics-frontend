@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import { paymentStatusTone } from "@/lib/ui/statusTones";
 import { AsyncSpinner, StatusPill } from "@/components/ds";
 import {
   adminService,
@@ -11,13 +12,6 @@ import {
   type AdminTransactionDetail,
 } from "@/lib/api/admin";
 import { formatMinor } from "@/lib/currencies/helpers";
-
-const STATUS_VARIANT: Record<string, "confirmed" | "pending" | "done" | "cancelled"> = {
-  succeeded: "confirmed",
-  pending: "pending",
-  reversed: "done",
-  failed: "cancelled",
-};
 
 const REFERENCE_LABEL: Record<string, string> = {
   membership_subscription: "Membership subscription",
@@ -135,7 +129,7 @@ export function PaymentDetailClient({ paymentId }: { paymentId: string }) {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <Kpi label="Status">
-              <StatusPill variant={STATUS_VARIANT[tx.status] ?? "done"} label={tx.status} />
+              <StatusPill tone={paymentStatusTone(tx.status)} label={tx.status} />
             </Kpi>
             <Kpi label="Amount">
               <span style={{ color: tx.direction === "debit" ? "var(--danger)" : "var(--ink)" }}>

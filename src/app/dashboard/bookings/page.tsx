@@ -19,6 +19,7 @@ import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
 import { PayBookingButton } from "@/components/bookings/PayBookingButton";
 import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingModal";
 import { bookingPaymentState, isPayable } from "@/lib/bookings/paymentState";
+import { bookingPaymentStateTone } from "@/lib/ui/statusTones";
 import { hasPaidReceipt, receiptHref } from "@/lib/bookings/receipt";
 
 type TabKey = "upcoming" | "past" | "cancelled";
@@ -29,18 +30,9 @@ const TABS: Array<{ key: TabKey; label: string }> = [
   { key: "cancelled", label: "Cancelled" },
 ];
 
-function statusVariant(status: ConsultationBookingStatus): "confirmed" | "pending" | "done" | "cancelled" {
-  switch (status) {
-    case ConsultationBookingStatus.CONFIRMED:
-      return "confirmed";
-    case ConsultationBookingStatus.PENDING:
-      return "pending";
-    case ConsultationBookingStatus.COMPLETED:
-      return "done";
-    case ConsultationBookingStatus.CANCELLED:
-    case ConsultationBookingStatus.NO_SHOW:
-      return "cancelled";
-  }
+/** Awaiting payment / no-show are warn, confirmed / completed success, the rest neutral. */
+function statusTone(booking: ConsultationBooking) {
+  return bookingPaymentStateTone(bookingPaymentState(booking));
 }
 
 function formatDateBlock(iso: string) {
@@ -149,7 +141,7 @@ function BookingRow({
         </div>
 
         <div className="flex flex-col items-end gap-1.5">
-          <StatusPill variant={statusVariant(booking.status)} label={bookingLabel(booking)} />
+          <StatusPill tone={statusTone(booking)} label={bookingLabel(booking)} />
           <span
             className="font-mono text-[11.5px]"
             style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}
@@ -531,7 +523,7 @@ export default function MyBookingsPage() {
                 </div>
 
                 <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <StatusPill variant={statusVariant(selected.status)} label={bookingLabel(selected)} />
+                  <StatusPill tone={statusTone(selected)} label={bookingLabel(selected)} />
                   {isPayable(selected) && (
                     <div className="mt-3">
                       <BookingPaymentPanel booking={selected} onBooking={replaceBooking} onError={(m) => toast.error(m)} />

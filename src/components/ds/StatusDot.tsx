@@ -4,7 +4,7 @@
  */
 const VARIANTS = {
   signal: { background: "var(--signal)", boxShadow: "0 0 0 4px var(--signal-soft)" },
-  warn:   { background: "var(--warn)",   boxShadow: "0 0 0 4px oklch(0.96 0.05 75)" },
+  warn:   { background: "var(--warn)",   boxShadow: "0 0 0 4px var(--warn-soft)" },
   danger: { background: "var(--danger)", boxShadow: "0 0 0 4px var(--danger-soft)" },
   muted:  { background: "var(--fg-3)",   boxShadow: "0 0 0 4px var(--bg-3)" },
 } as const;

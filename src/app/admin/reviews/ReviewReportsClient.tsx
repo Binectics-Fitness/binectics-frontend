@@ -165,7 +165,7 @@ export function ReviewReportsClient() {
                         </span>
                       </DSTableTd>
                       <DSTableTd>
-                        <StatusPill variant={pill.variant} label={pill.label} />
+                        <StatusPill tone={pill.tone} label={pill.label} />
                       </DSTableTd>
                     </DSTableRow>
                   );
