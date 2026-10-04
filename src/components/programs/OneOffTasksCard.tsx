@@ -81,11 +81,8 @@ interface Calendar {
 
 export default function OneOffTasksCard({
   clientProfileId,
-  accentInk,
 }: {
   clientProfileId: string;
-  /** Role accent for the send action (legible as text). */
-  accentInk: string;
 }) {
   const [tasks, setTasks] = useState<OneOffTask[] | null>(null);
   const [calendar, setCalendar] = useState<Calendar | null>(null);
@@ -154,7 +151,8 @@ export default function OneOffTasksCard({
           onClick={() => setSending(true)}
           disabled={!calendar}
           className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.5 rounded-(--r-1) disabled:opacity-50"
-          style={{ border: "1px solid var(--border)", color: accentInk, background: "transparent" }}
+          // Actions are neutral; role accents identify providers, not buttons.
+          style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "transparent" }}
         >
           + Send a form or task
         </button>

@@ -907,7 +907,6 @@ function AssignmentsModal({
 
 function ProgramCard({
   template,
-  accentInk,
   onEdit,
   onPublish,
   onAssign,
@@ -916,7 +915,6 @@ function ProgramCard({
   fmtDate,
 }: {
   template: ProgramTemplate;
-  accentInk: string;
   onEdit: () => void;
   onPublish: () => void;
   onAssign: () => void;
@@ -972,7 +970,7 @@ function ProgramCard({
             </button>
           )}
           {isPublished && template.status !== "archived" && (
-            <button type="button" onClick={onAssign} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: accentInk, background: "transparent" }}>
+            <button type="button" onClick={onAssign} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "transparent" }}>
               Assign
             </button>
           )}
@@ -1005,7 +1003,7 @@ export default function ProgramsManager({
   /** Open this program in the builder on arrival (?edit=<id>). */
   initialEditId?: string;
 }) {
-  const { Shell, basePath, accentInk, navItem, protocolsPath } = config;
+  const { Shell, basePath, navItem, protocolsPath } = config;
   // Retired protocols not yet converted (unconverted = unarchived).
   const [leftoverProtocols, setLeftoverProtocols] = useState(0);
   const { fmtDate } = useOrgFormat();
@@ -1234,7 +1232,6 @@ export default function ProgramsManager({
             <ProgramCard
               key={t._id}
               template={t}
-              accentInk={accentInk}
               fmtDate={fmtDate}
               onEdit={() => openEdit(t)}
               onPublish={() => handlePublish(t)}

@@ -19,8 +19,6 @@ export interface ProgramsRoleConfig {
   navItem: string;
   /** Route base, e.g. /dashboard/dietitian/programs. */
   basePath: string;
-  /** Accent used as text on light fills (must be legible, not the raw pastel). */
-  accentInk: string;
   /** Accent soft fill for badges. */
   accentSoft: string;
   /**
@@ -34,7 +32,6 @@ export const DIETITIAN_PROGRAMS_CONFIG: ProgramsRoleConfig = {
   Shell: DietitianDashboardShell,
   navItem: "Programs",
   basePath: "/dashboard/dietitian/programs",
-  accentInk: "var(--dietitian)",
   accentSoft: "var(--dietitian-soft)",
   protocolsPath: "/dashboard/dietitian/protocols",
 };
@@ -44,6 +41,5 @@ export const TRAINER_PROGRAMS_CONFIG: ProgramsRoleConfig = {
   navItem: "Programs",
   basePath: "/dashboard/trainer/programs",
   // --trainer (0.72 L) is too light for text; use the badge ink like badge-trainer.
-  accentInk: "oklch(0.45 0.12 75)",
   accentSoft: "var(--trainer-soft)",
 };

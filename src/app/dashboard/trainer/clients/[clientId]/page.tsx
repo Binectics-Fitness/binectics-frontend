@@ -214,7 +214,7 @@ export default function ClientDetailPage() {
         ))}
       </div>
 
-      {clientId && <OneOffTasksCard clientProfileId={clientId} accentInk={TRAINER_PROGRAMS_CONFIG.accentInk} />}
+      {clientId && <OneOffTasksCard clientProfileId={clientId} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
         {/* Notes */}
