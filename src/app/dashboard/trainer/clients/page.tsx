@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile } from "@/lib/api/progress";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -31,20 +31,7 @@ function clientInitials(c: ClientProfile): string {
 }
 
 function StatusBadge({ status }: { status: "Active" | "Paused" }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Active: { bg: "var(--signal-soft)", color: "var(--signal-ink)" },
-    Paused: { bg: "var(--bg-2)", color: "var(--fg-3)" },
-  };
-  const s = map[status] ?? map["Paused"];
-  return (
-    <span
-      className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px]"
-      style={{ background: s.bg, color: s.color }}
-    >
-      <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
-      {status}
-    </span>
-  );
+  return <StatusPill tone={status === "Active" ? "success" : "neutral"} label={status} />;
 }
 
 /* ─── Page ───────────────────────────────────────────────── */

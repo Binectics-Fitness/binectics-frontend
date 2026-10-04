@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { StatusPill } from "@/components/ds";
 import { useParams } from "next/navigation";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
@@ -179,9 +180,7 @@ export default function ClientDetailPage() {
           <div>
             <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{name}</h1>
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full" style={{ color: profile.is_active ? "var(--signal-ink)" : "var(--fg-2)", background: profile.is_active ? "var(--signal-soft)" : "var(--bg-3)", border: "1px solid var(--border)" }}>
-                {profile.is_active ? "Active client" : "Paused client"}
-              </span>
+              <StatusPill tone={profile.is_active ? "success" : "neutral"} label={profile.is_active ? "Active client" : "Paused client"} />
               <span className="inline-flex items-center font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full" style={{ color: "var(--fg-2)", background: "var(--bg-3)", border: "1px solid var(--border)" }}>
                 Client since {fmtDate(profile.created_at)}
               </span>

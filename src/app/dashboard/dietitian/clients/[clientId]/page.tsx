@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import {
@@ -255,7 +255,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
         <>
           {/* Header */}
           <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
-            <span className="w-[64px] h-[64px] rounded-(--r-3) flex-shrink-0 flex items-center justify-center text-[20px] font-semibold" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>{initials(name)}</span>
+            <span className="w-[64px] h-[64px] rounded-(--r-3) flex-shrink-0 flex items-center justify-center text-[20px] font-semibold" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(name)}</span>
             <div className="flex-1">
               <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>{name}</h1>
               <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
@@ -349,15 +349,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
                       {" · "}assigned {fmtDate(p.assigned_at)}
                     </div>
                   </div>
-                  <span
-                    className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full"
-                    style={{
-                      background: p.status === PlanStatus.ACTIVE ? "var(--signal-soft)" : "var(--bg-2)",
-                      color: p.status === PlanStatus.ACTIVE ? "var(--signal-ink)" : "var(--fg-3)",
-                    }}
-                  >
-                    {p.status === PlanStatus.ACTIVE ? "Active" : "Paused"}
-                  </span>
+                  <StatusPill tone={p.status === PlanStatus.ACTIVE ? "success" : "neutral"} label={p.status === PlanStatus.ACTIVE ? "Active" : "Paused"} />
                 </div>
               ))
             )}

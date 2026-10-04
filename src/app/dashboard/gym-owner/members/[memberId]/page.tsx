@@ -173,7 +173,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
       <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
         <div
           className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-(--r-3) flex-shrink-0 flex items-center justify-center text-[22px] font-semibold"
-          style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 80), oklch(0.72 0.06 60))", color: "white" }}
+          style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}
         >
           {getInitials(name)}
         </div>
