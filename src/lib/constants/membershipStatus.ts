@@ -4,6 +4,8 @@ import {
   isSeatBearingMembershipStatus,
   type MembershipSubscription,
 } from "@/lib/types";
+import { membershipStatusTone } from "@/lib/ui/statusTones";
+import { toneColors, type Tone } from "@/lib/ui/tones";
 
 /**
  * One description of every membership state — label, pill colours, and the two
@@ -24,20 +26,22 @@ import {
  * gym their paying customer has churned and tells the member they have been
  * locked out. Neither is true.
  *
- * Pill colours are the design system's, not invented here:
- *   - active / paused / past-due: binectics-design-system/binectics/gym-members.html:85-87
- *   - pending (the `.status.new` treatment): gym-members.html:88
- *   - suspended (muted WITH a border, so it reads as imposed rather than
- *     chosen, and is distinguishable from paused): admin-users.html:62
+ * Pill colours come from the app-wide tone set (lib/ui/statusTones
+ * membershipStatusTone): active is success; pending payment is waiting on
+ * the member (warn); past due (a renewal that failed) and suspended
+ * (blocked by the gym) are danger; paused is the member's own break and
+ * expired / cancelled are endings, so all three are neutral.
  * gym-members.html:204-210 already carries "Paused" and "Past-due" filter
  * pills, so the roster's filter row is design-led rather than a new invention.
  */
 export interface MembershipStatusMeta {
   /** Sentence-case label for a pill or a table cell. */
   label: string;
+  /** What the state means; color/background are this tone's ink and fill. */
+  tone: Tone;
   color: string;
   background: string;
-  /** Only `suspended` carries one — see above. */
+  /** No state draws a border any more; kept so callers can pass it through. */
   border?: string;
   /** True when the member may enter / book right now. */
   hasAccess: boolean;
@@ -47,47 +51,41 @@ export interface MembershipStatusMeta {
   hint: string;
 }
 
-export const MEMBERSHIP_STATUS_META: Record<
-  MembershipSubscriptionStatus,
-  MembershipStatusMeta
-> = {
+type MetaFacts = Omit<MembershipStatusMeta, "tone" | "color" | "background" | "border">;
+
+function withTone(status: MembershipSubscriptionStatus | string, facts: MetaFacts): MembershipStatusMeta {
+  const tone = membershipStatusTone(status);
+  const { fill, ink } = toneColors(tone);
+  return { ...facts, tone, color: ink, background: fill };
+}
+
+const FACTS: Record<MembershipSubscriptionStatus, MetaFacts> = {
   [MembershipSubscriptionStatus.ACTIVE]: {
     label: "Active",
-    color: "var(--signal-ink)",
-    background: "var(--signal-soft)",
     hasAccess: true,
     bearsSeat: true,
     hint: "Paid and running.",
   },
   [MembershipSubscriptionStatus.PENDING_PAYMENT]: {
     label: "Pending payment",
-    color: "oklch(0.42 0.13 75)",
-    background: "var(--trainer-soft)",
     hasAccess: false,
     bearsSeat: true,
     hint: "Enrolled but not paid, no access until payment settles.",
   },
   [MembershipSubscriptionStatus.PAUSED]: {
     label: "Paused",
-    color: "var(--fg-3)",
-    background: "var(--bg-2)",
     hasAccess: false,
     bearsSeat: true,
     hint: "On their own break. Frozen days are credited back on resume, so they are coming back, not churned.",
   },
   [MembershipSubscriptionStatus.SUSPENDED]: {
     label: "Suspended",
-    color: "var(--fg-3)",
-    background: "var(--bg-2)",
-    border: "1px solid var(--border)",
     hasAccess: false,
     bearsSeat: true,
     hint: "Blocked by the gym. Unlike a pause, the paid time keeps running down.",
   },
   [MembershipSubscriptionStatus.PAST_DUE]: {
     label: "Past due",
-    color: "var(--danger)",
-    background: "var(--danger-soft)",
     // Still has access — the grace window is the whole point of the state.
     hasAccess: true,
     bearsSeat: true,
@@ -95,21 +93,22 @@ export const MEMBERSHIP_STATUS_META: Record<
   },
   [MembershipSubscriptionStatus.EXPIRED]: {
     label: "Expired",
-    color: "var(--fg-3)",
-    background: "var(--bg-2)",
     hasAccess: false,
     bearsSeat: false,
     hint: "Term ended. Only a new payment revives it.",
   },
   [MembershipSubscriptionStatus.CANCELLED]: {
     label: "Cancelled",
-    color: "var(--fg-3)",
-    background: "var(--bg-2)",
     hasAccess: false,
     bearsSeat: false,
     hint: "Ended by the member or the gym.",
   },
 };
+
+export const MEMBERSHIP_STATUS_META: Record<MembershipSubscriptionStatus, MembershipStatusMeta> =
+  Object.fromEntries(
+    (Object.keys(FACTS) as MembershipSubscriptionStatus[]).map((status) => [status, withTone(status, FACTS[status])]),
+  ) as Record<MembershipSubscriptionStatus, MembershipStatusMeta>;
 
 /**
  * Meta for a status, tolerant of one the API adds before this repo knows it.
@@ -123,14 +122,12 @@ export function membershipStatusMeta(
 ): MembershipStatusMeta {
   const known = MEMBERSHIP_STATUS_META[status as MembershipSubscriptionStatus];
   if (known) return known;
-  return {
+  return withTone(String(status ?? ""), {
     label: String(status ?? "Unknown"),
-    color: "var(--fg-3)",
-    background: "var(--bg-2)",
     hasAccess: isEntitlingMembershipStatus(status),
     bearsSeat: isSeatBearingMembershipStatus(status),
     hint: "Unrecognised status, refresh, or contact support if it persists.",
-  };
+  });
 }
 
 /** The plan id a subscription points at, populated or not. */

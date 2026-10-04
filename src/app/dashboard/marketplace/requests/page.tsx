@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useId, useMemo, useRef, useState } from "react";
+import { StatusPill } from "@/components/ds/StatusPill";
+import { requestStatusTone } from "@/lib/ui/statusTones";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
@@ -72,20 +74,14 @@ const STATUS_LABEL: Record<MarketplaceRequestStatus, string> = {
   [MarketplaceRequestStatus.CANCELLED]: "Closed",
 };
 
-function StatusPill({ status }: { status: MarketplaceRequestStatus }) {
-  const accepted = status === MarketplaceRequestStatus.ACCEPTED;
-  return (
-    <span
-      className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px] shrink-0"
-      style={{
-        background: accepted ? "var(--signal-soft)" : "var(--bg-2)",
-        color: accepted ? "var(--signal-ink)" : "var(--fg-3)",
-      }}
-    >
-      <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
-      {STATUS_LABEL[status] ?? status}
-    </span>
-  );
+/**
+ * A handled request's state. Accepted is success and one still waiting on
+ * the provider is warn. Declined is neutral here, unlike on the member's
+ * side: the provider made that call, nothing failed for them.
+ */
+function RequestStatusPill({ status }: { status: MarketplaceRequestStatus }) {
+  const tone = status === MarketplaceRequestStatus.DECLINED ? "neutral" : requestStatusTone(status);
+  return <StatusPill tone={tone} label={STATUS_LABEL[status] ?? status} className="shrink-0" />;
 }
 
 function Avatar({ name }: { name: string }) {
@@ -316,7 +312,7 @@ function HandledRequestRow({
           <span className="text-[13.5px] font-medium truncate" style={{ color: "var(--ink)" }}>
             {name}
           </span>
-          <StatusPill status={r.status} />
+          <RequestStatusPill status={r.status} />
         </div>
         <div className="font-mono text-[11px] mt-0.5" style={{ color: "var(--fg-3)" }}>
           Asked {fmtDate(r.created_at)} · updated {fmtDate(r.updated_at)}

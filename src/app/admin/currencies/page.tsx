@@ -90,7 +90,7 @@ function UseChip({
 }) {
   const effect = currency.effective[use];
   if (!effect) return <span style={{ color: "var(--fg-4)" }}>-</span>;
-  if (effect.selectable) return <StatusPill variant="confirmed" label="On" />;
+  if (effect.selectable) return <StatusPill tone="success" label="On" />;
   // The row states its shared reasons once; this cell shows only what is
   // different about this use. The tooltip and screen-reader label still
   // carry every reason.
@@ -103,7 +103,7 @@ function UseChip({
       className="inline-flex flex-col items-start gap-1 outline-none"
       aria-label={`${USE_LABEL[use]} off: ${effect.reasons.map((r) => r.message).join(". ")}`}
     >
-      <StatusPill variant="done" label="Off" />
+      <StatusPill tone="neutral" label="Off" />
       {first && (
         <span className="text-[11.5px] leading-snug max-w-[22ch]" style={{ color: "var(--fg-3)" }}>
           {first.message}
@@ -560,7 +560,7 @@ export default function AdminCurrenciesPage() {
                     )}
                   </DSTableTd>
                   <DSTableTd>
-                    <StatusPill variant={c.platform_enabled ? "confirmed" : "done"} label={c.platform_enabled ? "Offered" : "Off"} />
+                    <StatusPill tone={c.platform_enabled ? "success" : "neutral"} label={c.platform_enabled ? "Offered" : "Off"} />
                     {sharedOffReasons(c) && (
                       <div className="text-[11.5px] leading-snug mt-1.5 max-w-[24ch]" style={{ color: "var(--fg-3)" }}>
                         Why it&apos;s off: {sharedOffReasons(c)!.map((r) => r.message).join(". ")}

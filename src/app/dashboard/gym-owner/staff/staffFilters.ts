@@ -2,6 +2,7 @@ import {
   MemberStatus,
   type OrganizationMember,
 } from "@/lib/api/teams";
+import { toneColors, type Tone } from "@/lib/ui/tones";
 
 /**
  * Search + status filtering for the staff roster.
@@ -103,12 +104,30 @@ export function memberInitials(name: string): string {
   );
 }
 
+/**
+ * A team member's status as a tone (lib/ui/tones): active is success, an
+ * invite not yet accepted is waiting (warn), inactive is neutral.
+ */
+export const MEMBER_STATUS_TONE: Record<MemberStatus, Tone> = {
+  [MemberStatus.ACTIVE]: "success",
+  [MemberStatus.PENDING]: "warn",
+  [MemberStatus.INACTIVE]: "neutral",
+};
+
+const MEMBER_STATUS_LABEL: Record<MemberStatus, string> = {
+  [MemberStatus.ACTIVE]: "Active",
+  [MemberStatus.PENDING]: "Pending",
+  [MemberStatus.INACTIVE]: "Inactive",
+};
+
 /** Pill colours for a team member's status, shared by the roster and the detail page. */
 export const MEMBER_STATUS_STYLE: Record<
   MemberStatus,
-  { color: string; bg: string; label: string }
-> = {
-  [MemberStatus.ACTIVE]: { color: "var(--signal-ink)", bg: "var(--signal-soft)", label: "Active" },
-  [MemberStatus.PENDING]: { color: "oklch(0.42 0.13 75)", bg: "var(--trainer-soft)", label: "Pending" },
-  [MemberStatus.INACTIVE]: { color: "var(--fg-3)", bg: "var(--bg-2)", label: "Inactive" },
-};
+  { color: string; bg: string; label: string; tone: Tone }
+> = Object.fromEntries(
+  Object.values(MemberStatus).map((status) => {
+    const tone = MEMBER_STATUS_TONE[status];
+    const { fill, ink } = toneColors(tone);
+    return [status, { color: ink, bg: fill, label: MEMBER_STATUS_LABEL[status], tone }];
+  }),
+) as Record<MemberStatus, { color: string; bg: string; label: string; tone: Tone }>;

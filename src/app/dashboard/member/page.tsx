@@ -5,6 +5,11 @@ import Link from "next/link";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { StatusPill } from "@/components/ds/StatusPill";
+import { IconTile } from "@/components/ds/IconTile";
+import { Building2, CalendarClock } from "lucide-react";
+import { bookingLabel } from "@/lib/bookings/labels";
+import { bookingPaymentState } from "@/lib/bookings/paymentState";
+import { bookingPaymentStateTone } from "@/lib/ui/statusTones";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
@@ -236,13 +241,7 @@ function MemberHomeContent() {
                 ? formatStartDate(snapshot.nextBooking.startsAt)
                 : "None booked"
           }
-          delta={
-            snapshot.nextBooking
-              ? snapshot.nextBooking.status === ConsultationBookingStatus.CONFIRMED
-                ? "Confirmed"
-                : "Pending"
-              : "Book a session"
-          }
+          delta={snapshot.nextBooking ? bookingLabel(snapshot.nextBooking) : "Book a session"}
           deltaColor="var(--fg-3)"
           small
         />
@@ -288,7 +287,9 @@ function MemberHomeContent() {
                     className="flex items-center justify-between gap-3 p-4 rounded-(--r-2)"
                     style={{ background: "var(--bg-2)" }}
                   >
-                    <div style={{ minWidth: 0 }}>
+                    {/* The row is about a gym: its tile takes the gym accent. */}
+                    <IconTile icon={Building2} tone="gym" />
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <div
                         style={{
                           fontSize: 15,
@@ -365,16 +366,9 @@ function MemberHomeContent() {
                   borderRadius: "var(--r-2)",
                 }}
               >
-                <div
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: "var(--r-2)",
-                    background:
-                      "linear-gradient(135deg, oklch(0.85 0.05 60), oklch(0.72 0.08 40))",
-                    flexShrink: 0,
-                  }}
-                />
+                {/* The booking does not say which kind of provider it is with,
+                    so the tile is neutral rather than a guessed role accent. */}
+                <IconTile icon={CalendarClock} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{ fontSize: 15, fontWeight: 500, color: "var(--ink)" }}
@@ -402,18 +396,8 @@ function MemberHomeContent() {
                   </div>
                   <div className="mt-2">
                     <StatusPill
-                      variant={
-                        snapshot.nextBooking.status ===
-                        ConsultationBookingStatus.CONFIRMED
-                          ? "confirmed"
-                          : "pending"
-                      }
-                      label={
-                        snapshot.nextBooking.status ===
-                        ConsultationBookingStatus.CONFIRMED
-                          ? "Confirmed"
-                          : "Pending"
-                      }
+                      tone={bookingPaymentStateTone(bookingPaymentState(snapshot.nextBooking))}
+                      label={bookingLabel(snapshot.nextBooking)}
                     />
                   </div>
                 </div>

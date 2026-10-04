@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, EmptySlate, ActionModal } from "@/components/ds";
+import { bookingStatusTone } from "@/lib/ui/statusTones";
+import { toneColors } from "@/lib/ui/tones";
+import { bookingStatusLabel } from "@/lib/consultations/bookingActions";
 import { toast } from "@/components/Toast";
 import {
   consultationsService,
@@ -34,13 +37,17 @@ const HOURS = Array.from(
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
-  [ConsultationBookingStatus.CONFIRMED]: { bg: "var(--signal-soft)", color: "var(--signal-ink)", label: "Confirmed" },
-  [ConsultationBookingStatus.PENDING]: { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)", label: "Pending" },
-  [ConsultationBookingStatus.COMPLETED]: { bg: "var(--bg-3)", color: "var(--fg-2)", label: "Completed" },
-  [ConsultationBookingStatus.CANCELLED]: { bg: "var(--danger-soft)", color: "var(--danger)", label: "Cancelled" },
-  [ConsultationBookingStatus.NO_SHOW]: { bg: "var(--danger-soft)", color: "var(--danger)", label: "No-show" },
-};
+/**
+ * Calendar colours by what a booking's status means (lib/ui/statusTones):
+ * confirmed / completed success, a no-show warn, pending and cancelled
+ * neutral. A cancellation is not a failure, so it is not red.
+ */
+const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = Object.fromEntries(
+  Object.values(ConsultationBookingStatus).map((status) => {
+    const { fill, ink } = toneColors(bookingStatusTone(status));
+    return [status, { bg: fill, color: ink, label: bookingStatusLabel(status) }];
+  }),
+);
 
 function bookingClientName(b: ConsultationBooking): string {
   const name = [b.clientFirstName, b.clientLastName].filter(Boolean).join(" ");
@@ -349,7 +356,7 @@ export default function DietitianCalendarPage() {
               <span className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
                 {bookingClientName(booking)}
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: STATUS_COLORS[booking.status]?.color ?? "var(--signal-ink)" }}>
+              <span className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: STATUS_COLORS[booking.status]?.color ?? "var(--fg-2)" }}>
                 {booking.status.toLowerCase().replace("_", " ")}
               </span>
             </div>
@@ -467,7 +474,7 @@ export default function DietitianCalendarPage() {
               <div key={s.label} className="p-3 px-3.5 flex flex-col gap-0.5" style={{ borderRight: i % 2 === 0 ? "1px solid var(--border)" : "none", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
                 <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.label}</div>
                 <div className="text-[18px] font-medium tracking-[-0.018em] tabular-nums leading-none mt-0.5" style={{ color: "var(--ink)" }}>{s.value}</div>
-                <div className="font-mono text-[10px] mt-1" style={{ color: "var(--signal-ink)" }}>{s.delta}</div>
+                <div className="font-mono text-[10px] mt-1" style={{ color: "var(--fg-3)" }}>{s.delta}</div>
               </div>
             ))}
           </div>

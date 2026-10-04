@@ -16,12 +16,14 @@ export { FilterPill } from "./FilterPill";
 export { ChipEditor } from "./ChipEditor";
 export { DSCard, DSCardHead } from "./DSCard";
 export { DSStatCard } from "./DSStatCard";
-export { DSBadge } from "./DSBadge";
 export { DSTable, DSTableHead, DSTableTh, DSTableRow, DSTableTd } from "./DSTable";
 export { DashboardTopbar } from "./DashboardTopbar";
 
 // Phase 2 — booking + provider patterns
 export { StatusPill } from "./StatusPill";
+export { IconTile } from "./IconTile";
+export type { IconTileSize } from "./IconTile";
+export { NotificationIconTile } from "./NotificationIconTile";
 export { BookingStatusBadge } from "./BookingStatusBadge";
 export { ReceiptTable } from "./ReceiptTable";
 export { Wizard } from "./Wizard";

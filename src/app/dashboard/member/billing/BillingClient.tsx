@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { StatusPill } from "@/components/ds/StatusPill";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import {
   useMySubscriptions,
@@ -123,11 +124,7 @@ export function BillingClient() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5">
                   <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{plan?.name ?? "Membership"}</span>
-                  <span
-                    className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]"
-                    style={{ background: meta.background, color: meta.color, border: meta.border }}
-                    title={meta.hint}
-                  >{meta.label}</span>
+                  <StatusPill tone={meta.tone} label={meta.label} title={meta.hint} />
                 </div>
                 <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>
                   {gymNameOf(s)}

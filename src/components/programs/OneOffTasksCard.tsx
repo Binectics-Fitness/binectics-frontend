@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
+import { sentTaskTone } from "@/lib/ui/statusTones";
+import type { Tone } from "@/lib/ui/tones";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
@@ -39,29 +41,30 @@ function formatDay(day: string): string {
   });
 }
 
-type Tone = "done" | "open" | "late" | "quiet";
-
 /**
- * The label beside a sent task. A pending task past its due day is still
- * inside the catch-up window (once that closes the API reports it missed),
- * so it reads as still open, not as a failure.
+ * The label beside a sent task, and its tone (lib/ui/statusTones
+ * sentTaskTone, the same rule as the mobile coach view): done or submitted
+ * is success; missed, or still open past its due day, needs a nudge (warn,
+ * not danger: inside the catch-up window the client can still do it);
+ * skipped and not-yet-due are neutral.
  */
 export function oneOffStatus(task: OneOffTask, today: string): { label: string; tone: Tone } {
   const isForm = task.type === "form";
+  const tone = sentTaskTone(task, today);
   switch (task.status) {
     case "done":
       return {
         label: task.completed_late ? (isForm ? "Submitted late" : "Done late") : isForm ? "Submitted" : "Done",
-        tone: "done",
+        tone,
       };
     case "skipped":
-      return { label: "Skipped", tone: "quiet" };
+      return { label: "Skipped", tone };
     case "missed":
-      return { label: "Missed", tone: "late" };
+      return { label: "Missed", tone };
     default:
-      if (task.due_date < today) return { label: "Past due, still open", tone: "open" };
-      if (task.due_date === today) return { label: "Due today", tone: "open" };
-      return { label: `Due ${formatDay(task.due_date)}`, tone: "open" };
+      if (task.due_date < today) return { label: "Past due, still open", tone };
+      if (task.due_date === today) return { label: "Due today", tone };
+      return { label: `Due ${formatDay(task.due_date)}`, tone };
   }
 }
 
@@ -71,13 +74,6 @@ export function insertByDueDate(tasks: OneOffTask[], task: OneOffTask): OneOffTa
   return at === -1 ? [...tasks, task] : [...tasks.slice(0, at), task, ...tasks.slice(at)];
 }
 
-const TONES: Record<Tone, { bg: string; color: string }> = {
-  done: { bg: "var(--signal-soft)", color: "var(--signal-ink)" },
-  open: { bg: "var(--bg-3)", color: "var(--fg-2)" },
-  late: { bg: "var(--danger-soft)", color: "var(--danger)" },
-  quiet: { bg: "var(--bg-2)", color: "var(--fg-3)" },
-};
-
 interface Calendar {
   today: string;
   max_due: string;
@@ -85,11 +81,8 @@ interface Calendar {
 
 export default function OneOffTasksCard({
   clientProfileId,
-  accentInk,
 }: {
   clientProfileId: string;
-  /** Role accent for the send action (legible as text). */
-  accentInk: string;
 }) {
   const [tasks, setTasks] = useState<OneOffTask[] | null>(null);
   const [calendar, setCalendar] = useState<Calendar | null>(null);
@@ -158,7 +151,8 @@ export default function OneOffTasksCard({
           onClick={() => setSending(true)}
           disabled={!calendar}
           className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.5 rounded-(--r-1) disabled:opacity-50"
-          style={{ border: "1px solid var(--border)", color: accentInk, background: "transparent" }}
+          // Actions are neutral; role accents identify providers, not buttons.
+          style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "transparent" }}
         >
           + Send a form or task
         </button>
@@ -179,7 +173,6 @@ export default function OneOffTasksCard({
       ) : (
         tasks!.map((t, i, arr) => {
           const s = oneOffStatus(t, calendar!.today);
-          const tone = TONES[s.tone];
           const confirming = confirmId === t.id;
           return (
             <div key={t.id} className="flex items-center gap-3 px-5.5 py-3.5 flex-wrap" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
@@ -190,9 +183,7 @@ export default function OneOffTasksCard({
                   {t.detail ? ` · ${t.detail}` : ""}
                 </div>
               </div>
-              <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: tone.bg, color: tone.color }}>
-                {s.label}
-              </span>
+              <StatusPill tone={s.tone} label={s.label} />
               {t.status === "pending" && (
                 <button
                   type="button"

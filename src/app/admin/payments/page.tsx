@@ -4,6 +4,7 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import { paymentStatusTone } from "@/lib/ui/statusTones";
 import {
   AsyncSpinner,
   EmptySlate,
@@ -30,16 +31,6 @@ const STATUS_FILTERS = [
   { value: "failed", label: "Failed" },
   { value: "reversed", label: "Reversed" },
 ];
-
-const STATUS_VARIANT: Record<
-  string,
-  "confirmed" | "pending" | "done" | "cancelled"
-> = {
-  succeeded: "confirmed",
-  pending: "pending",
-  reversed: "done",
-  failed: "cancelled",
-};
 
 function payerLabel(tx: AdminTransaction): {
   name: string;
@@ -228,7 +219,7 @@ export default function AdminPaymentsPage() {
                       </DSTableTd>
                       <DSTableTd>
                         <StatusPill
-                          variant={STATUS_VARIANT[tx.status] ?? "done"}
+                          tone={paymentStatusTone(tx.status)}
                           label={tx.status}
                         />
                       </DSTableTd>

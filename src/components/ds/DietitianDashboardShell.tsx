@@ -44,7 +44,7 @@ export function DietitianDashboardShell({ activeItem, crumb, actions, children }
       actions={actions}
       config={{
         role: UserRole.DIETITIAN,
-        sections: withNavBadge(SIDEBAR, "Requests", pendingRequests),
+        sections: withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"),
         identity: "user",
         tone: { avatarBg: "var(--dietitian-soft)", avatarColor: "var(--dietitian)" },
         settingsHref: "/dashboard/dietitian/settings",

@@ -1,4 +1,5 @@
 import React from "react";
+import { IconTile } from "@/components/ds/IconTile";
 
 /**
  * EmptyState — a sentence and one action, no illustrations.
@@ -41,12 +42,10 @@ export function EmptyState({
       }`}
     >
       {icon && (
-        <div
-          className="mb-4 flex h-10 w-10 items-center justify-center rounded-[var(--r-3)]"
-          style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}
-        >
+        // Empty states are neutral: nothing is wrong, there is just nothing yet.
+        <IconTile size={compact ? "md" : "lg"} className="mb-4">
           {icon}
-        </div>
+        </IconTile>
       )}
       {title && (
         <h3

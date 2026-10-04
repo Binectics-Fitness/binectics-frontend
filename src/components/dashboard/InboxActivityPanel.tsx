@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { NotificationIconTile } from "@/components/ds/NotificationIconTile";
 import {
   NotificationType,
   notificationsService,
@@ -159,12 +160,15 @@ export default function InboxActivityPanel({ role }: Props) {
             key={row.id}
             className="rounded-(--r-2) border p-3"
             style={{
-              borderColor: row.isRead ? "var(--border)" : "var(--signal)",
-              background: row.isRead ? "var(--bg)" : "var(--signal-soft)",
+              // Unread is a quieter fill, not a green row: the tile already
+              // carries the row's one tone.
+              borderColor: "var(--border)",
+              background: row.isRead ? "var(--bg)" : "var(--bg-2)",
             }}
           >
-            <div className="flex items-start justify-between gap-2">
-              <div>
+            <div className="flex items-start justify-between gap-3">
+              <NotificationIconTile type={row.type} category={row.category} />
+              <div className="min-w-0 flex-1">
                 <h2 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
                   {row.title}
                 </h2>

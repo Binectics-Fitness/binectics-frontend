@@ -21,34 +21,23 @@ import {
 } from "@/lib/api/providerBilling";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { invoiceStatusTone, subscriptionStatusTone } from "@/lib/ui/statusTones";
+import { toneColors } from "@/lib/ui/tones";
 
+/**
+ * Status pill colours from the shared tone set (lib/ui/statusTones): active
+ * success, trialing neutral, pending payment warn, past due danger (the
+ * renewal failed), cancelled / expired neutral. Invoices: paid success, open
+ * warn (waiting on payment), uncollectible danger, draft / void neutral.
+ */
 function subscriptionStatusColor(status: ProviderSubscriptionStatus): React.CSSProperties {
-  switch (status) {
-    case ProviderSubscriptionStatus.ACTIVE:
-    case ProviderSubscriptionStatus.TRIALING:
-      return { background: "var(--signal-soft)", color: "var(--signal)" };
-    case ProviderSubscriptionStatus.PAST_DUE:
-      return { background: "var(--bg-2)", color: "var(--warn)" };
-    case ProviderSubscriptionStatus.CANCELLED:
-    case ProviderSubscriptionStatus.EXPIRED:
-      return { background: "var(--danger-soft)", color: "var(--danger)" };
-    default:
-      return { background: "var(--bg-2)", color: "var(--fg-3)" };
-  }
+  const { fill, ink } = toneColors(subscriptionStatusTone(status));
+  return { background: fill, color: ink };
 }
 
 function invoiceStatusColor(status: ProviderInvoiceStatus): React.CSSProperties {
-  switch (status) {
-    case ProviderInvoiceStatus.PAID:
-      return { background: "var(--signal-soft)", color: "var(--signal)" };
-    case ProviderInvoiceStatus.OPEN:
-      return { background: "var(--bg-2)", color: "var(--fg-2)" };
-    case ProviderInvoiceStatus.VOID:
-    case ProviderInvoiceStatus.UNCOLLECTIBLE:
-      return { background: "var(--danger-soft)", color: "var(--danger)" };
-    default:
-      return { background: "var(--bg-2)", color: "var(--fg-3)" };
-  }
+  const { fill, ink } = toneColors(invoiceStatusTone(status));
+  return { background: fill, color: ink };
 }
 
 const TIER_LABELS: Record<ProviderPlanTier, string> = {

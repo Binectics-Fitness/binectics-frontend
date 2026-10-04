@@ -265,11 +265,11 @@ export default function AdminUsersPage() {
                     </DSTableTd>
                     <DSTableTd>
                       {u.is_suspended ? (
-                        <StatusPill variant="cancelled" label="Suspended" />
+                        <StatusPill tone="danger" label="Suspended" />
                       ) : u.is_placeholder ? (
-                        <StatusPill variant="pending" label="Invited" />
+                        <StatusPill tone="warn" label="Invited" />
                       ) : (
-                        <StatusPill variant="confirmed" label="Active" />
+                        <StatusPill tone="success" label="Active" />
                       )}
                     </DSTableTd>
                   </DSTableRow>

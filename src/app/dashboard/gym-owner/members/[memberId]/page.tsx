@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { StatusPill } from "@/components/ds/StatusPill";
 import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -173,7 +174,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
       <div className="flex flex-col sm:flex-row gap-4.5 items-start sm:items-center">
         <div
           className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-(--r-3) flex-shrink-0 flex items-center justify-center text-[22px] font-semibold"
-          style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 80), oklch(0.72 0.06 60))", color: "white" }}
+          style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}
         >
           {getInitials(name)}
         </div>
@@ -195,14 +196,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
               label="Message"
             />
           )}
-          <span
-            className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2.5 py-1.5 rounded-full"
-            style={{ color: statusMeta.color, background: statusMeta.background, border: statusMeta.border }}
-            title={statusMeta.hint}
-          >
-            <span className="w-1.25 h-1.25 rounded-full bg-current" />
-            {statusLabel}
-          </span>
+          <StatusPill tone={statusMeta.tone} label={statusLabel} title={statusMeta.hint} />
         </div>
       </div>
 

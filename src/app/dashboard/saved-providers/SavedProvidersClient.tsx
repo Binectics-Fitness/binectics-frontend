@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { AsyncSpinner } from "@/components/ds";
+import { AsyncSpinner, IconTile } from "@/components/ds";
+import { providerTone, toneColors } from "@/lib/ui/tones";
 import { toast } from "@/components/Toast";
 import { useSavedListings, useToggleSavedListing } from "@/lib/queries/savedListings";
 import { useCurrencyList } from "@/lib/queries/currencies";
@@ -64,9 +65,9 @@ export function SavedProvidersClient() {
         </div>
       ) : saved.length === 0 ? (
         <div className="rounded-(--r-3) flex flex-col items-center text-center px-6 py-14 mt-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>
+          <IconTile size="lg" className="mb-4">
             <HeartIcon />
-          </div>
+          </IconTile>
           <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>Nothing saved yet</h2>
           <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
             Tap the heart on a gym, trainer, or dietitian in the marketplace and they&apos;ll show up here so you can come back to them.
@@ -84,9 +85,11 @@ export function SavedProvidersClient() {
             return (
               <li key={l._id} className="rounded-(--r-3) p-4 flex flex-col gap-2" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{type}</span>
+                  {/* Which kind of provider, in its role accent; "verified" is
+                      plain information beside it, so the card keeps one tone. */}
+                  <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: toneColors(providerTone(l.account_type)).fill, color: toneColors(providerTone(l.account_type)).ink }}>{type}</span>
                   {l.verification_badge && l.verification_badge !== "none" && (
-                    <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}>verified</span>
+                    <span className="font-mono text-[10px] px-1.75 py-0.5 rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>verified</span>
                   )}
                 </div>
                 <Link href={href} className="text-[16px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.014em", textDecoration: "none" }}>

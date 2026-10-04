@@ -55,10 +55,10 @@ export function TrainerDashboardShell({ activeItem, crumb, actions, children }: 
       actions={actions}
       config={{
         role: UserRole.TRAINER,
-        sections: sidebarFor(withNavBadge(SIDEBAR, "Requests", pendingRequests), Boolean(gym)),
+        sections: sidebarFor(withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"), Boolean(gym)),
         chipNote: gym ? `Coaching at ${gym.name}` : undefined,
         identity: "user",
-        tone: { avatarBg: "var(--trainer-soft)", avatarColor: "var(--trainer)" },
+        tone: { avatarBg: "var(--trainer-soft)", avatarColor: "var(--trainer-ink)" },
         settingsHref: "/dashboard/trainer/settings",
         homeHref: "/dashboard/trainer",
         fallbackLabel: "Trainer",

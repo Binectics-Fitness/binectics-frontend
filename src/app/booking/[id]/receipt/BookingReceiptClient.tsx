@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 import { AsyncSpinner, BookingStatusBadge } from "@/components/ds";
+import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   ConsultationBookingStatus,
@@ -169,7 +170,7 @@ function ReceiptCard({ booking, back }: { booking: ConsultationBooking; back: { 
           </h1>
         </div>
         <div className="flex flex-col sm:items-end gap-1.5">
-          <BookingStatusBadge status={booking.status} />
+          <BookingStatusBadge status={booking.status} awaitingPayment={bookingPaymentState(booking) === "awaiting_payment"} />
           {paidAt && (
             <div className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>
               Paid {formatViewerDateTime(paidAt)}

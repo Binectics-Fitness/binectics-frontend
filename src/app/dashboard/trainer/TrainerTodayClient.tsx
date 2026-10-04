@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, isSameDay } from "date-fns";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, BookingStatusBadge, EmptySlate, IconTile } from "@/components/ds";
+import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { BookSessionButton } from "./_actions";
 import { progressService, type ClientProfile } from "@/lib/api/progress";
@@ -44,14 +45,6 @@ function bookingClientName(b: ConsultationBooking): string {
   const name = [b.clientFirstName, b.clientLastName].filter(Boolean).join(" ");
   return name || "Client";
 }
-
-const BOOKING_STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
-  [ConsultationBookingStatus.CONFIRMED]: { color: "var(--signal-ink)", bg: "var(--signal-soft)", label: "Confirmed" },
-  [ConsultationBookingStatus.PENDING]: { color: "oklch(0.42 0.13 75)", bg: "var(--trainer-soft)", label: "Pending" },
-  [ConsultationBookingStatus.COMPLETED]: { color: "var(--fg-3)", bg: "var(--bg-2)", label: "Completed" },
-  [ConsultationBookingStatus.CANCELLED]: { color: "var(--danger)", bg: "var(--danger-soft)", label: "Cancelled" },
-  [ConsultationBookingStatus.NO_SHOW]: { color: "var(--danger)", bg: "var(--danger-soft)", label: "No-show" },
-};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -182,7 +175,6 @@ function TrainerTodayContent() {
                 <div className="px-4.5 py-4"><EmptySlate message="No upcoming sessions." hint="New bookings will show up here." mt="mt-0" /></div>
               ) : (
                 upcoming.slice(0, 8).map((b, i, arr) => {
-                  const st = BOOKING_STATUS_STYLE[b.status];
                   const start = new Date(b.startsAt);
                   return (
                     <div key={b.id} className="grid gap-3 px-4.5 py-3 items-center" style={{ gridTemplateColumns: "auto 1fr auto", borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
@@ -195,9 +187,7 @@ function TrainerTodayContent() {
                         <div className="font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>{durationMins(b)} min</div>
                         {b.notes && <div className="text-[12px] truncate mt-0.5" style={{ color: "var(--fg-3)" }}>{b.notes}</div>}
                       </div>
-                      <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st?.color, background: st?.bg, border: `1px solid ${st?.color ?? "var(--border)"}` }}>
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st?.label ?? b.status}
-                      </span>
+                      <BookingStatusBadge status={b.status} awaitingPayment={bookingPaymentState(b) === "awaiting_payment"} />
                     </div>
                   );
                 })
@@ -219,7 +209,7 @@ function TrainerTodayContent() {
                   const name = clientName(c);
                   return (
                     <div key={c._id} className="flex items-center gap-3 px-4.5 py-3.5" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
-                      <span className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(name)}</span>
+                      <IconTile initials={initials(name)} />
                       <div className="min-w-0 flex-1">
                         <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{name}</div>
                         <div className="font-mono text-[12px] truncate mt-0.5" style={{ color: "var(--fg-3)" }}>

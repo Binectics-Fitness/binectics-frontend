@@ -43,6 +43,15 @@
   --danger: oklch(0.58 0.18 25);
   --danger-soft: oklch(0.95 0.03 25);
   --warn: oklch(0.72 0.14 75);
+  /* Ink pairs for soft fills. Not shared.css variables, but the literals the
+     design system already draws these badges with, named so the tone set
+     (src/lib/ui/tones.ts) can use them:
+       --warn-soft / --warn-ink  binectics/notifications.html `.pill.warn`
+       --trainer-ink             shared.css `.badge-trainer` text (--trainer
+                                 is too light to read on --trainer-soft). */
+  --warn-soft: oklch(0.96 0.06 75);
+  --warn-ink: oklch(0.45 0.16 75);
+  --trainer-ink: oklch(0.45 0.12 75);
 
   /* Typography */
   --font-sans: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -119,6 +128,9 @@
   --color-danger: oklch(0.58 0.18 25);
   --color-danger-soft: oklch(0.95 0.03 25);
   --color-warn: oklch(0.72 0.14 75);
+  --color-warn-soft: oklch(0.96 0.06 75);
+  --color-warn-ink: oklch(0.45 0.16 75);
+  --color-trainer-ink: oklch(0.45 0.12 75);
 
   --radius-1: 3px;
   --radius-2: 6px;
@@ -208,6 +220,17 @@ button {
   cursor: pointer;
   color: inherit;
   font-size: inherit;
+}
+
+/* The one colour a button can't do without: paper text on an ink fill.
+   The unlayered `color: inherit` above beats the layered text-bg utility,
+   so every selected pill drawn `bg-ink text-bg` (notification tabs,
+   pagination, time and role pickers, the availability switch) rendered
+   dark-on-dark. A class+element selector outranks the bare `button` rule
+   without switching on the other text-* classes buttons carry; that wider
+   change is the separate pass the note above describes. */
+button.text-bg {
+  color: var(--bg);
 }
 
 input,

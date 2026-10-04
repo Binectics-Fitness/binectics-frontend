@@ -62,8 +62,9 @@ export function ShellNotificationBell() {
             height: 16,
             padding: "0 4px",
             borderRadius: "var(--r-full)",
-            background: "var(--danger)",
-            color: "var(--bg)",
+            // Unread counts are signal everywhere: news, not an error.
+            background: "var(--signal)",
+            color: "var(--signal-ink)",
             fontSize: 10,
             fontWeight: 600,
             lineHeight: 1,

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { NewPlanButton } from "./_actions";
 import { checkinsService } from "@/lib/api/checkins";
@@ -211,9 +211,7 @@ function GymOverviewContent() {
                   <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Live check-ins</h3>
                   <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Most recent activity</div>
                 </div>
-                <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ background: "var(--signal-soft)", border: "1px solid oklch(0.88 0.05 148)", color: "var(--signal-ink)" }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />Live
-                </span>
+                <StatusPill tone="success" label="Live" />
               </div>
               <div className="py-1 overflow-hidden" style={{ maxHeight: 320 }}>
                 {liveCheckIns.length === 0 ? (
@@ -223,7 +221,9 @@ function GymOverviewContent() {
                     const listing = checkInListing(c);
                     return (
                       <div key={c._id} className="flex gap-3 px-4.5 py-2.5 items-start">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-[7px]" style={{ background: "var(--signal)", boxShadow: "0 0 0 4px var(--signal-soft)" }} />
+                        {/* A check-in is an event, not a success: the dot is neutral and
+                            the "Live" pill above carries the colour. */}
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-[7px]" style={{ background: "var(--fg-4)" }} />
                         <span className="text-[13px] flex-1" style={{ color: "var(--ink)" }}>
                           <strong className="font-medium">{checkInName(c)}</strong> checked in{listing ? ` at ${listing}` : ""}
                         </span>
@@ -272,9 +272,7 @@ function GymOverviewContent() {
                           </td>
                           <td className="px-4.5 py-3" style={{ borderBottom: border, color: "var(--ink)" }}>{planName(sub)}</td>
                           <td className="px-4.5 py-3" style={{ borderBottom: border }}>
-                            <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st.color, background: st.background, border: `1px solid ${st.color}` }} title={st.hint}>
-                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st.label}
-                            </span>
+                            <StatusPill tone={st.tone} label={st.label} title={st.hint} />
                           </td>
                           <td className="px-4.5 py-3 font-mono text-[12px]" style={{ borderBottom: border, color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{fmtDate(sub.created_at)}</td>
                           <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid_minor != null ? fmtMoney(minorToMajor(sub.amount_paid_minor, sub.currency ?? currentOrg?.currency), sub.currency ?? currentOrg?.currency) : "-"}</td>

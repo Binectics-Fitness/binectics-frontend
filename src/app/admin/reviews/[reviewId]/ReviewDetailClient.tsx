@@ -155,7 +155,7 @@ export function ReviewDetailClient({ reviewId }: { reviewId: string }) {
           </h1>
           {review ? (
             <p className="text-[13.5px] mt-1.5 flex flex-wrap items-center gap-2" style={{ color: "var(--fg-3)" }}>
-              {statusPill ? <StatusPill variant={statusPill.variant} label={statusPill.label} /> : null}
+              {statusPill ? <StatusPill tone={statusPill.tone} label={statusPill.label} /> : null}
               <span>
                 Posted {formatAdminDate(review.created_at)} · {reports.length} report{reports.length === 1 ? "" : "s"}
                 {openReports ? `, ${openReports} open` : ""}
@@ -298,7 +298,7 @@ export function ReviewDetailClient({ reviewId }: { reviewId: string }) {
                             {formatAdminDate(r.created_at)}
                           </DSTableTd>
                           <DSTableTd className="text-[12.5px]">
-                            <StatusPill variant={pill.variant} label={pill.label} />
+                            <StatusPill tone={pill.tone} label={pill.label} />
                             {r.resolution ? (
                               <span className="block mt-1" style={{ color: "var(--fg-3)" }}>
                                 {r.resolution.resolved_by?.name ?? "An admin"} ·{" "}
