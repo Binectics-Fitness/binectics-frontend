@@ -519,10 +519,7 @@ function MealPlanCard({
         <div className="flex items-center gap-2 flex-wrap">
           <span
             className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full"
-            style={{
-              background: template ? "var(--dietitian-soft)" : "var(--trainer-soft)",
-              color: template ? "var(--dietitian)" : "oklch(0.42 0.13 75)",
-            }}
+            style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}
           >
             {template ? "Template" : assignedName ? `Assigned · ${assignedName}` : "Assigned"}
           </span>

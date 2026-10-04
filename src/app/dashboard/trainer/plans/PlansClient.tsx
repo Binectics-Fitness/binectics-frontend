@@ -359,7 +359,7 @@ function PlanCard({
       <div className="px-5.5 pt-5 pb-3.5 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: plan.plan_type === MembershipPlanType.SUBSCRIPTION ? "var(--gym-soft)" : "var(--trainer-soft)", color: plan.plan_type === MembershipPlanType.SUBSCRIPTION ? "var(--gym)" : "oklch(0.42 0.13 75)" }}>
+            <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
               {plan.plan_type === MembershipPlanType.SUBSCRIPTION ? "Subscription" : "One-time"}
             </span>
             {!plan.is_public && (
