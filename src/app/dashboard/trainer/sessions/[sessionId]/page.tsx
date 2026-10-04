@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { AsyncSpinner, BookingStatusBadge } from "@/components/ds";
+import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { BookingActionsPanel } from "@/components/BookingActionsPanel";
 import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingModal";
 import { toast } from "@/components/Toast";
@@ -130,7 +131,7 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
       {booking && (
         <>
           <div className="flex items-center gap-3.5">
-            <span className="w-11 h-11 rounded-full flex items-center justify-center text-[14px] font-semibold shrink-0" style={{ background: "var(--trainer-soft)", color: "var(--trainer)" }}>
+            <span className="w-11 h-11 rounded-full flex items-center justify-center text-[14px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
               {clientInitials(booking)}
             </span>
             <div className="min-w-0">
@@ -143,7 +144,7 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
                 <span>{fmtDateTime(booking.startsAt)} – {fmtTime(booking.endsAt)}</span>
                 <span>&middot;</span>
                 <span>{durationMins(booking)} min</span>
-                <BookingStatusBadge status={booking.status} />
+                <BookingStatusBadge status={booking.status} awaitingPayment={bookingPaymentState(booking) === "awaiting_payment"} />
               </p>
             </div>
           </div>

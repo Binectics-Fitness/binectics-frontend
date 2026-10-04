@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, BookingStatusBadge, Drawer } from "@/components/ds";
+import { AsyncSpinner, BookingStatusBadge, Drawer, IconTile } from "@/components/ds";
+import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { BookingActionsPanel } from "@/components/BookingActionsPanel";
 import {
   bookingTypeName,
@@ -253,9 +254,7 @@ export default function DietitianConsultationsPage() {
                     >
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                         <div className="flex gap-2.5 items-center">
-                          <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>
-                            {clientInitials(c)}
-                          </span>
+                          <IconTile initials={clientInitials(c)} size="sm" />
                           <span className="font-medium" style={{ color: "var(--ink)" }}>{clientName(c)}</span>
                         </div>
                       </td>
@@ -263,7 +262,7 @@ export default function DietitianConsultationsPage() {
                         <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-2)" }}>{fmtDateTime(c.startsAt)}</span>
                       </td>
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                        <span className="font-mono text-[9.5px] px-1.5 py-[2px] rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>
+                        <span className="font-mono text-[9.5px] px-1.5 py-[2px] rounded-(--r-1) uppercase tracking-[0.04em]" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
                           {type}
                         </span>
                       </td>
@@ -271,7 +270,7 @@ export default function DietitianConsultationsPage() {
                         <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>{durationMins(c)} min</span>
                       </td>
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                        <BookingStatusBadge status={c.status} />
+                        <BookingStatusBadge status={c.status} awaitingPayment={bookingPaymentState(c) === "awaiting_payment"} />
                       </td>
                     </tr>
                   );
@@ -294,12 +293,12 @@ export default function DietitianConsultationsPage() {
         {selected && (
           <div className="flex flex-col gap-4 p-1">
             <div className="flex items-center gap-3">
-              <span className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>
+              <span className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
                 {clientInitials(selected)}
               </span>
               <div>
                 <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>{clientName(selected)}</div>
-                <div className="mt-1"><BookingStatusBadge status={selected.status} /></div>
+                <div className="mt-1"><BookingStatusBadge status={selected.status} awaitingPayment={bookingPaymentState(selected) === "awaiting_payment"} /></div>
               </div>
             </div>
 

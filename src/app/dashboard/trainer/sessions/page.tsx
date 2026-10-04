@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { AsyncSpinner, BookingStatusBadge } from "@/components/ds";
+import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import {
@@ -267,7 +268,7 @@ export default function TrainerSessionsListPage() {
                       <td className="px-3.5 py-3" style={{ color: "var(--ink)" }}>{typeLabel}</td>
                       <td className="px-3.5 py-3 font-mono" style={{ color: "var(--ink)" }}>{durationMins(s)} min</td>
                       <td className="px-3.5 py-3 font-mono text-[12.5px]" style={{ color: "var(--ink)" }}>{note}</td>
-                      <td className="px-3.5 py-3"><BookingStatusBadge status={s.status} /></td>
+                      <td className="px-3.5 py-3"><BookingStatusBadge status={s.status} awaitingPayment={bookingPaymentState(s) === "awaiting_payment"} /></td>
                     </tr>
                   );
                 })
