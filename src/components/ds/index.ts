@@ -23,6 +23,7 @@ export { DashboardTopbar } from "./DashboardTopbar";
 export { StatusPill } from "./StatusPill";
 export { IconTile } from "./IconTile";
 export type { IconTileSize } from "./IconTile";
+export { NotificationIconTile } from "./NotificationIconTile";
 export { BookingStatusBadge } from "./BookingStatusBadge";
 export { ReceiptTable } from "./ReceiptTable";
 export { Wizard } from "./Wizard";

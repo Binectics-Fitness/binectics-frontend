@@ -4,6 +4,7 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Drawer } from "./Drawer";
+import { NotificationIconTile } from "./NotificationIconTile";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useMarkAllAsRead,
@@ -156,13 +157,11 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
               type="button"
               onClick={() => handleNotificationClick(n.id, n.isRead, n.actionUrl)}
               className={`flex gap-3 border-b border-border px-6 py-4 ${
-                n.isRead ? "" : "bg-signal-soft/30"
+                n.isRead ? "" : "bg-bg-2"
               }`}
               style={{ width: "100%", textAlign: "left" }}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-(--r-2) bg-bg-2 font-mono text-[11px] font-medium uppercase text-fg-3">
-                {n.title.charAt(0)}
-              </div>
+              <NotificationIconTile type={n.type} category={n.category} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <p className={`text-[13.5px] leading-snug ${n.isRead ? "text-fg" : "font-medium text-ink"}`}>

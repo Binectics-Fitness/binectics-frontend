@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, NotificationIconTile } from "@/components/ds";
 import { RoleShell } from "@/components/ds/RoleShell";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -159,12 +159,10 @@ export default function NotificationsInboxClient() {
                   type="button"
                   onClick={() => onOpen(item)}
                   className={`flex w-full gap-3 border-b border-border px-5 py-4 text-left sm:px-6 ${
-                    item.isRead ? "" : "bg-signal-soft/30"
+                    item.isRead ? "" : "bg-bg-2"
                   }`}
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-(--r-2) bg-bg-2 font-mono text-[11px] uppercase text-fg-3">
-                    {item.title.charAt(0)}
-                  </div>
+                  <NotificationIconTile type={item.type} category={item.category} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <p className={`text-sm leading-snug ${item.isRead ? "text-fg" : "font-medium text-ink"}`}>

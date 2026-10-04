@@ -33,7 +33,7 @@ export default function NotificationBell({
           />
         </svg>
         {count > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-bg">
+          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-signal px-1 text-[10px] font-bold text-signal-ink">
             {count > 99 ? "99+" : count}
           </span>
         )}
