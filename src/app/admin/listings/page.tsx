@@ -156,7 +156,8 @@ export default function AdminListingsPage() {
       label: "Pending review",
       value: loading ? "-" : counts.pending.toString(),
       delta: "no badge yet",
-      valueColor: counts.pending > 0 ? "var(--danger)" : "var(--ink)",
+      // Waiting on review is attention, not failure (warn, not danger).
+      valueColor: counts.pending > 0 ? "var(--warn-ink)" : "var(--ink)",
     },
     {
       label: "Suspended",
@@ -408,9 +409,11 @@ export default function AdminListingsPage() {
                               onClick={() => setUnsuspendTarget(l)}
                               className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer"
                               style={{
-                                background: "var(--signal-soft)",
-                                color: "var(--signal-ink)",
-                                border: "none",
+                                // Row actions stay neutral: the status pill carries the
+                                // meaning, and Suspend confirms in a modal.
+                                background: "var(--bg)",
+                                color: "var(--ink)",
+                                border: "1px solid var(--border)",
                               }}
                             >
                               Unsuspend
@@ -424,9 +427,11 @@ export default function AdminListingsPage() {
                               }}
                               className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer"
                               style={{
-                                background: "var(--danger-soft)",
-                                color: "var(--danger)",
-                                border: "none",
+                                // Row actions stay neutral: the status pill carries the
+                                // meaning, and Suspend confirms in a modal.
+                                background: "var(--bg)",
+                                color: "var(--ink)",
+                                border: "1px solid var(--border)",
                               }}
                             >
                               Suspend
@@ -460,9 +465,10 @@ export default function AdminListingsPage() {
                                 disabled={actionLoading}
                                 className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) cursor-pointer"
                                 style={{
-                                  background: "var(--signal-soft)",
-                                  color: "var(--signal-ink)",
-                                  border: "none",
+                                  // Row actions stay neutral: the status pill carries the meaning.
+                                  background: "var(--bg)",
+                                  color: "var(--ink)",
+                                  border: "1px solid var(--border)",
                                 }}
                               >
                                 Verify
