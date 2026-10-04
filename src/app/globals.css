@@ -222,6 +222,17 @@ button {
   font-size: inherit;
 }
 
+/* The one colour a button can't do without: paper text on an ink fill.
+   The unlayered `color: inherit` above beats the layered text-bg utility,
+   so every selected pill drawn `bg-ink text-bg` (notification tabs,
+   pagination, time and role pickers, the availability switch) rendered
+   dark-on-dark. A class+element selector outranks the bare `button` rule
+   without switching on the other text-* classes buttons carry; that wider
+   change is the separate pass the note above describes. */
+button.text-bg {
+  color: var(--bg);
+}
+
 input,
 textarea,
 select {
