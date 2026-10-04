@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
@@ -281,10 +281,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
     {
       label: "Status",
       value: (
-        <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st?.color, background: st?.bg, border: `1px solid ${st?.color ?? "var(--border)"}` }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />
-          {st?.label ?? member.status}
-        </span>
+        <StatusPill tone={st?.tone ?? "neutral"} label={st?.label ?? member.status} />
       ),
     },
     { label: "Joined", value: joined ? fmtDate(joined) : "-" },
@@ -359,9 +356,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
                         <div className="font-mono text-[11px] mt-0.5 truncate" style={{ color: "var(--fg-3)" }}>{plan}</div>
                       )}
                     </div>
-                    <span className="font-mono text-[10.5px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em] shrink-0" style={{ background: meta.background, color: meta.color }}>
-                      {meta.label}
-                    </span>
+                    <StatusPill tone={meta.tone} label={meta.label} title={meta.hint} className="shrink-0" />
                   </Link>
                 );
               })}

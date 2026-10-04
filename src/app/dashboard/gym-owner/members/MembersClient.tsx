@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { StatusPill } from "@/components/ds/StatusPill";
 import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AddMemberButton } from "./_actions";
@@ -689,14 +690,7 @@ export default function GymMembersClient() {
                       </td>
                       <td className="px-4.5 py-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span
-                            className="inline-flex items-center gap-1.25 font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"
-                            style={{ color: statusMeta.color, background: statusMeta.background, border: statusMeta.border }}
-                            title={statusMeta.hint}
-                          >
-                            <span className="w-1.25 h-1.25 rounded-full bg-current" />
-                            {statusMeta.label}
-                          </span>
+                          <StatusPill tone={statusMeta.tone} label={statusMeta.label} title={statusMeta.hint} />
                           {sub.is_archived && (
                             <span
                               className="inline-flex items-center font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toneColors, type Tone } from "@/lib/ui/tones";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { checkinsService } from "@/lib/api/checkins";
@@ -20,10 +21,12 @@ const STALE_AFTER_SECONDS = 75;
 
 type Freshness = "live" | "stale" | "offline";
 
-const STATUS_PILL: Record<Freshness, { color: string; bg: string; border: string; pulse: boolean }> = {
-  live: { color: "var(--signal-ink)", bg: "var(--signal-soft)", border: "oklch(0.88 0.05 148)", pulse: true },
-  stale: { color: "oklch(0.45 0.16 75)", bg: "oklch(0.96 0.06 75)", border: "oklch(0.85 0.08 75)", pulse: true },
-  offline: { color: "var(--danger)", bg: "var(--danger-soft)", border: "oklch(0.92 0.05 25)", pulse: false },
+/** Live is success, a missed refresh is warn, offline has failed (danger). */
+const FRESHNESS_TONE: Record<Freshness, Tone> = { live: "success", stale: "warn", offline: "danger" };
+const STATUS_PILL: Record<Freshness, { color: string; bg: string; pulse: boolean }> = {
+  live: { color: toneColors("success").ink, bg: toneColors("success").fill, pulse: true },
+  stale: { color: toneColors("warn").ink, bg: toneColors("warn").fill, pulse: true },
+  offline: { color: toneColors("danger").ink, bg: toneColors("danger").fill, pulse: false },
 };
 
 function personName(checkIn: CheckIn): string {
@@ -184,7 +187,7 @@ export default function GymCheckinsPage() {
       organizationInitials={currentOrg ? initials(currentOrg.name) : "IL"}
       actions={
         <div className="flex gap-2.5 items-center">
-          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.04em] px-2.5 py-1 rounded-full" style={{ color: pill.color, background: pill.bg, border: `1px solid ${pill.border}` }}>
+          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.04em] px-2.5 py-1 rounded-full" data-tone={FRESHNESS_TONE[freshness.kind]} style={{ color: pill.color, background: pill.bg }}>
             <span className={`w-1.5 h-1.5 rounded-full ${pill.pulse ? "animate-pulse" : ""}`} style={{ background: pill.color }} />
             {freshness.label} · {currentOrg ? currentOrg.name : "no org selected"}
           </span>
@@ -252,13 +255,13 @@ export default function GymCheckinsPage() {
           </button>
         </div>
       ) : freshness.kind === "stale" && lastUpdatedAt ? (
-        <div className="rounded-(--r-3) p-3 text-[12.5px] flex items-center justify-between gap-3" style={{ background: "oklch(0.96 0.06 75)", border: "1px solid oklch(0.85 0.08 75)", color: "oklch(0.40 0.14 75)" }}>
+        <div className="rounded-(--r-3) p-3 text-[12.5px] flex items-center justify-between gap-3" style={{ background: "var(--warn-soft)", color: "var(--warn-ink)" }}>
           <span>Live feed may be out of date, last updated {lastUpdatedLabel}.</span>
           <button
             onClick={refresh}
             disabled={isRefreshing}
             className="shrink-0 px-3 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ border: "1px solid oklch(0.80 0.10 75)", background: "var(--bg)", color: "oklch(0.40 0.14 75)" }}
+            style={{ border: "1px solid var(--border-2)", background: "var(--bg)", color: "var(--warn-ink)" }}
           >
             {isRefreshing ? "Refreshing…" : "Refresh"}
           </button>

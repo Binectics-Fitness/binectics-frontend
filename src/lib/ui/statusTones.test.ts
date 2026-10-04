@@ -164,3 +164,15 @@ describe("money and membership tones", () => {
     expect(recordStateTone("off")).toBe("neutral");
   });
 });
+
+describe("membership pill meta", () => {
+  it("draws every membership pill from its tone, so the four surfaces cannot drift", async () => {
+    const { MEMBERSHIP_STATUS_META, membershipStatusMeta } = await import("@/lib/constants/membershipStatus");
+    for (const [status, meta] of Object.entries(MEMBERSHIP_STATUS_META)) {
+      expect(meta.tone).toBe(membershipStatusTone(status));
+      expect(meta.color).toBe(TONE_COLORS[meta.tone].ink);
+      expect(meta.background).toBe(TONE_COLORS[meta.tone].fill);
+    }
+    expect(membershipStatusMeta("dormant").tone).toBe("neutral");
+  });
+});

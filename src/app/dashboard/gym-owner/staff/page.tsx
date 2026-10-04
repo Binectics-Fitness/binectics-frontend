@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { AddStaffModal } from "@/components/ds/modals/AddStaffModal";
 import { teamsService, MemberStatus, InvitationStatus, type OrganizationMember, type TeamInvitation } from "@/lib/api/teams";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -217,9 +217,7 @@ export default function GymStaffPage() {
                 <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
                   {joined ? `Joined ${fmtDate(joined)}` : "-"}
                 </span>
-                <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: st?.color, background: st?.bg, border: `1px solid ${st?.color ?? "var(--border)"}` }}>
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />{st?.label ?? m.status}
-                </span>
+                <StatusPill tone={st?.tone ?? "neutral"} label={st?.label ?? m.status} />
                 <div className="justify-self-end">
                   {canMessage && (
                     <StartConversationButton
@@ -255,9 +253,7 @@ export default function GymStaffPage() {
                   <span className="font-mono text-[12px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
                     Expires {fmtDate(inv.expires_at)}
                   </span>
-                  <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ color: "oklch(0.42 0.13 75)", background: "var(--trainer-soft)", border: "1px solid oklch(0.42 0.13 75)" }}>
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "currentColor" }} />Invited
-                  </span>
+                  <StatusPill tone="warn" label="Invited" />
                 </div>
               );
             })}
