@@ -22,16 +22,16 @@ describe("oneOffStatus", () => {
   const today = "2026-09-25";
 
   it("says when an open task is due", () => {
-    expect(oneOffStatus(task({}), today)).toMatchObject({ tone: "open" });
+    expect(oneOffStatus(task({}), today)).toMatchObject({ tone: "neutral" });
     expect(oneOffStatus(task({}), today).label).toMatch(/^Due /);
     expect(oneOffStatus(task({ due_date: today }), today).label).toBe("Due today");
   });
 
-  it("keeps a task past its due day neutral: the client can still catch up", () => {
+  it("marks a task past its due day warn, not danger: the client can still catch up", () => {
     // Once the catch-up window closes the API reports it missed instead.
     expect(oneOffStatus(task({ due_date: "2026-09-24" }), today)).toEqual({
       label: "Past due, still open",
-      tone: "open",
+      tone: "warn",
     });
   });
 
@@ -49,8 +49,9 @@ describe("oneOffStatus", () => {
   });
 
   it("shows missed and skipped as they are", () => {
-    expect(oneOffStatus(task({ status: "missed" }), today)).toEqual({ label: "Missed", tone: "late" });
-    expect(oneOffStatus(task({ status: "skipped" }), today).label).toBe("Skipped");
+    expect(oneOffStatus(task({ status: "missed" }), today)).toEqual({ label: "Missed", tone: "warn" });
+    expect(oneOffStatus(task({ status: "skipped" }), today)).toEqual({ label: "Skipped", tone: "neutral" });
+    expect(oneOffStatus(task({ status: "done" }), today).tone).toBe("success");
   });
 });
 

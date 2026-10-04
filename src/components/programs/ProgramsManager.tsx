@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
+import { instanceStatusTone, templateStatusTone } from "@/lib/ui/statusTones";
 import SearchableSelect from "@/components/SearchableSelect";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { toast } from "@/components/Toast";
@@ -827,14 +828,6 @@ function AssignProgramModal({
 
 // ─── Assignments (clients) modal ─────────────────────────────────────────────
 
-const INSTANCE_STATUS_TINT: Record<ProgramInstance["status"], string> = {
-  active: "var(--signal-ink)",
-  assigned: "var(--fg-2)",
-  paused: "oklch(0.42 0.13 75)",
-  completed: "var(--fg-3)",
-  cancelled: "var(--fg-4)",
-};
-
 function AssignmentsModal({
   template,
   basePath,
@@ -899,7 +892,7 @@ function AssignmentsModal({
                       {i.occurrences_done} / {i.occurrences_scheduled} tasks done
                     </div>
                   </div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.05em]" style={{ color: INSTANCE_STATUS_TINT[i.status] }}>{i.status}</span>
+                  <StatusPill tone={instanceStatusTone(i.status)} label={i.status} />
                 </Link>
               ))}
             </div>
@@ -915,7 +908,6 @@ function AssignmentsModal({
 function ProgramCard({
   template,
   accentInk,
-  accentSoft,
   onEdit,
   onPublish,
   onAssign,
@@ -925,7 +917,6 @@ function ProgramCard({
 }: {
   template: ProgramTemplate;
   accentInk: string;
-  accentSoft: string;
   onEdit: () => void;
   onPublish: () => void;
   onAssign: () => void;
@@ -933,12 +924,11 @@ function ProgramCard({
   onArchive: () => void;
   fmtDate: (d: string | Date) => string;
 }) {
-  const STATUS_BADGE: Record<ProgramTemplate["status"], { bg: string; color: string; label: string }> = {
-    draft: { bg: "var(--bg-3)", color: "var(--fg-2)", label: "Draft" },
-    published: { bg: accentSoft, color: accentInk, label: "Published" },
-    archived: { bg: "var(--bg-3)", color: "var(--fg-4)", label: "Archived" },
+  const STATUS_LABEL: Record<ProgramTemplate["status"], string> = {
+    draft: "Draft",
+    published: "Published",
+    archived: "Archived",
   };
-  const badge = STATUS_BADGE[template.status];
   const isPublished = template.latest_published_version_no >= 1;
   const draftAhead = hasUnpublishedDraft(template);
 
@@ -946,9 +936,9 @@ function ProgramCard({
     <div className="rounded-(--r-3) flex flex-col overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
       <div className="px-5.5 pt-5 pb-3.5 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: badge.bg, color: badge.color }}>
-            {badge.label}
-          </span>
+          {/* Published is ready to assign (success), on every role: the role
+              accent says whose program it is, which the page already does. */}
+          <StatusPill tone={templateStatusTone(template.status)} label={STATUS_LABEL[template.status]} />
           {draftAhead && isPublished && (
             // Neutral fill (not an accent) so it stays distinct from the
             // "Published" pill on every role, incl. the amber trainer accent.
@@ -1015,7 +1005,7 @@ export default function ProgramsManager({
   /** Open this program in the builder on arrival (?edit=<id>). */
   initialEditId?: string;
 }) {
-  const { Shell, basePath, accentInk, accentSoft, navItem, protocolsPath } = config;
+  const { Shell, basePath, accentInk, navItem, protocolsPath } = config;
   // Retired protocols not yet converted (unconverted = unarchived).
   const [leftoverProtocols, setLeftoverProtocols] = useState(0);
   const { fmtDate } = useOrgFormat();
@@ -1245,7 +1235,6 @@ export default function ProgramsManager({
               key={t._id}
               template={t}
               accentInk={accentInk}
-              accentSoft={accentSoft}
               fmtDate={fmtDate}
               onEdit={() => openEdit(t)}
               onPublish={() => handlePublish(t)}

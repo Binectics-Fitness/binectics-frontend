@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AsyncSpinner } from "@/components/ds";
+import { AsyncSpinner, StatusPill } from "@/components/ds";
+import { adherenceCountTones, instanceStatusTone } from "@/lib/ui/statusTones";
+import { toneColors, type Tone } from "@/lib/ui/tones";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
@@ -12,14 +14,6 @@ import {
 } from "@/lib/api/programs";
 import type { ProgramsRoleConfig } from "./config";
 
-const STATUS_TINT: Record<ProgramInstance["status"], string> = {
-  active: "var(--signal-ink)",
-  assigned: "var(--fg-2)",
-  paused: "oklch(0.42 0.13 75)",
-  completed: "var(--fg-3)",
-  cancelled: "var(--fg-4)",
-};
-
 function clientName(i: ProgramInstance): string {
   if (typeof i.client_id === "object" && i.client_id !== null) {
     return `${i.client_id.first_name} ${i.client_id.last_name}`.trim();
@@ -27,7 +21,10 @@ function clientName(i: ProgramInstance): string {
   return "Client";
 }
 
-function Stat({ label, value, tint }: { label: string; value: string; tint?: string }) {
+function Stat({ label, value, tone = "neutral" }: { label: string; value: string; tone?: Tone }) {
+  // Only a count that means something carries colour (adherenceCountTones);
+  // the rest stay ink.
+  const tint = tone === "neutral" ? undefined : toneColors(tone).ink;
   return (
     <div className="rounded-(--r-2) px-4 py-3" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
       <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{label}</div>
@@ -97,6 +94,7 @@ export default function ProgramInstanceView({
   const instance = detail?.instance;
   const status = instance?.status;
   const isTerminal = status === "completed" || status === "cancelled";
+  const countTones = detail ? adherenceCountTones(detail.adherence) : null;
 
   return (
     <Shell activeItem={navItem} crumb="Program progress">
@@ -119,9 +117,10 @@ export default function ProgramInstanceView({
               <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
                 {clientName(instance)}
                 {instance.started_at ? ` · started ${fmtDate(instance.started_at)}` : ""}
-                {" · "}
-                <span style={{ color: STATUS_TINT[instance.status] }}>{instance.status}</span>
               </p>
+              <div className="mt-2">
+                <StatusPill tone={instanceStatusTone(instance.status)} label={instance.status} />
+              </div>
             </div>
             <div className="flex gap-2 flex-wrap">
               {status === "active" && (
@@ -146,10 +145,9 @@ export default function ProgramInstanceView({
               <Stat
                 label="Adherence"
                 value={detail.adherence.adherence_pct != null ? `${detail.adherence.adherence_pct}%` : "-"}
-                tint="var(--signal-ink)"
               />
-              <Stat label="Done" value={String(detail.adherence.done)} />
-              <Stat label="Missed" value={String(detail.adherence.missed)} tint={detail.adherence.missed > 0 ? "var(--danger)" : undefined} />
+              <Stat label="Done" value={String(detail.adherence.done)} tone={countTones?.done} />
+              <Stat label="Missed" value={String(detail.adherence.missed)} tone={countTones?.missed} />
               <Stat label="Skipped" value={String(detail.adherence.skipped)} />
               <Stat label="Pending" value={String(detail.adherence.pending)} />
             </div>
