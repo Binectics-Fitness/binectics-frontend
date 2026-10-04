@@ -196,7 +196,7 @@ export function ListingDetailClient({ listingId }: { listingId: string }) {
               />
               {listing.is_suspended ? <StatusPill tone="danger" label="Suspended" /> : null}
               <StatusPill
-                tone={hasBadge ? "success" : "neutral"}
+                tone={hasBadge ? "success" : "warn"}
                 label={BADGE_LABEL[listing.verification_badge] ?? listing.verification_badge}
               />
               <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>

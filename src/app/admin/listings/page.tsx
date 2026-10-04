@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, IconTile, StatusPill } from "@/components/ds";
+import { providerTone, toneColors } from "@/lib/ui/tones";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -40,53 +41,31 @@ function initialsFor(name: string): string {
     .join("") || "?";
 }
 
+/**
+ * A listing's moderation state: suspended is blocked (danger), awaiting
+ * verification is waiting on an admin (warn), any badge is success.
+ */
 function StatusBadge({ listing }: { listing: MarketplaceListing }) {
-  let label: string;
-  let bg: string;
-  let color: string;
-  if (listing.is_suspended) {
-    label = "Suspended";
-    bg = "var(--danger-soft)";
-    color = "var(--danger)";
-  } else if (listing.verification_badge === MarketplaceVerificationBadge.NONE) {
-    label = "Pending";
-    bg = "var(--trainer-soft)";
-    color = "oklch(0.42 0.13 75)";
-  } else if (listing.verification_badge === MarketplaceVerificationBadge.FEATURED) {
-    label = "Featured";
-    bg = "var(--signal-soft)";
-    color = "var(--signal-ink)";
-  } else if (listing.verification_badge === MarketplaceVerificationBadge.PREMIUM_VERIFIED) {
-    label = "Premium";
-    bg = "var(--signal-soft)";
-    color = "var(--signal-ink)";
-  } else {
-    label = "Verified";
-    bg = "var(--signal-soft)";
-    color = "var(--signal-ink)";
+  if (listing.is_suspended) return <StatusPill tone="danger" label="Suspended" />;
+  switch (listing.verification_badge) {
+    case MarketplaceVerificationBadge.NONE:
+      return <StatusPill tone="warn" label="Pending" />;
+    case MarketplaceVerificationBadge.FEATURED:
+      return <StatusPill tone="success" label="Featured" />;
+    case MarketplaceVerificationBadge.PREMIUM_VERIFIED:
+      return <StatusPill tone="success" label="Premium" />;
+    default:
+      return <StatusPill tone="success" label="Verified" />;
   }
-  return (
-    <span
-      className="font-mono text-[10.5px] px-[7px] py-[2px] rounded-full uppercase tracking-[0.04em] inline-flex items-center gap-[5px]"
-      style={{ background: bg, color }}
-    >
-      <span className="w-[5px] h-[5px] rounded-full" style={{ background: "currentColor" }} />
-      {label}
-    </span>
-  );
 }
 
+/** Which kind of provider the listing is: identity, in its role accent. */
 function TypePill({ type }: { type: "Gym" | "Trainer" | "Dietitian" }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Gym: { bg: "var(--gym-soft)", color: "var(--gym)" },
-    Trainer: { bg: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)" },
-    Dietitian: { bg: "var(--dietitian-soft)", color: "var(--dietitian)" },
-  };
-  const s = map[type];
+  const { fill, ink } = toneColors(providerTone(type));
   return (
     <span
       className="font-mono text-[9.5px] px-1.5 py-[2px] rounded-(--r-1) uppercase tracking-[0.04em]"
-      style={{ background: s.bg, color: s.color }}
+      style={{ background: fill, color: ink }}
     >
       {type}
     </span>
@@ -371,12 +350,11 @@ export default function AdminListingsPage() {
                     <tr key={l._id} className="hover:bg-[var(--bg-2)]">
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                         <div className="flex gap-2.5 items-center">
-                          <span
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0"
-                            style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}
-                          >
-                            {initialsFor(provider)}
-                          </span>
+                          <IconTile
+                            size="sm"
+                            initials={initialsFor(provider)}
+                            tone={providerTone(listingTypeLabel(l.account_type))}
+                          />
                           <div>
                             <Link
                               href={`/admin/listings/${l._id}`}
