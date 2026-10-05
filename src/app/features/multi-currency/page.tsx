@@ -10,7 +10,7 @@ import {
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Multi-Currency Payments, Binectics",
+  title: "Multi-Currency Payments",
   description:
     "Get paid in your local currency. Clients pay at your price, in your currency, and the money settles to your own payment account.",
   keywords:
