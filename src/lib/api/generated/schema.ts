@@ -202,6 +202,40 @@ export interface paths {
         patch: operations["AdminController_unsuspendGym"];
         trace?: never;
     };
+    "/api/v1/admin/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All marketplace listings, every account type */
+        get: operations["AdminController_getListings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/listings/{listingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One listing with owner, organization, badge awarder and documents */
+        get: operations["AdminController_getListingDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/loyalty/rewards": {
         parameters: {
             query?: never;
@@ -516,6 +550,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/review-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review reports, newest first, with the review, its author, the listing/provider and the reporter */
+        get: operations["AdminReviewsController_listReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/review-reports/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Resolve a report: dismiss it, or hide the review (closing every open report on it) */
+        patch: operations["AdminReviewsController_resolveReport"];
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/{reviewId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One review with every report filed on it */
+        get: operations["AdminReviewsController_getReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/{reviewId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Hide (VISIBLE -> HIDDEN, closes open reports) or restore (HIDDEN -> VISIBLE) a review */
+        patch: operations["AdminReviewsController_setReviewStatus"];
+        trace?: never;
+    };
     "/api/v1/admin/transactions": {
         parameters: {
             query?: never;
@@ -533,6 +635,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/transactions/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One ledger row with payer, organization, booking/subscription reference and refund linkage */
+        get: operations["AdminTransactionsController_getOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/user/permission": {
         parameters: {
             query?: never;
@@ -541,6 +660,40 @@ export interface paths {
             cookie?: never;
         };
         get: operations["AdminController_getPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search users by email or name (case-insensitive), optionally by role, newest first */
+        get: operations["AdminUsersController_listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Account view: profile basics, role, verification, suspension, owned listings/orgs, team memberships, counts */
+        get: operations["AdminUsersController_getUser"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1751,23 +1904,6 @@ export interface paths {
         put?: never;
         /** Redeem a reward using my points */
         post: operations["LoyaltyController_redeem"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mail/send": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Send email */
-        post: operations["MailController_send"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3109,6 +3245,58 @@ export interface paths {
         head?: never;
         /** Update own review */
         patch: operations["MarketplaceController_updateReview"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/saved": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My saved listings, newest first, as listing cards with saved_at. Unpublished or suspended listings are left out. */
+        get: operations["SavedListingsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/saved/{listingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save a listing (idempotent) */
+        put: operations["SavedListingsController_save"];
+        post?: never;
+        /** Remove a saved listing (no-op if not saved) */
+        delete: operations["SavedListingsController_unsave"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/saved/ids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The ids of every listing I have saved, for showing saved state */
+        get: operations["SavedListingsController_ids"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/transfer": {
@@ -7080,7 +7268,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "MAIL_SEND_FAILED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "SAVED_LISTINGS_LIMIT" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "MAIL_SEND_FAILED";
             /** @example Validation failed */
             message: Record<string, never>;
             /** @example POST */
@@ -7443,6 +7631,14 @@ export interface components {
             email: string;
         };
         ResetPasswordDto: Record<string, never>;
+        ResolveReviewReportDto: {
+            /**
+             * @description dismiss leaves the review public; hide_review hides it and closes every open report on it.
+             * @enum {string}
+             */
+            action: "dismiss" | "hide_review";
+            note?: string;
+        };
         RespondMarketplaceRequestDto: {
             /** @example Looking forward to working with you! */
             response_note?: string;
@@ -7466,7 +7662,6 @@ export interface components {
             token?: string;
         };
         SeedTemplateDto: Record<string, never>;
-        SendMailDto: Record<string, never>;
         SendMessageDto: {
             body: string;
         };
@@ -7502,6 +7697,11 @@ export interface components {
         };
         SetProviderAvailabilityDto: {
             rules: components["schemas"]["AvailabilityRuleInputDto"][];
+        };
+        SetReviewStatusDto: {
+            note?: string;
+            /** @enum {string} */
+            status: "VISIBLE" | "HIDDEN";
         };
         SettleInvoiceDto: {
             /** @example 1400000 */
@@ -8455,6 +8655,42 @@ export interface operations {
             };
         };
     };
+    AdminController_getListings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_getListingDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     LoyaltyAdminController_createReward: {
         parameters: {
             query?: never;
@@ -8919,6 +9155,93 @@ export interface operations {
             };
         };
     };
+    AdminReviewsController_listReports: {
+        parameters: {
+            query?: {
+                /** @description open = awaiting a decision; resolved = dismissed or acted on. Omit for all. */
+                status?: "open" | "resolved";
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminReviewsController_resolveReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveReviewReportDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminReviewsController_getReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reviewId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminReviewsController_setReviewStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reviewId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetReviewStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminTransactionsController_list: {
         parameters: {
             query?: {
@@ -8948,11 +9271,72 @@ export interface operations {
             };
         };
     };
+    AdminTransactionsController_getOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_getPermissions: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminUsersController_listUsers: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive match on email, first or last name, "first last", or an exact user id. */
+                q?: string;
+                role?: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminUsersController_getUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -9084,6 +9468,27 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description AUTH_INVALID_CREDENTIALS, or AUTH_ACCOUNT_LOCKED after repeated failures, with `retry_after_seconds` (integer) beside the message. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Correct credentials but the account cannot sign in: AUTH_EMAIL_NOT_VERIFIED, or AUTH_ACCOUNT_SUSPENDED with `suspension_reason` (string | null) and `suspended_at` (ISO date string | null) beside the message. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too many sign-in requests; see the Retry-After header. */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11075,27 +11480,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    MailController_send: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendMailDto"];
-            };
-        };
         responses: {
             201: {
                 headers: {
@@ -13140,6 +13524,78 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateMarketplaceReviewDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SavedListingsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SavedListingsController_save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SavedListingsController_unsave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SavedListingsController_ids: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
