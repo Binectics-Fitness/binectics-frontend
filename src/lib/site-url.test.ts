@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_SITE_URL, isCanonicalHost, resolveSiteUrl } from "./site-url";
 
 describe("resolveSiteUrl", () => {
@@ -64,5 +64,21 @@ describe("isCanonicalHost", () => {
 
   it("rejects a request with no host", () => {
     expect(isCanonicalHost(null, site)).toBe(false);
+  });
+});
+
+describe("SITE_URL at run time", () => {
+  it("falls back to the production address instead of throwing", async () => {
+    vi.resetModules();
+    vi.stubEnv("NETLIFY", "true");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3001");
+    try {
+      const mod = await import("./site-url");
+      expect(mod.SITE_URL).toBe(DEFAULT_SITE_URL);
+      expect(() => mod.resolveSiteUrl()).toThrow(/hosted deploy/);
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 });

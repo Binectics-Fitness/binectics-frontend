@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 import { resolve } from "path";
 import { REMOVED_PAGE_REDIRECTS } from "./src/lib/routing/removedPages";
-// Imported for its check: it throws on an unusable NEXT_PUBLIC_APP_URL, so a
-// bad address fails the build instead of reaching the sitemap.
-import "./src/lib/site-url";
+import { resolveSiteUrl } from "./src/lib/site-url";
+
+// Throws on an unusable NEXT_PUBLIC_APP_URL, so a bad address fails the build
+// instead of reaching the sitemap and canonical tags.
+resolveSiteUrl();
 
 const nextConfig: NextConfig = {
   turbopack: { root: resolve(import.meta.dirname ?? ".") },

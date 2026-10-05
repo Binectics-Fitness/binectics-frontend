@@ -24,9 +24,9 @@ function isHostedDeploy(env: Env): boolean {
 }
 
 /**
- * Resolves the site URL, without a trailing slash. Throws — and so fails the
- * build, since next.config.ts calls it — when an override is not an absolute
- * http(s) URL, or when a hosted deploy would publish a local address.
+ * Resolves the site URL, without a trailing slash. Throws when an override is
+ * not an absolute http(s) URL, or when a hosted deploy would publish a local
+ * address; next.config.ts calls it so either case fails the build.
  */
 export function resolveSiteUrl(env: Env = process.env): string {
   const raw = env.NEXT_PUBLIC_APP_URL?.trim();
@@ -49,7 +49,22 @@ export function resolveSiteUrl(env: Env = process.env): string {
   return url.origin;
 }
 
-export const SITE_URL = resolveSiteUrl();
+/**
+ * Never throws: this module also loads in the middleware on every request,
+ * and an app built on CI (Azure builds on GitHub Actions) can see a hosting
+ * variable only at run time. The strict check is next.config.ts's job; at run
+ * time an unusable override falls back to the production address rather
+ * than failing every page.
+ */
+function siteUrlOrDefault(): string {
+  try {
+    return resolveSiteUrl();
+  } catch {
+    return DEFAULT_SITE_URL;
+  }
+}
+
+export const SITE_URL = siteUrlOrDefault();
 
 /** Host (with port, if any) of SITE_URL, as a request's Host header carries it. */
 export const SITE_HOST = new URL(SITE_URL).host;
