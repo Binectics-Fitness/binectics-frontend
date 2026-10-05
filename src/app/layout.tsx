@@ -11,6 +11,7 @@ import { ToastContainer } from "@/components/Toast";
 import { CommandBar } from "@/components/ds/CommandBar";
 import { NavigationProgress } from "@/components/ds/NavigationProgress";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: {
@@ -50,9 +51,10 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://binectics.com",
-  ),
+  // Resolves the relative canonical paths each public page declares. No
+  // canonical here: a layout's is inherited by every page below it, which
+  // would declare them all duplicates of the home page.
+  metadataBase: new URL(SITE_URL),
 };
 
 export default function RootLayout({

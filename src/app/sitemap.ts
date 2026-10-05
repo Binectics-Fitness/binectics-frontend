@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://binectics.com";
+  const baseUrl = SITE_URL;
 
   const routes: {
     path: string;

@@ -5,6 +5,7 @@ import {
   REGION_OVERRIDE_COOKIE,
 } from "@/lib/constants/regions";
 import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
+import { isCanonicalHost } from "@/lib/site-url";
 
 // Routes that require authentication
 const protectedRoutes = [
@@ -90,7 +91,13 @@ export function middleware(request: NextRequest) {
   const currentRegion = request.cookies.get(REGION_COOKIE)?.value;
 
   const needsRegionCookie = currentRegion !== country;
-  function withRegion(res: NextResponse): NextResponse {
+  // The app also answers on copies of itself (vercel.app, Netlify branch and
+  // preview aliases, azurewebsites.net). Keep them reachable for QA but out
+  // of search indexes. A header, not robots.txt: a crawler robots.txt turns
+  // away never sees the noindex, and robots.txt is built once for all hosts.
+  const indexable = isCanonicalHost(request.headers.get("host"));
+  function withSiteHeaders(res: NextResponse): NextResponse {
+    if (!indexable) res.headers.set("X-Robots-Tag", "noindex, nofollow");
     if (needsRegionCookie) {
       res.cookies.set(REGION_COOKIE, country, {
         path: "/",
@@ -107,7 +114,7 @@ export function middleware(request: NextRequest) {
     if (onboardingDone) {
       const role = request.cookies.get("user_role")?.value ?? "";
       const dashMap: Record<string, string> = { USER: "/dashboard/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
-      return withRegion(NextResponse.redirect(new URL(dashMap[role] || "/dashboard/member", request.url)));
+      return withSiteHeaders(NextResponse.redirect(new URL(dashMap[role] || "/dashboard/member", request.url)));
     }
   }
 
@@ -116,10 +123,10 @@ export function middleware(request: NextRequest) {
   // does for this role. Signed-out visitors log in first and come back here.
   if (token && !isPrefetchRequest(request)) {
     const target = legacyLinkTarget(pathname, request.nextUrl.search, request.cookies.get("user_role")?.value);
-    if (target) return withRegion(NextResponse.redirect(new URL(target, request.url)));
+    if (target) return withSiteHeaders(NextResponse.redirect(new URL(target, request.url)));
   }
   if (!token && pathname === "/search") {
-    return withRegion(NextResponse.redirect(new URL("/marketplace", request.url)));
+    return withSiteHeaders(NextResponse.redirect(new URL("/marketplace", request.url)));
   }
 
   // Check if the current route is protected
@@ -147,7 +154,7 @@ export function middleware(request: NextRequest) {
     // presence token in ?t= — dropping it here forced a second scan after
     // every first-time login.
     loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);
-    return withRegion(NextResponse.redirect(loginUrl));
+    return withSiteHeaders(NextResponse.redirect(loginUrl));
   }
 
   // Force users with temporary credentials onto /admin/change-password
@@ -157,7 +164,7 @@ export function middleware(request: NextRequest) {
     isProtectedRoute &&
     pathname !== "/admin/change-password"
   ) {
-    return withRegion(
+    return withSiteHeaders(
       NextResponse.redirect(new URL("/admin/change-password", request.url)),
     );
   }
@@ -165,7 +172,7 @@ export function middleware(request: NextRequest) {
   // Redirect to dashboard if accessing auth routes with valid token
   if (isAuthRoute && token && !isPrefetch) {
     if (mustChangePassword) {
-      return withRegion(
+      return withSiteHeaders(
         NextResponse.redirect(new URL("/admin/change-password", request.url)),
       );
     }
@@ -178,10 +185,10 @@ export function middleware(request: NextRequest) {
       ADMIN: "/admin/dashboard",
     };
     const dashboardPath = roleMapping[role] || "/dashboard/member";
-    return withRegion(NextResponse.redirect(new URL(dashboardPath, request.url)));
+    return withSiteHeaders(NextResponse.redirect(new URL(dashboardPath, request.url)));
   }
 
-  return withRegion(NextResponse.next());
+  return withSiteHeaders(NextResponse.next());
 }
 
 export const config = {
