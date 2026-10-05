@@ -8,6 +8,7 @@ import { PayableCurrencyCount } from "@/components/marketing/CurrencyFacts";
 export const metadata: Metadata = {
   title: "About",
   description: "Learn about Binectics, our mission to unify the global fitness ecosystem, and the team behind the platform.",
+  alternates: { canonical: "/about" },
 };
 
 /**
