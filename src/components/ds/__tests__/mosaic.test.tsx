@@ -653,6 +653,14 @@ describe("SuccessTakeover", () => {
     page.remove();
   });
 
+  it("renders the title as an h1 when the takeover is the screen", () => {
+    render(
+      <SuccessTakeover status="s" title={{ emphasis: "in" }} titleAs="h1" primaryAction={{ label: "Done", onClick: () => {} }} />,
+    );
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("in");
+    expect(screen.getByRole("dialog")).toHaveAccessibleName("in");
+  });
+
   it("returns focus to <main> when the opener is gone", () => {
     const main = document.createElement("main");
     const opener = document.createElement("button");

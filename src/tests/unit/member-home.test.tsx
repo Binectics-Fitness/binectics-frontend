@@ -112,6 +112,14 @@ describe("streak lines", () => {
     expect(isPersonalBest({ current_streak_days: 1, longest_streak_days: 1 })).toBe(false);
     expect(longestStreakLine({ current_streak_days: 0, longest_streak_days: 1 })).toBe("Longest · 1 day");
   });
+
+  it("doesn't repeat the streak back when it equals the longest but isn't a best", () => {
+    // A first check-in: 1 day, longest 1. "Longest · 1 day" would just echo the number.
+    expect(longestStreakLine({ current_streak_days: 1, longest_streak_days: 1 })).toBeNull();
+    // Current above a stale longest (the API's longest lags a read): still no echo.
+    expect(longestStreakLine({ current_streak_days: 1, longest_streak_days: 0 })).toBeNull();
+    expect(longestStreakLine({ current_streak_days: 3, longest_streak_days: 2 })).toBe("Personal best");
+  });
 });
 
 describe("member home helpers", () => {
@@ -255,6 +263,31 @@ describe("member home page", () => {
     expect(screen.queryByText("Your program")).toBeNull();
     expect(screen.queryByText(/Personal best|Longest/)).toBeNull();
     expect(screen.getByRole("link", { name: "Log your weight" })).toHaveAttribute("href", "/dashboard/member/weight-log");
+  });
+
+  it("shows a dash, not invented zeros, when reads fail", async () => {
+    vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(
+      ok([{ status: MembershipSubscriptionStatus.ACTIVE, organization_id: { _id: "g1", name: "Dapo" } } as MembershipSubscription]),
+    );
+    vi.spyOn(checkinsService, "getMyHistory").mockRejectedValue(new Error("offline"));
+    vi.spyOn(loyaltyService, "getBalance").mockResolvedValue({ success: false, message: "boom" } as never);
+    vi.spyOn(progressService, "getMyOwnProfiles").mockReturnValue(ok([{ _id: "cp" }] as never));
+    vi.spyOn(progressService, "getWeightLogs").mockRejectedValue(new Error("offline"));
+    render(<MemberHomePage />);
+    expect(await screen.findByText(/Couldn.t load this week.s check-ins/)).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Check-ins this week" })).toBeNull();
+    const values = Array.from(document.querySelectorAll("[data-stat-value]")).map((el) => el.textContent);
+    expect(values).toEqual(["–", "–"]); // check-ins this week, weight
+    expect(screen.queryByText("Log your weight")).toBeNull();
+    expect(screen.getByText(/Couldn.t load your balance/)).toBeInTheDocument();
+    expect(screen.queryByText(/No loyalty activity yet/)).toBeNull();
+  });
+
+  it("lets Weight take the row when there are no check-in widgets", async () => {
+    render(<MemberHomePage />);
+    await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
+    const weightCard = screen.getByText("Weight").closest("[data-size]")!;
+    expect(weightCard.parentElement?.className).toContain("grid-cols-1");
   });
 
   it("puts the next booking in a row that opens bookings", async () => {

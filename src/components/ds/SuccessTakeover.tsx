@@ -27,6 +27,14 @@
  * alone when they come from inside one of those nested layers (a modal
  * opened from the takeover, or a data-takeover-layer portal): that layer
  * owns them, so Escape closes it rather than the whole takeover.
+ *   - The shared Modal (src/components/Modal.tsx) is NOT portalled: render
+ *     it as a child of the takeover (in `children`), or it lands in the
+ *     inert page behind and can't be reached.
+ *   - An Escape a nested layer handles is not stopped here: the shared
+ *     Modal listens on `document`, so stopping it would also stop the
+ *     nested Modal's own handler. Any Modal still open UNDER the takeover
+ *     (on the page behind) will therefore see that Escape too; avoid
+ *     opening a takeover over an open Modal.
  * The inert marks are reference-counted per element, so with two takeovers
  * stacked the page stays inert until the LAST one closes, whichever order
  * they close in.
@@ -56,6 +64,11 @@ interface SuccessTakeoverProps {
   subtitle?: ReactNode;
   children?: ReactNode;
   primaryAction: TakeoverAction;
+  /**
+   * Heading level of the title. Use "h1" when the takeover IS the screen
+   * (the page behind is inert, so its own h1 is hidden from assistive tech).
+   */
+  titleAs?: "h1" | "h2";
   /** Called on Escape. Omit to make Escape do nothing. */
   onDismiss?: () => void;
 }
@@ -158,6 +171,7 @@ export function SuccessTakeover({
   subtitle,
   children,
   primaryAction,
+  titleAs = "h2",
   onDismiss,
 }: SuccessTakeoverProps) {
   const titleId = useId();
@@ -299,7 +313,7 @@ export function SuccessTakeover({
 
         <TitleWithEmphasis
           {...title}
-          as="h2"
+          as={titleAs}
           id={titleId}
           className="takeover-rise text-[32px]"
           style={{ color: "var(--bg)", animationDelay: "1040ms" }}

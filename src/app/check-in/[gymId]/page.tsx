@@ -238,6 +238,17 @@ function CheckInScanContent() {
   );
 }
 
+/**
+ * "welcome back" only when the stats say this isn't the first visit; if the
+ * stats read failed we don't know, so just the gym.
+ */
+function subtitleFor(gymName: string, stats: StreakStats | null): string {
+  const total = stats?.total_check_ins;
+  if (typeof total === "number" && total > 1) return `${gymName} · welcome back`;
+  if (total === 1) return `${gymName} · your first check-in`;
+  return gymName;
+}
+
 function clockOf(iso: string | null): string | null {
   if (!iso) return null;
   const d = new Date(iso);
@@ -273,7 +284,8 @@ function CheckInSuccess({
     <SuccessTakeover
       status={time ? `Checked in · ${time}` : "Checked in"}
       title={{ before: "You\u2019re ", emphasis: "in", after: firstName ? `, ${firstName}.` : "." }}
-      subtitle={`${gymName} · ${stats?.total_check_ins === 1 ? "your first check-in" : "welcome back"}`}
+      subtitle={subtitleFor(gymName, stats)}
+      titleAs="h1"
       primaryAction={{ label: "Done", onClick: onDone }}
       onDismiss={onDone}
     >

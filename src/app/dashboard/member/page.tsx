@@ -42,11 +42,13 @@ import {
 
 interface MemberSnapshot {
   checkins: StreakStats | null;
-  /** Check-in moments from the last 7 days, for the week strip. */
-  weekCheckIns: string[];
+  /** Check-in moments from the last 7 days; null when the read failed. */
+  weekCheckIns: string[] | null;
   next: NextUpItem | null;
   loyalty: LoyaltyBalance | null;
-  weights: WeightLog[];
+  loyaltyFailed: boolean;
+  /** null when the read failed (no profile is not a failure: that's []). */
+  weights: WeightLog[] | null;
   gyms: { orgId: string; name: string }[];
   program: ProgramDay | null;
 }
@@ -56,6 +58,7 @@ const EMPTY: MemberSnapshot = {
   weekCheckIns: [],
   next: null,
   loyalty: null,
+  loyaltyFailed: false,
   weights: [],
   gyms: [],
   program: null,
@@ -75,6 +78,11 @@ export default function MemberHomePage() {
 
 function settled<T>(res: PromiseSettledResult<{ data?: T }>): T | undefined {
   return res.status === "fulfilled" ? res.value.data : undefined;
+}
+
+/** The read came back and the API said it worked. */
+function succeeded(res: PromiseSettledResult<{ success?: boolean }>): boolean {
+  return res.status === "fulfilled" && res.value.success !== false;
 }
 
 function MemberHomeContent() {
@@ -101,14 +109,16 @@ function MemberHomeContent() {
           ]);
         if (!isMounted) return;
 
-        let weights: WeightLog[] = [];
+        // A failed read is shown as "–", never as an empty history.
+        let weights: WeightLog[] | null = succeeded(profilesRes) ? [] : null;
         const profileId = settled(profilesRes)?.[0]?._id;
         if (profileId) {
           try {
             // Enough for a 30-day change; the API returns newest first.
-            weights = (await progressService.getWeightLogs(profileId, 30)).data ?? [];
+            const res = await progressService.getWeightLogs(profileId, 30);
+            weights = res.success === false ? null : (res.data ?? []);
           } catch {
-            // Treat as no log.
+            weights = null;
           }
         }
         if (!isMounted) return;
@@ -116,9 +126,10 @@ function MemberHomeContent() {
         const at = Date.now();
         setSnapshot({
           checkins: (settled(checkinsRes) as StreakStats | undefined) ?? null,
-          weekCheckIns: (settled(historyRes) ?? []).map((c) => c.checked_in_at),
+          weekCheckIns: succeeded(historyRes) ? (settled(historyRes) ?? []).map((c) => c.checked_in_at) : null,
           next: nextUp(settled(bookingsRes) ?? [], settled(classesRes) ?? [], at),
           loyalty: settled(loyaltyRes) ?? null,
+          loyaltyFailed: !succeeded(loyaltyRes),
           weights,
           gyms: activeGyms(settled(subsRes) ?? [], at),
           program: currentProgramDay(settled(programsRes) ?? []),
@@ -136,11 +147,11 @@ function MemberHomeContent() {
   }, []);
 
   const week = useMemo(
-    () => (now ? weekStrip(snapshot.weekCheckIns, now) : null),
+    () => (now && snapshot.weekCheckIns ? weekStrip(snapshot.weekCheckIns, now) : null),
     [snapshot.weekCheckIns, now],
   );
   const weight = useMemo(
-    () => (now ? weightSummary(snapshot.weights, now.getTime()) : null),
+    () => (now && snapshot.weights ? weightSummary(snapshot.weights, now.getTime()) : null),
     [snapshot.weights, now],
   );
 
@@ -213,22 +224,29 @@ function MemberHomeContent() {
             )}
           </section>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          {/* A pair when the member checks in; otherwise Weight takes the row. */}
+          <div className={`grid gap-2.5 ${checksIn ? "grid-cols-2" : "grid-cols-1"}`}>
             {checksIn && (
               <DSStatCard
                 size="sm"
                 label="Check-ins · this week"
                 value={loading || !week ? "–" : week.reduce((n, d) => n + d.count, 0)}
-                delta={stats ? `Last: ${now ? lastCheckInLabel(stats.last_check_in_at, now) : "–"}` : undefined}
+                delta={
+                  stats && now
+                    ? stats.last_check_in_at
+                      ? `Last: ${lastCheckInLabel(stats.last_check_in_at, now)}`
+                      : "None yet"
+                    : undefined
+                }
               />
             )}
             <DSStatCard
               size="sm"
               label="Weight"
-              value={loading ? "–" : weight ? weight.kg : "No log"}
+              value={loading || !snapshot.weights ? "–" : weight ? weight.kg : "No log"}
               unit={weight ? "kg" : undefined}
               delta={
-                loading ? undefined : weight ? (
+                loading || !snapshot.weights ? undefined : weight ? (
                   weight.delta
                 ) : (
                   <Link href="/dashboard/member/weight-log" className="underline underline-offset-2">
@@ -244,7 +262,11 @@ function MemberHomeContent() {
               <div className="mb-3">
                 <Eyebrow as="h2">Check-ins this week</Eyebrow>
               </div>
-              {week && !loading ? (
+              {!loading && !snapshot.weekCheckIns ? (
+                <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>
+                  Couldn&rsquo;t load this week&rsquo;s check-ins. Try again later.
+                </p>
+              ) : week && !loading ? (
                 <WeekStrip
                   days={week}
                   label="Check-ins this week"
@@ -316,7 +338,12 @@ function MemberHomeContent() {
                 Loading...
               </div>
             )}
-            {!loading && !snapshot.loyalty && (
+            {!loading && !snapshot.loyalty && snapshot.loyaltyFailed && (
+              <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
+                Couldn&rsquo;t load your balance. Try again later.
+              </div>
+            )}
+            {!loading && !snapshot.loyalty && !snapshot.loyaltyFailed && (
               <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
                 No loyalty activity yet. Start checking in to earn points.
               </div>

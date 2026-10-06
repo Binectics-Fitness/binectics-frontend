@@ -22,10 +22,16 @@ export function isPersonalBest(stats: Pick<StreakStats, "current_streak_days" | 
   return longest !== null && stats.current_streak_days >= 2 && stats.current_streak_days >= longest;
 }
 
-/** Mono footnote under a streak number: the best, or how far off it is. */
+/**
+ * Mono footnote under a streak number: "Personal best", or the longest
+ * streak while the current one is still short of it. Nothing when the API
+ * sent no longest streak, or when the line would only repeat the number
+ * above it (a first 1-day streak is its own longest).
+ */
 export function longestStreakLine(stats: Pick<StreakStats, "current_streak_days" | "longest_streak_days">): string | null {
   const longest = longestStreak(stats);
   if (longest === null) return null;
   if (isPersonalBest(stats)) return "Personal best";
+  if (stats.current_streak_days >= longest) return null;
   return `Longest · ${longest} ${dayUnit(longest)}`;
 }

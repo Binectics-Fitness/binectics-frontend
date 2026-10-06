@@ -42,7 +42,8 @@ describe("check-in success takeover", () => {
     render(<CheckInScanPage />);
     // jsdom's name computation pads the <em> with a space; browsers don't.
     const dialog = await screen.findByRole("dialog", { name: /^You’re in ?, Yemi\.$/ });
-    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("You’re in, Yemi.");
+    // The takeover IS the screen (the page behind is inert): its title is the h1.
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("You’re in, Yemi.");
     expect(dialog.style.background).toBe("var(--ink)");
     expect(dialog).toHaveAccessibleDescription(`Checked in · ${clock}`);
     expect(dialog.querySelector("em")?.textContent).toBe("in");
@@ -73,14 +74,20 @@ describe("check-in success takeover", () => {
     const dialog = await screen.findByRole("dialog");
     expect(dialog.querySelector("[data-surface='raised']")).toBeNull();
     expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
+    // Unknown history: neither "welcome back" nor "first check-in", just the gym.
+    expect(screen.getByText("Dapo Fitness Hub")).toBeInTheDocument();
+    expect(dialog.textContent).not.toMatch(/welcome back|first check-in/);
   });
 
   it("says it is the first check-in when it is", async () => {
     vi.spyOn(checkinsService, "getMyDashboardStats").mockResolvedValue({
       success: true,
-      data: { has_checked_in_today: true, current_streak_days: 1, total_check_ins: 1 },
+      data: { has_checked_in_today: true, current_streak_days: 1, total_check_ins: 1, longest_streak_days: 1 },
     });
     render(<CheckInScanPage />);
-    expect(await screen.findByText("Dapo Fitness Hub · your first check-in")).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog");
+    expect(screen.getByText("Dapo Fitness Hub · your first check-in")).toBeInTheDocument();
+    // 1 day, longest 1: no footnote that only repeats the streak.
+    expect(dialog.textContent).not.toMatch(/Longest|Personal best/);
   });
 });
