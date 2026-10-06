@@ -5,7 +5,7 @@ import { TrainerDemo } from "@/components/ds/TrainerDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For Personal Trainers, Binectics",
+  title: "For Personal Trainers",
   description:
     "Grow your personal training business on Binectics. Get discovered by local clients, manage bookings, build programs, and get paid, all from one platform.",
   keywords:

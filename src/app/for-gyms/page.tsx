@@ -5,7 +5,7 @@ import { GymOwnerDemo } from "@/components/ds/GymOwnerDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For Gym Owners, Binectics",
+  title: "For Gym Owners",
   description:
     "Manage memberships, check-ins, payouts, staff, and multi-location operations from a single dashboard. Replace spreadsheets and WhatsApp groups with one platform.",
   keywords:

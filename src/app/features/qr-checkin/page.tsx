@@ -5,7 +5,7 @@ import { KioskDemo } from "@/components/ds/KioskDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "QR Check-in, Binectics",
+  title: "QR Check-in",
   description:
     "Touchless attendance with 92% scan success. iPad kiosks at the door, real-time streak tracking, and a 2-second check-in that members actually enjoy.",
   keywords:

@@ -31,9 +31,17 @@ describe("middleware X-Robots-Tag", () => {
     expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
   });
 
-  it("does not mark redirects on the canonical host", () => {
+  it("marks the sign-in redirect from a private route on the canonical host", () => {
     const res = middleware(request("/dashboard", SITE_HOST));
     expect(res.status).toBe(307);
-    expect(res.headers.get("x-robots-tag")).toBeNull();
+    expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
   });
+
+  it.each(["/login", "/checkout", "/forms/f1"])(
+    "keeps %s out of search on the canonical host too",
+    (path) => {
+      const res = middleware(request(path, SITE_HOST));
+      expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    },
+  );
 });

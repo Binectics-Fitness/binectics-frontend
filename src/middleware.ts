@@ -6,6 +6,7 @@ import {
 } from "@/lib/constants/regions";
 import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
 import { isCanonicalHost } from "@/lib/site-url";
+import { isPrivatePath } from "@/lib/routing/indexing";
 
 // Routes that require authentication
 const protectedRoutes = [
@@ -95,7 +96,10 @@ export function middleware(request: NextRequest) {
   // preview aliases, azurewebsites.net). Keep them reachable for QA but out
   // of search indexes. A header, not robots.txt: a crawler robots.txt turns
   // away never sees the noindex, and robots.txt is built once for all hosts.
-  const indexable = isCanonicalHost(request.headers.get("host"));
+  // Sign-in, checkout, check-in and similar routes stay out of search on
+  // every host.
+  const indexable =
+    isCanonicalHost(request.headers.get("host")) && !isPrivatePath(pathname);
   function withSiteHeaders(res: NextResponse): NextResponse {
     if (!indexable) res.headers.set("X-Robots-Tag", "noindex, nofollow");
     if (needsRegionCookie) {

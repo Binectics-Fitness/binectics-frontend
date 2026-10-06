@@ -5,7 +5,7 @@ import { DietitianDemo } from "@/components/ds/DietitianDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For Dietitians, Binectics",
+  title: "For Dietitians",
   description:
     "Credential-verified dietitian profiles, weekly meal plans, consultations, and client meal feedback, all on one platform.",
   keywords:
