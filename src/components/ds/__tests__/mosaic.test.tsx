@@ -573,6 +573,86 @@ describe("SuccessTakeover", () => {
     document.removeEventListener("keydown", underneath);
   });
 
+  it("leaves Escape and Tab to a nested modal or takeover layer", () => {
+    const onDismiss = vi.fn();
+    const { unmount } = render(
+      <SuccessTakeover status="s" title={{ emphasis: "in" }} primaryAction={{ label: "Done", onClick: () => {} }} onDismiss={onDismiss}>
+        <div role="dialog" aria-modal="true" aria-label="Nested">
+          <button type="button">Inner</button>
+        </div>
+      </SuccessTakeover>,
+    );
+    const inner = screen.getByRole("button", { name: "Inner" });
+    const nestedEscape = vi.fn();
+    inner.addEventListener("keydown", (e) => e.key === "Escape" && nestedEscape());
+
+    // Escape from inside the nested modal closes that modal, not the takeover.
+    inner.focus();
+    expect(fireEvent.keyDown(inner, { key: "Escape" })).toBe(true);
+    expect(onDismiss).not.toHaveBeenCalled();
+    expect(nestedEscape).toHaveBeenCalledOnce();
+
+    // Tab inside it is the nested modal's to trap; the takeover doesn't move focus.
+    expect(fireEvent.keyDown(inner, { key: "Tab" })).toBe(true);
+    expect(document.activeElement).toBe(inner);
+
+    // A portal marked as a takeover layer is treated the same way.
+    const layer = document.createElement("div");
+    layer.setAttribute("data-takeover-layer", "");
+    layer.innerHTML = '<button type="button">Tip action</button>';
+    document.body.appendChild(layer);
+    const tipButton = layer.querySelector("button")!;
+    tipButton.focus();
+    expect(fireEvent.keyDown(tipButton, { key: "Tab" })).toBe(true);
+    expect(document.activeElement).toBe(tipButton);
+    fireEvent.keyDown(tipButton, { key: "Escape" });
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    // From the takeover itself, Escape still dismisses it.
+    const done = screen.getByRole("button", { name: "Done" });
+    done.focus();
+    fireEvent.keyDown(done, { key: "Escape" });
+    expect(onDismiss).toHaveBeenCalledOnce();
+    unmount();
+    layer.remove();
+  });
+
+  it("keeps the page inert until the last stacked takeover closes, in either order", async () => {
+    const page = document.createElement("div");
+    const opener = document.createElement("button");
+    page.appendChild(opener);
+    document.body.appendChild(page);
+    opener.focus();
+
+    const lower = render(
+      <SuccessTakeover status="s" title={{ emphasis: "lower" }} primaryAction={{ label: "Lower", onClick: () => {} }} />,
+    );
+    const upper = render(
+      <SuccessTakeover status="s" title={{ emphasis: "upper" }} primaryAction={{ label: "Upper", onClick: () => {} }} />,
+    );
+    await new Promise((r) => setTimeout(r, 0));
+    const upperDone = screen.getByRole("button", { name: "Upper" });
+    expect(document.activeElement).toBe(upperDone);
+
+    // The lower one closes first: the page must stay inert under the upper one.
+    lower.unmount();
+    expect(page).toHaveAttribute("inert");
+    expect(lower.container).toHaveAttribute("inert");
+    expect(screen.getByRole("dialog")).not.toHaveAttribute("inert");
+    expect(document.activeElement).toBe(upperDone); // focus stays on top
+
+    // Keys still go to the upper one.
+    fireEvent.keyDown(window, { key: "Tab" });
+    expect(document.activeElement).toBe(upperDone);
+
+    // The upper one was opened over the lower one, whose Done is gone, so it
+    // hands focus to where the lower one would have: the original opener.
+    upper.unmount();
+    expect(page).not.toHaveAttribute("inert");
+    expect(document.activeElement).toBe(opener);
+    page.remove();
+  });
+
   it("returns focus to <main> when the opener is gone", () => {
     const main = document.createElement("main");
     const opener = document.createElement("button");

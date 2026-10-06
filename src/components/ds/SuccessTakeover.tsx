@@ -23,7 +23,13 @@
  *   - a modal dialog (aria-modal="true") — only reachable from in here;
  *   - any portal marked with TAKEOVER_LAYER_ATTR (data-takeover-layer):
  *     put it on tooltips/popovers you open from inside a takeover.
- * Only the topmost open takeover handles keys.
+ * Only the topmost open takeover handles keys, and it leaves Escape and Tab
+ * alone when they come from inside one of those nested layers (a modal
+ * opened from the takeover, or a data-takeover-layer portal): that layer
+ * owns them, so Escape closes it rather than the whole takeover.
+ * The inert marks are reference-counted per element, so with two takeovers
+ * stacked the page stays inert until the LAST one closes, whichever order
+ * they close in.
  *
  * Accessibility: role="dialog" + aria-modal, labelled by the title and
  * described by the status line. Focus moves to the primary action on open,
@@ -77,8 +83,58 @@ const noopSubscribe = () => () => {};
 export const TAKEOVER_LAYER_ATTR = "data-takeover-layer";
 const ROOT_ATTR = "data-takeover-root";
 
+interface OpenTakeover {
+  root: HTMLElement;
+  /** Where focus goes when this takeover closes. */
+  restore: HTMLElement | null;
+}
+
 /** Open takeovers, oldest first; only the last one handles keys. */
-const openStack: HTMLElement[] = [];
+const openStack: OpenTakeover[] = [];
+
+/**
+ * How many open takeovers hold each element inert. An element is made inert
+ * by the first holder and released by the last, so a lower takeover closing
+ * first can't wake the page while a higher one is still open. Elements that
+ * were already inert for some other reason are never counted or touched.
+ */
+const inertHolds = new Map<HTMLElement, number>();
+
+function holdInert(el: HTMLElement): boolean {
+  const held = inertHolds.get(el);
+  if (held) {
+    inertHolds.set(el, held + 1);
+    return true;
+  }
+  if (el.hasAttribute("inert")) return false;
+  // The attribute (not the .inert property) so it also holds where the
+  // property isn't implemented; browsers reflect one to the other.
+  el.setAttribute("inert", "");
+  inertHolds.set(el, 1);
+  return true;
+}
+
+function releaseInert(el: HTMLElement) {
+  const held = inertHolds.get(el);
+  if (!held) return;
+  if (held > 1) {
+    inertHolds.set(el, held - 1);
+    return;
+  }
+  inertHolds.delete(el);
+  el.removeAttribute("inert");
+}
+
+/**
+ * A key that starts inside a nested modal or a takeover layer belongs to
+ * that layer. The takeover root is itself aria-modal, so `closest` lands on
+ * it for anything that is simply inside the takeover.
+ */
+function inNestedLayer(target: EventTarget | null, root: Element | null): boolean {
+  if (!(target instanceof Element)) return false;
+  const layer = target.closest(`[aria-modal="true"], [${TAKEOVER_LAYER_ATTR}]`);
+  return layer !== null && layer !== root;
+}
 
 function keepsInteractive(el: Element): boolean {
   return (
@@ -123,20 +179,21 @@ export function SuccessTakeover({
   useEffect(() => {
     const root = rootRef.current;
     if (!mounted || !root) return;
-    const previous = document.activeElement as HTMLElement | null;
+    const active = document.activeElement;
+    const entry: OpenTakeover = {
+      root,
+      restore: active instanceof HTMLElement && active !== document.body ? active : null,
+    };
     const release = lockScroll();
 
-    // Make everything else on the page inert; remember only what we changed.
+    // Make everything else on the page inert; remember only what we hold.
     const madeInert: HTMLElement[] = [];
     const makeInert = (el: Element) => {
-      // The attribute (not the .inert property) so it also holds where the
-      // property isn't implemented; browsers reflect one to the other.
-      if (el === root || !(el instanceof HTMLElement) || el.hasAttribute("inert")) return;
-      el.setAttribute("inert", "");
-      madeInert.push(el);
+      if (el === root || !(el instanceof HTMLElement)) return;
+      if (holdInert(el)) madeInert.push(el);
     };
     Array.from(document.body.children).forEach(makeInert);
-    openStack.push(root);
+    openStack.push(entry);
     // Layers that mount later (the cookie banner, toasts) get the same,
     // unless they belong on top of this takeover (see the header comment).
     const observer = new MutationObserver((records) => {
@@ -149,7 +206,8 @@ export function SuccessTakeover({
     actionRef.current?.focus();
 
     function onKeyDown(e: KeyboardEvent) {
-      if (openStack[openStack.length - 1] !== root) return;
+      if (openStack[openStack.length - 1] !== entry) return;
+      if ((e.key === "Escape" || e.key === "Tab") && inNestedLayer(e.target, root)) return;
       if (e.key === "Escape") {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -176,11 +234,20 @@ export function SuccessTakeover({
     return () => {
       window.removeEventListener("keydown", onKeyDown, true);
       observer.disconnect();
-      const at = openStack.indexOf(root);
+      const at = openStack.indexOf(entry);
+      const wasTop = at === openStack.length - 1;
       if (at !== -1) openStack.splice(at, 1);
-      for (const el of madeInert) el.removeAttribute("inert");
+      for (const el of madeInert) releaseInert(el);
       release();
-      if (previous && previous !== document.body && document.contains(previous)) previous.focus();
+      if (!wasTop) {
+        // A takeover above this one is still open and keeps focus. If it was
+        // opened from in here, it should hand focus to where this one would.
+        const above = openStack[at];
+        if (above && (!above.restore || root.contains(above.restore))) above.restore = entry.restore;
+        return;
+      }
+      const target = entry.restore;
+      if (target && document.contains(target)) target.focus();
       else focusMain();
     };
   }, [mounted]);

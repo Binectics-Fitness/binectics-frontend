@@ -1,85 +1,67 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { IconTile } from "@/components/ds/IconTile";
-import { Building2, CalendarClock } from "lucide-react";
+import { PageHeader } from "@/components/ds/PageHeader";
+import { HeroStatCard } from "@/components/ds/HeroStatCard";
+import { DSCard } from "@/components/ds/DSCard";
+import { DSStatCard } from "@/components/ds/DSStatCard";
+import { Eyebrow } from "@/components/ds/Eyebrow";
+import { ListRow } from "@/components/ds/ListRow";
+import { WeekStrip } from "@/components/ds/WeekStrip";
+import { Building2 } from "lucide-react";
 import { bookingLabel } from "@/lib/bookings/labels";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { bookingPaymentStateTone } from "@/lib/ui/statusTones";
+import { weekStrip } from "@/lib/ui/activity";
+import { useClientNow } from "@/lib/ui/useClientNow";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
-import { UserRole } from "@/lib/types";
+import { CheckInHistoryPeriod, UserRole } from "@/lib/types";
 import { checkinsService } from "@/lib/api/checkins";
-import { consultationsService, ConsultationBookingStatus } from "@/lib/api/consultations";
+import { classBookingsService } from "@/lib/api/classBookings";
+import { consultationsService } from "@/lib/api/consultations";
 import { loyaltyService } from "@/lib/api/loyalty";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { currentProgramDay, myProgramsService, type ProgramDay } from "@/lib/api/myPrograms";
 import { progressService } from "@/lib/api/progress";
-import type {
-  ConsultationBooking,
-} from "@/lib/api/consultations";
 import type { WeightLog } from "@/lib/api/progress";
-import type {
-  LoyaltyBalance,
-  MembershipSubscription,
-  MyCheckInDashboardStats,
-} from "@/lib/types";
-import { MembershipSubscriptionStatus } from "@/lib/types";
+import type { LoyaltyBalance } from "@/lib/types";
+import { dayUnit, longestStreakLine, type StreakStats } from "@/lib/checkins/streak";
+import {
+  activeGyms,
+  lastCheckInLabel,
+  nextUp,
+  weightSummary,
+  type NextUpItem,
+} from "./memberHome";
 
 interface MemberSnapshot {
-  checkins: MyCheckInDashboardStats | null;
-  nextBooking: ConsultationBooking | null;
+  checkins: StreakStats | null;
+  /** Check-in moments from the last 7 days, for the week strip. */
+  weekCheckIns: string[];
+  next: NextUpItem | null;
   loyalty: LoyaltyBalance | null;
-  latestWeight: WeightLog | null;
+  weights: WeightLog[];
   gyms: { orgId: string; name: string }[];
+  program: ProgramDay | null;
 }
 
-/**
- * The gyms this member can check in at: one entry per ACTIVE, unexpired
- * membership whose organization came back populated. Enrolled members have
- * no listing on their subscription, so the org is the only gym identity.
- */
-function activeGyms(subs: MembershipSubscription[]): { orgId: string; name: string }[] {
-  const seen = new Set<string>();
-  const gyms: { orgId: string; name: string }[] = [];
-  for (const sub of subs) {
-    if (sub.status !== MembershipSubscriptionStatus.ACTIVE) continue;
-    if (sub.end_date && new Date(sub.end_date).getTime() < Date.now()) continue;
-    const org = sub.organization_id;
-    if (!org || typeof org !== "object" || !org._id) continue;
-    if (seen.has(org._id)) continue;
-    seen.add(org._id);
-    gyms.push({ orgId: org._id, name: org.name || "My gym" });
-  }
-  return gyms;
-}
-
-function formatStartDate(iso: string) {
-  const d = new Date(iso);
-  const dow = d.toLocaleString(undefined, { weekday: "short" });
-  const time = d.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit" });
-  return `${dow} ${time}`;
-}
-
-function formatLastCheckIn(iso?: string) {
-  if (!iso) return "No check-ins yet";
-  const d = new Date(iso);
-  const diffDays = Math.floor((Date.now() - d.getTime()) / 86400000);
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-const cardStyle = {
-  background: "var(--bg)",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r-3)",
-  padding: 22,
+const EMPTY: MemberSnapshot = {
+  checkins: null,
+  weekCheckIns: [],
+  next: null,
+  loyalty: null,
+  weights: [],
+  gyms: [],
+  program: null,
 };
+
+const CARD_PAD = "p-5.5";
 
 export default function MemberHomePage() {
   // Role guard: a provider account (promoted during onboarding) landing
@@ -91,15 +73,14 @@ export default function MemberHomePage() {
   return <MemberHomeContent />;
 }
 
+function settled<T>(res: PromiseSettledResult<{ data?: T }>): T | undefined {
+  return res.status === "fulfilled" ? res.value.data : undefined;
+}
+
 function MemberHomeContent() {
   const { user } = useAuth();
-  const [snapshot, setSnapshot] = useState<MemberSnapshot>({
-    checkins: null,
-    nextBooking: null,
-    loyalty: null,
-    latestWeight: null,
-    gyms: [],
-  });
+  const now = useClientNow();
+  const [snapshot, setSnapshot] = useState<MemberSnapshot>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,52 +88,41 @@ function MemberHomeContent() {
     let isMounted = true;
     void (async () => {
       try {
-        const profilesPromise = progressService.getMyOwnProfiles();
-        const [checkinsRes, bookingsRes, loyaltyRes, profilesRes, subsRes] =
+        const [checkinsRes, historyRes, bookingsRes, classesRes, loyaltyRes, profilesRes, subsRes, programsRes] =
           await Promise.allSettled([
             checkinsService.getMyDashboardStats(),
+            checkinsService.getMyHistory(CheckInHistoryPeriod.WEEK),
             consultationsService.getMyBookings("upcoming"),
+            classBookingsService.getMyClassBookings(),
             loyaltyService.getBalance(),
-            profilesPromise,
+            progressService.getMyOwnProfiles(),
             marketplaceService.getMyMembershipSubscriptions(),
+            myProgramsService.listMine(),
           ]);
-
         if (!isMounted) return;
 
-        const checkins =
-          checkinsRes.status === "fulfilled" ? (checkinsRes.value.data ?? null) : null;
-        const upcoming =
-          bookingsRes.status === "fulfilled" ? (bookingsRes.value.data ?? []) : [];
-        const loyalty =
-          loyaltyRes.status === "fulfilled" ? (loyaltyRes.value.data ?? null) : null;
-        const gyms =
-          subsRes.status === "fulfilled" ? activeGyms(subsRes.value.data ?? []) : [];
-
-        let latestWeight: WeightLog | null = null;
-        if (profilesRes.status === "fulfilled") {
-          const profileId = profilesRes.value.data?.[0]?._id;
-          if (profileId) {
-            try {
-              const weightsRes = await progressService.getWeightLogs(profileId, 1);
-              if (isMounted) latestWeight = weightsRes.data?.[0] ?? null;
-            } catch {
-              // Ignore weight fetch errors; treat as no log.
-            }
+        let weights: WeightLog[] = [];
+        const profileId = settled(profilesRes)?.[0]?._id;
+        if (profileId) {
+          try {
+            // Enough for a 30-day change; the API returns newest first.
+            weights = (await progressService.getWeightLogs(profileId, 30)).data ?? [];
+          } catch {
+            // Treat as no log.
           }
         }
+        if (!isMounted) return;
 
-        const nextBooking = upcoming
-          .filter(
-            (b) =>
-              b.status === ConsultationBookingStatus.CONFIRMED ||
-              b.status === ConsultationBookingStatus.PENDING,
-          )
-          .sort(
-            (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
-          )[0] ?? null;
-
-        if (isMounted)
-          setSnapshot({ checkins, nextBooking, loyalty, latestWeight, gyms });
+        const at = Date.now();
+        setSnapshot({
+          checkins: (settled(checkinsRes) as StreakStats | undefined) ?? null,
+          weekCheckIns: (settled(historyRes) ?? []).map((c) => c.checked_in_at),
+          next: nextUp(settled(bookingsRes) ?? [], settled(classesRes) ?? [], at),
+          loyalty: settled(loyaltyRes) ?? null,
+          weights,
+          gyms: activeGyms(settled(subsRes) ?? [], at),
+          program: currentProgramDay(settled(programsRes) ?? []),
+        });
       } catch (err) {
         if (!isMounted) return;
         setError(err instanceof Error ? err.message : "Failed to load dashboard");
@@ -165,144 +135,150 @@ function MemberHomeContent() {
     };
   }, []);
 
-  const firstName = user?.first_name || "there";
-  const today = new Date().toLocaleString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const week = useMemo(
+    () => (now ? weekStrip(snapshot.weekCheckIns, now) : null),
+    [snapshot.weekCheckIns, now],
+  );
+  const weight = useMemo(
+    () => (now ? weightSummary(snapshot.weights, now.getTime()) : null),
+    [snapshot.weights, now],
+  );
+
+  const stats = snapshot.checkins;
+  // Check-ins only mean something to a gym member, or to someone who has
+  // checked in before (a lapsed membership): everyone else gets no streak
+  // hero, no week strip and no check-in stat.
+  const checksIn = snapshot.gyms.length > 0 || (stats?.total_check_ins ?? 0) > 0;
+  const firstName = user?.first_name?.trim() || "there";
+  const dateLine = now
+    ? `${now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}${
+        user?.country_code ? ` · ${user.country_code}` : ""
+      }`
+    : null;
 
   return (
     <MemberDashboardShell activeLabel="Home">
-      <div style={{ marginBottom: 18 }}>
-        <div
-          className="font-mono"
-          style={{
-            fontSize: 11,
-            color: "var(--fg-3)",
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-          }}
-        >
-          {today}
-          {user?.country_code ? ` · ${user.country_code}` : ""}
-        </div>
-        <h1
-          style={{
-            fontSize: 30,
-            letterSpacing: "-0.024em",
-            fontWeight: 500,
-            marginTop: 6,
-            color: "var(--ink)",
-          }}
-        >
-          Hey, <em style={{ fontStyle: "italic" }}>{firstName}</em>.
-        </h1>
-      </div>
+      <PageHeader
+        eyebrow={dateLine ?? <span aria-hidden="true">&nbsp;</span>}
+        title={{ before: "Hey, ", emphasis: firstName, after: "." }}
+      />
 
       {error && (
         <div
+          role="alert"
           className="rounded-(--r-3) p-4 mb-4 text-[13px]"
-          style={{
-            background: "var(--danger-soft)",
-            border: "1px solid oklch(0.92 0.05 25)",
-            color: "var(--danger)",
-          }}
+          style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}
         >
           {error}
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 14 }}>
-        <Kpi
-          label="Streak"
-          value={loading ? "-" : `${snapshot.checkins?.current_streak_days ?? 0} days`}
-          delta={
-            snapshot.checkins?.has_checked_in_today
-              ? "Checked in today"
-              : "Check in to grow it"
-          }
-          deltaColor={
-            snapshot.checkins?.has_checked_in_today ? "var(--signal-ink)" : "var(--fg-3)"
-          }
-        />
-        <Kpi
-          label="Total check-ins"
-          value={loading ? "-" : String(snapshot.checkins?.total_check_ins ?? 0)}
-          delta={formatLastCheckIn(snapshot.checkins?.last_check_in_at)}
-          deltaColor="var(--fg-3)"
-        />
-        <Kpi
-          label="Next session"
-          value={
-            loading
-              ? "-"
-              : snapshot.nextBooking
-                ? formatStartDate(snapshot.nextBooking.startsAt)
-                : "None booked"
-          }
-          delta={snapshot.nextBooking ? bookingLabel(snapshot.nextBooking) : "Book a session"}
-          deltaColor="var(--fg-3)"
-          small
-        />
-        <Kpi
-          label="Latest weight"
-          value={
-            loading
-              ? "-"
-              : snapshot.latestWeight
-                ? `${snapshot.latestWeight.weight_kg} kg`
-                : "No log yet"
-          }
-          delta={
-            snapshot.latestWeight
-              ? new Date(snapshot.latestWeight.recorded_at).toLocaleDateString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                })
-              : "Log to track trend"
-          }
-          deltaColor="var(--fg-3)"
-        />
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3.5">
-        <div>
+        <div className="flex min-w-0 flex-col gap-3.5">
+          {loading ? (
+            <div aria-hidden="true" className="h-36 rounded-(--r-3) animate-pulse" style={{ background: "var(--bg-3)" }} />
+          ) : (
+            <MemberHero program={snapshot.program} stats={checksIn ? stats : null} />
+          )}
+
+          <section aria-labelledby="next-up-label">
+            {/* Gaps go on wrappers: globals.css zeroes heading margins. */}
+            <div className="mb-2">
+              <Eyebrow id="next-up-label" as="h2">
+                Next up
+              </Eyebrow>
+            </div>
+            {loading ? (
+              <div aria-hidden="true" className="h-15 rounded-(--r-3) animate-pulse" style={{ background: "var(--bg-3)" }} />
+            ) : snapshot.next ? (
+              <ListRow
+                href="/dashboard/bookings"
+                title={snapshot.next.title}
+                meta={snapshot.next.meta}
+                trailing={
+                  snapshot.next.booking ? (
+                    <StatusPill
+                      tone={bookingPaymentStateTone(bookingPaymentState(snapshot.next.booking))}
+                      label={bookingLabel(snapshot.next.booking)}
+                    />
+                  ) : undefined
+                }
+              />
+            ) : (
+              <ListRow
+                href="/marketplace"
+                title="Nothing booked"
+                meta="Browse the marketplace"
+              />
+            )}
+          </section>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            {checksIn && (
+              <DSStatCard
+                size="sm"
+                label="Check-ins · this week"
+                value={loading || !week ? "–" : week.reduce((n, d) => n + d.count, 0)}
+                delta={stats ? `Last: ${now ? lastCheckInLabel(stats.last_check_in_at, now) : "–"}` : undefined}
+              />
+            )}
+            <DSStatCard
+              size="sm"
+              label="Weight"
+              value={loading ? "–" : weight ? weight.kg : "No log"}
+              unit={weight ? "kg" : undefined}
+              delta={
+                loading ? undefined : weight ? (
+                  weight.delta
+                ) : (
+                  <Link href="/dashboard/member/weight-log" className="underline underline-offset-2">
+                    Log your weight
+                  </Link>
+                )
+              }
+            />
+          </div>
+
+          {checksIn && (
+            <DSCard className={CARD_PAD}>
+              <div className="mb-3">
+                <Eyebrow as="h2">Check-ins this week</Eyebrow>
+              </div>
+              {week && !loading ? (
+                <WeekStrip
+                  days={week}
+                  label="Check-ins this week"
+                  stateLabels={{ done: "checked in", missed: "no check-in" }}
+                />
+              ) : (
+                <div aria-hidden="true" className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: 7 }, (_, i) => (
+                    <div key={i} className="aspect-square rounded-(--r-2) animate-pulse" style={{ background: "var(--bg-3)" }} />
+                  ))}
+                </div>
+              )}
+            </DSCard>
+          )}
+
           {!loading && snapshot.gyms.length > 0 && (
-            <div style={{ ...cardStyle, marginBottom: 14 }}>
-              <h3
-                style={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  marginBottom: 14,
-                  color: "var(--ink)",
-                }}
-              >
+            <DSCard className={CARD_PAD}>
+              <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)", marginBottom: 14 }}>
                 {snapshot.gyms.length === 1 ? "My gym" : "My gyms"}
               </h3>
               <div className="flex flex-col gap-2">
                 {snapshot.gyms.map((gym) => (
                   <div
                     key={gym.orgId}
-                    className="flex items-center justify-between gap-3 p-4 rounded-(--r-2)"
+                    className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-(--r-2)"
                     style={{ background: "var(--bg-2)" }}
                   >
                     {/* The row is about a gym: its tile takes the gym accent. */}
                     <IconTile icon={Building2} tone="gym" />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 500,
-                          color: "var(--ink)",
-                        }}
-                      >
+                    <div className="min-w-0 flex-1 basis-40">
+                      <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
                         {gym.name}
                       </div>
-                      <div
-                        className="text-[12.5px] mt-0.5"
-                        style={{ color: "var(--fg-3)" }}
-                      >
+                      <div className="text-[12.5px] mt-0.5" style={{ color: "var(--fg-3)" }}>
                         Active membership · scan the front-desk QR to check in
                       </div>
                     </div>
@@ -312,119 +288,19 @@ function MemberHomeContent() {
                         messagesHref="/dashboard/messages"
                         label="Message"
                       />
-                      <Link
-                        href="/check-in"
-                        className="btn-primary-v2 sm"
-                        style={{ whiteSpace: "nowrap" }}
-                      >
+                      <Link href="/check-in" className="btn-primary-v2 sm" style={{ whiteSpace: "nowrap" }}>
                         Check in
                       </Link>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </DSCard>
           )}
 
-          <div style={{ ...cardStyle, marginBottom: 14 }}>
-            <h3
-              style={{
-                fontSize: 14,
-                fontWeight: 500,
-                marginBottom: 14,
-                color: "var(--ink)",
-              }}
-            >
-              Next up
-            </h3>
-            {loading && (
-              <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-                Loading next session...
-              </div>
-            )}
-            {!loading && !snapshot.nextBooking && (
-              <div
-                className="flex items-center justify-between gap-3 p-4 rounded-(--r-2)"
-                style={{ background: "var(--bg-2)" }}
-              >
-                <div className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>
-                  No upcoming sessions. Browse the marketplace to book one.
-                </div>
-                <Link href="/marketplace" className="btn-primary-v2 sm">
-                  Browse
-                </Link>
-              </div>
-            )}
-            {!loading && snapshot.nextBooking && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: 14,
-                  alignItems: "center",
-                  padding: 16,
-                  background: "var(--bg-2)",
-                  borderRadius: "var(--r-2)",
-                }}
-              >
-                {/* The booking does not say which kind of provider it is with,
-                    so the tile is neutral rather than a guessed role accent. */}
-                <IconTile icon={CalendarClock} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{ fontSize: 15, fontWeight: 500, color: "var(--ink)" }}
-                  >
-                    Consultation &middot;{" "}
-                    {Math.round(
-                      (new Date(snapshot.nextBooking.endsAt).getTime() -
-                        new Date(snapshot.nextBooking.startsAt).getTime()) /
-                        60000,
-                    )}{" "}
-                    min
-                  </div>
-                  <div
-                    className="font-mono"
-                    style={{
-                      fontSize: 11,
-                      color: "var(--fg-3)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                      marginTop: 3,
-                    }}
-                  >
-                    {formatStartDate(snapshot.nextBooking.startsAt)} ·{" "}
-                    {snapshot.nextBooking.clientTimezone}
-                  </div>
-                  <div className="mt-2">
-                    <StatusPill
-                      tone={bookingPaymentStateTone(bookingPaymentState(snapshot.nextBooking))}
-                      label={bookingLabel(snapshot.nextBooking)}
-                    />
-                  </div>
-                </div>
-                <Link
-                  href="/dashboard/bookings"
-                  style={{
-                    background: "var(--ink)",
-                    color: "var(--bg)",
-                    padding: "8px 14px",
-                    borderRadius: "var(--r-2)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    textDecoration: "none",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Details
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div style={{ ...cardStyle, marginBottom: 14 }}>
+          <DSCard className={CARD_PAD}>
             <div className="flex items-center justify-between mb-3">
-              <h3
-                style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}
-              >
+              <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
                 Loyalty balance
               </h3>
               <Link
@@ -448,120 +324,79 @@ function MemberHomeContent() {
             {!loading && snapshot.loyalty && (
               <div className="flex items-baseline gap-3">
                 <div
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 500,
-                    color: "var(--ink)",
-                    letterSpacing: "-0.02em",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
+                  className="text-[32px] font-medium"
+                  style={{ color: "var(--ink)", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
                 >
                   {snapshot.loyalty.balance.toLocaleString()}
                 </div>
-                <div
-                  className="font-mono text-[11px] uppercase"
-                  style={{ color: "var(--fg-3)", letterSpacing: "0.04em" }}
-                >
-                  points
-                </div>
+                <Eyebrow as="span">points</Eyebrow>
               </div>
             )}
-          </div>
+          </DSCard>
         </div>
 
         <div>
-          <div style={cardStyle}>
-            <h3
-              style={{
-                fontSize: 14,
-                fontWeight: 500,
-                marginBottom: 14,
-                color: "var(--ink)",
-              }}
-            >
+          <DSCard className={CARD_PAD}>
+            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)", marginBottom: 14 }}>
               Quick log
             </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {[
                 { href: "/dashboard/member/weight-log", label: "Log weight" },
                 { href: "/dashboard/member/meal-log", label: "Log meal" },
                 { href: "/dashboard/member/workout-log", label: "Log workout" },
                 { href: "/dashboard/bookings", label: "My bookings" },
               ].map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid var(--border)",
-                    padding: "8px 14px",
-                    borderRadius: "var(--r-2)",
-                    fontSize: 13,
-                    color: "var(--ink)",
-                    textDecoration: "none",
-                    textAlign: "center",
-                    display: "block",
-                  }}
-                >
+                <Link key={item.href} href={item.href} className="btn-ghost-v2 sm w-full justify-center">
                   {item.label}
                 </Link>
               ))}
             </div>
-          </div>
+          </DSCard>
         </div>
       </div>
     </MemberDashboardShell>
   );
 }
 
-function Kpi({
-  label,
-  value,
-  delta,
-  deltaColor,
-  small,
-}: {
-  label: string;
-  value: string;
-  delta: string;
-  deltaColor: string;
-  small?: boolean;
-}) {
+/**
+ * The dark hero (owner ruling, Oct 2026): a program client sees "Day N of
+ * M"; otherwise a gym member sees their check-in streak; anyone with
+ * neither sees nothing. Programs have no streaks, so a member with both
+ * gets the program; the streak stays one tap away under Activity.
+ */
+function MemberHero({ program, stats }: { program: ProgramDay | null; stats: StreakStats | null }) {
+  if (program) {
+    const { day, totalDays, week, name } = program;
+    return (
+      <HeroStatCard
+        eyebrow="Your program"
+        value={`Day ${day}`}
+        unit={totalDays ? `of ${totalDays}` : undefined}
+        sub={name}
+        progress={
+          totalDays
+            ? { value: day, max: totalDays, label: `Progress through ${name}`, valueText: `Day ${day} of ${totalDays}` }
+            : undefined
+        }
+        footnote={week ? `${week.done} of ${week.scheduled} tasks done · last 7 days` : undefined}
+      />
+    );
+  }
+  if (!stats) return null;
+  const streak = stats.current_streak_days ?? 0;
+  let sub: string;
+  if (stats.has_checked_in_today) sub = "Checked in today";
+  else if (stats.streak_at_risk) sub = "Check in today to keep it going";
+  else if (streak === 0) sub = "Check in at your gym to start one";
+  else sub = "Check in to grow it";
   return (
-    <div style={cardStyle}>
-      <div
-        className="font-mono"
-        style={{
-          fontSize: 10.5,
-          color: "var(--fg-3)",
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: small ? 18 : 24,
-          fontWeight: 500,
-          color: "var(--ink)",
-          letterSpacing: "-0.02em",
-          marginTop: 4,
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {value}
-      </div>
-      <div
-        className="font-mono"
-        style={{
-          fontSize: 11,
-          color: deltaColor,
-          marginTop: 4,
-        }}
-      >
-        {delta}
-      </div>
-    </div>
+    <HeroStatCard
+      eyebrow="Check-in streak"
+      value={streak}
+      unit={dayUnit(streak)}
+      sub={sub}
+      footnote={longestStreakLine(stats) ?? undefined}
+    />
   );
 }
