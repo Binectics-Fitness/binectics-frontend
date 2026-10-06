@@ -13,59 +13,47 @@ export const metadata: Metadata = {
 };
 
 const PAIN_POINTS = [
-  {
-    before: "Instagram DMs for bookings, voice notes for programs",
-    after: "Calendar with instant booking + program builder",
-  },
-  {
-    before: "Chase clients for payment every month",
-    after: "Auto-billing with smart retry on failed cards",
-  },
-  {
-    before: "Lose 30% of new leads because you respond too slowly",
-    after: "Instant booking from your marketplace profile",
-  },
-  {
-    before: "No idea which clients are about to churn",
-    after: "Rebooking signals and streak alerts on your dashboard",
-  },
+  { before: "Instagram DMs for bookings, voice notes for programs", after: "Bookings from your profile, programs in the app" },
+  { before: "Chase clients for payment every month", after: "Clients pay in the app, by card or bank transfer" },
+  { before: "Lose new leads because you reply too slowly", after: "Clients book open slots from your marketplace profile" },
+  { before: "No idea which clients are falling behind", after: "Missed and late tasks show on each client’s profile" },
 ];
 
 const FEATURES = [
   {
     title: "Marketplace profile",
-    desc: "SEO-optimized listing with verified badge, specialties, photo gallery, and client reviews. Prospective clients find you through search and location filters.",
-    stat: "Avg 8.4 leads/month per profile",
+    desc: "A public listing with your specialties, photo gallery, plans, and client reviews. Members find you by location and specialty on the marketplace.",
+    stat: "Verified badge after document review",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
   },
   {
-    title: "Smart calendar",
-    desc: "Recurring sessions, configurable buffer time, timezone support. Syncs with Google Calendar and Apple Calendar so you never double-book.",
-    stat: "Zero double-bookings reported",
+    title: "Booking calendar",
+    desc: "Set your session types and weekly hours. Clients book open slots from your profile, and a booking can’t land outside your hours or on top of another.",
+    stat: "No double-bookings",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>,
   },
   {
     title: "Client management",
-    desc: "Full roster with session history, rebooking status, and progress tracking. See who is overdue, who is thriving, and who needs a check-in.",
-    stat: "42 avg active clients per trainer",
+    desc: "Every client in one roster with their program, check-ins, journal, and weight logs. See who is keeping up and who has gone quiet.",
+    stat: "One roster for every client",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   },
   {
-    title: "Program builder",
-    desc: "Sets, reps, tempo, rest. Drag-and-drop exercises. Copy-to-next-week for progressive overload. Template library for common goals.",
-    stat: "8 min avg program build time",
+    title: "Training programs",
+    desc: "Build a program once, with daily tasks on a schedule, and assign it to your clients. Clients follow it day by day in their app.",
+    stat: "Assign one program to many clients",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>,
   },
   {
-    title: "Earnings dashboard",
-    desc: "Per-client revenue breakdown, monthly trends, projected earnings, and payout timeline. Know exactly what is coming and when.",
+    title: "Get paid",
+    desc: "Clients pay by card or bank transfer straight into your own Paystack account. Binectics takes no cut.",
     stat: "Each currency shown as it was paid",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
   {
     title: "Client journals",
-    desc: "Log workouts, notes, and metrics after every session. Clients see their own feed with progress over time. Builds accountability and trust.",
-    stat: "+34% client retention with journals",
+    desc: "Write journal entries on a client’s profile. Clients read them in their app next to their own logs.",
+    stat: "Shared with the client",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h4"/></svg>,
   },
 ];
@@ -73,23 +61,22 @@ const FEATURES = [
 const EARNINGS = [
   {
     title: "In-person sessions",
-    desc: "Charge per session or sell packs of 12/24. Members book from your calendar. You get paid in 2 days.",
+    desc: "Set session types with their own price and length. Clients book from your calendar and pay when they book.",
   },
   {
-    title: "Online programs",
-    desc: "Sell PDF or interactive programs to clients anywhere. Multi-currency. No shipping, no inventory.",
+    title: "Coaching plans",
+    desc: "Sell plans for ongoing coaching. Clients subscribe from your profile and pay into your own Paystack account.",
   },
   {
-    title: "Recurring subscriptions",
-    desc: "Monthly retainers for ongoing coaching. Auto-renew with smart retry. Predictable income.",
+    title: "Clients you bring",
+    desc: "Invite your existing clients by email. They join your roster without going through the marketplace.",
   },
 ];
 
 const KPIS = [
-  { label: "Draft types in the copilot", value: "5" },
-  { label: "Drafts sent without your review", value: "0" },
-  { label: "Currencies for client billing", value: "8" },
-  { label: "Payout settlement", value: "2 days" },
+  { label: "Cut of client payments", value: "0%" },
+  { label: "Card numbers stored", value: "0" },
+  { label: "Client app", value: "Included" },
 ];
 
 export default function ForTrainersPage() {
@@ -120,10 +107,10 @@ export default function ForTrainersPage() {
           className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          The copilot drafts your check-in summaries, weekly reports, and
-          program tweaks from the data clients already log. A profile that
-          ranks in local search, a calendar that never double-books, payouts
-          in 2 days.
+          Build training programs once and assign them, take 1:1 bookings
+          against your own hours, and get paid straight into your Paystack
+          account. A marketplace profile clients can find, and a calendar
+          that never double-books.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup&role=trainer" className="btn-primary-v2 lg">
@@ -287,39 +274,12 @@ export default function ForTrainersPage() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section
-        className="mx-auto max-w-280 px-5 sm:px-8 py-12"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        <div
-          className="rounded-(--r-3) p-6 sm:p-8"
-          style={{ background: "var(--bg-2)" }}
-        >
-          <blockquote
-            className="text-[17px] sm:text-[19px] leading-[1.5] max-w-[58ch] mb-5"
-            style={{ color: "var(--ink)" }}
-          >
-            Monday, 8:04. Four client reports drafted overnight from last
-            week&apos;s logs. You edit two sentences, approve, and send them
-            all before your first session.
-          </blockquote>
-          <div
-            className="text-[14px] leading-[1.5]"
-            style={{ color: "var(--fg-3)" }}
-          >
-            The Monday morning &middot; trainer workflow with the copilot
-            &middot; early access
-          </div>
-        </div>
-      </section>
-
       {/* KPIs */}
       <section
         className="mx-auto max-w-280 px-5 sm:px-8 py-12"
         style={{ borderTop: "1px solid var(--border)" }}
       >
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5">
           {KPIS.map((k) => (
             <div
               key={k.label}

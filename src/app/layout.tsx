@@ -15,14 +15,12 @@ import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: {
-    default: "Binectics, the copilot your fitness business runs on",
+    default: "Binectics: run your gym, coaching and payments in one place",
     template: "%s, Binectics",
   },
   description:
-    "AI-drafted client summaries, weekly reports, and program updates, plus payments in your local currency and a verified marketplace. For trainers, dietitians, and gyms in 50+ countries.",
+    "Memberships, Paystack payments, QR check-in, classes, bookings, training programs and meal plans for gyms, personal trainers and dietitians in Nigeria. Priced per seat, with no cut of your takings.",
   keywords: [
-    "AI fitness copilot",
-    "AI client reports",
     "fitness marketplace",
     "gym management",
     "personal trainer software",
@@ -31,21 +29,22 @@ export const metadata: Metadata = {
     "fitness payments",
     "client management",
     "workout plans",
-    "multi-currency fitness",
+    "gym software Nigeria",
+    "Paystack",
   ],
   openGraph: {
     type: "website",
     siteName: "Binectics",
-    title: "Binectics, the copilot your fitness business runs on",
+    title: "Binectics: run your gym, coaching and payments in one place",
     description:
-      "AI-drafted client reports, local-currency payments, and a verified marketplace, for trainers, dietitians, and gyms in 50+ countries.",
+      "Memberships, Paystack payments, QR check-in, classes, bookings, training programs and meal plans for gyms, personal trainers and dietitians in Nigeria. Priced per seat, with no cut of your takings.",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Binectics, the copilot your fitness business runs on",
+    title: "Binectics: run your gym, coaching and payments in one place",
     description:
-      "AI-drafted client reports, local-currency payments, and a verified marketplace, for trainers, dietitians, and gyms in 50+ countries.",
+      "Memberships, Paystack payments, QR check-in, classes, bookings, training programs and meal plans for gyms, personal trainers and dietitians in Nigeria. Priced per seat, with no cut of your takings.",
   },
   robots: {
     index: true,

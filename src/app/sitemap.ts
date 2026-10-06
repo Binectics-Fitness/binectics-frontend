@@ -24,14 +24,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     // Info
     { path: "/contact", changeFrequency: "yearly", priority: 0.6 },
-    { path: "/blog", changeFrequency: "weekly", priority: 0.7 },
     { path: "/help", changeFrequency: "monthly", priority: 0.5 },
     { path: "/qr-help", changeFrequency: "monthly", priority: 0.4 },
-
-    // Company
-    { path: "/careers", changeFrequency: "monthly", priority: 0.5 },
-    { path: "/partners", changeFrequency: "monthly", priority: 0.6 },
-    { path: "/press", changeFrequency: "monthly", priority: 0.4 },
 
     // Legal (Terms & Cookies are tabs inside /privacy)
     { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },

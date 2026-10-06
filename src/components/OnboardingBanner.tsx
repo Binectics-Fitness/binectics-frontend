@@ -45,7 +45,7 @@ const ROLE_CONFIG: Record<
   },
   TRAINER: {
     title: "Complete your trainer profile",
-    desc: "Add your certifications and specialties to get verified, the copilot starts drafting once your first clients join.",
+    desc: "Add your certifications and specialties to get verified and appear in the marketplace.",
     steps: ["Certifications & credentials", "Specialties & expertise", "Professional bio", "Pricing & availability"],
     accent: "var(--trainer)",
     soft: "var(--trainer-soft)",

@@ -8,8 +8,8 @@ import { MarketingFooter } from "@/components/ds/MarketingFooter";
  */
 
 export const metadata: Metadata = {
-  title: "Contact | Binectics",
-  description: "Get in touch with the Binectics team. Email us, submit a request, or visit our offices in Lagos and London.",
+  title: "Contact",
+  description: "Get in touch with the Binectics team. Email us or send a message.",
   alternates: { canonical: "/contact" },
 };
 
@@ -23,7 +23,7 @@ const METHODS = [
     ),
     label: "General enquiries",
     email: "help@binectics.com",
-    desc: "Support, account issues, bug reports. We reply within 24 hours.",
+    desc: "Support, account issues, bug reports.",
   },
   {
     icon: (
@@ -38,22 +38,6 @@ const METHODS = [
     email: "sales@binectics.com",
     desc: "Enterprise plans, gym chains, API access, and integration discussions.",
   },
-  {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
-        <path d="M18 14h-8" /><path d="M15 18h-5" /><path d="M10 6h8v4h-8V6Z" />
-      </svg>
-    ),
-    label: "Press & media",
-    email: "press@binectics.com",
-    desc: "Interviews, press kit requests, and media enquiries. 4-hour response on weekdays.",
-  },
-];
-
-const OFFICES = [
-  { city: "Lagos, Nigeria", tz: "WAT (UTC+1)", address: "14 Admiralty Way, Lekki Phase 1" },
-  { city: "London, United Kingdom", tz: "GMT / BST", address: "71 Queen Victoria St, EC4V 4AY" },
 ];
 
 export default function ContactPage() {
@@ -147,22 +131,6 @@ export default function ContactPage() {
               <button type="submit" className="btn-primary-v2 self-start mt-1">Send message &rarr;</button>
             </form>
           </div>
-        </div>
-      </section>
-
-      {/* Offices */}
-      <section className="mx-auto max-w-280 px-5 sm:px-8 py-12" style={{ borderTop: "1px solid var(--border)" }}>
-        <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-          Our offices.
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {OFFICES.map((o) => (
-            <div key={o.city} className="rounded-(--r-3) p-6" style={{ background: "var(--bg-2)" }}>
-              <h3 className="text-[17px] font-medium mb-1" style={{ color: "var(--ink)" }}>{o.city}</h3>
-              <p className="text-[13.5px] leading-[1.55] mb-1" style={{ color: "var(--fg-2)" }}>{o.address}</p>
-              <span className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{o.tz}</span>
-            </div>
-          ))}
         </div>
       </section>
 
