@@ -6,6 +6,8 @@ import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { DSStatCard, PageHeader } from "@/components/ds";
 import { progressService, type WeightLog, type ClientProfile } from "@/lib/api/progress";
 import { formatDate } from "@/utils/format";
+import { useClientNow } from "@/lib/ui/useClientNow";
+import { signedKg, weightChange30d } from "../_lib/logStats";
 
 /**
  * Health metrics from real weight logs (progress module). Wearable metrics
@@ -17,24 +19,34 @@ export function HealthMetricsClient() {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const { data: profiles = [] } = useQuery<ClientProfile[]>({
-    queryKey: ["progress", "myOwnProfiles"],
+  // apiClient reports failures as success:false rather than throwing; both
+  // queries throw on it so a failed load shows an error, not "no entries".
+  // The profiles key differs from the shared one in src/lib/queries, which
+  // turns a failure into [].
+  const profilesQuery = useQuery<ClientProfile[]>({
+    queryKey: ["progress", "myOwnProfiles", "strict"],
     queryFn: async () => {
       const res = await progressService.getMyOwnProfiles();
-      return res.success && res.data ? res.data : [];
+      if (!res.success) throw new Error(res.message || "Couldn't load your profile.");
+      return res.data ?? [];
     },
+    retry: 1,
   });
-  const profileId = profiles[0]?._id;
+  const profileId = profilesQuery.data?.[0]?._id;
 
-  const { data: logs = [], isLoading } = useQuery<WeightLog[]>({
+  const logsQuery = useQuery<WeightLog[]>({
     queryKey: ["progress", "weightLogs", profileId ?? ""],
     queryFn: async () => {
       if (!profileId) return [];
       const res = await progressService.getWeightLogs(profileId, 60);
-      return res.success && res.data ? res.data : [];
+      if (!res.success) throw new Error(res.message || "Couldn't load your weight.");
+      return res.data ?? [];
     },
     enabled: !!profileId,
+    retry: 1,
   });
+  const logs = useMemo(() => logsQuery.data ?? [], [logsQuery.data]);
+  const loadFailed = profilesQuery.isError || logsQuery.isError;
 
   const addWeight = useMutation({
     mutationFn: (weight_kg: number) => {
@@ -60,25 +72,14 @@ export function HealthMetricsClient() {
     [logs],
   );
   const latest = sorted[sorted.length - 1];
-  // 30-day window anchored on the latest entry's own date (pure — no clock
-  // reads in render): change vs the earliest log within 30 days of it.
-  const { baseline30, change30 } = useMemo(() => {
-    const last = sorted[sorted.length - 1];
-    if (!last) return { baseline30: undefined, change30: null };
-    const windowStart = new Date(
-      new Date(last.recorded_at).getTime() - 30 * 86400_000,
-    ).toISOString();
-    const base = sorted.find((l) => l.recorded_at >= windowStart) ?? sorted[0];
-    return {
-      baseline30: base,
-      change30:
-        base && last._id !== base._id ? last.weight_kg - base.weight_kg : null,
-    };
-  }, [sorted]);
+  // Same 30-day change as the weight log: latest minus the earliest log in
+  // the 30 days ending today, by the viewer's clock (null until mount).
+  const now = useClientNow();
+  const change30 = useMemo(() => (now ? weightChange30d(logs, now) : null), [logs, now]);
 
   const kpis = [
     { label: "Latest weight", value: latest ? latest.weight_kg.toFixed(1) : "-", unit: latest ? "kg" : undefined, delta: latest ? formatDate(latest.recorded_at) : "No entries yet" },
-    { label: "30-day change", value: change30 != null ? `${change30 > 0 ? "+" : change30 < 0 ? "−" : ""}${Math.abs(change30).toFixed(1)}` : "-", unit: change30 != null ? "kg" : undefined, delta: change30 != null ? `since ${formatDate(baseline30.recorded_at)}` : "Needs two entries" },
+    { label: "30-day change", value: change30 ? signedKg(change30.kg) : "-", unit: change30 ? "kg" : undefined, delta: change30 ? `since ${formatDate(change30.since)}` : now ? "Needs two entries in 30 days" : undefined },
     { label: "Entries", value: String(logs.length), unit: undefined, delta: "Last 60 recorded" },
   ];
 
@@ -100,12 +101,25 @@ export function HealthMetricsClient() {
       <PageHeader title={{ before: "Health ", emphasis: "metrics" }} />
 
       <div className="flex flex-col gap-3.5">
+        {loadFailed && (
+          <p
+            role="alert"
+            className="rounded-[var(--r-3)] px-4 py-3.5 text-[13px]"
+            style={{ background: "var(--danger-soft)", border: "1px solid var(--border)", color: "var(--danger-ink)" }}
+          >
+            We couldn&rsquo;t load your weight entries. Please refresh to try again.
+          </p>
+        )}
+
         {/* KPIs. The change is neutral in tone: down is not "good" for everyone. */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {kpis.map((k) => (
-            <DSStatCard key={k.label} size="sm" label={k.label} value={k.value} unit={k.unit} delta={k.delta} />
-          ))}
-        </div>
+        {/* Tiles wait for the entries (or a confirmed "no profile yet"). */}
+        {!loadFailed && (logsQuery.isSuccess || (profilesQuery.isSuccess && !profileId)) && (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {kpis.map((k) => (
+              <DSStatCard key={k.label} size="sm" label={k.label} value={k.value} unit={k.unit} delta={k.delta} />
+            ))}
+          </div>
+        )}
 
         {/* Weight trend + quick add */}
         <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
@@ -121,7 +135,7 @@ export function HealthMetricsClient() {
             </div>
           </div>
           {error && <p className="text-[12px] mt-2" style={{ color: "var(--danger, #b00020)" }}>{error}</p>}
-          {!profileId && !isLoading && (
+          {!loadFailed && profilesQuery.isSuccess && !profileId && (
             <p className="text-[13px] mt-4" style={{ color: "var(--fg-3)" }}>
               Weight tracking starts once you have a progress profile (created when you join a gym or connect with a coach).
             </p>

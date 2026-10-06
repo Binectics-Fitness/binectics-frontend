@@ -13,19 +13,8 @@ import {
 } from "@/lib/progress/logForms";
 import { useClientNow } from "@/lib/ui/useClientNow";
 import { mealsToday } from "../_lib/logStats";
+import { LOG_LIMIT, logDate } from "../_lib/logFormat";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
-
-function formatDate(isoDate: string): string {
-  const d = new Date(isoDate);
-  const today = new Date();
-  const isToday =
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate();
-
-  if (isToday) return "Today";
-  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
-}
 
 const MEAL_TYPE_LABELS: Record<MealType, string> = {
   [MealType.BREAKFAST]: "Breakfast",
@@ -74,7 +63,8 @@ const fieldInputStyle = {
 
 export default function MealLogPage() {
   const [profile, setProfile] = useState<ClientProfile | null>(null);
-  const [meals, setMeals] = useState<MealFeedback[]>([]);
+  // null until the list has loaded: a failed load must not read as "no meals".
+  const [meals, setMeals] = useState<MealFeedback[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,8 +80,12 @@ export default function MealLogPage() {
 
   /** Re-read the list from the server so a create shows the stored record. */
   const refetchMeals = useCallback(async (profileId: string) => {
-    const mealsRes = await progressService.getMealFeedbacks(profileId, 50);
-    setMeals(mealsRes.success && mealsRes.data ? mealsRes.data : []);
+    // apiClient reports failures as success:false rather than throwing.
+    const mealsRes = await progressService.getMealFeedbacks(profileId, LOG_LIMIT);
+    if (!mealsRes.success) {
+      throw new Error(mealsRes.message || "Couldn't load your meals. Please try again.");
+    }
+    setMeals(mealsRes.data ?? []);
   }, []);
 
   useEffect(() => {
@@ -101,8 +95,11 @@ export default function MealLogPage() {
         // get-or-create the SELF profile so a first-time member can log a meal
         // without a provider having to add them as a client first.
         const profileRes = await progressService.getMyOwnProfiles();
+        if (!profileRes.success) {
+          throw new Error(profileRes.message || "Couldn't load your meals. Please try again.");
+        }
         let myProfile =
-          profileRes.success && profileRes.data?.length
+          profileRes.data?.length
             ? profileRes.data[0]
             : null;
         if (!myProfile) {
@@ -120,7 +117,7 @@ export default function MealLogPage() {
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load meal log");
-        setMeals([]);
+        setMeals(null);
       } finally {
         setLoading(false);
       }
@@ -157,10 +154,13 @@ export default function MealLogPage() {
         validated.value,
       );
       if (res.success) {
-        await refetchMeals(profile._id);
         setFormOpen(false);
         setForm(EMPTY_MEAL_FORM);
         toast.success("Meal logged.");
+        // Saved either way; a failed re-read is reported, not blamed on the save.
+        await refetchMeals(profile._id).catch((err: unknown) =>
+          setError(err instanceof Error ? err.message : "Couldn't refresh your meals."),
+        );
       } else {
         setFormError(res.message || "Could not save the meal. Please try again.");
       }
@@ -175,9 +175,11 @@ export default function MealLogPage() {
 
   // "Today" is the viewer's day, known only after mount (null on the server).
   const now = useClientNow();
-  const today = useMemo(() => (now ? mealsToday(meals, now) : null), [meals, now]);
+  const today = useMemo(() => (now && meals ? mealsToday(meals, now) : null), [meals, now]);
+  // On a failed load only the error shows, never zeros.
+  const showData = !loading && meals !== null;
   const [openId, setOpenId] = useState<string | null>(null);
-  const opened = meals.find((m) => m._id === openId) ?? null;
+  const opened = meals?.find((m) => m._id === openId) ?? null;
 
   return (
     <MemberDashboardShell activeLabel="Activity">
@@ -383,13 +385,14 @@ export default function MealLogPage() {
 
       {/* Stat pair for today. No calorie target: none is set anywhere, so
           the old "/ 2000" was invented. */}
-      {loading || !today ? (
+      {(loading || (showData && !today)) && (
         <div aria-hidden="true" className="grid grid-cols-2 gap-3 mb-3.5">
           {[0, 1].map((i) => (
             <div key={i} className="h-[92px] rounded-[var(--r-3)]" style={{ background: "var(--bg-2)" }} />
           ))}
         </div>
-      ) : (
+      )}
+      {showData && today && (
         <div className="grid grid-cols-2 gap-3 mb-3.5">
           <DSStatCard
             size="sm"
@@ -412,35 +415,37 @@ export default function MealLogPage() {
         </div>
       )}
 
-      <section aria-labelledby="recent-meals">
-        <Eyebrow id="recent-meals" as="h2" className="mb-2.5 px-1">
-          Recent meals
-        </Eyebrow>
-        {loading ? (
-          <AsyncSpinner label="Loading meals" />
-        ) : meals.length === 0 ? (
-          <EmptySlate message="No meals logged yet." mt="mt-0" />
-        ) : (
-          <ul className="flex flex-col gap-1.5">
-            {meals.slice(0, 20).map((meal) => (
-              <li key={meal._id}>
-                <ListRow
-                  title={meal.description || mealTypeLabel(meal.meal_type)}
-                  meta={[
-                    formatDate(meal.meal_date),
-                    mealTypeLabel(meal.meal_type),
-                    meal.calories ? `${meal.calories} kcal` : null,
-                    meal.rating ? MEAL_RATING_LABELS[meal.rating] : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                  onClick={() => setOpenId(meal._id)}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {(loading || showData) && (
+        <section aria-labelledby="recent-meals">
+          <Eyebrow id="recent-meals" as="h2" className="mb-2.5 px-1">
+            Recent meals
+          </Eyebrow>
+          {loading || !meals ? (
+            <AsyncSpinner label="Loading meals" />
+          ) : meals.length === 0 ? (
+            <EmptySlate message="No meals logged yet." mt="mt-0" />
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {meals.slice(0, 20).map((meal) => (
+                <li key={meal._id}>
+                  <ListRow
+                    title={meal.description || mealTypeLabel(meal.meal_type)}
+                    meta={[
+                      logDate(meal.meal_date, now),
+                      mealTypeLabel(meal.meal_type),
+                      meal.calories ? `${meal.calories} kcal` : null,
+                      meal.rating ? MEAL_RATING_LABELS[meal.rating] : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    onClick={() => setOpenId(meal._id)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <LogDetailDrawer
         open={opened !== null}
@@ -449,7 +454,7 @@ export default function MealLogPage() {
         fields={
           opened
             ? [
-                { label: "Date", value: formatDate(opened.meal_date) },
+                { label: "Date", value: logDate(opened.meal_date, now) },
                 { label: "What you ate", value: opened.description },
                 { label: "Calories", value: opened.calories ? `${opened.calories} kcal` : null },
                 { label: "How it felt", value: opened.rating ? MEAL_RATING_LABELS[opened.rating] : null },

@@ -8,24 +8,15 @@ import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, WeightLog } from "@/lib/api/progress";
 import { useClientNow } from "@/lib/ui/useClientNow";
 import { recentWeights, signedKg, weightChange30d } from "../_lib/logStats";
+import { LOG_LIMIT, logDate } from "../_lib/logFormat";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
-
-function formatDate(isoDate: string): string {
-  const d = new Date(isoDate);
-  const today = new Date();
-  const isToday =
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate();
-
-  if (isToday) return "Today";
-  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
-}
 
 export default function WeightLogPage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ClientProfile | null>(null);
-  const [logs, setLogs] = useState<WeightLog[]>([]);
+  // null until the list has loaded: a failed load must not read as "no logs".
+  const [loadedLogs, setLoadedLogs] = useState<WeightLog[] | null>(null);
+  const logs = useMemo(() => loadedLogs ?? [], [loadedLogs]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [logOpen, setLogOpen] = useState(false);
@@ -58,7 +49,8 @@ export default function WeightLogPage() {
             ? { _id: (res.data as WeightLog).logged_by as string, first_name: user.first_name ?? "", last_name: user.last_name ?? "" }
             : (res.data as WeightLog).logged_by,
       } as WeightLog;
-      setLogs((prev) => [stamped, ...prev]);
+      // Prepend only to a list that loaded; after a failed load the error stays.
+      setLoadedLogs((prev) => (prev ? [stamped, ...prev] : prev));
       setLogWeight("");
       setLogOpen(false);
     } else {
@@ -73,8 +65,11 @@ export default function WeightLogPage() {
         // get-or-create the SELF profile so first-time members can track
         // without anyone having to add them as a client first.
         const profileRes = await progressService.getMyOwnProfiles();
+        if (!profileRes.success) {
+          throw new Error(profileRes.message || "Couldn't load your weight log. Please try again.");
+        }
         let myProfile =
-          profileRes.success && profileRes.data?.length
+          profileRes.data?.length
             ? profileRes.data[0]
             : null;
         if (!myProfile) {
@@ -88,12 +83,16 @@ export default function WeightLogPage() {
         }
         setProfile(myProfile);
 
-        const logsRes = await progressService.getWeightLogs(myProfile._id, 50);
-        setLogs(logsRes.success && logsRes.data ? logsRes.data : []);
+        // apiClient reports failures as success:false rather than throwing.
+        const logsRes = await progressService.getWeightLogs(myProfile._id, LOG_LIMIT);
+        if (!logsRes.success) {
+          throw new Error(logsRes.message || "Couldn't load your weight log. Please try again.");
+        }
+        setLoadedLogs(logsRes.data ?? []);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load weight log");
-        setLogs([]);
+        setLoadedLogs(null);
       } finally {
         setLoading(false);
       }
@@ -126,6 +125,8 @@ export default function WeightLogPage() {
   const chartLogs = useMemo(() => logs.slice(0, 12).reverse(), [logs]);
   const [openId, setOpenId] = useState<string | null>(null);
   const opened = logs.find((l) => l._id === openId) ?? null;
+  // On a failed load only the error shows, never "-" tiles or "no logs".
+  const showData = !loading && loadedLogs !== null;
 
   const logAction = (
     <div>
@@ -212,20 +213,21 @@ export default function WeightLogPage() {
 
       {/* Stat pair. The change is neutral in tone: down is not "good" for
           everyone. Only drawn from two or more logs inside the window. */}
-      {loading ? (
+      {loading && (
         <div aria-hidden="true" className="grid grid-cols-2 gap-3 mb-3.5">
           {[0, 1].map((i) => (
             <div key={i} className="h-[92px] rounded-[var(--r-3)]" style={{ background: "var(--bg-2)" }} />
           ))}
         </div>
-      ) : (
+      )}
+      {showData && (
         <div className="grid grid-cols-2 gap-3 mb-3.5">
           <DSStatCard
             size="sm"
             label="Current"
             value={latestLog ? latestLog.weight_kg.toFixed(1) : "-"}
             unit={latestLog ? "kg" : undefined}
-            delta={latestLog ? formatDate(latestLog.recorded_at) : "No logs yet"}
+            delta={latestLog ? logDate(latestLog.recorded_at, now) : "No logs yet"}
             spark={spark.length >= 2 ? spark : undefined}
             sparkVariant="line"
             sparkLabel={`Weight, last ${spark.length} logs`}
@@ -236,12 +238,12 @@ export default function WeightLogPage() {
             value={change ? signedKg(change.kg) : "-"}
             unit={change ? "kg" : undefined}
             deltaTone="neutral"
-            delta={change ? `since ${formatDate(change.since)}` : now ? "Needs two logs in 30 days" : undefined}
+            delta={change ? `since ${logDate(change.since, now)}` : now ? "Needs two logs in 30 days" : undefined}
           />
         </div>
       )}
 
-      {!loading && chartLogs.length >= 2 && (
+      {showData && chartLogs.length >= 2 && (
         <DSCard className="p-4.5 mb-3.5">
           <Eyebrow className="mb-3">Last {chartLogs.length} logs</Eyebrow>
           {(() => {
@@ -261,9 +263,9 @@ export default function WeightLogPage() {
               >
                 <path d={`M ${points}`} fill="none" style={{ stroke: "var(--ink)" }} strokeWidth="2" strokeLinejoin="round" />
                 <g fontFamily="ui-monospace, monospace" fontSize="10" style={{ fill: "var(--fg-3)" }}>
-                  <text x="40" y="190">{formatDate(chartLogs[0].recorded_at)}</text>
+                  <text x="40" y="190">{logDate(chartLogs[0].recorded_at, now)}</text>
                   <text x="760" y="190" textAnchor="end">
-                    {formatDate(chartLogs[chartLogs.length - 1].recorded_at)}
+                    {logDate(chartLogs[chartLogs.length - 1].recorded_at, now)}
                   </text>
                   <text x="20" y="34" textAnchor="end">
                     {maxW.toFixed(1)}
@@ -278,36 +280,38 @@ export default function WeightLogPage() {
         </DSCard>
       )}
 
-      <section aria-labelledby="recent-weights">
-        <Eyebrow id="recent-weights" as="h2" className="mb-2.5 px-1">
-          Recent
-        </Eyebrow>
-        {loading ? (
-          <AsyncSpinner label="Loading logs" />
-        ) : logs.length === 0 ? (
-          <EmptySlate message="No weight logs yet." mt="mt-0" />
-        ) : (
-          <ul className="flex flex-col gap-1.5">
-            {logs.map((log) => {
-              const by = loggedByName(log);
-              return (
-                <li key={log._id}>
-                  <ListRow
-                    title={`${log.weight_kg.toFixed(1)} kg`}
-                    meta={[
-                      formatDate(log.recorded_at),
-                      hasProviderLogs && by && by !== "You" ? `by ${by}` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                    onClick={() => setOpenId(log._id)}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      {(loading || showData) && (
+        <section aria-labelledby="recent-weights">
+          <Eyebrow id="recent-weights" as="h2" className="mb-2.5 px-1">
+            Recent
+          </Eyebrow>
+          {loading ? (
+            <AsyncSpinner label="Loading logs" />
+          ) : logs.length === 0 ? (
+            <EmptySlate message="No weight logs yet." mt="mt-0" />
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {logs.map((log) => {
+                const by = loggedByName(log);
+                return (
+                  <li key={log._id}>
+                    <ListRow
+                      title={`${log.weight_kg.toFixed(1)} kg`}
+                      meta={[
+                        logDate(log.recorded_at, now),
+                        hasProviderLogs && by && by !== "You" ? `by ${by}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                      onClick={() => setOpenId(log._id)}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
 
       <LogDetailDrawer
         open={opened !== null}
@@ -316,7 +320,7 @@ export default function WeightLogPage() {
         fields={
           opened
             ? [
-                { label: "Date", value: formatDate(opened.recorded_at) },
+                { label: "Date", value: logDate(opened.recorded_at, now) },
                 { label: "Weight", value: `${opened.weight_kg.toFixed(1)} kg` },
                 { label: "Note", value: opened.note },
                 { label: "Logged by", value: hasProviderLogs ? loggedByName(opened) : null },

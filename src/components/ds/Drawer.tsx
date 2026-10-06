@@ -1,5 +1,13 @@
 "use client";
 
+/**
+ * Drawer — a side panel dialog.
+ *
+ * Focus: on open, focus moves into the panel (the close button when there
+ * is a title, else the panel itself); Tab and Shift+Tab stay inside it; on
+ * close, focus returns to the element that had it when the drawer opened
+ * (usually the row or button that opened it), if that is still on the page.
+ */
 import { useEffect, useState, useRef, useCallback } from "react";
 
 interface DrawerProps {
@@ -22,16 +30,42 @@ export function Drawer({
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+
+  // Remember the opener as the drawer opens; give focus back when it closes.
+  useEffect(() => {
+    if (!open) return;
+    const active = document.activeElement;
+    openerRef.current = active instanceof HTMLElement && active !== document.body ? active : null;
+    return () => {
+      const opener = openerRef.current;
+      openerRef.current = null;
+      if (opener && opener.isConnected) opener.focus();
+    };
+  }, [open]);
+
+  // Move focus in once the panel is mounted.
+  useEffect(() => {
+    if (!open || !shouldRender) return;
+    const target = closeRef.current ?? panelRef.current;
+    if (target && !panelRef.current?.contains(document.activeElement)) target.focus();
+  }, [open, shouldRender]);
+
+  // Mount on open and start the slide-out on close during render (React's
+  // "adjust state when a prop changes" pattern), so no effect sets state
+  // synchronously. The slide-in waits a frame; the unmount waits for the
+  // slide-out.
+  if (open && !shouldRender) setShouldRender(true);
+  if (!open && isAnimating) setIsAnimating(false);
 
   useEffect(() => {
     if (open) {
-      setShouldRender(true);
-      requestAnimationFrame(() => setIsAnimating(true));
-    } else {
-      setIsAnimating(false);
-      const timer = setTimeout(() => setShouldRender(false), 220);
-      return () => clearTimeout(timer);
+      const frame = requestAnimationFrame(() => setIsAnimating(true));
+      return () => cancelAnimationFrame(frame);
     }
+    const timer = setTimeout(() => setShouldRender(false), 220);
+    return () => clearTimeout(timer);
   }, [open]);
 
   useEffect(() => {
@@ -53,6 +87,14 @@ export function Drawer({
 
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+
+    // Focus on the panel itself, or somewhere outside it: pull it back in.
+    if (!(active instanceof HTMLElement) || active === panelRef.current || !panelRef.current.contains(active)) {
+      e.preventDefault();
+      (e.shiftKey ? last : first).focus();
+      return;
+    }
 
     if (e.shiftKey) {
       if (document.activeElement === first) {
@@ -90,10 +132,11 @@ export function Drawer({
       />
       <div
         ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="absolute top-0 bottom-0 flex flex-col bg-bg"
+        className="absolute top-0 bottom-0 flex flex-col bg-bg focus:outline-none"
         style={{
           [side]: 0,
           width,
@@ -118,6 +161,8 @@ export function Drawer({
               {title}
             </h3>
             <button
+              ref={closeRef}
+              type="button"
               onClick={onClose}
               className="flex h-7 w-7 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-bg-2 hover:text-ink"
               aria-label="Close"

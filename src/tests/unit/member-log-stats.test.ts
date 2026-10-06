@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
+import { activityTypeLabel, logDate } from "@/app/dashboard/member/_lib/logFormat";
 import {
+  mayBeTruncated,
   mealsToday,
   nextStreakMilestone,
   recentWeights,
@@ -88,5 +90,30 @@ describe("nextStreakMilestone", () => {
     expect(nextStreakMilestone(7)).toBe(30);
     expect(nextStreakMilestone(32)).toBe(50);
     expect(nextStreakMilestone(365)).toBeNull();
+  });
+});
+
+describe("mayBeTruncated", () => {
+  const rows = (days: number[]) => days.map((d) => ({ at: at(2026, 10, d) }));
+  it("is true only for a full page that still sits inside the window", () => {
+    expect(mayBeTruncated(rows([7, 6, 5]), (r) => r.at, 3, NOW)).toBe(true);
+    expect(mayBeTruncated(rows([7, 6]), (r) => r.at, 3, NOW)).toBe(false);
+    // Full page, but its oldest row is before the window: the window is complete.
+    expect(mayBeTruncated([...rows([7, 6]), { at: at(2026, 8, 1) }], (r) => r.at, 3, NOW)).toBe(false);
+  });
+});
+
+describe("logDate / activityTypeLabel", () => {
+  it("says Today only for the viewer's day, and never without a clock", () => {
+    expect(logDate(at(2026, 10, 7, 23), NOW)).toBe("Today");
+    expect(logDate(at(2026, 10, 7, 23), null)).not.toBe("Today");
+    expect(logDate(at(2026, 10, 6), NOW)).not.toBe("Today");
+    expect(logDate("garbage", NOW)).toBe("-");
+  });
+
+  it("labels workout types instead of showing the raw enum", () => {
+    expect(activityTypeLabel("hiit")).toBe("HIIT");
+    expect(activityTypeLabel("strength")).toBe("Strength");
+    expect(activityTypeLabel("parkour")).toBe("parkour");
   });
 });

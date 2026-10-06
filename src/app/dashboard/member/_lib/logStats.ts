@@ -26,6 +26,22 @@ export function onDays<T>(items: readonly T[], at: (item: T) => DatedEvent, keys
   });
 }
 
+/**
+ * True when a newest-first page of `limit` records may have cut the window
+ * short: the page is full and its oldest record is still inside the
+ * `days`-day window, so older records in the window may not have loaded.
+ */
+export function mayBeTruncated<T>(
+  items: readonly T[],
+  at: (item: T) => DatedEvent,
+  limit: number,
+  now: Date,
+  days = 30,
+): boolean {
+  if (items.length < limit) return false;
+  return onDays(items, at, windowDayKeys(now, days)).length === items.length;
+}
+
 export interface WorkoutLike {
   performed_at: string;
   duration_minutes?: number | null;
