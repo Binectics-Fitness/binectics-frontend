@@ -1,18 +1,7 @@
 import type { MyCheckInDashboardStats } from "@/lib/types";
 
-/**
- * GET /checkins/dashboard-stats, plus the fields API #191 adds. They are
- * optional on purpose: an API build without them still works, and the UI
- * then simply leaves out the "longest streak" line and the at-risk hint.
- * Once #191 is in the generated schema, fold these into the shared type.
- */
-export interface StreakStats extends MyCheckInDashboardStats {
-  /** The streak is still alive from yesterday but today has no check-in yet. */
-  streak_at_risk?: boolean;
-  longest_streak_days?: number;
-  /** IANA zone the API counted days in. */
-  streak_timezone?: string;
-}
+/** GET /checkins/dashboard-stats; the API #191 fields on it are optional. */
+export type StreakStats = MyCheckInDashboardStats;
 
 export function dayUnit(n: number): string {
   return n === 1 ? "day" : "days";
