@@ -1,26 +1,26 @@
 import { describe, expect, it } from "vitest";
 import { ConsultationBookingStatus as S, type ConsultationBooking } from "@/lib/api/consultations";
-import { coachSchedule, gapAnchors, scheduleGaps } from "../coachSchedule";
+import { coachSchedule, gapAnchors, isExpiredHold, scheduleGaps } from "../coachSchedule";
 
-// Local wall-clock times on one day, so the tests hold in any TZ.
-const at = (day: number, h: number, m = 0) => new Date(2026, 9, day, h, m).toISOString();
+const LAGOS = "Africa/Lagos"; // UTC+1, no DST
+// Lagos wall-clock h:m on 2026-10-(day), as a UTC instant.
+const lagos = (day: number, h: number, m = 0) => Date.UTC(2026, 9, day, h - 1, m);
 
-function booking(id: string, day: number, h: number, mins: number, status = S.CONFIRMED, m = 0): ConsultationBooking {
-  const start = new Date(2026, 9, day, h, m);
+function booking(id: string, day: number, h: number, mins: number, status = S.CONFIRMED, m = 0, extra: Partial<ConsultationBooking> = {}): ConsultationBooking {
+  const start = lagos(day, h, m);
   return {
     id,
     clientUserId: "c",
     providerId: "p",
     consultationTypeId: "t",
-    startsAt: start.toISOString(),
-    endsAt: new Date(start.getTime() + mins * 60000).toISOString(),
-    providerTimezone: "Africa/Lagos",
-    clientTimezone: "Africa/Lagos",
+    startsAt: new Date(start).toISOString(),
+    endsAt: new Date(start + mins * 60000).toISOString(),
+    providerTimezone: LAGOS,
+    clientTimezone: LAGOS,
     status,
+    ...extra,
   } as ConsultationBooking;
 }
-
-const today = new Date(2026, 9, 6, 8);
 
 describe("coachSchedule", () => {
   const rows = [
@@ -32,17 +32,48 @@ describe("coachSchedule", () => {
     booking("yesterday", 5, 10, 60),
   ];
 
-  it("lists every booking on today's date in start order, cancelled included", () => {
-    const s = coachSchedule(rows, today, new Date(at(6, 12)).getTime());
+  it("lists every booking on the org's today in start order, cancelled included", () => {
+    const s = coachSchedule(rows, lagos(6, 12), LAGOS);
+    expect(s.todayKey).toBe("2026-10-06");
+    expect(s.tomorrowKey).toBe("2026-10-07");
     expect(s.today.map((b) => b.id)).toEqual(["done", "am", "cancelled", "pm"]);
     expect(s.liveToday).toBe(3);
   });
 
   it("counts only open sessions that haven't started as still to come", () => {
-    const s = coachSchedule(rows, today, new Date(at(6, 12)).getTime());
+    const s = coachSchedule(rows, lagos(6, 12), LAGOS);
     expect(s.stillToCome).toBe(1); // pm; am already started, done is completed
     expect(s.upcoming.map((b) => b.id)).toEqual(["pm", "later"]);
     expect(s.later.map((b) => b.id)).toEqual(["later"]);
+  });
+
+  it("buckets by the org's day, not the viewer's", () => {
+    // 23:30 UTC on the 6th: 19:30 on the 6th in New York, 00:30 on the 7th in Lagos.
+    const now = Date.UTC(2026, 9, 6, 23, 30);
+    const early = booking("early", 7, 8, 60); // 08:00 Lagos on the 7th
+    const lagosView = coachSchedule([early], now, LAGOS);
+    expect(lagosView.todayKey).toBe("2026-10-07");
+    expect(lagosView.today.map((b) => b.id)).toEqual(["early"]);
+    expect(lagosView.stillToCome).toBe(1);
+    // The same instant bucketed in New York's zone would be the 6th and miss it.
+    const nyView = coachSchedule([early], now, "America/New_York");
+    expect(nyView.todayKey).toBe("2026-10-06");
+    expect(nyView.today).toEqual([]);
+  });
+
+  it("does not count an expired payment hold as today, still to come or upcoming", () => {
+    const hold = booking("hold", 6, 15, 60, S.PENDING, 0, {
+      payment: { reference: "r", expiresAt: new Date(lagos(6, 11)).toISOString() },
+    });
+    const now = lagos(6, 12);
+    expect(isExpiredHold(hold, now)).toBe(true);
+    const s = coachSchedule([hold], now, LAGOS);
+    expect(s.today.map((b) => b.id)).toEqual(["hold"]); // still listed, as expired
+    expect(s.liveToday).toBe(0);
+    expect(s.stillToCome).toBe(0);
+    expect(s.upcoming).toEqual([]);
+    // A live hold still counts.
+    expect(coachSchedule([hold], lagos(6, 10), LAGOS).stillToCome).toBe(1);
   });
 });
 

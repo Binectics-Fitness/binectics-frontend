@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { AsyncSpinner, Eyebrow, IconTile, ListRow, PageHeader, RoleShell } from "@/components/ds";
+import { ShownCopyOnly } from "../trainer/_components/ShownCopyOnly";
 import { CalendarClock } from "lucide-react";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
@@ -80,7 +81,7 @@ function BookingRow({
 
   const holdUntil = isPayable(booking) && booking.payment?.expiresAt ? booking.payment.expiresAt : null;
   const cancelReason = booking.status === ConsultationBookingStatus.CANCELLED ? booking.cancelReason : undefined;
-  const hasFooter = Boolean(holdUntil || cancelReason || booking.notes || hasPaidReceipt(booking) || onPay || children);
+  const timezone = booking.clientTimezone || getClientTimezone();
 
   return (
     <div className="mb-2 flex flex-col">
@@ -106,54 +107,69 @@ function BookingRow({
         title={
           <>
             {booking.consultationTypeName ?? "Consultation"} &middot; {durationMin} min
+            {/* The date block is decorative; this is its text for screen readers. */}
+            <span className="sr-only">, {date.full}</span>
           </>
         }
-        meta={`${date.dow} · ${date.time} · ${booking.clientTimezone || getClientTimezone()}`}
+        // Time first so it survives truncation; the timezone only where there is room.
+        meta={
+          <>
+            {date.time} · {date.dow}
+            <span className="hidden sm:inline"> · {timezone}</span>
+          </>
+        }
         trailing={<StatusPill tone={statusTone(booking)} label={bookingLabel(booking)} />}
       />
 
-      {hasFooter && (
-        <div className="flex flex-col gap-2 px-3.5 pt-2 pb-1">
-          {holdUntil && (
-            <div className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
-              Slot held until {formatClock(holdUntil)}
-            </div>
-          )}
-          {cancelReason && (
-            <div className="text-[12.5px] truncate" style={{ color: "var(--fg-2)" }}>
-              {cancelReason}
-            </div>
-          )}
-          {booking.notes && (
-            <div className="text-[12.5px] truncate" style={{ color: "var(--fg-2)" }}>
-              {booking.notes}
-            </div>
-          )}
-          {/* Siblings of the row, not children: a button cannot contain a
-              link or another button. Pay now is hidden where the panel
-              below already offers the payment. */}
-          {(hasPaidReceipt(booking) || onPay) && (
-            <div className="flex justify-end gap-2">
-              {hasPaidReceipt(booking) && (
-                <Link href={receiptHref(booking.id)} className="btn-ghost-v2 sm" data-testid="booking-receipt-link">
-                  Receipt
-                </Link>
-              )}
-              {onPay && (
-                <button
-                  type="button"
-                  onClick={onPay}
-                  className={`btn-primary-v2 sm ${isSelected ? "hidden lg:inline-flex" : ""}`}
-                  data-testid="pay-now"
-                >
+      <div className="flex flex-col gap-2 px-3.5 pt-2 pb-1">
+        {/* Phones have no detail column, so the booking ID (and the
+            timezone the meta line drops) are shown here. */}
+        <div
+          className="lg:hidden font-mono text-[11px] uppercase tracking-[0.04em]"
+          style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}
+        >
+          Booking {booking.id.slice(-8)}
+          <span className="normal-case"> · {timezone}</span>
+        </div>
+        {holdUntil && (
+          <div className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
+            Slot held until {formatClock(holdUntil)}
+          </div>
+        )}
+        {cancelReason && (
+          <div className="text-[12.5px] truncate" style={{ color: "var(--fg-2)" }}>
+            {cancelReason}
+          </div>
+        )}
+        {booking.notes && (
+          <div className="text-[12.5px] truncate" style={{ color: "var(--fg-2)" }}>
+            {booking.notes}
+          </div>
+        )}
+        {/* Siblings of the row, not children: a button cannot contain a
+            link or another button. Pay now is hidden where the panel
+            below already offers the payment. */}
+        {(hasPaidReceipt(booking) || onPay) && (
+          <div className="flex justify-end gap-2">
+            {hasPaidReceipt(booking) && (
+              <Link href={receiptHref(booking.id)} className="btn-ghost-v2 sm" data-testid="booking-receipt-link">
+                Receipt
+              </Link>
+            )}
+            {onPay && (
+              // The visibility sits on a wrapper: the unlayered
+              // `.btn-primary-v2 { display: inline-flex }` beats a
+              // layered `hidden` on the button itself.
+              <span className={isSelected ? "hidden lg:flex" : "flex"}>
+                <button type="button" onClick={onPay} className="btn-primary-v2 sm" data-testid="pay-now">
                   Pay now
                 </button>
-              )}
-            </div>
-          )}
-          {children}
-        </div>
-      )}
+              </span>
+            )}
+          </div>
+        )}
+        {children}
+      </div>
     </div>
   );
 }
@@ -351,203 +367,212 @@ export default function MyBookingsPage() {
   const counts = useMemo(() => bookings.length, [bookings]);
 
   return (
-    <RoleShell activeItem="Bookings" memberActiveLabel="Bookings" crumb="My bookings">
-      <div>
-        <PageHeader
-          title={{ before: "Your ", emphasis: "bookings" }}
-          subtitle="All your sessions across trainers and dietitians, in one place."
-          actions={
-            <Link href="/marketplace" className="btn-primary-v2 sm">
-              + Book new session
-            </Link>
-          }
-        />
-
-        {/* Gym class bookings — renders only when the member has some */}
-        <MyClassBookingsCard />
-
-        <div className="flex gap-0 mb-6" style={{ borderBottom: "1px solid var(--border)" }}>
-          {TABS.map((t) => {
-            const isActive = activeTab === t.key;
-            return (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={`px-4.5 py-3 text-[14px] -mb-px cursor-pointer inline-flex items-center gap-2 ${isActive ? "border-b-2 border-ink font-medium" : ""}`}
-                style={{ color: isActive ? "var(--ink)" : "var(--fg-3)" }}
-              >
-                {t.label}
-                {isActive && (
-                  <span
-                    className="font-mono text-[11px] px-1.5 py-px"
-                    style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
-                  >
-                    {counts}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] items-start gap-6 lg:gap-8">
+    <>
+      <RoleShell activeItem="Bookings" memberActiveLabel="Bookings" crumb="My bookings">
+        {/* Provider shells mount their children twice (desktop + mobile);
+            only the shown copy is mounted, so there is one h1 and one set of
+            payment panels. */}
+        <ShownCopyOnly>
           <div>
-            {loading && (
-              <div className="rounded-(--r-3) px-4.5 py-8" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <AsyncSpinner label="Loading bookings" />
-              </div>
-            )}
-            {!loading && error && (
-              <div
-                className="rounded-(--r-3) p-5"
-                style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}
-              >
-                <div className="text-[14px] font-medium">Couldn&apos;t load bookings</div>
-                <div className="text-[13px] mt-1" style={{ color: "var(--ink)" }}>
-                  {error}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => loadBookings(activeTab)}
-                  className="btn-ghost-v2 sm mt-3"
-                >
-                  Try again
-                </button>
-              </div>
-            )}
-            {!loading && !error && bookings.length === 0 && <EmptyState tab={activeTab} />}
-            {!loading && !error && bookings.length > 0 && (
-              <>
-                {grouped.map(([monthLabel, items]) => (
-                  <div key={monthLabel} className="mb-1">
-                    <div className="flex justify-between pb-1.5">
-                      <Eyebrow as="h2">{monthLabel}</Eyebrow>
-                      <Eyebrow as="span">
-                        {items.length} {items.length === 1 ? "session" : "sessions"}
-                      </Eyebrow>
-                    </div>
-                    {items.map((b) => (
-                      <BookingRow
-                        key={b.id}
-                        booking={b}
-                        isSelected={b.id === selectedId}
-                        onSelect={() => setSelectedId(b.id)}
-                        onPay={isPayable(b) ? () => payFor(b.id) : undefined}
+            <PageHeader
+              title={{ before: "Your ", emphasis: "bookings" }}
+              subtitle="All your sessions across trainers and dietitians, in one place."
+              actions={
+                <Link href="/marketplace" className="btn-primary-v2 sm">
+                  + Book new session
+                </Link>
+              }
+            />
+
+            {/* Gym class bookings — renders only when the member has some */}
+            <MyClassBookingsCard />
+
+            <div className="flex gap-0 mb-6" style={{ borderBottom: "1px solid var(--border)" }}>
+              {TABS.map((t) => {
+                const isActive = activeTab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={`px-4.5 py-3 text-[14px] -mb-px cursor-pointer inline-flex items-center gap-2 ${isActive ? "border-b-2 border-ink font-medium" : ""}`}
+                    style={{ color: isActive ? "var(--ink)" : "var(--fg-3)" }}
+                  >
+                    {t.label}
+                    {isActive && (
+                      <span
+                        className="font-mono text-[11px] px-1.5 py-px"
+                        style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}
                       >
-                        {b.id === selectedId && isPayable(b) && (
-                          <div className="lg:hidden pt-1 pb-3">
-                            <BookingPaymentPanel booking={b} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
-                          </div>
-                        )}
-                      </BookingRow>
-                    ))}
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-
-          <div
-            className="hidden lg:block sticky top-20 rounded-(--r-3) overflow-hidden"
-            style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-          >
-            {!selected && (
-              <div className="p-6 text-[13px] text-center" style={{ color: "var(--fg-3)" }}>
-                Select a booking to see details.
-              </div>
-            )}
-            {selected && (
-              <>
-                <div className="px-5 pt-4.5 pb-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                    Booking {selected.id.slice(-8)}
-                  </div>
-                  <div className="text-[18px] font-medium mt-1.5" style={{ letterSpacing: "-0.012em", color: "var(--ink)" }}>
-                    {formatDateBlock(selected.startsAt).full}
-                  </div>
-                </div>
-
-                <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <StatusPill tone={statusTone(selected)} label={bookingLabel(selected)} />
-                  {isPayable(selected) && (
-                    <div className="mt-3">
-                      <BookingPaymentPanel booking={selected} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
-                    </div>
-                  )}
-                  {bookingPaymentState(selected) === "expired" && (
-                    <div className="text-[12.5px] mt-2 leading-relaxed" style={{ color: "var(--fg-3)" }}>
-                      The hold on this slot ran out before payment, so it was released.{" "}
-                      <Link href="/marketplace" className="underline" style={{ color: "var(--ink)" }}>Choose another time</Link>.
-                    </div>
-                  )}
-                  {selected.cancelReason && bookingPaymentState(selected) !== "expired" && (
-                    <div className="text-[12.5px] mt-2" style={{ color: "var(--fg-3)" }}>
-                      {selected.cancelReason}
-                    </div>
-                  )}
-                </div>
-
-                <div className="px-5 py-4 flex flex-col gap-1.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>
-                    When &amp; where
-                  </div>
-                  {[
-                    { k: "Date", v: formatDateBlock(selected.startsAt).full },
-                    { k: "Time", v: formatDateBlock(selected.startsAt).time },
-                    {
-                      k: "Duration",
-                      v: `${Math.round((new Date(selected.endsAt).getTime() - new Date(selected.startsAt).getTime()) / 60000)} min`,
-                    },
-                    { k: "Timezone", v: selected.providerTimezone || getClientTimezone() },
-                  ].map((r) => (
-                    <div key={r.k} className="flex justify-between text-[13px] py-1.5 gap-3">
-                      <span style={{ color: "var(--fg-3)" }}>{r.k}</span>
-                      <span className="font-mono text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-                        {r.v}
+                        {counts}
                       </span>
-                    </div>
-                  ))}
-                </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-                {selected.notes && (
-                  <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>
-                      Notes
-                    </div>
-                    <div className="text-[13px] leading-relaxed" style={{ color: "var(--ink)" }}>
-                      {selected.notes}
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] items-start gap-6 lg:gap-8">
+              <div>
+                {loading && (
+                  <div className="rounded-(--r-3) px-4.5 py-8" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                    <AsyncSpinner label="Loading bookings" />
                   </div>
                 )}
-
-                {(selected.status === ConsultationBookingStatus.PENDING ||
-                  selected.status === ConsultationBookingStatus.CONFIRMED) && (
-                  <div className="px-5 py-4 flex flex-col gap-2" style={{ background: "var(--bg-2)" }}>
+                {!loading && error && (
+                  <div
+                    className="rounded-(--r-3) p-5"
+                    style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}
+                  >
+                    <div className="text-[14px] font-medium">Couldn&apos;t load bookings</div>
+                    <div className="text-[13px] mt-1" style={{ color: "var(--ink)" }}>
+                      {error}
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setRescheduleOpen(true)}
-                      className="btn-ghost-v2 sm w-full justify-center"
-                      disabled={actionLoading}
+                      onClick={() => loadBookings(activeTab)}
+                      className="btn-ghost-v2 sm mt-3"
                     >
-                      Reschedule
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCancelOpen(true)}
-                      className="btn-ghost-v2 sm w-full justify-center"
-                      style={{ color: "var(--danger)" }}
-                      disabled={actionLoading}
-                    >
-                      Cancel booking
+                      Try again
                     </button>
                   </div>
                 )}
-              </>
-            )}
+                {!loading && !error && bookings.length === 0 && <EmptyState tab={activeTab} />}
+                {!loading && !error && bookings.length > 0 && (
+                  <>
+                    {grouped.map(([monthLabel, items]) => (
+                      <div key={monthLabel} className="mb-1">
+                        <div className="flex justify-between pb-1.5">
+                          <Eyebrow as="h2">{monthLabel}</Eyebrow>
+                          <Eyebrow as="span">
+                            {items.length} {items.length === 1 ? "session" : "sessions"}
+                          </Eyebrow>
+                        </div>
+                        {items.map((b) => (
+                          <BookingRow
+                            key={b.id}
+                            booking={b}
+                            isSelected={b.id === selectedId}
+                            onSelect={() => setSelectedId(b.id)}
+                            onPay={isPayable(b) ? () => payFor(b.id) : undefined}
+                          >
+                            {b.id === selectedId && isPayable(b) && (
+                              <div className="lg:hidden pt-1 pb-3">
+                                <BookingPaymentPanel booking={b} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
+                              </div>
+                            )}
+                          </BookingRow>
+                        ))}
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+
+              <div
+                className="hidden lg:block sticky top-20 rounded-(--r-3) overflow-hidden"
+                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+              >
+                {!selected && (
+                  <div className="p-6 text-[13px] text-center" style={{ color: "var(--fg-3)" }}>
+                    Select a booking to see details.
+                  </div>
+                )}
+                {selected && (
+                  <>
+                    <div className="px-5 pt-4.5 pb-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+                        Booking {selected.id.slice(-8)}
+                      </div>
+                      <div className="text-[18px] font-medium mt-1.5" style={{ letterSpacing: "-0.012em", color: "var(--ink)" }}>
+                        {formatDateBlock(selected.startsAt).full}
+                      </div>
+                    </div>
+
+                    <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <StatusPill tone={statusTone(selected)} label={bookingLabel(selected)} />
+                      {isPayable(selected) && (
+                        <div className="mt-3">
+                          <BookingPaymentPanel booking={selected} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
+                        </div>
+                      )}
+                      {bookingPaymentState(selected) === "expired" && (
+                        <div className="text-[12.5px] mt-2 leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                          The hold on this slot ran out before payment, so it was released.{" "}
+                          <Link href="/marketplace" className="underline" style={{ color: "var(--ink)" }}>Choose another time</Link>.
+                        </div>
+                      )}
+                      {selected.cancelReason && bookingPaymentState(selected) !== "expired" && (
+                        <div className="text-[12.5px] mt-2" style={{ color: "var(--fg-3)" }}>
+                          {selected.cancelReason}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-5 py-4 flex flex-col gap-1.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>
+                        When &amp; where
+                      </div>
+                      {[
+                        { k: "Date", v: formatDateBlock(selected.startsAt).full },
+                        { k: "Time", v: formatDateBlock(selected.startsAt).time },
+                        {
+                          k: "Duration",
+                          v: `${Math.round((new Date(selected.endsAt).getTime() - new Date(selected.startsAt).getTime()) / 60000)} min`,
+                        },
+                        { k: "Timezone", v: selected.providerTimezone || getClientTimezone() },
+                      ].map((r) => (
+                        <div key={r.k} className="flex justify-between text-[13px] py-1.5 gap-3">
+                          <span style={{ color: "var(--fg-3)" }}>{r.k}</span>
+                          <span className="font-mono text-right" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+                            {r.v}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {selected.notes && (
+                      <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>
+                          Notes
+                        </div>
+                        <div className="text-[13px] leading-relaxed" style={{ color: "var(--ink)" }}>
+                          {selected.notes}
+                        </div>
+                      </div>
+                    )}
+
+                    {(selected.status === ConsultationBookingStatus.PENDING ||
+                      selected.status === ConsultationBookingStatus.CONFIRMED) && (
+                      <div className="px-5 py-4 flex flex-col gap-2" style={{ background: "var(--bg-2)" }}>
+                        <button
+                          type="button"
+                          onClick={() => setRescheduleOpen(true)}
+                          className="btn-ghost-v2 sm w-full justify-center"
+                          disabled={actionLoading}
+                        >
+                          Reschedule
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCancelOpen(true)}
+                          className="btn-ghost-v2 sm w-full justify-center"
+                          style={{ color: "var(--danger)" }}
+                          disabled={actionLoading}
+                        >
+                          Cancel booking
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </ShownCopyOnly>
+      </RoleShell>
 
+      {/* Siblings of the shell, so each dialog (and its unsaved-changes
+          guard) exists once. */}
       {selected && (
         <>
           <RescheduleBookingModal
@@ -598,7 +623,7 @@ export default function MyBookingsPage() {
           />
         </>
       )}
-    </RoleShell>
+    </>
   );
 }
 

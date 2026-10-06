@@ -5,6 +5,8 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { DSStatCard } from "@/components/ds";
 import { NewPlanButton } from "./_actions";
 import { CoachToday } from "../trainer/_components/CoachToday";
+import { ShownCopyOnly } from "../trainer/_components/ShownCopyOnly";
+import { useCoachTodayData } from "../trainer/_components/useCoachTodayData";
 import { progressService, type DashboardStats } from "@/lib/api/progress";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
@@ -17,6 +19,8 @@ export default function DietitianTodayClient() {
 }
 
 function DietitianTodayContent() {
+  // Everything is loaded here, outside the shell, which mounts its children twice.
+  const data = useCoachTodayData();
   // Practice stats (/progress/dashboard-stats). Optional: on failure the
   // cards are simply absent, and the page's own error rule (both list calls
   // failing) still decides whether to show the failure banner.
@@ -48,13 +52,17 @@ function DietitianTodayContent() {
 
   return (
     <DietitianDashboardShell activeItem="Today" crumb="Today" actions={<NewPlanButton />}>
-      <CoachToday
-        noun="consult"
-        calendarHref="/dashboard/dietitian/calendar"
-        clientsHref="/dashboard/dietitian/clients"
-        clientHref={(id) => `/dashboard/dietitian/clients/${id}`}
-        extraStats={extraStats}
-      />
+      {/* One mounted copy: one h1, one schedule list. */}
+      <ShownCopyOnly>
+        <CoachToday
+          data={data}
+          noun="consult"
+          calendarHref="/dashboard/dietitian/calendar"
+          clientsHref="/dashboard/dietitian/clients"
+          clientHref={(id) => `/dashboard/dietitian/clients/${id}`}
+          extraStats={extraStats}
+        />
+      </ShownCopyOnly>
     </DietitianDashboardShell>
   );
 }

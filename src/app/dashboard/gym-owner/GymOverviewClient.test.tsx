@@ -37,11 +37,12 @@ vi.mock("@/lib/api/checkins", () => ({
 vi.mock("@/lib/api/marketplace", () => ({
   marketplaceService: { getOrgMembershipSubscriptions: async () => ({ success: true, data: [] }) },
 }));
+let seriesCurrency = "NGN";
 vi.mock("@/lib/api/earnings", () => ({
   earningsService: {
     getOrgTimeseries: async () => ({
       success: true,
-      data: [{ date: new Date().toISOString().slice(0, 10), revenue_minor: 5_000_000, currency: "NGN" }],
+      data: [{ date: new Date().toISOString().slice(0, 10), revenue_minor: 9_005_000, currency: seriesCurrency }],
     }),
   },
 }));
@@ -64,5 +65,21 @@ describe("Gym overview", () => {
     expect(screen.getAllByText("Revenue · 30d").length).toBeGreaterThan(0);
     expect(screen.getAllByText("No reviews yet").length).toBeGreaterThan(0);
     expect(screen.queryByText(/churn/i)).toBeNull();
+  });
+
+  it("takes Revenue · 30d from the same series and currency as the sparkline", async () => {
+    seriesCurrency = "NGN";
+    renderWithProviders(<GymOverviewClient />);
+    // 9,005,000 kobo in the series, not the stats' revenue_month of 50,000.
+    expect((await screen.findAllByText("₦90,050", {}, { timeout: 5000 })).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText("USD")).toHaveLength(0);
+  });
+
+  it("shows the currency code when the revenue isn't in the org's currency", async () => {
+    seriesCurrency = "USD";
+    renderWithProviders(<GymOverviewClient />);
+    expect((await screen.findAllByText("USD", {}, { timeout: 5000 })).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/90,050/)[0].textContent).toMatch(/\$/);
+    expect(screen.getAllByRole("img", { name: /in USD/ }).length).toBeGreaterThan(0);
   });
 });

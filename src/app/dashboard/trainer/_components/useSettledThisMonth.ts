@@ -28,7 +28,8 @@ export function useSettledThisMonth(): string | null {
 
   const orgId = currentOrg?._id;
   const ownerId = currentOrg?.owner_id;
-  const isOwner = Boolean(orgId && user?.id && (!ownerId || String(ownerId) === user.id));
+  // Fails closed: an org without an owner_id is not treated as the user's.
+  const isOwner = Boolean(orgId && user?.id && ownerId != null && String(ownerId) === user.id);
 
   useEffect(() => {
     if (isLoading || !orgId || !isOwner) return;

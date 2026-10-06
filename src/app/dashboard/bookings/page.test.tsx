@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/tests/setup/test-utils";
 import MyBookingsPage from "./page";
 
@@ -21,23 +22,30 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/components/classes/MyClassBookingsCard", () => ({ MyClassBookingsCard: () => null }));
+const getMyBookings = vi.fn();
 vi.mock("@/lib/api/consultations", async (orig) => ({
   ...(await orig<typeof import("@/lib/api/consultations")>()),
   consultationsService: {
-    getMyBookings: async () => ({
-      success: true,
-      data: [
-        {
-          id: "b-00000001", clientUserId: "u-1", providerId: "p", consultationTypeId: "t",
-          consultationTypeName: "Strength", startsAt: "2026-10-07T08:00:00.000Z", endsAt: "2026-10-07T09:00:00.000Z",
-          providerTimezone: "Africa/Lagos", clientTimezone: "Africa/Lagos", status: "CONFIRMED",
-        },
-      ],
-    }),
+    getMyBookings: () => getMyBookings(),
   },
 }));
+const listResponse = () => ({
+  success: true,
+  data: [
+    {
+      id: "b-00000001", clientUserId: "u-1", providerId: "p", consultationTypeId: "t",
+      consultationTypeName: "Strength", startsAt: "2026-10-07T08:00:00.000Z", endsAt: "2026-10-07T09:00:00.000Z",
+      providerTimezone: "Africa/Lagos", clientTimezone: "Africa/Lagos", status: "CONFIRMED",
+    },
+  ],
+});
 
 describe("My bookings", () => {
+  beforeEach(() => {
+    getMyBookings.mockReset();
+    getMyBookings.mockImplementation(async () => listResponse());
+  });
+
   it("renders in the member's own shell, not a bespoke top nav", async () => {
     role = "USER";
     renderWithProviders(<MyBookingsPage />);
@@ -56,5 +64,25 @@ describe("My bookings", () => {
     renderWithProviders(<MyBookingsPage />);
     expect((await screen.findAllByRole("link", { name: /Today/ })).length).toBeGreaterThan(0);
     expect(screen.queryByRole("link", { name: "Activity" })).toBeNull();
+  });
+
+  it("mounts once in a provider shell, which renders its children twice", async () => {
+    role = "TRAINER";
+    renderWithProviders(<MyBookingsPage />);
+    await screen.findByText(/Strength · 60 min/);
+    expect(getMyBookings).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    // One cancel dialog, so its unsaved-changes guard is the one being typed in.
+    await userEvent.click(screen.getByRole("button", { name: "Cancel booking" }));
+    const dialogs = await screen.findAllByRole("dialog");
+    expect(dialogs).toHaveLength(1);
+    expect(within(dialogs[0]).getByText(/This will cancel your session/)).toBeTruthy();
+  });
+
+  it("names the date for screen readers, since the date block is decorative", async () => {
+    role = "USER";
+    renderWithProviders(<MyBookingsPage />);
+    const row = (await screen.findAllByText(/Strength · 60 min/))[0];
+    expect(row.textContent).toMatch(/2026/);
   });
 });

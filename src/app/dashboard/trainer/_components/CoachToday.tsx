@@ -10,7 +10,7 @@
  * Left out of the mock for want of data: slot utilisation, the 30-day
  * rating, the "forecast" and the per-row Check-in / Join buttons.
  */
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -24,27 +24,33 @@ import {
   IconTile,
   ListRow,
   PageHeader,
+  StatusPill,
 } from "@/components/ds";
 import type { TitleParts } from "@/components/ds";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
-import { progressService, type ClientProfile } from "@/lib/api/progress";
-import { consultationsService, type ConsultationBooking } from "@/lib/api/consultations";
+import type { ClientProfile } from "@/lib/api/progress";
+import type { ConsultationBooking } from "@/lib/api/consultations";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
-import { useClientNow } from "@/lib/ui/useClientNow";
+import { formatInTz } from "@/utils/format";
 import {
   bookingClientName,
   coachSchedule,
+  dayKeyInTz,
   durationMinutes,
   gapAnchors,
   initials,
+  isExpiredHold,
   isLiveBooking,
+  type ScheduleGapInfo,
 } from "./coachSchedule";
 import { ScheduleGap, ScheduleList, ScheduleRow } from "./ScheduleRow";
-import { useSettledThisMonth } from "./useSettledThisMonth";
+import type { CoachTodayData } from "./useCoachTodayData";
 
 export interface CoachTodayProps {
+  /** Loaded by the page, outside the shell (see useCoachTodayData). */
+  data: CoachTodayData;
   /** "session" for trainers, "consult" for dietitians. */
   noun: "session" | "consult";
   /** Where a session row opens; omit when the role has no detail page. */
@@ -67,17 +73,20 @@ function plural(n: number, noun: string): string {
   return `${n} ${noun}${n === 1 ? "" : "s"}`;
 }
 
-/** lg column count for N cards: 3 or 4 per row, never a ragged 4+1. */
+/** lg column count for N cards: one even row, or two rows of three. */
 const GRID_COLS: Record<number, string> = {
   1: "lg:grid-cols-3",
   2: "lg:grid-cols-3",
   3: "lg:grid-cols-3",
   4: "lg:grid-cols-4",
-  5: "lg:grid-cols-3",
+  5: "lg:grid-cols-5",
   6: "lg:grid-cols-3",
 };
+/** On the 2-column phone grid an odd last card spans both columns. */
+const ODD_LAST_SPANS = "[&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1";
 
 export function CoachToday({
+  data,
   noun,
   sessionHref,
   calendarHref,
@@ -86,51 +95,27 @@ export function CoachToday({
   extraStats = [],
 }: CoachTodayProps) {
   const { user } = useAuth();
-  const { fmtDate, fmtTime } = useOrgFormat();
-  const today = useClientNow();
-  const settled = useSettledThisMonth();
-  const [clients, setClients] = useState<ClientProfile[]>([]);
-  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
-  // When the bookings were read: "still to come" is measured against it.
-  const [loadedAt, setLoadedAt] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { fmtTime, prefs } = useOrgFormat();
+  const { clients, bookings, loadedAt, loading, error, settled } = data;
+  const timeZone = prefs.timeZone;
 
-  useEffect(() => {
-    let active = true;
-    const run = async () => {
-      setLoading(true);
-      const [clientsRes, bookingsRes] = await Promise.allSettled([
-        progressService.getMyClientProfiles(),
-        consultationsService.getProviderBookings(),
-      ]);
-      if (!active) return;
-
-      let anyOk = false;
-      if (clientsRes.status === "fulfilled" && clientsRes.value.success && clientsRes.value.data) {
-        setClients(clientsRes.value.data);
-        anyOk = true;
-      }
-      if (bookingsRes.status === "fulfilled" && bookingsRes.value.success && bookingsRes.value.data) {
-        setBookings(bookingsRes.value.data);
-        anyOk = true;
-      }
-      setLoadedAt(Date.now());
-      setError(anyOk ? null : "We couldn't load your dashboard. Try again shortly.");
-      setLoading(false);
-    };
-    const kick = window.setTimeout(() => void run(), 0);
-    return () => {
-      active = false;
-      window.clearTimeout(kick);
-    };
-  }, []);
-
+  // Day buckets and the date line are in the org's zone, like the times.
   const schedule = useMemo(
-    () => (today && loadedAt ? coachSchedule(bookings, today, loadedAt) : null),
-    [bookings, today, loadedAt],
+    () => (loadedAt ? coachSchedule(bookings, loadedAt, timeZone) : null),
+    [bookings, loadedAt, timeZone],
   );
-  const gaps = useMemo(() => (schedule ? gapAnchors(schedule.today) : new Map()), [schedule]);
+  const gaps = useMemo(
+    () => (schedule ? gapAnchors(schedule.today, loadedAt) : new Map<string, ScheduleGapInfo>()),
+    [schedule, loadedAt],
+  );
+
+  /** "Today 21:00", "Tomorrow 09:00" or "Wed 8 Oct · 09:00", in the org's zone. */
+  const when = (iso: string) => {
+    const key = dayKeyInTz(iso, timeZone);
+    if (schedule && key === schedule.todayKey) return `Today ${fmtTime(iso)}`;
+    if (schedule && key === schedule.tomorrowKey) return `Tomorrow ${fmtTime(iso)}`;
+    return `${formatInTz(iso, "EEE d MMM", timeZone)} · ${fmtTime(iso)}`;
+  };
   const activeClients = useMemo(() => clients.filter((c) => c.is_active), [clients]);
 
   const first = user?.first_name?.trim().split(/\s+/)[0];
@@ -152,7 +137,7 @@ export function CoachToday({
           key="upcoming"
           label={`Upcoming ${nouns}`}
           value={schedule.upcoming.length}
-          delta={next ? `Next ${fmtDate(next.startsAt)} · ${fmtTime(next.startsAt)}` : "None scheduled"}
+          delta={next ? when(next.startsAt) : "None scheduled"}
         />,
         ...(settled != null
           ? [<DSStatCard key="earnings" label="Earnings · this month" value={settled} delta="Settled" />]
@@ -168,7 +153,7 @@ export function CoachToday({
       {/* The shell's <main> already spaces its children (gap-5). */}
       <PageHeader
         className="mb-0!"
-        eyebrow={today ? format(today, "EEEE · d MMM") : undefined}
+        eyebrow={loadedAt ? formatInTz(new Date(loadedAt), "EEEE · d MMM", timeZone) : undefined}
         title={title}
         subtitle={
           schedule
@@ -188,11 +173,11 @@ export function CoachToday({
         </div>
       ) : null}
 
-      {(loading && clients.length === 0 && bookings.length === 0) || !schedule ? (
+      {loading || !schedule ? (
         <AsyncSpinner size="page" label="Loading your dashboard" />
       ) : (
         <>
-          <div className={`grid grid-cols-2 gap-3 ${GRID_COLS[stats.length] ?? "lg:grid-cols-4"}`}>{stats}</div>
+          <div className={`grid grid-cols-2 gap-3 ${ODD_LAST_SPANS} ${GRID_COLS[stats.length] ?? "lg:grid-cols-4"}`}>{stats}</div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-3 items-start">
             <div className="flex flex-col gap-3 min-w-0">
@@ -205,7 +190,7 @@ export function CoachToday({
                       : [
                           plural(schedule.liveToday, noun),
                           schedule.today.length > schedule.liveToday
-                            ? `${schedule.today.length - schedule.liveToday} cancelled or missed`
+                            ? `${schedule.today.length - schedule.liveToday} cancelled, missed or expired`
                             : null,
                         ]
                           .filter(Boolean)
@@ -221,7 +206,7 @@ export function CoachToday({
                   <div className="px-4.5 py-4">
                     <EmptySlate
                       message="Nothing on today."
-                      hint={next ? `Your next ${noun} is ${fmtDate(next.startsAt)} at ${fmtTime(next.startsAt)}.` : "New bookings will show up here."}
+                      hint={next ? `Your next ${noun}: ${when(next.startsAt)}.` : "New bookings will show up here."}
                       mt="mt-0"
                     />
                   </div>
@@ -234,6 +219,7 @@ export function CoachToday({
                         <ScheduleRowWithGap
                           key={b.id}
                           booking={b}
+                          nowMs={loadedAt}
                           name={name}
                           time={fmtTime(b.startsAt)}
                           href={sessionHref?.(b.id)}
@@ -253,9 +239,10 @@ export function CoachToday({
                       <ScheduleRowWithGap
                         key={b.id}
                         booking={b}
+                        nowMs={loadedAt}
                         name={bookingClientName(b)}
                         time={fmtTime(b.startsAt)}
-                        timeSub={fmtDate(b.startsAt)}
+                        timeSub={formatInTz(b.startsAt, "EEE d MMM", timeZone)}
                         href={sessionHref?.(b.id)}
                       />
                     ))}
@@ -303,6 +290,7 @@ export function CoachToday({
 
 function ScheduleRowWithGap({
   booking,
+  nowMs,
   name,
   time,
   timeSub,
@@ -310,13 +298,15 @@ function ScheduleRowWithGap({
   gapLabel,
 }: {
   booking: ConsultationBooking;
+  nowMs: number;
   name: string;
   time: string;
   timeSub?: string;
   href?: string;
   gapLabel?: string;
 }) {
-  const live = isLiveBooking(booking);
+  const live = isLiveBooking(booking, nowMs);
+  const expired = isExpiredHold(booking, nowMs);
   const meta = [booking.consultationTypeName, `${durationMinutes(booking)} min`, booking.notes].filter(Boolean).join(" · ");
   return (
     <>
@@ -327,10 +317,15 @@ function ScheduleRowWithGap({
         meta={meta}
         leading={<IconTile initials={initials(name)} size="sm" />}
         trailing={
-          <BookingStatusBadge
-            status={booking.status}
-            awaitingPayment={bookingPaymentState(booking) === "awaiting_payment"}
-          />
+          expired ? (
+            // Still PENDING in the API until the sweep cancels it.
+            <StatusPill tone="neutral" label="Hold expired" />
+          ) : (
+            <BookingStatusBadge
+              status={booking.status}
+              awaitingPayment={bookingPaymentState(booking) === "awaiting_payment"}
+            />
+          )
         }
         muted={!live}
         href={href}
