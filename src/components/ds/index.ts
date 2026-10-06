@@ -11,13 +11,30 @@ export { ShellNotificationBell } from "./ShellNotificationBell";
 
 // Phase 1 — core primitives
 export { Eyebrow } from "./Eyebrow";
+export type { EyebrowTone } from "./Eyebrow";
 export { StatusDot } from "./StatusDot";
 export { FilterPill } from "./FilterPill";
 export { ChipEditor } from "./ChipEditor";
 export { DSCard, DSCardHead } from "./DSCard";
 export { DSStatCard } from "./DSStatCard";
+export type { StatCardSize, DeltaTone } from "./DSStatCard";
 export { DSTable, DSTableHead, DSTableTh, DSTableRow, DSTableTd } from "./DSTable";
 export { DashboardTopbar } from "./DashboardTopbar";
+
+// Mosaic primitives — the homepage-mockup pattern for product screens.
+// Same names as the mobile app's components; see src/lib/ui/activity.ts.
+export { TitleWithEmphasis } from "./TitleWithEmphasis";
+export type { TitleParts } from "./TitleWithEmphasis";
+export { PageHeader } from "./PageHeader";
+export { HeroStatCard } from "./HeroStatCard";
+export type { HeroProgress } from "./HeroStatCard";
+export { ProgressBar } from "./ProgressBar";
+export { WeekStrip } from "./WeekStrip";
+export { ActivityHeatmap, HEAT_COLORS } from "./ActivityHeatmap";
+export { ListRow } from "./ListRow";
+export { SuccessTakeover, TAKEOVER_LAYER_ATTR } from "./SuccessTakeover";
+export type { TakeoverAction } from "./SuccessTakeover";
+export { Sparkline } from "./Sparkline";
 
 // Phase 2 — booking + provider patterns
 export { StatusPill } from "./StatusPill";

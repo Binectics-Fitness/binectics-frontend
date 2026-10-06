@@ -45,13 +45,13 @@ shadows, Stripe/Linear rather than Headspace.
 
 - Next.js 16 (App Router), React 19, Tailwind CSS 4
 - Backend: external API on Azure (not in this repo)
-- Fonts: Geist (display/body/UI), Geist Mono (numerals/timestamps/IDs/eyebrows), Instrument Serif Italic (marketing emphasis only, 1-2 per page max)
+- Fonts: Geist (display/body/UI), Geist Mono (numerals/timestamps/IDs/eyebrows), Instrument Serif Italic (emphasis — see the serif rule under Design Principles)
 
 ## Design Tokens (source of truth: globals.css)
 
 Core token VALUES are synced from the design system (`binectics-design-system/shared.css`,
 the block the prototype renders). `npm run tokens:check` fails on drift (CI/pre-commit);
-`npm run tokens:sync` pulls DS values into globals.css. App-only tokens (`--consumer*`,
+`npm run tokens:sync` pulls DS values into globals.css. App-only tokens (`--consumer*`, `--ink-2`, `--on-ink-*`,
 `--motion-*`, `--ease*`, `--space-*`, `--fs-*`) are frontend extensions and are left alone.
 Note: the `@binectics-fitness/tokens` package (`packages/tokens`) is a stale earlier draft
 (`--diet` naming, drifted grays) — NOT the source; reconcile it before ever consuming it.
@@ -67,6 +67,8 @@ Role: trainer     --trainer: oklch(0.72 0.13 75)          --trainer-soft: oklch(
 Role: dietitian   --dietitian: oklch(0.58 0.14 300)       --dietitian-soft: oklch(0.95 0.03 300)
 Role: admin       --admin: oklch(0.45 0.02 80)            --admin-soft: oklch(0.93 0.005 85)
 Semantic          --danger: oklch(0.58 0.18 25)  --danger-soft: oklch(0.95 0.03 25)  --warn: oklch(0.72 0.14 75)
+On ink (app-only) --ink-2: oklch(0.30 0.008 80)  --on-ink-2: oklch(0.85 0.005 85)  --on-ink-3: oklch(0.75 0.005 85)
+App-only extras   --danger-ink: oklch(0.55 0.18 25) (danger as small text)  --z-takeover: 10000
 Radii             --r-1: 3px  --r-2: 6px  --r-3: 10px  --r-full: 999px (pills/avatars/toggles only)
 Motion            --motion-fast: 120ms  --motion-base: 220ms  --motion-slow: 360ms  --motion-hero: 600ms (check-in only)
 Easing            --ease-out: (.16,1,.3,1)  --ease-spring: (.34,1.4,.64,1)
@@ -80,8 +82,13 @@ Easing            --ease-out: (.16,1,.3,1)  --ease-spring: (.34,1.4,.64,1)
 - Sentence case only, no Title Case
 - No emoji in product chrome
 - No exclamation marks in product copy
-- Mono uppercase for eyebrow labels (10-11px, +6% tracking)
+- Mono uppercase for eyebrow labels: 11px, .06em tracking, --fg-3 (`Eyebrow` / `.eyebrow`)
 - Only celebratory animation: QR check-in success
+- Serif italic (owner ruling, Oct 2026):
+  - **Product screens** (the signed-in routes in `protectedRoutes`, `src/middleware.ts`: dashboard, member, admin, check-in, checkout, teams, onboarding): at most ONE serif-italic word per screen, and only in the screen's main title. Render it with `TitleWithEmphasis` or `PageHeader title={{ emphasis }}` from `src/components/ds` — never a hand-written `<em>`/`.serif`, and never in buttons, labels, eyebrows or body copy.
+  - **Marketing pages**: 1-2 serif-italic moments per page, never on every heading.
+- Dark surfaces: the only dark product surfaces are the hero stat card and the check-in success takeover. On `--ink` use `--bg` for primary text, `--on-ink-2` for secondary, `--on-ink-3` for muted/eyebrows, and `--ink-2` for a raised surface or progress track.
+- Mosaic pattern (homepage mockups → product): build screens from the `src/components/ds` primitives — `PageHeader`, `TitleWithEmphasis`, `Eyebrow`, `DSStatCard`, `HeroStatCard`, `ProgressBar`, `WeekStrip`, `ActivityHeatmap`, `ListRow`, `Sparkline`, `SuccessTakeover` — with day states from `src/lib/ui/activity.ts` (computed on the client: pass `useClientNow()` from `src/lib/ui/useClientNow.ts` as the required `now`). Keep the 10px `--r-3` card with a hairline border; don't copy the mockup's 14-18px borderless white phone cards. No invented numbers: omit a figure, target or delta the API doesn't give you.
 - Dark text on colored backgrounds
 
 ## Typography Hierarchy

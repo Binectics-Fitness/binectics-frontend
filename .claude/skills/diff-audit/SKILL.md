@@ -24,8 +24,9 @@ For each changed file, check:
 - **Shadows** (`shadow-sm|md|lg|xl`, `boxShadow`) outside modals / check-in.
 
 ### 2. Serif italic
-- Count instances of `font-serif` + `italic` in each file
-- Flag if any file has more than 2
+Rule (owner, Oct 2026): product screens get at most ONE serif-italic word, only in the main title, via `TitleWithEmphasis` / `PageHeader title={{ emphasis }}`; marketing pages keep 1-2 per page. Product = the `protectedRoutes` in `src/middleware.ts` (today: `src/app/dashboard|member|admin|check-in|checkout|teams|onboarding/**`). Grep can't see what a page renders: check the components a changed product page imports, and count emphasis per screen, not per file.
+- Product file: any raw `serif` / `font-serif` / `--font-serif` / `<em` / italic styling is a violation (use the components; `src/components/ds/` itself is exempt). Flag more than one `TitleWithEmphasis`/`emphasis:` per screen, and any multi-word `emphasis`.
+- Marketing file: count `font-serif` + `italic` instances; flag more than 2.
 
 ### 3. Region pricing
 - Any hardcoded currency amounts (`$48`, `₦15,000`, etc.)?

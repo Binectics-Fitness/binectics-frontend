@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Full project audit — mobile responsiveness, design tokens, serif italic limit, region pricing consistency. Use when the user asks to audit, check, or verify the project.
+description: Full project audit — mobile responsiveness, design tokens, serif italic rule (one word per product screen), region pricing consistency. Use when the user asks to audit, check, or verify the project.
 argument-hint: [scope]
 arguments: [scope]
 allowed-tools: Bash(grep *) Bash(find *) Read
@@ -13,7 +13,7 @@ agent: Explore
 - **Design tokens source of truth: `src/app/globals.css`** (the "v2" oklch token layer + `btn-*-v2` utility classes). This is canonical — CLAUDE.md says so.
 - **`docs/UI_STANDARDS.md` is LEGACY** — its hex colors (`#00d991`, `#03314b`), Tailwind-scale type (`text-2xl font-black`), and `rounded-2xl/xl` radii are superseded by the token layer. Do NOT audit toward it. The only rules that survive from it (re-asserted in CLAUDE.md) are: SearchableSelect over native `<select>`, enums for domain constants, and `text-sm` mobile minimum.
 - Region pricing: all marketing pages must use `useRegion()` from `@/contexts/RegionContext`
-- Serif italic: Instrument Serif italic limited to 1-2 instances per page max
+- Serif italic (owner ruling, Oct 2026): **product screens** get at most ONE serif-italic word per screen, only in the main title, rendered via `TitleWithEmphasis` / `PageHeader title={{ emphasis }}`; never in buttons, labels, eyebrows or body. **Marketing pages** keep 1-2 serif-italic moments per page.
 - Mobile: 44px min touch targets (min-h-11), responsive at 320-430px
 - **Design system components: `src/components/ds/`** — prefer these over bespoke markup that duplicates them (`DSCard`, `DSTable`, shells, `ChipEditor`, etc.).
 - **Dropdowns: `SearchableSelect` (`@/components/SearchableSelect`), never native `<select>`.** Hard rule.
@@ -27,7 +27,10 @@ If no scope is provided, run all audits.
 ## Audits to run
 
 ### 1. Serif italic audit
-Find every file in `src/app/` that uses `font-serif` or `Instrument Serif` or `italic` class combinations. Count instances per file. Flag any file with more than 2.
+Product surfaces are the signed-in routes: read the `protectedRoutes` array in `src/middleware.ts` and treat `src/app/<route>/**` for each entry as product (today: dashboard, member, admin, check-in, checkout, teams, onboarding). Everything else in `src/app/` is marketing.
+Grep only sees the file a pattern is in, not the components a page renders: for a product page, also open the components it imports from outside `src/components/ds/` and apply the product rule to them, and count emphasis across the whole screen, not per file.
+- **Product files:** grep for `serif` (the `.serif` class), `font-serif`, `--font-serif`, `Instrument Serif`, `<em` and `fontStyle: "italic"` / `italic` classes. Any hit is a violation — serif emphasis must come from `TitleWithEmphasis` or `PageHeader title={{ emphasis: … }}` (the components themselves in `src/components/ds/` are exempt). A hand-rolled `<em style={{fontStyle:"italic"}}>` in an H1 is also a violation (Geist italic follows neither rule). Then count `TitleWithEmphasis` + `emphasis:` uses per page file (including the components it renders): flag any screen with more than 1, and any `emphasis` value containing whitespace (one word only).
+- **Marketing files:** count `font-serif` / `.serif` / `Instrument Serif` italic instances per file. Flag any file with more than 2.
 
 ### 2. Region pricing audit
 Find every file in `src/app/` and `src/components/` that contains hardcoded currency symbols (`$`, `₦`, `£`, `€`, `R `, `KSh`, `₹`, `د.إ`) followed by numbers. These should use `useRegion()` instead. Exclude:
