@@ -11,16 +11,24 @@
  *
  * Layout: --ink ground; 80px --signal circle with an ink tick; mono status
  * line in --signal; title with one serif-italic word; optional sub line;
- * `children` (e.g. <HeroStatCard surface="raised">); a full-width --bg
- * primary action pinned to the bottom.
+ * `children` (e.g. <HeroStatCard surface="raised" align="center">); a
+ * full-width --bg primary action pinned to the bottom.
+ *
+ * Layering: portalled to <body> at z-index var(--z-takeover), above the
+ * cookie banner, toasts and drawers. Every other child of <body> is made
+ * `inert` while it is open, so nothing behind it can be clicked, focused or
+ * read.
  *
  * Accessibility: role="dialog" + aria-modal, labelled by the title and
  * described by the status line. Focus moves to the primary action on open,
- * Tab is kept inside, Escape calls `onDismiss` when given, and focus returns
- * to where it was on close. Page scroll is locked while open.
+ * Tab and Shift+Tab wrap inside, Escape calls `onDismiss` when given, and
+ * focus returns to where it was on close. Page scroll is locked through the
+ * shared reference-counted lock (src/lib/ui/scrollLock.ts).
  */
 import Link from "next/link";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { lockScroll } from "@/lib/ui/scrollLock";
 import { TitleWithEmphasis, type TitleParts } from "./TitleWithEmphasis";
 
 export type TakeoverAction =
@@ -41,8 +49,21 @@ interface SuccessTakeoverProps {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-const ACTION_CLASS =
-  "flex h-12 w-full items-center justify-center rounded-[var(--r-3)] text-[15px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2";
+const ACTION_CLASS = "flex h-12 w-full items-center justify-center rounded-[var(--r-3)] text-[15px] font-medium";
+
+/**
+ * The global `:focus-visible { outline: 2px solid var(--ink) }` would draw an
+ * ink ring on an ink ground. An inline outline-color outranks it while the
+ * global rule still supplies the style and width, so the ring is --bg here.
+ */
+const ACTION_STYLE = {
+  background: "var(--bg)",
+  color: "var(--ink)",
+  outlineColor: "var(--bg)",
+  outlineOffset: 3,
+} as const;
+
+const noopSubscribe = () => () => {};
 
 export function SuccessTakeover({
   status,
@@ -57,15 +78,39 @@ export function SuccessTakeover({
   const rootRef = useRef<HTMLDivElement>(null);
   const actionRef = useRef<HTMLElement | null>(null);
   const dismissRef = useRef(onDismiss);
+  // Portals need document; render nothing on the server and during hydration.
+  const mounted = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     dismissRef.current = onDismiss;
   }, [onDismiss]);
 
   useEffect(() => {
+    const root = rootRef.current;
+    if (!mounted || !root) return;
     const previous = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const release = lockScroll();
+
+    // Make everything else on the page inert; remember only what we changed.
+    const madeInert: HTMLElement[] = [];
+    const makeInert = (el: Element) => {
+      // The attribute (not the .inert property) so it also holds where the
+      // property isn't implemented; browsers reflect one to the other.
+      if (el === root || !(el instanceof HTMLElement) || el.hasAttribute("inert")) return;
+      el.setAttribute("inert", "");
+      madeInert.push(el);
+    };
+    Array.from(document.body.children).forEach(makeInert);
+    // Layers that mount later (the cookie banner, toasts) get the same.
+    const observer = new MutationObserver((records) => {
+      for (const r of records) r.addedNodes.forEach((n) => n instanceof Element && makeInert(n));
+    });
+    observer.observe(document.body, { childList: true });
+
     actionRef.current?.focus();
 
     function onKeyDown(e: KeyboardEvent) {
@@ -73,16 +118,16 @@ export function SuccessTakeover({
         dismissRef.current?.();
         return;
       }
-      if (e.key !== "Tab" || !rootRef.current) return;
-      const focusable = Array.from(rootRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (e.key !== "Tab" || !root) return;
+      const focusable = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE));
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       const active = document.activeElement;
-      if (e.shiftKey && (active === first || !rootRef.current.contains(active))) {
+      if (e.shiftKey && (active === first || !root.contains(active))) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && (active === last || !rootRef.current.contains(active))) {
+      } else if (!e.shiftKey && (active === last || !root.contains(active))) {
         e.preventDefault();
         first.focus();
       }
@@ -91,22 +136,24 @@ export function SuccessTakeover({
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      observer.disconnect();
+      for (const el of madeInert) el.removeAttribute("inert");
+      release();
       if (previous && document.contains(previous)) previous.focus();
     };
-  }, []);
+  }, [mounted]);
 
-  const actionStyle = { background: "var(--bg)", color: "var(--ink)" };
+  if (!mounted) return null;
 
-  return (
+  return createPortal(
     <div
       ref={rootRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={statusId}
-      className="takeover fixed inset-0 z-[100] flex flex-col overflow-y-auto"
-      style={{ background: "var(--ink)", color: "var(--bg)" }}
+      className="takeover fixed inset-0 flex flex-col overflow-y-auto"
+      style={{ background: "var(--ink)", color: "var(--bg)", zIndex: "var(--z-takeover)" }}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 py-10 text-center">
         <div
@@ -129,9 +176,11 @@ export function SuccessTakeover({
           </svg>
         </div>
 
+        {/* The gap to the title lives here: a margin on the heading would
+            lose to the global `h1…h6 { margin: 0 }`. */}
         <p
           id={statusId}
-          className="takeover-rise font-mono text-[11px] uppercase tracking-[0.06em]"
+          className="takeover-rise mb-2.5 font-mono text-[11px] uppercase tracking-[0.06em]"
           style={{ color: "var(--signal)", animationDelay: "950ms" }}
         >
           <span aria-hidden="true">● </span>
@@ -142,7 +191,7 @@ export function SuccessTakeover({
           {...title}
           as="h2"
           id={titleId}
-          className="takeover-rise mt-2.5 text-[32px]"
+          className="takeover-rise text-[32px]"
           style={{ color: "var(--bg)", animationDelay: "1040ms" }}
         />
 
@@ -170,7 +219,7 @@ export function SuccessTakeover({
             }}
             href={primaryAction.href}
             className={ACTION_CLASS}
-            style={actionStyle}
+            style={ACTION_STYLE}
           >
             {primaryAction.label}
           </Link>
@@ -182,12 +231,13 @@ export function SuccessTakeover({
             type="button"
             onClick={primaryAction.onClick}
             className={ACTION_CLASS}
-            style={actionStyle}
+            style={ACTION_STYLE}
           >
             {primaryAction.label}
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

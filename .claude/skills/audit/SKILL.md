@@ -27,7 +27,8 @@ If no scope is provided, run all audits.
 ## Audits to run
 
 ### 1. Serif italic audit
-Product surfaces are `src/app/dashboard/**`, `src/app/admin/**`, `src/app/check-in/**`, `src/app/onboarding/**`, `src/app/member/**`, `src/app/teams/**` and the components they render; everything else in `src/app/` is marketing.
+Product surfaces are the signed-in routes: read the `protectedRoutes` array in `src/middleware.ts` and treat `src/app/<route>/**` for each entry as product (today: dashboard, member, admin, check-in, checkout, teams, onboarding). Everything else in `src/app/` is marketing.
+Grep only sees the file a pattern is in, not the components a page renders: for a product page, also open the components it imports from outside `src/components/ds/` and apply the product rule to them, and count emphasis across the whole screen, not per file.
 - **Product files:** grep for `serif` (the `.serif` class), `font-serif`, `--font-serif`, `Instrument Serif`, `<em` and `fontStyle: "italic"` / `italic` classes. Any hit is a violation — serif emphasis must come from `TitleWithEmphasis` or `PageHeader title={{ emphasis: … }}` (the components themselves in `src/components/ds/` are exempt). A hand-rolled `<em style={{fontStyle:"italic"}}>` in an H1 is also a violation (Geist italic follows neither rule). Then count `TitleWithEmphasis` + `emphasis:` uses per page file (including the components it renders): flag any screen with more than 1, and any `emphasis` value containing whitespace (one word only).
 - **Marketing files:** count `font-serif` / `.serif` / `Instrument Serif` italic instances per file. Flag any file with more than 2.
 

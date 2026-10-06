@@ -8,6 +8,9 @@
  * Delta colour is meaning-neutral by default. A change is only "positive" or
  * "negative" when the caller knows which way is good — weight down is not
  * good for everyone — so pass deltaTone explicitly when it is.
+ *
+ * The card is a size container: below 16rem wide (a 2-up grid on a phone)
+ * the sparkline drops under the value so the delta keeps its one line.
  */
 import type { ReactNode } from "react";
 import { Eyebrow } from "./Eyebrow";
@@ -22,7 +25,7 @@ const VALUE_SIZE: Record<StatCardSize, number> = { sm: 24, md: 28, lg: 32 };
 const DELTA_COLOR: Record<DeltaTone, string> = {
   neutral: "var(--fg-3)",
   positive: "var(--signal-ink)",
-  negative: "var(--danger)",
+  negative: "var(--danger-ink)",
 };
 
 interface DSStatCardProps {
@@ -57,14 +60,14 @@ export function DSStatCard({
   return (
     <div
       data-size={size}
-      className={`rounded-[var(--r-3)] px-4.5 py-4 ${className}`}
+      className={`@container rounded-[var(--r-3)] px-4.5 py-4 ${className}`}
       style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
     >
       <div className="flex items-center gap-2 mb-2">
         {dot && <StatusDot variant={dot} size={6} />}
         <Eyebrow as="span">{label}</Eyebrow>
       </div>
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-col gap-2.5 @[16rem]:flex-row @[16rem]:items-end @[16rem]:justify-between @[16rem]:gap-3">
         <div className="min-w-0">
           <div className="flex items-baseline gap-1.5">
             <span
@@ -88,7 +91,7 @@ export function DSStatCard({
           {delta && (
             <div
               data-delta={deltaTone}
-              className="font-mono text-[12px] mt-1.5"
+              className="font-mono text-[12px] mt-1.5 truncate whitespace-nowrap"
               style={{ color: DELTA_COLOR[deltaTone], fontVariantNumeric: "tabular-nums" }}
             >
               {delta}

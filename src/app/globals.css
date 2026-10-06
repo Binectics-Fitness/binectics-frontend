@@ -62,6 +62,13 @@
   --ink-2: oklch(0.30 0.008 80);
   --on-ink-2: oklch(0.85 0.005 85);
   --on-ink-3: oklch(0.75 0.005 85);
+  /* Danger as small TEXT (deltas). --danger is 4.49:1 on --bg, just under
+     AA; this is the same hue one step darker (5.09:1 on --bg, 4.80 on --bg-2). */
+  --danger-ink: oklch(0.55 0.18 25);
+
+  /* Stacking: the check-in takeover sits above every fixed app layer
+     (cookie banner 7000–9000, toasts/drawers 9998–9999). */
+  --z-takeover: 10000;
 
   /* Typography */
   --font-sans: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -144,6 +151,7 @@
   --color-ink-2: oklch(0.30 0.008 80);
   --color-on-ink-2: oklch(0.85 0.005 85);
   --color-on-ink-3: oklch(0.75 0.005 85);
+  --color-danger-ink: oklch(0.55 0.18 25);
 
   --radius-1: 3px;
   --radius-2: 6px;
@@ -814,6 +822,14 @@ details .faq-icon::before { font-size: 20px; font-family: var(--font-mono); }
 @media (prefers-reduced-motion: reduce) {
   .live-dot::before { animation: none !important; }
   .loading-bar { transition: none !important; }
+}
+
+/* ─── Scroll lock (src/lib/ui/scrollLock.ts) ────────────────── */
+/* Attribute on <html>, not an inline body style, so it can't be undone by
+   another component restoring body.style.overflow while it is held. */
+html[data-scroll-locked],
+html[data-scroll-locked] body {
+  overflow: hidden !important;
 }
 
 /* ─── Success takeover (check-in only) ──────────────────────── */

@@ -7,6 +7,7 @@
  * ProgressBar and a mono footnote under it.
  *
  * Every number on it must be real; omit `progress` rather than invent a target.
+ * `align="center"` centres every line (used inside SuccessTakeover).
  */
 import type { ReactNode } from "react";
 import { Eyebrow } from "./Eyebrow";
@@ -31,6 +32,7 @@ interface HeroStatCardProps {
   /** Mono line under the bar, e.g. "18 days to the 50-day milestone". */
   footnote?: ReactNode;
   surface?: "ink" | "raised";
+  align?: "start" | "center";
   className?: string;
 }
 
@@ -42,16 +44,19 @@ export function HeroStatCard({
   progress,
   footnote,
   surface = "ink",
+  align = "start",
   className = "",
 }: HeroStatCardProps) {
+  const centred = align === "center";
   return (
     <section
       data-surface={surface}
-      className={`rounded-[var(--r-3)] px-5.5 py-5 ${className}`}
+      data-align={align}
+      className={`rounded-[var(--r-3)] px-5.5 py-5 ${centred ? "text-center" : ""} ${className}`}
       style={{ background: surface === "raised" ? "var(--ink-2)" : "var(--ink)", color: "var(--bg)" }}
     >
       <Eyebrow tone="onInk">{eyebrow}</Eyebrow>
-      <div className="flex items-baseline gap-1.5 mt-1.5">
+      <div data-hero-row className={`flex items-baseline gap-1.5 mt-1.5 ${centred ? "justify-center" : ""}`}>
         <span
           data-hero-value
           className="text-[44px] font-medium leading-none"

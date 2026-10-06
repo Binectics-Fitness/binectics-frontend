@@ -4,6 +4,12 @@
  * `title` is either plain text or TitleParts (one serif-italic word, see
  * TitleWithEmphasis). It deliberately does not take arbitrary markup, so the
  * one-serif-word rule can't be bypassed with a hand-written <em>.
+ *
+ * Spacing trap: globals.css has an unlayered `h1, h2, … { margin: 0 }`,
+ * which beats Tailwind margin utilities (they live in a cascade layer), so
+ * a margin class on the H1 does nothing. Put the gap on the
+ * neighbouring element, or pass it through `style`.
+ * Here the gaps sit on the eyebrow (mb) and subtitle (mt).
  */
 import type { ReactNode } from "react";
 import { Eyebrow } from "./Eyebrow";

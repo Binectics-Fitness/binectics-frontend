@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Eyebrow } from "@/components/ds/Eyebrow";
 import { DSStatCard } from "@/components/ds/DSStatCard";
@@ -12,6 +12,7 @@ import { ListRow } from "@/components/ds/ListRow";
 import { SuccessTakeover } from "@/components/ds/SuccessTakeover";
 import { Sparkline } from "@/components/ds/Sparkline";
 import { heatmapCells, weekStrip } from "@/lib/ui/activity";
+import { lockScroll } from "@/lib/ui/scrollLock";
 
 const NOW = new Date(2026, 9, 7, 10, 0, 0); // Wed 7 Oct 2026
 
@@ -59,12 +60,15 @@ describe("DSStatCard", () => {
     rerender(<DSStatCard label="Revenue" value="1" delta="↑ 12%" deltaTone="positive" />);
     expect(screen.getByText("↑ 12%").style.color).toBe("var(--signal-ink)");
     rerender(<DSStatCard label="Revenue" value="1" delta="↓ 4%" deltaTone="negative" />);
-    expect(screen.getByText("↓ 4%").style.color).toBe("var(--danger)");
+    // --danger-ink: --danger itself is 4.49:1 on --bg, just under AA for 12px text.
+    expect(screen.getByText("↓ 4%").style.color).toBe("var(--danger-ink)");
   });
 
   it("draws a sparkline only from real points", () => {
     const { rerender } = render(<DSStatCard label="Check-ins" value="12" spark={[1, 3, 2]} />);
     expect(screen.getByRole("img", { name: "Check-ins" })).toBeInTheDocument();
+    // A size container, so the spark can drop under the value on narrow cards.
+    expect(screen.getByRole("img").closest("[data-size]")!.className).toContain("@container");
     rerender(<DSStatCard label="Check-ins" value="12" spark={[4]} />);
     expect(screen.queryByRole("img")).toBeNull();
   });
@@ -141,6 +145,14 @@ describe("ProgressBar", () => {
     render(<ProgressBar value={1} max={2} label="p" onInk />);
     expect(screen.getByRole("progressbar").style.background).toBe("var(--ink-2)");
   });
+
+  it("outlines the light fill in signal-ink so it clears 3:1 against the track", () => {
+    const { container, rerender } = render(<ProgressBar value={1} max={2} label="p" />);
+    const fill = () => container.querySelector<HTMLElement>("[data-fill]")!;
+    expect(fill().style.outline).toBe("1px solid var(--signal-ink)");
+    rerender(<ProgressBar value={1} max={2} label="p" onInk />);
+    expect(fill().style.outline).toBe("");
+  });
 });
 
 describe("HeroStatCard", () => {
@@ -163,6 +175,13 @@ describe("HeroStatCard", () => {
     expect(screen.getByText("Started 4 Sep").style.color).toBe("var(--on-ink-2)");
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "32");
     expect(screen.getByRole("progressbar").style.background).toBe("var(--ink-2)");
+  });
+
+  it("can centre every line, value row included", () => {
+    const { container } = render(<HeroStatCard eyebrow="Streak" value={33} unit="days" align="center" />);
+    const card = container.firstElementChild as HTMLElement;
+    expect(card.className).toContain("text-center");
+    expect(card.querySelector("[data-hero-row]")!.className).toContain("justify-center");
   });
 
   it("draws no bar without a real target, and a raised surface inside a takeover", () => {
@@ -189,9 +208,15 @@ describe("WeekStrip", () => {
       "upcoming",
       "upcoming",
     ]);
-    expect(items[0]).toHaveAttribute("aria-label", "Mon 5, checked in");
-    expect(items[1]).toHaveAttribute("aria-label", "Tue 6, no check-in");
-    expect(items[2]).toHaveAttribute("aria-label", "Wed 7, checked in, today");
+    // Spoken text is a visually hidden span inside each chip, not an aria-label.
+    const spoken = (i: number) => within(items[i]).getByText(/, /);
+    expect(spoken(0).textContent).toBe("Mon 5 Oct, checked in");
+    expect(spoken(0).className).toContain("sr-only");
+    expect(spoken(1).textContent).toBe("Tue 6 Oct, no check-in");
+    expect(spoken(2).textContent).toBe("Wed 7 Oct, checked in, today");
+    expect(items[0]).not.toHaveAttribute("aria-label");
+    expect(items[1].style.color).toBe("var(--fg-3)");
+    expect(items[3].style.color).toBe("var(--fg-3)");
     expect(items[2]).toHaveAttribute("aria-current", "date");
     expect(items[0].querySelector("[data-tick]")).not.toBeNull();
     expect(items[3].querySelector("[data-tick]")).toBeNull();
@@ -202,14 +227,14 @@ describe("WeekStrip", () => {
     const today = screen.getAllByRole("listitem")[2];
     expect(today.dataset.state).toBe("today");
     expect(today.style.background).toBe("var(--ink)");
-    expect(today).toHaveAttribute("aria-label", "Wed 7, today");
+    expect(within(today).getByText("Wed 7 Oct, today")).toHaveClass("sr-only");
   });
 });
 
 describe("ActivityHeatmap", () => {
   it("draws one square per day on the signal ramp with a spoken summary", () => {
     const cells = heatmapCells([new Date(2026, 9, 7, 8), new Date(2026, 9, 7, 18), new Date(2026, 9, 6, 8)], 30, NOW);
-    const { container } = render(<ActivityHeatmap cells={cells} noun="check-ins" />);
+    const { container } = render(<ActivityHeatmap cells={cells} noun="check-ins" nounOne="check-in" />);
     expect(screen.getByRole("img", { name: "3 check-ins on 2 of the last 30 days" })).toBeInTheDocument();
     const squares = container.querySelectorAll<HTMLElement>("[data-level]");
     expect(squares).toHaveLength(30);
@@ -220,9 +245,17 @@ describe("ActivityHeatmap", () => {
     expect(container.querySelectorAll("[data-legend-level]")).toHaveLength(4);
   });
 
+  it("draws once-a-day data in the mid shade, not the darkest step", () => {
+    const cells = heatmapCells([new Date(2026, 9, 7, 8), new Date(2026, 9, 5, 8)], 30, NOW);
+    const { container } = render(<ActivityHeatmap cells={cells} noun="check-ins" nounOne="check-in" />);
+    const active = Array.from(container.querySelectorAll<HTMLElement>("[data-level]")).filter((c) => c.dataset.level !== "0");
+    expect(active).toHaveLength(2);
+    expect(active.every((c) => c.style.background === "var(--signal)")).toBe(true);
+  });
+
   it("uses the singular for one event and can hide the legend", () => {
     const cells = heatmapCells([new Date(2026, 9, 7, 8)], 7, NOW);
-    const { container } = render(<ActivityHeatmap cells={cells} noun="workouts" legend={false} columns={7} />);
+    const { container } = render(<ActivityHeatmap cells={cells} noun="workouts" nounOne="workout" legend={false} columns={7} />);
     expect(screen.getByRole("img", { name: "1 workout on 1 of the last 7 days" })).toBeInTheDocument();
     expect(container.querySelector("[data-legend-level]")).toBeNull();
   });
@@ -310,7 +343,7 @@ describe("SuccessTakeover", () => {
     );
     const done = screen.getByRole("button", { name: "Done" });
     expect(document.activeElement).toBe(done);
-    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.documentElement).toHaveAttribute("data-scroll-locked");
 
     fireEvent.keyDown(document, { key: "Tab" });
     expect(document.activeElement).toBe(done);
@@ -323,8 +356,97 @@ describe("SuccessTakeover", () => {
 
     unmount();
     expect(document.activeElement).toBe(outside);
-    expect(document.body.style.overflow).toBe("");
+    expect(document.documentElement).not.toHaveAttribute("data-scroll-locked");
     outside.remove();
+  });
+
+  it("wraps Tab and Shift+Tab across several focusables", () => {
+    render(
+      <SuccessTakeover status="s" title={{ emphasis: "in" }} primaryAction={{ label: "Done", onClick: () => {} }}>
+        <a href="/streaks">See streak</a>
+        <button type="button">Share</button>
+      </SuccessTakeover>,
+    );
+    const link = screen.getByRole("link", { name: "See streak" });
+    const share = screen.getByRole("button", { name: "Share" });
+    const done = screen.getByRole("button", { name: "Done" });
+    expect(document.activeElement).toBe(done);
+
+    // Done is last: Tab wraps to the first focusable.
+    const tab = fireEvent.keyDown(document, { key: "Tab" });
+    expect(tab).toBe(false); // default prevented
+    expect(document.activeElement).toBe(link);
+
+    // Link is first: Shift+Tab wraps to the last.
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(done);
+
+    // In the middle, the browser moves focus: the trap must not interfere.
+    share.focus();
+    expect(fireEvent.keyDown(document, { key: "Tab" })).toBe(true);
+    expect(fireEvent.keyDown(document, { key: "Tab", shiftKey: true })).toBe(true);
+  });
+
+  it("portals above the app's fixed layers and makes the page behind inert", async () => {
+    const banner = document.createElement("div");
+    banner.innerHTML = '<button type="button">Accept cookies</button>';
+    document.body.appendChild(banner);
+    const alreadyInert = document.createElement("div");
+    alreadyInert.setAttribute("inert", "");
+    document.body.appendChild(alreadyInert);
+
+    const { container, unmount } = render(
+      <SuccessTakeover status="s" title={{ emphasis: "in" }} primaryAction={{ label: "Done", onClick: () => {} }} />,
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.parentElement).toBe(document.body);
+    expect(container.contains(dialog)).toBe(false);
+    expect(dialog.style.zIndex).toBe("var(--z-takeover)");
+    expect(banner).toHaveAttribute("inert");
+    expect(container).toHaveAttribute("inert"); // the app root
+    expect(dialog).not.toHaveAttribute("inert");
+
+    // A layer that mounts after the takeover opened is made inert too.
+    const late = document.createElement("div");
+    document.body.appendChild(late);
+    await waitFor(() => expect(late).toHaveAttribute("inert"));
+
+    unmount();
+    expect(banner).not.toHaveAttribute("inert");
+    expect(late).not.toHaveAttribute("inert");
+    late.remove();
+    expect(alreadyInert).toHaveAttribute("inert"); // left as it was
+    banner.remove();
+    alreadyInert.remove();
+  });
+
+  it("draws the Done focus ring in a colour that shows on ink", () => {
+    render(
+      <SuccessTakeover status="s" title={{ emphasis: "in" }} primaryAction={{ label: "Done", onClick: () => {} }} />,
+    );
+    const dialog = screen.getByRole("dialog");
+    const done = screen.getByRole("button", { name: "Done" });
+    const ring = getComputedStyle(done).outlineColor;
+    expect(ring).toBe("var(--bg)");
+    expect(ring).not.toBe(getComputedStyle(dialog).backgroundColor);
+    expect(ring).not.toBe(dialog.style.background);
+  });
+
+  it("keeps the page locked while another component restores body overflow", () => {
+    const release = lockScroll();
+    document.body.style.overflow = "hidden";
+    const { unmount } = render(
+      <SuccessTakeover status="s" title={{ emphasis: "in" }} primaryAction={{ label: "Done", onClick: () => {} }} />,
+    );
+    // e.g. a Modal closing underneath and resetting the inline style
+    document.body.style.overflow = "";
+    expect(document.documentElement).toHaveAttribute("data-scroll-locked");
+    unmount();
+    // the other holder still has it
+    expect(document.documentElement).toHaveAttribute("data-scroll-locked");
+    release();
+    expect(document.documentElement).not.toHaveAttribute("data-scroll-locked");
+    expect(document.body.style.overflow).toBe("");
   });
 
   it("carries the motion classes that reduced motion collapses to a fade", () => {

@@ -8,6 +8,11 @@
  *
  *   <TitleWithEmphasis before="Hey, " emphasis="Tunde" after="." />
  *   → Hey, <em class="serif">Tunde</em>.
+ *
+ * Spacing trap: globals.css has an unlayered `h1, h2, … { margin: 0 }`,
+ * which beats Tailwind margin utilities (they live in a cascade layer), so
+ * `className="mt-4"` on the heading does nothing. Put the gap on the
+ * neighbouring element, or pass it through `style`.
  */
 import type { CSSProperties } from "react";
 

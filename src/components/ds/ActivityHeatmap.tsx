@@ -1,10 +1,13 @@
 /**
  * ActivityHeatmap — one square per day, shaded by how much happened.
  *
- * Feed it `heatmapCells(events, days, now)` from src/lib/ui/activity.ts so
- * levels come from real counts. Ramp is the signal scale (never a role
- * colour such as --gym-soft, which means "gym", not "intensity"):
+ * Feed it `heatmapCells(events, days, now)` from src/lib/ui/activity.ts,
+ * computed on the client with the viewer's clock, so levels come from real
+ * counts. Ramp is the signal scale (never a role colour such as --gym-soft,
+ * which means "gym", not "intensity"):
  *   0 --bg-2 · 1 --signal-soft · 2 --signal · 3 --signal-ink
+ * Once-a-day data (check-ins) only ever uses 0 and 2; the darkest step is
+ * kept for days that really were busier than others (see heatLevel).
  * The grid is one labelled image with a spoken summary; each square has a
  * hover title with its date and count.
  */
@@ -21,8 +24,9 @@ interface ActivityHeatmapProps {
   cells: readonly HeatCell[];
   /** What is counted, plural, e.g. "check-ins" or "workouts". */
   noun: string;
-  /** Singular form; defaults to `noun` without a trailing "s". */
-  nounOne?: string;
+  /** Singular form, e.g. "check-in" or "class". Required: English plurals
+   *  can't be singularised by rule ("classes" → "classe"). */
+  nounOne: string;
   columns?: number;
   /** Show the Less→More legend (default true). */
   legend?: boolean;
@@ -37,8 +41,7 @@ export function ActivityHeatmap({
   legend = true,
   className = "",
 }: ActivityHeatmapProps) {
-  const one = nounOne ?? noun.replace(/s$/, "");
-  const word = (n: number) => (n === 1 ? one : noun);
+  const word = (n: number) => (n === 1 ? nounOne : noun);
   const total = cells.reduce((sum, c) => sum + c.count, 0);
   const active = activeDays(cells);
   const summary = `${total} ${word(total)} on ${active} of the last ${cells.length} days`;

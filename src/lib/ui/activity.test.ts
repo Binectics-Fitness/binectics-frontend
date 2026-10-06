@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   activeDays,
   countByDay,
   dayKey,
   heatLevel,
   heatmapCells,
+  toDate,
   weekStrip,
 } from "./activity";
 
@@ -23,6 +24,14 @@ describe("dayKey / countByDay", () => {
     expect(counts.get("2026-10-07")).toBe(1);
     expect(counts.size).toBe(2);
   });
+
+  it("reads a date-only string as that local day, not UTC midnight", () => {
+    const d = toDate("2026-10-05")!;
+    expect([d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()]).toEqual([2026, 9, 5, 0]);
+    expect([...countByDay(["2026-10-05", "2026-10-05"]).entries()]).toEqual([["2026-10-05", 2]]);
+    expect(toDate("2026-13-45x")).toBeNull();
+    expect(toDate(new Date(Number.NaN))).toBeNull();
+  });
 });
 
 describe("weekStrip", () => {
@@ -33,6 +42,7 @@ describe("weekStrip", () => {
     expect(days[0].date).toBe("2026-10-05");
     expect(days[6].date).toBe("2026-10-11");
     expect(days[2].dayOfMonth).toBe(7);
+    expect(days[2].month).toBe("Oct");
   });
 
   it("can start the week on Sunday", () => {
@@ -74,8 +84,13 @@ describe("heatLevel", () => {
     expect(heatLevel(0, 0)).toBe(0);
   });
 
-  it("puts the busiest day at 3 and any active day at least at 1", () => {
-    expect(heatLevel(1, 1)).toBe(3);
+  it("uses the mid shade for yes/no data (at most one event a day)", () => {
+    expect(heatLevel(1, 1)).toBe(2);
+  });
+
+  it("with real variation puts the busiest day at 3 and any active day at least at 1", () => {
+    expect(heatLevel(1, 2)).toBe(2);
+    expect(heatLevel(2, 2)).toBe(3);
     expect(heatLevel(1, 9)).toBe(1);
     expect(heatLevel(4, 9)).toBe(2);
     expect(heatLevel(9, 9)).toBe(3);
@@ -101,4 +116,43 @@ describe("heatmapCells", () => {
     expect(activeDays(cells)).toBe(3);
     expect(cells.reduce((s, c) => s + c.count, 0)).toBe(5);
   });
+});
+
+describe("time zones and DST", () => {
+  const original = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = original;
+  });
+
+  const zones = ["America/Los_Angeles", "America/New_York", "America/Santiago", "Pacific/Auckland", "Asia/Kolkata", "UTC"];
+
+  for (const tz of zones) {
+    it(`keeps days contiguous and date-only strings on their day in ${tz}`, () => {
+      process.env.TZ = tz;
+      // Weeks spanning DST changes: NY ends 1 Nov 2026, starts 8 Mar 2026;
+      // Santiago starts 6 Sep 2026 (midnight gap); Auckland starts 27 Sep 2026.
+      for (const now of [
+        new Date(2026, 10, 3, 10),
+        new Date(2026, 2, 11, 10),
+        new Date(2026, 8, 7, 10),
+        new Date(2026, 8, 28, 0, 30),
+        new Date(2026, 10, 1, 23, 59),
+      ]) {
+        const week = weekStrip([], now);
+        expect(new Set(week.map((d) => d.date)).size).toBe(7);
+        expect(week.filter((d) => d.isToday)).toHaveLength(1);
+        const cells = heatmapCells([], 60, now);
+        expect(new Set(cells.map((c) => c.date)).size).toBe(60);
+        for (let i = 1; i < cells.length; i += 1) {
+          const a = Date.parse(`${cells[i - 1].date}T12:00:00Z`);
+          const b = Date.parse(`${cells[i].date}T12:00:00Z`);
+          expect(b - a).toBe(86_400_000);
+        }
+        expect(cells[cells.length - 1].date).toBe(dayKey(now));
+      }
+      expect([...countByDay(["2026-10-05"]).keys()]).toEqual(["2026-10-05"]);
+      const week = weekStrip(["2026-11-02"], new Date(2026, 10, 3, 10));
+      expect(week[0]).toMatchObject({ date: "2026-11-02", state: "done" });
+    });
+  }
 });
