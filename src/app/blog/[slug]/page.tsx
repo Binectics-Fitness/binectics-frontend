@@ -113,8 +113,8 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   return params.then(({ slug }) => {
     const post = POSTS[slug];
-    if (!post) return { title: "Post not found | Binectics" };
-    return { title: `${post.title} | Binectics Blog`, description: post.body[0] };
+    if (!post) return { title: "Post not found" };
+    return { title: post.title, description: post.body[0] };
   });
 }
 

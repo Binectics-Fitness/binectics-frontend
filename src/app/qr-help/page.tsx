@@ -9,7 +9,7 @@ import { MarketingFooter } from "@/components/ds/MarketingFooter";
  */
 
 export const metadata: Metadata = {
-  title: "QR Check-in Guide | Binectics",
+  title: "QR Check-in Guide",
   description: "Learn how to check in at any Binectics gym using the QR code scanner. Step-by-step guide and troubleshooting tips.",
   alternates: { canonical: "/qr-help" },
 };

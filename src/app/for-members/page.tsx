@@ -5,7 +5,7 @@ import { MemberDemo } from "@/components/ds/MemberDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For Members, Binectics",
+  title: "For Members",
   description:
     "Find your gym, trainer, or dietitian across 52 countries. One profile, one inbox, one checkout. Binectics is free for members, you pay your provider directly.",
   keywords:

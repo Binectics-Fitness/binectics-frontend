@@ -8,7 +8,7 @@ import { MarketingFooter } from "@/components/ds/MarketingFooter";
  */
 
 export const metadata: Metadata = {
-  title: "Contact | Binectics",
+  title: "Contact",
   description: "Get in touch with the Binectics team. Email us, submit a request, or visit our offices in Lagos and London.",
   alternates: { canonical: "/contact" },
 };

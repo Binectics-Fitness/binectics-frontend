@@ -5,7 +5,7 @@ import { JournalDemo } from "@/components/ds/JournalDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Client Journals, Binectics",
+  title: "Client Journals",
   description:
     "Trainers and dietitians log workouts, meals, metrics, and notes. Clients see their own progress in real time. Built for accountability.",
   keywords:

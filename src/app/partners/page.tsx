@@ -10,7 +10,7 @@ import { MarketingFooter } from "@/components/ds/MarketingFooter";
  */
 
 export const metadata: Metadata = {
-  title: "Partners & Integrations | Binectics",
+  title: "Partners & Integrations",
   description: "Explore our payment, technology, and fitness ecosystem partners powering the global Binectics platform.",
   alternates: { canonical: "/partners" },
 };
