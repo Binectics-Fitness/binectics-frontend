@@ -52,6 +52,16 @@
   --warn-soft: oklch(0.96 0.06 75);
   --warn-ink: oklch(0.45 0.16 75);
   --trainer-ink: oklch(0.45 0.12 75);
+  /* Dark surface (on --ink). App-only, not in shared.css yet: the literals
+     binectics/member-streaks.html draws its streak hero with, named so the
+     dark hero card, progress track and check-in takeover share one set.
+       --ink-2     raised surface on ink (progress track, card on a takeover) #302D29
+       --on-ink-2  secondary text on ink (sub lines)                          #CFCDCA
+       --on-ink-3  muted text on ink (eyebrows, units)                        #AFAEAA
+     Primary text on ink is --bg. */
+  --ink-2: oklch(0.30 0.008 80);
+  --on-ink-2: oklch(0.85 0.005 85);
+  --on-ink-3: oklch(0.75 0.005 85);
 
   /* Typography */
   --font-sans: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -131,6 +141,9 @@
   --color-warn-soft: oklch(0.96 0.06 75);
   --color-warn-ink: oklch(0.45 0.16 75);
   --color-trainer-ink: oklch(0.45 0.12 75);
+  --color-ink-2: oklch(0.30 0.008 80);
+  --color-on-ink-2: oklch(0.85 0.005 85);
+  --color-on-ink-3: oklch(0.75 0.005 85);
 
   --radius-1: 3px;
   --radius-2: 6px;
@@ -801,6 +814,52 @@ details .faq-icon::before { font-size: 20px; font-family: var(--font-mono); }
 @media (prefers-reduced-motion: reduce) {
   .live-dot::before { animation: none !important; }
   .loading-bar { transition: none !important; }
+}
+
+/* ─── Success takeover (check-in only) ──────────────────────── */
+/* Timeline from binectics/checkin.html: ring springs in at 50ms, the tick
+   draws at 350ms, then the text and cards rise from ~950ms. Reduced motion
+   collapses the whole sequence to one 200ms fade (checkin.html's rule). */
+.takeover-ring {
+  animation: takeover-ring-in 500ms var(--ease-spring) 50ms both;
+}
+.takeover-tick path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: takeover-tick-draw 320ms var(--ease-out) 350ms forwards;
+}
+.takeover-rise {
+  animation: takeover-rise-in 500ms var(--ease-out) both;
+}
+@keyframes takeover-ring-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes takeover-tick-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes takeover-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes takeover-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Class selectors outrank the global `*` reduced-motion rule, so this
+     200ms fade survives it while every other step is switched off. */
+  .takeover {
+    animation: takeover-fade-in 200ms ease-out both !important;
+  }
+  .takeover-ring,
+  .takeover-rise,
+  .takeover-tick path {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
 }
 
 /* ─── Print stylesheet ──────────────────────────────────────── */

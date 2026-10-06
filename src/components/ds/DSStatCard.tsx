@@ -1,53 +1,101 @@
 /**
- * DSStatCard — KPI stat card
- * Mono uppercase label (11px), large value (28px tabular-nums), optional delta
- * Delta: signal-ink for positive, danger for negative
+ * DSStatCard — KPI stat card. Label above value (the mosaic layout).
+ *
+ * Card: --bg, 1px --border, --r-3 (the product card, not the mockup's
+ * borderless white phone cards).
+ * Value sizes: sm 24px (stat pair), md 28px (KPI, default), lg 32px (desktop KPI).
+ *
+ * Delta colour is meaning-neutral by default. A change is only "positive" or
+ * "negative" when the caller knows which way is good — weight down is not
+ * good for everyone — so pass deltaTone explicitly when it is.
  */
+import type { ReactNode } from "react";
+import { Eyebrow } from "./Eyebrow";
+import { Sparkline } from "./Sparkline";
 import { StatusDot } from "./StatusDot";
+
+export type StatCardSize = "sm" | "md" | "lg";
+export type DeltaTone = "neutral" | "positive" | "negative";
+
+const VALUE_SIZE: Record<StatCardSize, number> = { sm: 24, md: 28, lg: 32 };
+
+const DELTA_COLOR: Record<DeltaTone, string> = {
+  neutral: "var(--fg-3)",
+  positive: "var(--signal-ink)",
+  negative: "var(--danger)",
+};
 
 interface DSStatCardProps {
   label: string;
-  value: string | number;
-  delta?: string;
-  deltaPositive?: boolean;
+  value: ReactNode;
+  /** Unit after the value, e.g. "kg", "days", "/ 32 slots". */
+  unit?: string;
+  /** Context line under the value, e.g. "↓ 1.8 · 30d" or "Last: 2 Oct". */
+  delta?: ReactNode;
+  deltaTone?: DeltaTone;
+  size?: StatCardSize;
   dot?: "signal" | "warn" | "danger" | "muted";
+  /** Real data points for a trailing sparkline; needs ≥2 to draw. */
+  spark?: readonly number[];
+  /** Accessible description of the sparkline; defaults to the label. */
+  sparkLabel?: string;
   className?: string;
 }
 
-export function DSStatCard({ label, value, delta, deltaPositive = true, dot, className = "" }: DSStatCardProps) {
+export function DSStatCard({
+  label,
+  value,
+  unit,
+  delta,
+  deltaTone = "neutral",
+  size = "md",
+  dot,
+  spark,
+  sparkLabel,
+  className = "",
+}: DSStatCardProps) {
   return (
     <div
+      data-size={size}
       className={`rounded-[var(--r-3)] px-4.5 py-4 ${className}`}
       style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
     >
-      <div className="flex items-center gap-2 mb-2.5">
+      <div className="flex items-center gap-2 mb-2">
         {dot && <StatusDot variant={dot} size={6} />}
-        <span
-          className="font-mono text-[11px] uppercase tracking-[0.04em]"
-          style={{ color: "var(--fg-3)" }}
-        >
-          {label}
-        </span>
+        <Eyebrow as="span">{label}</Eyebrow>
       </div>
-      <div className="flex items-baseline gap-2">
-        <span
-          className="text-[28px] font-medium"
-          style={{
-            color: "var(--ink)",
-            letterSpacing: "-0.02em",
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {value}
-        </span>
-        {delta && (
-          <span
-            className="font-mono text-[12px]"
-            style={{ color: deltaPositive ? "var(--signal-ink)" : "var(--danger)" }}
-          >
-            {delta}
-          </span>
-        )}
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span
+              data-stat-value
+              className="font-medium leading-none"
+              style={{
+                fontSize: VALUE_SIZE[size],
+                color: "var(--ink)",
+                letterSpacing: "-0.024em",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {value}
+            </span>
+            {unit && (
+              <span className="text-[13px]" style={{ color: "var(--fg-3)" }}>
+                {unit}
+              </span>
+            )}
+          </div>
+          {delta && (
+            <div
+              data-delta={deltaTone}
+              className="font-mono text-[12px] mt-1.5"
+              style={{ color: DELTA_COLOR[deltaTone], fontVariantNumeric: "tabular-nums" }}
+            >
+              {delta}
+            </div>
+          )}
+        </div>
+        {spark && <Sparkline values={spark} label={sparkLabel ?? label} />}
       </div>
     </div>
   );

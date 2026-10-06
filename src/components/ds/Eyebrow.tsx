@@ -1,21 +1,41 @@
 /**
- * Eyebrow — mono uppercase section label
- * Font: Geist Mono, 10.5px, uppercase, tracking +5-6%
- * Color: --fg-3 (default) or --fg-4 (muted)
+ * Eyebrow — mono uppercase label above a title, value or section.
+ *
+ * One spec everywhere (matches the `.eyebrow` class and the mosaic):
+ * Geist Mono 11px, uppercase, letter-spacing .06em.
+ * Tone: default --fg-3, muted --fg-4, onInk --on-ink-3 (on dark surfaces).
  */
+import type { ElementType, ReactNode } from "react";
+
+export type EyebrowTone = "default" | "muted" | "onInk";
+
+const TONE_COLOR: Record<EyebrowTone, string> = {
+  default: "var(--fg-3)",
+  muted: "var(--fg-4)",
+  onInk: "var(--on-ink-3)",
+};
+
 interface EyebrowProps {
-  children: React.ReactNode;
+  children: ReactNode;
+  tone?: EyebrowTone;
+  /** @deprecated use tone="muted" */
   muted?: boolean;
+  /** Element to render; a div by default. */
+  as?: ElementType;
+  id?: string;
   className?: string;
 }
 
-export function Eyebrow({ children, muted, className = "" }: EyebrowProps) {
+export function Eyebrow({ children, tone, muted, as: Tag = "div", id, className = "" }: EyebrowProps) {
+  const resolved: EyebrowTone = tone ?? (muted ? "muted" : "default");
   return (
-    <div
-      className={`font-mono text-[10.5px] uppercase tracking-[0.05em] ${className}`}
-      style={{ color: muted ? "var(--fg-4)" : "var(--fg-3)" }}
+    <Tag
+      id={id}
+      data-tone={resolved}
+      className={`font-mono text-[11px] uppercase tracking-[0.06em] ${className}`}
+      style={{ color: TONE_COLOR[resolved] }}
     >
       {children}
-    </div>
+    </Tag>
   );
 }
