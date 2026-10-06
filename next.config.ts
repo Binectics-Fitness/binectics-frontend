@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { resolve } from "path";
 import { REMOVED_PAGE_REDIRECTS } from "./src/lib/routing/removedPages";
 import { resolveSiteUrl } from "./src/lib/site-url";
+import { API_UPSTREAM_URL } from "./src/lib/api/upstream";
 
 // Throws on an unusable NEXT_PUBLIC_APP_URL, so a bad address fails the build
 // instead of reaching the sitemap and canonical tags.
@@ -84,8 +85,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/v1/:path*",
-        destination:
-          "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1/:path*",
+        destination: `${API_UPSTREAM_URL}/:path*`,
       },
     ];
   },

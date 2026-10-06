@@ -7,6 +7,7 @@ import {
 import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
 import { isCanonicalHost } from "@/lib/site-url";
 import { isPrivatePath } from "@/lib/routing/indexing";
+import { profileMayExist, profileSegment } from "@/lib/marketplace/profileGate";
 
 // Routes that require authentication
 const protectedRoutes = [
@@ -75,7 +76,7 @@ function isPrefetchRequest(request: NextRequest): boolean {
   );
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("access_token")?.value;
   const mustChangePassword =
@@ -110,6 +111,21 @@ export function middleware(request: NextRequest) {
       });
     }
     return res;
+  }
+
+  // A provider profile that does not exist answers 404 before rendering
+  // starts (see profileGate.ts). Only full page loads are checked: in-app
+  // navigations and prefetches render the page's own not-found state.
+  const profile = profileSegment(pathname);
+  if (
+    profile &&
+    (request.method === "GET" || request.method === "HEAD") &&
+    !request.headers.get("rsc") &&
+    !isPrefetchRequest(request) &&
+    !(await profileMayExist(profile))
+  ) {
+    // No route answers this path, so Next renders not-found.tsx with a 404.
+    return withSiteHeaders(NextResponse.rewrite(new URL("/__profile-not-found", request.url)));
   }
 
   // If user is on /onboarding but already completed it, redirect to dashboard

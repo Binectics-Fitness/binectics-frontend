@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ProviderPage from "@/app/marketplace/[listingId]/page";
+import { ListingProfile } from "@/app/marketplace/[listingId]/ListingProfile";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { MembershipPlanType, type MarketplaceMembershipPlan } from "@/lib/types";
 import type { PlatformCurrency } from "@/lib/api/currencies";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
-  useParams: () => ({ listingId: "l1" }),
   useRouter: () => ({ push, back: vi.fn(), replace: vi.fn() }),
 }));
 
@@ -68,10 +67,11 @@ const reset = plan({ _id: "p-reset", name: "Nourish and Reset", plan_type: Membe
 const eightWeek = plan({ _id: "p-8w", name: "8 WEEK PLAN", duration_days: 56, price_minor: 24_000_000 });
 const usdMonthly = plan({ _id: "p-usd", name: "Remote monthly", price_minor: 4_500, currency: "USD" });
 
-function givenPlans(plans: MarketplaceMembershipPlan[]) {
-  vi.spyOn(marketplaceService, "getListingById").mockResolvedValue({ success: true, data: listing as never });
-  vi.spyOn(marketplaceService, "getPublicListingPlans").mockResolvedValue({ success: true, data: plans });
+// The listing and its plans come from the server render (page.tsx); only
+// the reviews are fetched in the browser.
+function renderWithPlans(plans: MarketplaceMembershipPlan[]) {
   vi.spyOn(marketplaceService, "getListingReviews").mockResolvedValue({ success: true, data: { reviews: [] } as never });
+  render(<ListingProfile listing={listing as never} initialPlans={plans} />);
 }
 
 async function bookingCard() {
@@ -86,8 +86,7 @@ describe("listing booking card", () => {
   });
 
   it("offers each plan as a radio, priced in the plan's own currency with its cadence", async () => {
-    givenPlans([reset, eightWeek, usdMonthly]);
-    render(<ProviderPage />);
+    renderWithPlans([reset, eightWeek, usdMonthly]);
     const card = within(await bookingCard());
 
     const group = card.getByRole("group", { name: "Plan" });
@@ -99,8 +98,7 @@ describe("listing booking card", () => {
   });
 
   it("says which currencies the prices are in from the plans, not the listing's stored default", async () => {
-    givenPlans([reset, eightWeek, usdMonthly]);
-    render(<ProviderPage />);
+    renderWithPlans([reset, eightWeek, usdMonthly]);
     await bookingCard();
     const fact = screen.getByText("Prices in").parentElement!;
     expect(fact).toHaveTextContent("NGN · USD");
@@ -108,8 +106,7 @@ describe("listing booking card", () => {
 
   it("keeps Continue disabled until a plan is chosen, then sends a signed-in member to checkout", async () => {
     authState = { user: { id: "m1" }, isLoading: false };
-    givenPlans([reset, eightWeek]);
-    render(<ProviderPage />);
+    renderWithPlans([reset, eightWeek]);
     const card = within(await bookingCard());
 
     const cont = card.getByRole("button", { name: /Continue to checkout/ });
@@ -124,8 +121,7 @@ describe("listing booking card", () => {
   });
 
   it("sends a signed-out visitor to login with a return to the checkout", async () => {
-    givenPlans([eightWeek]);
-    render(<ProviderPage />);
+    renderWithPlans([eightWeek]);
     const card = within(await bookingCard());
 
     // One plan: already chosen.
@@ -137,8 +133,7 @@ describe("listing booking card", () => {
   });
 
   it("choosing a plan from the Plans section selects it in the card", async () => {
-    givenPlans([reset, eightWeek]);
-    render(<ProviderPage />);
+    renderWithPlans([reset, eightWeek]);
     const card = within(await bookingCard());
 
     await userEvent.click(screen.getByRole("button", { name: "Choose Nourish and Reset" }));
@@ -147,8 +142,7 @@ describe("listing booking card", () => {
   });
 
   it("with no plans says so and offers no checkout, and the session booking stays", async () => {
-    givenPlans([]);
-    render(<ProviderPage />);
+    renderWithPlans([]);
     const card = within(await bookingCard());
 
     expect(card.getByText("No membership plans yet.")).toBeInTheDocument();
@@ -157,8 +151,7 @@ describe("listing booking card", () => {
   });
 
   it("drops the unverified mockup copy and the platform fee row", async () => {
-    givenPlans([eightWeek]);
-    render(<ProviderPage />);
+    renderWithPlans([eightWeek]);
     const card = within(await bookingCard());
     expect(screen.queryByText(/Cancel any time|24.hr review window/)).toBeNull();
     expect(card.queryByText("Platform fee")).toBeNull();
