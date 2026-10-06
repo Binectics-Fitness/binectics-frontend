@@ -302,6 +302,8 @@ export interface MarketplaceListing {
         profile_picture?: string;
       };
   account_type: MarketplaceAccountType;
+  /** Public URL handle: /marketplace/<slug>. Older listings may lack one. */
+  slug?: string;
   headline: string;
   bio: string;
   specialties: string[];
