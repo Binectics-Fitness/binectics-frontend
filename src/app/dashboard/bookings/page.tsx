@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
-import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { StatusPill } from "@/components/ds/StatusPill";
-import { AsyncSpinner, IconTile } from "@/components/ds";
+import { AsyncSpinner, Eyebrow, IconTile, ListRow, PageHeader, RoleShell } from "@/components/ds";
 import { CalendarClock } from "lucide-react";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
@@ -79,98 +78,82 @@ function BookingRow({
     (new Date(booking.endsAt).getTime() - new Date(booking.startsAt).getTime()) / 60000,
   );
 
-  return (
-    <div
-      className={`rounded-(--r-3) mb-3 ${isSelected ? "border-ink" : "hover:border-ink"}`}
-      style={{
-        border: `1px solid ${isSelected ? "var(--ink)" : "var(--border)"}`,
-        background: "var(--bg)",
-        transition: "border-color 120ms",
-      }}
-    >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="text-left w-full grid gap-5 p-4.5 px-5"
-        style={{ gridTemplateColumns: "auto 1fr auto", alignItems: "center", cursor: "pointer" }}
-      >
-        <div
-          className="flex flex-col items-center gap-0.5 shrink-0"
-          style={{ paddingRight: 20, borderRight: "1px solid var(--border)", minWidth: 56 }}
-        >
-          <span className="font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}>
-            {date.month}
-          </span>
-          <span
-            className="font-medium leading-none text-[28px]"
-            style={{ letterSpacing: "-0.025em", fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}
-          >
-            {date.day}
-          </span>
-          <span className="font-mono text-[10px] uppercase" style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}>
-            {date.dow}
-          </span>
-        </div>
+  const holdUntil = isPayable(booking) && booking.payment?.expiresAt ? booking.payment.expiresAt : null;
+  const cancelReason = booking.status === ConsultationBookingStatus.CANCELLED ? booking.cancelReason : undefined;
+  const hasFooter = Boolean(holdUntil || cancelReason || booking.notes || hasPaidReceipt(booking) || onPay || children);
 
-        <div className="flex flex-col gap-1 min-w-0">
-          <div className="text-[15px] font-medium truncate" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>
-            {booking.consultationTypeName ?? "Consultation"} &middot; {durationMin} min
-          </div>
-          <div
-            className="flex flex-wrap items-center gap-3 font-mono text-[11.5px] uppercase"
-            style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}
+  return (
+    <div className="mb-2 flex flex-col">
+      {/* The row selects the booking for the detail column. A ring, not the
+          border, marks the selection: ListRow owns its border. */}
+      <ListRow
+        onClick={onSelect}
+        className={isSelected ? "ring-1 ring-(--ink)" : ""}
+        leading={
+          <span
+            aria-hidden="true"
+            className="flex w-11 flex-col items-center leading-none"
+            style={{ color: "var(--ink)" }}
           >
-            <span>{date.time}</span>
-            <span className="w-0.75 h-0.75 rounded-full" style={{ background: "var(--border-2)" }} />
-            <span>{booking.clientTimezone || getClientTimezone()}</span>
-          </div>
-          {isPayable(booking) && booking.payment?.expiresAt && (
-            <div className="text-[12.5px] mt-1.5" style={{ color: "var(--fg-2)" }}>
-              Slot held until {formatClock(booking.payment.expiresAt)}
+            <span className="font-mono text-[10px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>
+              {date.month}
+            </span>
+            <span className="mt-1 text-[20px] font-medium" style={{ letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+              {date.day}
+            </span>
+          </span>
+        }
+        title={
+          <>
+            {booking.consultationTypeName ?? "Consultation"} &middot; {durationMin} min
+          </>
+        }
+        meta={`${date.dow} · ${date.time} · ${booking.clientTimezone || getClientTimezone()}`}
+        trailing={<StatusPill tone={statusTone(booking)} label={bookingLabel(booking)} />}
+      />
+
+      {hasFooter && (
+        <div className="flex flex-col gap-2 px-3.5 pt-2 pb-1">
+          {holdUntil && (
+            <div className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
+              Slot held until {formatClock(holdUntil)}
             </div>
           )}
-          {booking.status === ConsultationBookingStatus.CANCELLED && booking.cancelReason && (
-            <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
-              {booking.cancelReason}
+          {cancelReason && (
+            <div className="text-[12.5px] truncate" style={{ color: "var(--fg-2)" }}>
+              {cancelReason}
             </div>
           )}
           {booking.notes && (
-            <div className="text-[12.5px] mt-1 truncate" style={{ color: "var(--fg-2)" }}>
+            <div className="text-[12.5px] truncate" style={{ color: "var(--fg-2)" }}>
               {booking.notes}
             </div>
           )}
-        </div>
-
-        <div className="flex flex-col items-end gap-1.5">
-          <StatusPill tone={statusTone(booking)} label={bookingLabel(booking)} />
-          <span
-            className="font-mono text-[11.5px]"
-            style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}
-          >
-            ID {booking.id.slice(-8)}
-          </span>
-        </div>
-      </button>
-
-      {/* A sibling of the row, not a child: a button cannot contain a link. */}
-      {hasPaidReceipt(booking) && (
-        <div className="flex justify-end px-5 pb-4 -mt-1">
-          <Link href={receiptHref(booking.id)} className="btn-ghost-v2 sm" data-testid="booking-receipt-link">
-            Receipt
-          </Link>
-        </div>
-      )}
-
-      {/* A sibling of the row, not a child: a button cannot contain a button.
-          Hidden where the panel below already offers the payment. */}
-      {onPay && (
-        <div className={`${isSelected ? "hidden lg:flex" : "flex"} justify-end px-5 pb-4`}>
-          <button type="button" onClick={onPay} className="btn-primary-v2 sm" data-testid="pay-now">
-            Pay now
-          </button>
+          {/* Siblings of the row, not children: a button cannot contain a
+              link or another button. Pay now is hidden where the panel
+              below already offers the payment. */}
+          {(hasPaidReceipt(booking) || onPay) && (
+            <div className="flex justify-end gap-2">
+              {hasPaidReceipt(booking) && (
+                <Link href={receiptHref(booking.id)} className="btn-ghost-v2 sm" data-testid="booking-receipt-link">
+                  Receipt
+                </Link>
+              )}
+              {onPay && (
+                <button
+                  type="button"
+                  onClick={onPay}
+                  className={`btn-primary-v2 sm ${isSelected ? "hidden lg:inline-flex" : ""}`}
+                  data-testid="pay-now"
+                >
+                  Pay now
+                </button>
+              )}
+            </div>
+          )}
+          {children}
         </div>
       )}
-      {children}
     </div>
   );
 }
@@ -368,54 +351,17 @@ export default function MyBookingsPage() {
   const counts = useMemo(() => bookings.length, [bookings]);
 
   return (
-    <div style={{ background: "var(--bg)" }}>
-      <nav
-        className="flex items-center justify-between h-14 sm:h-15 px-5 sm:px-10 sticky top-0 z-10"
-        style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
-      >
-        <div className="flex items-center gap-7">
-          <Link href="/">
-            <BinecticsLockup />
-          </Link>
-          <div className="hidden sm:flex gap-1">
-            {[
-              { href: "/marketplace", label: "Marketplace" },
-              { href: "/dashboard/bookings", label: "My bookings", active: true },
-              { href: "/dashboard/loyalty", label: "Loyalty" },
-              { href: "/dashboard/notifications", label: "Notifications" },
-            ].map((l) => (
-              <Link
-                key={l.label}
-                href={l.href}
-                className={`px-3 py-2 rounded-(--r-2) text-[13.5px] ${l.active ? "bg-bg-3 font-medium" : "hover:bg-bg-2"}`}
-                style={{ color: l.active ? "var(--ink)" : "var(--fg-2)" }}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </nav>
-
-      <div className="mx-auto max-w-360 px-5 sm:px-10 pt-6 sm:pt-8 pb-20">
-        <div
-          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6 pb-6"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          <div>
-            <h1 className="text-[32px] font-medium leading-none" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
-              Your bookings
-            </h1>
-            <div className="text-[14px] mt-2" style={{ color: "var(--fg-3)" }}>
-              All your sessions across trainers and dietitians, in one place.
-            </div>
-          </div>
-          <div className="flex gap-2">
+    <RoleShell activeItem="Bookings" memberActiveLabel="Bookings" crumb="My bookings">
+      <div>
+        <PageHeader
+          title={{ before: "Your ", emphasis: "bookings" }}
+          subtitle="All your sessions across trainers and dietitians, in one place."
+          actions={
             <Link href="/marketplace" className="btn-primary-v2 sm">
               + Book new session
             </Link>
-          </div>
-        </div>
+          }
+        />
 
         {/* Gym class bookings — renders only when the member has some */}
         <MyClassBookingsCard />
@@ -474,14 +420,11 @@ export default function MyBookingsPage() {
               <>
                 {grouped.map(([monthLabel, items]) => (
                   <div key={monthLabel} className="mb-1">
-                    <div
-                      className="flex justify-between font-mono text-[11px] uppercase pb-1.5"
-                      style={{ letterSpacing: "0.05em", color: "var(--fg-3)" }}
-                    >
-                      <span>{monthLabel}</span>
-                      <span style={{ color: "var(--fg-4)" }}>
+                    <div className="flex justify-between pb-1.5">
+                      <Eyebrow as="h2">{monthLabel}</Eyebrow>
+                      <Eyebrow as="span">
                         {items.length} {items.length === 1 ? "session" : "sessions"}
-                      </span>
+                      </Eyebrow>
                     </div>
                     {items.map((b) => (
                       <BookingRow
@@ -492,7 +435,7 @@ export default function MyBookingsPage() {
                         onPay={isPayable(b) ? () => payFor(b.id) : undefined}
                       >
                         {b.id === selectedId && isPayable(b) && (
-                          <div className="lg:hidden px-5 pb-5">
+                          <div className="lg:hidden pt-1 pb-3">
                             <BookingPaymentPanel booking={b} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
                           </div>
                         )}
@@ -655,7 +598,7 @@ export default function MyBookingsPage() {
           />
         </>
       )}
-    </div>
+    </RoleShell>
   );
 }
 
