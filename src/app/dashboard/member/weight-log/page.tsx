@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, Eyebrow, ListRow, PageHeader } from "@/components/ds";
@@ -15,6 +16,7 @@ export default function WeightLogPage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   // null until the list has loaded: a failed load must not read as "no logs".
+  const queryClient = useQueryClient();
   const [loadedLogs, setLoadedLogs] = useState<WeightLog[] | null>(null);
   const logs = useMemo(() => loadedLogs ?? [], [loadedLogs]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +53,8 @@ export default function WeightLogPage() {
       } as WeightLog;
       // Prepend only to a list that loaded; after a failed load the error stays.
       setLoadedLogs((prev) => (prev ? [stamped, ...prev] : prev));
+      // Health metrics caches weight under this prefix; don't leave it stale.
+      void queryClient.invalidateQueries({ queryKey: ["progress", "weightLogs"] });
       setLogWeight("");
       setLogOpen(false);
     } else {

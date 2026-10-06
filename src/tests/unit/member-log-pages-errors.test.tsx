@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import WorkoutLogPage from "@/app/dashboard/member/workout-log/page";
 import MealLogPage from "@/app/dashboard/member/meal-log/page";
 import WeightLogPage from "@/app/dashboard/member/weight-log/page";
@@ -46,7 +47,7 @@ describe("member log pages on a failed load", () => {
 
   it("weight log shows the error, not empty tiles", async () => {
     vi.spyOn(progressService, "getWeightLogs").mockResolvedValue(fail as never);
-    render(<WeightLogPage />);
+    render(withQuery(<WeightLogPage />));
     expect(await screen.findByText("Internal server error")).toBeInTheDocument();
     expect(screen.queryByText("Current")).not.toBeInTheDocument();
     expect(screen.queryByText("No weight logs yet.")).not.toBeInTheDocument();
@@ -78,5 +79,21 @@ describe("member log pages on a failed load", () => {
     vi.spyOn(progressService, "getWeightLogs").mockResolvedValue({ success: true, data: logs } as never);
     render(withQuery(<HealthMetricsClient />));
     expect(await screen.findByText("−1.8")).toBeInTheDocument();
+  });
+
+  it("a saved weight invalidates the cached weight queries (health metrics)", async () => {
+    vi.spyOn(progressService, "getWeightLogs").mockResolvedValue({ success: true, data: [] } as never);
+    vi.spyOn(progressService, "createWeightLog").mockResolvedValue({
+      success: true,
+      data: { _id: "w1", weight_kg: 72.5, recorded_at: new Date().toISOString(), logged_by: "u1" },
+    } as never);
+    const client = new QueryClient();
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+    render(<QueryClientProvider client={client}><WeightLogPage /></QueryClientProvider>);
+    await userEvent.click(await screen.findByRole("button", { name: "+ Log today" }));
+    await userEvent.type(screen.getByRole("spinbutton", { name: "Weight in kg" }), "72.5");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("72.5 kg", { selector: "span" })).toBeInTheDocument();
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["progress", "weightLogs"] });
   });
 });

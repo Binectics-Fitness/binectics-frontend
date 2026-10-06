@@ -7,8 +7,21 @@
  * is a title, else the panel itself); Tab and Shift+Tab stay inside it; on
  * close, focus returns to the element that had it when the drawer opened
  * (usually the row or button that opened it), if that is still on the page.
+ *
+ * A copy that isn't rendered (inside a display:none ancestor, e.g. a shell
+ * that mounts its children twice for desktop and mobile) does none of this:
+ * it must not trap Tab, steal focus or remember an opener.
  */
 import { useEffect, useState, useRef, useCallback } from "react";
+
+/** False when the panel sits under a display:none ancestor. */
+function isRendered(el: HTMLElement): boolean {
+  if (typeof el.checkVisibility === "function") return el.checkVisibility();
+  for (let node: HTMLElement | null = el; node; node = node.parentElement) {
+    if (getComputedStyle(node).display === "none") return false;
+  }
+  return true;
+}
 
 interface DrawerProps {
   open: boolean;
@@ -36,8 +49,10 @@ export function Drawer({
   // Remember the opener as the drawer opens; give focus back when it closes.
   useEffect(() => {
     if (!open) return;
+    const panel = panelRef.current;
     const active = document.activeElement;
-    openerRef.current = active instanceof HTMLElement && active !== document.body ? active : null;
+    openerRef.current =
+      panel && isRendered(panel) && active instanceof HTMLElement && active !== document.body ? active : null;
     return () => {
       const opener = openerRef.current;
       openerRef.current = null;
@@ -48,8 +63,10 @@ export function Drawer({
   // Move focus in once the panel is mounted.
   useEffect(() => {
     if (!open || !shouldRender) return;
-    const target = closeRef.current ?? panelRef.current;
-    if (target && !panelRef.current?.contains(document.activeElement)) target.focus();
+    const panel = panelRef.current;
+    if (!panel || !isRendered(panel)) return;
+    const target = closeRef.current ?? panel;
+    if (!panel.contains(document.activeElement)) target.focus();
   }, [open, shouldRender]);
 
   // Mount on open and start the slide-out on close during render (React's
@@ -78,7 +95,7 @@ export function Drawer({
   }, [open, onClose]);
 
   const handleFocusTrap = useCallback((e: KeyboardEvent) => {
-    if (e.key !== "Tab" || !panelRef.current) return;
+    if (e.key !== "Tab" || !panelRef.current || !isRendered(panelRef.current)) return;
 
     const focusable = panelRef.current.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])',

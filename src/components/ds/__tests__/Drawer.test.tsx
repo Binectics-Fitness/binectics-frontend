@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { useState } from "react";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Drawer } from "../Drawer";
 
@@ -14,6 +14,27 @@ function Harness({ title = "Details" }: { title?: string }) {
         <a href="#a">First link</a>
         <button type="button">Last action</button>
       </Drawer>
+    </>
+  );
+}
+
+/** A shell that mounts its children twice, one copy hidden (as ProviderDashboardShell does). */
+function DoubleHarness() {
+  const [open, setOpen] = useState(false);
+  const drawer = (
+    <Drawer open={open} onClose={() => setOpen(false)} title="Consultation">
+      <button type="button">Complete</button>
+      <textarea aria-label="Reason" />
+      <button type="button">Cancel session</button>
+    </Drawer>
+  );
+  return (
+    <>
+      <div data-copy="desktop">
+        <button type="button" onClick={() => setOpen(true)}>Open row</button>
+        {drawer}
+      </div>
+      <div data-copy="mobile" style={{ display: "none" }}>{drawer}</div>
     </>
   );
 }
@@ -70,5 +91,28 @@ describe("Drawer focus", () => {
     await userEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(opener).toHaveFocus();
     vi.useRealTimers();
+  });
+
+  it("ignores a hidden second copy: Tab cycles every control and Escape returns to the opener", async () => {
+    render(<DoubleHarness />);
+    const opener = screen.getByRole("button", { name: "Open row" });
+    await userEvent.click(opener);
+    const visible = screen.getAllByRole("dialog").find((d) => d.closest("[data-copy=desktop]"))!;
+    const v = within(visible);
+    await waitFor(() => expect(v.getByRole("button", { name: "Close" })).toHaveFocus());
+    await userEvent.tab();
+    expect(v.getByRole("button", { name: "Complete" })).toHaveFocus();
+    await userEvent.tab();
+    expect(v.getByRole("textbox", { name: "Reason" })).toHaveFocus();
+    await userEvent.tab();
+    expect(v.getByRole("button", { name: "Cancel session" })).toHaveFocus();
+    await userEvent.tab();
+    expect(v.getByRole("button", { name: "Close" })).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    expect(v.getByRole("button", { name: "Cancel session" })).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    expect(v.getByRole("textbox", { name: "Reason" })).toHaveFocus();
+    await userEvent.keyboard("{Escape}");
+    expect(opener).toHaveFocus();
   });
 });
