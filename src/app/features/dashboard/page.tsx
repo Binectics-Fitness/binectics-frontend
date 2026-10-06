@@ -5,7 +5,7 @@ import { DashboardDemo } from "@/components/ds/DashboardDemo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard, Binectics",
+  title: "Dashboard",
   description:
     "Four role-based dashboards in one login. Gym owners, trainers, dietitians, and members each get purpose-built views, KPIs, and actions.",
   keywords:

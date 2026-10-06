@@ -9,7 +9,7 @@ import { MarketingFooter } from "@/components/ds/MarketingFooter";
  */
 
 export const metadata: Metadata = {
-  title: "Blog | Binectics",
+  title: "Blog",
   description: "Insights on fitness technology, multi-currency payments, and building the operating system for global fitness.",
 };
 

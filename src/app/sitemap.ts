@@ -23,11 +23,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Discovery
     { path: "/marketplace", changeFrequency: "daily", priority: 0.9 },
 
-    // Auth
-    { path: "/login", changeFrequency: "yearly", priority: 0.5 },
-    { path: "/login?mode=signup", changeFrequency: "yearly", priority: 0.6 },
-    { path: "/forgot-password", changeFrequency: "yearly", priority: 0.3 },
-
     // Info
     { path: "/contact", changeFrequency: "yearly", priority: 0.6 },
     { path: "/blog", changeFrequency: "weekly", priority: 0.7 },
