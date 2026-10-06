@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSStatCard, EmptySlate, Eyebrow, ListRow, PageHeader } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { progressService, MealType, MealRating } from "@/lib/api/progress";
 import type { ClientProfile, MealFeedback } from "@/lib/api/progress";
@@ -11,6 +11,9 @@ import {
   validateMealForm,
   type MealFormInput,
 } from "@/lib/progress/logForms";
+import { useClientNow } from "@/lib/ui/useClientNow";
+import { mealsToday } from "../_lib/logStats";
+import { LogDetailDrawer } from "../_components/LogDetailDrawer";
 
 function formatDate(isoDate: string): string {
   const d = new Date(isoDate);
@@ -24,20 +27,15 @@ function formatDate(isoDate: string): string {
   return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
 }
 
-function getMealIcon(mealType: string): string {
-  switch (mealType) {
-    case MealType.BREAKFAST:
-      return "🍳";
-    case MealType.LUNCH:
-      return "🍽️";
-    case MealType.DINNER:
-      return "🍜";
-    case MealType.SNACK:
-      return "🍎";
-    default:
-      return "🍽️";
-  }
-}
+const MEAL_TYPE_LABELS: Record<MealType, string> = {
+  [MealType.BREAKFAST]: "Breakfast",
+  [MealType.LUNCH]: "Lunch",
+  [MealType.DINNER]: "Dinner",
+  [MealType.SNACK]: "Snack",
+};
+
+/** "breakfast" → "Breakfast"; an unknown type is shown as stored. */
+const mealTypeLabel = (type: string) => MEAL_TYPE_LABELS[type as MealType] ?? type;
 
 const EMPTY_MEAL_FORM: MealFormInput = {
   mealType: MealType.BREAKFAST,
@@ -175,53 +173,39 @@ export default function MealLogPage() {
     }
   };
 
-  const todayMeals = meals.filter(
-    (m) =>
-      new Date(m.meal_date).toDateString() ===
-      new Date().toDateString()
-  );
-  const totalCalories = todayMeals.reduce((sum, m) => sum + (m.calories ?? 0), 0);
+  // "Today" is the viewer's day, known only after mount (null on the server).
+  const now = useClientNow();
+  const today = useMemo(() => (now ? mealsToday(meals, now) : null), [meals, now]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const opened = meals.find((m) => m._id === openId) ?? null;
 
   return (
     <MemberDashboardShell activeLabel="Activity">
-      <div
-        className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3"
-        style={{ marginBottom: 18 }}
-      >
-        <div>
-          <h1
+      <PageHeader
+        title={{ before: "Meal ", emphasis: "log" }}
+        subtitle="Meals you log, and any your dietitian logs for you."
+        actions={
+          <button
+            type="button"
+            onClick={formOpen ? closeForm : openForm}
+            disabled={!profile || loading}
             style={{
-              fontSize: 30,
-              letterSpacing: "-0.024em",
+              background: "var(--ink)",
+              color: "var(--bg)",
+              padding: "8px 14px",
+              borderRadius: 6,
+              border: 0,
+              fontSize: 13,
               fontWeight: 500,
-              color: "var(--ink)",
+              cursor: !profile || loading ? "not-allowed" : "pointer",
+              opacity: !profile || loading ? 0.5 : 1,
+              whiteSpace: "nowrap",
             }}
           >
-            Meals
-          </h1>
-          <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            {profile ? `${typeof profile.client_id === "object" ? `${profile.client_id.first_name} ${profile.client_id.last_name}` : profile.client_id} · ${meals.length} meals logged` : "Loading.."}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={formOpen ? closeForm : openForm}
-          disabled={!profile || loading}
-          style={{
-            background: "var(--ink)",
-            color: "var(--bg)",
-            padding: "8px 14px",
-            borderRadius: 6,
-            border: 0,
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: !profile || loading ? "not-allowed" : "pointer",
-            opacity: !profile || loading ? 0.5 : 1,
-          }}
-        >
-          {formOpen ? "Cancel" : "+ Log meal"}
-        </button>
-      </div>
+            {formOpen ? "Cancel" : "+ Log meal"}
+          </button>
+        }
+      />
 
       {formOpen && (
         <form
@@ -256,7 +240,7 @@ export default function MealLogPage() {
               >
                 {Object.values(MealType).map((type) => (
                   <option key={type} value={type}>
-                    {getMealIcon(type)} {type}
+                    {MEAL_TYPE_LABELS[type]}
                   </option>
                 ))}
               </select>
@@ -397,135 +381,83 @@ export default function MealLogPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 14 }}>
-        {[
-          {
-            label: "Kcal · today",
-            value: `${totalCalories} / 2000`,
-            delta: `${((totalCalories / 2000) * 100).toFixed(0)}%`,
-          },
-          { label: "Meals logged", value: meals.length.toString(), delta: "Total" },
-          {
-            label: "Today",
-            value: todayMeals.length.toString(),
-            delta: todayMeals.length > 0 ? "Synced" : "-",
-          },
-          { label: "Status", value: loading ? "..." : "Active", delta: "Tracking" },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            style={{
-              background: "var(--bg)",
-              border: "1px solid var(--border)",
-              borderRadius: 10,
-              padding: "14px 16px",
-            }}
-          >
-            <div
-              className="font-mono"
-              style={{
-                fontSize: 10.5,
-                color: "var(--fg-3)",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {kpi.label}
-            </div>
-            <div
-              className="font-mono"
-              style={{
-                fontSize: 24,
-                fontWeight: 500,
-                color: "var(--ink)",
-                letterSpacing: "-0.02em",
-                marginTop: 4,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {kpi.value}
-            </div>
-            <div
-              className="font-mono"
-              style={{ fontSize: 11, color: "var(--signal-ink)", marginTop: 4 }}
-            >
-              {kpi.delta}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Stat pair for today. No calorie target: none is set anywhere, so
+          the old "/ 2000" was invented. */}
+      {loading || !today ? (
+        <div aria-hidden="true" className="grid grid-cols-2 gap-3 mb-3.5">
+          {[0, 1].map((i) => (
+            <div key={i} className="h-[92px] rounded-[var(--r-3)]" style={{ background: "var(--bg-2)" }} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 mb-3.5">
+          <DSStatCard
+            size="sm"
+            label="Meals · today"
+            value={today.count}
+          />
+          <DSStatCard
+            size="sm"
+            label="Kcal · today"
+            value={today.withCalories > 0 ? today.calories.toLocaleString() : "-"}
+            unit={today.withCalories > 0 ? "kcal" : undefined}
+            delta={
+              today.withCalories === 0
+                ? "No calories recorded today"
+                : today.withCalories < today.count
+                  ? `From ${today.withCalories} of ${today.count} meals`
+                  : undefined
+            }
+          />
+        </div>
+      )}
 
-      <div
-        style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          padding: 22,
-        }}
-      >
-        <h3
-          style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}
-        >
+      <section aria-labelledby="recent-meals">
+        <Eyebrow id="recent-meals" as="h2" className="mb-2.5 px-1">
           Recent meals
-        </h3>
-
+        </Eyebrow>
         {loading ? (
-           <AsyncSpinner label="Loading meals" />
+          <AsyncSpinner label="Loading meals" />
         ) : meals.length === 0 ? (
-           <EmptySlate message="No meals logged yet." mt="mt-0" />
+          <EmptySlate message="No meals logged yet." mt="mt-0" />
         ) : (
-          meals.slice(0, 20).map((meal, i) => (
-            <div
-              key={meal._id}
-              className="grid grid-cols-[1fr] sm:grid-cols-[60px_1fr_180px] gap-3.5"
-              style={{
-                padding: "12px 0",
-                borderBottom:
-                  i < Math.min(meals.length - 1, 19) ? "1px solid var(--border)" : "0",
-              }}
-            >
-              <span
-                className="font-mono"
-                style={{
-                  fontSize: 11,
-                  color: "var(--fg-3)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {formatDate(meal.meal_date)}
-              </span>
-              <div>
-                <strong
-                  style={{ fontSize: 13.5, color: "var(--ink)" }}
-                >
-                  {getMealIcon(meal.meal_type)} {meal.meal_type}
-                </strong>
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: "var(--fg-2)",
-                    marginTop: 2,
-                  }}
-                >
-                  {meal.description}
-                </div>
-              </div>
-              <div
-                className="font-mono"
-                style={{
-                  fontSize: 11.5,
-                  color: "var(--fg-3)",
-                  textAlign: "right",
-                  alignSelf: "center",
-                }}
-              >
-                {meal.calories ? `${meal.calories} kcal` : "-"} · {meal.rating || "unrated"}
-              </div>
-            </div>
-          ))
+          <ul className="flex flex-col gap-1.5">
+            {meals.slice(0, 20).map((meal) => (
+              <li key={meal._id}>
+                <ListRow
+                  title={meal.description || mealTypeLabel(meal.meal_type)}
+                  meta={[
+                    formatDate(meal.meal_date),
+                    mealTypeLabel(meal.meal_type),
+                    meal.calories ? `${meal.calories} kcal` : null,
+                    meal.rating ? MEAL_RATING_LABELS[meal.rating] : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  onClick={() => setOpenId(meal._id)}
+                />
+              </li>
+            ))}
+          </ul>
         )}
-      </div>
+      </section>
+
+      <LogDetailDrawer
+        open={opened !== null}
+        onClose={() => setOpenId(null)}
+        title={opened ? mealTypeLabel(opened.meal_type) : "Meal"}
+        fields={
+          opened
+            ? [
+                { label: "Date", value: formatDate(opened.meal_date) },
+                { label: "What you ate", value: opened.description },
+                { label: "Calories", value: opened.calories ? `${opened.calories} kcal` : null },
+                { label: "How it felt", value: opened.rating ? MEAL_RATING_LABELS[opened.rating] : null },
+                { label: "Notes", value: opened.feedback },
+              ]
+            : []
+        }
+      />
     </MemberDashboardShell>
   );
 }
