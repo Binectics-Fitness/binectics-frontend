@@ -7,77 +7,61 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "For Members",
   description:
-    "Find your gym, trainer, or dietitian across 52 countries. One profile, one inbox, one checkout. Binectics is free for members, you pay your provider directly.",
+    "Find your gym, trainer, or dietitian. One profile, one inbox, one checkout. Binectics is free for members, you pay your provider directly.",
   keywords:
     "fitness marketplace, find gym, find trainer, find dietitian, gym check-in, fitness app, verified trainers, meal tracking, progress journal",
 };
 
 const PAIN_POINTS = [
-  {
-    before:
-      "Different app for every gym, trainer, and meal plan",
-    after: "One profile across all providers",
-  },
-  {
-    before:
-      "WhatsApp booking, bank transfer payment, no receipt",
-    after: "Book and pay in the app, receipts auto-generated",
-  },
-  {
-    before:
-      "Trainer says you’re progressing but you can’t see the data",
-    after: "Same journal, same graphs, no information gap",
-  },
-  {
-    before: "Cancel a session and chase a refund for weeks",
-    after: "Refund within 24 hours, mediated by Binectics",
-  },
+  { before: "Different app for every gym, trainer, and meal plan", after: "One profile across all providers" },
+  { before: "WhatsApp booking, bank transfer payment, no receipt", after: "Book and pay in the app, with a receipt for each booking" },
+  { before: "Trainer says you’re progressing but you can’t see the data", after: "Your coach’s journal and your own logs in one place" },
+  { before: "Booking a session means DMs and back-and-forth", after: "See open slots and book in the app" },
 ];
 
 const FEATURES = [
   {
     title: "Verified providers",
-    desc: "Every trainer, gym, and dietitian is credential-checked by a human. Government ID, professional certs, and background verification. The green badge means something.",
-    stat: "100% of providers verified",
+    desc: "Providers earn the verified badge after our team reviews their documents: business registration, certifications, and identity.",
+    stat: "Badge means documents reviewed",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
   },
   {
     title: "One profile",
-    desc: "Bookings, health metrics, payment history, and progress photos, all in one place, across every provider you work with. Switch trainers without losing your data.",
-    stat: "Zero data lock-in",
+    desc: "Bookings, plans, check-ins, and logs in one place, across every provider you work with.",
+    stat: "One profile, every provider",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   },
   {
     title: "Check-in streaks",
     desc: "Scan a QR code at the gym door. Your streak counter updates instantly. Miss a day and it resets, no gamification tricks, just a clean record of when you showed up.",
-    stat: "32-day avg streak",
+    stat: "Resets on a missed day",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3-7.5.5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.5-2.5 1.5-3.5l1 1z"/></svg>,
   },
   {
     title: "Progress journal",
-    desc: "Your trainer or dietitian logs notes, metrics, and plans. You see the same data they see, weight graphs, adherence scores, photo timelines. Read-only, transparent.",
-    stat: "3.4 entries/week avg",
+    desc: "Your trainer or dietitian writes journal entries you can read, next to your own weight, meal, and activity logs.",
+    stat: "Read it in your app",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h4"/></svg>,
   },
   {
-    title: "Smart booking",
-    desc: "Browse the marketplace, pick a provider, choose a slot, pay. Confirmation in under 60 seconds. Syncs to your calendar automatically.",
-    stat: "Under 60s to book",
+    title: "Booking",
+    desc: "Browse the marketplace, pick a provider, choose an open slot, and pay by card or bank transfer.",
+    stat: "Card or bank transfer",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>,
   },
   {
     title: "Free for members",
-    desc: "No subscription fee, no premium tier, no feature gates. You pay your provider directly at their listed price. We take our cut from the provider side.",
+    desc: "No subscription fee, no premium tier, no feature gates. You pay your provider directly at their listed price. Providers pay us for their seats; we take nothing from what you pay them.",
     stat: "Zero platform fee",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1"/></svg>,
   },
 ];
 
 const KPIS = [
-  { label: "Verified providers", value: "14,200" },
-  { label: "Countries", value: "52" },
-  { label: "Avg check-in streak", value: "32 days" },
   { label: "Member cost", value: "Free" },
+  { label: "Fee added to what you pay", value: "0" },
+  { label: "App for gym, coach, and meals", value: "1" },
 ];
 
 export default function ForMembersPage() {
@@ -111,7 +95,7 @@ export default function ForMembersPage() {
           className="text-[17px] sm:text-[18px] max-w-[62ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          14,200 verified providers across 52 countries. One profile, one
+          Verified gyms, trainers, and dietitians. One profile, one
           inbox, one checkout. Pay your provider directly, Binectics is
           free for members.
         </p>
@@ -256,42 +240,6 @@ export default function ForMembersPage() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section
-        className="mx-auto max-w-280 px-5 sm:px-8 py-12"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        <h2
-          className="text-[28px] sm:text-[32px] font-medium mb-8"
-          style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}
-        >
-          What members are saying
-        </h2>
-        <div
-          className="rounded-(--r-3) p-6 sm:p-8"
-          style={{
-            background: "var(--bg-2)",
-            borderLeft: "3px solid var(--consumer)",
-          }}
-        >
-          <p
-            className="text-[17px] leading-[1.55] max-w-[58ch]"
-            style={{ color: "var(--ink)" }}
-          >
-            &ldquo;I was managing three apps, one for the gym, one for
-            my trainer, one for meal tracking. Now I open Binectics and
-            everything is there. My streak counter alone keeps me
-            honest.&rdquo;
-          </p>
-          <div
-            className="font-mono text-[11px] uppercase tracking-[0.04em] mt-5"
-            style={{ color: "var(--fg-3)" }}
-          >
-            Tunde Olatunji, Member &middot; Cape Town &middot; 32-day streak
-          </div>
-        </div>
-      </section>
-
       {/* KPIs */}
       <section
         className="mx-auto max-w-280 px-5 sm:px-8 py-12"
@@ -303,7 +251,7 @@ export default function ForMembersPage() {
         >
           By the numbers
         </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5">
           {KPIS.map((k) => (
             <div
               key={k.label}
@@ -473,7 +421,7 @@ export default function ForMembersPage() {
           className="text-[16px] sm:text-[17px] max-w-[50ch] mx-auto leading-[1.5] mb-7"
           style={{ color: "var(--fg-2)" }}
         >
-          14,200 verified providers. 52 countries. Zero platform fees.
+          Verified providers. Zero platform fees.
           Browse the marketplace now, download the app soon.
         </p>
         <Link href="/marketplace" className="btn-primary-v2 lg">

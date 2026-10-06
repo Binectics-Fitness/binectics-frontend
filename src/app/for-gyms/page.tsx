@@ -7,74 +7,61 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "For Gym Owners",
   description:
-    "Manage memberships, check-ins, payouts, staff, and multi-location operations from a single dashboard. Replace Mindbody, spreadsheets, and WhatsApp groups with one platform.",
+    "Manage memberships, check-ins, payouts, staff, and multi-location operations from a single dashboard. Replace spreadsheets and WhatsApp groups with one platform.",
   keywords:
     "gym management software, gym dashboard, member CRM, QR check-in, gym payouts, multi-location gym, class scheduling, gym owner tools",
 };
 
 const PAIN_POINTS = [
-  {
-    before: "Mindbody for bookings, Excel for members, WhatsApp for staff",
-    after: "One dashboard for everything",
-  },
-  {
-    before: "Manual attendance sheets at the front desk",
-    after: "QR check-in with streaks and live feed",
-  },
-  {
-    before: "Monthly revenue guesswork until the accountant calls",
-    after: "Real-time P&L with payout timeline",
-  },
-  {
-    before: "5 logins across 5 tools that don't talk to each other",
-    after: "Single sign-on, unified data layer",
-  },
+  { before: "Separate tools for bookings, members, and staff", after: "One dashboard for everything" },
+  { before: "Manual attendance sheets at the front desk", after: "QR check-in with a live check-in log" },
+  { before: "Revenue guesswork until the accountant calls", after: "Revenue and check-in stats on your dashboard" },
+  { before: "Logins across tools that don’t talk to each other", after: "One workspace for owners, staff, and staff trainers" },
 ];
 
 const FEATURES = [
   {
-    title: "Member CRM",
-    desc: "Profiles, streaks, payment history, and custom tags in one searchable directory. Filter by status, plan, last check-in, or any custom field you create.",
-    stat: "10k members indexed in 30ms",
+    title: "Members",
+    desc: "Every member with their plan, status, payment history, and last check-in in one searchable list.",
+    stat: "Filter by plan and status",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   },
   {
     title: "Class scheduling",
-    desc: "Drag-and-drop weekly schedule with recurring classes, waitlists, and capacity alerts. Members book from the app and get automatic reminders.",
-    stat: "Avg class fill rate 84%",
+    desc: "A weekly class timetable with capacity and waitlists. When a spot opens, the next person on the waitlist moves up automatically.",
+    stat: "Waitlists move up automatically",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>,
   },
   {
     title: "QR check-in",
-    desc: "Mount an iPad at the door and let members scan in. The kiosk shows their name, streak count, and next class. Offline queue syncs when connectivity returns.",
-    stat: "92.4% first-scan success",
+    desc: "Put a tablet or phone at the door showing a rotating QR code. Members scan it from the app; the code keeps changing, so a screenshot won’t work, and only members with an active plan get in.",
+    stat: "Rotating code, checked live",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><path d="M14 14h2v2h-2z"/><path d="M20 14h2v2h-2z"/><path d="M14 20h2v2h-2z"/><path d="M20 20h2v2h-2z"/><path d="M17 17h2v2h-2z"/></svg>,
   },
   {
     title: "Revenue dashboard",
-    desc: "Daily, weekly, and monthly revenue graphs with comparison overlays. Payout timeline shows the next amount, date, and destination bank. Gateway reconciliation built in.",
+    desc: "Revenue and check-in stats for your organization, with every payment shown in the currency it was paid.",
     stat: "Each currency shown as it was paid",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
   {
     title: "Multi-location",
-    desc: "Shared member directory across all branches with separate P&Ls per location. Consolidated reporting when you need the big picture, location switcher when you don't.",
-    stat: "Up to 12 locations per account",
+    desc: "Run several branches as listings under one organization, each with its own facilities, amenities, gallery, and documents.",
+    stat: "One login for every branch",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/></svg>,
   },
   {
     title: "Staff management",
-    desc: "Define roles with granular permissions. Receptionists see check-ins but not payouts. Managers edit schedules but can't change billing. Shift scheduling and attendance tracking included.",
-    stat: "Granular access for 6 role types",
+    desc: "Invite staff with roles and permission scopes, and bring staff trainers into your workspace to coach your members.",
+    stat: "Roles with permission scopes",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
   },
 ];
 
 const KPIS = [
-  { label: "Currencies", value: "8" },
-  { label: "Payment rails", value: "3" },
+  { label: "Cut of member payments", value: "0%" },
   { label: "Card numbers stored", value: "0" },
-  { label: "Countries supported", value: "50+" },
+  { label: "Payments by", value: "Paystack" },
 ];
 
 export default function ForGymsPage() {
@@ -105,9 +92,9 @@ export default function ForGymsPage() {
           className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          Members, schedule, check-ins, payouts, payroll, marketing, all in
-          one place, with copilot seats so your staff trainers&apos; report
-          drafts write themselves. No more Excel + Mindbody + WhatsApp groups.
+          Members, plans, classes, check-ins, staff, and payments, all in
+          one place, with your staff trainers coaching from the same
+          workspace. No more Excel + WhatsApp groups.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup&role=gym" className="btn-primary-v2 lg">
@@ -230,39 +217,6 @@ export default function ForGymsPage() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section
-        className="mx-auto max-w-280 px-5 sm:px-8 py-12"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        <h2
-          className="text-[28px] sm:text-[32px] font-medium mb-8"
-          style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}
-        >
-          What gym owners are saying
-        </h2>
-        <div
-          className="rounded-(--r-3) p-6 sm:p-8"
-          style={{ background: "var(--bg-2)" }}
-        >
-          <p
-            className="text-[17px] leading-[1.55] max-w-[58ch]"
-            style={{ color: "var(--ink)" }}
-          >
-            Members check in by QR, revenue reconciles itself, and every
-            staff trainer&apos;s report drafts are written for them. You watch
-            the floor, not the spreadsheet.
-          </p>
-          <div
-            className="font-mono text-[11px] uppercase tracking-[0.04em] mt-5"
-            style={{ color: "var(--fg-3)" }}
-          >
-            The front desk &middot; gym workflow with the copilot &middot;
-            early access
-          </div>
-        </div>
-      </section>
-
       {/* KPIs */}
       <section
         className="mx-auto max-w-280 px-5 sm:px-8 py-12"
@@ -274,7 +228,7 @@ export default function ForGymsPage() {
         >
           By the numbers
         </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5">
           {KPIS.map((k) => (
             <div
               key={k.label}

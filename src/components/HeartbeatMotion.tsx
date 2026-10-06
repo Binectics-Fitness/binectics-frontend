@@ -533,7 +533,7 @@ export default function HeartbeatMotion() {
       {/* Caption strip */}
       <div className="hb-caption">
         <span>
-          <strong>50+ countries</strong> supported at launch
+          Built for <strong>Nigeria</strong>
         </span>
       </div>
 

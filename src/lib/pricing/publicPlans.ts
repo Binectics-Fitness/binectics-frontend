@@ -37,6 +37,14 @@ export interface PlanPriceView {
   interval: BillingInterval | null;
 }
 
+/**
+ * The country whose catalogue the public pricing shows, for every visitor.
+ * Plans are priced in naira only for now (owner decision, Oct 2026), so a
+ * visitor detected elsewhere sees the same NGN prices rather than a "no
+ * price set" row for their own country.
+ */
+export const PRICING_COUNTRY = "NG";
+
 function priceFor(
   plan: Pick<PublicProviderPlanOption, "prices">,
   interval: BillingInterval,

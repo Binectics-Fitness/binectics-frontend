@@ -497,8 +497,8 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       <p style={S.docP}>A short list. We never add to it without telling you.</p>
       <ul style={S.docUl}>
         <li><strong style={S.docStrong}>The other side of your bookings</strong>, your coach sees what you&apos;d expect (name, sessions, messages, logs you&apos;ve shared).</li>
-        <li><strong style={S.docStrong}>Payment processors</strong>, Stripe, Paystack, Flutterwave, Razorpay, depending on your country. (Stripe, Flutterwave and Razorpay are not currently used.)</li>
-        <li><strong style={S.docStrong}>Infrastructure providers</strong>, Cloudflare, AWS (eu{"‑"}west{"‑"}1, af{"‑"}south{"‑"}1), Postmark for email.</li>
+        <li><strong style={S.docStrong}>Payment processors</strong>, Paystack.</li>
+        <li><strong style={S.docStrong}>Infrastructure providers</strong>, Microsoft Azure (hosting and databases), Netlify (this website), Cloudinary (photos you upload), Sentry (error monitoring), Firebase and Expo (push notifications), and our email delivery provider.</li>
         <li><strong style={S.docStrong}>Government authorities</strong>, only when legally required, with the narrowest possible response.</li>
       </ul>
 
@@ -506,7 +506,7 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <span style={S.docNum}>04</span>Where it lives
       </h2>
       <p style={S.docP}>
-        Primary database: <strong style={S.docStrong}>Cape Town, ZA</strong> (af{"‑"}south{"‑"}1). Real{"‑"}time replica: <strong style={S.docStrong}>Dublin, IE</strong> (eu{"‑"}west{"‑"}1) for backup and EU latency. Encrypted backups go to S3 with monthly rotation and 30{"‑"}day retention.
+        Binectics runs on <strong style={S.docStrong}>Microsoft Azure</strong>. Your data is stored in Azure databases and encrypted at rest and in transit.
       </p>
 
       <h2 id="p-6" style={S.docH2(false)}>
@@ -546,7 +546,7 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       <h2 id="p-7" style={S.docH2(false)}>
         <span style={S.docNum}>06</span>Your rights
       </h2>
-      <p style={S.docP}>Wherever you are, you have these rights. POPIA, GDPR, and our own policy converge on them.</p>
+      <p style={S.docP}>Wherever you are, you have these rights. Data protection law and our own policy converge on them.</p>
       <ul style={S.docUl}>
         <li><strong style={S.docStrong}>Access</strong>, download a full copy of your data from settings - ZIP delivery in under 24 hours.</li>
         <li><strong style={S.docStrong}>Correction</strong>, fix anything wrong from settings, or email <code style={S.code}>privacy@binectics.com</code>.</li>
@@ -559,10 +559,10 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <span style={S.docNum}>07</span>How to contact us
       </h2>
       <p style={S.docP}>
-        Our Data Protection Officer is <strong style={S.docStrong}>Lerato Mokoena</strong>. Email <code style={{ ...S.code, fontSize: 14 }}>privacy@binectics.com</code>. Most requests get a human reply within 4 hours during weekdays SAST.
+        Email <code style={{ ...S.code, fontSize: 14 }}>privacy@binectics.com</code> for any privacy request.
       </p>
       <p style={S.docP}>
-        If we get something wrong, you can complain to the South African Information Regulator (POPIA) or your local EU supervisory authority. We&apos;d rather hear from you first.
+        If we get something wrong, you can complain to the data protection authority where you live. We&apos;d rather hear from you first.
       </p>
 
       <div style={S.anchorRow}>
@@ -609,7 +609,7 @@ function TermsDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       </p>
       <ul style={S.docUl}>
         <li><strong style={S.docStrong}>Providers</strong> set their own prices, packages, cancellation policies, and availability.</li>
-        <li><strong style={S.docStrong}>Binectics</strong> sets the platform fee, verification standards, and the rules everyone agrees to here.</li>
+        <li><strong style={S.docStrong}>Binectics</strong> sets verification standards and the rules everyone agrees to here.</li>
         <li><strong style={S.docStrong}>Members</strong> agree to show up, respect provider time, and follow gym rules where they apply.</li>
       </ul>
 
@@ -617,13 +617,12 @@ function TermsDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <span style={S.docNum}>04</span>Payments &amp; refunds
       </h2>
       <p style={S.docP}>
-        We take a transparent <strong style={S.docStrong}>platform fee</strong> on processed payments, currently 5% to members, 0% to providers. Providers receive the rest direct to their account; we never hold funds beyond the standard gateway settlement period.
+        Binectics takes no fee from member payments. Members pay providers directly at the provider&apos;s price; providers pay Binectics for their plan&apos;s seats.
       </p>
       <p style={S.docP}>Refund windows:</p>
       <ul style={S.docUl}>
-        <li><strong style={S.docStrong}>Free cancellation</strong> up to 24 hours before a session.</li>
-        <li><strong style={S.docStrong}>Provider no{"‑"}show</strong> - full refund within 48 hours.</li>
-        <li><strong style={S.docStrong}>Service not as described</strong> - open a dispute and we mediate - usually resolved in 3 business days.</li>
+        <li><strong style={S.docStrong}>Cancellation</strong> - each provider sets their own policy. If they haven&apos;t, cancelling 24 hours or more before a session gets a full refund.</li>
+        <li><strong style={S.docStrong}>Something went wrong</strong> - contact the provider first, then email help@binectics.com.</li>
         <li><strong style={S.docStrong}>Chargebacks</strong> - we&apos;ll defend against fraud but cooperate fully with legitimate disputes.</li>
       </ul>
 
@@ -631,7 +630,7 @@ function TermsDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <span style={S.docNum}>05</span>Verification
       </h2>
       <p style={S.docP}>
-        The green verified badge means a human on our team has reviewed the provider&apos;s documents, business registration, certifications, identity. Verified providers stay verified as long as documents remain current. We re{"‑"}check every 24 months.
+        The green verified badge means a human on our team has reviewed the provider&apos;s documents, business registration, certifications, identity.
       </p>
       <p style={S.docP}>
         Rejection comes with a written reason and a 30{"‑"}day path to resubmit.
@@ -670,7 +669,7 @@ function TermsDoc({ onJump }: { onJump: (t: DocTab) => void }) {
         <span style={S.docNum}>09</span>Disputes &amp; arbitration
       </h2>
       <p style={S.docP}>
-        If you and a provider can&apos;t agree, open a dispute from the booking page. A Binectics admin reads both sides and decides within 3 business days. For disputes with Binectics itself, the governing jurisdiction is South Africa; either side can request mediation through the Cape Town arbitration foundation before litigation.
+        If you and a provider can&apos;t agree, email help@binectics.com and we&apos;ll help.
       </p>
 
       <div style={S.anchorRow}>
@@ -894,9 +893,7 @@ function LegalPageContent() {
           We&apos;ve kept it short. Privacy is what data we collect and why. Terms is the contract you accept by using us. Cookies is what runs in your browser and how to turn it off.
         </p>
         <div style={S.meta}>
-          <span><strong style={S.metaStrong}>Last updated</strong> - 14 May 2026</span>
-          <span><strong style={S.metaStrong}>Effective</strong> - 1 June 2026</span>
-          <span><strong style={S.metaStrong}>Jurisdiction</strong> - South Africa primary - GDPR - POPIA</span>
+          <span><strong style={S.metaStrong}>Last updated</strong> - 6 October 2026</span>
         </div>
       </section>
 
@@ -952,7 +949,7 @@ function LegalPageContent() {
             <div style={S.railH}>Need a real human</div>
             <div style={S.railCard}>
               <p style={S.railCardP}>
-                <strong style={S.docStrong}>privacy@binectics.com</strong> for anything in this section. Lerato Mokoena, DPO, replies within 4 hours on weekdays.
+                <strong style={S.docStrong}>privacy@binectics.com</strong> for anything in this section.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
                 <a href="mailto:privacy@binectics.com" style={S.railAction}>
@@ -965,25 +962,6 @@ function LegalPageContent() {
                   <span>Delete my account</span> <span style={{ color: "var(--fg-3)" }}>&nearr;</span>
                 </a>
               </div>
-            </div>
-          </div>
-
-          {/* Version history card */}
-          <div>
-            <div style={S.railH}>Version history</div>
-            <div style={S.railCard}>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)", lineHeight: 1.55, margin: "0 0 10px" }}>
-                <strong style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>v 3.1</strong> - 14 May 2026 - Updated retention table - clarified analytics
-              </p>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)", lineHeight: 1.55, margin: "0 0 10px" }}>
-                <strong style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>v 3.0</strong> - 01 Mar 2026 - POPIA alignment - DPO appointment
-              </p>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)", lineHeight: 1.55, margin: "0 0 10px" }}>
-                <strong style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>v 2.4</strong> - 12 Dec 2025 - Added Razorpay processor
-              </p>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)", lineHeight: 1.55, margin: 0 }}>
-                <strong style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>v 2.0</strong> - 01 Jul 2025 - First public version
-              </p>
             </div>
           </div>
 

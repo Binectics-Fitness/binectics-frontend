@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { TogglePill } from "@/components/ds/TogglePill";
 import { PlanCard, type PlanCardPlan } from "@/components/ds/PlanCard";
-import { useRegion } from "@/contexts/RegionContext";
 import { useCurrencyList } from "@/lib/queries/currencies";
 import { usePublicPlans } from "@/lib/queries/pricing";
 import type {
@@ -16,6 +15,7 @@ import type { PlatformCurrency } from "@/lib/api/currencies";
 import {
   FEATURE_LABELS,
   LIMIT_LABELS,
+  PRICING_COUNTRY,
   PROVIDER_AUDIENCES,
   hasYearlyPrices,
   planFeatureLines,
@@ -25,7 +25,7 @@ import {
 
 /**
  * Provider plans, straight from the public catalogue
- * (GET /provider-billing/plans) for the visitor's country and the provider
+ * (GET /provider-billing/plans) for PRICING_COUNTRY (naira, for now) and the provider
  * type they pick. Prices render in the currency the API returned them in; a
  * price the platform can't charge shows the API's reason instead. While the
  * catalogue loads, or if it fails, the section says so and points to the
@@ -34,9 +34,8 @@ import {
 export function ProviderPricing({ compare = false }: { compare?: boolean }) {
   const [audience, setAudience] = useState<Exclude<PlanAudience, "ALL">>(PROVIDER_AUDIENCES[0].value);
   const [interval, setBillingInterval] = useState<BillingInterval>("month");
-  const { country, isDetected } = useRegion();
   const { data: list } = useCurrencyList();
-  const plans = usePublicPlans(country, audience, isDetected);
+  const plans = usePublicPlans(PRICING_COUNTRY, audience);
 
   const rows = plans.data ?? [];
   const yearly = hasYearlyPrices(rows);
