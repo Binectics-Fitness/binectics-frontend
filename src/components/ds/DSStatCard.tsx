@@ -40,6 +40,8 @@ interface DSStatCardProps {
   dot?: "signal" | "warn" | "danger" | "muted";
   /** Real data points for a trailing sparkline; needs ≥2 to draw. */
   spark?: readonly number[];
+  /** bars (default) for counts per period; line for a measured series such as weight. */
+  sparkVariant?: "bars" | "line";
   /** Accessible description of the sparkline; defaults to the label. */
   sparkLabel?: string;
   className?: string;
@@ -54,6 +56,7 @@ export function DSStatCard({
   size = "md",
   dot,
   spark,
+  sparkVariant = "bars",
   sparkLabel,
   className = "",
 }: DSStatCardProps) {
@@ -98,7 +101,7 @@ export function DSStatCard({
             </div>
           )}
         </div>
-        {spark && <Sparkline values={spark} label={sparkLabel ?? label} />}
+        {spark && <Sparkline values={spark} variant={sparkVariant} label={sparkLabel ?? label} />}
       </div>
     </div>
   );

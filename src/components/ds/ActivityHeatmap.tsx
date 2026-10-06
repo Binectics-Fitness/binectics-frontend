@@ -2,12 +2,15 @@
  * ActivityHeatmap — one square per day, shaded by how much happened.
  *
  * Feed it `heatmapCells(events, days, now)` from src/lib/ui/activity.ts,
- * computed on the client with the viewer's clock, so levels come from real
+ * computed on the client with `useClientNow()`, so levels come from real
  * counts. Ramp is the signal scale (never a role colour such as --gym-soft,
  * which means "gym", not "intensity"):
  *   0 --bg-2 · 1 --signal-soft · 2 --signal · 3 --signal-ink
  * Once-a-day data (check-ins) only ever uses 0 and 2; the darkest step is
  * kept for days that really were busier than others (see heatLevel).
+ * Known limit: level 1 (--signal-soft) is only 1.06:1 against level 0
+ * (--bg-2). No token sits between --signal-soft and --signal, so it is left
+ * as is; the summary label carries the information for non-sighted users.
  * The grid is one labelled image with a spoken summary; each square has a
  * hover title with its date and count.
  */

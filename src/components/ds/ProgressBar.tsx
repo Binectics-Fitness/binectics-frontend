@@ -1,12 +1,23 @@
 /**
  * ProgressBar — 6px signal bar (progress toward a real target).
  *
- * Track: --bg-3 on light surfaces, --ink-2 on ink (`onInk`). Fill: --signal.
- * On light surfaces --signal is only 2.30:1 against the track (non-text
- * needs 3:1), so the fill gets a 1px --signal-ink inner outline there; on
- * ink the fill is already 5.05:1 and draws plain.
+ * `surface` is what the bar sits ON; the track is one step away from it:
+ *   light  (default) on --bg / --bg-2   track --bg-3
+ *   ink    on --ink  (HeroStatCard)     track --ink-2
+ *   raised on --ink-2 (card in a takeover) track --ink
+ * Fill: --signal. Against the light track --signal is only 2.30:1 (non-text
+ * needs 3:1), so there the fill gets a 1px --signal-ink inner outline; on
+ * the dark tracks it is 5.05:1 (--ink-2) and 7.37:1 (--ink) and draws plain.
  * Accessible as role="progressbar" with aria-valuenow/min/max and a label.
  */
+export type ProgressSurface = "light" | "ink" | "raised";
+
+const TRACK: Record<ProgressSurface, string> = {
+  light: "var(--bg-3)",
+  ink: "var(--ink-2)",
+  raised: "var(--ink)",
+};
+
 interface ProgressBarProps {
   value: number;
   /** Defaults to 100. */
@@ -15,14 +26,22 @@ interface ProgressBarProps {
   label: string;
   /** Spoken value when a number alone is unclear, e.g. "32 of 50 days". */
   valueText?: string;
-  onInk?: boolean;
+  surface?: ProgressSurface;
   className?: string;
 }
 
-export function ProgressBar({ value, max = 100, label, valueText, onInk, className = "" }: ProgressBarProps) {
+export function ProgressBar({
+  value,
+  max = 100,
+  label,
+  valueText,
+  surface = "light",
+  className = "",
+}: ProgressBarProps) {
   const safeMax = max > 0 ? max : 1;
   const now = Math.min(Math.max(Number.isFinite(value) ? value : 0, 0), safeMax);
   const pct = (now / safeMax) * 100;
+  const outlined = surface === "light" && pct > 0;
   return (
     <div
       role="progressbar"
@@ -31,8 +50,9 @@ export function ProgressBar({ value, max = 100, label, valueText, onInk, classNa
       aria-valuemax={safeMax}
       aria-valuenow={now}
       aria-valuetext={valueText}
+      data-surface={surface}
       className={`h-1.5 w-full overflow-hidden rounded-[var(--r-1)] ${className}`}
-      style={{ background: onInk ? "var(--ink-2)" : "var(--bg-3)" }}
+      style={{ background: TRACK[surface] }}
     >
       <div
         data-fill
@@ -40,7 +60,7 @@ export function ProgressBar({ value, max = 100, label, valueText, onInk, classNa
         style={{
           width: `${pct}%`,
           background: "var(--signal)",
-          ...(onInk || pct === 0 ? null : { outline: "1px solid var(--signal-ink)", outlineOffset: -1 }),
+          ...(outlined ? { outline: "1px solid var(--signal-ink)", outlineOffset: -1 } : null),
         }}
       />
     </div>

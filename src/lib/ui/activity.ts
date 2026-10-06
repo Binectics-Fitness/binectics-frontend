@@ -9,6 +9,8 @@
  * `now` is required on purpose. Call these on the CLIENT (in a client
  * component, after mount) with the viewer's clock: on the server, "today"
  * would be the server's UTC day and the markup would not match on hydration.
+ * Get it from `useClientNow()` (src/lib/ui/useClientNow.ts): null on the
+ * server, the viewer's Date on the client, refreshed at local midnight.
  *
  * Date-only strings ("2026-10-05") are read as that local calendar day, not
  * as UTC midnight (which would land on the previous day west of UTC). Full

@@ -2,12 +2,17 @@
  * WeekStrip — seven day chips for the current week.
  *
  * Feed it `weekStrip(events, now)` from src/lib/ui/activity.ts, computed on
- * the client with the viewer's clock (see that module), so every "done" day
+ * the client with `useClientNow()` (src/lib/ui/useClientNow.ts), so every "done" day
  * is a real event. States (mosaic + member-home.html):
  *   done      --signal-soft / --signal-ink, with a tick
  *   today     --ink / --bg (a done today keeps the done fill plus an ink ring)
- *   missed    --bg-2 / --fg-3
+ *   missed    --bg-2 / --fg-2
  *   upcoming  --bg with a hairline / --fg-3
+ * Visible text clears 4.5:1 (WCAG 1.4.3 applies even though it is
+ * aria-hidden): done 14.5, today 19.1, missed fg-2/bg-2 ≈ 10, upcoming
+ * fg-3/bg 4.65. The weekday label is dimmed (opacity .7) only on done and
+ * today chips, which have the headroom; missed and upcoming draw it at full
+ * strength.
  * Each chip reads as one sentence, e.g. "Mon 5 Oct, checked in" or
  * "Wed 7 Oct, checked in, today", from a visually hidden span; the visible
  * weekday/date text is aria-hidden so it isn't read twice.
@@ -25,7 +30,7 @@ const DEFAULT_STATE_LABELS: Record<DayState, string> = {
 const CHIP_STYLE: Record<DayState, { background: string; color: string; border: string }> = {
   done: { background: "var(--signal-soft)", color: "var(--signal-ink)", border: "1px solid transparent" },
   today: { background: "var(--ink)", color: "var(--bg)", border: "1px solid var(--ink)" },
-  missed: { background: "var(--bg-2)", color: "var(--fg-3)", border: "1px solid transparent" },
+  missed: { background: "var(--bg-2)", color: "var(--fg-2)", border: "1px solid transparent" },
   upcoming: { background: "var(--bg)", color: "var(--fg-3)", border: "1px solid var(--border)" },
 };
 
@@ -57,7 +62,10 @@ export function WeekStrip({ days, label, stateLabels, className = "" }: WeekStri
             <span className="sr-only">{spoken}</span>
             <span
               aria-hidden="true"
-              className="font-mono text-[9.5px] uppercase tracking-[0.04em] leading-none opacity-70"
+              data-weekday
+              className={`font-mono text-[9.5px] uppercase tracking-[0.04em] leading-none ${
+                day.state === "done" || day.state === "today" ? "opacity-70" : ""
+              }`}
             >
               {day.weekday}
             </span>

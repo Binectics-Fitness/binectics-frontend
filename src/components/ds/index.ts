@@ -32,7 +32,7 @@ export { ProgressBar } from "./ProgressBar";
 export { WeekStrip } from "./WeekStrip";
 export { ActivityHeatmap, HEAT_COLORS } from "./ActivityHeatmap";
 export { ListRow } from "./ListRow";
-export { SuccessTakeover } from "./SuccessTakeover";
+export { SuccessTakeover, TAKEOVER_LAYER_ATTR } from "./SuccessTakeover";
 export type { TakeoverAction } from "./SuccessTakeover";
 export { Sparkline } from "./Sparkline";
 

@@ -13,6 +13,7 @@ import { SuccessTakeover } from "@/components/ds/SuccessTakeover";
 import { Sparkline } from "@/components/ds/Sparkline";
 import { heatmapCells, weekStrip } from "@/lib/ui/activity";
 import { lockScroll } from "@/lib/ui/scrollLock";
+import { contrast, tokenOf } from "@/test/contrast";
 
 const NOW = new Date(2026, 9, 7, 10, 0, 0); // Wed 7 Oct 2026
 
@@ -69,6 +70,8 @@ describe("DSStatCard", () => {
     expect(screen.getByRole("img", { name: "Check-ins" })).toBeInTheDocument();
     // A size container, so the spark can drop under the value on narrow cards.
     expect(screen.getByRole("img").closest("[data-size]")!.className).toContain("@container");
+    rerender(<DSStatCard label="Weight" value="73" spark={[74, 73.6, 73.1]} sparkVariant="line" />);
+    expect(screen.getByRole("img", { name: "Weight" }).dataset.variant).toBe("line");
     rerender(<DSStatCard label="Check-ins" value="12" spark={[4]} />);
     expect(screen.queryByRole("img")).toBeNull();
   });
@@ -142,15 +145,27 @@ describe("ProgressBar", () => {
   });
 
   it("uses the raised-ink track on dark surfaces", () => {
-    render(<ProgressBar value={1} max={2} label="p" onInk />);
+    render(<ProgressBar value={1} max={2} label="p" surface="ink" />);
     expect(screen.getByRole("progressbar").style.background).toBe("var(--ink-2)");
+  });
+
+  it("uses an ink track on a raised (ink-2) surface, never the light one", () => {
+    const { container } = render(<ProgressBar value={1} max={2} label="p" surface="raised" />);
+    expect(screen.getByRole("progressbar").style.background).toBe("var(--ink)");
+    expect(container.querySelector<HTMLElement>("[data-fill]")!.style.outline).toBe("");
+  });
+
+  it("keeps the fill at 3:1 or better against every track", () => {
+    expect(contrast("signal-ink", "bg-3")).toBeGreaterThanOrEqual(3); // light: the outline carries it
+    expect(contrast("signal", "ink-2")).toBeGreaterThanOrEqual(3);
+    expect(contrast("signal", "ink")).toBeGreaterThanOrEqual(3);
   });
 
   it("outlines the light fill in signal-ink so it clears 3:1 against the track", () => {
     const { container, rerender } = render(<ProgressBar value={1} max={2} label="p" />);
     const fill = () => container.querySelector<HTMLElement>("[data-fill]")!;
     expect(fill().style.outline).toBe("1px solid var(--signal-ink)");
-    rerender(<ProgressBar value={1} max={2} label="p" onInk />);
+    rerender(<ProgressBar value={1} max={2} label="p" surface="ink" />);
     expect(fill().style.outline).toBe("");
   });
 });
@@ -184,6 +199,20 @@ describe("HeroStatCard", () => {
     expect(card.querySelector("[data-hero-row]")!.className).toContain("justify-center");
   });
 
+  it("draws a dark-track bar on the raised surface used in the takeover", () => {
+    render(
+      <HeroStatCard
+        eyebrow="Streak"
+        value={33}
+        surface="raised"
+        progress={{ value: 33, max: 50, label: "To 50 days" }}
+      />,
+    );
+    const bar = screen.getByRole("progressbar");
+    expect(bar.dataset.surface).toBe("raised");
+    expect(bar.style.background).toBe("var(--ink)");
+  });
+
   it("draws no bar without a real target, and a raised surface inside a takeover", () => {
     const { container } = render(<HeroStatCard eyebrow="Streak" value={3} surface="raised" />);
     expect(screen.queryByRole("progressbar")).toBeNull();
@@ -215,11 +244,31 @@ describe("WeekStrip", () => {
     expect(spoken(1).textContent).toBe("Tue 6 Oct, no check-in");
     expect(spoken(2).textContent).toBe("Wed 7 Oct, checked in, today");
     expect(items[0]).not.toHaveAttribute("aria-label");
-    expect(items[1].style.color).toBe("var(--fg-3)");
+    expect(items[1].style.color).toBe("var(--fg-2)");
     expect(items[3].style.color).toBe("var(--fg-3)");
     expect(items[2]).toHaveAttribute("aria-current", "date");
     expect(items[0].querySelector("[data-tick]")).not.toBeNull();
     expect(items[3].querySelector("[data-tick]")).toBeNull();
+  });
+
+  it("keeps every chip's visible text at 4.5:1 or better, weekday label included", () => {
+    const days = weekStrip([new Date(2026, 9, 5, 7)], NOW); // done, missed, today, upcoming…
+    render(<WeekStrip days={days} label="This week" />);
+    const items = screen.getAllByRole("listitem");
+    expect(new Set(items.map((i) => i.dataset.state))).toEqual(new Set(["done", "missed", "today", "upcoming"]));
+    for (const item of items) {
+      const ratio = contrast(tokenOf(item.style.color), tokenOf(item.style.background));
+      expect(ratio, `${item.dataset.state}`).toBeGreaterThanOrEqual(4.5);
+      // The weekday is dimmed only where there's headroom (done, today); on
+      // missed/upcoming it is full strength, so the ratio above is its ratio.
+      const weekday = item.querySelector<HTMLElement>("[data-weekday]")!;
+      const dims = item.dataset.state === "done" || item.dataset.state === "today";
+      expect(weekday.className.includes("opacity-70")).toBe(dims);
+      if (dims) expect(ratio * 0.7).toBeGreaterThanOrEqual(4.5); // conservative bound
+      for (const span of Array.from(item.querySelectorAll<HTMLElement>("span[aria-hidden]"))) {
+        expect(span.style.color).toBe("");
+      }
+    }
   });
 
   it("paints today ink when nothing is logged yet", () => {
@@ -282,6 +331,19 @@ describe("ListRow", () => {
     expect(screen.queryByRole("button")).toBeNull();
     expect(container.querySelector("[data-chevron]")).toBeNull();
     expect(screen.getByText("meta").className).toContain("font-mono");
+  });
+
+  it("renders a 0 in the trailing slot as a slot, and skips false/null", () => {
+    const { container, rerender } = render(<ListRow title="Sessions" trailing={0} />);
+    const row = container.firstElementChild as HTMLElement;
+    const slot = row.lastElementChild as HTMLElement;
+    expect(slot.tagName).toBe("SPAN");
+    expect(slot.className).toContain("shrink-0");
+    expect(slot.textContent).toBe("0");
+    rerender(<ListRow title="Sessions" trailing={false} />);
+    expect((container.firstElementChild as HTMLElement).textContent).toBe("Sessions");
+    rerender(<ListRow title="Sessions" trailing={null} />);
+    expect((container.firstElementChild as HTMLElement).childNodes).toHaveLength(1);
   });
 });
 
@@ -457,5 +519,73 @@ describe("SuccessTakeover", () => {
     expect(dialog.className).toContain("takeover");
     expect(dialog.querySelector(".takeover-ring")).not.toBeNull();
     expect(dialog.querySelector(".takeover-tick")).not.toBeNull();
+  });
+
+  it("lets a second takeover stack on top, and portals opened from inside stay live", async () => {
+    const first = render(
+      <SuccessTakeover status="s" title={{ emphasis: "first" }} primaryAction={{ label: "One", onClick: () => {} }} />,
+    );
+    const second = render(
+      <SuccessTakeover status="s" title={{ emphasis: "second" }} primaryAction={{ label: "Two", onClick: () => {} }} />,
+    );
+    const [d1, d2] = screen.getAllByRole("dialog", { hidden: true });
+    await new Promise((r) => setTimeout(r, 0)); // let the first one's observer run
+    expect(d2).not.toHaveAttribute("inert"); // the first takeover didn't inert the second
+    expect(d1).toHaveAttribute("inert"); // the second covers the first
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Two" }));
+
+    // A tooltip and a modal opened from inside the top takeover stay interactive.
+    const tip = document.createElement("div");
+    tip.setAttribute("data-takeover-layer", "");
+    const modal = document.createElement("div");
+    modal.innerHTML = '<div role="dialog" aria-modal="true"></div>';
+    document.body.append(tip, modal);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(tip).not.toHaveAttribute("inert");
+    expect(modal).not.toHaveAttribute("inert");
+
+    // Only the top one handles keys: Tab stays in the second.
+    fireEvent.keyDown(window, { key: "Tab" });
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Two" }));
+
+    second.unmount();
+    expect(d1).not.toHaveAttribute("inert");
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "One" }));
+    first.unmount();
+    tip.remove();
+    modal.remove();
+  });
+
+  it("swallows Escape before anything underneath sees it", () => {
+    const underneath = vi.fn();
+    document.addEventListener("keydown", underneath); // e.g. a Modal or MobileNav
+    const onDismiss = vi.fn();
+    const { unmount } = render(
+      <SuccessTakeover status="s" title={{ emphasis: "in" }} primaryAction={{ label: "Done", onClick: () => {} }} onDismiss={onDismiss} />,
+    );
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onDismiss).toHaveBeenCalledOnce();
+    expect(underneath).not.toHaveBeenCalled();
+    // Other keys still reach the page.
+    fireEvent.keyDown(document, { key: "a" });
+    expect(underneath).toHaveBeenCalledOnce();
+    unmount();
+    document.removeEventListener("keydown", underneath);
+  });
+
+  it("returns focus to <main> when the opener is gone", () => {
+    const main = document.createElement("main");
+    const opener = document.createElement("button");
+    main.appendChild(opener);
+    document.body.appendChild(main);
+    opener.focus();
+    const { unmount } = render(
+      <SuccessTakeover status="s" title={{ emphasis: "in" }} primaryAction={{ label: "Done", onClick: () => {} }} />,
+    );
+    opener.remove();
+    unmount();
+    expect(document.activeElement).toBe(main);
+    expect(main).toHaveAttribute("tabindex", "-1");
+    main.remove();
   });
 });

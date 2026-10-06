@@ -17,12 +17,20 @@
  * Layering: portalled to <body> at z-index var(--z-takeover), above the
  * cookie banner, toasts and drawers. Every other child of <body> is made
  * `inert` while it is open, so nothing behind it can be clicked, focused or
- * read.
+ * read; layers that mount later are made inert too, EXCEPT:
+ *   - another takeover (its root carries data-takeover-root), which stacks
+ *     on top and inerts this one until it closes;
+ *   - a modal dialog (aria-modal="true") — only reachable from in here;
+ *   - any portal marked with TAKEOVER_LAYER_ATTR (data-takeover-layer):
+ *     put it on tooltips/popovers you open from inside a takeover.
+ * Only the topmost open takeover handles keys.
  *
  * Accessibility: role="dialog" + aria-modal, labelled by the title and
  * described by the status line. Focus moves to the primary action on open,
- * Tab and Shift+Tab wrap inside, Escape calls `onDismiss` when given, and
- * focus returns to where it was on close. Page scroll is locked through the
+ * Tab and Shift+Tab wrap inside. Escape is caught in the capture phase on
+ * window and stopped there, so a Modal or MobileNav underneath never sees
+ * it; it calls `onDismiss` when given. On close focus returns to where it
+ * was, or to <main> (#main) if that element is gone. Page scroll is locked through the
  * shared reference-counted lock (src/lib/ui/scrollLock.ts).
  */
 import Link from "next/link";
@@ -65,6 +73,29 @@ const ACTION_STYLE = {
 
 const noopSubscribe = () => () => {};
 
+/** Mark a portal opened from inside a takeover so it stays interactive. */
+export const TAKEOVER_LAYER_ATTR = "data-takeover-layer";
+const ROOT_ATTR = "data-takeover-root";
+
+/** Open takeovers, oldest first; only the last one handles keys. */
+const openStack: HTMLElement[] = [];
+
+function keepsInteractive(el: Element): boolean {
+  return (
+    el.hasAttribute(ROOT_ATTR) ||
+    el.hasAttribute(TAKEOVER_LAYER_ATTR) ||
+    el.getAttribute("aria-modal") === "true" ||
+    el.querySelector('[aria-modal="true"]') !== null
+  );
+}
+
+function focusMain() {
+  const main = document.querySelector<HTMLElement>("main, #main");
+  if (!main) return;
+  if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+  main.focus();
+}
+
 export function SuccessTakeover({
   status,
   title,
@@ -105,16 +136,23 @@ export function SuccessTakeover({
       madeInert.push(el);
     };
     Array.from(document.body.children).forEach(makeInert);
-    // Layers that mount later (the cookie banner, toasts) get the same.
+    openStack.push(root);
+    // Layers that mount later (the cookie banner, toasts) get the same,
+    // unless they belong on top of this takeover (see the header comment).
     const observer = new MutationObserver((records) => {
-      for (const r of records) r.addedNodes.forEach((n) => n instanceof Element && makeInert(n));
+      for (const r of records) {
+        r.addedNodes.forEach((n) => n instanceof Element && !keepsInteractive(n) && makeInert(n));
+      }
     });
     observer.observe(document.body, { childList: true });
 
     actionRef.current?.focus();
 
     function onKeyDown(e: KeyboardEvent) {
+      if (openStack[openStack.length - 1] !== root) return;
       if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
         dismissRef.current?.();
         return;
       }
@@ -133,13 +171,17 @@ export function SuccessTakeover({
       }
     }
 
-    document.addEventListener("keydown", onKeyDown);
+    // Window + capture: the first listener any keydown reaches.
+    window.addEventListener("keydown", onKeyDown, true);
     return () => {
-      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, true);
       observer.disconnect();
+      const at = openStack.indexOf(root);
+      if (at !== -1) openStack.splice(at, 1);
       for (const el of madeInert) el.removeAttribute("inert");
       release();
-      if (previous && document.contains(previous)) previous.focus();
+      if (previous && previous !== document.body && document.contains(previous)) previous.focus();
+      else focusMain();
     };
   }, [mounted]);
 
@@ -148,6 +190,7 @@ export function SuccessTakeover({
   return createPortal(
     <div
       ref={rootRef}
+      data-takeover-root=""
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}

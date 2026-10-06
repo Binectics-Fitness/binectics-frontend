@@ -77,7 +77,7 @@ export function HeroStatCard({
       )}
       {progress && (
         <ProgressBar
-          onInk={surface === "ink"}
+          surface={surface}
           value={progress.value}
           max={progress.max}
           label={progress.label}

@@ -36,14 +36,18 @@ export function ListRow({ title, meta, leading, trailing, href, onClick, chevron
   const style = { background: "var(--bg)", border: "1px solid var(--border)" };
   const hover = interactive ? "hover:bg-[var(--bg-2)] focus-visible:outline-2 focus-visible:outline-offset-2" : "";
 
+  // `!= null && !== false`, not truthiness: a 0 count must render as the
+  // slot, not leak out as a bare "0" (and "" is a deliberate empty slot).
+  const has = (node: ReactNode) => node != null && node !== false;
+
   const content = (
     <>
-      {leading && <span className="shrink-0">{leading}</span>}
+      {has(leading) && <span className="shrink-0">{leading}</span>}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>
           {title}
         </span>
-        {meta && (
+        {has(meta) && (
           <span
             className="mt-0.5 block truncate font-mono text-[11px] uppercase tracking-[0.04em]"
             style={{ color: "var(--fg-3)" }}
@@ -52,7 +56,7 @@ export function ListRow({ title, meta, leading, trailing, href, onClick, chevron
           </span>
         )}
       </span>
-      {trailing && <span className="shrink-0">{trailing}</span>}
+      {has(trailing) && <span className="shrink-0">{trailing}</span>}
       {showChevron && (
         <ChevronRight aria-hidden="true" data-chevron size={14} className="shrink-0" style={{ color: "var(--fg-4)" }} />
       )}
