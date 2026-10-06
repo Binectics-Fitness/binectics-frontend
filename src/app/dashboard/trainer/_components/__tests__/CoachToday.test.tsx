@@ -156,7 +156,7 @@ describe("Trainer Today page", () => {
   });
   afterEach(() => vi.useRealTimers());
 
-  it("loads once and renders one copy, although the shell mounts its children twice", async () => {
+  it("loads once and renders one copy inside the shell", async () => {
     renderWithProviders(<TrainerTodayClient />);
     await screen.findByRole("list", { name: "Today's sessions" });
     await waitFor(() => expect(getOrgSummary).toHaveBeenCalled());

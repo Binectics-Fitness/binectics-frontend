@@ -32,7 +32,6 @@ import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { useClientNow } from "@/lib/ui/useClientNow";
 import { dailyRevenueSpark } from "./revenueSpark";
-import { ShownCopyOnly } from "../trainer/_components/ShownCopyOnly";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -203,125 +202,122 @@ function GymOverviewContent() {
   const place = stats?.city && stats?.country_code ? ` · ${stats.city}, ${stats.country_code}` : "";
   return (
     <GymDashboardShell activeItem="Overview" crumb="Overview" actions={<NewPlanButton />}>
-      {/* The shell mounts its children twice; keep one copy (one h1). */}
-      <ShownCopyOnly>
-        <OnboardingBanner />
+      <OnboardingBanner />
 
-        {/* The shell's <main> already spaces its children (gap-5). */}
-        <PageHeader
-          className="mb-0!"
-          eyebrow={now ? format(now, "EEEE · d MMM") : undefined}
-          title={title}
-          subtitle={currentOrg ? `Here's how ${currentOrg.name} is doing${place}` : "Your gym performance overview"}
-        />
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        eyebrow={now ? format(now, "EEEE · d MMM") : undefined}
+        title={title}
+        subtitle={currentOrg ? `Here's how ${currentOrg.name} is doing${place}` : "Your gym performance overview"}
+      />
 
-        {!currentOrg && !orgLoading ? (
-          <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
-            Select an organization to view its dashboard.
-          </div>
-        ) : error ? (
-          <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
-            <div className="font-medium">Couldn&apos;t load dashboard</div>
-            <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
-          </div>
-        ) : null}
+      {!currentOrg && !orgLoading ? (
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
+          Select an organization to view its dashboard.
+        </div>
+      ) : error ? (
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+          <div className="font-medium">Couldn&apos;t load dashboard</div>
+          <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
+        </div>
+      ) : null}
 
-        {loading && !stats ? (
-          <AsyncSpinner size="page" label="Loading your dashboard" />
-        ) : (
-          <>
-            {/* KPIs */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">{kpis}</div>
+      {loading && !stats ? (
+        <AsyncSpinner size="page" label="Loading your dashboard" />
+      ) : (
+        <>
+          {/* KPIs */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">{kpis}</div>
 
-            {/* Revenue summary + Live check-ins */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-3">
-              <DSCard>
-                <DSCardHead title="Revenue" subtitle="Settled to date" />
-                <div className="flex flex-col">
-                  {[
-                    { label: "Today", value: stats ? formatAmount(stats.revenue_today) : "-" },
-                    { label: "This week", value: stats ? formatAmount(stats.revenue_week) : "-" },
-                    { label: "This month", value: stats ? formatAmount(stats.revenue_month) : "-" },
-                  ].map((row, i, arr) => (
-                    <div key={row.label} className="flex justify-between px-4.5 py-3.5" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
-                      <span className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>{row.label}</span>
-                      <span className="font-mono text-[14px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{row.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </DSCard>
-
-              <DSCard>
-                <DSCardHead title="Live check-ins" subtitle="Most recent activity" action={<StatusPill tone="success" label="Live" />} />
-                <div className="py-1 overflow-hidden" style={{ maxHeight: 320 }}>
-                  {liveCheckIns.length === 0 ? (
-                    <div className="px-4.5 py-4"><EmptySlate message="No check-ins yet today." mt="mt-0" /></div>
-                  ) : (
-                    liveCheckIns.slice(0, 8).map((c) => {
-                      const listing = checkInListing(c);
-                      return (
-                        <div key={c._id} className="flex gap-3 px-4.5 py-2.5 items-start">
-                          {/* A check-in is an event, not a success: the dot is neutral and
-                              the "Live" pill above carries the colour. */}
-                          <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-[7px]" style={{ background: "var(--fg-4)" }} />
-                          <span className="text-[13px] flex-1" style={{ color: "var(--ink)" }}>
-                            <strong className="font-medium">{checkInName(c)}</strong> checked in{listing ? ` at ${listing}` : ""}
-                          </span>
-                          <span className="font-mono text-[11px] shrink-0" style={{ color: "var(--fg-3)" }}>{fmtTime(c.checked_in_at)}</span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </DSCard>
-            </div>
-
-            {/* Recent members */}
+          {/* Revenue summary + Live check-ins */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-3">
             <DSCard>
-              <DSCardHead title="Recent members" subtitle="Latest subscriptions" />
-              {recentMembers.length === 0 ? (
-                <div className="px-4.5 py-4"><EmptySlate message="No members yet." hint="New subscriptions will appear here." mt="mt-0" /></div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-[13.5px] min-w-[600px]">
-                    <thead>
-                      <tr>
-                        {["Member", "Plan", "Status", "Joined", "Amount"].map((h, i) => (
-                          <th key={h} className={`text-left font-medium font-mono text-[11px] uppercase tracking-[0.04em] px-4.5 py-3 ${i === 4 ? "text-right" : ""}`} style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentMembers.map((sub, idx) => {
-                        const name = memberName(sub);
-                        const last = idx === recentMembers.length - 1;
-                        const st = membershipStatusMeta(sub.status);
-                        const border = last ? "none" : "1px solid var(--border)";
-                        return (
-                          <tr key={sub._id} className="hover:bg-bg-2">
-                            <td className="px-4.5 py-3" style={{ borderBottom: border, color: "var(--ink)" }}>
-                              <div className="flex items-center gap-2.5">
-                                <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(name)}</span>
-                                {name}
-                              </div>
-                            </td>
-                            <td className="px-4.5 py-3" style={{ borderBottom: border, color: "var(--ink)" }}>{planName(sub)}</td>
-                            <td className="px-4.5 py-3" style={{ borderBottom: border }}>
-                              <StatusPill tone={st.tone} label={st.label} title={st.hint} />
-                            </td>
-                            <td className="px-4.5 py-3 font-mono text-[12px]" style={{ borderBottom: border, color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{fmtDate(sub.created_at)}</td>
-                            <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid_minor != null ? fmtMoney(minorToMajor(sub.amount_paid_minor, sub.currency ?? currentOrg?.currency), sub.currency ?? currentOrg?.currency) : "-"}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <DSCardHead title="Revenue" subtitle="Settled to date" />
+              <div className="flex flex-col">
+                {[
+                  { label: "Today", value: stats ? formatAmount(stats.revenue_today) : "-" },
+                  { label: "This week", value: stats ? formatAmount(stats.revenue_week) : "-" },
+                  { label: "This month", value: stats ? formatAmount(stats.revenue_month) : "-" },
+                ].map((row, i, arr) => (
+                  <div key={row.label} className="flex justify-between px-4.5 py-3.5" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
+                    <span className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>{row.label}</span>
+                    <span className="font-mono text-[14px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
             </DSCard>
-          </>
-        )}
-      </ShownCopyOnly>
+
+            <DSCard>
+              <DSCardHead title="Live check-ins" subtitle="Most recent activity" action={<StatusPill tone="success" label="Live" />} />
+              <div className="py-1 overflow-hidden" style={{ maxHeight: 320 }}>
+                {liveCheckIns.length === 0 ? (
+                  <div className="px-4.5 py-4"><EmptySlate message="No check-ins yet today." mt="mt-0" /></div>
+                ) : (
+                  liveCheckIns.slice(0, 8).map((c) => {
+                    const listing = checkInListing(c);
+                    return (
+                      <div key={c._id} className="flex gap-3 px-4.5 py-2.5 items-start">
+                        {/* A check-in is an event, not a success: the dot is neutral and
+                            the "Live" pill above carries the colour. */}
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-[7px]" style={{ background: "var(--fg-4)" }} />
+                        <span className="text-[13px] flex-1" style={{ color: "var(--ink)" }}>
+                          <strong className="font-medium">{checkInName(c)}</strong> checked in{listing ? ` at ${listing}` : ""}
+                        </span>
+                        <span className="font-mono text-[11px] shrink-0" style={{ color: "var(--fg-3)" }}>{fmtTime(c.checked_in_at)}</span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </DSCard>
+          </div>
+
+          {/* Recent members */}
+          <DSCard>
+            <DSCardHead title="Recent members" subtitle="Latest subscriptions" />
+            {recentMembers.length === 0 ? (
+              <div className="px-4.5 py-4"><EmptySlate message="No members yet." hint="New subscriptions will appear here." mt="mt-0" /></div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-[13.5px] min-w-[600px]">
+                  <thead>
+                    <tr>
+                      {["Member", "Plan", "Status", "Joined", "Amount"].map((h, i) => (
+                        <th key={h} className={`text-left font-medium font-mono text-[11px] uppercase tracking-[0.04em] px-4.5 py-3 ${i === 4 ? "text-right" : ""}`} style={{ color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentMembers.map((sub, idx) => {
+                      const name = memberName(sub);
+                      const last = idx === recentMembers.length - 1;
+                      const st = membershipStatusMeta(sub.status);
+                      const border = last ? "none" : "1px solid var(--border)";
+                      return (
+                        <tr key={sub._id} className="hover:bg-bg-2">
+                          <td className="px-4.5 py-3" style={{ borderBottom: border, color: "var(--ink)" }}>
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(name)}</span>
+                              {name}
+                            </div>
+                          </td>
+                          <td className="px-4.5 py-3" style={{ borderBottom: border, color: "var(--ink)" }}>{planName(sub)}</td>
+                          <td className="px-4.5 py-3" style={{ borderBottom: border }}>
+                            <StatusPill tone={st.tone} label={st.label} title={st.hint} />
+                          </td>
+                          <td className="px-4.5 py-3 font-mono text-[12px]" style={{ borderBottom: border, color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>{fmtDate(sub.created_at)}</td>
+                          <td className="px-4.5 py-3 text-right font-mono" style={{ borderBottom: border, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{sub.amount_paid_minor != null ? fmtMoney(minorToMajor(sub.amount_paid_minor, sub.currency ?? currentOrg?.currency), sub.currency ?? currentOrg?.currency) : "-"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </DSCard>
+        </>
+      )}
     </GymDashboardShell>
   );
 }

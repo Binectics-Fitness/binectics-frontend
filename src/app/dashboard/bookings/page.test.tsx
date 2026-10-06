@@ -66,7 +66,7 @@ describe("My bookings", () => {
     expect(screen.queryByRole("link", { name: "Activity" })).toBeNull();
   });
 
-  it("mounts once in a provider shell, which renders its children twice", async () => {
+  it("mounts once in a provider shell", async () => {
     role = "TRAINER";
     renderWithProviders(<MyBookingsPage />);
     await screen.findByText(/Strength · 60 min/);

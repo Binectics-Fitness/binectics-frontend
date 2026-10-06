@@ -17,10 +17,8 @@ export interface CoachTodayData {
 }
 
 /**
- * Everything the coach Today page reads. Call it in the page component,
- * OUTSIDE the dashboard shell: ProviderDashboardShell mounts its children
- * twice (a desktop and a mobile copy), so a fetch inside the shell runs
- * twice. CoachToday itself only renders what it is given.
+ * Everything the coach Today page reads. The page component calls it and
+ * hands the result to CoachToday, which only renders what it is given.
  */
 export function useCoachTodayData(): CoachTodayData {
   const settled = useSettledThisMonth();
