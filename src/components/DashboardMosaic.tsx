@@ -1139,13 +1139,13 @@ function Row2VerifyCard() {
 function Row2GlobalCard() {
   // Currency and payment-provider counts come from GET /currencies.
   const { data: currencyList } = useCurrencyList();
-  const stats: [string, string][] = [["50+", "Countries"]];
+  const stats: [string, string][] = [];
   if (currencyList && currencyList.length > 0) {
     stats.push([String(payableCurrencies(currencyList).length), "Currencies"]);
     stats.push([String(gatewayCurrencySummary(currencyList).length), "Payment providers"]);
   }
   return (
-    <div className="bento-card bento-r2 bento-r2-global" role="img" aria-label="Global reach across 50+ countries">
+    <div className="bento-card bento-r2 bento-r2-global" role="img" aria-label="Where payments run today">
       <WaveBackground id="gl-grad" stops={[["0%", "var(--trainer)"], ["50%", "var(--signal)"], ["100%", "var(--trainer)"]]} />
       <svg className="meridian-bg" viewBox="0 0 400 600" fill="none" aria-hidden="true">
         {[60, 120, 180, 220, 280, 340].map((x, i) => (
@@ -1165,7 +1165,6 @@ function Row2GlobalCard() {
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{c.code}</span>
               </div>
             ))}
-            <div className="globe-more">+42 more</div>
           </div>
           <div className="globe-stats" style={{ display: "flex", gap: 32, justifyContent: "center" }}>
             {stats.map(([val, label]) => (

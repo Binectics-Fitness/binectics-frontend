@@ -22,7 +22,7 @@ import { SEEDED_CURRENCIES } from "../setup/currencyFixtures";
  */
 
 vi.mock("@/contexts/RegionContext", () => ({
-  useRegion: () => ({ country: "NG", isDetected: true }),
+  useRegion: () => ({ country: "US", isDetected: true }),
 }));
 vi.mock("@/lib/queries/currencies", () => ({
   useCurrencyList: () => ({ data: SEEDED_CURRENCIES, isPending: false, isError: false }),
@@ -122,7 +122,7 @@ describe("ProviderPricing", () => {
   let get: ReturnType<typeof vi.spyOn>;
   afterEach(() => get.mockRestore());
 
-  it("asks for the visitor's country and provider type and renders the catalogue", async () => {
+  it("asks for the naira catalogue whatever the visitor's country, and renders it", async () => {
     get = vi.spyOn(apiClient, "get").mockResolvedValue({ success: true, data: CATALOGUE });
     render(<ProviderPricing />, { wrapper });
 

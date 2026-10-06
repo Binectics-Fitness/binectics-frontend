@@ -9,10 +9,6 @@ import {
   Heart,
   Apple,
   Building2,
-  Briefcase,
-  FileText,
-  Newspaper,
-  Handshake,
   Mail,
 } from "lucide-react";
 
@@ -85,16 +81,12 @@ export const NAV_ENTRIES: NavEntry[] = [
       {
         title: "Company",
         items: [
-          { label: "About", description: "Our mission and team", href: "/about", icon: Building2 },
-          { label: "Careers", description: "Join the team", href: "/careers", icon: Briefcase },
-          { label: "Blog", description: "News and updates", href: "/blog", icon: FileText },
+          { label: "About", description: "Why we're building Binectics", href: "/about", icon: Building2 },
         ],
       },
       {
         title: "Resources",
         items: [
-          { label: "Press", description: "Media resources", href: "/press", icon: Newspaper },
-          { label: "Partners", description: "Partner with us", href: "/partners", icon: Handshake },
           { label: "Contact", description: "Get in touch", href: "/contact", icon: Mail },
         ],
       },

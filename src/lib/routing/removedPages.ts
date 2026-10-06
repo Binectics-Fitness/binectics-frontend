@@ -47,4 +47,15 @@ export const REMOVED_PAGE_REDIRECTS: RemovedPageRedirect[] = [
     destination: "/dashboard/settings/notifications",
     permanent: false,
   },
+  // Invented company pages: a press page reporting a funding round that
+  // never happened, made-up job openings, and blog posts with invented
+  // authors. About is the one real page about the company.
+  { source: "/press", destination: "/about", permanent: false },
+  { source: "/careers", destination: "/about", permanent: false },
+  // Partners listed industry bodies we have no relationship with.
+  { source: "/partners", destination: "/about", permanent: false },
+  { source: "/blog", destination: "/", permanent: false },
+  { source: "/blog/:slug", destination: "/", permanent: false },
+  // A status page that hardcoded "Operational" for every service.
+  { source: "/status", destination: "/help", permanent: false },
 ];
