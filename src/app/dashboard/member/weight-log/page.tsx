@@ -1,28 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { useAuth } from "@/contexts/AuthContext";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, Eyebrow, ListRow, PageHeader } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile, WeightLog } from "@/lib/api/progress";
-
-function formatDate(isoDate: string): string {
-  const d = new Date(isoDate);
-  const today = new Date();
-  const isToday =
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate();
-
-  if (isToday) return "Today";
-  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
-}
+import { useClientNow } from "@/lib/ui/useClientNow";
+import { recentWeights, signedKg, weightChange30d } from "../_lib/logStats";
+import { LOG_LIMIT, logDate } from "../_lib/logFormat";
+import { LogDetailDrawer } from "../_components/LogDetailDrawer";
 
 export default function WeightLogPage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ClientProfile | null>(null);
-  const [logs, setLogs] = useState<WeightLog[]>([]);
+  // null until the list has loaded: a failed load must not read as "no logs".
+  const queryClient = useQueryClient();
+  const [loadedLogs, setLoadedLogs] = useState<WeightLog[] | null>(null);
+  const logs = useMemo(() => loadedLogs ?? [], [loadedLogs]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [logOpen, setLogOpen] = useState(false);
@@ -55,7 +51,10 @@ export default function WeightLogPage() {
             ? { _id: (res.data as WeightLog).logged_by as string, first_name: user.first_name ?? "", last_name: user.last_name ?? "" }
             : (res.data as WeightLog).logged_by,
       } as WeightLog;
-      setLogs((prev) => [stamped, ...prev]);
+      // Prepend only to a list that loaded; after a failed load the error stays.
+      setLoadedLogs((prev) => (prev ? [stamped, ...prev] : prev));
+      // Health metrics caches weight under this prefix; don't leave it stale.
+      void queryClient.invalidateQueries({ queryKey: ["progress", "weightLogs"] });
       setLogWeight("");
       setLogOpen(false);
     } else {
@@ -70,8 +69,11 @@ export default function WeightLogPage() {
         // get-or-create the SELF profile so first-time members can track
         // without anyone having to add them as a client first.
         const profileRes = await progressService.getMyOwnProfiles();
+        if (!profileRes.success) {
+          throw new Error(profileRes.message || "Couldn't load your weight log. Please try again.");
+        }
         let myProfile =
-          profileRes.success && profileRes.data?.length
+          profileRes.data?.length
             ? profileRes.data[0]
             : null;
         if (!myProfile) {
@@ -85,12 +87,16 @@ export default function WeightLogPage() {
         }
         setProfile(myProfile);
 
-        const logsRes = await progressService.getWeightLogs(myProfile._id, 50);
-        setLogs(logsRes.success && logsRes.data ? logsRes.data : []);
+        // apiClient reports failures as success:false rather than throwing.
+        const logsRes = await progressService.getWeightLogs(myProfile._id, LOG_LIMIT);
+        if (!logsRes.success) {
+          throw new Error(logsRes.message || "Couldn't load your weight log. Please try again.");
+        }
+        setLoadedLogs(logsRes.data ?? []);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load weight log");
-        setLogs([]);
+        setLoadedLogs(null);
       } finally {
         setLoading(false);
       }
@@ -108,95 +114,90 @@ export default function WeightLogPage() {
     (log) => user && loggerId(log) !== user.id,
   );
 
+  const loggedByName = (log: WeightLog) =>
+    user && loggerId(log) === user.id
+      ? "You"
+      : typeof log.logged_by === "string"
+        ? null
+        : `${log.logged_by.first_name} ${log.logged_by.last_name}`;
+
   const latestLog = logs.length > 0 ? logs[0] : null;
-  const oldestLog = logs.length > 0 ? logs[logs.length - 1] : null;
-  const changeKgValue =
-    latestLog && oldestLog
-      ? latestLog.weight_kg - oldestLog.weight_kg
-      : null;
-  const changeKg = changeKgValue !== null ? changeKgValue.toFixed(1) : null;
+  // The 30-day change needs the viewer's clock (null until mount).
+  const now = useClientNow();
+  const change = useMemo(() => (now ? weightChange30d(logs, now) : null), [logs, now]);
+  const spark = useMemo(() => recentWeights(logs, 12), [logs]);
+  const chartLogs = useMemo(() => logs.slice(0, 12).reverse(), [logs]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const opened = logs.find((l) => l._id === openId) ?? null;
+  // On a failed load only the error shows, never "-" tiles or "no logs".
+  const showData = !loading && loadedLogs !== null;
+
+  const logAction = (
+    <div>
+      {logOpen ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <div>
+            <input
+              type="number"
+              step="0.1"
+              min="1"
+              inputMode="decimal"
+              placeholder="kg"
+              aria-label="Weight in kg"
+              value={logWeight}
+              autoFocus
+              onChange={(e) => setLogWeight(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void onLogToday(); }}
+              style={{ width: 110, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-2)", fontSize: 13, background: "var(--bg)", color: "var(--ink)" }}
+            />
+            {logError && (
+              <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 4, maxWidth: 220 }}>{logError}</div>
+            )}
+          </div>
+          <button
+            onClick={() => void onLogToday()}
+            disabled={logSaving || !logWeight}
+            style={{ background: "var(--ink)", color: "var(--bg)", padding: "8px 14px", borderRadius: 6, border: 0, fontSize: 13, fontWeight: 500, cursor: logSaving ? "wait" : "pointer", opacity: logSaving || !logWeight ? 0.6 : 1 }}
+          >
+            {logSaving ? "Saving…" : "Save"}
+          </button>
+          <button
+            onClick={() => { setLogOpen(false); setLogError(null); }}
+            disabled={logSaving}
+            style={{ background: "var(--bg)", color: "var(--fg-2)", padding: "8px 14px", borderRadius: 6, border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setLogOpen(true)}
+          disabled={!profile || loading}
+          style={{
+            background: "var(--ink)",
+            color: "var(--bg)",
+            padding: "8px 14px",
+            borderRadius: 6,
+            border: 0,
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: !profile || loading ? "not-allowed" : "pointer",
+            opacity: !profile || loading ? 0.5 : 1,
+          }}
+        >
+          + Log today
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <MemberDashboardShell activeLabel="Activity">
-      <div
-        className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3"
-        style={{ marginBottom: 18 }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: 30,
-              letterSpacing: "-0.024em",
-              fontWeight: 500,
-              color: "var(--ink)",
-            }}
-          >
-            Weight
-          </h1>
-          <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            {profile
-              ? `${
-                  typeof profile.client_id === "object"
-                    ? `${profile.client_id.first_name} ${profile.client_id.last_name}`
-                    : `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "My log"
-                } · ${logs.length} ${logs.length === 1 ? "log" : "logs"} recorded`
-              : "Loading..."}
-          </p>
-        </div>
-        {logOpen ? (
-          <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
-            <div>
-              <input
-                type="number"
-                step="0.1"
-                min="1"
-                inputMode="decimal"
-                placeholder="kg"
-                value={logWeight}
-                autoFocus
-                onChange={(e) => setLogWeight(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") void onLogToday(); }}
-                style={{ width: 110, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-2)", fontSize: 13, background: "var(--bg)", color: "var(--ink)" }}
-              />
-              {logError && (
-                <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 4, maxWidth: 220 }}>{logError}</div>
-              )}
-            </div>
-            <button
-              onClick={() => void onLogToday()}
-              disabled={logSaving || !logWeight}
-              style={{ background: "var(--ink)", color: "var(--bg)", padding: "8px 14px", borderRadius: 6, border: 0, fontSize: 13, fontWeight: 500, cursor: logSaving ? "wait" : "pointer", opacity: logSaving || !logWeight ? 0.6 : 1 }}
-            >
-              {logSaving ? "Saving…" : "Save"}
-            </button>
-            <button
-              onClick={() => { setLogOpen(false); setLogError(null); }}
-              disabled={logSaving}
-              style={{ background: "var(--bg)", color: "var(--fg-2)", padding: "8px 14px", borderRadius: 6, border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setLogOpen(true)}
-            disabled={!profile || loading}
-            style={{
-              background: "var(--ink)",
-              color: "var(--bg)",
-              padding: "8px 14px",
-              borderRadius: 6,
-              border: 0,
-              fontSize: 13,
-              fontWeight: 500,
-              cursor: !profile || loading ? "not-allowed" : "pointer",
-              opacity: !profile || loading ? 0.5 : 1,
-            }}
-          >
-            + Log today
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title={{ before: "Weight ", emphasis: "log" }}
+        subtitle="Your weigh-ins, and any your coach records for you."
+        actions={logAction}
+      />
 
       {error && (
         <div
@@ -214,232 +215,123 @@ export default function WeightLogPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 14 }}>
-        {[
-          {
-            label: "Current",
-            value: latestLog ? `${latestLog.weight_kg.toFixed(1)} kg` : "-",
-            delta: latestLog ? formatDate(latestLog.recorded_at) : "-",
-          },
-          {
-            label: "Change",
-            value: changeKgValue ? `${changeKgValue > 0 ? "+" : ""}${changeKg}` : "-",
-            delta: changeKgValue ? (changeKgValue < 0 ? "↓ Loss" : "↑ Gain") : "-",
-          },
-          {
-            label: "Logs",
-            value: logs.length.toString(),
-            delta: "Total recorded",
-          },
-          {
-            label: "Status",
-            value: loading ? "..." : logs.length > 0 ? "Active" : "No logs",
-            delta: logs.length > 0 ? "Latest synced" : "-",
-          },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            style={{
-              background: "var(--bg)",
-              border: "1px solid var(--border)",
-              borderRadius: 10,
-              padding: "14px 16px",
-            }}
-          >
-            <div
-              className="font-mono"
-              style={{
-                fontSize: 10.5,
-                color: "var(--fg-3)",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {kpi.label}
-            </div>
-            <div
-              style={{
-                fontSize: 24,
-                fontWeight: 500,
-                color: "var(--ink)",
-                letterSpacing: "-0.02em",
-                marginTop: 4,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {kpi.value}
-            </div>
-            <div
-              className="font-mono"
-              style={{ fontSize: 11, color: "var(--signal-ink)", marginTop: 4 }}
-            >
-              {kpi.delta}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {!loading && logs.length > 0 && (
-        <div
-          style={{
-            background: "var(--bg)",
-            border: "1px solid var(--border)",
-            borderRadius: 12,
-            padding: 22,
-            marginBottom: 14,
-          }}
-        >
-          <h3
-            style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}
-          >
-            Last 12 records · trend
-          </h3>
-          <svg viewBox="0 0 800 200" style={{ width: "100%", height: 200 }}>
-            <defs>
-              <linearGradient id="wt" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stopColor="oklch(0.55 0.16 148)" stopOpacity="0.3" />
-                <stop offset="1" stopColor="oklch(0.55 0.16 148)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            {(() => {
-              const displayLogs = logs.slice(0, 12).reverse();
-              const weights = displayLogs.map((l) => l.weight_kg);
-              const minW = Math.min(...weights);
-              const maxW = Math.max(...weights);
-              const range = maxW - minW || 1;
-              const points = displayLogs
-                .map(
-                  (log, i) =>
-                    `${40 + (i / (displayLogs.length - 1 || 1)) * 720} ${150 - ((log.weight_kg - minW) / range) * 120}`
-                )
-                .join(" L ");
-              return (
-                <>
-                  <path d={`M ${points} L 760 200 L 40 200 Z`} fill="url(#wt)" />
-                  <path d={`M ${points}`} fill="none" stroke="oklch(0.55 0.16 148)" strokeWidth="2.5" />
-                  <g fontFamily="ui-monospace" fontSize="10" fill="oklch(0.55 0.008 80)">
-                    <text x="40" y="190">{displayLogs[0]?.recorded_at.slice(0, 10)}</text>
-                    <text x="400" y="190" textAnchor="middle">
-                      Mid
-                    </text>
-                    <text x="760" y="190" textAnchor="end">
-                      {displayLogs[displayLogs.length - 1]?.recorded_at.slice(0, 10)}
-                    </text>
-                    <text x="20" y="60" textAnchor="end">
-                      {maxW.toFixed(1)}
-                    </text>
-                    <text x="20" y="156" textAnchor="end">
-                      {minW.toFixed(1)}
-                    </text>
-                  </g>
-                </>
-              );
-            })()}
-          </svg>
+      {/* Stat pair. The change is neutral in tone: down is not "good" for
+          everyone. Only drawn from two or more logs inside the window. */}
+      {loading && (
+        <div aria-hidden="true" className="grid grid-cols-2 gap-3 mb-3.5">
+          {[0, 1].map((i) => (
+            <div key={i} className="h-[92px] rounded-[var(--r-3)]" style={{ background: "var(--bg-2)" }} />
+          ))}
+        </div>
+      )}
+      {showData && (
+        <div className="grid grid-cols-2 gap-3 mb-3.5">
+          <DSStatCard
+            size="sm"
+            label="Current"
+            value={latestLog ? latestLog.weight_kg.toFixed(1) : "-"}
+            unit={latestLog ? "kg" : undefined}
+            delta={latestLog ? logDate(latestLog.recorded_at, now) : "No logs yet"}
+            spark={spark.length >= 2 ? spark : undefined}
+            sparkVariant="line"
+            sparkLabel={`Weight, last ${spark.length} logs`}
+          />
+          <DSStatCard
+            size="sm"
+            label="Change · 30d"
+            value={change ? signedKg(change.kg) : "-"}
+            unit={change ? "kg" : undefined}
+            deltaTone="neutral"
+            delta={change ? `since ${logDate(change.since, now)}` : now ? "Needs two logs in 30 days" : undefined}
+          />
         </div>
       )}
 
-      <div
-        style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          padding: 22,
-        }}
-      >
-        <h3
-          style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}
-        >
-          Recent
-        </h3>
-        {loading ? (
-           <AsyncSpinner label="Loading logs" />
-        ) : logs.length === 0 ? (
-           <EmptySlate message="No weight logs yet." mt="mt-0" />
-        ) : (
-          <div className="overflow-x-auto">
-            <table
-              style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}
-            >
-              <thead>
-                <tr>
-                  {["Date", "Weight", "Note", ...(hasProviderLogs ? ["Logged by"] : [])].map((th) => (
-                    <th
-                      key={th}
-                      style={{
-                        textAlign: "left",
-                        padding: "10px 14px",
-                        fontFamily: "ui-monospace, monospace",
-                        fontSize: 10.5,
-                        color: "var(--fg-3)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                        borderBottom: "1px solid var(--border)",
-                        background: "var(--bg-2)",
-                      }}
-                    >
-                      {th}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => {
-                  const isOwn = user ? loggerId(log) === user.id : false;
-                  const loggedBy = isOwn
-                    ? "You"
-                    : typeof log.logged_by === "string"
-                      ? "-"
-                      : `${log.logged_by.first_name} ${log.logged_by.last_name}`;
-                  return (
-                    <tr key={log._id}>
-                      <td
-                        className="font-mono"
-                        style={{
-                          padding: "11px 14px",
-                          borderBottom: "1px solid var(--border)",
-                        }}
-                      >
-                        {formatDate(log.recorded_at)}
-                      </td>
-                      <td
-                        className="font-mono"
-                        style={{
-                          padding: "11px 14px",
-                          borderBottom: "1px solid var(--border)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {log.weight_kg.toFixed(1)} kg
-                      </td>
-                      <td
-                        style={{
-                          padding: "11px 14px",
-                          borderBottom: "1px solid var(--border)",
-                        }}
-                      >
-                        {log.note || "-"}
-                      </td>
-                      {hasProviderLogs && (
-                        <td
-                          style={{
-                            padding: "11px 14px",
-                            borderBottom: "1px solid var(--border)",
-                            fontSize: 12,
-                            color: "var(--fg-3)",
-                          }}
-                        >
-                          {loggedBy}
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {showData && chartLogs.length >= 2 && (
+        <DSCard className="p-4.5 mb-3.5">
+          <Eyebrow className="mb-3">Last {chartLogs.length} logs</Eyebrow>
+          {(() => {
+            const weights = chartLogs.map((l) => l.weight_kg);
+            const minW = Math.min(...weights);
+            const maxW = Math.max(...weights);
+            const range = maxW - minW || 1;
+            const points = chartLogs
+              .map((log, i) => `${40 + (i / (chartLogs.length - 1)) * 720} ${150 - ((log.weight_kg - minW) / range) * 120}`)
+              .join(" L ");
+            return (
+              <svg
+                viewBox="0 0 800 200"
+                role="img"
+                aria-label={`Weight from ${minW.toFixed(1)} to ${maxW.toFixed(1)} kg over the last ${chartLogs.length} logs`}
+                style={{ width: "100%", height: 200 }}
+              >
+                <path d={`M ${points}`} fill="none" style={{ stroke: "var(--ink)" }} strokeWidth="2" strokeLinejoin="round" />
+                <g fontFamily="ui-monospace, monospace" fontSize="10" style={{ fill: "var(--fg-3)" }}>
+                  <text x="40" y="190">{logDate(chartLogs[0].recorded_at, now)}</text>
+                  <text x="760" y="190" textAnchor="end">
+                    {logDate(chartLogs[chartLogs.length - 1].recorded_at, now)}
+                  </text>
+                  <text x="20" y="34" textAnchor="end">
+                    {maxW.toFixed(1)}
+                  </text>
+                  <text x="20" y="154" textAnchor="end">
+                    {minW.toFixed(1)}
+                  </text>
+                </g>
+              </svg>
+            );
+          })()}
+        </DSCard>
+      )}
+
+      {(loading || showData) && (
+        <section aria-labelledby="recent-weights">
+          <Eyebrow id="recent-weights" as="h2" className="mb-2.5 px-1">
+            Recent
+          </Eyebrow>
+          {loading ? (
+            <AsyncSpinner label="Loading logs" />
+          ) : logs.length === 0 ? (
+            <EmptySlate message="No weight logs yet." mt="mt-0" />
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {logs.map((log) => {
+                const by = loggedByName(log);
+                return (
+                  <li key={log._id}>
+                    <ListRow
+                      title={`${log.weight_kg.toFixed(1)} kg`}
+                      meta={[
+                        logDate(log.recorded_at, now),
+                        hasProviderLogs && by && by !== "You" ? `by ${by}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                      onClick={() => setOpenId(log._id)}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+
+      <LogDetailDrawer
+        open={opened !== null}
+        onClose={() => setOpenId(null)}
+        title={opened ? `${opened.weight_kg.toFixed(1)} kg` : "Weight log"}
+        fields={
+          opened
+            ? [
+                { label: "Date", value: logDate(opened.recorded_at, now) },
+                { label: "Weight", value: `${opened.weight_kg.toFixed(1)} kg` },
+                { label: "Note", value: opened.note },
+                { label: "Logged by", value: hasProviderLogs ? loggedByName(opened) : null },
+              ]
+            : []
+        }
+      />
     </MemberDashboardShell>
   );
 }

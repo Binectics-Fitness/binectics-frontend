@@ -1,8 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import {
+  ActivityHeatmap,
+  AsyncSpinner,
+  DSCard,
+  DSStatCard,
+  EmptySlate,
+  Eyebrow,
+  ListRow,
+  PageHeader,
+} from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { progressService, ActivityType } from "@/lib/api/progress";
 import type { ClientProfile, ActivityReport } from "@/lib/api/progress";
@@ -11,18 +20,11 @@ import {
   validateWorkoutForm,
   type WorkoutFormInput,
 } from "@/lib/progress/logForms";
-
-function formatDate(isoDate: string): string {
-  const d = new Date(isoDate);
-  const today = new Date();
-  const isToday =
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate();
-
-  if (isToday) return "Today";
-  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
-}
+import { heatmapCells } from "@/lib/ui/activity";
+import { useClientNow } from "@/lib/ui/useClientNow";
+import { mayBeTruncated, workoutTotals } from "../_lib/logStats";
+import { LOG_LIMIT, activityTypeLabel, logDate } from "../_lib/logFormat";
+import { LogDetailDrawer } from "../_components/LogDetailDrawer";
 
 const EMPTY_WORKOUT_FORM: WorkoutFormInput = {
   activityType: ActivityType.STRENGTH,
@@ -55,7 +57,8 @@ const fieldInputStyle = {
 
 export default function WorkoutLogPage() {
   const [profile, setProfile] = useState<ClientProfile | null>(null);
-  const [activities, setActivities] = useState<ActivityReport[]>([]);
+  // null until the list has loaded: a failed load must not read as "no workouts".
+  const [activities, setActivities] = useState<ActivityReport[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,10 +74,12 @@ export default function WorkoutLogPage() {
 
   /** Re-read the list from the server so a create shows the stored record. */
   const refetchActivities = useCallback(async (profileId: string) => {
-    const activitiesRes = await progressService.getActivityReports(profileId, 50);
-    setActivities(
-      activitiesRes.success && activitiesRes.data ? activitiesRes.data : [],
-    );
+    // apiClient reports failures as success:false rather than throwing.
+    const activitiesRes = await progressService.getActivityReports(profileId, LOG_LIMIT);
+    if (!activitiesRes.success) {
+      throw new Error(activitiesRes.message || "Couldn't load your workouts. Please try again.");
+    }
+    setActivities(activitiesRes.data ?? []);
   }, []);
 
   useEffect(() => {
@@ -84,8 +89,11 @@ export default function WorkoutLogPage() {
         // get-or-create the SELF profile so a first-time member can log a
         // session without a provider having to add them as a client first.
         const profileRes = await progressService.getMyOwnProfiles();
+        if (!profileRes.success) {
+          throw new Error(profileRes.message || "Couldn't load your workouts. Please try again.");
+        }
         let myProfile =
-          profileRes.success && profileRes.data?.length
+          profileRes.data?.length
             ? profileRes.data[0]
             : null;
         if (!myProfile) {
@@ -103,7 +111,7 @@ export default function WorkoutLogPage() {
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load workout log");
-        setActivities([]);
+        setActivities(null);
       } finally {
         setLoading(false);
       }
@@ -140,10 +148,13 @@ export default function WorkoutLogPage() {
         validated.value,
       );
       if (res.success) {
-        await refetchActivities(profile._id);
         setFormOpen(false);
         setForm(EMPTY_WORKOUT_FORM);
         toast.success("Workout logged.");
+        // Saved either way; a failed re-read is reported, not blamed on the save.
+        await refetchActivities(profile._id).catch((err: unknown) =>
+          setError(err instanceof Error ? err.message : "Couldn't refresh your workouts."),
+        );
       } else {
         setFormError(
           res.message || "Could not save the workout. Please try again.",
@@ -160,80 +171,57 @@ export default function WorkoutLogPage() {
     }
   };
 
-  const last30Days = activities.filter((a) => {
-    const actDate = new Date(a.performed_at);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return actDate >= thirtyDaysAgo;
-  });
-
-  const totalDurationMin = last30Days.reduce(
-    (sum, a) => sum + (a.duration_minutes ?? 0),
-    0
+  // Day-level numbers need the viewer's clock, which only exists after
+  // mount; until then the stat and heatmap blocks show a skeleton.
+  const now = useClientNow();
+  const stats = useMemo(
+    () => (now && activities ? workoutTotals(activities, now) : null),
+    [activities, now],
   );
-  const totalCalories = last30Days.reduce(
-    (sum, a) => sum + (a.calories_burned ?? 0),
-    0
+  const heatCells = useMemo(
+    () => (now && activities ? heatmapCells(activities.map((a) => a.performed_at), 30, now) : null),
+    [activities, now],
   );
-
-  const heatmapDays = Array.from({ length: 30 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - 29 + i);
-    const count = activities.filter(
-      (a) =>
-        new Date(a.performed_at).toDateString() === d.toDateString()
-    ).length;
-    return { date: d, count };
-  });
-
-  function heatmapColor(count: number): string {
-    if (count === 0) return "oklch(0.95 0.005 80)";
-    if (count === 1) return "var(--gym-soft)";
-    if (count === 2) return "var(--signal-soft)";
-    return "var(--signal)";
-  }
+  // A full page that is still inside the window may be missing older
+  // sessions in it: say "at least" rather than show a short total as exact.
+  const capped = useMemo(
+    () => (now && activities ? mayBeTruncated(activities, (a) => a.performed_at, LOG_LIMIT, now) : false),
+    [activities, now],
+  );
+  const plus = capped ? "+" : "";
+  const [openId, setOpenId] = useState<string | null>(null);
+  const opened = activities?.find((a) => a._id === openId) ?? null;
+  // Blocks that summarise the list wait for it; on a failed load only the
+  // error shows, never zeros.
+  const showData = !loading && activities !== null;
 
   return (
     <MemberDashboardShell activeLabel="Activity">
-      <div
-        className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3"
-        style={{ marginBottom: 18 }}
-      >
-        <div>
-          <h1
+      <PageHeader
+        title={{ before: "Workout ", emphasis: "log" }}
+        subtitle="Sessions you log, and any your coach logs for you."
+        actions={
+          <button
+            type="button"
+            onClick={formOpen ? closeForm : openForm}
+            disabled={!profile || loading}
             style={{
-              fontSize: 30,
-              letterSpacing: "-0.024em",
+              background: "var(--ink)",
+              color: "var(--bg)",
+              padding: "8px 14px",
+              borderRadius: 6,
+              border: 0,
+              fontSize: 13,
               fontWeight: 500,
-              color: "var(--ink)",
+              cursor: !profile || loading ? "not-allowed" : "pointer",
+              opacity: !profile || loading ? 0.5 : 1,
+              whiteSpace: "nowrap",
             }}
           >
-            Workout log
-          </h1>
-          <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-            {profile ? `${typeof profile.client_id === "object" ? `${profile.client_id.first_name} ${profile.client_id.last_name}` : profile.client_id} · ${activities.length} workouts logged` : "Loading..."}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={formOpen ? closeForm : openForm}
-          disabled={!profile || loading}
-          style={{
-            background: "var(--ink)",
-            color: "var(--bg)",
-            padding: "8px 14px",
-            borderRadius: 6,
-            border: 0,
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: !profile || loading ? "not-allowed" : "pointer",
-            opacity: !profile || loading ? 0.5 : 1,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {formOpen ? "Cancel" : "+ Log workout"}
-        </button>
-      </div>
+            {formOpen ? "Cancel" : "+ Log workout"}
+          </button>
+        }
+      />
 
       {formOpen && (
         <form
@@ -285,7 +273,7 @@ export default function WorkoutLogPage() {
               >
                 {Object.values(ActivityType).map((type) => (
                   <option key={type} value={type}>
-                    {type}
+                    {activityTypeLabel(type)}
                   </option>
                 ))}
               </select>
@@ -417,194 +405,105 @@ export default function WorkoutLogPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 14 }}>
-        {[
-          {
-            label: "Sessions · 30d",
-            value: last30Days.length.toString(),
-            delta: "Recent period",
-          },
-          {
-            label: "Duration · week",
-            value: `${totalDurationMin}`,
-            delta: "Total min",
-          },
-          {
-            label: "Calories · 30d",
-            value: totalCalories.toString(),
-            delta: "Burned",
-          },
-          { label: "Status", value: loading ? "..." : "Active", delta: "Tracking" },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            style={{
-              background: "var(--bg)",
-              border: "1px solid var(--border)",
-              borderRadius: 10,
-              padding: "14px 16px",
-            }}
-          >
-            <div
-              className="font-mono"
-              style={{
-                fontSize: 10.5,
-                color: "var(--fg-3)",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {kpi.label}
-            </div>
-            <div
-              style={{
-                fontSize: 24,
-                fontWeight: 500,
-                color: "var(--ink)",
-                letterSpacing: "-0.02em",
-                marginTop: 4,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {kpi.value}
-            </div>
-            <div
-              className="font-mono"
-              style={{ fontSize: 11, color: "var(--signal-ink)", marginTop: 4 }}
-            >
-              {kpi.delta}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div
-        style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          padding: 22,
-          marginBottom: 14,
-        }}
-      >
-        <h3
-          style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}
-        >
-          Last 30 days
-        </h3>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(30, 1fr)",
-            gap: 3,
-            marginBottom: 14,
-          }}
-        >
-          {heatmapDays.map((day, i) => (
-            <div
-              key={i}
-              title={`${day.date.toDateString()}: ${day.count} workout${day.count !== 1 ? "s" : ""}`}
-              style={{
-                aspectRatio: "1",
-                background: heatmapColor(day.count),
-                borderRadius: 2,
-              }}
-            />
+      {/* Stat pair: this week (Monday-first, the same week the heatmap and
+          WeekStrip use), with the 30-day figure as context. No top set or
+          volume: a workout record has no sets, reps or load. */}
+      {(loading || (showData && !stats)) && (
+        <div aria-hidden="true" className="grid grid-cols-2 gap-3 mb-3.5">
+          {[0, 1].map((i) => (
+            <div key={i} className="h-[92px] rounded-[var(--r-3)]" style={{ background: "var(--bg-2)" }} />
           ))}
         </div>
-      </div>
+      )}
+      {showData && stats && (
+        <div className="grid grid-cols-2 gap-3 mb-3.5">
+          <DSStatCard
+            size="sm"
+            label="Sessions · this week"
+            value={stats.week.sessions}
+            delta={`${stats.last30.sessions}${plus} in 30d`}
+          />
+          <DSStatCard
+            size="sm"
+            label="Minutes · this week"
+            value={stats.week.minutes}
+            unit="min"
+            delta={`${stats.last30.minutes}${plus} min in 30d`}
+          />
+        </div>
+      )}
 
-      <div
-        style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          padding: 22,
-        }}
-      >
-        <h3
-          style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}
-        >
-          Recent workouts
-        </h3>
+      {(loading || showData) && (
+        <DSCard className="p-4.5 mb-3.5">
+          <Eyebrow className="mb-3">Last 30 days</Eyebrow>
+          {showData && heatCells ? (
+            <ActivityHeatmap cells={heatCells} noun="workouts" nounOne="workout" columns={10} />
+          ) : (
+            <div aria-hidden="true" className="h-[120px] rounded-[var(--r-2)]" style={{ background: "var(--bg-2)" }} />
+          )}
+          {showData && stats && stats.last30.calories > 0 && (
+            <p className="font-mono text-[11px] mt-3" style={{ color: "var(--fg-3)" }}>
+              {stats.last30.calories.toLocaleString()}
+              {plus} kcal burned, from the sessions that recorded it
+            </p>
+          )}
+          {capped && (
+            <p className="font-mono text-[11px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+              Totals count your latest {LOG_LIMIT} sessions
+            </p>
+          )}
+        </DSCard>
+      )}
 
-        {loading ? (
-          <AsyncSpinner label="Loading workouts" />
-        ) : activities.length === 0 ? (
-          <EmptySlate message="No workouts logged yet." mt="mt-0" />
-        ) : (
-          <div className="overflow-x-auto">
-            <table
-              style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}
-            >
-              <thead>
-                <tr>
-                  {["Date", "Type", "Duration", "Notes"].map((th) => (
-                    <th
-                      key={th}
-                      style={{
-                        textAlign: "left",
-                        padding: "10px 14px",
-                        fontFamily: "ui-monospace, monospace",
-                        fontSize: 10.5,
-                        color: "var(--fg-3)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                        borderBottom: "1px solid var(--border)",
-                        background: "var(--bg-2)",
-                      }}
-                    >
-                      {th}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {activities.slice(0, 20).map((activity) => (
-                  <tr key={activity._id}>
-                    <td
-                      className="font-mono"
-                      style={{
-                        padding: "11px 14px",
-                        borderBottom: "1px solid var(--border)",
-                      }}
-                    >
-                      {formatDate(activity.performed_at)}
-                    </td>
-                    <td
-                      style={{
-                        padding: "11px 14px",
-                        borderBottom: "1px solid var(--border)",
-                      }}
-                    >
-                      {activity.activity_type}
-                    </td>
-                    <td
-                      className="font-mono"
-                      style={{
-                        padding: "11px 14px",
-                        borderBottom: "1px solid var(--border)",
-                      }}
-                    >
-                      {activity.duration_minutes} min
-                      {activity.calories_burned && ` · ${activity.calories_burned} kcal`}
-                    </td>
-                    <td
-                      style={{
-                        padding: "11px 14px",
-                        borderBottom: "1px solid var(--border)",
-                      }}
-                    >
-                      {activity.notes || "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {(loading || showData) && (
+        <section aria-labelledby="recent-workouts">
+          <Eyebrow id="recent-workouts" as="h2" className="mb-2.5 px-1">
+            Recent workouts
+          </Eyebrow>
+          {loading || !activities ? (
+            <AsyncSpinner label="Loading workouts" />
+          ) : activities.length === 0 ? (
+            <EmptySlate message="No workouts logged yet." mt="mt-0" />
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {activities.slice(0, 20).map((activity) => (
+                <li key={activity._id}>
+                  <ListRow
+                    title={activity.title || activityTypeLabel(activity.activity_type)}
+                    meta={[
+                      logDate(activity.performed_at, now),
+                      activityTypeLabel(activity.activity_type),
+                      `${activity.duration_minutes} min`,
+                      activity.calories_burned ? `${activity.calories_burned} kcal` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    onClick={() => setOpenId(activity._id)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      <LogDetailDrawer
+        open={opened !== null}
+        onClose={() => setOpenId(null)}
+        title={opened ? opened.title || activityTypeLabel(opened.activity_type) : "Workout"}
+        fields={
+          opened
+            ? [
+                { label: "Date", value: logDate(opened.performed_at, now) },
+                { label: "Type", value: activityTypeLabel(opened.activity_type) },
+                { label: "Duration", value: `${opened.duration_minutes} min` },
+                { label: "Calories burned", value: opened.calories_burned ? `${opened.calories_burned} kcal` : null },
+                { label: "Intensity", value: opened.intensity != null ? `${opened.intensity} / 10` : null },
+                { label: "Notes", value: opened.notes },
+              ]
+            : []
+        }
+      />
     </MemberDashboardShell>
   );
 }

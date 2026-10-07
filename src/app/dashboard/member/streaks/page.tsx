@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Streaks",
-  description: "View your workout streaks and consistency stats.",
+  description: "Your gym check-in streak, milestones and lifetime stats.",
 };
 
 export default function StreaksPage() {

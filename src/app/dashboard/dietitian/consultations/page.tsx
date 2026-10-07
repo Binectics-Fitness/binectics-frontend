@@ -255,7 +255,17 @@ export default function DietitianConsultationsPage() {
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                         <div className="flex gap-2.5 items-center">
                           <IconTile initials={clientInitials(c)} size="sm" />
-                          <span className="font-medium" style={{ color: "var(--ink)" }}>{clientName(c)}</span>
+                          {/* The keyboard way into the row: Enter/Space clicks this
+                              button, and the click bubbles to the row's handler, so
+                              the drawer opens and later hands focus back here. */}
+                          <button
+                            type="button"
+                            className="font-medium text-left rounded-(--r-1) focus-visible:outline-2 focus-visible:outline-offset-2"
+                            style={{ color: "var(--ink)" }}
+                          >
+                            {clientName(c)}
+                            <span className="sr-only">, open consultation details</span>
+                          </button>
                         </div>
                       </td>
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>

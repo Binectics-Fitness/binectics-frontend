@@ -89,8 +89,9 @@ export function BillingClient() {
     }
   };
 
+  // Billing has no main-nav entry, so nothing is highlighted (it was "Home").
   return (
-    <MemberDashboardShell activeLabel="Home">
+    <MemberDashboardShell activeLabel="">
       <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Billing</h1>
 
       {/* KPIs */}
