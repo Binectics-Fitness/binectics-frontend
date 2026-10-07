@@ -215,6 +215,58 @@ function BookingPaymentPanel({
   );
 }
 
+/**
+ * Whether the booking can still be moved or cancelled from here: the API
+ * refuses both once it is completed, a no-show or cancelled. The API also
+ * keeps its own rules (a client's cancellation window), and its message is
+ * shown when it refuses.
+ */
+function canChangeBooking(booking: ConsultationBooking) {
+  return (
+    booking.status === ConsultationBookingStatus.PENDING ||
+    booking.status === ConsultationBookingStatus.CONFIRMED
+  );
+}
+
+/**
+ * Reschedule and Cancel for the selected booking. Rendered in the detail
+ * column and, where there is none, under the row; both open the page's
+ * single pair of dialogs.
+ */
+function BookingActions({
+  disabled,
+  onReschedule,
+  onCancel,
+}: {
+  disabled: boolean;
+  onReschedule: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onReschedule}
+        className="btn-ghost-v2 sm w-full justify-center"
+        disabled={disabled}
+      >
+        Reschedule
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="btn-ghost-v2 sm w-full justify-center"
+        // --danger-ink, not --danger: small text, and --danger is just under
+        // AA on --bg and --bg-2.
+        style={{ color: "var(--danger-ink)" }}
+        disabled={disabled}
+      >
+        Cancel booking
+      </button>
+    </>
+  );
+}
+
 function EmptyState({ tab }: { tab: TabKey }) {
   const copy = {
     upcoming: { title: "No upcoming sessions", sub: "Book a new session from the marketplace." },
@@ -488,6 +540,19 @@ export default function MyBookingsPage() {
                               <BookingPaymentPanel booking={b} onBooking={replaceBooking} onError={(m) => toast.error(m)} shared={sharedPay(b.id)} />
                             </div>
                           )}
+                          {/* Phones have no detail column, so the selected
+                              booking's actions sit under its row. They open
+                              the same dialogs as the column's (one each, below
+                              the shell). */}
+                          {b.id === selectedId && canChangeBooking(b) && (
+                            <div className="lg:hidden grid grid-cols-2 gap-2 pb-2" data-testid="booking-actions-phone">
+                              <BookingActions
+                                disabled={actionLoading}
+                                onReschedule={() => setRescheduleOpen(true)}
+                                onCancel={() => setCancelOpen(true)}
+                              />
+                            </div>
+                          )}
                         </BookingRow>
                       ))}
                     </div>
@@ -569,26 +634,13 @@ export default function MyBookingsPage() {
                     </div>
                   )}
 
-                  {(selected.status === ConsultationBookingStatus.PENDING ||
-                    selected.status === ConsultationBookingStatus.CONFIRMED) && (
+                  {canChangeBooking(selected) && (
                     <div className="px-5 py-4 flex flex-col gap-2" style={{ background: "var(--bg-2)" }}>
-                      <button
-                        type="button"
-                        onClick={() => setRescheduleOpen(true)}
-                        className="btn-ghost-v2 sm w-full justify-center"
+                      <BookingActions
                         disabled={actionLoading}
-                      >
-                        Reschedule
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCancelOpen(true)}
-                        className="btn-ghost-v2 sm w-full justify-center"
-                        style={{ color: "var(--danger)" }}
-                        disabled={actionLoading}
-                      >
-                        Cancel booking
-                      </button>
+                        onReschedule={() => setRescheduleOpen(true)}
+                        onCancel={() => setCancelOpen(true)}
+                      />
                     </div>
                   )}
                 </>
