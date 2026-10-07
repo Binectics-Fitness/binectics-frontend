@@ -13,6 +13,8 @@ import {
   DSTableTh,
   DSTableRow,
   DSTableTd,
+  DSCard,
+  DSCardHead,
 } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { adminService, type AdminReviewReport, type AdminReviewView } from "@/lib/api/admin";
@@ -49,14 +51,14 @@ const ACTION_COPY: Record<PendingAction["kind"], { title: string; description: s
 
 function Card({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-(--r-3) p-5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    <DSCard className="p-5">
       {title ? (
         <h3 className="text-[14px] font-medium mb-3" style={{ color: "var(--ink)" }}>
           {title}
         </h3>
       ) : null}
       {children}
-    </div>
+    </DSCard>
   );
 }
 
@@ -249,18 +251,8 @@ export function ReviewDetailClient({ reviewId }: { reviewId: string }) {
               </dl>
             </Card>
 
-            <div
-              className="rounded-(--r-3)"
-              style={{
-                background: "var(--bg)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
-                  Reports
-                </h3>
-              </div>
+            <DSCard>
+              <DSCardHead title="Reports" />
               {reports.length === 0 ? (
                 <EmptySlate message="No reports on this review" />
               ) : (
@@ -328,7 +320,7 @@ export function ReviewDetailClient({ reviewId }: { reviewId: string }) {
                   </tbody>
                 </DSTable>
               )}
-            </div>
+            </DSCard>
           </>
         )}
       </AdminDashboardShell>

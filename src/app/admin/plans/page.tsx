@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { AsyncSpinner } from "@/components/ds";
+import { AsyncSpinner, PageHeader, Eyebrow } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import { majorToMinor, minorToMajor } from "@/lib/money/minorMoney";
@@ -63,7 +63,6 @@ const EDITABLE_KEYS: (keyof UpdateAdminPlan)[] = [
   ...FEATURES.map((f) => f.key),
 ];
 
-const labelClass = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
 // The backend's tier enum — plan codes are NOT free-form (the tier threads
 // through checkout, billing status and quota enforcement), so creation is
@@ -316,15 +315,11 @@ export default function AdminPlansPage() {
 
   return (
     <AdminDashboardShell activeItem="Plans" crumb="Plans">
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
-          Plans &amp; billing
-        </h1>
-        <p className="text-[13.5px] mt-1.5 max-w-[64ch]" style={{ color: "var(--fg-3)" }}>
-          Quotas and feature flags for each provider SaaS tier. Leave a quota blank for unlimited. Changes apply to future
-          enforcement immediately; existing subscriptions keep their tier.
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title="Plans & billing"
+        subtitle={<span className="block max-w-[64ch]">Quotas and feature flags for each provider SaaS tier. Leave a quota blank for unlimited. Changes apply to future enforcement immediately; existing subscriptions keep their tier.</span>}
+      />
 
       {error ? (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
@@ -375,7 +370,7 @@ export default function AdminPlansPage() {
 
                 {/* Quotas */}
                 <div className="mt-4">
-                  <div className={labelClass} style={{ color: "var(--fg-3)" }}>Quotas</div>
+                  <Eyebrow>Quotas</Eyebrow>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
                     {QUOTAS.map((q) => {
                       const val = draft[q.key];
@@ -406,7 +401,7 @@ export default function AdminPlansPage() {
 
                 {/* Features */}
                 <div className="mt-4">
-                  <div className={labelClass} style={{ color: "var(--fg-3)" }}>Features</div>
+                  <Eyebrow>Features</Eyebrow>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
                     {FEATURES.map((f) => (
                       <label key={f.key} className="flex items-center gap-2 cursor-pointer text-[13.5px]" style={{ color: "var(--ink)" }}>
@@ -422,15 +417,15 @@ export default function AdminPlansPage() {
                 </div>
 
                 {/* Pricing — checkout charges these rows */}
-                <div className={`${labelClass} mt-5 mb-2`} style={{ color: "var(--fg-3)" }}>
+                <Eyebrow className="mt-5 mb-2">
                   Pricing {plan.code === "free" ? "(free tier needs none)" : ""}
-                </div>
+                </Eyebrow>
                 <div className="flex flex-col gap-1.5">
                   {prices
                     .filter((pr) => pr.plan_code === plan.code)
                     .map((pr) => (
                       <div key={pr._id} className="flex flex-wrap items-center gap-3 rounded-(--r-2) px-3 py-2" style={{ background: "var(--bg-2)" }}>
-                        <span className="font-mono text-[11px] uppercase" style={{ color: "var(--fg-3)" }}>{pr.market_code}</span>
+                        <Eyebrow as="span">{pr.market_code}</Eyebrow>
                         <span className="text-[13px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                           {formatCurrency(minorToMajor(pr.amount_minor, pr.currency), pr.currency)}
                         </span>
@@ -592,7 +587,7 @@ export default function AdminPlansPage() {
                 </label>
               </div>
 
-              <div className={`${labelClass} mt-5 mb-2`} style={{ color: "var(--fg-3)" }}>Quotas</div>
+              <Eyebrow className="mt-5 mb-2">Quotas</Eyebrow>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {QUOTAS.map((q) => (
                   <div key={q.key}>
@@ -615,7 +610,7 @@ export default function AdminPlansPage() {
               </div>
               <div className="text-[11.5px] mt-1.5" style={{ color: "var(--fg-4)" }}>Blank = unlimited.</div>
 
-              <div className={`${labelClass} mt-5 mb-2`} style={{ color: "var(--fg-3)" }}>Features</div>
+              <Eyebrow className="mt-5 mb-2">Features</Eyebrow>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {FEATURES.map((f) => (
                   <label key={f.key} className="flex items-center gap-2 cursor-pointer text-[13.5px]" style={{ color: "var(--fg-2)" }}>

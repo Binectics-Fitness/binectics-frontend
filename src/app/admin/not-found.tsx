@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
+import { DSCard, Eyebrow } from "@/components/ds";
 
 export default function AdminNotFound() {
   return (
@@ -7,12 +8,9 @@ export default function AdminNotFound() {
       className="min-h-screen grid place-items-center p-8"
       style={{ background: "var(--bg)", fontFamily: "var(--font-sans)" }}
     >
-      <div
+      <DSCard
         className="w-full text-center"
         style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r-3)",
           maxWidth: 480,
           padding: "clamp(32px, 6vw, 48px) clamp(20px, 5vw, 40px)",
         }}
@@ -23,9 +21,7 @@ export default function AdminNotFound() {
         </div>
 
         {/* Eyebrow */}
-        <div className="eyebrow" style={{ marginBottom: 16 }}>
-          404
-        </div>
+        <Eyebrow className="mb-4">404</Eyebrow>
 
         {/* Heading */}
         <h1
@@ -64,7 +60,7 @@ export default function AdminNotFound() {
         >
           Back to admin
         </Link>
-      </div>
+      </DSCard>
     </div>
   );
 }

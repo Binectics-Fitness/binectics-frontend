@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
+import { DSCard, PageHeader } from "@/components/ds";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { UserRole } from "@/lib/types";
@@ -135,8 +136,11 @@ export default function SettingsLayout({
                 </svg>
                 Back to Dashboard
               </Link>
-              <h1 className="text-3xl font-black text-ink">Settings</h1>
-              <p className="mt-1 text-fg-2">Manage your account and preferences</p>
+              <PageHeader
+                className="mb-0!"
+                title="Settings"
+                subtitle="Manage your account and preferences"
+              />
             </div>
           </div>
         </div>
@@ -180,7 +184,7 @@ export default function SettingsLayout({
                 />
               </div>
             )}
-            <div className="bg-bg border border-border rounded-(--r-3) p-6 lg:p-8">{children}</div>
+            <DSCard className="p-6 lg:p-8" style={{ overflow: "visible" }}>{children}</DSCard>
           </div>
         </div>
       </div>

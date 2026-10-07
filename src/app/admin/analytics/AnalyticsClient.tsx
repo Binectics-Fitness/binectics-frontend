@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import { DSCard, DSStatCard, PageHeader } from "@/components/ds";
 import { adminService, type PlatformMetricsOverview } from "@/lib/api/admin";
 import { formatCurrency } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
@@ -39,13 +40,13 @@ export function AnalyticsClient() {
 
   return (
     <AdminDashboardShell activeItem="Analytics" crumb="Analytics">
-      <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Analytics</h1>
+      <PageHeader className="mb-0!" title="Analytics" />
 
       {isLoading && <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>Loading platform metrics…</p>}
       {!isLoading && !metrics && (
-        <div className="rounded-(--r-3) px-6 py-10 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="px-6 py-10 text-center">
           <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Couldn&rsquo;t load platform metrics, check your admin permissions and try again.</p>
-        </div>
+        </DSCard>
       )}
 
       {metrics && (
@@ -53,17 +54,13 @@ export function AnalyticsClient() {
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
             {kpis.map((k) => (
-              <div key={k.label} className="flex flex-col gap-1 rounded-(--r-3) px-4 py-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-                <div className="text-[22px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{k.value}</div>
-                <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{k.delta}</div>
-              </div>
+              <DSStatCard key={k.label} size="sm" label={k.label} value={k.value} delta={<span className="whitespace-normal">{k.delta}</span>} />
             ))}
           </div>
 
           <div className="grid lg:grid-cols-2 gap-3.5 items-start">
             {/* Providers by country */}
-            <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard className="p-5.5">
               <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Verified providers by country</h3>
               {metrics.verifiedProviders.byCountry.length === 0 && (
                 <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>No verified providers yet.</p>
@@ -79,10 +76,10 @@ export function AnalyticsClient() {
                   </div>
                 ))}
               </div>
-            </div>
+            </DSCard>
 
             {/* Subscription value by currency */}
-            <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard>
               <div className="px-5.5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
                 <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Subscription value by currency</h3>
               </div>
@@ -109,7 +106,7 @@ export function AnalyticsClient() {
                   </tbody>
                 </table>
               )}
-            </div>
+            </DSCard>
           </div>
         </>
       )}

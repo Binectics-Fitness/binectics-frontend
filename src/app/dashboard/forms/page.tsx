@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import SearchableSelect from "@/components/SearchableSelect";
 import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, DSCard, DSStatCard, Eyebrow, PageHeader } from "@/components/ds";
 import { TemplateGallery } from "./TemplateGallery";
 import {
   formsService,
@@ -292,79 +292,71 @@ export default function FormsPage() {
   return (
     <WorkspaceShell activeItem="Forms" crumb="Forms">
       <div className="flex flex-col gap-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div
-              className="font-mono text-[11px] uppercase tracking-[0.06em]"
-              style={{ color: "var(--fg-3)" }}
-            >
-              Workspace
-            </div>
-            <h1
-              className="text-[30px] font-medium mt-1"
-              style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
-            >
-              {view === "builder" && activeForm
-                ? activeForm.title
-                : "Forms builder"}
-            </h1>
-            {view === "builder" && (
+        <PageHeader
+          className="mb-0!"
+          eyebrow="Workspace"
+          title={view === "builder" && activeForm ? activeForm.title : "Forms builder"}
+          subtitle={
+            view === "builder" ? (
               <button
                 type="button"
                 onClick={() => setView("list")}
-                className="text-sm mt-1"
+                className="text-sm"
                 style={{ color: "var(--fg-3)", cursor: "pointer" }}
               >
                 &larr; Back to forms
               </button>
-            )}
-          </div>
-
-          {view === "list" && (
-            <button
-              type="button"
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
-              style={{ background: "var(--ink)", color: "var(--bg)", cursor: "pointer" }}
-            >
-              New form
-            </button>
-          )}
-          {view === "builder" && activeForm && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleTogglePublish(activeForm)}
-                className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
-                style={{
-                  borderColor: activeForm.is_published ? "var(--danger)" : "var(--signal)",
-                  color: activeForm.is_published ? "var(--danger)" : "var(--signal)",
-                  background: "transparent",
-                  cursor: "pointer",
-                }}
-              >
-                {activeForm.is_published ? "Unpublish" : "Publish"}
-              </button>
-              <Link
-                href={`/dashboard/forms/${activeForm._id}/responses`}
-                className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
-                style={{ borderColor: "var(--border)", color: "var(--fg-2)", textDecoration: "none" }}
-              >
-                View responses
-              </Link>
-              {activeForm.is_published && (
+            ) : undefined
+          }
+          actions={
+            <>
+              {view === "list" && (
                 <button
                   type="button"
-                  onClick={() => copyShareLink(activeForm._id)}
-                  className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
-                  style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
+                  onClick={() => setShowCreateForm(!showCreateForm)}
+                  className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
+                  style={{ background: "var(--ink)", color: "var(--bg)", cursor: "pointer" }}
                 >
-                  Copy share link
+                  New form
                 </button>
               )}
-            </div>
-          )}
-        </div>
+              {view === "builder" && activeForm && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePublish(activeForm)}
+                    className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
+                    style={{
+                      borderColor: activeForm.is_published ? "var(--danger)" : "var(--signal)",
+                      color: activeForm.is_published ? "var(--danger)" : "var(--signal)",
+                      background: "transparent",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {activeForm.is_published ? "Unpublish" : "Publish"}
+                  </button>
+                  <Link
+                    href={`/dashboard/forms/${activeForm._id}/responses`}
+                    className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
+                    style={{ borderColor: "var(--border)", color: "var(--fg-2)", textDecoration: "none" }}
+                  >
+                    View responses
+                  </Link>
+                  {activeForm.is_published && (
+                    <button
+                      type="button"
+                      onClick={() => copyShareLink(activeForm._id)}
+                      className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
+                      style={{ borderColor: "var(--border)", color: "var(--fg-2)", background: "transparent", cursor: "pointer" }}
+                    >
+                      Copy share link
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          }
+        />
 
         {message && (
           <div
@@ -400,12 +392,7 @@ export default function FormsPage() {
                 </h2>
                 <form className="mt-4 flex flex-col gap-3" onSubmit={handleCreateForm}>
                   <div>
-                    <label
-                      className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                      style={{ color: "var(--fg-3)" }}
-                    >
-                      Title *
-                    </label>
+                    <Eyebrow as="label">Title *</Eyebrow>
                     <input
                       type="text"
                       required
@@ -417,12 +404,7 @@ export default function FormsPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                      style={{ color: "var(--fg-3)" }}
-                    >
-                      Description
-                    </label>
+                    <Eyebrow as="label">Description</Eyebrow>
                     <textarea
                       value={newDescription}
                       onChange={(e) => setNewDescription(e.target.value)}
@@ -572,30 +554,11 @@ export default function FormsPage() {
         {view === "builder" && activeForm && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div
-                className="rounded-(--r-3) p-4"
-                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-              >
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Questions</div>
-                <div className="text-[30px] font-medium mt-1 tabular-nums" style={{ color: "var(--ink)" }}>
-                  {questions.length}
-                </div>
-              </div>
-              <div
-                className="rounded-(--r-3) p-4"
-                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-              >
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Responses</div>
-                <div className="text-[30px] font-medium mt-1 tabular-nums" style={{ color: "var(--ink)" }}>
-                  {responseCounts[activeForm._id] ?? 0}
-                </div>
-              </div>
-              <div
-                className="rounded-(--r-3) p-4"
-                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-              >
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Status</div>
-                <div className="mt-1">
+              <DSStatCard label="Questions" value={questions.length} />
+              <DSStatCard label="Responses" value={responseCounts[activeForm._id] ?? 0} />
+              <DSCard className="px-4.5 py-4">
+                <Eyebrow>Status</Eyebrow>
+                <div className="mt-2">
                   <span
                     className="font-mono text-sm uppercase tracking-wider rounded-(--r-2) px-2 py-1"
                     style={{
@@ -606,7 +569,7 @@ export default function FormsPage() {
                     {activeForm.is_published ? "Published" : "Draft"}
                   </span>
                 </div>
-              </div>
+              </DSCard>
             </div>
 
             <section
@@ -744,12 +707,7 @@ export default function FormsPage() {
               <form className="mt-4 flex flex-col gap-4" onSubmit={handleAddQuestion}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label
-                      className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                      style={{ color: "var(--fg-3)" }}
-                    >
-                      Question type
-                    </label>
+                    <Eyebrow as="label">Question type</Eyebrow>
                     <div className="mt-1.5">
                       <SearchableSelect
                         value={qType}
@@ -760,12 +718,7 @@ export default function FormsPage() {
                     </div>
                   </div>
                   <div>
-                    <label
-                      className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                      style={{ color: "var(--fg-3)" }}
-                    >
-                      Question label *
-                    </label>
+                    <Eyebrow as="label">Question label *</Eyebrow>
                     <input
                       type="text"
                       required
@@ -779,12 +732,7 @@ export default function FormsPage() {
                 </div>
 
                 <div>
-                  <label
-                    className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                    style={{ color: "var(--fg-3)" }}
-                  >
-                    Help text (optional)
-                  </label>
+                  <Eyebrow as="label">Help text (optional)</Eyebrow>
                   <input
                     type="text"
                     value={qHelpText}
@@ -797,12 +745,7 @@ export default function FormsPage() {
 
                 {hasOptions && (
                   <div>
-                    <label
-                      className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                      style={{ color: "var(--fg-3)" }}
-                    >
-                      Options (one per line, min 2)
-                    </label>
+                    <Eyebrow as="label">Options (one per line, min 2)</Eyebrow>
                     <textarea
                       value={qOptions}
                       onChange={(e) => setQOptions(e.target.value)}

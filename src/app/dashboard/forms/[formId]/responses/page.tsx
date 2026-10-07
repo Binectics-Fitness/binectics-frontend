@@ -12,6 +12,7 @@ import {
   type FormAnalytics,
 } from "@/lib/api/forms";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { Eyebrow, DSCard, DSStatCard, PageHeader } from "@/components/ds";
 
 export default function FormResponsesPage({
   params,
@@ -76,23 +77,18 @@ export default function FormResponsesPage({
   return (
     <WorkspaceShell activeItem="Forms" crumb="Forms">
       <div className="flex flex-col gap-5">
-        <div>
-          <div
-            className="font-mono text-[11px] uppercase tracking-[0.06em]"
-            style={{ color: "var(--fg-3)" }}
-          >
-            <Link href="/dashboard/forms" style={{ color: "var(--fg-3)", textDecoration: "none" }}>
-              Forms
-            </Link>
-            &nbsp;/&nbsp;Responses
-          </div>
-          <h1
-            className="text-[30px] font-medium mt-1"
-            style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
-          >
-            {form?.title ?? "Form responses"}
-          </h1>
-          <div className="flex gap-3 mt-2">
+        <PageHeader
+          className="mb-0!"
+          eyebrow={
+            <>
+              <Link href="/dashboard/forms" style={{ color: "var(--fg-3)", textDecoration: "none" }}>
+                Forms
+              </Link>
+              &nbsp;/&nbsp;Responses
+            </>
+          }
+          title={form?.title ?? "Form responses"}
+          subtitle={
             <Link
               href={`/dashboard/forms`}
               className="text-sm"
@@ -100,8 +96,8 @@ export default function FormResponsesPage({
             >
               &larr; Back to forms
             </Link>
-          </div>
-        </div>
+          }
+        />
 
         {error && (
           <div
@@ -114,59 +110,14 @@ export default function FormResponsesPage({
 
         {analytics && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div
-              className="rounded-(--r-3) p-4"
-              style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-            >
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                Total responses
-              </div>
-              <div className="text-[36px] font-medium mt-2 tabular-nums" style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                {fmtNumber(analytics.total_responses)}
-              </div>
-            </div>
-            <div
-              className="rounded-(--r-3) p-4"
-              style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-            >
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                Completion rate
-              </div>
-              <div className="text-[36px] font-medium mt-2 tabular-nums" style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                {Math.round(analytics.completion_rate * 100)}%
-              </div>
-            </div>
-            <div
-              className="rounded-(--r-3) p-4"
-              style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-            >
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                Avg completion time
-              </div>
-              <div className="text-[36px] font-medium mt-2 tabular-nums" style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                {analytics.average_completion_time > 0
-                  ? `${Math.round(analytics.average_completion_time)}s`
-                  : "-"}
-              </div>
-            </div>
-            <div
-              className="rounded-(--r-3) p-4"
-              style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-            >
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                Questions
-              </div>
-              <div className="text-[36px] font-medium mt-2 tabular-nums" style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                {questions.length}
-              </div>
-            </div>
+            <DSStatCard label="Total responses" value={fmtNumber(analytics.total_responses)} />
+            <DSStatCard label="Completion rate" value={`${Math.round(analytics.completion_rate * 100)}%`} />
+            <DSStatCard label="Avg completion time" value={analytics.average_completion_time > 0 ? `${Math.round(analytics.average_completion_time)}s` : "-"} />
+            <DSStatCard label="Questions" value={questions.length} />
           </div>
         )}
 
-        <div
-          className="rounded-(--r-3) overflow-hidden"
-          style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-        >
+        <DSCard>
           <div
             className="flex gap-1 p-2"
             style={{ borderBottom: "1px solid var(--border)" }}
@@ -211,9 +162,9 @@ export default function FormResponsesPage({
                             <div className="font-medium" style={{ color: "var(--ink)" }}>
                               {qStat.label}
                             </div>
-                            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-1" style={{ color: "var(--fg-3)" }}>
+                            <Eyebrow className="mt-1">
                               {qStat.type} &middot; {qStat.responses_count} responses &middot; {Math.round(qStat.response_rate * 100)}% response rate
-                            </div>
+                            </Eyebrow>
                           </div>
                           {qStat.average !== undefined && (
                             <div className="text-right">
@@ -254,9 +205,7 @@ export default function FormResponsesPage({
                         {qStat.sample_text_responses &&
                           qStat.sample_text_responses.length > 0 && (
                             <div className="mt-3 flex flex-col gap-1.5">
-                              <div className="text-xs uppercase font-mono tracking-wider" style={{ color: "var(--fg-3)" }}>
-                                Sample responses
-                              </div>
+                              <Eyebrow>Sample responses</Eyebrow>
                               {qStat.sample_text_responses.map((resp, idx) => (
                                 <div
                                   key={idx}
@@ -308,9 +257,7 @@ export default function FormResponsesPage({
                           className="rounded-(--r-2) p-3"
                           style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
                         >
-                          <div className="text-xs font-mono uppercase tracking-wider" style={{ color: "var(--fg-3)" }}>
-                            {question?.label ?? answer.question_id}
-                          </div>
+                          <Eyebrow>{question?.label ?? answer.question_id}</Eyebrow>
                           <div className="mt-1 text-sm" style={{ color: "var(--ink)" }}>
                             {displayValue}
                           </div>
@@ -387,7 +334,7 @@ export default function FormResponsesPage({
               </>
             )}
           </div>
-        </div>
+        </DSCard>
       </div>
     </WorkspaceShell>
   );

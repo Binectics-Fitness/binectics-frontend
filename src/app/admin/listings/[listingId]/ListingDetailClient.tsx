@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { AsyncSpinner, EmptySlate, FilterPill, StatusPill } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, FilterPill, StatusPill, DSCard, Eyebrow } from "@/components/ds";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { adminService, type AdminListingDetail } from "@/lib/api/admin";
@@ -334,12 +334,9 @@ export function ListingDetailClient({ listingId }: { listingId: string }) {
                           >
                             {d.file_name}
                           </div>
-                          <div
-                            className="font-mono text-[11px] uppercase"
-                            style={{ color: "var(--fg-3)" }}
-                          >
+                          <Eyebrow>
                             {formatBytes(d.file_size)} · {formatDate(d.created_at)}
-                          </div>
+                          </Eyebrow>
                         </div>
                         <a
                           href={d.file_url}
@@ -516,15 +513,12 @@ export function ListingDetailClient({ listingId }: { listingId: string }) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div
-      className="rounded-[12px] p-[22px]"
-      style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-    >
+    <DSCard className="p-[22px]">
       <h3 className="text-[14px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>
         {title}
       </h3>
       {children}
-    </div>
+    </DSCard>
   );
 }
 

@@ -14,6 +14,10 @@ import {
   DSTableTh,
   DSTableRow,
   DSTableTd,
+  PageHeader,
+  DSCard,
+  DSStatCard,
+  Eyebrow,
 } from "@/components/ds";
 import {
   adminService,
@@ -133,35 +137,15 @@ export default function AdminUsersPage() {
 
   return (
     <AdminDashboardShell activeItem="Users" crumb="Users">
-      <div>
-        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-          Users
-        </h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          Search by email or name, then open an account to see its details or suspend it.
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title="Users"
+        subtitle="Search by email or name, then open an account to see its details or suspend it."
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {kpis.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="rounded-(--r-3) p-[14px_16px]"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-          >
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-              {kpi.label}
-            </div>
-            <div
-              className="text-[22px] font-medium mt-1"
-              style={{ color: "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}
-            >
-              {kpi.value}
-            </div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>
-              {kpi.delta}
-            </div>
-          </div>
+          <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={<span className="whitespace-normal">{kpi.delta}</span>} />
         ))}
       </div>
 
@@ -213,10 +197,7 @@ export default function AdminUsersPage() {
         />
       ) : !error && data ? (
         <>
-          <div
-            className="rounded-(--r-3)"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)", opacity: loading ? 0.6 : 1 }}
-          >
+          <DSCard style={{ opacity: loading ? 0.6 : 1 }}>
             <DSTable minWidth={760}>
               <DSTableHead>
                 <DSTableTh>User</DSTableTh>
@@ -254,9 +235,9 @@ export default function AdminUsersPage() {
                     <DSTableTd className="text-[13px]">
                       {roleLabel(u.role?.code)}
                       {u.is_admin ? (
-                        <span className="font-mono text-[10.5px] uppercase ml-1.5" style={{ color: "var(--fg-3)" }}>
+                        <Eyebrow as="span" className="ml-1.5">
                           admin
-                        </span>
+                        </Eyebrow>
                       ) : null}
                     </DSTableTd>
                     <DSTableTd className="whitespace-nowrap text-[12.5px]">{formatAdminDate(u.created_at)}</DSTableTd>
@@ -276,7 +257,7 @@ export default function AdminUsersPage() {
                 ))}
               </tbody>
             </DSTable>
-          </div>
+          </DSCard>
 
           <div className="flex items-center justify-between text-[13px]">
             <div style={{ color: "var(--fg-3)" }}>

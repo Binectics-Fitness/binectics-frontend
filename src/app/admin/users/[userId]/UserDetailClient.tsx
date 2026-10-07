@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { ActionModal } from "@/components/ds/ActionModal";
-import { AsyncSpinner, StatusPill } from "@/components/ds";
+import { AsyncSpinner, StatusPill, DSCard, DSStatCard } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { adminService, type AdminUserDetail, type AdminUserSuspensionResult } from "@/lib/api/admin";
 import { formatAdminDate, formatAdminDateTime, roleLabel } from "@/lib/admin/moderation";
@@ -13,12 +13,12 @@ const SUSPEND_REASON_MAX = 500;
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-(--r-3) p-5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    <DSCard className="p-5">
       <h3 className="text-[14px] font-medium mb-3" style={{ color: "var(--ink)" }}>
         {title}
       </h3>
       {children}
-    </div>
+    </DSCard>
   );
 }
 
@@ -222,27 +222,7 @@ export function UserDetailClient({ userId }: { userId: string }) {
                   value: user.counts.client_profiles_as_provider,
                 },
               ].map((k) => (
-                <div
-                  key={k.label}
-                  className="rounded-(--r-3) p-[14px_16px]"
-                  style={{
-                    background: "var(--bg)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-                    {k.label}
-                  </div>
-                  <div
-                    className="text-[22px] font-medium mt-1"
-                    style={{
-                      color: "var(--ink)",
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {k.value.toLocaleString()}
-                  </div>
-                </div>
+                <DSStatCard key={k.label} size="sm" label={k.label} value={k.value.toLocaleString()} />
               ))}
             </div>
 

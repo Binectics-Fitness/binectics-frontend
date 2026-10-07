@@ -78,10 +78,10 @@ export default function AdminLoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-black text-ink mb-2">
+          <h1 className="text-[30px] font-medium leading-[1.1] text-ink" style={{ letterSpacing: "-0.024em" }}>
             Admin Login
           </h1>
-          <p className="text-fg-2">
+          <p className="text-fg-2 mt-2">
             Sign in to access the admin dashboard
           </p>
         </div>
@@ -90,7 +90,6 @@ export default function AdminLoginPage() {
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="bg-bg rounded-(--r-3) border border-border p-8"
-          style={{ boxShadow: "var(--shadow-2)" }}
         >
           {/* API Error Message */}
           {apiError && (
@@ -171,7 +170,7 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={isLoading || authLoading}
-            className="w-full h-12 bg-signal text-bg font-semibold rounded-(--r-2) hover:bg-signal/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            className="btn-signal-v2 lg w-full disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
             {isLoading || authLoading ? "Signing in..." : "Sign In as Admin"}
           </button>
@@ -186,7 +185,7 @@ export default function AdminLoginPage() {
               please use the{" "}
               <Link
                 href="/login" prefetch={false}
-                className="text-signal hover:text-signal/80 font-semibold"
+                className="text-signal-ink hover:underline font-semibold"
               >
                 user login page
               </Link>
@@ -206,7 +205,7 @@ export default function AdminLoginPage() {
               Create demo accounts at{" "}
               <Link
                 href="/admin/create-super-admin"
-                className="text-signal hover:underline"
+                className="text-signal-ink hover:underline"
               >
                 /admin/create-super-admin
               </Link>

@@ -13,7 +13,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, DSCard, PageHeader } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
@@ -32,12 +32,8 @@ import {
   requesterName,
 } from "@/lib/progress/invitations";
 
-const cardStyle = {
-  background: "var(--bg)",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r-3)",
-  padding: 22,
-};
+// DSCard supplies the surface, hairline border and 10px radius.
+const cardStyle = { padding: 22 };
 
 const rowStyle = {
   background: "var(--bg-2)",
@@ -161,34 +157,11 @@ function MemberRequestsContent() {
 
   return (
     <MemberDashboardShell activeLabel="Requests">
-      <div style={{ marginBottom: 18 }}>
-        <div
-          className="font-mono"
-          style={{
-            fontSize: 11,
-            color: "var(--fg-3)",
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-          }}
-        >
-          Your account
-        </div>
-        <h1
-          style={{
-            fontSize: 30,
-            letterSpacing: "-0.024em",
-            fontWeight: 500,
-            marginTop: 6,
-            color: "var(--ink)",
-          }}
-        >
-          Requests &amp; invitations
-        </h1>
-        <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
-          Trainers and dietitians who want to coach you need your say-so before
-          they can see your progress.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Your account"
+        title="Requests & invitations"
+        subtitle="Trainers and dietitians who want to coach you need your say-so before they can see your progress."
+      />
 
       {failed && (
         <div
@@ -221,23 +194,23 @@ function MemberRequestsContent() {
       )}
 
       {loading && (
-        <div style={cardStyle}>
+        <DSCard style={cardStyle}>
           <AsyncSpinner label="Loading requests and invitations" />
-        </div>
+        </DSCard>
       )}
 
       {isEmpty && (
-        <div style={cardStyle}>
+        <DSCard style={cardStyle}>
           <EmptySlate
             message="Nothing waiting on you."
             hint="When a trainer or dietitian asks to add you as a client, it shows up here."
             mt="mt-0"
           />
-        </div>
+        </DSCard>
       )}
 
       {!loading && requests.length > 0 && (
-        <div style={{ ...cardStyle, marginBottom: 14 }}>
+        <DSCard style={{ ...cardStyle, marginBottom: 14 }}>
           <h2
             style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: "var(--ink)" }}
           >
@@ -295,11 +268,11 @@ function MemberRequestsContent() {
               );
             })}
           </div>
-        </div>
+        </DSCard>
       )}
 
       {!loading && invitations.length > 0 && (
-        <div style={cardStyle}>
+        <DSCard style={cardStyle}>
           <h2
             style={{ fontSize: 14, fontWeight: 500, marginBottom: 4, color: "var(--ink)" }}
           >
@@ -361,7 +334,7 @@ function MemberRequestsContent() {
               );
             })}
           </div>
-        </div>
+        </DSCard>
       )}
     </MemberDashboardShell>
   );

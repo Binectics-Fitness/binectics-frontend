@@ -5,6 +5,7 @@ import {
   useUpdateNotificationPreferences,
 } from "@/lib/queries/notifications";
 import type { NotificationPreferences } from "@/lib/api/notifications";
+import { Eyebrow } from "@/components/ds";
 
 type PreferenceKey = keyof NotificationPreferences;
 
@@ -188,9 +189,7 @@ export default function NotificationPreferencesPanel() {
                     <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>
                       {row.label}
                     </div>
-                    <div className="mt-0.5 font-mono text-[10.5px] uppercase" style={{ letterSpacing: "0.04em", color: "var(--fg-3)" }}>
-                      {row.sub}
-                    </div>
+                    <Eyebrow className="mt-0.5">{row.sub}</Eyebrow>
                   </div>
 
                   <div className="flex justify-center">

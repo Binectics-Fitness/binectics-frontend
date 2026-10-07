@@ -6,6 +6,7 @@ import {
   useUpdatePrivacyPreferences,
 } from "@/lib/queries/privacy";
 import type { PrivacyPreferences, ProfileVisibility } from "@/lib/api/auth";
+import { DSCard } from "@/components/ds";
 
 const VISIBILITY_OPTIONS: Array<{
   value: ProfileVisibility;
@@ -135,8 +136,8 @@ export default function PrivacySettingsPage() {
   return (
     <div className="space-y-6">
       {/* Profile visibility */}
-      <div className="rounded-xl bg-bg p-4 border border-border sm:p-6">
-        <h3 className="mb-1 text-lg font-bold text-ink sm:text-xl">
+      <DSCard className="p-4 sm:p-6" style={{ overflow: "visible" }}>
+        <h3 className="mb-1 text-[16px] font-medium text-ink">
           Profile visibility
         </h3>
         <p className="mb-4 text-sm text-fg-2">
@@ -172,11 +173,11 @@ export default function PrivacySettingsPage() {
             );
           })}
         </div>
-      </div>
+      </DSCard>
 
       {/* Sharing toggles */}
-      <div className="rounded-xl bg-bg p-4 border border-border sm:p-6">
-        <h3 className="mb-1 text-lg font-bold text-ink sm:text-xl">Sharing</h3>
+      <DSCard className="p-4 sm:p-6" style={{ overflow: "visible" }}>
+        <h3 className="mb-1 text-[16px] font-medium text-ink">Sharing</h3>
         <p className="mb-2 text-sm text-fg-2">
           What you share, and with whom. Changes save immediately.
         </p>
@@ -208,7 +209,7 @@ export default function PrivacySettingsPage() {
             Could not save your change. Please try again.
           </p>
         )}
-      </div>
+      </DSCard>
     </div>
   );
 }

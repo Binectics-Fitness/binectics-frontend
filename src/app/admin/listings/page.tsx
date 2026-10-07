@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { AsyncSpinner, EmptySlate, IconTile, StatusPill } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, IconTile, StatusPill, PageHeader, DSCard, DSStatCard, Eyebrow } from "@/components/ds";
 import { providerTone, toneColors } from "@/lib/ui/tones";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
@@ -157,13 +157,12 @@ export default function AdminListingsPage() {
       value: loading ? "-" : counts.pending.toString(),
       delta: "no badge yet",
       // Waiting on review is attention, not failure (warn, not danger).
-      valueColor: counts.pending > 0 ? "var(--warn-ink)" : "var(--ink)",
+      dot: counts.pending > 0 ? ("warn" as const) : undefined,
     },
     {
       label: "Suspended",
       value: loading ? "-" : counts.suspended.toString(),
       delta: "needs review",
-      deltaColor: "var(--fg-3)",
     },
     {
       label: "Avg rating",
@@ -201,15 +200,11 @@ export default function AdminListingsPage() {
         </div>
       }
     >
-      <div>
-        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-          Listings
-        </h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          Every gym, trainer and dietitian listing. Open one to see its owner
-          and documents.
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title="Listings"
+        subtitle="Every gym, trainer and dietitian listing. Open one to see its owner and documents."
+      />
 
       {error && (
         <div
@@ -230,41 +225,11 @@ export default function AdminListingsPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {kpis.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="rounded-(--r-3) p-[14px_16px]"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-          >
-            <div
-              className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
-              style={{ color: "var(--fg-3)" }}
-            >
-              {kpi.label}
-            </div>
-            <div
-              className="text-[22px] font-medium mt-1"
-              style={{
-                color: kpi.valueColor || "var(--ink)",
-                letterSpacing: "-0.018em",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {kpi.value}
-            </div>
-            <div
-              className="font-mono text-[11px] mt-1"
-              style={{ color: kpi.deltaColor || "var(--fg-3)" }}
-            >
-              {kpi.delta}
-            </div>
-          </div>
+          <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={<span className="whitespace-normal">{kpi.delta}</span>} dot={kpi.dot} />
         ))}
       </div>
 
-      <div
-        className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap"
-        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-      >
+      <DSCard className="p-[10px_14px] flex gap-3.5 items-center flex-wrap">
         <div
           className="flex-1 min-w-[280px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)"
           style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
@@ -307,12 +272,9 @@ export default function AdminListingsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </DSCard>
 
-      <div
-        className="rounded-(--r-3) overflow-hidden"
-        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-      >
+      <DSCard>
         <div className="overflow-x-auto">
           <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
             <thead>
@@ -377,12 +339,7 @@ export default function AdminListingsPage() {
                         <TypePill type={listingTypeLabel(l.account_type)} />
                       </td>
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                        <span
-                          className="font-mono text-[11.5px] uppercase tracking-[0.04em]"
-                          style={{ color: "var(--fg-3)" }}
-                        >
-                          {l.country_code ?? "-"}
-                        </span>
+                        <Eyebrow as="span">{l.country_code ?? "-"}</Eyebrow>
                       </td>
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                         <span
@@ -482,7 +439,7 @@ export default function AdminListingsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DSCard>
 
       <ActionModal
         key={`suspend-${suspendTarget?._id ?? "none"}`}

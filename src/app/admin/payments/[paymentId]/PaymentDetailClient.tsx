@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 import { paymentStatusTone } from "@/lib/ui/statusTones";
-import { AsyncSpinner, StatusPill } from "@/components/ds";
+import { AsyncSpinner, StatusPill, DSCard, DSStatCard } from "@/components/ds";
 import {
   adminService,
   type AdminLinkedTransaction,
@@ -304,37 +304,18 @@ function LinkedTx({ row }: { row: AdminLinkedTransaction }) {
 
 function Kpi({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div
-      className="rounded-[10px] p-[13px_16px]"
-      style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-    >
-      <div
-        className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
-        style={{ color: "var(--fg-3)" }}
-      >
-        {label}
-      </div>
-      <div
-        className="text-[18px] font-medium mt-1"
-        style={{ color: "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}
-      >
-        {children}
-      </div>
-    </div>
+    <DSStatCard size="sm" label={label} value={children} />
   );
 }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div
-      className="rounded-[12px] p-[22px]"
-      style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-    >
+    <DSCard className="p-[22px]">
       <h3 className="text-[14px] font-medium mb-1" style={{ color: "var(--ink)" }}>
         {title}
       </h3>
       {children}
-    </div>
+    </DSCard>
   );
 }
 

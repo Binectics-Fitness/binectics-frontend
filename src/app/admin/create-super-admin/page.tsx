@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authService } from "@/lib/api/auth";
 import { AccountType } from "@/lib/types";
+import { DSCard, PageHeader } from "@/components/ds";
 import {
   createSuperAdminSchema,
   type CreateSuperAdminFormData,
@@ -130,21 +131,16 @@ export default function CreateSuperAdminPage() {
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-4">
-      <div
-        className="w-full max-w-2xl bg-bg rounded-(--r-3) border border-border p-4 sm:p-8"
-        style={{ boxShadow: "var(--shadow-2)" }}
-      >
-        <h1 className="text-3xl font-black text-ink mb-2">
-          Create Super Admin Account
-        </h1>
-        <p className="text-fg-2 mb-8">
-          This will create 4 supported registration accounts with the same
-          credentials but different account types.
-        </p>
+      <DSCard className="w-full max-w-2xl p-4 sm:p-8">
+        <PageHeader
+          className="mb-8"
+          title="Create Super Admin Account"
+          subtitle="This will create 4 supported registration accounts with the same credentials but different account types."
+        />
 
         {/* Account Details */}
-        <div className="bg-bg-2 rounded-(--r-3) p-6 mb-8">
-          <h2 className="text-lg font-bold text-fg mb-4">
+        <DSCard flat className="p-6 mb-8">
+          <h2 className="text-[16px] font-medium text-ink mb-4" style={{ letterSpacing: "-0.01em" }}>
             Account Details (All use same password)
           </h2>
           <div className="space-y-3">
@@ -193,11 +189,11 @@ export default function CreateSuperAdminPage() {
               </span>
             </div>
           </div>
-        </div>
+        </DSCard>
 
         {/* Edit Form */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-fg mb-4">
+          <h2 className="text-[16px] font-medium text-ink mb-4" style={{ letterSpacing: "-0.01em" }}>
             Edit Details (Optional)
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -249,7 +245,7 @@ export default function CreateSuperAdminPage() {
           <div
             className={`mb-6 p-4 rounded-(--r-2) ${
               message.type === "success"
-                ? "bg-signal-soft text-signal border border-signal/20"
+                ? "bg-signal-soft text-signal-ink border border-signal/20"
                 : "bg-danger-soft text-danger border border-danger/20"
             }`}
           >
@@ -262,7 +258,7 @@ export default function CreateSuperAdminPage() {
           <button
             onClick={createAllAccounts}
             disabled={isLoading}
-            className="w-full h-14 bg-signal text-bg font-semibold rounded-(--r-2) hover:bg-signal/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-signal-v2 lg w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Creating Accounts..." : "Create All 4 Accounts"}
           </button>
@@ -292,7 +288,7 @@ export default function CreateSuperAdminPage() {
             <button
               onClick={() => createAccount(AccountType.FITNESS_MEMBER)}
               disabled={isLoading}
-              className="px-3 py-2 bg-signal text-bg font-semibold rounded-(--r-2) hover:bg-signal/90 transition-colors disabled:opacity-50 text-sm"
+              className="btn-signal-v2 disabled:opacity-50"
             >
               User
             </button>
@@ -329,12 +325,12 @@ export default function CreateSuperAdminPage() {
         <div className="mt-6 text-center">
           <a
             href="/"
-            className="text-signal hover:underline font-medium"
+            className="text-signal-ink hover:underline font-medium"
           >
             ← Back to Home
           </a>
         </div>
-      </div>
+      </DSCard>
     </div>
   );
 }

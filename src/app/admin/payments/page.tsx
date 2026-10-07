@@ -15,6 +15,8 @@ import {
   DSTableTh,
   DSTableRow,
   DSTableTd,
+  PageHeader,
+  DSCard,
 } from "@/components/ds";
 import {
   adminService,
@@ -112,21 +114,11 @@ export default function AdminPaymentsPage() {
 
   return (
     <AdminDashboardShell activeItem="Payments" crumb="Payments">
-      <div>
-        <h1
-          className="text-[30px] font-medium"
-          style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}
-        >
-          Payments
-        </h1>
-        <p
-          className="text-[13.5px] mt-1.5 max-w-[64ch]"
-          style={{ color: "var(--fg-3)" }}
-        >
-          The platform-wide money ledger, every subscription, consultation,
-          refund and payout recorded by the transactions service, newest first.
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title="Payments"
+        subtitle={<span className="block max-w-[64ch]">The platform-wide money ledger, every subscription, consultation, refund and payout recorded by the transactions service, newest first.</span>}
+      />
 
       <div className="flex items-center gap-2 mt-4 flex-wrap">
         {STATUS_FILTERS.map((f) => (
@@ -171,13 +163,7 @@ export default function AdminPaymentsPage() {
         />
       ) : !error && data ? (
         <>
-          <div
-            className="rounded-(--r-3) mt-4"
-            style={{
-              background: "var(--bg)",
-              border: "1px solid var(--border)",
-            }}
-          >
+          <DSCard className="mt-4">
             <DSTable minWidth={860}>
               <DSTableHead>
                 <DSTableTh>Date</DSTableTh>
@@ -244,7 +230,7 @@ export default function AdminPaymentsPage() {
                 })}
               </tbody>
             </DSTable>
-          </div>
+          </DSCard>
 
           <div className="flex items-center justify-between mt-3 text-[13px]">
             <div style={{ color: "var(--fg-3)" }}>
