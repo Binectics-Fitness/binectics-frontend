@@ -214,6 +214,7 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
                 className="w-8 h-8 rounded-(--r-2) flex items-center justify-center"
                 style={{ border: "1px solid oklch(0.30 0.008 80)", color: "oklch(0.65 0.005 85)" }}
                 aria-label="Close navigation"
+                data-autofocus
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                   <path d="M18 6L6 18M6 6l12 12" />

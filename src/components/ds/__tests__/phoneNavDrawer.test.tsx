@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useEffect, useRef, useState } from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DashboardMobileNav, MarketingMobileNav } from "../MobileNav";
@@ -59,6 +60,38 @@ function ProviderPage() {
       </main>
     </div>
   );
+}
+
+/** Stands in for the global CommandBar: Cmd/Ctrl+K opens a bar that focuses its input. */
+function FakeCommandBar() {
+  const [open, setOpen] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") setOpen(true);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  useEffect(() => {
+    if (open) input.current?.focus();
+  }, [open]);
+  return open ? <input ref={input} aria-label="Command search" /> : null;
+}
+
+/** A layer that mounts above the open drawer, after its inert pass. */
+function mountLayerAbove(modal: boolean) {
+  const layer = document.createElement("div");
+  if (modal) {
+    layer.setAttribute("role", "dialog");
+    layer.setAttribute("aria-modal", "true");
+  }
+  const input = document.createElement("input");
+  input.setAttribute("aria-label", "Layer input");
+  layer.appendChild(input);
+  document.body.appendChild(layer);
+  input.focus();
+  return { layer, input };
 }
 
 beforeEach(() => {
@@ -214,6 +247,51 @@ describe.each([
   });
 });
 
+describe("layers above the drawer", () => {
+  it.each([
+    ["an aria-modal dialog", true],
+    ["a live element outside the overlay", false],
+  ])("leaves Tab and Escape from %s to that layer", async (_n, modal) => {
+    const user = userEvent.setup();
+    render(<ProviderPage />);
+    await user.click(openButton());
+    const { layer, input } = mountLayerAbove(modal);
+    const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    input.dispatchEvent(tab);
+    expect(tab.defaultPrevented).toBe(false); // the trap didn't touch it
+    expect(input).toHaveFocus();
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(screen.getByRole("dialog", { name: "Navigation" })).toBeInTheDocument();
+    layer.remove();
+  });
+
+  it("still traps Tab when focus fell to <body>", async () => {
+    const user = userEvent.setup();
+    render(<ProviderPage />);
+    await user.click(openButton());
+    (document.activeElement as HTMLElement).blur();
+    await user.tab();
+    expect(screen.getByRole("dialog").contains(document.activeElement)).toBe(true);
+  });
+
+  it("closes when Cmd/Ctrl+K opens the command bar, and leaves focus in the bar", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <ProviderPage />
+        <FakeCommandBar />
+      </>,
+    );
+    await user.click(openButton());
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Control>}k{/Control}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.querySelector("[inert]")).toBeNull();
+    expect(isScrollLocked()).toBe(false);
+    expect(screen.getByRole("textbox", { name: "Command search" })).toHaveFocus();
+  });
+});
+
 describe("member shell phone menu", () => {
   const mountMember = () =>
     render(
@@ -232,6 +310,17 @@ describe("member shell phone menu", () => {
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(trigger()).toHaveAttribute("aria-expanded", "true");
     expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  it("focuses the close button on open, not the logo link, so a second Enter can't leave the page", async () => {
+    const user = userEvent.setup();
+    mountMember();
+    trigger().focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("button", { name: "Close menu" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(trigger()).toHaveFocus();
   });
 
   it("traps Tab and Shift+Tab, and wraps", async () => {
@@ -311,7 +400,7 @@ describe("MarketingMobileNav", () => {
     const trigger = screen.getByRole("button", { name: "Open menu" });
     await user.click(trigger);
     expect(screen.getByRole("dialog", { name: "Menu" })).toHaveAttribute("aria-modal", "true");
-    expect(document.activeElement?.closest('[role="dialog"]')).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Close menu" })).toHaveFocus();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(trigger).toHaveFocus();

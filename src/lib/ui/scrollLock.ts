@@ -4,7 +4,8 @@
  * Sets `data-scroll-locked` on <html> (globals.css turns that into
  * overflow: hidden !important on html and body) while at least one lock is
  * held. It never reads or writes body.style.overflow, so it can't fight
- * components that do (Modal, MobileNav): their save/restore of the inline
+ * components that still do (UnifiedMobileNav, DocumentPreviewModal, the
+ * legacy components/MobileNav): their save/restore of the inline
  * style no longer unlocks the page under us, and ours never restores a
  * stale value over theirs.
  *

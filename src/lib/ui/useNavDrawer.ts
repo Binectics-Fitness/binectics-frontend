@@ -5,15 +5,21 @@
  * (the dashboard shells' slide-in sidebar).
  *
  * While open:
- *  - focus moves to the first focusable element in the panel (the close
- *    button in our drawers), and Tab / Shift+Tab wrap inside the panel
- *    (same trap as ds/Drawer);
+ *  - focus moves to the element marked `data-autofocus` (the close button
+ *    in our drawers; never a link, so a second Enter can't navigate away),
+ *    else the first focusable one, and Tab / Shift+Tab wrap inside the
+ *    panel (same trap as ds/Drawer);
  *  - Escape closes it, unless it comes from an open menu inside the panel
  *    (e.g. the account menu), which owns that Escape;
  *  - everything outside the panel's overlay is `inert` (the same attribute
  *    SuccessTakeover uses), so the page behind can't be focused, clicked or
  *    read; elements that were already inert are left alone;
  *  - page scroll is locked through the shared counter (scrollLock.ts).
+ *  - keys from a layer opened above it (another aria-modal dialog, or any
+ *    live element outside the overlay that mounted after the inert pass)
+ *    are left to that layer: no focus yanking, no double Escape;
+ *  - Cmd/Ctrl+K (the command bar) closes it, so the bar doesn't open over
+ *    an inert page with the drawer behind it.
  * It closes when the route changes and when the viewport reaches the
  * desktop breakpoint (Tailwind `lg`, 64rem, by default), where the drawer is hidden;
  * otherwise it would reappear, still open, on the way back to phone width.
@@ -88,6 +94,19 @@ function inertOutside(keep: HTMLElement): () => void {
  *   hidden (default Tailwind `lg`); a shell that switches at `md` passes
  *   "(min-width: 48rem)".
  */
+/**
+ * True when a key event comes from a layer above the drawer: inside another
+ * aria-modal dialog, or a live (non-inert) element outside the overlay.
+ * Events from <body> (focus lost) still belong to the drawer.
+ */
+function fromAnotherLayer(target: EventTarget | null, overlay: HTMLElement | null, panel: HTMLElement): boolean {
+  if (!(target instanceof Element) || target === document.body || target === document.documentElement) return false;
+  const modal = target.closest('[aria-modal="true"]');
+  if (modal && modal !== panel) return true;
+  if (overlay && !overlay.contains(target) && !target.closest("[inert]")) return true;
+  return false;
+}
+
 export function useNavDrawer(desktopQuery: string = DESKTOP_QUERY) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -131,12 +150,15 @@ export function useNavDrawer(desktopQuery: string = DESKTOP_QUERY) {
     const releaseScroll = lockScroll();
     const releaseInert = overlay ? inertOutside(overlay) : () => {};
     if (panel && !panel.contains(document.activeElement)) {
-      (focusables(panel)[0] ?? panel).focus();
+      (panel.querySelector<HTMLElement>("[data-autofocus]") ?? focusables(panel)[0] ?? panel).focus();
     }
 
     return () => {
       releaseInert();
       releaseScroll();
+      // Another layer (e.g. the command bar) already took focus: leave it.
+      const now = document.activeElement;
+      if (now instanceof HTMLElement && now !== document.body && now.isConnected) return;
       restoreFocus(opener);
     };
   }, [open]);
@@ -147,6 +169,11 @@ export function useNavDrawer(desktopQuery: string = DESKTOP_QUERY) {
     const onKey = (e: KeyboardEvent) => {
       const panel = panelRef.current;
       if (!panel) return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        setOpen(false);
+        return;
+      }
+      if (fromAnotherLayer(e.target, overlayRef.current, panel)) return;
       if (e.key === "Escape") {
         if (e.defaultPrevented) return;
         // A menu open inside the panel (the account menu) takes this Escape.

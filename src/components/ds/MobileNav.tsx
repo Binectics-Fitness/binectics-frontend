@@ -85,6 +85,7 @@ export function MarketingMobileNav({ links }: MarketingMobileNavProps) {
                 className="w-9 h-9 rounded-(--r-2) flex items-center justify-center"
                 style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}
                 aria-label="Close menu"
+                data-autofocus
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
@@ -181,6 +182,7 @@ export function DashboardMobileNav({ children }: DashboardMobileNavProps) {
                 className="w-8 h-8 rounded-(--r-2) flex items-center justify-center"
                 style={{ border: "1px solid var(--border)", color: "var(--fg-2)" }}
                 aria-label="Close navigation"
+                data-autofocus
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
