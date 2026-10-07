@@ -529,6 +529,13 @@ export interface MyCheckInStatus {
 export interface MyCheckInDashboardStats extends MyCheckInStatus {
   current_streak_days: number;
   total_check_ins: number;
+  // Added by API #191. Optional so an API build without them still works:
+  // the UI then leaves out the longest-streak line and the at-risk hint.
+  /** The streak is alive from yesterday but today has no check-in yet. */
+  streak_at_risk?: boolean;
+  longest_streak_days?: number;
+  /** IANA zone the API counted days in. */
+  streak_timezone?: string;
 }
 
 export interface OrgCheckInDashboardStats {

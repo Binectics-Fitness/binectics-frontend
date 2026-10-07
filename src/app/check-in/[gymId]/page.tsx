@@ -2,15 +2,25 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
+import { SuccessTakeover } from "@/components/ds/SuccessTakeover";
+import { HeroStatCard } from "@/components/ds/HeroStatCard";
+import { useAuth } from "@/contexts/AuthContext";
 import { checkinsService } from "@/lib/api/checkins";
-import type { MyCheckInDashboardStats } from "@/lib/types";
+import { dayUnit, isPersonalBest, longestStreakLine, type StreakStats } from "@/lib/checkins/streak";
 
 type Outcome =
   | { state: "working" }
   | { state: "scan_required"; gymName: string }
-  | { state: "success"; gymName: string; streak: number | null }
+  | {
+      state: "success";
+      gymName: string;
+      /** When the API recorded it (the scan response), not the device clock. */
+      checkedInAt: string | null;
+      /** Read after the scan; null if that read failed. */
+      stats: StreakStats | null;
+    }
   | { state: "already"; gymName: string }
   | {
       state: "no_subscription";
@@ -45,6 +55,8 @@ function CheckInScanContent() {
   const gymId = params.gymId;
   const qrToken = searchParams.get("t");
   const [outcome, setOutcome] = useState<Outcome>({ state: "working" });
+  const { user } = useAuth();
+  const router = useRouter();
   const firedRef = useRef(false);
 
   useEffect(() => {
@@ -73,16 +85,14 @@ function CheckInScanContent() {
       });
       if (res.success) {
         // Streak is a nice-to-have — never block the success screen on it.
-        let streak: number | null = null;
+        let stats: StreakStats | null = null;
         try {
-          const stats = await checkinsService.getMyDashboardStats();
-          streak = stats.success
-            ? ((stats.data as MyCheckInDashboardStats)?.current_streak_days ?? null)
-            : null;
+          const statsRes = await checkinsService.getMyDashboardStats();
+          stats = statsRes.success ? ((statsRes.data as StreakStats | undefined) ?? null) : null;
         } catch {
-          streak = null;
+          stats = null;
         }
-        setOutcome({ state: "success", gymName, streak });
+        setOutcome({ state: "success", gymName, checkedInAt: res.data?.checked_in_at ?? null, stats });
         return;
       }
 
@@ -147,37 +157,16 @@ function CheckInScanContent() {
           </>
         )}
 
+        {/* Success is the dark takeover (owner ruling, Oct 2026); it
+            portals over this page, which stays underneath, inert. */}
         {outcome.state === "success" && (
-          <>
-            <div
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full"
-              style={{ background: "var(--signal-soft)" }}
-            >
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--signal-ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12l5 5L20 7" />
-              </svg>
-            </div>
-            <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
-              You&rsquo;re in.
-            </h1>
-            <p className="mt-2 text-[15px]" style={{ color: "var(--fg-2)" }}>
-              Checked in at <strong>{outcome.gymName}</strong>. Have a great
-              session!
-            </p>
-            {outcome.streak !== null && outcome.streak > 0 && (
-              <p
-                className="mt-4 inline-block rounded-full px-4 py-1.5 font-mono text-[12px] uppercase tracking-[0.05em]"
-                style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}
-              >
-                {outcome.streak}-day streak
-              </p>
-            )}
-            <div className="mt-8">
-              <Link href="/dashboard/member" className="btn-primary-v2" style={{ textDecoration: "none" }}>
-                Go to my dashboard
-              </Link>
-            </div>
-          </>
+          <CheckInSuccess
+            gymName={outcome.gymName}
+            checkedInAt={outcome.checkedInAt}
+            stats={outcome.stats}
+            firstName={user?.first_name?.trim() || null}
+            onDone={() => router.push("/dashboard/member")}
+          />
         )}
 
         {outcome.state === "already" && (
@@ -246,5 +235,70 @@ function CheckInScanContent() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * "welcome back" only when the stats say this isn't the first visit; if the
+ * stats read failed we don't know, so just the gym.
+ */
+function subtitleFor(gymName: string, stats: StreakStats | null): string {
+  const total = stats?.total_check_ins;
+  if (typeof total === "number" && total > 1) return `${gymName} · welcome back`;
+  if (total === 1) return `${gymName} · your first check-in`;
+  return gymName;
+}
+
+function clockOf(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? null
+    : d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
+
+/**
+ * The dark check-in success (mosaic FlowBCheckin): "● CHECKED IN · 14:42",
+ * "You're in, Tunde.", the gym, and the streak on a raised card. Every
+ * figure is real: the time is the API's checked_in_at, the streak comes
+ * from dashboard-stats after the scan, and "Personal best" appears only
+ * when the API sends a longest streak (API #191) that this one has reached.
+ */
+function CheckInSuccess({
+  gymName,
+  checkedInAt,
+  stats,
+  firstName,
+  onDone,
+}: {
+  gymName: string;
+  checkedInAt: string | null;
+  stats: StreakStats | null;
+  firstName: string | null;
+  onDone: () => void;
+}) {
+  const time = clockOf(checkedInAt);
+  const streak = stats?.current_streak_days ?? 0;
+  const best = stats ? isPersonalBest(stats) : false;
+  return (
+    <SuccessTakeover
+      status={time ? `Checked in · ${time}` : "Checked in"}
+      title={{ before: "You\u2019re ", emphasis: "in", after: firstName ? `, ${firstName}.` : "." }}
+      subtitle={subtitleFor(gymName, stats)}
+      titleAs="h1"
+      primaryAction={{ label: "Done", onClick: onDone }}
+      onDismiss={onDone}
+    >
+      {stats && streak > 0 && (
+        <HeroStatCard
+          surface="raised"
+          align="center"
+          eyebrow="Streak"
+          value={streak}
+          unit={dayUnit(streak)}
+          footnote={best ? <span style={{ color: "var(--signal)" }}>Personal best</span> : (longestStreakLine(stats) ?? undefined)}
+        />
+      )}
+    </SuccessTakeover>
   );
 }
