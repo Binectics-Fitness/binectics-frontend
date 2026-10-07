@@ -46,7 +46,9 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
   const waitlisted = roster.filter((b) => b.status === "waitlisted");
 
   return (
-    <DSCard className="max-w-[720px]">
+    // overflow-visible: the date select in the header opens an in-flow
+    // dropdown, which a short roster would otherwise clip.
+    <DSCard className="max-w-[720px] overflow-visible!">
       <div className="flex items-center justify-between px-5.5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
         <div>
           <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Roster</h2>

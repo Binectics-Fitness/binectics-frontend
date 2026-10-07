@@ -134,7 +134,9 @@ export function GymPlansClient() {
       )}
 
       {plans.length > 0 && (
-        <DSCard>
+        // overflow-visible: the inline edit form's selects open an in-flow
+        // dropdown. The rows have no backgrounds, so the corners need no clip.
+        <DSCard className="overflow-visible!">
           {plans.map((p, i) => (
             <div key={p._id} style={{ borderBottom: i < plans.length - 1 ? "1px solid var(--border)" : "none" }}>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5.5 py-4">
