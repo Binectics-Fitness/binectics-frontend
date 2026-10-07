@@ -2,10 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { renderWithProviders } from "@/tests/setup/test-utils";
 
-// ProviderShell mounts the page twice — a desktop layout and a lg:hidden
-// mobile layout — and jsdom doesn't apply CSS breakpoints, so BOTH copies
-// are in the accessibility tree. Presence checks therefore use
-// getAllByText (>=1) and absence checks queryAllByText (length 0).
 import userEvent from "@testing-library/user-event";
 import StaffPage from "./page";
 import * as teamsService from "@/lib/api/teams";
@@ -125,7 +121,7 @@ describe("Staff List Page", () => {
 
     renderWithProviders(<StaffPage />);
 
-    const link = (await screen.findAllByRole("link", { name: "John Doe" }))[0];
+    const link = (await screen.findByRole("link", { name: "John Doe" }));
     expect(link).toHaveAttribute("href", "/dashboard/gym-owner/staff/member-1");
   });
 
@@ -216,7 +212,7 @@ describe("Staff List Page", () => {
     });
 
     // Both layouts render the chip row; click the first "Inactive" chip.
-    await user.click(screen.getAllByRole("button", { name: /^Inactive/ })[0]);
+    await user.click(screen.getByRole("button", { name: /^Inactive/ }));
 
     await waitFor(() => {
       expect(screen.getAllByText("Jane Smith").length).toBeGreaterThan(0);
@@ -260,7 +256,7 @@ describe("Staff List Page", () => {
       expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
     });
 
-    await user.type(screen.getAllByLabelText("Search staff")[0], "jane");
+    await user.type(screen.getByLabelText("Search staff"), "jane");
 
     await waitFor(() => {
       expect(screen.getAllByText("Jane Smith").length).toBeGreaterThan(0);
@@ -296,7 +292,7 @@ describe("Staff List Page", () => {
       expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
     });
 
-    await user.type(screen.getAllByLabelText("Search staff")[0], "nobody");
+    await user.type(screen.getByLabelText("Search staff"), "nobody");
 
     await waitFor(() => {
       // Not the "No staff yet" slate — the roster isn't empty, the filter is.

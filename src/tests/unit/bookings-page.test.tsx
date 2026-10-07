@@ -92,6 +92,28 @@ describe("bookings page", () => {
       expect(button).toHaveTextContent(/^Pay ₦/);
     }
   });
+  it("shares one checkout between both placements of the panel: same phase, no second start", async () => {
+    // Desktop shows the detail-column panel, phones the under-row one; both
+    // are in the DOM. A checkout started in one (then the window narrowed)
+    // must show as in flight in the other and refuse a second start.
+    list.mockResolvedValue(ok([hold]));
+    let release: (v: unknown) => void = () => {};
+    const start = vi
+      .spyOn(consultationsService, "startBookingPayment")
+      .mockImplementation(() => new Promise((r) => { release = r; }) as never);
+    render(<MyBookingsPage />);
+    await waitFor(() => expect(screen.getAllByTestId("pay-booking")).toHaveLength(2));
+    const [first, second] = screen.getAllByTestId("pay-booking");
+    await userEvent.click(first);
+    await waitFor(() => {
+      for (const b of screen.getAllByTestId("pay-booking")) expect(b).toHaveTextContent("Complete payment in the Paystack window");
+    });
+    await userEvent.click(second);
+    expect(start).toHaveBeenCalledTimes(1);
+    release({ success: false, message: "stop here" });
+    start.mockRestore();
+  });
+
   it("links a paid booking to its receipt, and never a free session or an unpaid hold", async () => {
     const paidBooking: ConsultationBooking = {
       ...hold,

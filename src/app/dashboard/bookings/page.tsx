@@ -16,7 +16,7 @@ import { formatCurrency, getClientTimezone } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { bookingLabel, formatClock } from "@/lib/bookings/labels";
 import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
-import { PayBookingButton } from "@/components/bookings/PayBookingButton";
+import { PayBookingButton, type PayPhase, type SharedPayState } from "@/components/bookings/PayBookingButton";
 import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingModal";
 import { bookingPaymentState, isPayable } from "@/lib/bookings/paymentState";
 import { bookingPaymentStateTone } from "@/lib/ui/statusTones";
@@ -181,10 +181,13 @@ function BookingPaymentPanel({
   booking,
   onBooking,
   onError,
+  shared,
 }: {
   booking: ConsultationBooking;
   onBooking: (booking: ConsultationBooking) => void;
   onError: (message: string) => void;
+  /** One state per booking, shared by both placements of its panel. */
+  shared: SharedPayState;
 }) {
   if (!isPayable(booking) || !booking.payment?.expiresAt) return null;
   return (
@@ -204,7 +207,7 @@ function BookingPaymentPanel({
           This slot is held for you until {formatClock(booking.payment.expiresAt)}. Pay by then and the session is confirmed; if it isn&apos;t paid, the hold is released and the time goes back on offer.
         </div>
       </div>
-      <PayBookingButton booking={booking} onBooking={onBooking} onError={onError} />
+      <PayBookingButton booking={booking} onBooking={onBooking} onError={onError} shared={shared} />
       <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
         You can leave and come back to pay any time before the deadline.
       </div>
@@ -278,6 +281,21 @@ async function withWantedBooking(
   return { list, wanted: null };
 }
 
+/** Which bookings have a checkout in flight: one attempt per booking. */
+function createPayGuard() {
+  const inFlight = new Set<string>();
+  return {
+    tryStart(id: string): boolean {
+      if (inFlight.has(id)) return false;
+      inFlight.add(id);
+      return true;
+    },
+    finish(id: string) {
+      inFlight.delete(id);
+    },
+  };
+}
+
 export default function MyBookingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
@@ -287,6 +305,21 @@ export default function MyBookingsPage() {
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  // The selected booking's payment panel is in the DOM twice: under its row
+  // (phones) and in the detail column (desktop), one hidden by CSS. Its pay
+  // state lives here, per booking, so both show the same phase and a
+  // checkout started in one (say at 1280, then the window is narrowed past
+  // lg) can't be started again from the other.
+  const [payPhases, setPayPhases] = useState<Record<string, PayPhase>>({});
+  // Created once; checked synchronously from the click handlers, so two
+  // quick clicks can't both pass before a re-render.
+  const [payGuard] = useState(createPayGuard);
+  const sharedPay = (id: string): SharedPayState => ({
+    phase: payPhases[id] ?? "idle",
+    setPhase: (phase) => setPayPhases((prev) => ({ ...prev, [id]: phase })),
+    tryStart: () => payGuard.tryStart(id),
+    finish: () => payGuard.finish(id),
+  });
   // undefined: not read yet; a string: read but not yet shown (a fetch the
   // effect abandoned keeps it); null: consumed.
   const wantedRef = useRef<string | null | undefined>(undefined);
@@ -452,7 +485,7 @@ export default function MyBookingsPage() {
                         >
                           {b.id === selectedId && isPayable(b) && (
                             <div className="lg:hidden pt-1 pb-3">
-                              <BookingPaymentPanel booking={b} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
+                              <BookingPaymentPanel booking={b} onBooking={replaceBooking} onError={(m) => toast.error(m)} shared={sharedPay(b.id)} />
                             </div>
                           )}
                         </BookingRow>
@@ -487,7 +520,7 @@ export default function MyBookingsPage() {
                     <StatusPill tone={statusTone(selected)} label={bookingLabel(selected)} />
                     {isPayable(selected) && (
                       <div className="mt-3">
-                        <BookingPaymentPanel booking={selected} onBooking={replaceBooking} onError={(m) => toast.error(m)} />
+                        <BookingPaymentPanel booking={selected} onBooking={replaceBooking} onError={(m) => toast.error(m)} shared={sharedPay(selected.id)} />
                       </div>
                     )}
                     {bookingPaymentState(selected) === "expired" && (

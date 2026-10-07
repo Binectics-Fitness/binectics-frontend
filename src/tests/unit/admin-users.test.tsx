@@ -79,7 +79,7 @@ describe("admin users search", () => {
 
   it("lists users with rows linking to the account view", async () => {
     render(<AdminUsersPage />);
-    const name = (await screen.findAllByText("Tia Trainer"))[0];
+    const name = (await screen.findByText("Tia Trainer"));
     expect(name.closest("a")).toHaveAttribute("href", "/admin/users/u-tia");
     expect(screen.getAllByText("Trainer").length).toBeGreaterThan(0);
     expect(list).toHaveBeenCalledWith({ q: undefined, role: undefined, page: 1, limit: 25 });
@@ -89,9 +89,9 @@ describe("admin users search", () => {
     const user = userEvent.setup();
     render(<AdminUsersPage />);
     await screen.findAllByText("Tia Trainer");
-    await user.type(screen.getAllByLabelText("Search users")[0], "tia@");
+    await user.type(screen.getByLabelText("Search users"), "tia@");
     await waitFor(() => expect(list).toHaveBeenLastCalledWith({ q: "tia@", role: undefined, page: 1, limit: 25 }));
-    await user.click(screen.getAllByRole("button", { name: "Dietitians" })[0]);
+    await user.click(screen.getByRole("button", { name: "Dietitians" }));
     await waitFor(() => expect(list).toHaveBeenLastCalledWith({ q: "tia@", role: "dietitian", page: 1, limit: 25 }));
   });
 
@@ -118,7 +118,7 @@ describe("admin user detail", () => {
     expect(get).toHaveBeenCalledWith("u-tia");
     expect(screen.getAllByText("tia@example.com").length).toBeGreaterThan(0);
     expect(screen.getAllByText("from a gym team role").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("link", { name: "Strength with Tia" })[0]).toHaveAttribute("href", "/marketplace/lst1");
+    expect(screen.getByRole("link", { name: "Strength with Tia" })).toHaveAttribute("href", "/marketplace/lst1");
     expect(screen.getAllByText("Tia Coaching").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Iron Gym").length).toBeGreaterThan(0);
     expect(screen.getAllByText("12").length).toBeGreaterThan(0);
@@ -137,7 +137,7 @@ describe("admin user detail", () => {
     });
     render(<UserDetailClient userId="u-tia" />);
     await screen.findAllByRole("heading", { name: "Tia Trainer" });
-    await user.click(screen.getAllByRole("button", { name: "Suspend" })[0]);
+    await user.click(screen.getByRole("button", { name: "Suspend" }));
     const dialog = await screen.findByRole("dialog");
     const confirm = within(dialog).getByRole("button", { name: "Suspend account" });
     expect(confirm).toBeDisabled();
@@ -159,7 +159,7 @@ describe("admin user detail", () => {
       data: { _id: "u-tia", first_name: "Tia", last_name: "Trainer", email: "tia@example.com", is_suspended: false, suspension_reason: null },
     });
     render(<UserDetailClient userId="u-tia" />);
-    await user.click((await screen.findAllByRole("button", { name: "Unsuspend" }))[0]);
+    await user.click((await screen.findByRole("button", { name: "Unsuspend" })));
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Reinstate" }));
     await waitFor(() => expect(unsuspend).toHaveBeenCalledWith("u-tia"));

@@ -104,8 +104,7 @@ export default function ConsultationAvailabilityManager({
   // the platform account, so a currency only the provider's own Paystack
   // account can take (useOrgPriceCurrencies) could be priced but never paid.
   const { all: currencies } = useCurrencies();
-  // The provider shells render their children twice (desktop and phone);
-  // a fixed id pointed the label at the hidden copy.
+  // A generated id, so the label can't collide with another instance.
   const currencyFieldId = useId();
   const userId = user?.id;
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);

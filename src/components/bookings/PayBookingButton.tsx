@@ -21,6 +21,22 @@ const VERIFY_POLL_LIMIT = 20;
 
 export type PayPhase = "idle" | "checkout" | "verifying" | "unsettled" | "failed";
 
+/**
+ * Payment state shared by every PayBookingButton for the same booking.
+ * A page that shows a booking's payment in two places (a phone and a
+ * desktop layout, one hidden by CSS) passes the same object to both, so
+ * they show one phase and one in-flight guard: a checkout started in one
+ * can't be started again from the other.
+ */
+export interface SharedPayState {
+  phase: PayPhase;
+  setPhase: (phase: PayPhase) => void;
+  /** Claims the one attempt; false while another is in flight. */
+  tryStart: () => boolean;
+  /** Releases the attempt claimed by tryStart. */
+  finish: () => void;
+}
+
 type GatewayStatus = NonNullable<ConsultationBooking["verification"]>["gatewayStatus"];
 
 /**
@@ -62,6 +78,7 @@ export function PayBookingButton({
   onError,
   label,
   className = "btn-primary-v2 w-full justify-center",
+  shared,
 }: {
   booking: ConsultationBooking;
   /** Every authoritative booking the API returns while paying. */
@@ -70,8 +87,12 @@ export function PayBookingButton({
   /** Defaults to "Pay ₦25,000"; the bookings list uses "Pay now". */
   label?: string;
   className?: string;
+  /** Shared phase and guard; without it the button keeps its own. */
+  shared?: SharedPayState;
 }) {
-  const [phase, setPhase] = useState<PayPhase>("idle");
+  const [localPhase, setLocalPhase] = useState<PayPhase>("idle");
+  const phase = shared ? shared.phase : localPhase;
+  const setPhase = shared ? shared.setPhase : setLocalPhase;
   // Set inside the effect, not at creation: StrictMode mounts, unmounts and
   // remounts in development, and a ref initialised once would stay false.
   const alive = useRef(true);
@@ -81,7 +102,19 @@ export function PayBookingButton({
   }, []);
   // One attempt at a time. The "checkout" phase keeps the button enabled
   // (see below), so a second click must be refused here, not by `disabled`.
-  const inFlight = useRef(false);
+  const localInFlight = useRef(false);
+  const tryStart =
+    shared?.tryStart ??
+    (() => {
+      if (localInFlight.current) return false;
+      localInFlight.current = true;
+      return true;
+    });
+  const finish =
+    shared?.finish ??
+    (() => {
+      localInFlight.current = false;
+    });
 
   // For the label only; the server charges its own snapshot.
   const charge = paystackChargeFor(booking);
@@ -176,12 +209,11 @@ export function PayBookingButton({
   };
 
   const run = async (action: () => Promise<void>) => {
-    if (inFlight.current) return;
-    inFlight.current = true;
+    if (!tryStart()) return;
     try {
       await action();
     } finally {
-      inFlight.current = false;
+      finish();
     }
   };
 

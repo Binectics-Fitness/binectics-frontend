@@ -598,7 +598,7 @@ export default function AdminCurrenciesPage() {
         </div>
       )}
     </AdminDashboardShell>
-    {/* Outside the shell, which renders its body twice (desktop and phone). */}
+    {/* Beside the shell, not in its body: an overlay, not page content. */}
     {editing && (
       <EditCurrencyModal currency={editing} onClose={() => setEditing(null)} onSaved={onSaved} />
     )}

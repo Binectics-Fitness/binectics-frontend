@@ -92,10 +92,10 @@ function renderPage() {
   );
 }
 
-/** The shell renders its body for desktop and phone; use the first copy. */
+/** The table row holding a currency's Edit button. */
 async function firstRow(code: string) {
-  const edit = await screen.findAllByRole("button", { name: `Edit ${code}` });
-  return edit[0].closest("tr") as HTMLTableRowElement;
+  const edit = await screen.findByRole("button", { name: `Edit ${code}` });
+  return edit.closest("tr") as HTMLTableRowElement;
 }
 
 describe("admin currencies page", () => {
@@ -135,9 +135,9 @@ describe("admin currencies page", () => {
     renderPage();
     await firstRow("NGN");
     expect(screen.queryAllByText("Euro")).toHaveLength(0);
-    await user.click(screen.getAllByRole("button", { name: /^All/ })[0]);
+    await user.click(screen.getByRole("button", { name: /^All/ }));
     expect(screen.getAllByText("Euro").length).toBeGreaterThan(0);
-    await user.type(screen.getAllByLabelText("Search currencies")[0], "ced");
+    await user.type(screen.getByLabelText("Search currencies"), "ced");
     expect(screen.queryAllByText("Euro")).toHaveLength(0);
     expect(screen.getAllByText("Ghanaian Cedi").length).toBeGreaterThan(0);
   });
@@ -265,7 +265,7 @@ describe("admin currencies page", () => {
     renderPage();
     await firstRow("NGN");
     expect(screen.queryAllByText("Euro")).toHaveLength(0);
-    await user.click(screen.getAllByRole("button", { name: /^On providers' accounts/ })[0]);
+    await user.click(screen.getByRole("button", { name: /^On providers' accounts/ }));
     const eur = await firstRow("EUR");
     expect(within(eur).getByText("Providers' own accounts: 1 org, 2 plans. Providers can't add it")).toBeInTheDocument();
     expect(screen.queryAllByRole("button", { name: "Edit NGN" })).toHaveLength(0);
