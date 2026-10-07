@@ -1,4 +1,7 @@
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { DSCard } from "@/components/ds/DSCard";
+import { DSStatCard } from "@/components/ds/DSStatCard";
+import { PageHeader } from "@/components/ds/PageHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -22,21 +25,18 @@ const CODES = [
 export default function GymMarketingPage() {
   return (
     <GymDashboardShell activeItem="Settings" crumb="Marketing">
-      <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Marketing tools</h1>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader className="mb-0!" title="Marketing tools" />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         {KPIS.map((k) => (
-          <div key={k.label} className="rounded-(--r-3) p-3.5 px-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-            <div className="text-[24px] font-medium tracking-[-0.02em] tabular-nums mt-1" style={{ color: "var(--ink)" }}>{k.value}</div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: "var(--signal-ink)" }}>{k.delta}</div>
-          </div>
+          <DSStatCard key={k.label} size="sm" label={k.label} value={k.value} delta={k.delta} />
         ))}
       </div>
 
       {/* Discount codes */}
-      <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="p-5.5">
         <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Discount codes</h3>
         <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[13.5px]">
@@ -63,11 +63,11 @@ export default function GymMarketingPage() {
         </table>
         </div>
         <button className="mt-3.5 px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>+ New code</button>
-      </div>
+      </DSCard>
 
       {/* Share kit + Embed widget */}
       <div className="grid lg:grid-cols-2 gap-3.5">
-        <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-5.5">
           <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Share kit</h3>
           <p className="text-[13.5px] mb-3.5" style={{ color: "var(--fg-2)" }}>Branded social templates for Instagram, WhatsApp status, and Facebook. Auto-generates with your gym name + photos.</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3.5">
@@ -76,16 +76,16 @@ export default function GymMarketingPage() {
             <div className="aspect-square rounded-(--r-2)" style={{ background: "linear-gradient(135deg, oklch(0.85 0.04 120), oklch(0.72 0.06 140))" }} />
           </div>
           <button className="px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>Download &middot; 9 templates</button>
-        </div>
+        </DSCard>
 
-        <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-5.5">
           <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Embed widget</h3>
           <p className="text-[13.5px] mb-3" style={{ color: "var(--fg-2)" }}>Drop on your website. Live class schedule with one-tap booking. ~3kb gzipped.</p>
           <div className="font-mono text-[12px] px-3.5 py-3 rounded-(--r-2) overflow-x-auto whitespace-nowrap" style={{ background: "var(--bg-2)", color: "var(--fg-2)" }}>
             {`<script src="binectics.com/w/iron-lab.js" defer></script>`}
           </div>
           <button className="mt-3.5 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}>Copy snippet</button>
-        </div>
+        </DSCard>
       </div>
     </GymDashboardShell>
   );

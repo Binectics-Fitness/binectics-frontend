@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import SearchableSelect from "@/components/SearchableSelect";
+import { DSCard } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { MemberStatus, teamsService, type OrganizationMember } from "@/lib/api/teams";
@@ -79,7 +80,8 @@ export function TrainerCard({
   }
 
   return (
-    <div className="rounded-(--r-3) p-5.5 flex flex-col gap-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    // overflow-visible: the trainer select opens an in-flow dropdown.
+    <DSCard className="p-5.5 flex flex-col gap-3 overflow-visible!">
       <div>
         <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Trainer</h3>
         <p className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>
@@ -105,6 +107,6 @@ export function TrainerCard({
       {!canAssign && hasTrainers && (
         <p className="text-[12px]" style={{ color: "var(--fg-3)" }}>This membership has ended, so it can&apos;t be assigned.</p>
       )}
-    </div>
+    </DSCard>
   );
 }

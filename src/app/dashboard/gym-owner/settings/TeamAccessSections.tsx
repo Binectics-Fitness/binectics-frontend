@@ -11,6 +11,7 @@ import {
 } from "@/lib/queries/teams";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { TeamPermission } from "@/lib/api/teams";
+import { DSCard, Eyebrow, ListRow } from "@/components/ds";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -19,7 +20,6 @@ const INPUT_STYLE = {
   fontFamily: "inherit",
 } as const;
 const INPUT_CLASS = "rounded-(--r-2) px-3.5 py-2.75 text-[14px]";
-const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
 /** Roles & scopes: read-only summary here; management lives at /dashboard/team. */
 export function RolesSection() {
@@ -32,28 +32,27 @@ export function RolesSection() {
       <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
         Who can do what across your organization. Create and edit roles from the Team page.
       </p>
-      <div className="flex flex-col gap-3 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="flex flex-col gap-3 p-5.5">
         {isLoading && <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading roles…</span>}
         {!isLoading && roles.length === 0 && (
           <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>No roles yet.</span>
         )}
         {roles.map((r) => (
-          <div key={r._id} className="flex items-center gap-3 p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--border)" }}>
-            <div className="flex-1 min-w-0">
-              <div className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{r.name}</div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>
-                {r.permissions.length} permission{r.permissions.length === 1 ? "" : "s"}
-              </div>
-            </div>
-            {r.is_default && (
-              <span className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full" style={{ color: "var(--fg-3)", background: "var(--bg-2, var(--bg))", border: "1px solid var(--border)" }}>Default</span>
-            )}
-          </div>
+          <ListRow
+            key={r._id}
+            title={r.name}
+            meta={`${r.permissions.length} permission${r.permissions.length === 1 ? "" : "s"}`}
+            trailing={
+              r.is_default && (
+                <span className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full" style={{ color: "var(--fg-3)", background: "var(--bg-2, var(--bg))", border: "1px solid var(--border)" }}>Default</span>
+              )
+            }
+          />
         ))}
         <Link href="/dashboard/team" className="btn-ghost-v2 sm self-start" style={{ textDecoration: "none" }}>
           Manage roles & team →
         </Link>
-      </div>
+      </DSCard>
     </section>
   );
 }
@@ -115,7 +114,7 @@ export function ApiKeysSection() {
       <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
         Keys for integrations and scripts. Scoped to this organization; the secret is shown once at creation and never again.
       </p>
-      <div className="flex flex-col gap-3 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="flex flex-col gap-3 p-5.5">
         {revealed && (
           <div className="flex flex-col gap-2 p-3.5 rounded-(--r-2)" style={{ border: "1px solid var(--signal, var(--border-2))", background: "var(--signal-soft, var(--bg))" }}>
             <span className="text-[12.5px] font-medium" style={{ color: "var(--signal-ink, var(--ink))" }}>
@@ -178,11 +177,11 @@ export function ApiKeysSection() {
         {adding ? (
           <div className="flex flex-col gap-3.5 p-3.5 rounded-(--r-2)" style={{ border: "1px dashed var(--border-2)" }}>
             <div className="flex flex-col gap-1.5">
-              <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Key name</label>
+              <Eyebrow as="label">Key name</Eyebrow>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Zapier integration" className={INPUT_CLASS} style={INPUT_STYLE} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Scopes</label>
+              <Eyebrow as="label">Scopes</Eyebrow>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {Object.values(TeamPermission).map((s) => (
                   <label key={s} className="flex items-center gap-2 text-[12.5px] cursor-pointer" style={{ color: "var(--ink)" }}>
@@ -203,7 +202,7 @@ export function ApiKeysSection() {
         ) : (
           <button className="btn-ghost-v2 sm self-start" disabled={!orgId} onClick={() => setAdding(true)}>+ Create API key</button>
         )}
-      </div>
+      </DSCard>
     </section>
   );
 }

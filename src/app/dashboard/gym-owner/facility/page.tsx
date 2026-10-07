@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/components/ds";
 import { AddLocationButton } from "./_actions";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
@@ -66,14 +66,16 @@ export default function GymLocationsPage() {
       crumb="Locations"
       actions={<AddLocationButton />}
     >
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Locations</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>{loading ? "Loading your locations..." : `${locations.length} active listings`}</div>
-      </div>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Locations"
+        subtitle={loading ? "Loading your locations..." : `${locations.length} active listings`}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
         {locations.map((l) => (
-          <div key={l._id} className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard key={l._id}>
             {/* Photo placeholder */}
             <div className="relative h-[140px]" style={{ background: "repeating-linear-gradient(135deg, oklch(0.90 0.014 248) 0 10px, oklch(0.93 0.012 248) 10px 20px)", borderBottom: "1px solid var(--border)" }}>
               <span className="absolute top-2.5 left-2.5 inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg border border-border" style={{ color: "var(--ink)" }}>{formatBadge(l.account_type)}</span>
@@ -91,7 +93,7 @@ export default function GymLocationsPage() {
                   { k: "Rating", v: String(l.average_rating ?? 0) },
                 ].map((s) => (
                   <div key={s.k}>
-                    <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.k}</div>
+                    <Eyebrow>{s.k}</Eyebrow>
                     <div className="text-[16px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
                   </div>
                 ))}
@@ -113,17 +115,17 @@ export default function GymLocationsPage() {
               <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Location · <strong style={{ color: "var(--ink)" }}>{l.city ?? "-"}, {l.country_code ?? "-"}</strong></span>
               <Link href={`/dashboard/gym-owner/locations/${l._id}`} className="btn-ghost-v2 sm">Manage location</Link>
             </div>
-          </div>
+          </DSCard>
         ))}
         {loading && locations.length === 0 && (
-          <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard className="px-4.5 py-6">
             <AsyncSpinner label="Loading locations" />
-          </div>
+          </DSCard>
         )}
         {!loading && locations.length === 0 && (
-          <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard className="px-4.5 py-6">
             <EmptySlate message="No listings found." hint="Add a location to get started." mt="mt-0" />
-          </div>
+          </DSCard>
         )}
       </div>
     </GymDashboardShell>

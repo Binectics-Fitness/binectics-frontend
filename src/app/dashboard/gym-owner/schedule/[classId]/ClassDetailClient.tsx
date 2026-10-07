@@ -19,6 +19,7 @@ import {
 } from "@/lib/api/classBookings";
 import { ClassForm, WEEKDAYS } from "../ClassForm";
 import SearchableSelect from "@/components/SearchableSelect";
+import { DSCard } from "@/components/ds";
 
 function memberName(b: ClassBooking): string {
   if (typeof b.member_user_id === "object") {
@@ -45,7 +46,7 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
   const waitlisted = roster.filter((b) => b.status === "waitlisted");
 
   return (
-    <section className="rounded-(--r-3) overflow-hidden max-w-[720px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    <DSCard className="max-w-[720px]">
       <div className="flex items-center justify-between px-5.5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
         <div>
           <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Roster</h2>
@@ -76,7 +77,7 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
           </span>
         </div>
       ))}
-    </section>
+    </DSCard>
   );
 }
 
@@ -151,7 +152,8 @@ export function ClassDetailClient() {
       )}
 
       {gymClass && (
-        <section className="rounded-(--r-3) p-5.5 max-w-[720px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        // overflow-visible: the form's selects open an in-flow dropdown.
+        <DSCard className="p-5.5 max-w-[720px] overflow-visible!">
           <ClassForm
             initial={gymClass}
             saving={update.isPending}
@@ -159,7 +161,7 @@ export function ClassDetailClient() {
             onSubmit={(d) => void onSave(d)}
             onCancel={() => router.push("/dashboard/gym-owner/schedule")}
           />
-        </section>
+        </DSCard>
       )}
     </GymDashboardShell>
   );

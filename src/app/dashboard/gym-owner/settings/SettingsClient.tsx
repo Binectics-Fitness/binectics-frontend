@@ -17,6 +17,7 @@ import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
 import { orgPriceOptions, providerRouteNote, writeErrorMessage } from "@/lib/currencies/helpers";
 import { toast } from "@/components/Toast";
 import { MoneyInput } from "@/components/ds/MoneyInput";
+import { DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
 import {
   FIRST_DAY_OPTIONS,
@@ -75,7 +76,6 @@ const INPUT_STYLE = {
   fontFamily: "inherit",
 } as const;
 const INPUT_CLASS = "rounded-(--r-2) px-3.5 py-2.75 text-[14px]";
-const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
 // ─────────────────────────────────────────────────────────────────────────
 // Form model — maps 1:1 to UpdateOrganizationRequest keys. The trading name
@@ -303,17 +303,19 @@ export function SettingsClient() {
 
   return (
     <GymDashboardShell activeItem="Settings" crumb="Settings" actions={saveAction}>
-      <div className="pb-1">
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Settings</h1>
-        <div className="text-[13.5px] mt-1.5 max-w-[60ch]" style={{ color: "var(--fg-3)" }}>Business identity, currencies, integrations, booking rules, and the org-level settings that apply across every location.</div>
-      </div>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Settings"
+        subtitle={<span className="block max-w-[60ch]">Business identity, currencies, integrations, booking rules, and the org-level settings that apply across every location.</span>}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-10 items-start">
         {/* Section nav */}
         <nav className="sticky top-22 flex flex-col sm:flex-row lg:flex-col gap-0.5 overflow-x-auto">
           {SECTIONS.map((s, si) => (
             <div key={s.group}>
-              <div className={`font-mono text-[10.5px] uppercase tracking-[0.06em] px-2.5 py-1 ${si > 0 ? "mt-3.5" : ""}`} style={{ color: "var(--fg-3)" }}>{s.group}</div>
+              <Eyebrow className={`px-2.5 py-1 ${si > 0 ? "mt-3.5" : ""}`}>{s.group}</Eyebrow>
               {s.items.map((item) => {
                 const active = activeId === item.id;
                 return (
@@ -329,9 +331,11 @@ export function SettingsClient() {
         {/* Sections */}
         <div className="flex flex-col gap-10">
           {/* Organization */}
+          {/* Cards holding a SearchableSelect stay overflow-visible: its list
+              opens in flow and DSCard would otherwise clip it. */}
           <section id="org">
             <SectionHeading title="Organization" desc="Legal entity, trading name, primary contact. Used on receipts and tax documents." />
-            <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <TextField label="Legal name" value={form?.legal_name ?? ""} onChange={(v) => set("legal_name", v)} disabled={!form} />
                 <TextField label="Trading name" value={form?.name ?? ""} onChange={(v) => set("name", v)} disabled={!form} />
@@ -344,13 +348,13 @@ export function SettingsClient() {
                   options={countries.map((c) => ({ label: `${c.name} · ${c.code}`, value: c.code }))} />
               </div>
               <TextField label="Primary email" type="email" value={form?.primary_email ?? ""} onChange={(v) => set("primary_email", v)} disabled={!form} />
-            </div>
+            </DSCard>
           </section>
 
           {/* Currency & locale */}
           <section id="currency">
             <SectionHeading title="Currency & locale" desc="How money and dates render across your dashboard and to your members." />
-            <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <SelectField label="Default currency" value={form?.currency ?? ""} onChange={(v) => set("currency", v)} disabled={!form} hint={providerRouteNote(form?.currency, currencies, providerHint) ?? "Used for new membership plans, listings, and revenue display."}
                   placeholder="Choose currency"
@@ -365,18 +369,18 @@ export function SettingsClient() {
                 <LocaleSelect label="Time format" value={form?.time_format} options={TIME_FORMAT_OPTIONS} onChange={(v) => set("time_format", v)} disabled={!form} />
                 <LocaleSelect label="Number format" value={form?.number_format} options={NUMBER_FORMAT_OPTIONS} onChange={(v) => set("number_format", v)} disabled={!form} />
               </div>
-            </div>
+            </DSCard>
           </section>
 
           {/* Tax & VAT */}
           <section id="tax">
             <SectionHeading title="Tax & VAT" desc="Shown on receipts and invoices. Nothing is computed platform-side yet, this is what your documents display." />
-            <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard className="flex flex-col gap-4 p-5.5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />
                 <TextField label="Tax rate %" type="number" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
                 <div className="flex flex-col gap-1.5">
-                  <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Prices include tax</label>
+                  <Eyebrow as="label">Prices include tax</Eyebrow>
                   <div className="flex items-center gap-2.5 py-2.75">
                     <Toggle on={form?.tax_inclusive ?? true} onToggle={() => set("tax_inclusive", !(form?.tax_inclusive ?? true))} />
                     <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
@@ -385,7 +389,7 @@ export function SettingsClient() {
                   </div>
                 </div>
               </div>
-            </div>
+            </DSCard>
           </section>
 
           {/* Booking rules */}
@@ -419,7 +423,7 @@ export function SettingsClient() {
           {/* Payout schedule */}
           <section id="payouts">
             <SectionHeading title="Payout schedule" desc="How often earnings settle to your bank. Execution follows your gateway's capabilities." />
-            <div className="flex flex-col gap-4 p-5.5 rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <SelectField label="Frequency" value={form?.payout_schedule.frequency ?? "weekly"} onChange={(v) => onPayoutFrequency(v as PayoutFrequency)} disabled={!form}
                   options={[{ label: "Daily", value: "daily" }, { label: "Weekly", value: "weekly" }, { label: "Monthly", value: "monthly" }]} />
@@ -437,7 +441,7 @@ export function SettingsClient() {
                 <TextField label="Hold period (days, 0–30)" type="number" value={String(form?.payout_schedule.hold_period_days ?? 0)} onChange={(v) => setPayout({ hold_period_days: Math.min(30, Math.max(0, Number(v) || 0)) })} disabled={!form} />
               </div>
               <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>Earnings below the minimum roll over to the next run. The hold period applies before earnings become payable.</span>
-            </div>
+            </DSCard>
           </section>
 
           {/* Roles & scopes — read-only summary, managed at /dashboard/team */}
@@ -477,7 +481,7 @@ function SectionHeading({ title, desc }: { title: string; desc: string }) {
 function TextField({ label, value, onChange, disabled, type = "text" }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; type?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
+      <Eyebrow as="label">{label}</Eyebrow>
       <input type={type} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
     </div>
   );
@@ -511,7 +515,7 @@ function MoneyField({ label, minor, currency, onChange, disabled }: { label: str
   }, [minor, currency]);
   return (
     <div className="flex flex-col gap-1.5">
-      <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
+      <Eyebrow as="label">{label}</Eyebrow>
       <MoneyInput
         value={display}
         currency={currency}
@@ -534,7 +538,7 @@ function MoneyField({ label, minor, currency, onChange, disabled }: { label: str
 function SelectField({ label, value, onChange, options, placeholder, disabled, hint }: { label: string; value: string; onChange: (v: string) => void; options: { label: string; value: string }[]; placeholder?: string; disabled?: boolean; hint?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
+      <Eyebrow as="label">{label}</Eyebrow>
       <SearchableSelect value={value} onChange={onChange} options={options} placeholder={placeholder} disabled={disabled} />
       {hint && <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>{hint}</span>}
     </div>
@@ -546,7 +550,7 @@ function LocaleSelect<T extends string>({ label, value, options, onChange, disab
   const preview = options.find((o) => o.value === value)?.preview;
   return (
     <div className="flex flex-col gap-1.5">
-      <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{label}</label>
+      <Eyebrow as="label">{label}</Eyebrow>
       <SearchableSelect
         value={value ?? ""}
         onChange={(v) => onChange(v as T)}
@@ -578,7 +582,7 @@ function WiredToggleSection({ id, title, desc, items, disabled }: { id: string; 
   return (
     <section id={id}>
       <SectionHeading title={title} desc={desc} />
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         {items.map((t, i) => (
           <div key={t.key} className="flex items-start gap-3.5 px-5.5 py-3" style={{ borderBottom: i < items.length - 1 ? "1px solid var(--border)" : "none" }}>
             <div className="flex-1">
@@ -588,7 +592,7 @@ function WiredToggleSection({ id, title, desc, items, disabled }: { id: string; 
             <Toggle on={t.on} onToggle={t.onToggle} disabled={disabled} />
           </div>
         ))}
-      </div>
+      </DSCard>
     </section>
   );
 }

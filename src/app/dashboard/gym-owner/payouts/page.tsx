@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { DSCard, PageHeader } from "@/components/ds";
 import { AddBankAccountModal } from "@/components/ds/modals/AddBankAccountModal";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrganizationDetails } from "@/lib/queries/teams";
@@ -38,13 +39,11 @@ export default function GymPayoutsPage() {
         <button className="btn-primary-v2 sm" onClick={() => setAddBankOpen(true)}>+ New bank account</button>
       }
     >
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Payouts</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>Funds settle directly to your bank · Binectics never holds money</div>
-      </div>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader className="mb-0!" title="Payouts" subtitle="Funds settle directly to your bank · Binectics never holds money" />
 
       {/* Configured schedule — real data from org.payout_schedule */}
-      <section className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="p-5.5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Payout schedule</h2>
@@ -65,9 +64,9 @@ export default function GymPayoutsPage() {
             Edit in Settings →
           </Link>
         </div>
-      </section>
+      </DSCard>
 
-      <div className="rounded-(--r-3) flex flex-col items-center text-center px-6 py-14" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="flex flex-col items-center text-center px-6 py-14">
         <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M2 10h20" /></svg>
         </div>
@@ -76,7 +75,7 @@ export default function GymPayoutsPage() {
           Your scheduled and completed payouts will appear here once the payouts service is live. In the meantime you can add the bank account funds should settle to.
         </p>
         <button className="btn-ghost-v2 sm mt-5" onClick={() => setAddBankOpen(true)}>Add bank account</button>
-      </div>
+      </DSCard>
 
       <AddBankAccountModal open={addBankOpen} onClose={() => setAddBankOpen(false)} />
     </GymDashboardShell>

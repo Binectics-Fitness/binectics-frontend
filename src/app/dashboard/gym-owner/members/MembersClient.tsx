@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { StatusPill } from "@/components/ds/StatusPill";
+import { DSCard, PageHeader } from "@/components/ds";
 import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AddMemberButton } from "./_actions";
@@ -537,14 +538,16 @@ export default function GymMembersClient() {
         </>
       }
     >
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Members</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {loading
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Members"
+        subtitle={
+          loading
             ? "Loading…"
-            : `${subscriptions.length} member${subscriptions.length === 1 ? "" : "s"} · ${activeCount} active${withAccessCount > activeCount ? ` · ${withAccessCount - activeCount} in grace` : ""}${seatLine ? ` · ${seatLine}` : ""}`}
-        </div>
-      </div>
+            : `${subscriptions.length} member${subscriptions.length === 1 ? "" : "s"} · ${activeCount} active${withAccessCount > activeCount ? ` · ${withAccessCount - activeCount} in grace` : ""}${seatLine ? ` · ${seatLine}` : ""}`
+        }
+      />
 
       {/* Seat headroom prompt. Shown at near_limit, not only over_limit — a
           prompt that arrives after an enrolment was refused is an apology, not
@@ -572,7 +575,7 @@ export default function GymMembersClient() {
       )}
 
       {/* Search + filter bar */}
-      <div className="flex items-center gap-3.5 p-3.5 rounded-(--r-3) flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="flex items-center gap-3.5 p-3.5 flex-wrap">
         <div className="flex items-center gap-2 h-8 px-3 rounded-(--r-2) flex-1 min-w-[200px]" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--fg-3)", flexShrink: 0 }}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input
@@ -605,10 +608,10 @@ export default function GymMembersClient() {
             );
           })}
         </div>
-      </div>
+      </DSCard>
 
       {/* Table */}
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[13.5px] min-w-[780px]" style={{ fontVariantNumeric: "tabular-nums" }}>
             <thead>
@@ -735,7 +738,7 @@ export default function GymMembersClient() {
             </span>
           </div>
         )}
-      </div>
+      </DSCard>
     </GymDashboardShell>
   );
 }

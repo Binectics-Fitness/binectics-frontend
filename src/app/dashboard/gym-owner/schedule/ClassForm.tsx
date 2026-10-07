@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { GymClass, CreateGymClassRequest } from "@/lib/api/classes";
 import SearchableSelect from "@/components/SearchableSelect";
+import { Eyebrow } from "@/components/ds";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -11,7 +12,6 @@ const INPUT_STYLE = {
   fontFamily: "inherit",
 } as const;
 const INPUT_CLASS = "h-9 rounded-(--r-2) px-3 text-[13.5px]";
-const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
 export const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -56,17 +56,17 @@ export function ClassForm({ initial, saving, error, onSubmit, onCancel, submitLa
     <div className="flex flex-col gap-3.5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Class name</span>
+          <Eyebrow as="span">Class name</Eyebrow>
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT_CLASS} style={INPUT_STYLE} />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Instructor</span>
+          <Eyebrow as="span">Instructor</Eyebrow>
           <input value={instructor} onChange={(e) => setInstructor(e.target.value)} maxLength={100} placeholder="optional" className={INPUT_CLASS} style={INPUT_STYLE} />
         </label>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Day</span>
+          <Eyebrow as="span">Day</Eyebrow>
           <SearchableSelect
             value={String(day)}
             onChange={(v) => setDay(Number(v))}
@@ -74,20 +74,20 @@ export function ClassForm({ initial, saving, error, onSubmit, onCancel, submitLa
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Start (24h)</span>
+          <Eyebrow as="span">Start (24h)</Eyebrow>
           <input value={time} onChange={(e) => setTime(e.target.value)} placeholder="06:30" className={INPUT_CLASS} style={INPUT_STYLE} />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Minutes</span>
+          <Eyebrow as="span">Minutes</Eyebrow>
           <input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value) || 60)} className={INPUT_CLASS} style={INPUT_STYLE} />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Capacity</span>
+          <Eyebrow as="span">Capacity</Eyebrow>
           <input type="number" value={capacity} onChange={(e) => setCapacity(Number(e.target.value) || 1)} className={INPUT_CLASS} style={INPUT_STYLE} />
         </label>
       </div>
       <label className="flex flex-col gap-1.5">
-        <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Description</span>
+        <Eyebrow as="span">Description</Eyebrow>
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} placeholder="optional"
           className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-y" style={{ ...INPUT_STYLE, minHeight: 60 }} />
       </label>

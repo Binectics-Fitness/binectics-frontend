@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toneColors, type Tone } from "@/lib/ui/tones";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, DSCardHead, DSStatCard, EmptySlate, Eyebrow, PageHeader } from "@/components/ds";
 import { checkinsService } from "@/lib/api/checkins";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -221,12 +221,12 @@ export default function GymCheckinsPage() {
         </div>
       }
     >
-      <div>
-        <h1 className="text-[30px] font-medium tracking-[-0.022em]" style={{ color: "var(--ink)" }}>{headline}</h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {stats ? `${stats.today_check_ins} today · ${stats.week_check_ins} this week · ${stats.month_check_ins} this month` : "Live feed and occupancy metrics refresh every 30 seconds."}
-        </p>
-      </div>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title={headline}
+        subtitle={stats ? `${stats.today_check_ins} today · ${stats.week_check_ins} this week · ${stats.month_check_ins} this month` : "Live feed and occupancy metrics refresh every 30 seconds."}
+      />
 
       {!currentOrg && !orgLoading ? (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
@@ -270,21 +270,17 @@ export default function GymCheckinsPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {topRow.map((k) => (
-          <div key={k.label} className="rounded-(--r-3) p-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-            <div className="text-[26px] font-medium tracking-[-0.02em] tabular-nums leading-none mt-1.5" style={{ color: "var(--ink)" }}>{k.value}</div>
-            <div className="font-mono text-[11.5px] mt-1" style={{ color: "var(--signal-ink)" }}>{k.delta}</div>
-          </div>
+          <DSStatCard key={k.label} label={k.label} value={k.value} delta={k.delta} />
         ))}
       </div>
 
       <div className="grid lg:grid-cols-[2fr_1fr] gap-3.5">
-        <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard>
           <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
             <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
-              Check-ins by hour <span className="font-mono text-[11px] font-normal uppercase tracking-[0.04em] ml-2" style={{ color: "var(--fg-3)" }}>{activeFilter}</span>
+              Check-ins by hour <Eyebrow as="span" className="font-normal ml-2">{activeFilter}</Eyebrow>
             </h3>
-            <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Real data</span>
+            <Eyebrow as="span">Real data</Eyebrow>
           </div>
           <div className="flex items-end gap-1 px-5.5 h-[200px] pt-4.5">
             {hourlyBars.map((h) => (
@@ -302,31 +298,28 @@ export default function GymCheckinsPage() {
             <span className="flex-1 text-center">18</span>
             <span className="flex-1 text-center">23</span>
           </div>
-        </div>
+        </DSCard>
 
-        <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-          <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Summary</h3>
-            <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Live</span>
-          </div>
+        <DSCard>
+          <DSCardHead title="Summary" action={<Eyebrow as="span">Live</Eyebrow>} />
           <div>
             <SummaryRow label="Tracked check-ins" value={String(stream.length)} />
             <SummaryRow label="Location" value={stats?.city && stats?.country_code ? `${stats.city}, ${stats.country_code}` : "Current org"} />
             <SummaryRow label="Reviews" value={String(stats?.review_count ?? 0)} />
             <SummaryRow label="Revenue week" value={fmtMoney(stats?.revenue_week ?? 0, currentOrg?.currency)} />
           </div>
-        </div>
+        </DSCard>
       </div>
 
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="flex justify-between items-center px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
           <h3 className="text-[14px] font-medium flex items-center gap-2.5" style={{ color: "var(--ink)" }}>
             Recent check-ins
             <span className={`inline-block w-1.5 h-1.5 rounded-full ${pill.pulse ? "animate-pulse" : ""}`} style={{ background: pill.color }} />
           </h3>
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+          <Eyebrow as="span">
             {!isOnline ? "Paused · offline" : freshness.kind === "stale" ? "Reconnecting…" : "Auto-refreshing"}
-          </span>
+          </Eyebrow>
         </div>
         <div className="max-h-[460px] overflow-y-auto">
           {(loading && isOnline && stream.length === 0) ? (
@@ -352,7 +345,7 @@ export default function GymCheckinsPage() {
             })
           )}
         </div>
-      </div>
+      </DSCard>
     </GymDashboardShell>
   );
 }

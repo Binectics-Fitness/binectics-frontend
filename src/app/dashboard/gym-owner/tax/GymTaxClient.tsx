@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { DSCard, PageHeader } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrganizationDetails } from "@/lib/queries/teams";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
@@ -68,15 +69,15 @@ export function GymTaxClient() {
 
   return (
     <GymDashboardShell activeItem="Settings" crumb="Tax">
-      <div className="pb-1">
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Tax</h1>
-        <div className="text-[13.5px] mt-1.5 max-w-[60ch]" style={{ color: "var(--fg-3)" }}>
-          Your configured tax settings and an estimate against recorded revenue.
-        </div>
-      </div>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Tax"
+        subtitle={<span className="block max-w-[60ch]">Your configured tax settings and an estimate against recorded revenue.</span>}
+      />
 
       {/* Settings summary */}
-      <section className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="p-5.5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Tax settings</h2>
@@ -95,10 +96,10 @@ export function GymTaxClient() {
             Edit in Settings →
           </Link>
         </div>
-      </section>
+      </DSCard>
 
       {/* Estimate table */}
-      <section className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="px-5.5 pt-4 pb-3" style={{ borderBottom: "1px solid var(--border)" }}>
           <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Revenue-based estimate</h2>
           <div className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>
@@ -119,7 +120,7 @@ export function GymTaxClient() {
             </tbody>
           </table>
         )}
-      </section>
+      </DSCard>
     </GymDashboardShell>
   );
 }
