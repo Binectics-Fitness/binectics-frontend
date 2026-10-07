@@ -18,7 +18,9 @@
  * desktop breakpoint (Tailwind `lg`, 64rem, by default), where the drawer is hidden;
  * otherwise it would reappear, still open, on the way back to phone width.
  * On close, focus returns to the trigger (or whatever had focus when it
- * opened) if that is still on the page.
+ * opened) if that is still on the page and rendered; otherwise (e.g. it
+ * closed because the viewport reached desktop, where the trigger is hidden)
+ * it goes to <main> / #main, as SuccessTakeover's fallback does, not <body>.
  *
  *   const nav = useNavDrawer();
  *   <button ref={nav.triggerRef} onClick={nav.show} aria-expanded={nav.open} />
@@ -37,6 +39,32 @@ function focusables(panel: HTMLElement): HTMLElement[] {
   return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
     (el) => !el.closest("[inert]") && !el.hasAttribute("hidden"),
   );
+}
+
+/** False when the element is detached or under a display:none ancestor. */
+function isRendered(el: HTMLElement): boolean {
+  if (!el.isConnected) return false;
+  if (typeof el.checkVisibility === "function") return el.checkVisibility();
+  for (let node: HTMLElement | null = el; node; node = node.parentElement) {
+    if (getComputedStyle(node).display === "none") return false;
+  }
+  return true;
+}
+
+/** Focus the opener if it can take focus, else the page's main landmark. */
+function restoreFocus(opener: HTMLElement | null) {
+  if (opener && isRendered(opener)) {
+    opener.focus();
+    return;
+  }
+  const main = document.querySelector<HTMLElement>("main, #main");
+  if (!main) return;
+  if (!main.hasAttribute("tabindex")) {
+    // A programmatic focus target, not a control: no focus ring around the page.
+    main.setAttribute("tabindex", "-1");
+    main.style.outline = "none";
+  }
+  main.focus({ preventScroll: true });
 }
 
 /** Mark everything outside `keep` (siblings along its ancestor chain up to <body>) inert; returns an undo. */
@@ -109,7 +137,7 @@ export function useNavDrawer(desktopQuery: string = DESKTOP_QUERY) {
     return () => {
       releaseInert();
       releaseScroll();
-      if (opener && opener.isConnected) opener.focus();
+      restoreFocus(opener);
     };
   }, [open]);
 

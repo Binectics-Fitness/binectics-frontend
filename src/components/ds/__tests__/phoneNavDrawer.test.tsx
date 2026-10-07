@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DashboardMobileNav, MarketingMobileNav } from "../MobileNav";
 import { AdminDashboardShell } from "../AdminDashboardShell";
+import { MemberDashboardShell } from "../MemberDashboardShell";
 import { ShellAccountMenu } from "../ShellAccountMenu";
 import { isScrollLocked } from "@/lib/ui/scrollLock";
 
@@ -19,6 +20,7 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "a-1", role: "ADMIN", first_name: "Ada" }, isLoading: false, logout: vi.fn() }),
 }));
 vi.mock("../ShellNotificationBell", () => ({ ShellNotificationBell: () => null }));
+vi.mock("@/hooks/useCommandBar", () => ({ openCommandBar: vi.fn() }));
 
 /** A controllable (min-width: 64rem) media query. */
 let mqlListeners: Set<() => void>;
@@ -196,6 +198,107 @@ describe.each([
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(isScrollLocked()).toBe(false);
     expect(document.querySelector("[inert]")).toBeNull();
+    resizeTo(false);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("sends focus to <main>, not <body>, when it closes at desktop width (trigger hidden)", async () => {
+    const user = userEvent.setup();
+    mount();
+    await user.click(openButton());
+    openButton().style.display = "none"; // what lg:hidden does at desktop width
+    resizeTo(true);
+    const main = document.querySelector("main") as HTMLElement;
+    expect(main).toHaveFocus();
+    expect(main).toHaveAttribute("tabindex", "-1");
+  });
+});
+
+describe("member shell phone menu", () => {
+  const mountMember = () =>
+    render(
+      <MemberDashboardShell activeLabel="Home">
+        <button type="button">Page action</button>
+      </MemberDashboardShell>,
+    );
+  const trigger = () => screen.getByRole("button", { name: "Open menu" });
+
+  it("is a labelled modal dialog with focus inside, and the trigger reports its state", async () => {
+    const user = userEvent.setup();
+    mountMember();
+    expect(trigger()).toHaveAttribute("aria-expanded", "false");
+    await user.click(trigger());
+    const dialog = screen.getByRole("dialog", { name: "Menu" });
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(trigger()).toHaveAttribute("aria-expanded", "true");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  it("traps Tab and Shift+Tab, and wraps", async () => {
+    const user = userEvent.setup();
+    mountMember();
+    await user.click(trigger());
+    const dialog = screen.getByRole("dialog");
+    for (let i = 0; i < 40; i++) {
+      await user.tab();
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+    for (let i = 0; i < 40; i++) {
+      await user.tab({ shift: true });
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+    within(dialog).getByRole("button", { name: "Log out" }).focus();
+    await user.tab();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBe(within(dialog).getByRole("button", { name: "Log out" }));
+  });
+
+  it("closes on Escape and returns focus to the trigger", async () => {
+    const user = userEvent.setup();
+    mountMember();
+    await user.click(trigger());
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(trigger()).toHaveFocus();
+  });
+
+  it("makes the page inert and locks scroll while open, and releases both", async () => {
+    const user = userEvent.setup();
+    mountMember();
+    const pageAction = screen.getByRole("button", { name: "Page action" });
+    await user.click(trigger());
+    expect(pageAction.closest("[inert]")).not.toBeNull();
+    expect(isScrollLocked()).toBe(true);
+    await user.click(screen.getByRole("button", { name: "Close menu" }));
+    expect(document.querySelector("[inert]")).toBeNull();
+    expect(isScrollLocked()).toBe(false);
+    expect(trigger()).toHaveFocus();
+  });
+
+  it("closes on route change", async () => {
+    const user = userEvent.setup();
+    const { rerender } = mountMember();
+    await user.click(trigger());
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    pathname = "/dashboard/bookings";
+    rerender(
+      <MemberDashboardShell activeLabel="Home">
+        <button type="button">Page action</button>
+      </MemberDashboardShell>,
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("closes at the md breakpoint (48rem), stays closed on the way back, and focuses <main>", async () => {
+    const user = userEvent.setup();
+    mountMember();
+    await user.click(trigger());
+    expect(window.matchMedia).toHaveBeenCalledWith("(min-width: 48rem)");
+    trigger().style.display = "none";
+    resizeTo(true);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.querySelector("main")).toHaveFocus();
     resizeTo(false);
     expect(screen.queryByRole("dialog")).toBeNull();
   });

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { openCommandBar } from "@/hooks/useCommandBar";
+import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -41,7 +41,17 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
   const { user, logout } = useAuth();
   const memberInitials =
     `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase() || "··";
-  const [mobileOpen, setMobileOpen] = useState(false);
+  // Phone menu: a modal dialog (focus trap, Escape, inert page, scroll lock),
+  // closed on navigation and once the md top nav takes over.
+  const {
+    open: mobileOpen,
+    show: openMobileMenu,
+    close: closeMobileMenu,
+    triggerRef: mobileTriggerRef,
+    overlayRef: mobileOverlayRef,
+    panelRef: mobilePanelRef,
+  } = useNavDrawer("(min-width: 48rem)");
+  const setMobileOpen = (next: boolean) => (next ? openMobileMenu() : closeMobileMenu());
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
@@ -188,6 +198,8 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
             {memberInitials}
           </Link>
           <button
+            ref={mobileTriggerRef}
+            type="button"
             onClick={() => setMobileOpen(true)}
             className="flex items-center justify-center"
             style={{
@@ -200,6 +212,8 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
               cursor: "pointer",
             }}
             aria-label="Open menu"
+            aria-haspopup="dialog"
+            aria-expanded={mobileOpen}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <path d="M4 7h16M4 12h16M4 17h16" />
@@ -210,7 +224,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
       {/* ── Mobile dropdown overlay ── */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden" style={{ animation: "fade-in var(--motion-base, 220ms) var(--ease, ease-out)" }}>
+        <div ref={mobileOverlayRef} className="fixed inset-0 z-50 md:hidden" style={{ animation: "fade-in var(--motion-base, 220ms) var(--ease, ease-out)" }}>
           {/* Backdrop */}
           <div
             className="absolute inset-0"
@@ -220,6 +234,10 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
           {/* Panel — full-screen slide */}
           <div
+            ref={mobilePanelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
             className="absolute inset-0 flex flex-col"
             style={{ background: "var(--bg)" }}
           >
@@ -229,6 +247,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                 <BinecticsLockup markSize={20} />
               </Link>
               <button
+                type="button"
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center justify-center"
                 style={{
