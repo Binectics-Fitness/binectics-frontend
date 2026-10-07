@@ -545,12 +545,35 @@ export interface OrgCheckInDashboardStats {
   active_members: number;
   average_rating: number;
   review_count: number;
+  /**
+   * Legacy: MAJOR units of `revenue_currency`. An API that predates
+   * revenue_currency sent these in a currency it didn't name.
+   */
   revenue_today: number;
   revenue_week: number;
   revenue_month: number;
+  /** Minor units of `revenue_currency`. Absent from older APIs. */
+  revenue_today_minor?: number;
+  revenue_week_minor?: number;
+  revenue_month_minor?: number;
+  /**
+   * The currency every revenue_* figure is in: the org's currency when set.
+   * null when none is known; absent (undefined) from older APIs.
+   */
+  revenue_currency?: string | null;
+  /** Every currency paid in, revenue_currency first. Never summed together. */
+  revenue_by_currency?: OrgRevenueByCurrency[];
   city?: string;
   country_code?: string;
   recent_check_ins: CheckIn[];
+}
+
+/** One currency's settled revenue per window, in its minor unit. */
+export interface OrgRevenueByCurrency {
+  currency: string;
+  today_minor: number;
+  week_minor: number;
+  month_minor: number;
 }
 
 /**
