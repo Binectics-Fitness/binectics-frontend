@@ -10,8 +10,7 @@
  * muted card keeps the --bg surface). ScheduleGap is the hairline "14:00–15:30 · 90 min" row
  * between two sessions.
  *
- * Lives with the trainer pages (the dietitian Today reuses it) rather than
- * in src/components/ds until a third surface needs it.
+ * Shared by the trainer and dietitian Today screens.
  *
  * Render rows inside a <ScheduleList>, which supplies the list semantics.
  */

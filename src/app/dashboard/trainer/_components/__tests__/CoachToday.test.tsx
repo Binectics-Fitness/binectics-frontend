@@ -4,7 +4,7 @@ import { ConsultationBookingStatus as S, type ConsultationBooking } from "@/lib/
 import { contrast } from "@/test/contrast";
 import { renderWithProviders } from "@/tests/setup/test-utils";
 import { CoachToday } from "../CoachToday";
-import { ScheduleRow } from "../ScheduleRow";
+import { ScheduleRow } from "@/components/ds/ScheduleRow";
 import type { CoachTodayData } from "../useCoachTodayData";
 import TrainerTodayClient from "../../TrainerTodayClient";
 
