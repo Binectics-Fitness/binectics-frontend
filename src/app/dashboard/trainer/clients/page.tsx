@@ -83,9 +83,7 @@ export default function TrainerClientsPage() {
 
   return (
     <>
-      {/* Outside the shell: it renders its children twice (desktop and
-          phone trees), and two open copies meant Escape on the hidden one
-          closed the modal past the visible one's unsaved-changes prompt. */}
+      {/* Beside the shell, not in its body: an overlay, not page content. */}
       <InviteClientModal
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}

@@ -157,8 +157,7 @@ function PendingRequestCard({
   const name = requesterName(r);
   const email = requesterEmail(r);
   const isInquiry = r.type === MarketplaceRequestType.INQUIRY;
-  // The shell renders the page twice (desktop + mobile), so ids come from
-  // useId rather than the request id.
+  // A generated id, so a note field's label can't collide with another card's.
   const noteId = useId();
   const busy = respond.isPending;
 
@@ -355,10 +354,7 @@ function RequestsInner() {
   // Bring the request from the notification into view, once per id.
   useEffect(() => {
     if (!focusId || !focusFound || scrolledFor.current === focusId) return;
-    // Two copies exist (desktop + mobile layouts); scroll the visible one.
-    const el = Array.from(
-      document.querySelectorAll<HTMLElement>(`[data-request-id="${CSS.escape(focusId)}"]`),
-    ).find((node) => node.getClientRects().length > 0);
+    const el = document.querySelector<HTMLElement>(`[data-request-id="${CSS.escape(focusId)}"]`);
     if (!el) return;
     scrolledFor.current = focusId;
     el.scrollIntoView({ behavior: "smooth", block: "center" });

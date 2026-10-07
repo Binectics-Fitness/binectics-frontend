@@ -109,8 +109,8 @@ export function UserDetailClient({ userId }: { userId: string }) {
   const name = user ? `${user.first_name} ${user.last_name}`.trim() || "Unnamed user" : "User";
   const place = user ? [user.city, user.country_code].filter(Boolean).join(" · ") : "";
 
-  // Modals sit outside the shell: it renders its body twice (desktop and
-  // phone), which would open two copies of each dialog.
+  // Modals sit beside the shell, not in its body: they're overlays, not
+  // page content.
   return (
     <>
       <AdminDashboardShell

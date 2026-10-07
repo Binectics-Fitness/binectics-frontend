@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithProviders as render } from "@/tests/setup/test-utils";
 import userEvent from "@testing-library/user-event";
 import MyBookingsPage from "@/app/dashboard/bookings/page";
 import { consultationsService, ConsultationBookingStatus, type ConsultationBooking } from "@/lib/api/consultations";
@@ -9,9 +10,16 @@ vi.mock("next/link", () => ({
     <a href={href} {...rest}>{children}</a>
   ),
 }));
-vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { email: "ngozi@example.com" } }) }));
+// A member: the page renders inside the member's own shell (RoleShell).
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: { email: "ngozi@example.com", role: "USER" }, isLoading: false, logout: vi.fn() }),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/dashboard/bookings",
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock("@/components/classes/MyClassBookingsCard", () => ({ MyClassBookingsCard: () => null }));
-vi.mock("@/components/BinecticsLogo", () => ({ BinecticsLockup: () => <span>Binectics</span> }));
 vi.mock("@/lib/payments/paystackInline", () => ({
   openPaystack: vi.fn(),
   paystackPublicKey: vi.fn(() => "pk_test_abc123"),
@@ -84,6 +92,28 @@ describe("bookings page", () => {
       expect(button).toHaveTextContent(/^Pay ₦/);
     }
   });
+  it("shares one checkout between both placements of the panel: same phase, no second start", async () => {
+    // Desktop shows the detail-column panel, phones the under-row one; both
+    // are in the DOM. A checkout started in one (then the window narrowed)
+    // must show as in flight in the other and refuse a second start.
+    list.mockResolvedValue(ok([hold]));
+    let release: (v: unknown) => void = () => {};
+    const start = vi
+      .spyOn(consultationsService, "startBookingPayment")
+      .mockImplementation(() => new Promise((r) => { release = r; }) as never);
+    render(<MyBookingsPage />);
+    await waitFor(() => expect(screen.getAllByTestId("pay-booking")).toHaveLength(2));
+    const [first, second] = screen.getAllByTestId("pay-booking");
+    await userEvent.click(first);
+    await waitFor(() => {
+      for (const b of screen.getAllByTestId("pay-booking")) expect(b).toHaveTextContent("Complete payment in the Paystack window");
+    });
+    await userEvent.click(second);
+    expect(start).toHaveBeenCalledTimes(1);
+    release({ success: false, message: "stop here" });
+    start.mockRestore();
+  });
+
   it("links a paid booking to its receipt, and never a free session or an unpaid hold", async () => {
     const paidBooking: ConsultationBooking = {
       ...hold,

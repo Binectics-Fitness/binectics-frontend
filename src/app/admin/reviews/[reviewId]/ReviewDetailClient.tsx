@@ -114,8 +114,8 @@ export function ReviewDetailClient({ reviewId }: { reviewId: string }) {
   const openReports = reports.filter((r) => r.status === "OPEN").length;
   const statusPill = review ? REVIEW_STATUS_PILL[review.status] : null;
 
-  // Modals sit outside the shell: it renders its body twice (desktop and
-  // phone), which would open two copies of each dialog.
+  // Modals sit beside the shell, not in its body: they're overlays, not
+  // page content.
   return (
     <>
       <AdminDashboardShell

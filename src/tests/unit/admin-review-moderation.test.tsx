@@ -77,7 +77,7 @@ describe("admin review report queue", () => {
         limit: 25,
       },
     });
-    await user.click(screen.getAllByRole("button", { name: /^Resolved/ })[0]);
+    await user.click(screen.getByRole("button", { name: /^Resolved/ }));
     await waitFor(() => expect(list).toHaveBeenLastCalledWith({ status: "resolved", page: 1, limit: 25 }));
     expect((await screen.findAllByText("Dismissed")).length).toBeGreaterThan(0);
   });
@@ -107,9 +107,9 @@ describe("admin review detail", () => {
     render(<ReviewDetailClient reviewId="rev1" />);
     expect((await screen.findAllByText(/Abusive text about the coach/)).length).toBeGreaterThan(0);
     expect(get).toHaveBeenCalledWith("rev1");
-    const author = screen.getAllByRole("link", { name: "Ayo B" })[0];
+    const author = screen.getByRole("link", { name: "Ayo B" });
     expect(author).toHaveAttribute("href", "/admin/users/u-author");
-    expect(screen.getAllByRole("link", { name: "Strength with Tia" })[0]).toHaveAttribute("href", "/marketplace/lst1");
+    expect(screen.getByRole("link", { name: "Strength with Tia" })).toHaveAttribute("href", "/marketplace/lst1");
     expect(screen.getAllByText("Names the coach").length).toBeGreaterThan(0);
   });
 
@@ -118,7 +118,7 @@ describe("admin review detail", () => {
     setStatus.mockResolvedValue({ success: true, data: { review: { ...review, status: "HIDDEN" }, reports_closed: 1 } });
     render(<ReviewDetailClient reviewId="rev1" />);
     await screen.findAllByText(/Abusive text about the coach/);
-    await user.click(screen.getAllByRole("button", { name: "Hide review" })[0]);
+    await user.click(screen.getByRole("button", { name: "Hide review" }));
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText(/Note/), "Harassment policy");
     get.mockResolvedValue({ success: true, data: { review: { ...review, status: "HIDDEN" }, reports: [] } });
@@ -133,7 +133,7 @@ describe("admin review detail", () => {
     resolve.mockResolvedValue({ success: true, data: report({ status: "DISMISSED" }) });
     render(<ReviewDetailClient reviewId="rev1" />);
     await screen.findAllByText(/Abusive text about the coach/);
-    await user.click(screen.getAllByRole("button", { name: "Dismiss" })[0]);
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Dismiss report" }));
     await waitFor(() => expect(resolve).toHaveBeenCalledWith("rep1", "dismiss", undefined));
@@ -145,7 +145,7 @@ describe("admin review detail", () => {
     setStatus.mockResolvedValue({ success: false, message: "The author removed this review" });
     render(<ReviewDetailClient reviewId="rev1" />);
     await screen.findAllByText(/Abusive text about the coach/);
-    await user.click(screen.getAllByRole("button", { name: "Hide review" })[0]);
+    await user.click(screen.getByRole("button", { name: "Hide review" }));
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Hide review" }));
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("The author removed this review"));

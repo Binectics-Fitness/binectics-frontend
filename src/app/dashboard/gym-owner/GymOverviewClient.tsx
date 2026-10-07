@@ -2,10 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
+import { format } from "date-fns";
+import {
+  AsyncSpinner,
+  DSCard,
+  DSCardHead,
+  DSStatCard,
+  EmptySlate,
+  PageHeader,
+  StatusPill,
+} from "@/components/ds";
+import type { TitleParts } from "@/components/ds";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { NewPlanButton } from "./_actions";
 import { checkinsService } from "@/lib/api/checkins";
+import { earningsService, type RevenueTimeseriesPoint } from "@/lib/api/earnings";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +30,8 @@ import {
 } from "@/lib/types";
 import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { useClientNow } from "@/lib/ui/useClientNow";
+import { dailyRevenueSpark } from "./revenueSpark";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -57,23 +70,6 @@ function initials(name: string): string {
   );
 }
 
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-(--r-3) overflow-hidden ${className}`} style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-      {children}
-    </div>
-  );
-}
-
-function CardHead({ title, sub }: { title: string; sub?: string }) {
-  return (
-    <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-      <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>{title}</h3>
-      {sub && <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>{sub}</div>}
-    </div>
-  );
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function GymOverviewClient() {
@@ -92,6 +88,9 @@ function GymOverviewContent() {
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
+  // null: the ledger series couldn't be read (it is owner-only).
+  const [series, setSeries] = useState<RevenueTimeseriesPoint[] | null>(null);
+  const now = useClientNow();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,9 +100,12 @@ function GymOverviewContent() {
 
     const run = async () => {
       setLoading(true);
-      const [statsRes, subsRes] = await Promise.allSettled([
+      const [statsRes, subsRes, seriesRes] = await Promise.allSettled([
         checkinsService.getOrgDashboardStats(currentOrg._id),
         marketplaceService.getOrgMembershipSubscriptions(currentOrg._id),
+        // Owner-only ledger. It drives the revenue card's figure AND its
+        // sparkline, so the two always share a window and a currency.
+        earningsService.getOrgTimeseries(currentOrg._id, 30),
       ]);
       if (!active) return;
 
@@ -115,6 +117,10 @@ function GymOverviewContent() {
       if (subsRes.status === "fulfilled" && subsRes.value.success && subsRes.value.data) {
         setSubs(subsRes.value.data);
       }
+      // Cleared on failure so another org's series never lingers.
+      setSeries(
+        seriesRes.status === "fulfilled" && seriesRes.value.success && seriesRes.value.data ? seriesRes.value.data : null,
+      );
       setError(statsOk ? null : "We couldn't load your dashboard. Try again shortly.");
       setLoading(false);
     };
@@ -138,28 +144,73 @@ function GymOverviewContent() {
   const attendance =
     stats && stats.active_members > 0 ? Math.round((stats.today_check_ins / stats.active_members) * 100) : null;
 
+  const spark = useMemo(() => (now && series ? dailyRevenueSpark(series, now) : null), [series, now]);
+
+  // Revenue · 30d comes from the ledger series when it is readable: the
+  // same days and the same currency as the bars, with the currency code
+  // shown when it isn't the org's own. Only without the series does it fall
+  // back to dashboard-stats' revenue_month, whose currency the API doesn't
+  // say (it picks the largest bucket) — an API follow-up.
+  const orgCurrency = currentOrg?.currency ?? "";
+  const revenue30d =
+    series && now
+      ? spark
+        ? {
+            value: fmtMoney(minorToMajor(spark.values.reduce((a, b) => a + b, 0), spark.currency), spark.currency),
+            unit: spark.currency !== orgCurrency ? spark.currency : undefined,
+          }
+        : { value: fmtMoney(0, orgCurrency), unit: undefined }
+      : stats
+        ? { value: formatAmount(stats.revenue_month), unit: undefined }
+        : null;
+
+  // No churn card (the mock has one): there is no churn figure in the API.
   const kpis = stats
     ? [
-        { label: "Revenue · 30d", value: formatAmount(stats.revenue_month), sub: `${formatAmount(stats.revenue_today)} today` },
-        { label: "Active members", value: String(stats.active_members), sub: `${stats.month_check_ins} check-ins · 30d` },
-        { label: "Check-ins · today", value: String(stats.today_check_ins), sub: attendance != null ? `${attendance}% attendance` : "-" },
-        { label: "Avg rating", value: stats.average_rating.toFixed(1), sub: `${stats.review_count} reviews` },
+        <DSStatCard
+          key="revenue"
+          label="Revenue · 30d"
+          value={revenue30d?.value ?? "–"}
+          unit={revenue30d?.unit}
+          delta="Settled"
+          spark={spark?.values}
+          sparkLabel={spark ? `Settled revenue per day in ${spark.currency}, last 30 days` : undefined}
+        />,
+        <DSStatCard
+          key="members"
+          label="Active members"
+          value={stats.active_members}
+          delta={`${stats.month_check_ins} check-ins · 30d`}
+        />,
+        <DSStatCard
+          key="checkins"
+          label="Check-ins · today"
+          value={stats.today_check_ins}
+          delta={attendance != null ? `${attendance}% attendance` : "No active members"}
+        />,
+        <DSStatCard
+          key="rating"
+          label="Avg rating"
+          value={stats.review_count > 0 ? stats.average_rating.toFixed(1) : "–"}
+          delta={stats.review_count > 0 ? `${stats.review_count} review${stats.review_count === 1 ? "" : "s"}` : "No reviews yet"}
+        />,
       ]
     : [];
 
-  const headline = user?.first_name ? `Welcome back, ${user.first_name}` : "Overview";
-  const location = stats?.city && stats?.country_code ? ` · ${stats.city}, ${stats.country_code}` : "";
-
+  const first = user?.first_name?.trim().split(/\s+/)[0];
+  const title: TitleParts = first ? { before: "Welcome back, ", emphasis: first } : { emphasis: "Overview" };
+  const place = stats?.city && stats?.country_code ? ` · ${stats.city}, ${stats.country_code}` : "";
   return (
     <GymDashboardShell activeItem="Overview" crumb="Overview" actions={<NewPlanButton />}>
       <OnboardingBanner />
 
-      <div className="pb-1">
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{headline}</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {currentOrg ? `Here's how ${currentOrg.name} is doing${location}` : "Your gym performance overview"}
-        </div>
-      </div>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        eyebrow={now ? format(now, "EEEE · d MMM") : undefined}
+        title={title}
+        subtitle={currentOrg ? `Here's how ${currentOrg.name} is doing${place}` : "Your gym performance overview"}
+      />
 
       {!currentOrg && !orgLoading ? (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
@@ -177,20 +228,12 @@ function GymOverviewContent() {
       ) : (
         <>
           {/* KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {kpis.map((kpi) => (
-              <div key={kpi.label} className="flex flex-col gap-2 min-h-[96px] rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
-                <div className="text-[30px] font-medium leading-none" style={{ letterSpacing: "-0.022em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{kpi.value}</div>
-                <div className="font-mono text-[11.5px]" style={{ color: "var(--signal-ink)" }}>{kpi.sub}</div>
-              </div>
-            ))}
-          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">{kpis}</div>
 
           {/* Revenue summary + Live check-ins */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-3">
-            <Card>
-              <CardHead title="Revenue" sub="Settled to date" />
+            <DSCard>
+              <DSCardHead title="Revenue" subtitle="Settled to date" />
               <div className="flex flex-col">
                 {[
                   { label: "Today", value: stats ? formatAmount(stats.revenue_today) : "-" },
@@ -203,16 +246,10 @@ function GymOverviewContent() {
                   </div>
                 ))}
               </div>
-            </Card>
+            </DSCard>
 
-            <Card>
-              <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                <div>
-                  <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Live check-ins</h3>
-                  <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Most recent activity</div>
-                </div>
-                <StatusPill tone="success" label="Live" />
-              </div>
+            <DSCard>
+              <DSCardHead title="Live check-ins" subtitle="Most recent activity" action={<StatusPill tone="success" label="Live" />} />
               <div className="py-1 overflow-hidden" style={{ maxHeight: 320 }}>
                 {liveCheckIns.length === 0 ? (
                   <div className="px-4.5 py-4"><EmptySlate message="No check-ins yet today." mt="mt-0" /></div>
@@ -233,17 +270,12 @@ function GymOverviewContent() {
                   })
                 )}
               </div>
-            </Card>
+            </DSCard>
           </div>
 
           {/* Recent members */}
-          <Card>
-            <div className="flex items-center justify-between px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-              <div>
-                <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Recent members</h3>
-                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Latest subscriptions</div>
-              </div>
-            </div>
+          <DSCard>
+            <DSCardHead title="Recent members" subtitle="Latest subscriptions" />
             {recentMembers.length === 0 ? (
               <div className="px-4.5 py-4"><EmptySlate message="No members yet." hint="New subscriptions will appear here." mt="mt-0" /></div>
             ) : (
@@ -283,7 +315,7 @@ function GymOverviewContent() {
                 </table>
               </div>
             )}
-          </Card>
+          </DSCard>
         </>
       )}
     </GymDashboardShell>

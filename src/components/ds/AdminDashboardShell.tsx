@@ -232,11 +232,12 @@ export function AdminDashboardShell({ activeItem, crumb, actions, children }: Ad
       {/* Mobile nav — dark variant */}
       <AdminMobileNav activeItem={activeItem} />
 
-      {/* Desktop layout */}
-      <div className="hidden lg:grid" style={{ gridTemplateColumns: "248px 1fr", minHeight: "100vh" }}>
+      {/* ONE content slot: the page and the header actions render once and
+          CSS switches the chrome (see ProviderDashboardShell). */}
+      <div className="lg:grid lg:min-h-screen lg:grid-cols-[248px_1fr]">
         {/* Desktop sidebar — dark (ink) */}
         <aside
-          className="flex flex-col gap-5.5 sticky top-0 h-screen overflow-y-auto"
+          className="hidden lg:flex flex-col gap-5.5 sticky top-0 h-screen overflow-y-auto"
           style={{
             background: "var(--ink)",
             borderRight: "1px solid var(--ink)",
@@ -250,52 +251,36 @@ export function AdminDashboardShell({ activeItem, crumb, actions, children }: Ad
 
         {/* Main */}
         <div className="flex flex-col min-w-0">
-          {/* Header bar — 56px, sticky, breadcrumb + actions */}
+          {/* Header bar: under the phone top bar (h-12, top-14), at the top
+              on desktop (h-14); breadcrumb + actions */}
           <header
-            className="flex items-center justify-between h-14 px-7 sticky top-0 z-10"
+            className="flex items-center justify-between gap-3 h-12 px-5 sticky top-14 z-10 lg:h-14 lg:px-7 lg:top-0"
             style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
           >
-            <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-              <Link
-                href="/admin/dashboard"
-                className="hover:underline"
-                style={{ color: "var(--fg-3)", textDecoration: "none" }}
-              >
-                Admin
-              </Link>
-              <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
+            <div className="min-w-0 flex-1 truncate whitespace-nowrap text-[13px]" style={{ color: "var(--fg-3)" }}>
+              <span className="hidden lg:inline">
+                <Link
+                  href="/admin/dashboard"
+                  className="hover:underline"
+                  style={{ color: "var(--fg-3)", textDecoration: "none" }}
+                >
+                  Admin
+                </Link>
+                <span className="mx-1.5" style={{ color: "var(--fg-4)" }}>/</span>
+              </span>
               <span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex shrink-0 items-center gap-2.5">
               <ShellNotificationBell />
               {actions}
             </div>
           </header>
 
           {/* Body */}
-          <main className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-7 flex-1">
+          <main className="flex flex-col gap-4 sm:gap-6 p-4 lg:p-7 flex-1">
             {children}
           </main>
         </div>
-      </div>
-
-      {/* Mobile content (no sidebar grid) */}
-      <div className="lg:hidden">
-        <header
-          className="flex items-center justify-between h-12 px-5 sticky top-14 z-10"
-          style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
-        >
-          <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-            <span className="font-medium" style={{ color: "var(--ink)" }}>{crumb}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <ShellNotificationBell />
-            {actions}
-          </div>
-        </header>
-        <main className="flex flex-col gap-4 sm:gap-6 p-4 flex-1">
-          {children}
-        </main>
       </div>
     </div>
   );

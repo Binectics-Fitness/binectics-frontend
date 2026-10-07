@@ -132,7 +132,7 @@ describe("Gym staff detail page", () => {
     expect(screen.queryAllByText("Bola Member")).toHaveLength(0);
     expect(screen.queryAllByText("Chidi Member")).toHaveLength(0);
     expect(screen.getAllByText("Assigned members · 1").length).toBeGreaterThan(0);
-    const link = screen.getAllByRole("link", { name: /Ada Member/ })[0];
+    const link = screen.getByRole("link", { name: /Ada Member/ });
     expect(link).toHaveAttribute("href", "/dashboard/gym-owner/members/s-1");
   });
 
@@ -184,11 +184,11 @@ describe("Gym staff detail page", () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click((await screen.findAllByRole("button", { name: "Remove from team" }))[0]);
+    await user.click((await screen.findByRole("button", { name: "Remove from team" })));
     expect(svc.removeMember).not.toHaveBeenCalled();
     expect(screen.getAllByText("Remove Thandi Nkosi from your team?").length).toBeGreaterThan(0);
 
-    await user.click(screen.getAllByRole("button", { name: "Remove" })[0]);
+    await user.click(screen.getByRole("button", { name: "Remove" }));
     await waitFor(() => expect(svc.removeMember).toHaveBeenCalledWith("org-1", "m-1"));
     expect(push).toHaveBeenCalledWith("/dashboard/gym-owner/staff");
   });
@@ -200,8 +200,8 @@ describe("Gym staff detail page", () => {
 
     await screen.findAllByRole("heading", { name: "Thandi Nkosi" });
     // SearchableSelect: open the picker, then choose an option.
-    await user.click(screen.getAllByRole("button", { name: /Trainer/ })[0]);
-    await user.click((await screen.findAllByText("Front desk"))[0]);
+    await user.click(screen.getByRole("button", { name: /Trainer/ }));
+    await user.click((await screen.findByText("Front desk")));
 
     await waitFor(() =>
       expect(svc.updateMember).toHaveBeenCalledWith("org-1", "m-1", { team_role_id: "role-desk" }),
