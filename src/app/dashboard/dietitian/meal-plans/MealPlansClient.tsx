@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { FoodPicker } from "./FoodPicker";
@@ -47,9 +47,7 @@ const fieldStyle: React.CSSProperties = {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-      {children}
-    </label>
+    <Eyebrow as="label">{children}</Eyebrow>
   );
 }
 
@@ -514,7 +512,7 @@ function MealPlanCard({
   const assignedName = planClientName(plan);
 
   return (
-    <div className="rounded-(--r-3) flex flex-col overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    <DSCard className="flex flex-col">
       <div className="px-5.5 pt-5 pb-3.5 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span
@@ -537,19 +535,19 @@ function MealPlanCard({
 
       <div className="grid grid-cols-3" style={{ borderTop: "1px solid var(--border)", background: "var(--bg-2)" }}>
         <div className="py-3 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
-          <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Meals</div>
+          <Eyebrow>Meals</Eyebrow>
           <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
             {isDocument ? "-" : planMealCount(plan)}
           </div>
         </div>
         <div className="py-3 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
-          <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Calories</div>
+          <Eyebrow>Calories</Eyebrow>
           <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
             {calories != null ? calories.toLocaleString() : "-"}
           </div>
         </div>
         <div className="py-3 px-5.5">
-          <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Status</div>
+          <Eyebrow>Status</Eyebrow>
           <div className="text-[13px] font-medium mt-0.5" style={{ color: plan.status === PlanStatus.ACTIVE ? "var(--signal-ink)" : "var(--fg-3)" }}>
             {plan.status === PlanStatus.ACTIVE ? "Live" : "Paused"}
           </div>
@@ -601,7 +599,7 @@ function MealPlanCard({
           </button>
         </div>
       </div>
-    </div>
+    </DSCard>
   );
 }
 
@@ -738,25 +736,26 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
 
   return (
     <DietitianDashboardShell activeItem="Meal plans" crumb="Meal plans">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-1">
-        <div>
-          <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Meal plans</h1>
-          <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-            {loading
-              ? "Loading..."
-              : `${counts.Templates} template${counts.Templates === 1 ? "" : "s"} · ${counts.Assigned} assigned`}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setModal({ mode: "create" })}
-          className="btn-signal-v2 inline-flex items-center gap-2 self-start sm:self-auto"
-          style={{ height: "36px", padding: "0 16px", fontSize: "13px" }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
-          New meal plan
-        </button>
-      </div>
+      <PageHeader
+        className="mb-1!"
+        title={{ before: "Meal ", emphasis: "plans" }}
+        subtitle={
+          loading
+            ? "Loading..."
+            : `${counts.Templates} template${counts.Templates === 1 ? "" : "s"} · ${counts.Assigned} assigned`
+        }
+        actions={
+          <button
+            type="button"
+            onClick={() => setModal({ mode: "create" })}
+            className="btn-signal-v2 inline-flex items-center gap-2 self-start sm:self-auto"
+            style={{ height: "36px", padding: "0 16px", fontSize: "13px" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+            New meal plan
+          </button>
+        }
+      />
 
       {error && (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>

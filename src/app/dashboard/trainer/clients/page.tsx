@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
-import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
+import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, PageHeader, StatusPill } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile } from "@/lib/api/progress";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -92,24 +92,21 @@ export default function TrainerClientsPage() {
     <TrainerDashboardShell activeItem="Clients" crumb="Clients">
       {/* Heading. Actions live here rather than in the shell header, whose
           48px mobile bar can't fit two buttons beside the crumb. */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-            Clients
-          </h1>
-          <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-            {loading ? "Loading…" : error ? "\u00a0" : `${clients.length} total clients`}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/trainer/clients/bulk-invite" className="btn-ghost-v2 md">
-            Bulk invite
-          </Link>
-          <button type="button" className="btn-primary-v2 md" onClick={() => setInviteOpen(true)}>
-            Invite client
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title={{ emphasis: "Clients" }}
+        subtitle={loading ? "Loading…" : error ? "\u00a0" : `${clients.length} total clients`}
+        actions={
+          <>
+            <Link href="/dashboard/trainer/clients/bulk-invite" className="btn-ghost-v2 md">
+              Bulk invite
+            </Link>
+            <button type="button" className="btn-primary-v2 md" onClick={() => setInviteOpen(true)}>
+              Invite client
+            </button>
+          </>
+        }
+      />
 
       {invited && (
         <div
@@ -140,16 +137,12 @@ export default function TrainerClientsPage() {
           { label: "Active", value: loading ? "-" : String(counts.Active), delta: "Currently active" },
           { label: "Paused", value: loading ? "-" : String(counts.Paused), delta: "Inactive / paused" },
         ].map((kpi) => (
-          <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
-            <div className="text-[22px] font-medium mt-1" style={{ color: "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}>{kpi.value}</div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: "var(--signal-ink)" }}>{kpi.delta}</div>
-          </div>
+          <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={kpi.delta} />
         ))}
       </div>
 
       {/* Toolbar */}
-      <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="p-[10px_14px] flex gap-3.5 items-center flex-wrap">
         <div className="flex-1 min-w-[240px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           <input
@@ -176,7 +169,7 @@ export default function TrainerClientsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </DSCard>
 
       {/* Error */}
       {error && (
@@ -186,7 +179,7 @@ export default function TrainerClientsPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="overflow-x-auto">
           <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
             <thead>
@@ -253,7 +246,7 @@ export default function TrainerClientsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DSCard>
     </TrainerDashboardShell>
     </>
   );

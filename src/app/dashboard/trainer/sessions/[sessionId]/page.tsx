@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
-import { AsyncSpinner, BookingStatusBadge } from "@/components/ds";
+import { AsyncSpinner, BookingStatusBadge, DSCard, Eyebrow } from "@/components/ds";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { BookingActionsPanel } from "@/components/BookingActionsPanel";
 import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingModal";
@@ -26,17 +26,17 @@ type LoadState =
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    <DSCard className="p-5.5">
       <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>{title}</h3>
       {children}
-    </div>
+    </DSCard>
   );
 }
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{label}</div>
+      <Eyebrow>{label}</Eyebrow>
       <div className="text-[13.5px] leading-relaxed" style={{ color: "var(--ink)" }}>{children}</div>
     </div>
   );
@@ -106,9 +106,9 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
       </div>
 
       {state.kind === "loading" && (
-        <div className="rounded-(--r-3) p-8" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-8">
           <AsyncSpinner label="Loading session" />
-        </div>
+        </DSCard>
       )}
 
       {state.kind === "missing" && (

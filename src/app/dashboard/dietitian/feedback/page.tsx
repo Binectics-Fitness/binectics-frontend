@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/components/ds";
 import {
   MealRating,
   progressService,
@@ -99,36 +99,39 @@ export default function DietitianFeedbackPage() {
 
   return (
     <DietitianDashboardShell activeItem="Settings" crumb="Meal feedback">
-      <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Meal feedback &middot; {loading ? "loading..." : `${awaitingReview} awaiting review`}</h1>
+      <PageHeader
+        className="mb-0!"
+        title={{ before: "Meal ", emphasis: "feedback", after: ` · ${loading ? "loading..." : `${awaitingReview} awaiting review`}` }}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
         {rows.map((m) => {
           const state = renderStatus(m);
           return (
-          <div key={m._id} className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard key={m._id}>
             {/* Image placeholder */}
             <div className="aspect-[4/3]" style={{ background: "linear-gradient(135deg, var(--bg-2), var(--bg-3))" }} />
             <div className="p-5.5 pt-3.5">
               <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{m.clientLabel}</div>
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5 mb-2" style={{ color: "var(--fg-3)" }}>{m.meal_type.toLowerCase()} · {fmtDate(m.meal_date)}</div>
+              <Eyebrow className="mt-0.5 mb-2">{m.meal_type.toLowerCase()} · {fmtDate(m.meal_date)}</Eyebrow>
               <div className="text-[13px] mb-3" style={{ color: "var(--fg-2)" }}>{m.description}</div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]" style={pillStyle(state.status)}>{state.text}</span>
                 <span className="font-mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>{fmtDateTime(m.created_at)}</span>
               </div>
             </div>
-          </div>
+          </DSCard>
           );
         })}
         {loading && rows.length === 0 && (
-          <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard className="px-4.5 py-6">
             <AsyncSpinner label="Loading meal feedback" />
-          </div>
+          </DSCard>
         )}
         {!loading && rows.length === 0 && (
-          <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard className="px-4.5 py-6">
             <EmptySlate message="No meal feedback entries yet." mt="mt-0" />
-          </div>
+          </DSCard>
         )}
       </div>
     </DietitianDashboardShell>

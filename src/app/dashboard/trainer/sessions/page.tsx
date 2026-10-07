@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
-import { AsyncSpinner, BookingStatusBadge } from "@/components/ds";
+import { AsyncSpinner, BookingStatusBadge, DSCard, PageHeader } from "@/components/ds";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
@@ -173,12 +173,11 @@ export default function TrainerSessionsListPage() {
       }
     >
       {/* Page header */}
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>Sessions log</h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {loading ? "Loading sessions…" : `${filtered.length} session${filtered.length === 1 ? "" : "s"} found`}
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title={{ before: "Sessions ", emphasis: "log" }}
+        subtitle={loading ? "Loading sessions…" : `${filtered.length} session${filtered.length === 1 ? "" : "s"} found`}
+      />
 
       {/* Error state — never render an API failure as an empty list */}
       {error && (
@@ -188,7 +187,7 @@ export default function TrainerSessionsListPage() {
       )}
 
       {/* Card with filters + table */}
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         {/* Filter bar */}
         <div className="flex flex-col sm:flex-row gap-2 p-5 pb-3.5">
           <input
@@ -285,7 +284,7 @@ export default function TrainerSessionsListPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DSCard>
     </TrainerDashboardShell>
   );
 }

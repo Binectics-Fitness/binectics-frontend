@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, BookingStatusBadge, Drawer, IconTile } from "@/components/ds";
+import { AsyncSpinner, BookingStatusBadge, Drawer, DSCard, DSStatCard, Eyebrow, IconTile, PageHeader } from "@/components/ds";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { BookingActionsPanel } from "@/components/BookingActionsPanel";
 import {
@@ -41,7 +41,7 @@ function toFilter(status: ConsultationBookingStatus): Filter {
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{label}</div>
+      <Eyebrow>{label}</Eyebrow>
       <div className="text-[13.5px]" style={{ color: "var(--ink)" }}>{children}</div>
     </div>
   );
@@ -142,7 +142,7 @@ export default function DietitianConsultationsPage() {
       { label: "Today's consults", value: String(today), delta: `${counts.Upcoming} upcoming` },
       { label: "Upcoming", value: String(counts.Upcoming), delta: "Scheduled" },
       { label: "Completed", value: String(completed), delta: "All loaded" },
-      { label: "No-shows", value: String(noShow), delta: "Requires follow-up", deltaColor: "var(--signal-ink)" },
+      { label: "No-shows", value: String(noShow), delta: "Requires follow-up" },
     ];
   }, [bookings, counts]);
 
@@ -157,40 +157,31 @@ export default function DietitianConsultationsPage() {
   return (
     <DietitianDashboardShell activeItem="Consultations" crumb="Consultations">
       {/* Heading */}
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-            Consultations
-          </h1>
-          <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-            Manage your consultation schedule and history
-          </p>
-        </div>
-        <Link
-          href="/dashboard/dietitian/calendar"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-(--r-2) text-[13px] no-underline"
-          style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "var(--bg)" }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
-          Calendar
-        </Link>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title={{ emphasis: "Consultations" }}
+        subtitle="Manage your consultation schedule and history"
+        actions={
+          <Link
+            href="/dashboard/dietitian/calendar"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-(--r-2) text-[13px] no-underline"
+            style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "var(--bg)" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
+            Calendar
+          </Link>
+        }
+      />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
-            <div className="text-[22px] font-medium mt-1" style={{ color: "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}>
-              {kpi.value}
-            </div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: kpi.deltaColor || "var(--signal-ink)" }}>{kpi.delta}</div>
-          </div>
+          <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={kpi.delta} />
         ))}
       </div>
 
       {/* Toolbar */}
-      <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="p-[10px_14px] flex gap-3.5 items-center flex-wrap">
         <div className="flex-1 min-w-[240px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           <input className="flex-1 border-0 bg-transparent text-[13px] outline-none" placeholder="Search by client name..." style={{ color: "var(--ink)" }} value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -211,7 +202,7 @@ export default function DietitianConsultationsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </DSCard>
 
       {/* Error state — never render an API failure as an empty list */}
       {error && (
@@ -221,7 +212,7 @@ export default function DietitianConsultationsPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="overflow-x-auto">
           <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
             <thead>
@@ -296,7 +287,7 @@ export default function DietitianConsultationsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DSCard>
 
       {/* Detail drawer */}
       <Drawer open={selected != null} onClose={() => setSelectedId(null)} title="Consultation" width={420}>

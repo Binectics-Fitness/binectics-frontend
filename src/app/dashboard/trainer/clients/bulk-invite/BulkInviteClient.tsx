@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import { DSCard, PageHeader } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import { toast } from "@/components/Toast";
 
@@ -160,16 +161,11 @@ export default function BulkInviteClient() {
   return (
     <TrainerDashboardShell activeItem="Clients" crumb="Bulk invite">
       <div className="max-w-[860px]">
-        <h1
-          className="text-[30px] font-medium tracking-[-0.024em] mb-2"
-          style={{ color: "var(--ink)" }}
-        >
-          Bulk invite · CSV
-        </h1>
-        <p className="text-[13.5px] mb-5.5" style={{ color: "var(--fg-3)" }}>
-          Upload a CSV with columns name, email, phone and we will send
-          invitation links to valid rows.
-        </p>
+        <PageHeader
+          className="mb-5.5!"
+          title={{ before: "Bulk ", emphasis: "invite", after: " · CSV" }}
+          subtitle="Upload a CSV with columns name, email, phone and we will send invitation links to valid rows."
+        />
 
         <input
           ref={inputRef}
@@ -179,10 +175,7 @@ export default function BulkInviteClient() {
           onChange={onFileChange}
         />
 
-        <div
-          className="rounded-(--r-3) p-5.5"
-          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-        >
+        <DSCard className="p-5.5">
           <button
             type="button"
             onClick={onPickFile}
@@ -274,12 +267,9 @@ export default function BulkInviteClient() {
               </tbody>
             </table>
           </div>
-        </div>
+        </DSCard>
 
-        <div
-          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-3.5 px-5 py-4 rounded-(--r-3)"
-          style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-        >
+        <DSCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-3.5 px-5 py-4">
           <div className="text-[13px]" style={{ color: "var(--fg-2)" }}>
             <strong className="font-medium" style={{ color: "var(--ink)" }}>
               {readyCount} invite{readyCount === 1 ? "" : "s"} ready.
@@ -295,7 +285,7 @@ export default function BulkInviteClient() {
           >
             {sending ? "Sending invites..." : `Send ${readyCount} invite${readyCount === 1 ? "" : "s"}`}
           </button>
-        </div>
+        </DSCard>
       </div>
     </TrainerDashboardShell>
   );
