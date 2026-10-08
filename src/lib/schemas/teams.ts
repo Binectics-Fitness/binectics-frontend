@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { emailSchema, passwordSchema } from "./shared";
+import { emailSchema } from "./shared";
 
 // ─── Organization Creation ──────────────────────────────────────
 
@@ -23,11 +23,11 @@ export type InviteMemberFormData = z.infer<typeof inviteMemberSchema>;
 
 // ─── Add Member Directly ────────────────────────────────────────
 
+// Sends a pending invitation (no account, no password). Names are optional.
 export const addMemberDirectSchema = z.object({
-  first_name: z.string().min(1, "First name is required").trim(),
-  last_name: z.string().min(1, "Last name is required").trim(),
+  first_name: z.string().trim().optional(),
+  last_name: z.string().trim().optional(),
   email: emailSchema,
-  password: passwordSchema,
   team_role_id: z.string().min(1, "Please select a role"),
 });
 

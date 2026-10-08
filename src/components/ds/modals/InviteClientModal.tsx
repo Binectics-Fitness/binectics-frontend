@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -16,6 +17,7 @@ import { MoneyInput } from "@/components/ds/MoneyInput";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { formatCurrency } from "@/utils/format";
+import { queryKeys } from "@/lib/queries/keys";
 
 interface InviteClientModalProps {
   open: boolean;
@@ -36,7 +38,6 @@ const EMPTY_FORM = {
   amount_paid_minor: null as number | null,
   payment_reference: "",
   status: "active" as "active" | "pending_payment",
-  send_invite: true,
 };
 
 /**
@@ -65,12 +66,14 @@ function useCountdown(expiresAt: string | null | undefined): string | null {
 
 export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientModalProps) {
   const { currentOrg } = useOrganization();
+  const queryClient = useQueryClient();
   const cancelledRef = useRef(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Set after a successful transfer enrolment: switches the modal to the
-  // account-details view so staff can read the number to the member.
+  // Legacy only: an API that still returns a transfer account to the gym
+  // switches the modal to the account-details view. The current API opens the
+  // account when the member accepts and shows it to them instead.
   const [transfer, setTransfer] = useState<EnrollTransferAccount | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -137,7 +140,6 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
       email: form.email.trim(),
       plan_id: form.plan_id,
       payment_mode: form.payment_mode,
-      send_invite: form.send_invite,
     };
     if (form.first_name.trim()) data.first_name = form.first_name.trim();
     if (form.last_name.trim()) data.last_name = form.last_name.trim();
@@ -159,33 +161,34 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
       if (cancelledRef.current) return;
 
       if (!res.success) {
-        setError(res.message ?? "Failed to enroll member. Please try again.");
+        setError(res.message ?? "Couldn't send the offer. Please try again.");
         return;
       }
 
-      const memberName =
-        [form.first_name, form.last_name].filter(Boolean).join(" ") || form.email;
+      // Enrolling sends an offer: nothing is created until the member accepts
+      // it, and the response is the same whether or not they have an account.
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.orgEnrollmentOffers(currentOrg._id),
+      });
 
-      if (isTransfer) {
-        const account = res.data?.transfer_account;
-        if (!account) {
-          setError(
-            "The member was enrolled but no transfer account was returned. Check the members list.",
-          );
-          return;
-        }
-        // Stay open on the account view; the enrolment is pending until paid.
-        setTransfer(account);
+      // Backward compat: an older API answered a transfer enrolment with the
+      // account to pay into. Show it if it is there; never require it.
+      const legacyAccount = res.data?.transfer_account;
+      if (legacyAccount) {
+        setTransfer(legacyAccount);
         setError(null);
         return;
       }
 
-      toast.success(`${memberName} enrolled successfully`);
+      const memberName =
+        [form.first_name.trim(), form.last_name.trim()].filter(Boolean).join(" ") ||
+        form.email.trim();
+      toast.success(`Offer sent to ${memberName}. They'll be enrolled when they accept it.`);
       resetAll();
       onEnrolled?.();
       onClose();
     } catch {
-      if (!cancelledRef.current) setError("Failed to enroll member. Please try again.");
+      if (!cancelledRef.current) setError("Couldn't send the offer. Please try again.");
     } finally {
       if (!cancelledRef.current) setSubmitting(false);
     }
@@ -218,13 +221,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
               disabled={!canSubmit}
               className="btn-signal-v2 disabled:opacity-40"
             >
-              {submitting
-                ? isTransfer
-                  ? "Generating…"
-                  : "Enrolling…"
-                : isTransfer
-                  ? "Generate account"
-                  : "Enroll member"}
+              {submitting ? "Sending…" : "Send offer"}
             </button>
           </>
         )
@@ -348,7 +345,7 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
               <PaymentModeTab
                 active={isTransfer}
                 label="Bank transfer"
-                hint="Generate an account to pay into"
+                hint="They get an account to pay into"
                 onClick={() => setForm((f) => ({ ...f, payment_mode: "paystack_transfer" }))}
               />
             </div>
@@ -361,14 +358,14 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
             >
               {selectedPlan ? (
                 <>
-                  We&apos;ll generate a one-time account for{" "}
+                  When they accept, they get a one-time account to transfer{" "}
                   <span style={{ color: "var(--fg-2)" }}>
                     {formatCurrency(minorToMajor(selectedPlan.price_minor, selectedPlan.currency), selectedPlan.currency)}
-                  </span>
-                  . The membership activates automatically once the member transfers.
+                  </span>{" "}
+                  into. The membership activates once the transfer arrives.
                 </>
               ) : (
-                "Select a plan to generate a one-time account for its price. The membership activates automatically once the member transfers."
+                "Select a plan. When they accept, they get a one-time account for its price, and the membership activates once the transfer arrives."
               )}
             </p>
           ) : (
@@ -432,18 +429,11 @@ export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientMod
             </>
           )}
 
-          {/* Send invite */}
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.send_invite}
-              onChange={(e) => setForm((f) => ({ ...f, send_invite: e.target.checked }))}
-              className="w-4 h-4"
-            />
-            <span className="text-[13px]" style={{ color: "var(--fg-2)" }}>
-              Send welcome email to member
-            </span>
-          </label>
+          {/* Consent: the member is always emailed and must accept. */}
+          <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+            We&apos;ll email them this offer. Nothing starts until they accept it
+            from their Binectics account.
+          </p>
 
           {/* Error */}
           {error && (

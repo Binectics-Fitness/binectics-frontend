@@ -84,12 +84,6 @@ export default function TeamWorkspacePage() {
   const [inviteRoleId, setInviteRoleId] = useState("");
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
   const [submittingInvite, setSubmittingInvite] = useState(false);
-  const [directFirstName, setDirectFirstName] = useState("");
-  const [directLastName, setDirectLastName] = useState("");
-  const [directEmail, setDirectEmail] = useState("");
-  const [directRoleId, setDirectRoleId] = useState("");
-  const [directPassword, setDirectPassword] = useState("");
-  const [submittingDirect, setSubmittingDirect] = useState(false);
 
   const orgId = currentOrg?._id;
   const {
@@ -100,7 +94,6 @@ export default function TeamWorkspacePage() {
     error,
     loadOrgData,
     inviteMember,
-    addMemberDirect,
     updateMember,
     removeMember,
     cancelInvitation,
@@ -117,7 +110,6 @@ export default function TeamWorkspacePage() {
   );
 
 
-  const selectedDirectRoleId = directRoleId || roles[0]?._id || "";
 
   // Get current user's permissions from their role in the active organization
   const userPermissions = useMemo(() => {
@@ -183,7 +175,7 @@ export default function TeamWorkspacePage() {
 
     if (res.success) {
       setInviteEmail("");
-      setGlobalMessage("Invitation sent successfully.");
+      setGlobalMessage("Invitation sent. They join the team when they accept it.");
     } else {
       setGlobalMessage(
         describeTeamError(res, "Unable to send invitation. Please try again."),
@@ -191,37 +183,6 @@ export default function TeamWorkspacePage() {
     }
     setSubmittingInvite(false);
   }
-
-
-
-  async function handleDirectAdd(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!directFirstName || !directLastName || !directEmail || !directPassword || !selectedDirectRoleId || !orgId) return;
-
-    setSubmittingDirect(true);
-    setGlobalMessage(null);
-    const res = await addMemberDirect({
-      first_name: directFirstName,
-      last_name: directLastName,
-      email: directEmail.trim(),
-      password: directPassword,
-      team_role_id: selectedDirectRoleId,
-    });
-
-    if (res.success) {
-      setDirectFirstName("");
-      setDirectLastName("");
-      setDirectEmail("");
-      setDirectPassword("");
-      setGlobalMessage("Member added and invited successfully.");
-    } else {
-      setGlobalMessage(
-        describeTeamError(res, "Unable to add member. Please try again."),
-      );
-    }
-    setSubmittingDirect(false);
-  }
-
 
   async function handleRoleChange(memberId: string, newRoleId: string) {
     if (!canUpdateRole) {
@@ -446,7 +407,7 @@ export default function TeamWorkspacePage() {
               )}
             </section>
 
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div
                 className="rounded-(--r-3) p-4"
                 style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
@@ -510,136 +471,6 @@ export default function TeamWorkspacePage() {
                   >
                     {submittingInvite ? "Sending..." : "Send invitation"}
                   </button>
-                  </form>
-                )}
-              </div>
-
-
-              <div
-                className="rounded-(--r-3) p-4"
-                style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
-              >
-                <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
-                  Add member directly
-                </h2>
-                {!canManageOrg ? (
-                  <p className="text-sm mt-4" style={{ color: "var(--fg-3)" }}>
-                    You don&apos;t have permission to add members directly.
-                  </p>
-                ) : (
-                  <form className="mt-4 flex flex-col gap-3" onSubmit={handleDirectAdd}>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label
-                          className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                          style={{ color: "var(--fg-3)" }}
-                        >
-                          First name
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={directFirstName}
-                          onChange={(event) => setDirectFirstName(event.target.value)}
-                          placeholder="John"
-                          className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
-                          style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
-                        />
-                      </div>
-                      <div>
-                        <label
-                          className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                          style={{ color: "var(--fg-3)" }}
-                        >
-                          Last name
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={directLastName}
-                          onChange={(event) => setDirectLastName(event.target.value)}
-                          placeholder="Doe"
-                          className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
-                          style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label
-                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                        style={{ color: "var(--fg-3)" }}
-                      >
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={directEmail}
-                        onChange={(event) => setDirectEmail(event.target.value)}
-                        placeholder="john@example.com"
-                        className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
-                        style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                        style={{ color: "var(--fg-3)" }}
-                      >
-                        Password
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        value={directPassword}
-                        onChange={(event) => setDirectPassword(event.target.value)}
-                        placeholder="••••••••"
-                        className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
-                        style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-                        style={{ color: "var(--fg-3)" }}
-                      >
-                        Team role
-                      </label>
-                      <div className="mt-1.5">
-                        <SearchableSelect
-                          value={selectedDirectRoleId}
-                          onChange={setDirectRoleId}
-                          options={roleOptions}
-                          placeholder="Select role"
-                        />
-                      </div>
-                      {teamRoleHint(roles.find((r) => r._id === selectedDirectRoleId)?.code) && (
-                      <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-                        {teamRoleHint(roles.find((r) => r._id === selectedDirectRoleId)?.code)}
-                      </p>
-                    )}
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={submittingDirect || !selectedDirectRoleId}
-                      className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
-                      style={{
-                        background:
-                          submittingDirect || !selectedDirectRoleId
-                            ? "var(--bg-3)"
-                            : "var(--ink)",
-                        color:
-                          submittingDirect || !selectedDirectRoleId
-                            ? "var(--fg-4)"
-                            : "var(--bg)",
-                        cursor:
-                          submittingDirect || !selectedDirectRoleId
-                            ? "not-allowed"
-                            : "pointer",
-                      }}
-                    >
-                      {submittingDirect ? "Adding..." : "Add member"}
-                    </button>
                   </form>
                 )}
               </div>

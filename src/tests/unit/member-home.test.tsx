@@ -24,6 +24,8 @@ vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
 }));
 vi.mock("@/components/messaging/StartConversationButton", () => ({ StartConversationButton: () => null }));
+// Covered in its own test (it needs a QueryClient); not part of this page's layout checks.
+vi.mock("@/app/dashboard/member/_components/EnrollmentOffersCard", () => ({ EnrollmentOffersCard: () => null }));
 
 const NOW = new Date(2026, 9, 7, 10, 0, 0); // Wed 7 Oct 2026, local
 const at = (daysAgo: number, h = 8) =>

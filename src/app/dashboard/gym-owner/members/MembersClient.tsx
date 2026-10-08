@@ -5,6 +5,7 @@ import { StatusPill } from "@/components/ds/StatusPill";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { PendingOffers } from "./PendingOffers";
 import { AddMemberButton } from "./_actions";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
@@ -739,6 +740,8 @@ export default function GymMembersClient() {
           </div>
         )}
       </DSCard>
+
+      <PendingOffers orgId={currentOrg?._id} />
     </GymDashboardShell>
   );
 }
