@@ -22,3 +22,9 @@
   to = "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1/:splat"
   status = 200
   force = true
+  # Netlify adds an `x-nf-sign` JWS (HS256, iss "netlify") keyed with the
+  # value of the API_SIGNATURE_TOKEN env var (Runtime scope). The API checks
+  # it (NETLIFY_PROXY_SIGNATURE_SECRET, same value) before trusting Netlify's
+  # report of the browser's IP for rate limiting. Without it every web user
+  # shares Netlify's egress IPs in the API's throttles.
+  signed = "API_SIGNATURE_TOKEN"
