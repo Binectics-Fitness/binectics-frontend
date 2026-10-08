@@ -249,11 +249,13 @@ export type UpdateOrgMembershipPlanRequest =
   Partial<CreateOrgMembershipPlanRequest>;
 
 /**
- * How the enrolment is paid.
- * - "manual": money taken off-platform; the subscription is active immediately.
- * - "paystack_transfer": open a one-time Paystack transfer account for the plan
- *   price. The subscription stays pending until the transfer is confirmed by
- *   webhook; the response carries `transfer_account` to display.
+ * How the enrolment is paid. Either way the gym only sends an offer: nothing
+ * is created until the member accepts it.
+ * - "manual": money taken off-platform; the subscription starts with the
+ *   requested status once the member accepts.
+ * - "paystack_transfer": when the member accepts, a one-time Paystack transfer
+ *   account is opened for the plan price and returned to the MEMBER (not the
+ *   gym). The subscription stays pending until the webhook confirms it.
  */
 export type EnrollPaymentMode = "manual" | "paystack_transfer";
 
@@ -268,6 +270,7 @@ export interface EnrollMemberRequest {
   payment_proof_url?: string;
   first_name?: string;
   last_name?: string;
+  /** @deprecated Ignored by the API: the member is always emailed the offer. */
   send_invite?: boolean;
 }
 
@@ -284,11 +287,84 @@ export interface EnrollTransferAccount {
   reference: string;
 }
 
+export type EnrollmentOfferStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "cancelled"
+  | "expired";
+
+/** What the gym gets back after enrolling: the offer, never the member's data. */
+export interface EnrollmentOfferSummary {
+  _id: string;
+  email: string;
+  plan_id: string;
+  status: EnrollmentOfferStatus;
+  expires_at: string;
+}
+
+/**
+ * Enrolling no longer creates a subscription or an account: it records an
+ * offer the member accepts. The response is the same for every email, so it
+ * cannot be used to probe who has an account.
+ */
 export interface EnrollMemberResponse {
-  subscription: MembershipSubscription;
+  /** Always null now; the subscription is created when the member accepts. */
+  subscription: MembershipSubscription | null;
+  /** Always false now; no account is ever created for someone else. */
   user_created: boolean;
-  /** Present only for a "paystack_transfer" enrolment. */
+  pending_acceptance?: boolean;
+  enrollment_offer?: EnrollmentOfferSummary;
+  /**
+   * @deprecated No longer returned to the gym: for a transfer offer the
+   * account is opened when the member accepts and is shown to them.
+   */
   transfer_account?: EnrollTransferAccount;
+}
+
+/** A pending membership offer, as the member sees it. */
+export interface EnrollmentOffer {
+  _id: string;
+  /** Null if the gym's workspace was deleted after the offer was made. */
+  organization_id: { _id: string; name: string; logo_url?: string | null } | null;
+  /** Null if the plan was deleted after the offer was made. */
+  plan_id: {
+    _id: string;
+    name: string;
+    /** Minor units (kobo/cents). */
+    price_minor: number;
+    currency: string;
+    duration_days: number;
+  } | null;
+  email: string;
+  requested_status: "active" | "pending_payment";
+  payment_mode: EnrollPaymentMode;
+  /** Minor units (kobo/cents). */
+  amount_paid_minor?: number | null;
+  payment_reference?: string | null;
+  expires_at: string;
+  created_at: string;
+  status: EnrollmentOfferStatus;
+}
+
+export interface AcceptEnrollmentOfferResult {
+  subscription: MembershipSubscription;
+  /** Present for a "paystack_transfer" offer: where the member pays. */
+  transfer_account?: EnrollTransferAccount;
+}
+
+/** A pending offer as the gym sees it (plan populated). */
+export interface OrgEnrollmentOffer {
+  _id: string;
+  email: string;
+  plan_id:
+    | { _id: string; name: string; price_minor: number; currency: string; duration_days?: number }
+    | string
+    | null;
+  payment_mode: EnrollPaymentMode;
+  status: EnrollmentOfferStatus;
+  expires_at: string;
+  created_at: string;
 }
 
 // ==================== FEATURED ====================
@@ -1014,6 +1090,48 @@ export const marketplaceService = {
     return await apiClient.post<EnrollMemberResponse>(
       `/marketplace/organizations/${organizationId}/subscriptions/enroll`,
       data,
+    );
+  },
+
+  /** Pending offers the gym has sent (plan populated). */
+  async getOrgEnrollmentOffers(
+    organizationId: string,
+  ): Promise<ApiResponse<OrgEnrollmentOffer[]>> {
+    return await apiClient.get<OrgEnrollmentOffer[]>(
+      `/marketplace/organizations/${organizationId}/enrollment-offers`,
+    );
+  },
+
+  /** Withdraw a pending offer. 204 on success. */
+  async cancelOrgEnrollmentOffer(
+    organizationId: string,
+    offerId: string,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.post<void>(
+      `/marketplace/organizations/${organizationId}/enrollment-offers/${offerId}/cancel`,
+    );
+  },
+
+  /** Membership offers addressed to me. Empty until my email is verified. */
+  async getMyEnrollmentOffers(): Promise<ApiResponse<EnrollmentOffer[]>> {
+    return await apiClient.get<EnrollmentOffer[]>(
+      "/marketplace/enrollment-offers/mine",
+    );
+  },
+
+  async acceptEnrollmentOffer(
+    offerId: string,
+  ): Promise<ApiResponse<AcceptEnrollmentOfferResult>> {
+    return await apiClient.post<AcceptEnrollmentOfferResult>(
+      `/marketplace/enrollment-offers/${offerId}/accept`,
+    );
+  },
+
+  async declineEnrollmentOffer(
+    offerId: string,
+  ): Promise<ApiResponse<{ declined: true }>> {
+    return await apiClient.post<{ declined: true }>(
+      `/marketplace/enrollment-offers/${offerId}/decline`,
     );
   },
 

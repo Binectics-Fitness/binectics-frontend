@@ -39,6 +39,7 @@ import {
   weightSummary,
   type NextUpItem,
 } from "./memberHome";
+import { EnrollmentOffersCard } from "./_components/EnrollmentOffersCard";
 
 interface MemberSnapshot {
   checkins: StreakStats | null;
@@ -91,6 +92,8 @@ function MemberHomeContent() {
   const [snapshot, setSnapshot] = useState<MemberSnapshot>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Bumped when the member accepts a gym's offer, so "My gyms" picks it up.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -144,7 +147,7 @@ function MemberHomeContent() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const week = useMemo(
     () => (now && snapshot.weekCheckIns ? weekStrip(snapshot.weekCheckIns, now) : null),
@@ -191,6 +194,8 @@ function MemberHomeContent() {
           ) : (
             <MemberHero program={snapshot.program} stats={checksIn ? stats : null} />
           )}
+
+          <EnrollmentOffersCard onAccepted={() => setReloadKey((k) => k + 1)} />
 
           <section aria-labelledby="next-up-label">
             {/* Gaps go on wrappers: globals.css zeroes heading margins. */}

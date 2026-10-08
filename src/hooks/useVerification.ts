@@ -26,14 +26,19 @@ export function useVerification() {
     }
   }, []);
 
-  const resendOtp = useCallback(async (email: string) => {
+  /**
+   * true: a new code was sent. "claim_link": the account was created by a
+   * gym and has no password of its own yet, so the API emailed a
+   * set-password link instead of a code. false: it failed.
+   */
+  const resendOtp = useCallback(async (email: string): Promise<boolean | "claim_link"> => {
     setIsResending(true);
     setError(null);
     try {
       const response = await authService.resendOtp({ email });
       setIsResending(false);
       if (response.success) {
-        return true;
+        return response.data?.claim_link_sent ? "claim_link" : true;
       }
       setError(response.message || "Failed to resend OTP");
       return false;

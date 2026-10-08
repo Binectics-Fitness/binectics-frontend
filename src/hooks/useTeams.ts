@@ -122,10 +122,12 @@ export function useOrgManagement(orgId: string) {
   const addMemberDirect = useCallback(
     async (
       data: AddMemberDirectRequest,
-    ): Promise<ApiResponse<OrganizationMember>> => {
+    ): Promise<ApiResponse<TeamInvitation>> => {
+      // The API answers with a pending invitation, not a member: nobody joins
+      // the team until they accept it.
       const response = await teamsService.addMemberDirect(orgId, data);
       if (response.success && response.data) {
-        setMembers((prev) => [...prev, response.data!]);
+        setInvitations((prev) => [...prev, response.data!]);
       }
       return response;
     },

@@ -274,12 +274,17 @@ export interface InviteMemberRequest {
   team_role_id: string;
 }
 
+/**
+ * "Add member directly" no longer creates an account or a membership: the API
+ * sends the same pending invitation as `inviteMember`, so nobody joins a team
+ * (or gets an account) without accepting. Names are optional and only used to
+ * personalise the email; a password is never sent.
+ */
 export interface AddMemberDirectRequest {
-  first_name: string;
-  last_name: string;
   email: string;
-  password: string;
   team_role_id: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface UpdateMemberRequest {
@@ -534,14 +539,24 @@ export const teamsService = {
     );
   },
 
+  /** Leave a team you belong to (not available to the owner). 204 on success. */
+  async leaveOrganization(organizationId: string): Promise<ApiResponse<void>> {
+    return await apiClient.post<void>(
+      `/teams/organizations/${organizationId}/leave`,
+    );
+  },
+
   // ==================== INVITATIONS ====================
 
-  /** Directly add a member — creates a user account if the email is new */
+  /**
+   * "Add member directly" — the API now sends a pending invitation (same as
+   * `inviteMember`) and returns it; no account or membership is created.
+   */
   async addMemberDirect(
     organizationId: string,
     data: AddMemberDirectRequest,
-  ): Promise<ApiResponse<OrganizationMember>> {
-    return await apiClient.post<OrganizationMember>(
+  ): Promise<ApiResponse<TeamInvitation>> {
+    return await apiClient.post<TeamInvitation>(
       `/teams/organizations/${organizationId}/members`,
       data,
     );

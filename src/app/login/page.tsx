@@ -31,7 +31,7 @@ const ROLE_PARAM_TO_ACCOUNT_TYPE: Record<string, AccountType> = {
  * Panels switch via state. OAuth row, 2FA code input, remember-me toggle.
  */
 
-type Panel = "login" | "2fa" | "signup" | "reset" | "reset-sent";
+type Panel = "login" | "2fa" | "signup" | "reset" | "reset-sent" | "claim-sent";
 
 export default function AuthPage() {
   return (
@@ -53,6 +53,9 @@ function AuthContent() {
   const [showSignupPw, setShowSignupPw] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
+  // Signing up over an account a gym created emails a set-password link
+  // instead of an OTP; this is the address it went to.
+  const [claimEmail, setClaimEmail] = useState("");
 
   const { register: registerField, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -101,6 +104,9 @@ function AuthContent() {
       });
       if (!result.success) {
         setApiError(result.error || "Registration failed. Please try again.");
+      } else if (result.claimLinkSent) {
+        setClaimEmail(data.email);
+        setPanel("claim-sent");
       }
     } catch {
       setApiError("Something went wrong. Please try again.");
@@ -133,6 +139,7 @@ function AuthContent() {
     signup: { text: "Have an account?", link: "Sign in", panel: "login" },
     reset: { text: "", link: "← Sign in", panel: "login" },
     "reset-sent": { text: "", link: "← Sign in", panel: "login" },
+    "claim-sent": { text: "", link: "← Sign in", panel: "login" },
   };
 
   const sw = switcherText[panel];
@@ -409,6 +416,25 @@ function AuthContent() {
                   <div className="text-[12.5px] text-center" style={{ color: "var(--fg-3)" }}>
                     Wrong email? <button onClick={() => setPanel("reset")} className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Try another</button>
                   </div>
+                </div>
+              </>
+            )}
+
+            {/* ── CLAIM LINK SENT ── (signup over an account a gym created) */}
+            {panel === "claim-sent" && (
+              <>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5" style={{ background: "var(--signal-soft)" }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--signal-ink)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                </div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Check your inbox</div>
+                <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
+                  Set your password from the email.
+                </h1>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                  We emailed {claimEmail ? <span style={{ color: "var(--fg-2)" }}>{claimEmail}</span> : "you"} a link to set your password. Use it to finish creating your account. Check spam if you don&apos;t see it within a minute.
+                </p>
+                <div className="flex flex-col gap-3.5 mt-8">
+                  <button className="btn-primary-v2 lg w-full justify-center" onClick={() => setPanel("login")}>Back to sign in</button>
                 </div>
               </>
             )}
