@@ -16,7 +16,7 @@ const WORKFLOW = [
   {
     step: "01",
     title: "Log an entry",
-    desc: "After a session, consultation, or weigh-in, tap, type, done. Structured fields for metrics, free text for everything else. Under 90 seconds per entry.",
+    desc: "After a session, consultation, or weigh-in, tap, type, done. Structured fields for metrics, free text for everything else.",
   },
   {
     step: "02",

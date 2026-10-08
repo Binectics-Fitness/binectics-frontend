@@ -250,7 +250,7 @@ export default function QRCheckinFeaturePage() {
           className="text-[16px] sm:text-[17px] max-w-[46ch] mx-auto leading-[1.5] mb-7"
           style={{ color: "var(--fg-2)" }}
         >
-          Set up your first kiosk in under 10 minutes. Free on every
+          Set up your first kiosk from your gym settings. Free on every
           Binectics gym plan.
         </p>
         <Link href="/login?mode=signup&role=gym" className="btn-primary-v2 lg">
