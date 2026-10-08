@@ -118,8 +118,11 @@ export function renewHrefForNotification(input: {
 
 /** How long after expiry the API still renews the same membership (api #196). */
 export const RENEWABLE_AFTER_EXPIRY_DAYS = 30;
-/** Offer paying ahead this close to the end of an active term. */
-export const RENEW_AHEAD_DAYS = 14;
+/**
+ * Offer paying ahead this close to the end of an active term. The same
+ * window as mobile (#93): change both together.
+ */
+export const RENEW_AHEAD_DAYS = 7;
 
 const DAY = 86_400_000;
 
@@ -127,7 +130,8 @@ const DAY = 86_400_000;
  * The checkout that renews this membership, or null when "Renew" shouldn't
  * show. Shown for a paid, recurring plan bought from a listing when:
  *  - it is past due, or expired within the last 30 days (renew in place);
- *  - it is active and ends within 14 days, and no saved card will renew it.
+ *  - it is active and ends within RENEW_AHEAD_DAYS (7), and no saved card
+ *    will renew it.
  */
 export function renewHrefForMembership(
   sub: MembershipSubscription,

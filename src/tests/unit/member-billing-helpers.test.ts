@@ -12,6 +12,7 @@ import {
   renewHrefForMembership,
   renewHrefForNotification,
   renewHrefFromMetadata,
+  RENEW_AHEAD_DAYS,
 } from "@/lib/billing/autoRenew";
 import { resolveNotificationTarget } from "@/utils/resolveNotificationLink";
 import { canRecordRenewalFor } from "@/app/dashboard/gym-owner/members/MembersClient";
@@ -111,6 +112,15 @@ describe("Renew links from notification metadata", () => {
 describe("Renew on a membership row", () => {
   it("offers Renew near the end of an active paid term", () => {
     expect(renewHrefForMembership(sub(), NOW)).toBe("/checkout?listing=l1&plan=p1");
+  });
+
+  it("opens the window exactly RENEW_AHEAD_DAYS (7, as on mobile) before the end", () => {
+    expect(RENEW_AHEAD_DAYS).toBe(7);
+    const at = (days: number) => sub({ end_date: new Date(NOW.getTime() + days * DAY).toISOString() });
+    expect(renewHrefForMembership(at(RENEW_AHEAD_DAYS), NOW)).toBe("/checkout?listing=l1&plan=p1");
+    expect(renewHrefForMembership(at(RENEW_AHEAD_DAYS + 0.01), NOW)).toBeNull();
+    expect(renewHrefForMembership(at(8), NOW)).toBeNull();
+    expect(renewHrefForMembership(at(10), NOW)).toBeNull();
   });
 
   it("doesn't offer it weeks before the term ends", () => {
