@@ -196,4 +196,14 @@ describe("apiClient session expiry redirect", () => {
     expect(res.status).toBe(401);
     expect(replace).not.toHaveBeenCalled();
   });
+
+  it("stays put on the admin sign-in page", async () => {
+    vi.stubGlobal("location", { pathname: "/admin", search: "", replace });
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(401, { message: "Unauthorized" }));
+
+    const res = await apiClient.get("/auth/profile");
+
+    expect(res.status).toBe(401);
+    expect(replace).not.toHaveBeenCalled();
+  });
 });

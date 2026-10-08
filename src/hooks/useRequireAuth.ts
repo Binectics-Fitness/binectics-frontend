@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardRoute } from "@/lib/constants/routes";
-import { UserRole } from "@/lib/types";
+import { UserRole, type User } from "@/lib/types";
 
 /**
  * Hook to protect client-side routes
@@ -71,13 +71,14 @@ export function useRequireRole(
  * platform admin is orthogonal to running a gym (the same login can be
  * both). Role ADMIN still passes for dedicated admin accounts.
  */
+export function isPlatformAdmin(user: Pick<User, "role" | "is_admin"> | null | undefined): boolean {
+  return !!user && (user.role === UserRole.ADMIN || user.is_admin === true);
+}
+
 export function useAdminGuard() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const isAuthorized =
-    !isLoading &&
-    user !== null &&
-    (user.role === UserRole.ADMIN || user.is_admin === true);
+  const isAuthorized = !isLoading && isPlatformAdmin(user);
 
   useEffect(() => {
     if (isLoading) return;
@@ -90,7 +91,7 @@ export function useAdminGuard() {
       window.location.assign("/login");
       return;
     }
-    if (!(user.role === UserRole.ADMIN || user.is_admin === true)) {
+    if (!isPlatformAdmin(user)) {
       router.replace(getDashboardRoute(user.role));
     }
   }, [isLoading, user, router]);

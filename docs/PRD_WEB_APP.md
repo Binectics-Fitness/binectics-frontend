@@ -380,7 +380,6 @@ Providers (GYM_OWNER, TRAINER, DIETITIAN) must be verified before appearing in t
 | `/admin/currencies` | Currency management |
 | `/admin/loyalty` | Loyalty/gamification settings |
 | `/admin/change-password` | Force password change (first login) |
-| `/admin/create-super-admin` | Create super admin account |
 
 ---
 
@@ -489,7 +488,7 @@ Providers (GYM_OWNER, TRAINER, DIETITIAN) must be verified before appearing in t
 - **Platform metrics**: Revenue, subscriptions, user counts
 - **Currency management**: Configure supported currencies
 - **Loyalty/gamification**: Configure points, badges, streaks
-- **Create super admin**: `/admin/create-super-admin`
+- **First admin**: granted from the API (`scripts/grant-admin.js`, `scripts/seed-admin.js` or the env-gated boot seed); the web app has no page that creates admins
 
 ### 5.10 Teams & Organizations
 

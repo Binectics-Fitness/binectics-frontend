@@ -5,6 +5,7 @@ import {
   REGION_OVERRIDE_COOKIE,
 } from "@/lib/constants/regions";
 import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
+import { isAdminLoginPath } from "@/lib/routing/adminPaths";
 import { isCanonicalHost } from "@/lib/site-url";
 import { isPrivatePath } from "@/lib/routing/indexing";
 import { profileMayExist, profileSegment } from "@/lib/marketplace/profileGate";
@@ -149,10 +150,12 @@ export async function middleware(request: NextRequest) {
     return withSiteHeaders(NextResponse.redirect(new URL("/marketplace", request.url)));
   }
 
-  // Check if the current route is protected
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
+  // Check if the current route is protected. The admin sign-in page sits
+  // under /admin but must open while signed out; every other /admin page
+  // needs a session here and an admin in AdminClientShell.
+  const isProtectedRoute =
+    !isAdminLoginPath(pathname) &&
+    protectedRoutes.some((route) => pathname.startsWith(route));
 
   // Check if the current route is an auth route
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));

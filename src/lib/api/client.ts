@@ -6,6 +6,7 @@
 import type { ApiResponse } from "@/lib/types";
 import { clearAuthStorage, userStorage } from "@/lib/utils/storage";
 import { isAuthRoute } from "@/lib/constants/routes";
+import { isAdminLoginPath } from "@/lib/routing/adminPaths";
 import {
   ACCOUNT_STATE_ROUTES,
   isAccountStateRoute,
@@ -80,10 +81,11 @@ function detailsOf(
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-/** Pages where a 401 must not trigger a redirect: the sign-in pages, and the
- *  account-state pages a refused or ended session lands on. */
+/** Pages where a 401 must not trigger a redirect: the sign-in pages (the
+ *  admin one included), and the account-state pages a refused or ended
+ *  session lands on. */
 function staysPut(pathname: string): boolean {
-  return isAuthRoute(pathname) || isAccountStateRoute(pathname);
+  return isAuthRoute(pathname) || isAdminLoginPath(pathname) || isAccountStateRoute(pathname);
 }
 
 class ApiClient {

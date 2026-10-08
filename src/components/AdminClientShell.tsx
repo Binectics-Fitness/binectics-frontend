@@ -4,45 +4,49 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useAutoLogout } from "@/hooks/useAutoLogout";
+import { useAdminGuard } from "@/hooks/useRequireAuth";
+import { isAdminLoginPath } from "@/lib/routing/adminPaths";
 
+/**
+ * Every /admin page except the sign-in page needs a platform admin
+ * (is_admin, or the ADMIN role). The API enforces the same rule on every
+ * admin endpoint; this keeps non-admins from seeing the admin screens.
+ */
 export default function AdminClientShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
 
-  // Enable auto-logout for admin pages (60 minutes of inactivity)
+  // Sign out after 60 minutes without activity on admin pages.
   useAutoLogout(60);
 
-  useEffect(() => {
-    // Don't redirect if we're on the admin login page (/admin) or create-super-admin page
-    if (pathname === "/admin" || pathname === "/admin/create-super-admin") {
-      return;
-    }
-
-    // Redirect non-admin users to login page
-    if (!isLoading && (!user || user.role !== "ADMIN")) {
-      router.push("/admin");
-      return;
-    }
-
-    // Force admins with temporary credentials onto the change-password page
-    if (
-      !isLoading &&
-      user?.must_change_password &&
-      pathname !== "/admin/change-password"
-    ) {
-      router.push("/admin/change-password");
-    }
-  }, [user, isLoading, router, pathname]);
-
-  // Allow access to login page and create-super-admin without auth
-  if (pathname === "/admin" || pathname === "/admin/create-super-admin") {
+  if (isAdminLoginPath(pathname)) {
     return <>{children}</>;
   }
+
+  return <AdminGate pathname={pathname}>{children}</AdminGate>;
+}
+
+function AdminGate({
+  pathname,
+  children,
+}: {
+  pathname: string | null;
+  children: React.ReactNode;
+}) {
+  // Signed out → /login; signed in without admin → their own dashboard.
+  const { isAuthorized, isLoading } = useAdminGuard();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  // Admins with temporary credentials go to the change-password page first.
+  useEffect(() => {
+    if (isAuthorized && user?.must_change_password && pathname !== "/admin/change-password") {
+      router.push("/admin/change-password");
+    }
+  }, [isAuthorized, user, router, pathname]);
 
   if (isLoading) {
     return (
@@ -55,7 +59,7 @@ export default function AdminClientShell({
     );
   }
 
-  if (!user || user.role !== "ADMIN") {
+  if (!isAuthorized) {
     return null;
   }
 
