@@ -77,19 +77,12 @@ const ROLE_VIEWS = [
 const SHARED_FEATURES = [
   { title: "Unified notifications", desc: "One inbox for bookings, payments, check-ins, and journal updates. Push, email, or in-app, you pick." },
   { title: "Cross-role visibility", desc: "Gym owners see trainer schedules. Trainers see member check-ins. Everyone works from the same data." },
-  { title: "Real-time sync", desc: "A check-in at the door shows on the gym dashboard in under 400ms. No polling, no refresh button." },
+  { title: "Real-time sync", desc: "A check-in at the door shows on the gym dashboard in real time. No refresh button." },
   { title: "Mobile-first responsive", desc: "Every dashboard renders cleanly from 320px phone to 2560px ultrawide. No pinch-zooming required." },
   { title: "Keyboard shortcuts", desc: "Power users navigate with G+D for dashboard, G+C for clients, G+S for settings. Vim-style, discoverable." },
   { title: "Export and API", desc: "CSV and PDF exports for every data table. REST API for gyms that want to pipe data into their own BI tool." },
   { title: "Granular permissions", desc: "Gym staff can view check-ins but not payouts. Receptionist role can't edit class schedules. You set the rules." },
   { title: "Audit log", desc: "Every action is timestamped and attributed. See who changed a member's plan, when, and from what." },
-];
-
-const KPIS = [
-  { label: "Avg session time", value: "4.2 min" },
-  { label: "Actions per session", value: "8.3" },
-  { label: "Mobile usage", value: "62%" },
-  { label: "Uptime (12mo)", value: "99.97%" },
 ];
 
 export default function DashboardFeaturePage() {
@@ -269,7 +262,7 @@ export default function DashboardFeaturePage() {
           className="text-[16px] max-w-[52ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          These features work the same whether you're a gym owner with 4
+          These features work the same whether you&apos;re a gym owner with 4
           locations or a member with one subscription.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -291,38 +284,6 @@ export default function DashboardFeaturePage() {
               >
                 {f.desc}
               </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* KPIs */}
-      <section
-        className="mx-auto max-w-280 px-5 sm:px-8 py-12"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {KPIS.map((k) => (
-            <div
-              key={k.label}
-              className="rounded-(--r-3) p-4.5"
-              style={{ background: "var(--bg-2)" }}
-            >
-              <div
-                className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
-                style={{ color: "var(--fg-3)" }}
-              >
-                {k.label}
-              </div>
-              <div
-                className="text-[24px] sm:text-[32px] font-medium mt-1"
-                style={{
-                  letterSpacing: "-0.024em",
-                  color: "var(--ink)",
-                }}
-              >
-                {k.value}
-              </div>
             </div>
           ))}
         </div>
