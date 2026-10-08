@@ -31,7 +31,13 @@ import {
 import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { useClientNow } from "@/lib/ui/useClientNow";
-import { dailyRevenueSpark } from "./revenueSpark";
+import {
+  dailyRevenueSpark,
+  pickRevenueCurrency,
+  revenueCardFigures,
+  seriesCurrencies,
+  statsCurrencies,
+} from "./revenueSpark";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -83,8 +89,6 @@ function GymOverviewContent() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { user } = useAuth();
   const { fmtDate, fmtTime, fmtMoney } = useOrgFormat();
-  // Org money renders in the org's own currency — never the visitor's region.
-  const formatAmount = (n: number) => fmtMoney(n, currentOrg?.currency);
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
@@ -144,24 +148,42 @@ function GymOverviewContent() {
   const attendance =
     stats && stats.active_members > 0 ? Math.round((stats.today_check_ins / stats.active_members) * 100) : null;
 
-  const spark = useMemo(() => (now && series ? dailyRevenueSpark(series, now) : null), [series, now]);
+  // One revenue currency for the headline, its bars and the Revenue card:
+  // the API's revenue_currency (the org's own) when it has revenue, never
+  // "whichever number is biggest" across currencies. Org money renders in
+  // the org's currency, never the visitor's region.
+  const orgCurrency = currentOrg?.currency ?? "";
+  const revenueCurrency = useMemo(
+    () =>
+      pickRevenueCurrency(stats?.revenue_currency ?? (orgCurrency || null), [
+        ...statsCurrencies(stats),
+        ...(series && now ? seriesCurrencies(series, now) : []),
+      ]),
+    [stats, orgCurrency, series, now],
+  );
+  const spark = useMemo(
+    () => (now && series ? dailyRevenueSpark(series, now, 30, revenueCurrency) : null),
+    [series, now, revenueCurrency],
+  );
+  const card = stats ? revenueCardFigures(stats, revenueCurrency, orgCurrency || null) : null;
+  // The currency code is shown wherever revenue isn't in the org's own
+  // currency, on the headline and the card alike.
+  const foreignCode = revenueCurrency && revenueCurrency !== orgCurrency ? revenueCurrency : undefined;
+  const cardCode = card?.currency && card.currency !== orgCurrency ? card.currency : undefined;
 
   // Revenue · 30d comes from the ledger series when it is readable: the
-  // same days and the same currency as the bars, with the currency code
-  // shown when it isn't the org's own. Only without the series does it fall
-  // back to dashboard-stats' revenue_month, whose currency the API doesn't
-  // say (it picks the largest bucket) — an API follow-up.
-  const orgCurrency = currentOrg?.currency ?? "";
+  // same days and the same currency as the bars. Without the series it
+  // falls back to dashboard-stats' month figure, in the same currency.
   const revenue30d =
     series && now
-      ? spark
-        ? {
-            value: fmtMoney(minorToMajor(spark.values.reduce((a, b) => a + b, 0), spark.currency), spark.currency),
-            unit: spark.currency !== orgCurrency ? spark.currency : undefined,
-          }
-        : { value: fmtMoney(0, orgCurrency), unit: undefined }
-      : stats
-        ? { value: formatAmount(stats.revenue_month), unit: undefined }
+      ? {
+          value: spark
+            ? fmtMoney(minorToMajor(spark.values.reduce((a, b) => a + b, 0), spark.currency), spark.currency)
+            : fmtMoney(0, revenueCurrency ?? orgCurrency),
+          unit: foreignCode,
+        }
+      : card
+        ? { value: fmtMoney(card.month, card.currency ?? orgCurrency), unit: cardCode }
         : null;
 
   // No churn card (the mock has one): there is no churn figure in the API.
@@ -233,12 +255,21 @@ function GymOverviewContent() {
           {/* Revenue summary + Live check-ins */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-3">
             <DSCard>
-              <DSCardHead title="Revenue" subtitle="Settled to date" />
+              <DSCardHead
+                title="Revenue"
+                subtitle={cardCode ? `Settled to date · ${cardCode}` : "Settled to date"}
+              />
               <div className="flex flex-col">
                 {[
-                  { label: "Today", value: stats ? formatAmount(stats.revenue_today) : "-" },
-                  { label: "This week", value: stats ? formatAmount(stats.revenue_week) : "-" },
-                  { label: "This month", value: stats ? formatAmount(stats.revenue_month) : "-" },
+                  { label: "Today", value: card ? fmtMoney(card.today, card.currency ?? orgCurrency) : "-" },
+                  { label: "This week", value: card ? fmtMoney(card.week, card.currency ?? orgCurrency) : "-" },
+                  { label: "This month", value: card ? fmtMoney(card.month, card.currency ?? orgCurrency) : "-" },
+                  // Paid in another currency too: listed under its own
+                  // code, never added to the figures above.
+                  ...(card?.others ?? []).map((o) => ({
+                    label: `This month · ${o.currency}`,
+                    value: fmtMoney(o.month, o.currency),
+                  })),
                 ].map((row, i, arr) => (
                   <div key={row.label} className="flex justify-between px-4.5 py-3.5" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
                     <span className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>{row.label}</span>
