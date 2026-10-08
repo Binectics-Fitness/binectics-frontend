@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminGuard } from "@/hooks/useRequireAuth";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
-import { UserRole } from "@/lib/types";
 import { ROLE_LABEL, personInitials, shortName } from "@/lib/identity";
+import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 
 /* ─── Icon helper ──────────────────────────────────────────── */
 
@@ -156,8 +155,9 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
 
 /* ─── Dark mobile nav for admin ───────────────────────────── */
 
+/** Modal behaviour (focus trap, Escape, inert page, close on navigation and at desktop width) comes from useNavDrawer. */
 function AdminMobileNav({ activeItem }: { activeItem: string }) {
-  const [open, setOpen] = useState(false);
+  const { open, show, close, triggerRef, overlayRef, panelRef, closeOnLinkClick } = useNavDrawer();
 
   return (
     <>
@@ -167,10 +167,14 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
         style={{ background: "var(--ink)", borderBottom: "1px solid oklch(0.25 0.005 85)", color: "var(--bg)" }}
       >
         <button
-          onClick={() => setOpen(true)}
+          ref={triggerRef}
+          type="button"
+          onClick={show}
           className="w-9 h-9 rounded-(--r-2) flex items-center justify-center shrink-0"
           style={{ border: "1px solid oklch(0.30 0.008 80)", background: "transparent", color: "var(--bg)" }}
           aria-label="Open navigation"
+          aria-haspopup="dialog"
+          aria-expanded={open}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <path d="M4 6h16M4 12h16M4 18h16" />
@@ -182,15 +186,19 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
 
       {/* Slide-in panel */}
       {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div ref={overlayRef} className="fixed inset-0 z-50 lg:hidden">
           {/* Backdrop */}
           <div
             className="absolute inset-0"
             style={{ background: "oklch(0.08 0.005 80 / 0.5)", transition: "opacity var(--motion-base, 220ms)" }}
-            onClick={() => setOpen(false)}
+            onClick={close}
           />
           {/* Dark sidebar panel */}
           <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Admin navigation"
             className="absolute top-0 left-0 h-full w-[280px] overflow-y-auto"
             style={{
               background: "var(--ink)",
@@ -201,18 +209,21 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
             {/* Close button */}
             <div className="flex justify-end p-3">
               <button
-                onClick={() => setOpen(false)}
+                type="button"
+                onClick={close}
                 className="w-8 h-8 rounded-(--r-2) flex items-center justify-center"
                 style={{ border: "1px solid oklch(0.30 0.008 80)", color: "oklch(0.65 0.005 85)" }}
                 aria-label="Close navigation"
+                data-autofocus
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            {/* Sidebar content */}
-            <div onClick={() => setOpen(false)}>
+            {/* Sidebar content. Picking a link closes the drawer; the account
+                menu doesn't. */}
+            <div onClick={closeOnLinkClick}>
               <SidebarContent activeItem={activeItem} />
             </div>
           </div>
