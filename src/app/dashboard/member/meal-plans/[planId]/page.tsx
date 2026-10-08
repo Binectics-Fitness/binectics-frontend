@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { AsyncSpinner } from "@/components/ds";
+import { AsyncSpinner, DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { progressService, type DietPlan, type DayOfWeek, type DietMeal } from "@/lib/api/progress";
 import { DietPlanDeliveryType } from "@/lib/types";
@@ -55,10 +55,8 @@ function ShoppingListSection({ plan, planId }: { plan: DietPlan; planId: string 
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-        Shopping list · this week
-      </div>
-      <div className="rounded-(--r-2)" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <Eyebrow>Shopping list · this week</Eyebrow>
+      <DSCard>
         {visible.map((item) => (
           <div key={item.food} className="flex items-center gap-3 px-4 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
             <button
@@ -93,9 +91,9 @@ function ShoppingListSection({ plan, planId }: { plan: DietPlan; planId: string 
         ))}
         {hidden.length > 0 && (
           <div className="px-4 py-2.5 flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-4)" }}>
+            <Eyebrow as="span">
               Already have:
-            </span>
+            </Eyebrow>
             {hidden.map((item) => (
               <button
                 key={item.food}
@@ -109,18 +107,16 @@ function ShoppingListSection({ plan, planId }: { plan: DietPlan; planId: string 
             ))}
           </div>
         )}
-      </div>
+      </DSCard>
     </div>
   );
 }
 
 function MealCard({ meal }: { meal: DietMeal }) {
   return (
-    <div className="rounded-(--r-2) px-4 py-3 flex flex-col gap-1" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    <DSCard className="px-4 py-3 flex flex-col gap-1">
       <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>
-          {SLOT_LABELS[meal.meal_type]}
-        </span>
+        <Eyebrow as="span">{SLOT_LABELS[meal.meal_type]}</Eyebrow>
         {meal.calories != null && (
           <span className="font-mono text-[11px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
             {meal.calories.toLocaleString()} kcal
@@ -139,7 +135,7 @@ function MealCard({ meal }: { meal: DietMeal }) {
       {meal.notes && (
         <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)", lineHeight: 1.5 }}>{meal.notes}</div>
       )}
-    </div>
+    </DSCard>
   );
 }
 
@@ -206,15 +202,10 @@ export default function MemberMealPlanDetailPage({
         </div>
       ) : (
         <div className="flex flex-col gap-4 max-w-2xl">
-          <div>
-            <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{plan.title}</h1>
-            {plan.description && (
-              <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-2)", lineHeight: 1.5 }}>{plan.description}</p>
-            )}
-          </div>
+          <PageHeader className="mb-0!" title={plan.title} subtitle={plan.description || undefined} />
 
           {isDocument ? (
-            <div className="rounded-(--r-3) p-5 flex flex-col gap-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard className="p-5 flex flex-col gap-3">
               <div className="text-[13.5px]" style={{ color: "var(--fg-2)", lineHeight: 1.5 }}>
                 This plan is a document{plan.document_file_name ? ` (${plan.document_file_name})` : ""}. Open it to see your meals.
               </div>
@@ -227,7 +218,7 @@ export default function MemberMealPlanDetailPage({
               >
                 {downloading ? "Opening..." : "Open plan"}
               </button>
-            </div>
+            </DSCard>
           ) : (
             <>
               {/* Day selector: the week ahead, today pre-selected. */}
@@ -261,9 +252,9 @@ export default function MemberMealPlanDetailPage({
               )}
 
               <div className="flex flex-col gap-2">
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+                <Eyebrow>
                   {WEEKDAY_LABELS[day]}{day === todayWeekday() ? " · today" : ""}
-                </div>
+                </Eyebrow>
                 {dayMeals.length === 0 ? (
                   <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
                     No meals planned for this day.
@@ -276,12 +267,10 @@ export default function MemberMealPlanDetailPage({
               <ShoppingListSection key={`shop-${user?.id ?? "anon"}`} plan={plan} planId={planId} />
 
               {plan.dietitian_notes && (
-                <div className="rounded-(--r-2) px-4 py-3" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.05em] mb-1" style={{ color: "var(--fg-3)" }}>
-                    From your dietitian
-                  </div>
+                <DSCard flat className="px-4 py-3">
+                  <Eyebrow className="mb-1">From your dietitian</Eyebrow>
                   <div className="text-[13px]" style={{ color: "var(--fg-2)", lineHeight: 1.6 }}>{plan.dietitian_notes}</div>
-                </div>
+                </DSCard>
               )}
             </>
           )}

@@ -6,7 +6,7 @@ import { requestStatusTone } from "@/lib/ui/statusTones";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
-import { AsyncSpinner } from "@/components/ds";
+import { AsyncSpinner, PageHeader, DSCard, Eyebrow } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -368,14 +368,11 @@ function RequestsInner() {
 
   return (
     <>
-      <div>
-        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-          Connection requests
-        </h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          Members who asked to work with you from your marketplace listing.
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title="Connection requests"
+        subtitle="Members who asked to work with you from your marketplace listing."
+      />
 
       {requestsQuery.isError && (
         <div
@@ -391,9 +388,9 @@ function RequestsInner() {
       )}
 
       {(unpublished || notAccepting) && (
-        <div
-          className="rounded-(--r-3) px-4 py-3 text-[13px] flex flex-wrap items-center justify-between gap-2"
-          style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-2)" }}
+        <DSCard
+          className="px-4 py-3 text-[13px] flex flex-wrap items-center justify-between gap-2"
+          style={{ color: "var(--fg-2)" }}
         >
           <span>
             {unpublished
@@ -403,7 +400,7 @@ function RequestsInner() {
           <Link href={listingHref(role)} className="btn-ghost-v2 sm">
             Open my listing
           </Link>
-        </div>
+        </DSCard>
       )}
 
       {focusId && !loading && !requestsQuery.isError && !focusFound && hasListing && (
@@ -433,18 +430,11 @@ function RequestsInner() {
       ) : (
         <>
           <section aria-labelledby={pendingHeadingId} className="flex flex-col gap-3">
-            <h2
-              id={pendingHeadingId}
-              className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
-              style={{ color: "var(--fg-3)" }}
-            >
+            <Eyebrow as="h2" id={pendingHeadingId}>
               Waiting for you · {pending.length}
-            </h2>
+            </Eyebrow>
             {pending.length === 0 ? (
-              <div
-                className="rounded-(--r-3) p-5"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-              >
+              <DSCard className="p-5">
                 <p className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>
                   No requests waiting.
                 </p>
@@ -455,7 +445,7 @@ function RequestsInner() {
                 <Link href={listingHref(role)} className="btn-ghost-v2 sm mt-3">
                   Review my listing
                 </Link>
-              </div>
+              </DSCard>
             ) : (
               pending.map((r) => (
                 <PendingRequestCard

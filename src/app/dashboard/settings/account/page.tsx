@@ -11,6 +11,7 @@ import {
   changePasswordSchema,
   type ChangePasswordFormData,
 } from "@/lib/schemas/settings";
+import { DSCard } from "@/components/ds";
 
 export default function AccountSettingsPage() {
   const { user, logout } = useAuth();
@@ -79,8 +80,8 @@ export default function AccountSettingsPage() {
   return (
     <div className="space-y-6">
       {/* Change Password */}
-      <div className="rounded-xl bg-bg p-4 border border-border sm:p-6">
-        <h3 className="mb-4 text-lg font-bold text-ink sm:text-xl">
+      <DSCard className="p-4 sm:p-6" style={{ overflow: "visible" }}>
+        <h3 className="mb-4 text-[16px] font-medium text-ink">
           Change Password
         </h3>
         <form
@@ -94,10 +95,10 @@ export default function AccountSettingsPage() {
             <input
               type="password"
               {...register("current")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-signal"
+              className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.current && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-danger-ink">
                 {errors.current.message}
               </p>
             )}
@@ -109,10 +110,10 @@ export default function AccountSettingsPage() {
             <input
               type="password"
               {...register("new")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-signal"
+              className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.new && (
-              <p className="mt-1 text-sm text-red-500">{errors.new.message}</p>
+              <p className="mt-1 text-sm text-danger-ink">{errors.new.message}</p>
             )}
           </div>
           <div>
@@ -122,10 +123,10 @@ export default function AccountSettingsPage() {
             <input
               type="password"
               {...register("confirm")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-signal"
+              className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.confirm && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-danger-ink">
                 {errors.confirm.message}
               </p>
             )}
@@ -133,17 +134,17 @@ export default function AccountSettingsPage() {
           <button
             type="submit"
             disabled={isChangingPassword}
-            className="w-full rounded-lg bg-signal px-6 py-3 font-semibold text-ink transition-colors hover:bg-signal/85 sm:w-auto"
+            className="btn-signal-v2 lg w-full sm:w-auto"
           >
             {isChangingPassword ? "Changing..." : "Change Password"}
           </button>
         </form>
-      </div>
+      </DSCard>
 
 
       {/* Danger zone — real deletion via POST /auth/account/delete */}
-      <div className="rounded-xl bg-bg p-4 sm:p-6" style={{ border: "1px solid oklch(0.88 0.05 25)" }}>
-        <h3 className="mb-1 text-lg font-bold sm:text-xl" style={{ color: "var(--danger)" }}>
+      <DSCard className="p-4 sm:p-6" style={{ border: "1px solid oklch(0.88 0.05 25)" }}>
+        <h3 className="mb-1 text-[16px] font-medium" style={{ color: "var(--danger)" }}>
           Delete account
         </h3>
         <p className="mb-4 max-w-[64ch] text-sm text-fg-2">
@@ -157,7 +158,7 @@ export default function AccountSettingsPage() {
           <button
             type="button"
             onClick={() => setDeleteOpen(true)}
-            className="rounded-lg px-5 py-2.5 text-sm font-semibold"
+            className="rounded-(--r-2) px-5 py-2.5 text-sm font-semibold"
             style={{ border: "1px solid oklch(0.88 0.05 25)", color: "var(--danger)", background: "var(--danger-soft)" }}
           >
             Delete my account&hellip;
@@ -172,7 +173,7 @@ export default function AccountSettingsPage() {
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
               autoComplete="current-password"
-              className="w-full rounded-lg border border-neutral-200 px-4 py-3 focus:outline-none focus:ring-2"
+              className="w-full rounded-(--r-2) border border-border bg-bg text-ink px-4 py-3 focus:outline-none focus:ring-2"
               style={{ ["--tw-ring-color" as string]: "var(--danger)" }}
             />
             {deleteError && (
@@ -183,7 +184,7 @@ export default function AccountSettingsPage() {
                 type="button"
                 onClick={onDeleteAccount}
                 disabled={!deletePassword || isDeleting}
-                className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-(--r-2) px-5 py-2.5 text-sm font-semibold text-bg disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ background: "var(--danger)" }}
               >
                 {isDeleting ? "Deleting…" : "Permanently delete my account"}
@@ -192,7 +193,7 @@ export default function AccountSettingsPage() {
                 type="button"
                 onClick={() => { setDeleteOpen(false); setDeletePassword(""); setDeleteError(""); }}
                 disabled={isDeleting}
-                className="rounded-lg px-5 py-2.5 text-sm font-semibold text-fg-2"
+                className="rounded-(--r-2) px-5 py-2.5 text-sm font-semibold text-fg-2"
                 style={{ border: "1px solid var(--border)" }}
               >
                 Cancel
@@ -200,7 +201,7 @@ export default function AccountSettingsPage() {
             </div>
           </div>
         )}
-      </div>
+      </DSCard>
     </div>
   );
 }

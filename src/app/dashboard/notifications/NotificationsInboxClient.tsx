@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AsyncSpinner, EmptySlate, NotificationIconTile } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, NotificationIconTile, DSCard, Eyebrow } from "@/components/ds";
 import { RoleShell } from "@/components/ds/RoleShell";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -107,12 +107,10 @@ export default function NotificationsInboxClient() {
       crumb="Notifications"
     >
       <div className="mx-auto w-full max-w-5xl">
-        <div className="rounded-(--r-3) border border-border bg-bg">
+        <DSCard>
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4 sm:px-6">
             <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-fg-3">
-                Notifications
-              </p>
+              <Eyebrow as="p">Notifications</Eyebrow>
               <h1 className="text-xl font-semibold text-ink sm:text-2xl">Inbox</h1>
             </div>
             {unreadTotal > 0 && (
@@ -171,9 +169,9 @@ export default function NotificationsInboxClient() {
                       {!item.isRead && <span className="mt-1.5 h-2 w-2 rounded-full bg-signal" />}
                     </div>
                     <p className="mt-1 text-sm text-fg-3">{item.message}</p>
-                    <p className="mt-1 font-mono text-[10.5px] uppercase tracking-wide text-fg-4">
+                    <Eyebrow as="p" className="mt-1">
                       {relativeTime(item.createdAt)}
-                    </p>
+                    </Eyebrow>
                   </div>
                 </button>
               ))
@@ -205,7 +203,7 @@ export default function NotificationsInboxClient() {
               </div>
             </div>
           )}
-        </div>
+        </DSCard>
       </div>
     </RoleShell>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, EmptySlate, PageHeader } from "@/components/ds";
 import { progressService, type DietPlan } from "@/lib/api/progress";
 import { DietPlanDeliveryType } from "@/lib/types";
 import { isWeeklyPlan, planDays } from "@/lib/progress/weeklyPlan";
@@ -44,14 +44,10 @@ export default function MemberMealPlansPage() {
 
   return (
     <MemberDashboardShell activeLabel="Meal plans">
-      <div className="mb-1">
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-          Meal plans
-        </h1>
-        <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-          Plans from your dietitian. Open one to see the week ahead and plan your shopping.
-        </p>
-      </div>
+      <PageHeader
+        title="Meal plans"
+        subtitle="Plans from your dietitian. Open one to see the week ahead and plan your shopping."
+      />
 
       {error && (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}>

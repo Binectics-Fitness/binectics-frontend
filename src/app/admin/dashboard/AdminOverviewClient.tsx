@@ -3,7 +3,7 @@
 import { formatPercent } from "@/lib/admin/percent";
 import { useEffect, useMemo, useState } from "react";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, DSCardHead, DSStatCard, Eyebrow, EmptySlate, PageHeader } from "@/components/ds";
 import { adminService, type PlatformMetricsOverview, type FeedbackSummary } from "@/lib/api/admin";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { formatRevenue, revenueHeadline, revenueRows } from "@/lib/admin/revenue";
@@ -96,10 +96,7 @@ export default function AdminOverviewClient() {
 
   return (
     <AdminDashboardShell activeItem="Overview" crumb="Overview">
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Platform overview</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>Providers, subscriptions, and member feedback</div>
-      </div>
+      <PageHeader className="mb-0!" title="Platform overview" subtitle="Providers, subscriptions, and member feedback" />
 
       {error ? (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
@@ -115,21 +112,14 @@ export default function AdminOverviewClient() {
           {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {kpis.map((s) => (
-              <div key={s.l} className="flex flex-col gap-1 rounded-(--r-3) px-4 py-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.l}</div>
-                <div className="text-[22px] font-medium" style={{ letterSpacing: "-0.018em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
-                <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{s.d}</div>
-              </div>
+              <DSStatCard key={s.l} size="sm" label={s.l} value={s.v} delta={<span className="whitespace-normal">{s.d}</span>} />
             ))}
           </div>
 
           {/* Providers by country + Revenue by currency */}
           <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-3 items-start">
-            <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-              <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Verified providers · by country</h3>
-                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Top {byCountry.length} of {metrics.verifiedProviders.distinctCountries}</div>
-              </div>
+            <DSCard>
+              <DSCardHead title="Verified providers · by country" subtitle={`Top ${byCountry.length} of ${metrics.verifiedProviders.distinctCountries}`} />
               {byCountry.length === 0 ? (
                 <div className="px-4.5 py-4"><EmptySlate message="No verified providers yet." mt="mt-0" /></div>
               ) : (
@@ -143,13 +133,10 @@ export default function AdminOverviewClient() {
                   </div>
                 ))
               )}
-            </div>
+            </DSCard>
 
-            <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-              <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Revenue · by currency</h3>
-                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Active subscriptions</div>
-              </div>
+            <DSCard>
+              <DSCardHead title="Revenue · by currency" subtitle="Active subscriptions" />
               {byCurrency.length === 0 ? (
                 <div className="px-4.5 py-4"><EmptySlate message="No revenue recorded yet." mt="mt-0" /></div>
               ) : (
@@ -163,16 +150,13 @@ export default function AdminOverviewClient() {
                   </div>
                 ))
               )}
-            </div>
+            </DSCard>
           </div>
 
           {/* Member feedback */}
           {feedback && feedback.responseCount > 0 && (
-            <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-              <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Member feedback</h3>
-                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>{feedback.responseCount} responses</div>
-              </div>
+            <DSCard>
+              <DSCardHead title="Member feedback" subtitle={`${feedback.responseCount} responses`} />
               <div className="grid grid-cols-3 gap-3 p-4.5">
                 {[
                   { l: "Positive", v: pct(feedback.positivePercentage) },
@@ -180,12 +164,12 @@ export default function AdminOverviewClient() {
                   { l: "Responses", v: feedback.responseCount.toLocaleString() },
                 ].map((s) => (
                   <div key={s.l}>
-                    <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.l}</div>
+                    <Eyebrow>{s.l}</Eyebrow>
                     <div className="text-[22px] font-medium mt-1" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
                   </div>
                 ))}
               </div>
-            </div>
+            </DSCard>
           )}
         </>
       ) : null}

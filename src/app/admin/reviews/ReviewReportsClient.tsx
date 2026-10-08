@@ -13,6 +13,8 @@ import {
   DSTableTh,
   DSTableRow,
   DSTableTd,
+  PageHeader,
+  DSCard,
 } from "@/components/ds";
 import {
   adminService,
@@ -75,15 +77,11 @@ export function ReviewReportsClient() {
 
   return (
     <AdminDashboardShell activeItem="Reviews" crumb="Reviews">
-      <div>
-        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
-          Reviews
-        </h1>
-        <p className="text-[13.5px] mt-1.5 max-w-[64ch]" style={{ color: "var(--fg-3)" }}>
-          Reports members file on reviews. Open one to dismiss the report or hide the review; a hidden review leaves the
-          provider&apos;s page and their rating.
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title="Reviews"
+        subtitle={<span className="block max-w-[64ch]">Reports members file on reviews. Open one to dismiss the report or hide the review; a hidden review leaves the provider&apos;s page and their rating.</span>}
+      />
 
       <div className="flex items-center gap-2 mt-4 flex-wrap">
         {FILTERS.map((f) => (
@@ -119,7 +117,7 @@ export function ReviewReportsClient() {
         <EmptySlate message="No reports" hint={EMPTY_HINT[filter]} />
       ) : !error && data ? (
         <>
-          <div className="rounded-(--r-3) mt-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard className="mt-4">
             <DSTable minWidth={820}>
               <DSTableHead>
                 <DSTableTh>Reported</DSTableTh>
@@ -172,7 +170,7 @@ export function ReviewReportsClient() {
                 })}
               </tbody>
             </DSTable>
-          </div>
+          </DSCard>
 
           <div className="flex items-center justify-between mt-3 text-[13px]">
             <div style={{ color: "var(--fg-3)" }}>

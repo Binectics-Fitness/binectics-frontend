@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { AsyncSpinner, IconTile } from "@/components/ds";
+import { AsyncSpinner, IconTile, PageHeader, DSCard } from "@/components/ds";
 import { providerTone, toneColors } from "@/lib/ui/tones";
 import { toast } from "@/components/Toast";
 import { useSavedListings, useToggleSavedListing } from "@/lib/queries/savedListings";
@@ -47,24 +47,25 @@ export function SavedProvidersClient() {
 
   return (
     <MemberDashboardShell activeLabel="Saved">
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Saved providers</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {saved.length > 0
+      <PageHeader
+        className="mb-0!"
+        title="Saved providers"
+        subtitle={
+          saved.length > 0
             ? `${saved.length} saved provider${saved.length === 1 ? "" : "s"}`
-            : "Your bookmarked gyms, trainers, and dietitians"}
-        </div>
-      </div>
+            : "Your bookmarked gyms, trainers, and dietitians"
+        }
+      />
 
       {isPending ? (
         <div className="mt-6"><AsyncSpinner label="Loading saved providers" /></div>
       ) : isError ? (
-        <div className="rounded-(--r-3) px-5 py-6 mt-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="px-5 py-6 mt-4">
           <p className="text-[14px]" style={{ color: "var(--ink)" }}>Couldn&apos;t load your saved providers.</p>
           <button type="button" onClick={() => void refetch()} className="btn-ghost-v2 sm mt-3">Try again</button>
-        </div>
+        </DSCard>
       ) : saved.length === 0 ? (
-        <div className="rounded-(--r-3) flex flex-col items-center text-center px-6 py-14 mt-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="flex flex-col items-center text-center px-6 py-14 mt-4">
           <IconTile size="lg" className="mb-4">
             <HeartIcon />
           </IconTile>
@@ -73,7 +74,7 @@ export function SavedProvidersClient() {
             Tap the heart on a gym, trainer, or dietitian in the marketplace and they&apos;ll show up here so you can come back to them.
           </p>
           <Link href="/marketplace" className="btn-primary-v2 sm mt-5">Browse marketplace</Link>
-        </div>
+        </DSCard>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-4" aria-label="Saved providers">
           {saved.map((l) => {

@@ -14,6 +14,9 @@ import {
   DSTableTh,
   DSTableRow,
   DSTableTd,
+  PageHeader,
+  DSCard,
+  Eyebrow,
 } from "@/components/ds";
 import Modal from "@/components/Modal";
 import { toast } from "@/components/Toast";
@@ -220,7 +223,6 @@ function Switch({
 
 const inputClass = "h-9 w-full rounded-(--r-2) px-3 text-[13.5px]";
 const inputStyle = { background: "var(--bg)", border: "1px solid var(--border-2)", color: "var(--ink)" };
-const labelClass = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
 function EditCurrencyModal({
   currency,
@@ -333,7 +335,7 @@ function EditCurrencyModal({
           </div>
 
           <section className="flex flex-col gap-3">
-            <div className={labelClass} style={{ color: "var(--fg-3)" }}>Payment providers</div>
+            <Eyebrow>Payment providers</Eyebrow>
             {currency.gateways.length === 0 && (
               <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>No payment provider is set up for this currency.</p>
             )}
@@ -392,7 +394,7 @@ function EditCurrencyModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className={labelClass} style={{ color: "var(--fg-3)" }}>Name</span>
+              <Eyebrow as="span">Name</Eyebrow>
               <input
                 value={draft.name}
                 maxLength={80}
@@ -402,7 +404,7 @@ function EditCurrencyModal({
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className={labelClass} style={{ color: "var(--fg-3)" }}>Symbol</span>
+              <Eyebrow as="span">Symbol</Eyebrow>
               <input
                 value={draft.symbol}
                 maxLength={10}
@@ -413,7 +415,7 @@ function EditCurrencyModal({
             </label>
           </div>
           <label className="flex flex-col gap-1.5">
-            <span className={labelClass} style={{ color: "var(--fg-3)" }}>Notes</span>
+            <Eyebrow as="span">Notes</Eyebrow>
             <textarea
               value={draft.notes}
               maxLength={500}
@@ -484,15 +486,11 @@ export default function AdminCurrenciesPage() {
   return (
     <>
     <AdminDashboardShell activeItem="Currencies" crumb="Currencies">
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
-          Currencies
-        </h1>
-        <p className="text-[13.5px] mt-1.5 max-w-[68ch]" style={{ color: "var(--fg-3)" }}>
-          A currency can be priced and paid only when it is offered on the platform, a payment provider we use can
-          charge it, and that provider has it switched on for our account. Each column shows the result and why.
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title="Currencies"
+        subtitle={<span className="block max-w-[68ch]">A currency can be priced and paid only when it is offered on the platform, a payment provider we use can charge it, and that provider has it switched on for our account. Each column shows the result and why.</span>}
+      />
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-4">
         <input
@@ -533,7 +531,7 @@ export default function AdminCurrenciesPage() {
           hint={filter === "enabled" && !search ? "No currency is offered yet. Choose All to turn one on." : "Try another search."}
         />
       ) : (
-        <div className="rounded-(--r-3) mt-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="mt-4">
           <DSTable minWidth={1100}>
             <DSTableHead>
               <DSTableTh>Currency</DSTableTh>
@@ -595,7 +593,7 @@ export default function AdminCurrenciesPage() {
               ))}
             </tbody>
           </DSTable>
-        </div>
+        </DSCard>
       )}
     </AdminDashboardShell>
     {/* Beside the shell, not in its body: an overlay, not page content. */}

@@ -63,8 +63,10 @@ describe("admin revenue", () => {
       </QueryClientProvider>,
     );
     const label = await screen.findByText("Subscription revenue");
-    expect(label.nextSibling?.textContent).toBe("₦1,250,000");
-    expect(label.nextSibling?.nextSibling?.textContent).toBe("+1 more currency");
+    // The KPI is a DSStatCard: read its value and delta slots, not DOM siblings.
+    const card = label.closest("[data-size]") as HTMLElement;
+    expect(card.querySelector("[data-stat-value]")?.textContent).toBe("₦1,250,000");
+    expect(card.querySelector("[data-delta]")?.textContent).toBe("+1 more currency");
     expect(screen.queryByText(/USD equivalent/)).toBeNull();
   });
 });

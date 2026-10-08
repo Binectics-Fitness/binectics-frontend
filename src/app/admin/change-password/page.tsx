@@ -11,6 +11,7 @@ import {
 import { authService } from "@/lib/api/auth";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/Toast";
+import { DSCard } from "@/components/ds";
 
 export default function AdminChangePasswordPage() {
   const router = useRouter();
@@ -49,11 +50,8 @@ export default function AdminChangePasswordPage() {
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-4">
-      <div
-        className="w-full max-w-md bg-bg rounded-(--r-3) border border-border p-6 sm:p-8"
-        style={{ boxShadow: "var(--shadow-2)" }}
-      >
-        <h1 className="text-2xl font-black text-ink">
+      <DSCard className="w-full max-w-md p-6 sm:p-8">
+        <h1 className="text-[24px] font-medium leading-[1.15] text-ink" style={{ letterSpacing: "-0.02em" }}>
           Set a new password
         </h1>
         <p className="mt-2 text-sm text-fg-2">
@@ -124,12 +122,12 @@ export default function AdminChangePasswordPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-(--r-2) bg-signal px-4 py-2.5 text-sm font-semibold text-bg hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn-signal-v2 w-full disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Updating…" : "Update password"}
           </button>
         </form>
-      </div>
+      </DSCard>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { DSCard } from "@/components/ds";
+
 /**
  * Admin loading skeleton — dark sidebar (280px, ink bg) + KPI cards + table rows.
  */
@@ -23,15 +25,15 @@ export default function AdminLoading() {
           {/* KPI cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-(--r-3) border p-5" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
+              <DSCard key={i} className="p-5">
                 <div className="h-3 w-24 animate-pulse rounded-(--r-2) mb-3" style={{ background: "var(--bg-3)" }} />
                 <div className="h-7 w-20 animate-pulse rounded-(--r-2)" style={{ background: "var(--bg-2)" }} />
-              </div>
+              </DSCard>
             ))}
           </div>
 
           {/* Table skeleton */}
-          <div className="rounded-(--r-3) border overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
+          <DSCard>
             {/* Header row */}
             <div className="flex gap-4 px-5 py-3 border-b" style={{ borderColor: "var(--border)", background: "var(--bg-2)" }}>
               {[100, 140, 80, 60, 72].map((w, i) => (
@@ -46,7 +48,7 @@ export default function AdminLoading() {
                 ))}
               </div>
             ))}
-          </div>
+          </DSCard>
         </main>
       </div>
     </div>

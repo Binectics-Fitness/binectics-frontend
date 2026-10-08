@@ -22,6 +22,7 @@ import {
   dateOfBirthInput,
   todayYmd,
 } from "@/lib/schemas/settings";
+import { DSCard } from "@/components/ds";
 
 const FITNESS_GOAL_SUGGESTIONS = [
   "Weight Loss",
@@ -297,8 +298,8 @@ export default function ProfileSettingsPage() {
   if (!user) return null;
 
   const renderUserFields = () => (
-    <div className="mb-6 rounded-xl bg-bg p-4 border border-border sm:p-6">
-      <h3 className="mb-4 text-lg font-bold text-ink sm:text-xl">
+    <DSCard className="mb-6 p-4 sm:p-6" style={{ overflow: "visible" }}>
+      <h3 className="mb-4 text-[16px] font-medium text-ink">
         Fitness Goals & Preferences
       </h3>
       <div className="space-y-4">
@@ -327,14 +328,14 @@ export default function ProfileSettingsPage() {
           />
         </div>
       </div>
-    </div>
+    </DSCard>
   );
 
   return (
     <div>
 
       {/* Basic Information */}
-      <div className="mb-6 rounded-xl bg-bg p-4 border border-border sm:p-6">
+      <DSCard className="mb-6 p-4 sm:p-6" style={{ overflow: "visible" }}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             {displayedProfileImage ? (
@@ -342,16 +343,16 @@ export default function ProfileSettingsPage() {
               <img
                 src={displayedProfileImage}
                 alt="Profile"
-                className="h-20 w-20 rounded-2xl object-cover border border-neutral-200"
+                className="h-20 w-20 rounded-(--r-3) object-cover border border-border"
               />
             ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-signal-soft text-2xl font-black text-signal-ink">
+              <div className="flex h-20 w-20 items-center justify-center rounded-(--r-3) bg-signal-soft text-2xl font-medium text-signal-ink">
                 {`${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() ||
                   "U"}
               </div>
             )}
             <div>
-              <h3 className="text-lg font-bold text-ink sm:text-xl">
+              <h3 className="text-[16px] font-medium text-ink">
                 Profile Image
               </h3>
               <p className="text-sm text-fg-2">
@@ -366,7 +367,7 @@ export default function ProfileSettingsPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <label className="cursor-pointer rounded-lg border border-neutral-300 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-signal disabled:opacity-50">
+            <label className="btn-ghost-v2 lg cursor-pointer">
               {isUploadingProfileImage ? "Uploading..." : "Upload Image"}
               <input
                 type="file"
@@ -384,16 +385,16 @@ export default function ProfileSettingsPage() {
                 isUploadingProfileImage ||
                 isDeletingProfileImage
               }
-              className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-ghost-v2 lg text-danger-ink! hover:bg-danger-soft! disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDeletingProfileImage ? "Removing..." : "Remove Image"}
             </button>
           </div>
         </div>
-      </div>
+      </DSCard>
 
-      <div className="mb-6 rounded-xl bg-bg p-4 border border-border sm:p-6">
-        <h3 className="mb-4 text-lg font-bold text-ink sm:text-xl">
+      <DSCard className="mb-6 p-4 sm:p-6" style={{ overflow: "visible" }}>
+        <h3 className="mb-4 text-[16px] font-medium text-ink">
           Basic Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -404,10 +405,10 @@ export default function ProfileSettingsPage() {
             <input
               type="text"
               {...registerField("firstName")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-signal"
+              className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.firstName && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-danger-ink">
                 {errors.firstName.message}
               </p>
             )}
@@ -419,10 +420,10 @@ export default function ProfileSettingsPage() {
             <input
               type="text"
               {...registerField("lastName")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-signal"
+              className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.lastName && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-danger-ink">
                 {errors.lastName.message}
               </p>
             )}
@@ -435,7 +436,7 @@ export default function ProfileSettingsPage() {
               type="email"
               value={formData.email}
               disabled
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg bg-neutral-50 text-fg-3 cursor-not-allowed"
+              className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg-2 text-fg-3 cursor-not-allowed"
             />
           </div>
           <div>
@@ -445,7 +446,7 @@ export default function ProfileSettingsPage() {
             <input
               type="tel"
               {...registerField("phone")}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-signal"
+              className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
               placeholder="+1 (555) 000-0000"
             />
           </div>
@@ -466,12 +467,12 @@ export default function ProfileSettingsPage() {
               aria-describedby={
                 errors.dateOfBirth ? "profile-date-of-birth-error" : undefined
               }
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
+              className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.dateOfBirth && (
               <p
                 id="profile-date-of-birth-error"
-                className="mt-1 text-sm text-red-500"
+                className="mt-1 text-sm text-danger-ink"
               >
                 {errors.dateOfBirth.message}
               </p>
@@ -491,15 +492,15 @@ export default function ProfileSettingsPage() {
             />
           </div>
         </div>
-      </div>
+      </DSCard>
 
       {/* Default Currency (providers only) */}
       {(user.role === UserRole.GYM_OWNER ||
         user.role === UserRole.TRAINER ||
         user.role === UserRole.DIETITIAN) && (
-        <div className="mb-6 rounded-xl border-2 border-border bg-bg p-4 border border-border sm:p-6">
+        <DSCard className="mb-6 p-4 sm:p-6" style={{ overflow: "visible" }}>
           <div className="mb-4 flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-signal-soft text-signal-ink">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-(--r-2) bg-signal-soft text-signal-ink">
               <svg
                 className="h-5 w-5"
                 fill="none"
@@ -515,7 +516,7 @@ export default function ProfileSettingsPage() {
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-ink sm:text-xl">
+              <h3 className="text-[16px] font-medium text-ink">
                 Default Currency
               </h3>
               <p className="text-sm text-fg-2">
@@ -550,13 +551,13 @@ export default function ProfileSettingsPage() {
                   !orgCurrency ||
                   orgCurrency === (currentOrg.currency || "")
                 }
-                className="h-12 rounded-lg bg-signal px-6 text-sm font-semibold text-ink transition-colors hover:bg-signal/85 disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-signal-v2 lg disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSavingCurrency ? "Saving..." : "Save Currency"}
               </button>
             </div>
           )}
-        </div>
+        </DSCard>
       )}
 
       {/* Role-specific fields */}
@@ -567,7 +568,7 @@ export default function ProfileSettingsPage() {
         <button
           onClick={handleSubmit(onSave)}
           disabled={isSaving}
-          className="w-full rounded-lg bg-signal px-8 py-3 font-semibold text-ink transition-colors hover:bg-signal/85 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className="btn-signal-v2 lg w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {isSaving ? "Saving..." : "Save Profile"}
         </button>

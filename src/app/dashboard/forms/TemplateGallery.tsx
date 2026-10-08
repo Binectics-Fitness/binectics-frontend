@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formsService, type Form, type FormTemplate } from "@/lib/api/forms";
+import { DSCard, Eyebrow } from "@/components/ds";
 
 const CATEGORY_LABEL: Record<FormTemplate["category"], string> = {
   gym: "Gym",
@@ -137,10 +138,7 @@ export function TemplateGallery({ onCreated, onError }: TemplateGalleryProps) {
       )}
 
       {preview && (
-        <div
-          className="rounded-(--r-2) p-4 mt-3"
-          style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
-        >
+        <DSCard flat className="p-4 mt-3">
           <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>
             {preview.title}, questions
           </div>
@@ -157,15 +155,15 @@ export function TemplateGallery({ onCreated, onError }: TemplateGalleryProps) {
                       required
                     </span>
                   )}
-                  <span className="font-mono text-[10px] uppercase tracking-wider ml-2" style={{ color: "var(--fg-4)" }}>
+                  <Eyebrow as="span" className="ml-2">
                     {q.type}
                     {q.options && q.options.length > 0 ? ` · ${q.options.length} options` : ""}
-                  </span>
+                  </Eyebrow>
                 </span>
               </li>
             ))}
           </ol>
-        </div>
+        </DSCard>
       )}
     </section>
   );
