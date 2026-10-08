@@ -10,7 +10,7 @@ import type { OrgEnrollmentOffer } from "@/lib/api/marketplace";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 
 function planName(offer: OrgEnrollmentOffer): string {
-  return typeof offer.plan_id === "string" ? "Membership" : offer.plan_id.name;
+  return offer.plan_id && typeof offer.plan_id === "object" ? offer.plan_id.name : "Membership";
 }
 
 /**

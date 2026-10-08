@@ -31,14 +31,21 @@ export function EnrollmentOffersCard({ onAccepted }: { onAccepted?: () => void }
   // Shown after accepting a transfer offer: the one-time account to pay into.
   const [transfer, setTransfer] = useState<{ gym: string; account: EnrollTransferAccount } | null>(null);
 
-  const pending = offers.filter((o) => o.status === "pending");
+  // An offer whose plan or gym has since been deleted has nothing left to
+  // accept (the API cancels and filters them; this guards older responses).
+  const pending = offers.filter(
+    (o): o is EnrollmentOffer & {
+      plan_id: NonNullable<EnrollmentOffer["plan_id"]>;
+      organization_id: NonNullable<EnrollmentOffer["organization_id"]>;
+    } => o.status === "pending" && !!o.plan_id && !!o.organization_id,
+  );
   if (pending.length === 0 && !transfer) return null;
 
   const handle = async (offer: EnrollmentOffer, accept: boolean) => {
     setBusyId(offer._id);
     try {
       const result = await respond.mutateAsync({ offerId: offer._id, accept });
-      const gym = offer.organization_id.name;
+      const gym = offer.organization_id?.name ?? "the gym";
       if (accept) onAccepted?.();
       if (!accept) {
         toast.success(`Declined the offer from ${gym}`);

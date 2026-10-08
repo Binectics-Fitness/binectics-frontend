@@ -44,6 +44,32 @@ describe("EnrollmentOffersCard", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it("skips an offer whose plan or gym was deleted instead of crashing the page", async () => {
+    vi.spyOn(marketplaceService, "getMyEnrollmentOffers").mockResolvedValue({
+      success: true,
+      data: [
+        offer({ _id: "gone-plan", plan_id: null }),
+        offer({ _id: "gone-gym", organization_id: null }),
+        offer({ _id: "ok", organization_id: { _id: "g2", name: "Still Here Gym" } }),
+      ],
+    });
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    renderCard();
+    expect(await screen.findByText("Still Here Gym")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Accept" })).toHaveLength(1);
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it("renders nothing when every pending offer lost its plan", async () => {
+    const get = vi
+      .spyOn(marketplaceService, "getMyEnrollmentOffers")
+      .mockResolvedValue({ success: true, data: [offer({ plan_id: null })] });
+    const { container } = renderCard();
+    await waitFor(() => expect(get).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 20));
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it("lists a pending offer with the plan price from minor units", async () => {
     vi.spyOn(marketplaceService, "getMyEnrollmentOffers").mockResolvedValue({
       success: true,

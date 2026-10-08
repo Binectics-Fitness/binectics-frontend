@@ -184,7 +184,7 @@ export const authService = {
    */
   async resendOtp(
     data: ResendOtpRequest,
-  ): Promise<ApiResponse<{ message: string }>> {
+  ): Promise<ApiResponse<{ message?: string; claim_link_sent?: boolean }>> {
     return apiClient.post("/auth/resend-otp", data, false);
   },
 

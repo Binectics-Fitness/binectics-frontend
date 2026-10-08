@@ -325,7 +325,9 @@ export interface EnrollMemberResponse {
 /** A pending membership offer, as the member sees it. */
 export interface EnrollmentOffer {
   _id: string;
-  organization_id: { _id: string; name: string; logo_url?: string | null };
+  /** Null if the gym's workspace was deleted after the offer was made. */
+  organization_id: { _id: string; name: string; logo_url?: string | null } | null;
+  /** Null if the plan was deleted after the offer was made. */
   plan_id: {
     _id: string;
     name: string;
@@ -333,7 +335,7 @@ export interface EnrollmentOffer {
     price_minor: number;
     currency: string;
     duration_days: number;
-  };
+  } | null;
   email: string;
   requested_status: "active" | "pending_payment";
   payment_mode: EnrollPaymentMode;
@@ -357,7 +359,8 @@ export interface OrgEnrollmentOffer {
   email: string;
   plan_id:
     | { _id: string; name: string; price_minor: number; currency: string; duration_days?: number }
-    | string;
+    | string
+    | null;
   payment_mode: EnrollPaymentMode;
   status: EnrollmentOfferStatus;
   expires_at: string;

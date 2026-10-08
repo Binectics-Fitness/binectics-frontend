@@ -44,7 +44,13 @@ function VerificationForm() {
 
     const sent = await resendOtp(email);
 
-    if (sent) {
+    if (sent === "claim_link") {
+      // A gym created this account; it is finished from the emailed link,
+      // not with a code.
+      setSuccess(
+        "We emailed you a link to set your password. Open it to finish setting up your account.",
+      );
+    } else if (sent) {
       setSuccess("Verification code has been resent to your email");
       setTimeout(() => setSuccess(""), 5000);
     } else {
