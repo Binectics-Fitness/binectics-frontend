@@ -41,6 +41,10 @@ interface RawResponseBody {
   suspended_at?: unknown;
   /** Seconds until sign-in reopens (AUTH_ACCOUNT_LOCKED). */
   retry_after_seconds?: unknown;
+  /** Fresh auto-renew consent (CONSENT_TEXT_CHANGED, CONSENT_REQUIRED). */
+  consent?: unknown;
+  /** Why auto-renew isn't offered (AUTO_RENEW_NOT_AVAILABLE). */
+  reason?: unknown;
 }
 
 /**
@@ -56,6 +60,8 @@ const TOP_LEVEL_DETAIL_FIELDS = [
   "suspension_reason",
   "suspended_at",
   "retry_after_seconds",
+  "consent",
+  "reason",
 ] as const;
 
 function detailsOf(

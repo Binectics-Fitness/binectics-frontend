@@ -20,6 +20,9 @@ function SuccessContent() {
 
   const listingId = searchParams.get("listing");
   const planId = searchParams.get("plan");
+  // Set by the checkout only when the member ticked "Renew automatically".
+  // Wording only: Billing re-reads the real state from the API.
+  const renewal = searchParams.get("renewal");
 
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [plan, setPlan] = useState<MarketplaceMembershipPlan | null>(null);
@@ -44,6 +47,8 @@ function SuccessContent() {
   }, [listingId, planId]);
 
   useEffect(() => {
+    // Reading the plan from the API is the external sync this effect is for.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!authLoading && user) void loadData();
   }, [user, authLoading, loadData]);
 
@@ -119,6 +124,17 @@ function SuccessContent() {
               </div>
             </div>
           </div>
+        )}
+
+        {renewal === "on" && (
+          <p role="status" className="mb-6 rounded-(--r-3) border border-border bg-bg-2 px-4 py-3 text-left text-sm text-fg-2">
+            Auto-renew is on. We&apos;ll remind you before each charge, and you can turn it off or remove your card in Billing at any time.
+          </p>
+        )}
+        {renewal === "not_saved" && (
+          <p role="status" className="mb-6 rounded-(--r-3) border border-warn bg-warn-soft px-4 py-3 text-left text-sm text-warn-ink">
+            We couldn&apos;t save this card for renewals, so auto-renew is off. Renew in Billing when your term ends.
+          </p>
         )}
 
         <div className="flex flex-col sm:flex-row gap-3">

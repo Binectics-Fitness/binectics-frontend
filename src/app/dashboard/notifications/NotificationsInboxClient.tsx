@@ -17,7 +17,9 @@ import {
   useNotifications,
   useUnreadNotificationCount,
 } from "@/lib/queries/notifications";
-import { resolveNotificationLink } from "@/utils/resolveNotificationLink";
+import Link from "next/link";
+import { resolveNotificationTarget } from "@/utils/resolveNotificationLink";
+import { renewHrefForNotification } from "@/lib/billing/autoRenew";
 
 const TABS = ["all", "bookings", "payments", "mentions", "system"] as const;
 type Tab = (typeof TABS)[number];
@@ -88,7 +90,7 @@ export default function NotificationsInboxClient() {
       await markAsReadMutation.mutateAsync(item.id);
     }
 
-    const nextPath = resolveNotificationLink(item.actionUrl, user?.role);
+    const nextPath = resolveNotificationTarget(item, user?.role);
     router.push(nextPath);
   };
 
@@ -151,14 +153,14 @@ export default function NotificationsInboxClient() {
             ) : notifications.length === 0 ? (
               <div className="px-6 py-4"><EmptySlate message="No notifications in this category." /></div>
             ) : (
-              notifications.map((item) => (
+              notifications.map((item) => {
+                const renewHref = renewHrefForNotification(item);
+                return (
+                <div key={item.id} className={`border-b border-border ${item.isRead ? "" : "bg-bg-2"}`}>
                 <button
-                  key={item.id}
                   type="button"
                   onClick={() => onOpen(item)}
-                  className={`flex w-full gap-3 border-b border-border px-5 py-4 text-left sm:px-6 ${
-                    item.isRead ? "" : "bg-bg-2"
-                  }`}
+                  className="flex w-full gap-3 px-5 py-4 text-left sm:px-6"
                 >
                   <NotificationIconTile type={item.type} category={item.category} />
                   <div className="min-w-0 flex-1">
@@ -174,7 +176,16 @@ export default function NotificationsInboxClient() {
                     </Eyebrow>
                   </div>
                 </button>
-              ))
+                {renewHref && (
+                  <div className="-mt-1 pb-4 pl-[64px] pr-5 sm:pl-[68px] sm:pr-6">
+                    <Link href={renewHref} className="btn-primary-v2 md inline-flex">
+                      Renew
+                    </Link>
+                  </div>
+                )}
+                </div>
+                );
+              })
             )}
           </div>
 

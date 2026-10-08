@@ -61,6 +61,8 @@ export const queryKeys = {
     all: ["marketplace"] as const,
     subscriptions: () =>
       [...queryKeys.marketplace.all, "subscriptions"] as const,
+    paymentMethods: () =>
+      [...queryKeys.marketplace.all, "paymentMethods"] as const,
     search: (params?: Record<string, unknown>) =>
       [...queryKeys.marketplace.all, "search", params] as const,
     myListing: () => [...queryKeys.marketplace.all, "myListing"] as const,

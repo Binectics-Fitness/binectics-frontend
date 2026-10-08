@@ -57,6 +57,12 @@ const BY_TYPE: Record<string, { icon: NotificationIconKey; tone?: Tone }> = {
   PAYMENT_RECEIVED: { icon: "payment", tone: "success" },
   SUBSCRIPTION_EXPIRING: { icon: "payment", tone: "warn" },
   SUBSCRIPTION_EXPIRED: { icon: "payment" },
+  SUBSCRIPTION_RENEWAL_UPCOMING: { icon: "payment" },
+  SUBSCRIPTION_PRICE_CHANGE: { icon: "payment", tone: "warn" },
+  PAYMENT_METHOD_EXPIRING: { icon: "payment", tone: "warn" },
+  PAYMENT_METHOD_UNUSABLE: { icon: "payment", tone: "danger" },
+  SUBSCRIPTION_PAYMENT_FAILED: { icon: "payment", tone: "danger" },
+  MEMBER_PAYMENT_FAILED_FINAL: { icon: "payment", tone: "danger" },
 
   CLIENT_INVITATION: { icon: "client", tone: "warn" },
   CLIENT_REQUEST: { icon: "client", tone: "warn" },

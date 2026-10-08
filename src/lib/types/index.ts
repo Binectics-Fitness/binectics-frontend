@@ -696,6 +696,19 @@ export interface MembershipSubscription {
   currency: string;
   payment_reference?: string;
   auto_renew: boolean;
+  /**
+   * How the next term is paid (recurring member billing, api #204):
+   * `card_auto` renews on a saved card the member agreed to; `pay_link`
+   * means the member pays each term; `offline` is the gym collecting it.
+   * Older APIs send nothing.
+   */
+  collection_method?: "card_auto" | "pay_link" | "offline";
+  /** The saved card a `card_auto` membership renews on. */
+  payment_method_id?: string | null;
+  /** What the next automatic charge will be, minor units, in `currency`. */
+  renewal_price_minor?: number | null;
+  /** When the next automatic charge is due (a day before the term ends). */
+  next_charge_at?: string | null;
   /** When the current pause began. Null in every state except `paused`. */
   paused_at?: string | null;
   /** Total time spent paused, in ms, across all pauses. Credited to end_date. */

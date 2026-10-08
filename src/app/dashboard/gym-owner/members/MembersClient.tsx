@@ -29,6 +29,12 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
 import SearchableSelect from "@/components/SearchableSelect";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
+import Modal from "@/components/Modal";
+import {
+  memberBillingService,
+  type RecordRenewalMethod,
+} from "@/lib/api/memberBilling";
+import { formatMinor } from "@/lib/currencies/helpers";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -115,6 +121,7 @@ function RowActions({
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
+  const [recordRenewalOpen, setRecordRenewalOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -160,6 +167,7 @@ function RowActions({
   const hasAccess = isEntitlingMembershipStatus(sub.status);
   const scheduledPlan =
     sub.next_plan_id && typeof sub.next_plan_id === "object" ? sub.next_plan_id : null;
+  const canRecordRenewal = canRecordRenewalFor(sub);
 
   const run = async (fn: () => Promise<void>) => {
     setOpen(false);
@@ -289,6 +297,12 @@ function RowActions({
               Mark as paid
             </button>
           )}
+          {canRecordRenewal && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }}
+              onClick={() => { setOpen(false); setRecordRenewalOpen(true); }}>
+              Record renewal payment…
+            </button>
+          )}
           {isLive && !isPending && (
             <button type="button" className={item} style={{ color: "var(--ink)" }}
               onClick={() => { setOpen(false); setChangePlanOpen(true); }}>
@@ -331,7 +345,153 @@ function RowActions({
           onUpdate={onUpdate}
         />
       )}
+      <RecordRenewalModal
+        open={recordRenewalOpen}
+        sub={sub}
+        orgId={orgId}
+        onClose={() => setRecordRenewalOpen(false)}
+        onRecorded={onRosterChange}
+      />
     </div>
+  );
+}
+
+/** How long after expiry the API still renews the same membership (api #196). */
+const RENEWABLE_AFTER_EXPIRY_MS = 30 * 86_400_000;
+
+/**
+ * Staff can add a paid term to a membership that is active, past due, or
+ * expired within the last 30 days (api #196 renew in place). A pending
+ * enrolment uses Mark as paid instead.
+ */
+export function canRecordRenewalFor(sub: MembershipSubscription, now: Date = new Date()): boolean {
+  if (
+    sub.status === MembershipSubscriptionStatus.ACTIVE ||
+    sub.status === MembershipSubscriptionStatus.PAST_DUE
+  ) {
+    return true;
+  }
+  if (sub.status !== MembershipSubscriptionStatus.EXPIRED || !sub.end_date) return false;
+  return now.getTime() - new Date(sub.end_date).getTime() <= RENEWABLE_AFTER_EXPIRY_MS;
+}
+
+const RENEWAL_METHODS: { value: RecordRenewalMethod; label: string }[] = [
+  { value: "cash", label: "Cash" },
+  { value: "bank_transfer", label: "Bank transfer" },
+  { value: "card", label: "Card (paid at the desk)" },
+  { value: "other", label: "Other" },
+];
+
+/**
+ * Record that a member paid for one more term outside the app. There is no
+ * amount field: the API charges the plan's own price and writes it to the
+ * ledger. The receipt reference stops a double submit adding two terms.
+ */
+export function RecordRenewalModal({
+  open,
+  sub,
+  orgId,
+  onClose,
+  onRecorded,
+}: {
+  open: boolean;
+  sub: MembershipSubscription;
+  orgId: string;
+  onClose: () => void;
+  onRecorded: () => void;
+}) {
+  const [method, setMethod] = useState<RecordRenewalMethod>("cash");
+  const [reference, setReference] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const plan = typeof sub.plan_id === "object" ? sub.plan_id : null;
+  const price = plan ? formatMinor(plan.currency, plan.price_minor) : null;
+
+  const close = () => {
+    if (saving) return;
+    setMethod("cash");
+    setReference("");
+    setError(null);
+    onClose();
+  };
+
+  const onSave = async () => {
+    setSaving(true);
+    setError(null);
+    const trimmed = reference.trim();
+    const res = await memberBillingService.recordRenewal(orgId, sub._id, {
+      payment_method: method,
+      ...(trimmed ? { payment_reference: trimmed } : {}),
+    });
+    setSaving(false);
+    if (res.success) {
+      toast.success(
+        res.data?.end_date
+          ? `Renewal recorded. The membership now runs until ${new Date(res.data.end_date).toLocaleDateString()}.`
+          : "Renewal recorded.",
+      );
+      setReference("");
+      setMethod("cash");
+      onClose();
+      onRecorded();
+    } else if (res.status === 403) {
+      setError("You don't have permission to record payments for this gym.");
+    } else {
+      setError(res.message ?? "We couldn't record the renewal. Please try again.");
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={close}
+      title="Record renewal payment"
+      size="sm"
+      footer={
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn-ghost-v2 md" disabled={saving} onClick={close}>Cancel</button>
+          <button type="button" className="btn-primary-v2 md" disabled={saving} onClick={() => void onSave()}>
+            {saving ? "Recording…" : "Record payment"}
+          </button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-4 text-[13.5px] text-fg-2">
+        <p>
+          Adds one more term to {getMemberName(sub)}&apos;s <strong className="text-ink">{getPlanName(sub)}</strong>
+          {price ? <> at the plan&apos;s price, <strong className="text-ink">{price}</strong></> : " at the plan's price"}.
+          Use this when they paid you directly.
+        </p>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={`renewal-method-${sub._id}`} className="text-[12.5px] font-medium text-ink">
+            How they paid
+          </label>
+          <SearchableSelect
+            id={`renewal-method-${sub._id}`}
+            value={method}
+            onChange={(v) => setMethod(v as RecordRenewalMethod)}
+            options={RENEWAL_METHODS}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={`renewal-ref-${sub._id}`} className="text-[12.5px] font-medium text-ink">
+            Receipt or transfer reference (optional)
+          </label>
+          <input
+            id={`renewal-ref-${sub._id}`}
+            type="text"
+            maxLength={100}
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            className="h-10 rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink"
+          />
+          <p className="text-[12px] text-fg-2">
+            Adding a reference means the same receipt can&apos;t be recorded twice.
+          </p>
+        </div>
+        {error && <p role="alert" className="text-danger-ink">{error}</p>}
+      </div>
+    </Modal>
   );
 }
 

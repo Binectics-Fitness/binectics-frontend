@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import {
@@ -17,6 +19,13 @@ import {
 } from "@/lib/types";
 import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { formatMinor } from "@/lib/currencies/helpers";
+import { queryKeys } from "@/lib/queries/keys";
+import { useMyPaymentMethods } from "@/lib/queries/memberBilling";
+import { cardLabel, renewHrefForMembership } from "@/lib/billing/autoRenew";
+import { MembershipPlanType } from "@/lib/types";
+import { AutoRenewControl } from "./AutoRenewControl";
+import { SavedCards } from "./SavedCards";
 
 const planOf = (s: MembershipSubscription) =>
   typeof s.plan_id === "object" ? s.plan_id : null;
@@ -32,14 +41,74 @@ const gymNameOf = (s: MembershipSubscription) => {
 };
 
 /**
- * Member billing: real membership subscriptions (plans, amounts, renewal
- * dates, cancel). Replaces the fabricated card-on-file / transactions
- * mockup — payment methods and a full transaction ledger have no member
- * endpoints yet, so they are omitted rather than invented.
+ * The "pay next term by card" checkout for a membership that isn't due yet:
+ * renewHrefForMembership only offers Renew close to the end of a term, but
+ * saving a card for auto-renew means paying the next term now (renew in
+ * place adds it after the current one).
+ */
+function dayBeforeTermEnd(s: MembershipSubscription): Date {
+  return s.end_date ? new Date(new Date(s.end_date).getTime() - 86_400_000) : new Date();
+}
+
+/** The fields the auto-renew PATCH changes; the rest stay as populated. */
+const BILLING_FIELDS = [
+  "auto_renew",
+  "collection_method",
+  "payment_method_id",
+  "renewal_price_minor",
+  "next_charge_at",
+] as const;
+
+/**
+ * Member billing: memberships (plans, amounts, renewal dates, cancel),
+ * card auto-renew per membership, saved cards, and "Renew" wherever a term
+ * can be paid for. A full transaction ledger has no member endpoint yet, so
+ * it is left out rather than invented.
  */
 export function BillingClient() {
   const { data: subs = [], isLoading } = useMySubscriptions();
+  const { data: cards = [] } = useMyPaymentMethods();
   const cancel = useCancelSubscription();
+  const queryClient = useQueryClient();
+
+  // A notification can open this page at one membership (?subscriptionId=).
+  // Read once from the address bar; no Suspense boundary needed.
+  useEffect(() => {
+    if (isLoading) return;
+    let id: string | null = null;
+    try {
+      id = new URLSearchParams(window.location.search).get("subscriptionId");
+    } catch {
+      id = null;
+    }
+    if (!id || !/^[A-Za-z0-9_-]{1,64}$/.test(id)) return;
+    const row = document.getElementById(`membership-${id}`);
+    if (row) {
+      row.scrollIntoView({ block: "center" });
+      row.focus({ preventScroll: true });
+    }
+  }, [isLoading]);
+
+  /** Render the server's answer, then re-read both lists from the API. */
+  const onAutoRenewChanged = (updated: MembershipSubscription) => {
+    queryClient.setQueryData<MembershipSubscription[]>(
+      queryKeys.marketplace.subscriptions(),
+      (old) =>
+        old?.map((s) => {
+          if (s._id !== updated._id) return s;
+          const next = { ...s };
+          for (const key of BILLING_FIELDS) {
+            if (key in updated) (next as Record<string, unknown>)[key] = updated[key];
+          }
+          return next;
+        }),
+    );
+    void queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.subscriptions() });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.paymentMethods() });
+  };
+
+  const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
+  const pastDue = subs.filter((s) => s.status === MembershipSubscriptionStatus.PAST_DUE);
 
   /**
    * Memberships the member can actually use — `active` AND `past_due`. A
@@ -79,7 +148,7 @@ export function BillingClient() {
       delta: onHold.length > 0 ? `${onHold.length} on hold · ${subs.length} total` : `${subs.length} total`,
     },
     { label: "Total paid", value: totalsByCurrency, delta: "across all plans", small: totalsByCurrency.length > 10 },
-    { label: "Next renewal", value: nextRenewal, delta: usable.find((s) => s.auto_renew) ? "auto-renews" : "manual renewal", small: true },
+    { label: "Next renewal", value: nextRenewal, delta: usable.find((s) => s.auto_renew && s.collection_method === "card_auto") ? "auto-renews by card" : "you renew it", small: true },
   ];
 
   const onCancel = (s: MembershipSubscription) => {
@@ -105,6 +174,33 @@ export function BillingClient() {
         ))}
       </div>
 
+      {/* Payment problems first: a past-due membership loses access when its
+          grace runs out, so the way to pay sits at the top. */}
+      {pastDue.map((s) => {
+        const href = renewHrefForMembership(s);
+        return (
+          <div
+            key={`due-${s._id}`}
+            role="alert"
+            className="flex flex-col gap-3 rounded-(--r-3) border border-danger bg-danger-soft px-5 py-4 sm:flex-row sm:items-center"
+          >
+            <div className="min-w-0 flex-1 text-[13.5px] text-ink">
+              <p className="font-medium">Your {planOf(s)?.name ?? "membership"} payment didn&apos;t go through.</p>
+              <p className="mt-0.5 text-fg-2">
+                {s.grace_expires_at
+                  ? `Pay by ${formatDate(s.grace_expires_at)} to keep your access.`
+                  : "Pay now to keep your access."}
+              </p>
+            </div>
+            {href && (
+              <Link href={href} className="btn-primary-v2 md shrink-0">
+                Renew now
+              </Link>
+            )}
+          </div>
+        );
+      })}
+
       {/* Subscriptions */}
       <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
         <div className="px-5.5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
@@ -120,8 +216,22 @@ export function BillingClient() {
           const plan = planOf(s);
           const listing = listingOf(s);
           const meta = membershipStatusMeta(s.status);
+          const live =
+            !TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) &&
+            s.status !== MembershipSubscriptionStatus.PENDING_PAYMENT;
+          const recurring = plan?.plan_type === MembershipPlanType.SUBSCRIPTION;
+          const renewHref = renewHrefForMembership(s);
+          const card = s.payment_method_id ? cardById.get(String(s.payment_method_id)) : undefined;
+          const byCard = s.auto_renew && s.collection_method === "card_auto";
           return (
-            <div key={s._id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-5.5 py-4" style={{ borderBottom: i < subs.length - 1 ? "1px solid var(--border)" : "none" }}>
+            <div
+              key={s._id}
+              id={`membership-${s._id}`}
+              tabIndex={-1}
+              className="flex flex-col gap-3 px-5.5 py-4"
+              style={{ borderBottom: i < subs.length - 1 ? "1px solid var(--border)" : "none" }}
+            >
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5">
                   <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{plan?.name ?? "Membership"}</span>
@@ -152,18 +262,46 @@ export function BillingClient() {
               {/* Cancelling is offered wherever the membership is still live —
                   a past_due member can still choose to stop, and a paused one
                   should not have to resume first. */}
-              {!TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) && s.status !== MembershipSubscriptionStatus.PENDING_PAYMENT && (
-                <button className="btn-ghost-v2 sm shrink-0" disabled={cancel.isPending} onClick={() => onCancel(s)}>
+              {renewHref && (
+                <Link
+                  href={renewHref}
+                  className="btn-primary-v2 md shrink-0"
+                  aria-label={`Renew ${plan?.name ?? "membership"}`}
+                >
+                  Renew
+                </Link>
+              )}
+              {live && (
+                <button className="btn-ghost-v2 md shrink-0" disabled={cancel.isPending} onClick={() => onCancel(s)}>
                   Cancel
                 </button>
               )}
+            </div>
+            {live && recurring && (
+              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-6">
+                {s.enrolled_by ? (
+                  <p className="text-[12.5px] text-fg-2">Your gym manages renewals for this membership. Pay your gym to renew it.</p>
+                ) : (
+                  <AutoRenewControl sub={s} renewHref={renewHref ?? renewHrefForMembership(s, dayBeforeTermEnd(s))} onChanged={onAutoRenewChanged} />
+                )}
+                {byCard && (
+                  <p className="text-[12.5px] text-fg-2 sm:pt-3">
+                    {s.next_charge_at ? `Next charge ${formatDate(s.next_charge_at)}` : "Renews automatically"}
+                    {s.renewal_price_minor != null ? ` · ${formatMinor(s.currency, s.renewal_price_minor)}` : ""}
+                    {card ? ` · ${cardLabel(card)}` : ""}
+                  </p>
+                )}
+              </div>
+            )}
             </div>
           );
         })}
       </div>
 
-      <p className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-        Payment methods and a full transaction ledger are coming, for now this shows your memberships and what you&rsquo;ve paid for them.
+      <SavedCards />
+
+      <p className="text-[12px] text-fg-2">
+        A full payment history is coming. For now this shows your memberships, your saved cards and what you&rsquo;ve paid.
       </p>
     </MemberDashboardShell>
   );
