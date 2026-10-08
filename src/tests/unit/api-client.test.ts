@@ -192,6 +192,40 @@ describe("apiClient session expiry redirect", () => {
     expect(localStorage.getItem("user")).not.toBeNull();
   });
 
+  it.each(["/auth/login", "/auth/verify-otp", "/auth/change-password"])(
+    "never refreshes or retries a 401 from %s (a wrong credential must count once)",
+    async (endpoint) => {
+      localStorage.setItem("user", JSON.stringify({ id: "u1" }));
+      const fetchSpy = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValue(
+          jsonResponse(401, { message: ["Authentication failed"], code: "AUTH_INVALID_CREDENTIALS" }),
+        );
+
+      const res = await apiClient.post(endpoint, { email: "a@b.example", password: "wrong" }, false);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(res.success).toBe(false);
+      expect(res.status).toBe(401);
+      expect(replace).not.toHaveBeenCalled();
+      expect(localStorage.getItem("user")).not.toBeNull();
+    },
+  );
+
+  it("does not race-retry a business 401 that carries a code", async () => {
+    localStorage.setItem("user", JSON.stringify({ id: "u1" }));
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse(401, { message: "No", code: "SOMETHING" })) // original
+      .mockResolvedValueOnce(jsonResponse(401, { message: "Unauthorized" })) // refresh fails
+      .mockResolvedValue(jsonResponse(200, { data: { id: "u1" } }));
+
+    void apiClient.get("/some/resource");
+    await vi.waitFor(() => expect(replace).toHaveBeenCalled());
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2); // original + refresh, no race retry
+  });
+
   it("sends someone who was never signed in to /login", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(401, { message: "Unauthorized" }));
 

@@ -80,6 +80,30 @@ function detailsOf(
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+/**
+ * Endpoints whose 401 means "those credentials are wrong", not "your session
+ * expired": sign-in, sign-up, OTP, password reset/change, account deletion
+ * (password-confirmed), and the refresh/logout calls themselves.
+ */
+const CREDENTIAL_ENDPOINTS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/verify-otp",
+  "/auth/resend-otp",
+  "/auth/verify-email",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/change-password",
+  "/auth/account/delete",
+  "/auth/refresh",
+  "/auth/logout",
+];
+
+export function isCredentialEndpoint(endpoint: string): boolean {
+  const path = endpoint.split("?")[0].replace(/\/+$/, "");
+  return CREDENTIAL_ENDPOINTS.includes(path);
+}
+
 /** Pages where a 401 must not trigger a redirect: the sign-in pages, and the
  *  account-state pages a refused or ended session lands on. */
 function staysPut(pathname: string): boolean {
@@ -114,6 +138,7 @@ class ApiClient {
   private async handleResponse<T>(
     response: Response,
     retryFn?: () => Promise<Response>,
+    endpoint?: string,
   ): Promise<ApiResponse<T>> {
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
@@ -131,9 +156,19 @@ class ApiClient {
     const body: RawResponseBody =
       parsed && typeof parsed === "object" ? (parsed as RawResponseBody) : {};
 
+    // A 401 from an endpoint that checks credentials (wrong password, wrong
+    // code) is an answer, not an expired session: never refresh, retry or
+    // redirect. A retry would count a wrong password twice toward lockout.
+    const credentialAnswer =
+      response.status === 401 &&
+      endpoint !== undefined &&
+      isCredentialEndpoint(endpoint);
+
     if (!response.ok) {
       // Handle 401 - Unauthorized (token expired)
-      if (response.status === 401 && retryFn) {
+      if (credentialAnswer) {
+        // fall through to the error result below
+      } else if (response.status === 401 && retryFn) {
         const refreshed = await this.tryRefreshToken();
         if (refreshed) {
           // Retry the original request with the new token
@@ -145,9 +180,13 @@ class ApiClient {
         // concurrent use of one. When two tabs refresh at the same moment,
         // the other tab wins and the browser already holds its fresh
         // cookies, so retry the original request once before giving up.
-        const raceRetry = await retryFn();
-        if (raceRetry.status !== 401) {
-          return this.handleResponse<T>(raceRetry);
+        // Only for the guard's own 401 (no `code`: an expired or missing
+        // session), never for a business 401 that carries a code.
+        if (body.code === undefined && body.error === undefined) {
+          const raceRetry = await retryFn();
+          if (raceRetry.status !== 401) {
+            return this.handleResponse<T>(raceRetry);
+          }
         }
 
         // Refresh failed — clear auth and redirect. Someone who was signed
@@ -221,7 +260,11 @@ class ApiClient {
           headers: this.getHeaders(),
           credentials: "include",
         });
-      return this.handleResponse<T>(await makeFetch(), makeFetch);
+      return this.handleResponse<T>(
+        await makeFetch(),
+        isCredentialEndpoint(endpoint) ? undefined : makeFetch,
+        endpoint,
+      );
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
@@ -236,7 +279,11 @@ class ApiClient {
           body: JSON.stringify(body),
           credentials: "include",
         });
-      return this.handleResponse<T>(await makeFetch(), makeFetch);
+      return this.handleResponse<T>(
+        await makeFetch(),
+        isCredentialEndpoint(endpoint) ? undefined : makeFetch,
+        endpoint,
+      );
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
@@ -251,7 +298,11 @@ class ApiClient {
           body: JSON.stringify(body),
           credentials: "include",
         });
-      return this.handleResponse<T>(await makeFetch(), makeFetch);
+      return this.handleResponse<T>(
+        await makeFetch(),
+        isCredentialEndpoint(endpoint) ? undefined : makeFetch,
+        endpoint,
+      );
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
@@ -266,7 +317,11 @@ class ApiClient {
           body: JSON.stringify(body),
           credentials: "include",
         });
-      return this.handleResponse<T>(await makeFetch(), makeFetch);
+      return this.handleResponse<T>(
+        await makeFetch(),
+        isCredentialEndpoint(endpoint) ? undefined : makeFetch,
+        endpoint,
+      );
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
@@ -281,7 +336,11 @@ class ApiClient {
           body,
           credentials: "include",
         });
-      return this.handleResponse<T>(await makeFetch(), makeFetch);
+      return this.handleResponse<T>(
+        await makeFetch(),
+        isCredentialEndpoint(endpoint) ? undefined : makeFetch,
+        endpoint,
+      );
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
@@ -296,7 +355,11 @@ class ApiClient {
           body,
           credentials: "include",
         });
-      return this.handleResponse<T>(await makeFetch(), makeFetch);
+      return this.handleResponse<T>(
+        await makeFetch(),
+        isCredentialEndpoint(endpoint) ? undefined : makeFetch,
+        endpoint,
+      );
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
@@ -311,7 +374,11 @@ class ApiClient {
           credentials: "include",
           ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
         });
-      return this.handleResponse<T>(await makeFetch(), makeFetch);
+      return this.handleResponse<T>(
+        await makeFetch(),
+        isCredentialEndpoint(endpoint) ? undefined : makeFetch,
+        endpoint,
+      );
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Network error" };
     }
