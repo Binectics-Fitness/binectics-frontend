@@ -69,8 +69,10 @@ describe("mealsForWeekday", () => {
 
 describe("todayWeekday", () => {
   it("maps JS getDay (Sunday-first) onto the Monday-first week", () => {
-    expect(todayWeekday(new Date("2026-08-10T12:00:00Z"))).toBe("monday");
-    expect(todayWeekday(new Date("2026-08-16T12:00:00Z"))).toBe("sunday");
+    // Local date parts, not a UTC string: todayWeekday reads the device's
+    // local day, so "…T12:00Z" is already Tuesday in Auckland (UTC+12).
+    expect(todayWeekday(new Date(2026, 7, 10, 12))).toBe("monday");
+    expect(todayWeekday(new Date(2026, 7, 16, 12))).toBe("sunday");
     expect(WEEKDAYS).toHaveLength(7);
   });
 });

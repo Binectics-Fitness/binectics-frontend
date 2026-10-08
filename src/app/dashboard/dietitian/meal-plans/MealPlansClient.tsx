@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
+import Modal from "@/components/Modal";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { FoodPicker } from "./FoodPicker";
 import { toast } from "@/components/Toast";
@@ -33,8 +34,10 @@ import {
   planToDaysState,
   everyDaySlotCollisions,
   planMealCount,
-  planTotalCalories,
+  planDailyCalories,
+  formatDailyCalories,
   isTemplatePlan,
+  isAssignableTemplate,
 } from "./_lib";
 
 // ─── Shared bits ─────────────────────────────────────────────────────────────
@@ -155,17 +158,21 @@ function PlanFormModal({
     >
       {confirmationModal}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="meal-plan-form-title"
         className="w-full max-w-2xl rounded-(--r-3) overflow-y-auto max-h-[90vh]"
         style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }}
         {...dirtyProps}
       >
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-          <h2 className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>
+          <h2 id="meal-plan-form-title" className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>
             {mode === "create" ? "New meal plan" : "Edit meal plan"}
           </h2>
           <button
             type="button"
             onClick={requestClose}
+            aria-label="Close"
             className="w-7 h-7 flex items-center justify-center rounded-(--r-2)"
             style={{ color: "var(--fg-3)", border: "1px solid var(--border)" }}
           >
@@ -247,6 +254,7 @@ function PlanFormModal({
                       key={day}
                       type="button"
                       onClick={() => setActiveDay(day)}
+                      aria-pressed={active}
                       className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
                       style={{
                         background: active ? "var(--ink)" : "var(--bg-2)",
@@ -392,7 +400,6 @@ export function AssignPlanModal({
   const [clientsError, setClientsError] = useState<string | null>(null);
   const [selected, setSelected] = useState("");
   const [assigning, setAssigning] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -430,62 +437,53 @@ export function AssignPlanModal({
     }
   };
 
+  // Shared Modal: dialog semantics, labelled close, ESC and focus trap. No
+  // footer prop on purpose: the footer variant scrolls its body, which would
+  // clip the client picker's dropdown. A client pick is not typed work, so
+  // the discard guard stays off.
   return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(3,20,30,0.55)" }}
-      onClick={(e) => e.target === overlayRef.current && onClose()}
-    >
-      <div
-        className="w-full max-w-md rounded-(--r-3)"
-        style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }}
-      >
-        <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-          <h2 className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>Assign to client</h2>
-          <p className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-            Creates a copy of &ldquo;{plan.title}&rdquo; as the client&apos;s own plan.
-          </p>
-        </div>
-        <div className="p-6 flex flex-col gap-2">
-          <FieldLabel>Client</FieldLabel>
-          {clientsError ? (
-            <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
-              {clientsError}
-            </div>
-          ) : !loadingClients && clients.length === 0 ? (
-            <EmptySlate message="No active clients yet." hint="Add a client first, then assign plans." mt="mt-0" />
-          ) : (
-            <SearchableSelect
-              value={selected}
-              onChange={setSelected}
-              options={clients.map((c) => ({ label: clientName(c), value: c._id }))}
-              placeholder={loadingClients ? "Loading clients…" : "Pick a client…"}
-              loading={loadingClients}
-            />
-          )}
-        </div>
-        <div className="flex justify-end gap-2 px-6 py-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium"
-            style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleAssign}
-            disabled={!selected || assigning}
-            className="h-9 px-5 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50"
-            style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
-          >
-            {assigning ? "Assigning..." : "Assign plan"}
-          </button>
-        </div>
+    <Modal open onClose={onClose} title="Assign to client" disableCloseGuard>
+      <p className="text-[12.5px] -mt-2 mb-4" style={{ color: "var(--fg-3)" }}>
+        Creates a copy of &ldquo;{plan.title}&rdquo; as the client&apos;s own plan.
+      </p>
+      <div className="flex flex-col gap-2">
+        <FieldLabel>Client</FieldLabel>
+        {clientsError ? (
+          <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+            {clientsError}
+          </div>
+        ) : !loadingClients && clients.length === 0 ? (
+          <EmptySlate message="No active clients yet." hint="Add a client first, then assign plans." mt="mt-0" />
+        ) : (
+          <SearchableSelect
+            value={selected}
+            onChange={setSelected}
+            options={clients.map((c) => ({ label: clientName(c), value: c._id }))}
+            placeholder={loadingClients ? "Loading clients…" : "Pick a client…"}
+            loading={loadingClients}
+          />
+        )}
       </div>
-    </div>
+      <div className="flex justify-end gap-2 mt-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium"
+          style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleAssign}
+          disabled={!selected || assigning}
+          className="h-9 px-5 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50"
+          style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
+        >
+          {assigning ? "Assigning..." : "Assign plan"}
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -508,7 +506,9 @@ function MealPlanCard({
 }) {
   const template = isTemplatePlan(plan);
   const isDocument = plan.delivery_type === DietPlanDeliveryType.DOCUMENT;
-  const calories = planTotalCalories(plan);
+  const dailyCalories = planDailyCalories(plan);
+  // The server copy only accepts templates (no client yet) with meal content.
+  const canAssign = template && isAssignableTemplate(plan);
   const assignedName = planClientName(plan);
 
   return (
@@ -541,9 +541,9 @@ function MealPlanCard({
           </div>
         </div>
         <div className="py-3 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
-          <Eyebrow>Calories</Eyebrow>
+          <Eyebrow>Kcal/day</Eyebrow>
           <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
-            {calories != null ? calories.toLocaleString() : "-"}
+            {isDocument ? "-" : formatDailyCalories(dailyCalories)}
           </div>
         </div>
         <div className="py-3 px-5.5">
@@ -564,7 +564,7 @@ function MealPlanCard({
           >
             Edit
           </button>
-          {!isDocument && (
+          {canAssign && (
             <button
               type="button"
               onClick={onAssign}

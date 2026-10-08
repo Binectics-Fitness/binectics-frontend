@@ -8,7 +8,8 @@ import {
   planMealCount,
   emptyDaysState,
   isAssignableTemplate,
-  planTotalCalories,
+  planDailyCalories,
+  formatDailyCalories,
   isTemplatePlan,
   type MealFormRow,
 } from "@/app/dashboard/dietitian/meal-plans/_lib";
@@ -184,20 +185,66 @@ describe("planMealCount / isAssignableTemplate", () => {
   });
 });
 
-describe("planTotalCalories / isTemplatePlan", () => {
-  it("sums only recorded calories, null when none recorded", () => {
+describe("planDailyCalories / isTemplatePlan", () => {
+  const m = (meal_type: MealSlot, calories?: number) => ({
+    meal_type,
+    title: "m",
+    foods: [],
+    calories,
+    order: 1,
+  });
+
+  it("legacy flat plans count once per day, recorded calories only", () => {
     expect(
-      planTotalCalories({
-        meals: [
-          { meal_type: MealSlot.LUNCH, title: "a", foods: [], calories: 500, order: 0 },
-          { meal_type: MealSlot.DINNER, title: "b", foods: [], order: 1 },
-        ],
-      }),
-    ).toBe(500);
-    expect(
-      planTotalCalories({ meals: [{ meal_type: MealSlot.LUNCH, title: "a", foods: [], order: 0 }] }),
-    ).toBeNull();
-    expect(planTotalCalories({ meals: [] })).toBeNull();
+      planDailyCalories({ meals: [m(MealSlot.LUNCH, 500), m(MealSlot.DINNER)] }),
+    ).toEqual({ min: 500, max: 500 });
+    expect(planDailyCalories({ meals: [m(MealSlot.LUNCH)] })).toBeNull();
+    expect(planDailyCalories({ meals: [] })).toBeNull();
+  });
+
+  it("applies the render rule per weekday instead of summing the week", () => {
+    // every_day 1,500 + Monday 400 + Friday 600: the old sum showed 2,500,
+    // a total no single day has.
+    const plan = {
+      meals: [],
+      days: [
+        { day_of_week: "every_day" as const, meals: [m(MealSlot.BREAKFAST, 500), m(MealSlot.LUNCH, 1000)] },
+        { day_of_week: "monday" as const, meals: [m(MealSlot.DINNER, 400)] },
+        { day_of_week: "friday" as const, meals: [m(MealSlot.DINNER, 600)] },
+      ],
+    };
+    expect(planDailyCalories(plan)).toEqual({ min: 1500, max: 2100 });
+  });
+
+  it("is a single value when every day totals the same", () => {
+    const plan = {
+      meals: [],
+      days: [
+        { day_of_week: "every_day" as const, meals: [m(MealSlot.LUNCH, 700)] },
+        { day_of_week: "monday" as const, meals: [m(MealSlot.DINNER)] },
+      ],
+    };
+    expect(planDailyCalories(plan)).toEqual({ min: 700, max: 700 });
+  });
+
+  it("leaves out days with no recorded calories rather than counting 0", () => {
+    const plan = {
+      meals: [],
+      days: [
+        { day_of_week: "monday" as const, meals: [m(MealSlot.DINNER, 900)] },
+        { day_of_week: "tuesday" as const, meals: [m(MealSlot.DINNER, 1200)] },
+        { day_of_week: "wednesday" as const, meals: [m(MealSlot.DINNER)] },
+      ],
+    };
+    expect(planDailyCalories(plan)).toEqual({ min: 900, max: 1200 });
+  });
+
+  it("formats a single value, a range, or a dash", () => {
+    expect(formatDailyCalories({ min: 1800, max: 1800 })).toBe((1800).toLocaleString());
+    expect(formatDailyCalories({ min: 1500, max: 2100 })).toBe(
+      `${(1500).toLocaleString()}\u2013${(2100).toLocaleString()}`,
+    );
+    expect(formatDailyCalories(null)).toBe("-");
   });
 
   it("treats a plan as a template only when it has no client", () => {
