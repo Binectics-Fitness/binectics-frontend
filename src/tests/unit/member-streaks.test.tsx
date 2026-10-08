@@ -38,14 +38,32 @@ const badge = (name: string) =>
 describe("streaks page", () => {
   const stats = vi.spyOn(checkinsService, "getMyDashboardStats");
   const history = vi.spyOn(checkinsService, "getMyHistory");
-  const balance = vi.spyOn(loyaltyService, "getBalance");
+  const balance = vi.spyOn(loyaltyService, "getPrograms");
 
   beforeEach(() => {
     stats.mockReset();
     history.mockReset();
     balance.mockReset();
     history.mockResolvedValue(ok([]) as never);
-    balance.mockResolvedValue(ok({ balance: 120 }) as never);
+    balance.mockResolvedValue(
+      ok([{ organization_id: "g1", organization_name: "Iron Lab", account_type: "gym", balance: 120, is_member: true }]) as never,
+    );
+  });
+
+  it("shows loyalty points only when a provider runs a program, named for that provider", async () => {
+    stats.mockResolvedValue(ok({ has_checked_in_today: false, current_streak_days: 0, total_check_ins: 4 }) as never);
+    renderPage();
+    expect(await screen.findByText("Loyalty points")).toBeInTheDocument();
+    expect(screen.getByText("With Iron Lab")).toBeInTheDocument();
+    expect(screen.queryByText(/Redeemable at your gym/)).not.toBeInTheDocument();
+  });
+
+  it("shows no loyalty card when none of the member's providers runs a program", async () => {
+    balance.mockResolvedValue(ok([]) as never);
+    stats.mockResolvedValue(ok({ has_checked_in_today: false, current_streak_days: 0, total_check_ins: 4 }) as never);
+    renderPage();
+    await screen.findByText("Total check-ins");
+    expect(screen.queryByText("Loyalty points")).not.toBeInTheDocument();
   });
 
   it("highlights Activity in the nav, not Home", async () => {

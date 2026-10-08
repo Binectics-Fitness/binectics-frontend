@@ -245,7 +245,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create a loyalty reward */
+        /** Create a reward in a provider's program (support; organization_id required, platform-wide rewards are retired) */
         post: operations["LoyaltyAdminController_createReward"];
         delete?: never;
         options?: never;
@@ -263,11 +263,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete a loyalty reward */
+        /** Delete a provider's reward (retired platform rewards: 404) */
         delete: operations["LoyaltyAdminController_deleteReward"];
         options?: never;
         head?: never;
-        /** Update a loyalty reward */
+        /** Update a provider's reward (retired platform rewards: 404) */
         patch: operations["LoyaltyAdminController_updateReward"];
         trace?: never;
     };
@@ -280,7 +280,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Manually credit/debit a user's points */
+        /** Manually credit/debit a user's points in one provider's program (audited) */
         post: operations["LoyaltyAdminController_adjust"];
         delete?: never;
         options?: never;
@@ -295,7 +295,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a user's loyalty balance */
+        /** A user's balance in every provider program (on or off) plus legacy unattributed points, for support */
         get: operations["LoyaltyAdminController_getUserBalance"];
         put?: never;
         post?: never;
@@ -983,7 +983,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get dashboard stats for the authenticated member */
+        /**
+         * Get dashboard stats for the authenticated member
+         * @description Check-in counts and streaks. The current streak still stands until a full day passes with no check-in; streak_at_risk says today is that day.
+         */
         get: operations["CheckinsController_getMyDashboardStats"];
         put?: never;
         post?: never;
@@ -1068,7 +1071,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get dashboard stats for an organisation */
+        /**
+         * Get dashboard stats for an organisation
+         * @description Revenue figures are in revenue_currency (the org currency when set); other currencies are listed in revenue_by_currency, never summed.
+         */
         get: operations["CheckinsController_getOrgDashboardStats"];
         put?: never;
         post?: never;
@@ -1832,7 +1838,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get my current loyalty points balance */
+        /** My balance in one provider's program, or the total across the programs I can see */
         get: operations["LoyaltyController_getBalance"];
         put?: never;
         post?: never;
@@ -1849,8 +1855,79 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List my loyalty points transactions */
+        /** List my points transactions in the programs I can see (optionally one) */
         get: operations["LoyaltyController_getHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/loyalty/organizations/{organizationId}/rewards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** This provider’s rewards, active or not */
+        get: operations["LoyaltyOrgController_listRewards"];
+        put?: never;
+        /** Add a reward to this provider’s program (program must be on) */
+        post: operations["LoyaltyOrgController_createReward"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/loyalty/organizations/{organizationId}/rewards/{rewardId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a reward; one that was ever redeemed is archived instead of deleted */
+        delete: operations["LoyaltyOrgController_removeReward"];
+        options?: never;
+        head?: never;
+        /** Edit one of this provider’s rewards */
+        patch: operations["LoyaltyOrgController_updateReward"];
+        trace?: never;
+    };
+    "/api/v1/loyalty/organizations/{organizationId}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether this provider runs a loyalty program */
+        get: operations["LoyaltyOrgController_getSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Turn this provider’s own loyalty program on or off (owner or manage-organization permission; audited) */
+        patch: operations["LoyaltyOrgController_updateSettings"];
+        trace?: never;
+    };
+    "/api/v1/loyalty/programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The provider loyalty programs I can see (providers I belong to or hold points with, that have loyalty on), each with my balance there */
+        get: operations["LoyaltyController_programs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1866,7 +1943,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List my redemption history */
+        /** List my redemptions in the programs I can see */
         get: operations["LoyaltyController_myRedemptions"];
         put?: never;
         post?: never;
@@ -1883,7 +1960,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List active rewards available to me (filterable by organization). */
+        /** List active rewards in the programs I can see (optionally one provider) */
         get: operations["LoyaltyController_listRewards"];
         put?: never;
         post?: never;
@@ -1902,7 +1979,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Redeem a reward using my points */
+        /** Redeem a provider's reward with points earned with that provider */
         post: operations["LoyaltyController_redeem"];
         delete?: never;
         options?: never;
@@ -6311,6 +6388,8 @@ export interface components {
             team_role_id: string;
         };
         AdjustPointsDto: {
+            /** @description The provider whose program the adjustment is in. Points only exist inside a provider's program. */
+            organization_id: string;
             /** @description Signed delta. Positive credits, negative debits. */
             points: number;
             reason: string;
@@ -6859,8 +6938,8 @@ export interface components {
             is_active: boolean;
             max_redemptions?: number;
             name: string;
-            /** @description Limit to a specific org (omit for global reward). */
-            organization_id?: string;
+            /** @description The provider whose program the reward is in. */
+            organization_id: string;
             points_cost: number;
         };
         CreateMarketplaceRequestDto: {
@@ -7455,11 +7534,69 @@ export interface components {
              */
             value: number;
         };
+        LoyaltyRewardFieldsDto: {
+            description?: string;
+            image_url?: string;
+            /** @default true */
+            is_active: boolean;
+            max_redemptions?: number;
+            name: string;
+            points_cost: number;
+        };
         MarkSubscriptionPaidDto: {
             /** @description URL to uploaded payment proof image */
             payment_proof_url?: string;
             /** @description External payment reference (e.g. bank transfer narration) */
             payment_reference?: string;
+        };
+        MyDashboardStatsDto: {
+            /**
+             * @description Consecutive check-in days (stored per check-in in its gym's zone), ending today — or ending yesterday when the member has not checked in yet today. 0 once a full day is missed.
+             * @example 6
+             */
+            current_streak_days: number;
+            /**
+             * @description Whether the member has checked in today.
+             * @example false
+             */
+            has_checked_in_today: boolean;
+            /**
+             * Format: date-time
+             * @description Latest check-in that is not in the future.
+             */
+            last_check_in_at?: string;
+            /** @description Listing of the latest check-in (old listing-based QRs only). */
+            last_listing_id?: string;
+            /**
+             * @description Longest run of consecutive check-in days in the full history. Always >= current_streak_days.
+             * @example 21
+             */
+            longest_streak_days: number;
+            /**
+             * @description True when current_streak_days > 0 and there is no check-in yet today: checking in today extends the streak, missing today ends it.
+             * @example true
+             */
+            streak_at_risk: boolean;
+            /**
+             * @description IANA time zone "today" is computed in, from the gym of the latest (non-future) check-in: its time_zone setting, else its country's zone when the country has exactly one, else UTC. Past check-in days keep the zone of the gym they were made at.
+             * @example Africa/Lagos
+             */
+            streak_timezone: string;
+            /**
+             * Format: date-time
+             * @description Time of today's latest check-in, if any.
+             */
+            today_check_in_at?: string;
+            /**
+             * @description Every check-in row on record for the member, including historical second scans at the same gym on the same day that the local_day backfill set aside (they were real scans, and loyalty points reference them). Those rows are not streak days.
+             * @example 42
+             */
+            total_check_ins: number;
+        };
+        MyDashboardStatsResponseDto: {
+            data: components["schemas"]["MyDashboardStatsDto"];
+            /** @example true */
+            success: boolean;
         };
         OptimizedImageVariantsDto: {
             /** @example https://res.cloudinary.com/.../image.jpg */
@@ -7469,8 +7606,63 @@ export interface components {
             /** @example https://res.cloudinary.com/.../w_200,h_200/.../image.jpg */
             thumbnail: string;
         };
+        OrgDashboardStatsDto: {
+            /**
+             * @description Members who could check in right now (not a seat count).
+             * @example 21
+             */
+            active_members: number;
+            /** @example 4.7 */
+            average_rating: number;
+            /** @example Lagos */
+            city?: string;
+            /** @example NG */
+            country_code?: string;
+            /** @example 48 */
+            month_check_ins: number;
+            /** @description The five latest check-ins, member populated. */
+            recent_check_ins: {
+                [key: string]: unknown;
+            }[];
+            /** @description Every currency the ledger holds in these windows, revenue_currency first, then by code. Never summed across currencies. A currency with no revenue in any window is not listed. */
+            revenue_by_currency: components["schemas"]["RevenueByCurrencyDto"][];
+            /**
+             * @description Currency of every revenue_* figure: the org currency, else the listing's, else one the ledger holds. Null when none is known, in which case every revenue_* figure is 0.
+             * @example USD
+             */
+            revenue_currency: string | null;
+            /**
+             * @description Settled revenue over the last month, minor unit of revenue_currency.
+             * @example 320000
+             */
+            revenue_month_minor: number;
+            /**
+             * @description Settled revenue since the start of today, in the minor unit of revenue_currency. Integer.
+             * @example 12000
+             */
+            revenue_today_minor: number;
+            /**
+             * @description Settled revenue over the last 7 days, minor unit of revenue_currency.
+             * @example 90000
+             */
+            revenue_week_minor: number;
+            /** @example 18 */
+            review_count: number;
+            /** @example 3 */
+            today_check_ins: number;
+            /** @example 17 */
+            week_check_ins: number;
+        };
+        OrgDashboardStatsResponseDto: {
+            data: components["schemas"]["OrgDashboardStatsDto"];
+            /** @example true */
+            success: boolean;
+        };
         OrgRevenueStatsDto: {
-            /** @example USD */
+            /**
+             * @description The currency to headline: the organization's currency when set, else one the timeseries holds (the first by code). Never picked by comparing totals across currencies. The timeseries keeps every currency's rows, each tagged with its own currency; never sum them.
+             * @example USD
+             */
             currency: string | null;
             /** @example 12 */
             new_members_count: number;
@@ -7642,6 +7834,25 @@ export interface components {
         RespondMarketplaceRequestDto: {
             /** @example Looking forward to working with you! */
             response_note?: string;
+        };
+        RevenueByCurrencyDto: {
+            /** @example USD */
+            currency: string;
+            /**
+             * @description Minor units. Integer.
+             * @example 320000
+             */
+            month_minor: number;
+            /**
+             * @description Minor units. Integer.
+             * @example 12000
+             */
+            today_minor: number;
+            /**
+             * @description Minor units. Integer.
+             * @example 90000
+             */
+            week_minor: number;
         };
         RevenueTimeseriesItemDto: {
             /** @example USD */
@@ -8045,9 +8256,11 @@ export interface components {
             is_active: boolean;
             max_redemptions?: number;
             name?: string;
-            /** @description Limit to a specific org (omit for global reward). */
-            organization_id?: string;
             points_cost?: number;
+        };
+        UpdateLoyaltySettingsDto: {
+            /** @description Turn the provider's own loyalty program on or off. Off hides it from members; no points are deleted. */
+            enabled: boolean;
         };
         UpdateMarketplaceReviewDto: {
             comment?: string;
@@ -9752,7 +9965,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MyDashboardStatsResponseDto"];
+                };
             };
         };
     };
@@ -9855,7 +10070,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OrgDashboardStatsResponseDto"];
+                };
             };
         };
     };
@@ -10187,7 +10404,9 @@ export interface operations {
         parameters: {
             query?: {
                 status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+                /** @description Inclusive lower bound on starts_at. */
                 from?: string;
+                /** @description Exclusive upper bound on starts_at: pass the start of the next window (e.g. tomorrow 00:00 for "today"). A session starting exactly at `to` is not included. */
                 to?: string;
             };
             header?: never;
@@ -11399,7 +11618,9 @@ export interface operations {
     };
     LoyaltyController_getBalance: {
         parameters: {
-            query?: never;
+            query?: {
+                organizationId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -11419,7 +11640,153 @@ export interface operations {
             query: {
                 limit: string;
                 skip: string;
+                organizationId?: string;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LoyaltyOrgController_listRewards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LoyaltyOrgController_createReward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoyaltyRewardFieldsDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LoyaltyOrgController_removeReward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                rewardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LoyaltyOrgController_updateReward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                rewardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLoyaltyRewardDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LoyaltyOrgController_getSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LoyaltyOrgController_updateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLoyaltySettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LoyaltyController_programs: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -11453,8 +11820,8 @@ export interface operations {
     };
     LoyaltyController_listRewards: {
         parameters: {
-            query: {
-                organizationId: string;
+            query?: {
+                organizationId?: string;
             };
             header?: never;
             path?: never;

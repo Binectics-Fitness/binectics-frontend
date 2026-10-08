@@ -19,7 +19,7 @@ import { loyaltyService } from "@/lib/api/loyalty";
 import { heatmapCells, weekStrip } from "@/lib/ui/activity";
 import { useClientNow } from "@/lib/ui/useClientNow";
 import { formatDate } from "@/utils/format";
-import type { MyCheckInDashboardStats, CheckIn } from "@/lib/types";
+import type { MyCheckInDashboardStats, CheckIn, LoyaltyProgram } from "@/lib/types";
 import { SESSION_MILESTONES, STREAK_MILESTONES, nextStreakMilestone } from "../_lib/logStats";
 
 /**
@@ -89,14 +89,15 @@ export function StreaksClient() {
     },
     retry: 1,
   });
-  // The shared useLoyaltyBalance turns a failure into { balance: 0 }; read it
-  // here so a failure hides the card instead of showing 0 points.
-  const loyaltyQuery = useQuery<number>({
-    queryKey: ["loyalty", "balance", "strict"],
+  // Loyalty is each provider's own opt-in program: the card shows only when
+  // at least one of the member's providers runs one (and hides on a failed
+  // read rather than showing 0 points).
+  const loyaltyQuery = useQuery<LoyaltyProgram[]>({
+    queryKey: ["loyalty", "programs", "strict"],
     queryFn: async () => {
-      const res = await loyaltyService.getBalance();
+      const res = await loyaltyService.getPrograms();
       if (!res.success || !res.data) throw new Error(res.message || "Couldn't load your points.");
-      return res.data.balance;
+      return res.data;
     },
     retry: 1,
   });
@@ -106,7 +107,12 @@ export function StreaksClient() {
   const streak = stats?.current_streak_days ?? 0;
   const total = stats?.total_check_ins ?? 0;
   const longest = typeof stats?.longest_streak_days === "number" ? stats.longest_streak_days : null;
-  const points = loyaltyQuery.data ?? null;
+  const programs = loyaltyQuery.data ?? [];
+  const points = programs.length ? programs.reduce((sum, p) => sum + p.balance, 0) : null;
+  const pointsWhere =
+    programs.length === 1
+      ? `With ${programs[0].organization_name || "your provider"}`
+      : `Across ${programs.length} providers`;
   // Milestone progress is shown only with the API's longest streak (owner
   // ruling: no "N days to milestone" until the API has it).
   const next = longest !== null && streak > 0 ? nextStreakMilestone(streak) : null;
@@ -200,7 +206,7 @@ export function StreaksClient() {
               <DSStatCard size="sm" label="Longest streak" value={longest} unit={longest === 1 ? "day" : "days"} />
             )}
             {points != null && (
-              <DSStatCard size="sm" label="Loyalty points" value={points.toLocaleString()} delta="Redeemable at your gym" />
+              <DSStatCard size="sm" label="Loyalty points" value={points.toLocaleString()} delta={pointsWhere} />
             )}
           </div>
         )}

@@ -65,7 +65,7 @@ const ROLE_VIEWS = [
     headline: "Your fitness in one place",
     items: [
       "Active subscriptions with renewal dates and payment history",
-      "Check-in streak counter with personal best and gym leaderboard",
+      "Check-in streak counter with personal best",
       "Upcoming sessions, trainer or dietitian, with join/cancel buttons",
       "Progress journal, weight, measurements, photos, mood over time",
       "Invoices and receipts, downloadable PDF for every transaction",
@@ -269,7 +269,7 @@ export default function DashboardFeaturePage() {
           className="text-[16px] max-w-[52ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          These features work the same whether you're a gym owner with 4
+          These features work the same whether you&apos;re a gym owner with 4
           locations or a member with one subscription.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
