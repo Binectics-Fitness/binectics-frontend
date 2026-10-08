@@ -141,6 +141,15 @@ class ApiClient {
           return this.handleResponse<T>(retryResponse);
         }
 
+        // Refresh tokens are single-use and the API now refuses a second
+        // concurrent use of one. When two tabs refresh at the same moment,
+        // the other tab wins and the browser already holds its fresh
+        // cookies, so retry the original request once before giving up.
+        const raceRetry = await retryFn();
+        if (raceRetry.status !== 401) {
+          return this.handleResponse<T>(raceRetry);
+        }
+
         // Refresh failed — clear auth and redirect. Someone who was signed
         // in (a cached user) had their session expire: say so, and offer to
         // bring them back here after signing in. Anyone else just signs in.

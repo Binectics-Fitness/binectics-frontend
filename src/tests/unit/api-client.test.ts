@@ -177,6 +177,21 @@ describe("apiClient session expiry redirect", () => {
     expect(localStorage.getItem("user")).toBeNull();
   });
 
+  it("recovers when another tab won the refresh race (fresh cookie already set)", async () => {
+    localStorage.setItem("user", JSON.stringify({ id: "u1" }));
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse(401, { message: "Unauthorized" })) // original
+      .mockResolvedValueOnce(jsonResponse(401, { message: "Refresh token is invalid or expired" })) // lost the race
+      .mockResolvedValueOnce(jsonResponse(200, { data: { id: "u1" } })); // retried with the winner's cookie
+
+    const res = await apiClient.get<{ id: string }>("/auth/profile");
+
+    expect(res.success).toBe(true);
+    expect(res.data).toEqual({ id: "u1" });
+    expect(replace).not.toHaveBeenCalled();
+    expect(localStorage.getItem("user")).not.toBeNull();
+  });
+
   it("sends someone who was never signed in to /login", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(401, { message: "Unauthorized" }));
 
