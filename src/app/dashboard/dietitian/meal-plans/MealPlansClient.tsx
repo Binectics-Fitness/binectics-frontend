@@ -8,6 +8,7 @@ import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/compone
 import SearchableSelect from "@/components/SearchableSelect";
 import Modal from "@/components/Modal";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { useDialogFocus } from "@/lib/ui/useDialogFocus";
 import { FoodPicker } from "./FoodPicker";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -104,8 +105,13 @@ function PlanFormModal({
   const [saving, setSaving] = useState(false);
   const [activeDay, setActiveDay] = useState<DayOfWeek>(EVERY_DAY);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
   const { requestClose, dirtyProps, confirmationModal } =
     useUnsavedChangesGuard(onClose);
+  // Focus in on open (the title field), Tab trapped, Escape through the
+  // discard guard, focus back to the trigger on close.
+  useDialogFocus(panelRef, { onEscape: requestClose, initialFocusRef: titleRef });
 
   const dayRows = form.days[activeDay];
 
@@ -158,10 +164,12 @@ function PlanFormModal({
     >
       {confirmationModal}
       <div
+        ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="meal-plan-form-title"
-        className="w-full max-w-2xl rounded-(--r-3) overflow-y-auto max-h-[90vh]"
+        className="w-full max-w-2xl rounded-(--r-3) overflow-y-auto max-h-[90vh] focus:outline-none"
         style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }}
         {...dirtyProps}
       >
@@ -186,6 +194,7 @@ function PlanFormModal({
               Plan title <span style={{ color: "var(--danger)" }}>*</span>
             </FieldLabel>
             <input
+              ref={titleRef}
               required
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -507,7 +516,8 @@ function MealPlanCard({
   const template = isTemplatePlan(plan);
   const isDocument = plan.delivery_type === DietPlanDeliveryType.DOCUMENT;
   const dailyCalories = planDailyCalories(plan);
-  // The server copy only accepts templates (no client yet) with meal content.
+  // The server copy only accepts templates (no client yet); document plans
+  // keep their content in a file, so only platform templates can be copied.
   const canAssign = template && isAssignableTemplate(plan);
   const assignedName = planClientName(plan);
 

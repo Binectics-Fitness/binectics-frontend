@@ -99,3 +99,57 @@ describe("MealPlansClient cards", () => {
     expect(everyDay).toHaveAttribute("aria-pressed", "false");
   });
 });
+
+describe("MealPlansClient builder keyboard", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.spyOn(progressService, "getProviderDietPlans").mockResolvedValue({ success: true, data: [TEMPLATE] });
+  });
+
+  const openBuilder = async () => {
+    render(<MealPlansClient />);
+    await screen.findByText("Template week");
+    const trigger = screen.getByRole("button", { name: /New meal plan/ });
+    trigger.focus();
+    fireEvent.click(trigger);
+    const dialog = await screen.findByRole("dialog", { name: "New meal plan" });
+    return { trigger, dialog };
+  };
+
+  it("moves focus to the title field on open", async () => {
+    const { dialog } = await openBuilder();
+    expect(document.activeElement).toBe(within(dialog).getByPlaceholderText(/Mediterranean week/));
+  });
+
+  it("traps Tab and Shift+Tab inside the dialog", async () => {
+    const { dialog } = await openBuilder();
+    const close = within(dialog).getByRole("button", { name: "Close" });
+    const buttons = within(dialog).getAllByRole("button");
+    const last = buttons[buttons.length - 1];
+    close.focus();
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
+    fireEvent.keyDown(last, { key: "Tab" });
+    expect(document.activeElement).toBe(close);
+    // Focus that fell to <body> is pulled back in.
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.keyDown(document.body, { key: "Tab" });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  it("Escape closes a clean builder and returns focus to the trigger", async () => {
+    const { trigger, dialog } = await openBuilder();
+    fireEvent.keyDown(within(dialog).getByPlaceholderText(/Mediterranean week/), { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "New meal plan" })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("Escape on a dirty builder goes through the discard guard", async () => {
+    const { dialog } = await openBuilder();
+    const title = within(dialog).getByPlaceholderText(/Mediterranean week/);
+    fireEvent.change(title, { target: { value: "Draft" } });
+    fireEvent.keyDown(title, { key: "Escape" });
+    expect(await screen.findByText("Discard changes?")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "New meal plan" })).toBeInTheDocument();
+  });
+});
