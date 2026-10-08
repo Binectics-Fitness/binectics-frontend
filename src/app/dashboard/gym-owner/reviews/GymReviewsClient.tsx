@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { DSCard, DSStatCard, Eyebrow, PageHeader } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgListing } from "@/lib/queries/marketplace";
 import { useTargetAggregate, useTargetReviews } from "@/lib/queries/reviews";
@@ -47,12 +48,13 @@ export function GymReviewsClient() {
 
   return (
     <GymDashboardShell activeItem="Settings" crumb="Reviews">
-      <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>Reviews</h1>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader className="mb-0!" title="Reviews" />
 
       {!listingId && !isLoading && (
-        <div className="rounded-(--r-3) px-6 py-10 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="px-6 py-10 text-center">
           <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Reviews appear once your marketplace listing is live.</p>
-        </div>
+        </DSCard>
       )}
 
       {listingId && (
@@ -60,11 +62,14 @@ export function GymReviewsClient() {
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
             {kpis.map((k) => (
-              <div key={k.label} className="flex flex-col gap-1 rounded-(--r-3) px-4 py-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-                <div className="text-[24px] font-medium" style={{ letterSpacing: "-0.02em", color: k.danger ? "var(--danger, var(--ink))" : "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{k.value}</div>
-                <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{k.delta}</div>
-              </div>
+              <DSStatCard
+                key={k.label}
+                size="sm"
+                label={k.label}
+                // Unanswered reviews keep their red value; the card has no tone for it.
+                value={k.danger ? <span style={{ color: "var(--danger, var(--ink))" }}>{k.value}</span> : k.value}
+                delta={k.delta}
+              />
             ))}
           </div>
 
@@ -88,9 +93,9 @@ export function GymReviewsClient() {
           <div className="flex flex-col gap-2.5">
             {isLoading && <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>Loading reviews…</p>}
             {!isLoading && reviews.length === 0 && (
-              <div className="rounded-(--r-3) px-6 py-10 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <DSCard className="px-6 py-10 text-center">
                 <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>No reviews yet, they&rsquo;ll appear here once members start rating your gym.</p>
-              </div>
+              </DSCard>
             )}
             {reviews.map((r) => (
               <ReviewCard key={r.id} review={r} listingId={listingId} />
@@ -135,7 +140,7 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
   });
 
   return (
-    <div className="rounded-(--r-3) p-4.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    <DSCard className="p-4.5">
       <div className="flex items-center gap-2.5">
         <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{review.reviewerName}</span>
         <span className="text-[13px]" style={{ color: "var(--warn, var(--ink))" }}>{"★".repeat(review.rating)}<span style={{ color: "var(--border-2)" }}>{"★".repeat(Math.max(0, 5 - review.rating))}</span></span>
@@ -147,7 +152,7 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
 
       {review.providerResponse ? (
         <div className="mt-3 pl-3.5 py-2" style={{ borderLeft: "2px solid var(--border-2)" }}>
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Your response · {fmtDate(review.providerResponse.createdAt)}</div>
+          <Eyebrow>Your response · {fmtDate(review.providerResponse.createdAt)}</Eyebrow>
           <p className="text-[13px] mt-1 leading-relaxed" style={{ color: "var(--fg-2)" }}>{review.providerResponse.message}</p>
         </div>
       ) : replying ? (
@@ -166,6 +171,6 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
       ) : (
         <button className="btn-ghost-v2 sm mt-3" onClick={() => { setReplying(true); setError(null); }}>Respond</button>
       )}
-    </div>
+    </DSCard>
   );
 }

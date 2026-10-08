@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, StatusPill } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
@@ -311,21 +311,22 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
       </div>
 
       {/* Details */}
-      <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      {/* overflow-visible: the role select opens an in-flow dropdown. */}
+      <DSCard className="p-5.5 overflow-visible!">
         <h3 className="text-[15px] font-medium mb-4" style={{ color: "var(--ink)" }}>Details</h3>
         <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
           {details.map((row) => (
             <div key={row.label}>
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mb-0.5" style={{ color: "var(--fg-3)" }}>{row.label}</div>
+              <Eyebrow className="mb-0.5">{row.label}</Eyebrow>
               <div className="text-[13.5px]" style={{ color: "var(--ink)" }}>{row.value}</div>
             </div>
           ))}
         </div>
-      </div>
+      </DSCard>
 
       {/* A staff trainer's assigned members */}
       {isTrainer && (
-        <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-5.5">
           <h3 className="text-[15px] font-medium mb-1" style={{ color: "var(--ink)" }}>
             Assigned members{assigned.kind === "ready" ? ` · ${assigned.subs.length}` : ""}
           </h3>
@@ -362,12 +363,12 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
               })}
             </div>
           )}
-        </div>
+        </DSCard>
       )}
 
       {/* Remove */}
       {canEdit && (
-        <div className="rounded-(--r-3) p-5.5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-5.5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
           <div>
             <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Remove from team</h3>
             <p className="text-[13px] mt-0.5" style={{ color: "var(--fg-3)" }}>
@@ -382,7 +383,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
           >
             Remove from team
           </button>
-        </div>
+        </DSCard>
       )}
 
       {confirmationModal}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader, StatusPill } from "@/components/ds";
 import { AddStaffModal } from "@/components/ds/modals/AddStaffModal";
 import { teamsService, MemberStatus, InvitationStatus, type OrganizationMember, type TeamInvitation } from "@/lib/api/teams";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -116,19 +116,21 @@ export default function GymStaffPage() {
         </>
       }
     >
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Staff</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {members.length === 0
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Staff"
+        subtitle={
+          members.length === 0
             ? "Your team and their roles"
             : isFiltering
               ? `${visibleMembers.length} of ${members.length} team member${members.length === 1 ? "" : "s"}`
-              : `${members.length} team member${members.length === 1 ? "" : "s"} · ${activeCount} active`}
-        </div>
-      </div>
+              : `${members.length} team member${members.length === 1 ? "" : "s"} · ${activeCount} active`
+        }
+      />
 
       {members.length > 0 && (
-        <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-[10px_14px] flex gap-3.5 items-center flex-wrap">
           <div className="flex-1 min-w-[240px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
             <input
@@ -157,7 +159,7 @@ export default function GymStaffPage() {
               </button>
             ))}
           </div>
-        </div>
+        </DSCard>
       )}
 
       {!currentOrg && !orgLoading ? (
@@ -174,19 +176,19 @@ export default function GymStaffPage() {
       {loading && members.length === 0 ? (
         <AsyncSpinner size="page" label="Loading staff" />
       ) : members.length === 0 && !error && currentOrg ? (
-        <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="px-4.5 py-6">
           <EmptySlate message="No staff yet." hint="Add your first team member to get started." mt="mt-0" />
-        </div>
+        </DSCard>
       ) : members.length > 0 && visibleMembers.length === 0 ? (
-        <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="px-4.5 py-6">
           <EmptySlate
             message="No staff match your filters."
             hint="Try a different search term or status."
             mt="mt-0"
           />
-        </div>
+        </DSCard>
       ) : members.length > 0 ? (
-        <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard>
           {visibleMembers.map((m, i) => {
             const name = memberName(m);
             const email = memberEmail(m);
@@ -230,15 +232,15 @@ export default function GymStaffPage() {
               </div>
             );
           })}
-        </div>
+        </DSCard>
       ) : null}
 
       {pendingInvites.length > 0 && (
         <div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>
+          <Eyebrow className="mb-2">
             Pending invitations ({pendingInvites.length})
-          </div>
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          </Eyebrow>
+          <DSCard>
             {pendingInvites.map((inv, i) => {
               const role = inviteRoleName(inv);
               return (
@@ -257,7 +259,7 @@ export default function GymStaffPage() {
                 </div>
               );
             })}
-          </div>
+          </DSCard>
         </div>
       )}
 

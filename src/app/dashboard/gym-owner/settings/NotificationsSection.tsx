@@ -1,6 +1,7 @@
 "use client";
 
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { DSCard, Eyebrow } from "@/components/ds";
 import {
   useOrgNotificationSettings,
   useUpdateOrgNotificationSettings,
@@ -48,11 +49,11 @@ export function NotificationsSection() {
       <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
         Which channels your organization uses per event. Individual staff control their own in-app preferences.
       </p>
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="grid items-center gap-2 px-5.5 py-2.5" style={{ gridTemplateColumns: "1fr repeat(3, 56px)", borderBottom: "1px solid var(--border)" }}>
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Event</span>
+          <Eyebrow as="span">Event</Eyebrow>
           {ORG_NOTIFICATION_CHANNELS.map((c) => (
-            <span key={c} className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-center" style={{ color: "var(--fg-3)" }}>{CHANNEL_LABELS[c]}</span>
+            <Eyebrow key={c} as="span" className="text-center">{CHANNEL_LABELS[c]}</Eyebrow>
           ))}
         </div>
         {ORG_NOTIFICATION_EVENTS.map((ev, i) => (
@@ -84,7 +85,7 @@ export function NotificationsSection() {
             })}
           </div>
         ))}
-      </div>
+      </DSCard>
       {update.isError && (
         <p className="text-[12px] mt-2" style={{ color: "var(--danger, #b00020)" }}>Couldn&rsquo;t save that change, try again.</p>
       )}

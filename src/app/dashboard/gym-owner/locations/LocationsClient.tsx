@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, PageHeader } from "@/components/ds";
 import { AddLocationModal } from "@/components/ds/modals/AddLocationModal";
 import { teamsService, type OrganizationLocation } from "@/lib/api/teams";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -59,14 +59,16 @@ export default function LocationsClient() {
         <button className="btn-primary-v2 sm" onClick={() => setAddOpen(true)}>+ Add location</button>
       }
     >
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Locations</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {activeLocations.length > 0
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Locations"
+        subtitle={
+          activeLocations.length > 0
             ? `${activeLocations.length} active location${activeLocations.length === 1 ? "" : "s"}`
-            : "Your branches and where members can train"}
-        </div>
-      </div>
+            : "Your branches and where members can train"
+        }
+      />
 
       {!currentOrg && !orgLoading ? (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
@@ -82,9 +84,9 @@ export default function LocationsClient() {
       {loading && locations.length === 0 ? (
         <AsyncSpinner size="page" label="Loading locations" />
       ) : activeLocations.length === 0 && !error && currentOrg ? (
-        <div className="rounded-(--r-3) px-4.5 py-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="px-4.5 py-6">
           <EmptySlate message="No locations yet." hint="Add your first branch to get started." mt="mt-0" />
-        </div>
+        </DSCard>
       ) : activeLocations.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {activeLocations.map((loc) => (

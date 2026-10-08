@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, DSCardHead, DSStatCard, EmptySlate, PageHeader } from "@/components/ds";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -109,12 +109,12 @@ export default function RevenueClient() {
 
   return (
     <GymDashboardShell activeItem="Revenue" crumb="Revenue">
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Revenue</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {currentOrg ? `${currentOrg.name} · settled revenue` : "Your gym revenue"}
-        </div>
-      </div>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Revenue"
+        subtitle={currentOrg ? `${currentOrg.name} · settled revenue` : "Your gym revenue"}
+      />
 
       {!currentOrg && !orgLoading ? (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}>
@@ -133,20 +133,14 @@ export default function RevenueClient() {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {kpis.map((k) => (
-              <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-                <div className="text-[24px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{k.value}</div>
-              </div>
+              <DSStatCard key={k.label} size="sm" label={k.label} value={k.value} />
             ))}
           </div>
 
           {/* Revenue timeseries */}
           {timeseries.length > 0 && (
-            <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-              <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Daily revenue · 30d</h3>
-                <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>Settled transactions in {revenueStats?.currency ?? ""}</div>
-              </div>
+            <DSCard>
+              <DSCardHead title="Daily revenue · 30d" subtitle={`Settled transactions in ${revenueStats?.currency ?? ""}`} />
               <div className="px-4.5 py-4">
                 <div className="flex items-end gap-[3px] h-20">
                   {timeseries.map((r) => (
@@ -163,15 +157,12 @@ export default function RevenueClient() {
                   <span>{timeseries[timeseries.length - 1]?.date?.slice(5)}</span>
                 </div>
               </div>
-            </div>
+            </DSCard>
           )}
 
           {/* Revenue by plan */}
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-              <h3 className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Revenue by plan</h3>
-              <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>From subscription payments</div>
-            </div>
+          <DSCard>
+            <DSCardHead title="Revenue by plan" subtitle="From subscription payments" />
             {mix.rows.length === 0 || mix.sum === 0 ? (
               <div className="px-4.5 py-4"><EmptySlate message="No subscription revenue yet." mt="mt-0" /></div>
             ) : (
@@ -195,7 +186,7 @@ export default function RevenueClient() {
                 </div>
               </div>
             )}
-          </div>
+          </DSCard>
         </>
       ) : null}
     </GymDashboardShell>

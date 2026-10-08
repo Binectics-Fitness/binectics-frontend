@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner } from "@/components/ds";
+import { AsyncSpinner, DSCard, Eyebrow } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { teamsService, type OrganizationLocation } from "@/lib/api/teams";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -127,7 +127,6 @@ export default function LocationDetailClient() {
   }
 
   const inputClass = "h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink placeholder:text-fg-4 focus:border-border-2 focus:outline-none";
-  const labelClass = "mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3";
 
   return (
     <GymDashboardShell activeItem="Locations" crumb="Locations">
@@ -156,29 +155,29 @@ export default function LocationDetailClient() {
         </div>
       ) : location ? (
         <>
-          <section className="rounded-(--r-3) p-4.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard className="p-4.5">
             <h2 className="text-[16px] font-medium mb-4" style={{ color: "var(--ink)" }}>Details</h2>
             <div className="flex flex-col gap-4 max-w-[520px]">
               <div>
-                <label className={labelClass}>Location name</label>
+                <Eyebrow as="label" className="mb-1.5 block">Location name</Eyebrow>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Street address</label>
+                <Eyebrow as="label" className="mb-1.5 block">Street address</Eyebrow>
                 <input type="text" value={street} onChange={(e) => setStreet(e.target.value)} className={inputClass} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className={labelClass}>City</label>
+                  <Eyebrow as="label" className="mb-1.5 block">City</Eyebrow>
                   <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Postal code</label>
+                  <Eyebrow as="label" className="mb-1.5 block">Postal code</Eyebrow>
                   <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className={inputClass} />
                 </div>
               </div>
               <div>
-                <label className={labelClass}>Country</label>
+                <Eyebrow as="label" className="mb-1.5 block">Country</Eyebrow>
                 <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} className={inputClass} />
               </div>
               <div>
@@ -187,9 +186,9 @@ export default function LocationDetailClient() {
                 </button>
               </div>
             </div>
-          </section>
+          </DSCard>
 
-          <section className="rounded-(--r-3) p-4.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard className="p-4.5">
             <h2 className="text-[16px] font-medium mb-1" style={{ color: "var(--ink)" }}>Manage</h2>
             <p className="text-[12.5px] mb-4" style={{ color: "var(--fg-3)" }}>
               The primary location is shown first across your workspace.
@@ -210,7 +209,7 @@ export default function LocationDetailClient() {
                 Deactivate location
               </button>
             </div>
-          </section>
+          </DSCard>
         </>
       ) : null}
     </GymDashboardShell>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, PageHeader } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { checkinsService, type CheckInRejection } from "@/lib/api/checkins";
@@ -133,24 +133,24 @@ export default function CheckInKioskPage() {
   return (
     <>
       <GymDashboardShell activeItem="Check-in kiosk" crumb="Check-in kiosk">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" style={{ marginBottom: 18 }}>
-        <div>
-          <h1 style={{ fontSize: 30, letterSpacing: "-0.024em", fontWeight: 500, color: "var(--ink)" }}>
-            Check-in kiosk
-          </h1>
-          <p style={{ color: "var(--fg-3)", marginTop: 6 }}>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Check-in kiosk"
+        subtitle={
+          <>
             Members scan your gym&rsquo;s QR with their phone, arrivals and
             declined attempts land here live.
-          </p>
-        </div>
-        {qrDataUrl && (
-          <div className="flex gap-2">
+          </>
+        }
+        actions={
+          qrDataUrl && (
             <button type="button" className="btn-primary-v2 sm" onClick={() => setKioskMode(true)}>
               Open kiosk display
             </button>
-          </div>
-        )}
-      </div>
+          )
+        }
+      />
 
       {!orgId && !orgLoading ? (
         <div className="rounded-(--r-2) border border-border bg-bg-2 p-5 text-sm" style={{ color: "var(--fg-2)" }}>
@@ -162,7 +162,7 @@ export default function CheckInKioskPage() {
         <>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
             {/* QR card */}
-            <div className="rounded-(--r-3) border border-border bg-bg p-5 text-center" style={{ alignSelf: "start" }}>
+            <DSCard className="p-5 text-center self-start">
               {qrDataUrl && (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={qrDataUrl} alt="Check-in QR code" className="mx-auto w-full max-w-[260px] rounded-(--r-2) border border-border bg-white p-3" />
@@ -175,11 +175,11 @@ export default function CheckInKioskPage() {
                 code refreshes every minute, printed copies and photos stop
                 working by design.
               </p>
-            </div>
+            </DSCard>
 
             {/* Live feed */}
             <div className="flex flex-col gap-4">
-              <div className="rounded-(--r-3) border border-border bg-bg p-5">
+              <DSCard className="p-5">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
                     Today&rsquo;s arrivals · {checkIns.length}
@@ -201,9 +201,9 @@ export default function CheckInKioskPage() {
                     ))}
                   </div>
                 )}
-              </div>
+              </DSCard>
 
-              <div className="rounded-(--r-3) border border-border bg-bg p-5">
+              <DSCard className="p-5">
                 <h3 className="mb-3" style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
                   Declined at the door
                 </h3>
@@ -231,7 +231,7 @@ export default function CheckInKioskPage() {
                     ))}
                   </div>
                 )}
-              </div>
+              </DSCard>
             </div>
           </div>
         </>

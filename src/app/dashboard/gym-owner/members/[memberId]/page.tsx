@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { StatusPill } from "@/components/ds/StatusPill";
+import { DSCard, Eyebrow } from "@/components/ds";
 import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -203,50 +204,38 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         {kpis.map((k) => (
-          <div
-            key={k.label}
-            className="rounded-(--r-3) p-3.5 px-4"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-          >
-            <div
-              className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
-              style={{ color: "var(--fg-3)" }}
-            >
-              {k.label}
-            </div>
+          // Not DSStatCard: these values are words (plan, status) that must
+          // truncate at 20px, which the stat card's number slot doesn't do.
+          <DSCard key={k.label} className="p-3.5 px-4">
+            <Eyebrow>{k.label}</Eyebrow>
             <div
               className="text-[20px] font-medium tracking-[-0.02em] mt-1 truncate"
               style={k.style ?? { color: "var(--ink)" }}
             >
               {k.value}
             </div>
-          </div>
+          </DSCard>
         ))}
       </div>
 
       {/* Subscription details + trainer */}
       <div className="grid lg:grid-cols-[3fr_2fr] gap-3.5">
         {/* Subscription detail */}
-        <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-5.5">
           <h3 className="text-[15px] font-medium mb-4" style={{ color: "var(--ink)" }}>
             Subscription details
           </h3>
           <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
             {details.map((row) => (
               <div key={row.label}>
-                <div
-                  className="font-mono text-[10.5px] uppercase tracking-[0.04em] mb-0.5"
-                  style={{ color: "var(--fg-3)" }}
-                >
-                  {row.label}
-                </div>
+                <Eyebrow className="mb-0.5">{row.label}</Eyebrow>
                 <div className="text-[13.5px]" style={{ color: "var(--ink)" }}>
                   {row.value}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </DSCard>
 
         {/* Who coaches this member */}
         <TrainerCard
@@ -262,15 +251,12 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
       </div>
 
       {/* Activity — not yet available */}
-      <div
-        className="rounded-(--r-3) p-5.5 flex flex-col items-center justify-center gap-2 min-h-[120px]"
-        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-      >
+      <DSCard className="p-5.5 flex flex-col items-center justify-center gap-2 min-h-[120px]">
         <p className="text-[14px] font-medium" style={{ color: "var(--fg-2)" }}>Activity</p>
         <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>
           Activity tracking coming soon.
         </p>
-      </div>
+      </DSCard>
     </GymDashboardShell>
   );
 }

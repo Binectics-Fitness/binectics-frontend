@@ -22,7 +22,7 @@ import {
   type MarketplaceMembershipPlan,
 } from "@/lib/types";
 import type { CreateOrgMembershipPlanRequest } from "@/lib/api/marketplace";
-import { ChipEditor } from "@/components/ds";
+import { ChipEditor, DSCard, DSStatCard, Eyebrow, PageHeader } from "@/components/ds";
 import { planPerLabel as perLabel } from "@/lib/marketplace/planDisplay";
 import SearchableSelect from "@/components/SearchableSelect";
 
@@ -33,7 +33,6 @@ const INPUT_STYLE = {
   fontFamily: "inherit",
 } as const;
 const INPUT_CLASS = "h-9 rounded-(--r-2) px-3 text-[13.5px]";
-const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
 
 
 /**
@@ -93,45 +92,51 @@ export function GymPlansClient() {
       crumb="Plans & pricing"
       actions={<button className="btn-primary-v2 sm" disabled={!orgId} onClick={() => { setAdding(true); setEditingId(null); }}>+ New plan</button>}
     >
-      <div className="pb-1">
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Plans & pricing</h1>
-        <div className="text-[13.5px] mt-1.5 max-w-[60ch]" style={{ color: "var(--fg-3)" }}>
-          The memberships members can buy on your listing. Deactivated plans stay valid for existing subscribers.
-        </div>
-      </div>
+      {/* The shell's <main> already spaces its children (gap-5). */}
+      <PageHeader
+        className="mb-0!"
+        title="Plans & pricing"
+        subtitle={<span className="block max-w-[60ch]">The memberships members can buy on your listing. Deactivated plans stay valid for existing subscribers.</span>}
+      />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
         {kpis.map((k) => (
-          <div key={k.label} className="flex flex-col gap-1 rounded-(--r-3) px-4 py-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-            <div className={`font-medium ${k.small ? "text-[17px]" : "text-[24px]"}`} style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{k.value}</div>
-            <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{k.delta}</div>
-          </div>
+          <DSStatCard
+            key={k.label}
+            size="sm"
+            label={k.label}
+            // A plan name, not a number: kept at the smaller size so it fits.
+            value={k.small ? <span className="text-[17px]">{k.value}</span> : k.value}
+            delta={k.delta}
+          />
         ))}
       </div>
 
       {adding && (
-        <section className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        // overflow-visible: the form's selects open an in-flow dropdown.
+        <DSCard className="p-5.5 overflow-visible!">
           <h2 className="text-[16px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>New plan</h2>
           <PlanForm saving={create.isPending} error={error} defaultCurrency={currentOrg?.currency ?? ""} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create plan" />
-        </section>
+        </DSCard>
       )}
 
       {isLoading && <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>Loading plans…</p>}
 
       {!isLoading && plans.length === 0 && !adding && (
-        <div className="rounded-(--r-3) flex flex-col items-center text-center px-6 py-14" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="flex flex-col items-center text-center px-6 py-14">
           <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>No plans yet</h2>
           <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
             Create your first membership plan, it becomes purchasable on your marketplace listing.
           </p>
           <button className="btn-primary-v2 sm mt-5" disabled={!orgId} onClick={() => setAdding(true)}>+ New plan</button>
-        </div>
+        </DSCard>
       )}
 
       {plans.length > 0 && (
-        <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        // overflow-visible: the inline edit form's selects open an in-flow
+        // dropdown. The rows have no backgrounds, so the corners need no clip.
+        <DSCard className="overflow-visible!">
           {plans.map((p, i) => (
             <div key={p._id} style={{ borderBottom: i < plans.length - 1 ? "1px solid var(--border)" : "none" }}>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5.5 py-4">
@@ -181,7 +186,7 @@ export function GymPlansClient() {
               )}
             </div>
           ))}
-        </div>
+        </DSCard>
       )}
     </GymDashboardShell>
   );
@@ -269,17 +274,17 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
     <div className="flex flex-col gap-3.5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Plan name</span>
+          <Eyebrow as="span">Plan name</Eyebrow>
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT_CLASS} style={INPUT_STYLE} />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Description</span>
+          <Eyebrow as="span">Description</Eyebrow>
           <input value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} placeholder="optional" className={INPUT_CLASS} style={INPUT_STYLE} />
         </label>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Type</span>
+          <Eyebrow as="span">Type</Eyebrow>
           <SearchableSelect
             value={planType}
             onChange={(v) => setPlanType(v as MembershipPlanType)}
@@ -290,9 +295,9 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>
+          <Eyebrow as="span">
             {oneTime ? "Access window" : "Billing period"}
-          </span>
+          </Eyebrow>
           <SearchableSelect
             value={period}
             onChange={(v) => setPeriod(v)}
@@ -304,12 +309,12 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
         </label>
         {period === "custom" && (
           <label className="flex flex-col gap-1.5">
-            <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Days</span>
+            <Eyebrow as="span">Days</Eyebrow>
             <input type="number" min={1} value={customDays} onChange={(e) => setCustomDays(Math.max(1, Math.round(Number(e.target.value) || 1)))} className={INPUT_CLASS} style={INPUT_STYLE} />
           </label>
         )}
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Price</span>
+          <Eyebrow as="span">Price</Eyebrow>
           {/* MoneyInput renders the currency symbol itself (₦5,000), exactly as
               formatCurrency will render the saved value, so the standalone
               currency-code prefix is gone rather than duplicated. */}
@@ -324,7 +329,7 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Visible on listing</span>
+          <Eyebrow as="span">Visible on listing</Eyebrow>
           <div className="flex items-center h-9">
             <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
           </div>
