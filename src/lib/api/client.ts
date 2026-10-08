@@ -180,9 +180,13 @@ class ApiClient {
         // concurrent use of one. When two tabs refresh at the same moment,
         // the other tab wins and the browser already holds its fresh
         // cookies, so retry the original request once before giving up.
-        // Only for the guard's own 401 (no `code`: an expired or missing
-        // session), never for a business 401 that carries a code.
-        if (body.code === undefined && body.error === undefined) {
+        // Only for the auth guard's own 401 (an expired or missing session):
+        // the API's exception filter labels it AUTH_UNAUTHORIZED, and older
+        // responses carry no code. Never for a business 401 with its own code.
+        if (
+          (body.code === undefined || body.code === "AUTH_UNAUTHORIZED") &&
+          body.error === undefined
+        ) {
           const raceRetry = await retryFn();
           if (raceRetry.status !== 401) {
             return this.handleResponse<T>(raceRetry);

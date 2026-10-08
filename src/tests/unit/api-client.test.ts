@@ -212,6 +212,40 @@ describe("apiClient session expiry redirect", () => {
     },
   );
 
+  it("race-retries the API's real guard 401 (code AUTH_UNAUTHORIZED)", async () => {
+    localStorage.setItem("user", JSON.stringify({ id: "u1" }));
+    const guard401 = () =>
+      jsonResponse(401, { success: false, statusCode: 401, code: "AUTH_UNAUTHORIZED", message: "Unauthorized" });
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(guard401()) // original: session expired
+      .mockResolvedValueOnce(
+        jsonResponse(401, {
+          success: false,
+          statusCode: 401,
+          code: "AUTH_REFRESH_TOKEN_INVALID",
+          message: ["Refresh token is invalid or expired"],
+        }),
+      ) // lost the refresh race
+      .mockResolvedValueOnce(jsonResponse(200, { data: { id: "u1" } })); // retried with the winner's cookie
+
+    const res = await apiClient.get<{ id: string }>("/auth/profile");
+
+    expect(res.success).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("does not race-retry the guard 401 shape on a credential endpoint", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(
+        jsonResponse(401, { success: false, statusCode: 401, code: "AUTH_UNAUTHORIZED", message: "Unauthorized" }),
+      );
+    await apiClient.post("/auth/verify-otp", { email: "a@b.example", otp: "000000" }, false);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
   it("does not race-retry a business 401 that carries a code", async () => {
     localStorage.setItem("user", JSON.stringify({ id: "u1" }));
     const fetchSpy = vi
