@@ -385,7 +385,7 @@ export default function ProfileSettingsPage() {
                 isUploadingProfileImage ||
                 isDeletingProfileImage
               }
-              className="btn-ghost-v2 lg text-danger! hover:bg-danger-soft! disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-ghost-v2 lg text-danger-ink! hover:bg-danger-soft! disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDeletingProfileImage ? "Removing..." : "Remove Image"}
             </button>
@@ -408,7 +408,7 @@ export default function ProfileSettingsPage() {
               className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.firstName && (
-              <p className="mt-1 text-sm text-danger">
+              <p className="mt-1 text-sm text-danger-ink">
                 {errors.firstName.message}
               </p>
             )}
@@ -423,7 +423,7 @@ export default function ProfileSettingsPage() {
               className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.lastName && (
-              <p className="mt-1 text-sm text-danger">
+              <p className="mt-1 text-sm text-danger-ink">
                 {errors.lastName.message}
               </p>
             )}
@@ -472,7 +472,7 @@ export default function ProfileSettingsPage() {
             {errors.dateOfBirth && (
               <p
                 id="profile-date-of-birth-error"
-                className="mt-1 text-sm text-danger"
+                className="mt-1 text-sm text-danger-ink"
               >
                 {errors.dateOfBirth.message}
               </p>

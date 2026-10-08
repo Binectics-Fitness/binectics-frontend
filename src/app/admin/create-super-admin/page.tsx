@@ -267,21 +267,21 @@ export default function CreateSuperAdminPage() {
             <button
               onClick={() => createAccount(AccountType.GYM_OWNER)}
               disabled={isLoading}
-              className="px-3 py-2 bg-gym text-bg font-semibold rounded-(--r-2) hover:bg-gym/90 transition-colors disabled:opacity-50 text-sm"
+              className="btn-signal-v2 disabled:opacity-50"
             >
               Gym
             </button>
             <button
               onClick={() => createAccount(AccountType.PERSONAL_TRAINER)}
               disabled={isLoading}
-              className="px-3 py-2 bg-trainer text-fg font-semibold rounded-(--r-2) hover:bg-trainer/90 transition-colors disabled:opacity-50 text-sm"
+              className="btn-signal-v2 disabled:opacity-50"
             >
               Trainer
             </button>
             <button
               onClick={() => createAccount(AccountType.DIETITIAN)}
               disabled={isLoading}
-              className="px-3 py-2 bg-dietitian text-bg font-semibold rounded-(--r-2) hover:bg-dietitian/90 transition-colors disabled:opacity-50 text-sm"
+              className="btn-signal-v2 disabled:opacity-50"
             >
               Dietitian
             </button>

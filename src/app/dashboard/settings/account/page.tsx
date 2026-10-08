@@ -98,7 +98,7 @@ export default function AccountSettingsPage() {
               className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.current && (
-              <p className="mt-1 text-sm text-danger">
+              <p className="mt-1 text-sm text-danger-ink">
                 {errors.current.message}
               </p>
             )}
@@ -113,7 +113,7 @@ export default function AccountSettingsPage() {
               className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.new && (
-              <p className="mt-1 text-sm text-danger">{errors.new.message}</p>
+              <p className="mt-1 text-sm text-danger-ink">{errors.new.message}</p>
             )}
           </div>
           <div>
@@ -126,7 +126,7 @@ export default function AccountSettingsPage() {
               className="w-full px-4 py-3 border border-border rounded-(--r-2) bg-bg text-ink focus:outline-none focus:ring-2 focus:ring-signal"
             />
             {errors.confirm && (
-              <p className="mt-1 text-sm text-danger">
+              <p className="mt-1 text-sm text-danger-ink">
                 {errors.confirm.message}
               </p>
             )}
