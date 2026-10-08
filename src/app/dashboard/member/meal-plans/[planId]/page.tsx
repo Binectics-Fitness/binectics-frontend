@@ -82,6 +82,7 @@ function ShoppingListSection({ plan, planId }: { plan: DietPlan; planId: string 
             <button
               type="button"
               onClick={() => toggleHave(item)}
+              aria-label={`Have it: ${item.occurrences[0].raw.trim()}`}
               className="font-mono text-[10px] uppercase tracking-[0.04em]"
               style={{ color: "var(--fg-4)", background: "transparent", border: "none", cursor: "pointer" }}
             >
@@ -231,6 +232,8 @@ export default function MemberMealPlanDetailPage({
                       key={d}
                       type="button"
                       onClick={() => setDay(d)}
+                      aria-pressed={active}
+                      aria-current={isToday ? "date" : undefined}
                       className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
                       style={{
                         background: active ? "var(--ink)" : "var(--bg)",

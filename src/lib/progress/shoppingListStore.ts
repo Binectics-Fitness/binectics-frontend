@@ -15,12 +15,26 @@ interface ShopState {
 
 const key = (userId: string, planId: string) => `mealplan-shop:${userId}:${planId}`;
 
+const strings = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+
+/**
+ * Parse stored state defensively. Storage is outside our control (older
+ * builds, manual edits, other tabs), so a missing or malformed `weeks` or
+ * `have` must degrade to empty rather than crash the meal-plan page.
+ */
 function read(userId: string, planId: string): ShopState {
   if (typeof window === "undefined") return { have: [], weeks: {} };
   try {
     const raw = window.localStorage.getItem(key(userId, planId));
-    const parsed = raw ? (JSON.parse(raw) as ShopState) : null;
-    return parsed && Array.isArray(parsed.have) ? parsed : { have: [], weeks: {} };
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    if (!parsed || typeof parsed !== "object") return { have: [], weeks: {} };
+    const { have, weeks } = parsed as { have?: unknown; weeks?: unknown };
+    const safeWeeks: Record<string, string[]> = {};
+    if (weeks && typeof weeks === "object" && !Array.isArray(weeks)) {
+      for (const [week, items] of Object.entries(weeks)) safeWeeks[week] = strings(items);
+    }
+    return { have: strings(have), weeks: safeWeeks };
   } catch {
     return { have: [], weeks: {} };
   }

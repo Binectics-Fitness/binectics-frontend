@@ -11,6 +11,7 @@ import type {
   DayOfWeek,
   DietPlan,
 } from "@/lib/api/progress";
+import { mealsForWeekday } from "@/lib/progress/weeklyPlan";
 
 export const MEAL_SLOT_LABELS: Record<MealSlot, string> = {
   [MealSlot.BREAKFAST]: "Breakfast",
@@ -207,15 +208,37 @@ export function isAssignableTemplate(
   return plan.delivery_type === DietPlanDeliveryType.PLATFORM;
 }
 
-/** Sum of the calories recorded on a plan's meals; null if none recorded. */
-export function planTotalCalories(
+/**
+ * Daily calories for the plan card, per weekday under the client render rule
+ * (every-day meals + that weekday's meals, see `mealsForWeekday`). Summing
+ * every meal across the week overstated a weekly plan several times over.
+ *
+ * Days whose meals carry no recorded calories are left out rather than
+ * counted as 0 kcal (unknown is not zero). Returns null when no day has any
+ * recorded calories; `min === max` when every counted day is the same.
+ */
+export function planDailyCalories(
   plan: Pick<DietPlan, "meals" | "days">,
-): number | null {
-  const days = plan.days ?? [];
-  const meals = days.length > 0 ? days.flatMap((d) => d.meals) : plan.meals ?? [];
-  const withCalories = meals.filter((m) => m.calories != null);
-  if (withCalories.length === 0) return null;
-  return withCalories.reduce((sum, m) => sum + (m.calories ?? 0), 0);
+): { min: number; max: number } | null {
+  const totals: number[] = [];
+  for (const day of WEEKDAYS) {
+    const recorded = mealsForWeekday(plan, day).filter((m) => m.calories != null);
+    if (recorded.length > 0) {
+      totals.push(recorded.reduce((sum, m) => sum + (m.calories ?? 0), 0));
+    }
+  }
+  if (totals.length === 0) return null;
+  return { min: Math.min(...totals), max: Math.max(...totals) };
+}
+
+/** "1,800" when every day matches, else "1,600–2,100"; "-" when unknown. */
+export function formatDailyCalories(
+  range: { min: number; max: number } | null,
+): string {
+  if (!range) return "-";
+  return range.min === range.max
+    ? range.min.toLocaleString()
+    : `${range.min.toLocaleString()}\u2013${range.max.toLocaleString()}`;
 }
 
 /** A template is a provider plan not yet tied to any client. */

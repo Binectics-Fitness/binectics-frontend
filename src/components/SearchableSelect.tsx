@@ -29,6 +29,7 @@ export default function SearchableSelect({
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
   const filtered = search.trim()
@@ -80,8 +81,15 @@ export default function SearchableSelect({
         select(filtered[highlightIndex].value);
       }
     } else if (e.key === "Escape") {
+      // Escape closes only the list, not a dialog the picker sits in:
+      // preventDefault marks it handled for document-level dialog handlers
+      // that honour defaultPrevented, stopPropagation for bubbling ones.
+      // Focus goes back to the trigger, since the search field unmounts.
+      e.preventDefault();
+      e.stopPropagation();
       setOpen(false);
       setSearch("");
+      triggerRef.current?.focus();
     }
   }
 
@@ -89,6 +97,7 @@ export default function SearchableSelect({
     <div ref={wrapperRef} className="relative">
       {name && <input type="hidden" name={name} value={value} />}
       <button
+        ref={triggerRef}
         type="button"
         id={id}
         disabled={disabled}

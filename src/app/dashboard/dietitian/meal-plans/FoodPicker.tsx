@@ -111,7 +111,12 @@ export function FoodPicker({
       e.preventDefault();
       if (optionCount > 0) chooseHighlighted();
     } else if (e.key === "Escape") {
-      setOpen(false);
+      // An open suggestion list takes this Escape; the dialog only gets it
+      // (via defaultPrevented) once the list is closed.
+      if (open && (q.length > 0 || loading)) {
+        e.preventDefault();
+        setOpen(false);
+      }
     } else if (e.key === "Backspace" && query === "" && value.length > 0) {
       // Quick correction: backspace on an empty field drops the last chip.
       onChange(value.slice(0, -1));
