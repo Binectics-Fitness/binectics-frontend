@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { StatusPill } from "@/components/ds";
+import { DSCard, Eyebrow, StatusPill } from "@/components/ds";
 import { useParams } from "next/navigation";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
@@ -46,8 +46,6 @@ const SESSION_LABEL: Record<string, string> = {
   NO_SHOW: "No-show",
   CANCELLED: "Cancelled",
 };
-
-const card: React.CSSProperties = { background: "var(--bg)", border: "1px solid var(--border)" };
 
 export default function ClientDetailPage() {
   const params = useParams<{ clientId: string }>();
@@ -129,9 +127,9 @@ export default function ClientDetailPage() {
   if (loading) {
     return (
       <TrainerDashboardShell activeItem="Clients" crumb="Client">
-        <div className="rounded-(--r-3) p-6 text-[14px]" style={{ ...card, color: "var(--fg-3)" }}>
+        <DSCard className="p-6 text-[14px]" style={{ color: "var(--fg-3)" }}>
           Loading client…
-        </div>
+        </DSCard>
       </TrainerDashboardShell>
     );
   }
@@ -203,14 +201,14 @@ export default function ClientDetailPage() {
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {kpis.map((k) => (
-          <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={card}>
-            <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
+          <DSCard key={k.label} className="px-4.5 py-4">
+            <Eyebrow>{k.label}</Eyebrow>
             <div className={`${k.small ? "text-[17px]" : "text-[24px]"} font-medium mt-1.5`} style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
               {k.value}
               {k.suffix && <small className="font-mono text-[12px] font-normal ml-1" style={{ color: "var(--fg-3)" }}>{k.suffix}</small>}
             </div>
             <div className="text-[12px] mt-1 truncate" style={{ color: "var(--fg-3)" }}>{k.sub}</div>
-          </div>
+          </DSCard>
         ))}
       </div>
 
@@ -220,7 +218,7 @@ export default function ClientDetailPage() {
         {/* Notes */}
         <section aria-labelledby="notes-heading" className="flex flex-col gap-3">
           <h2 id="notes-heading" className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Notes</h2>
-          <div className="rounded-(--r-3) overflow-hidden" style={card}>
+          <DSCard>
             <label htmlFor="client-note" className="sr-only">Note for {firstName}</label>
             <textarea
               id="client-note"
@@ -239,8 +237,8 @@ export default function ClientDetailPage() {
                 {saving ? "Saving…" : "Save note"}
               </button>
             </div>
-          </div>
-          <div className="rounded-(--r-3)" style={card}>
+          </DSCard>
+          <DSCard>
             {journals.length === 0 ? (
               <div className="px-4 py-5 text-[13px]" style={{ color: "var(--fg-3)" }}>No notes yet.</div>
             ) : (
@@ -251,67 +249,71 @@ export default function ClientDetailPage() {
                 </div>
               ))
             )}
-          </div>
+          </DSCard>
         </section>
 
         {/* Right rail */}
         <aside className="flex flex-col gap-4">
-          <section aria-labelledby="programs-heading" className="rounded-(--r-3) p-3.5" style={card}>
-            <h2 id="programs-heading" className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>Programs</h2>
-            {programs === null ? (
-              <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading…</div>
-            ) : livePrograms.length === 0 ? (
-              <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Not on a program.</div>
-            ) : (
-              livePrograms.map((p) => {
-                const week = p.progress?.last_7_days;
-                const day = p.progress?.day;
-                return (
-                  <Link key={p.id} href={`${TRAINER_PROGRAMS_CONFIG.basePath}/instances/${p.id}`} className="block py-2" style={{ borderTop: "1px solid var(--border)" }}>
-                    <div className="flex justify-between gap-2">
-                      <span className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{p.name}</span>
-                      {p.adherence_pct != null && (
-                        <span className="font-mono text-[12.5px]" style={{ color: "var(--ink)" }}>{p.adherence_pct}%</span>
-                      )}
-                    </div>
-                    <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>
-                      {[
-                        p.status === "paused" ? "Paused" : day != null ? (p.progress?.total_days ? `Day ${day} of ${p.progress.total_days}` : `Day ${day}`) : null,
-                        week && week.scheduled > 0 ? `${week.done} of ${week.scheduled} this week` : null,
-                        p.counts.missed > 0 ? `${p.counts.missed} missed` : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </div>
-                  </Link>
-                );
-              })
-            )}
-          </section>
+          <DSCard className="p-3.5">
+            <section aria-labelledby="programs-heading">
+              <Eyebrow as="h2" id="programs-heading" className="mb-2">Programs</Eyebrow>
+              {programs === null ? (
+                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading…</div>
+              ) : livePrograms.length === 0 ? (
+                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Not on a program.</div>
+              ) : (
+                livePrograms.map((p) => {
+                  const week = p.progress?.last_7_days;
+                  const day = p.progress?.day;
+                  return (
+                    <Link key={p.id} href={`${TRAINER_PROGRAMS_CONFIG.basePath}/instances/${p.id}`} className="block py-2" style={{ borderTop: "1px solid var(--border)" }}>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{p.name}</span>
+                        {p.adherence_pct != null && (
+                          <span className="font-mono text-[12.5px]" style={{ color: "var(--ink)" }}>{p.adherence_pct}%</span>
+                        )}
+                      </div>
+                      <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                        {[
+                          p.status === "paused" ? "Paused" : day != null ? (p.progress?.total_days ? `Day ${day} of ${p.progress.total_days}` : `Day ${day}`) : null,
+                          week && week.scheduled > 0 ? `${week.done} of ${week.scheduled} this week` : null,
+                          p.counts.missed > 0 ? `${p.counts.missed} missed` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
+            </section>
+          </DSCard>
 
-          <section aria-labelledby="sessions-heading" className="rounded-(--r-3) p-3.5" style={card}>
-            <h2 id="sessions-heading" className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>Sessions</h2>
-            {bookings === null ? (
-              <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading…</div>
-            ) : !next && recent.length === 0 ? (
-              <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>No sessions yet.</div>
-            ) : (
-              [...(next ? [next] : []), ...recent].map((b) => (
-                <div key={b.id} className="py-2" style={{ borderTop: "1px solid var(--border)" }}>
-                  <div className="flex justify-between gap-2 text-[12.5px]">
-                    <span style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fmtDateTime(b.startsAt)}</span>
-                    <span style={{ color: "var(--fg-3)" }}>{b === next ? "Next" : SESSION_LABEL[b.status]}</span>
+          <DSCard className="p-3.5">
+            <section aria-labelledby="sessions-heading">
+              <Eyebrow as="h2" id="sessions-heading" className="mb-2">Sessions</Eyebrow>
+              {bookings === null ? (
+                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading…</div>
+              ) : !next && recent.length === 0 ? (
+                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>No sessions yet.</div>
+              ) : (
+                [...(next ? [next] : []), ...recent].map((b) => (
+                  <div key={b.id} className="py-2" style={{ borderTop: "1px solid var(--border)" }}>
+                    <div className="flex justify-between gap-2 text-[12.5px]">
+                      <span style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fmtDateTime(b.startsAt)}</span>
+                      <span style={{ color: "var(--fg-3)" }}>{b === next ? "Next" : SESSION_LABEL[b.status]}</span>
+                    </div>
+                    {b.completionNote && (
+                      <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-2)" }}>{b.completionNote}</div>
+                    )}
                   </div>
-                  {b.completionNote && (
-                    <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-2)" }}>{b.completionNote}</div>
-                  )}
-                </div>
-              ))
-            )}
-            <Link href="/dashboard/trainer/sessions" className="block text-[12.5px] underline mt-2" style={{ color: "var(--ink)" }}>
-              All sessions
-            </Link>
-          </section>
+                ))
+              )}
+              <Link href="/dashboard/trainer/sessions" className="block text-[12.5px] underline mt-2" style={{ color: "var(--ink)" }}>
+                All sessions
+              </Link>
+            </section>
+          </DSCard>
         </aside>
       </div>
     </TrainerDashboardShell>

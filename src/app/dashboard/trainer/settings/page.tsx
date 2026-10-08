@@ -1,6 +1,7 @@
 "use client";
 
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
+import { DSCard } from "@/components/ds";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
@@ -22,12 +23,14 @@ export default function TrainerSettingsPage() {
           can then use currencies that account has enabled. */}
       <div className="mt-8">
         {gym ? (
-          <section className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <h2 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Payment account</h2>
-            <p className="text-[13px] mt-1" style={{ color: "var(--fg-3)" }}>
-              You coach at {gym.name}, so payments for your sessions go to {gym.name}. Earnings shows the sessions you ran.
-            </p>
-          </section>
+          <DSCard className="p-5.5">
+            <section>
+              <h2 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Payment account</h2>
+              <p className="text-[13px] mt-1" style={{ color: "var(--fg-3)" }}>
+                You coach at {gym.name}, so payments for your sessions go to {gym.name}. Earnings shows the sessions you ran.
+              </p>
+            </section>
+          </DSCard>
         ) : (
           <GatewaysSection
             title="Payment account"

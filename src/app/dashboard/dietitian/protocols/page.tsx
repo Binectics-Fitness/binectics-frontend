@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, PageHeader } from "@/components/ds";
 import { nutritionService, type Protocol } from "@/lib/api/nutrition";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -84,14 +84,13 @@ export default function DietitianProtocolsPage() {
 
   return (
     <DietitianDashboardShell activeItem="Programs" crumb="Protocols">
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Protocols</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {loading ? "Loading protocols..." : error ? "Couldn't load protocols" : `${total} to move over`}
-        </div>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title={{ emphasis: "Protocols" }}
+        subtitle={loading ? "Loading protocols..." : error ? "Couldn't load protocols" : `${total} to move over`}
+      />
 
-      <div className="rounded-(--r-3) px-4.5 py-4 flex flex-col gap-1.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="px-4.5 py-4 flex flex-col gap-1.5">
         <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Protocols are now Programs</div>
         <div className="text-[13px]" style={{ color: "var(--fg-2)", lineHeight: 1.55, maxWidth: "70ch" }}>
           A program does everything a protocol did, and clients see its steps as tasks on their Today. Open each
@@ -101,7 +100,7 @@ export default function DietitianProtocolsPage() {
         <Link href={DIETITIAN_PROGRAMS_CONFIG.basePath} className="text-[13px] font-medium underline self-start" style={{ color: "var(--ink)" }}>
           Go to Programs
         </Link>
-      </div>
+      </DSCard>
 
       {error && (
         <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
@@ -110,7 +109,7 @@ export default function DietitianProtocolsPage() {
         </div>
       )}
 
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[13.5px] min-w-[760px]" style={{ fontVariantNumeric: "tabular-nums" }}>
             <thead>
@@ -176,7 +175,7 @@ export default function DietitianProtocolsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DSCard>
     </DietitianDashboardShell>
   );
 }

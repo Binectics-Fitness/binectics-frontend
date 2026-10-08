@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
+import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, Eyebrow, StatusPill } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import {
@@ -111,7 +111,7 @@ function TemplatePickerModal({
           </p>
         </div>
         <div className="p-6 flex flex-col gap-2">
-          <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Template</label>
+          <Eyebrow as="label">Template</Eyebrow>
           {error ? (
             <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
               {error}
@@ -274,17 +274,13 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
             {kpis.map((k) => (
-              <div key={k.label} className="rounded-(--r-3) p-3.5 px-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-                <div className="text-[24px] font-medium tracking-[-0.02em] tabular-nums mt-1" style={{ color: "var(--ink)" }}>{k.value}</div>
-                <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>{k.delta}</div>
-              </div>
+              <DSStatCard key={k.label} size="sm" label={k.label} value={k.value} delta={k.delta} />
             ))}
           </div>
 
           {/* Goals + Notes */}
           <div className="grid lg:grid-cols-[1fr_1fr] gap-3.5">
-            <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard className="p-5.5">
               <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Goals</h3>
               {!client.goals?.length ? (
                 <EmptySlate message="No goals recorded." mt="mt-0" />
@@ -298,22 +294,22 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
               {client.height_cm != null && (
                 <div className="mt-4 font-mono text-[12px]" style={{ color: "var(--fg-3)" }}>Height · {client.height_cm} cm</div>
               )}
-            </div>
+            </DSCard>
 
-            <div className="rounded-(--r-3) p-5.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <DSCard className="p-5.5">
               <h3 className="text-[15px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>Notes</h3>
               {client.notes ? (
                 <div className="text-[13px] leading-[1.55]" style={{ color: "var(--fg-2)" }}>{client.notes}</div>
               ) : (
                 <EmptySlate message="No notes yet." mt="mt-0" />
               )}
-            </div>
+            </DSCard>
           </div>
 
           <OneOffTasksCard clientProfileId={clientId} />
 
           {/* Diet plans */}
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <DSCard>
             <div className="flex items-center justify-between gap-3 px-5.5 py-3.5 flex-wrap" style={{ borderBottom: "1px solid var(--border)" }}>
               <div>
                 <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Diet plans</h3>
@@ -352,7 +348,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
                 </div>
               ))
             )}
-          </div>
+          </DSCard>
 
           {templateModal && (
             <TemplatePickerModal

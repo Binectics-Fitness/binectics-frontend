@@ -16,6 +16,7 @@ import {
 } from "@/lib/types";
 import { countMembersByPlan } from "@/lib/constants/membershipStatus";
 import { MoneyInput } from "@/components/ds/MoneyInput";
+import { DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { toast } from "@/components/Toast";
@@ -155,9 +156,9 @@ function PlanModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6">
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+            <Eyebrow as="label">
               Plan name <span style={{ color: "var(--danger)" }}>*</span>
-            </label>
+            </Eyebrow>
             <input
               required
               value={form.name}
@@ -170,7 +171,7 @@ function PlanModal({
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Description</label>
+            <Eyebrow as="label">Description</Eyebrow>
             <textarea
               value={form.description ?? ""}
               onChange={(e) => set("description", e.target.value)}
@@ -184,7 +185,7 @@ function PlanModal({
           {/* Type + Duration */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Type</label>
+              <Eyebrow as="label">Type</Eyebrow>
               <SearchableSelect
                 value={form.plan_type}
                 onChange={(v) => set("plan_type", v as MembershipPlanType)}
@@ -195,7 +196,7 @@ function PlanModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Duration (days)</label>
+              <Eyebrow as="label">Duration (days)</Eyebrow>
               <input
                 type="number"
                 min={1}
@@ -211,9 +212,9 @@ function PlanModal({
           {/* Price + Currency */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+              <Eyebrow as="label">
                 Price <span style={{ color: "var(--danger)" }}>*</span>
-              </label>
+              </Eyebrow>
               {/* MoneyInput reports MINOR units directly, so nothing here
                   re-parses a formatted string, and it renders the currency
                   symbol exactly as the saved price will render elsewhere. */}
@@ -231,7 +232,7 @@ function PlanModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Currency</label>
+              <Eyebrow as="label">Currency</Eyebrow>
               <SearchableSelect
                 value={form.currency ?? ""}
                 onChange={(v) => set("currency", v)}
@@ -246,7 +247,7 @@ function PlanModal({
 
           {/* Features */}
           <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Features</label>
+            <Eyebrow as="label">Features</Eyebrow>
             <div className="flex gap-2">
               <input
                 value={featureInput}
@@ -293,9 +294,9 @@ function PlanModal({
                     style={{ background: "var(--bg)", left: form[key] ? "14px" : "2px", transition: "left 120ms" }}
                   />
                 </span>
-                <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+                <Eyebrow as="span">
                   {key === "is_active" ? "Active" : "Public"}
-                </span>
+                </Eyebrow>
               </label>
             ))}
           </div>
@@ -352,10 +353,7 @@ function PlanCard({
 }) {
   const { fmtMoney } = useOrgFormat();
   return (
-    <div
-      className="rounded-(--r-3) flex flex-col overflow-hidden"
-      style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-    >
+    <DSCard className="flex flex-col">
       <div className="px-5.5 pt-5 pb-3.5 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -396,11 +394,11 @@ function PlanCard({
 
       <div className="grid grid-cols-2" style={{ borderTop: "1px solid var(--border)", background: "var(--bg-2)" }}>
         <div className="py-3.5 px-5.5" style={{ borderRight: "1px solid var(--border)" }}>
-          <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Subscribers</div>
+          <Eyebrow>Subscribers</Eyebrow>
           <div className="text-[15px] font-medium mt-0.5" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{memberCount}</div>
         </div>
         <div className="py-3.5 px-5.5">
-          <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Status</div>
+          <Eyebrow>Status</Eyebrow>
           <div className="text-[13px] font-medium mt-0.5" style={{ color: plan.is_active ? "var(--signal-ink)" : "var(--fg-3)" }}>
             {plan.is_active ? "Live" : "Paused"}
           </div>
@@ -439,7 +437,7 @@ function PlanCard({
           />
         </button>
       </div>
-    </div>
+    </DSCard>
   );
 }
 
@@ -545,25 +543,24 @@ export default function TrainerPlansClient() {
 
   return (
     <TrainerDashboardShell activeItem="Plans" crumb="Plans">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-1">
-        <div>
-          <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Plans</h1>
-          <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-            {loading ? "Loading..." : `${plans.length} plan${plans.length === 1 ? "" : "s"} · ${activeCount} live`}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setModal({ mode: "create" })}
-          disabled={!orgId}
-          title={orgId ? undefined : "Set up your organization to create plans"}
-          className="btn-signal-v2 inline-flex items-center gap-2 self-start sm:self-auto disabled:opacity-40"
-          style={{ height: "36px", padding: "0 16px", fontSize: "13px" }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
-          New plan
-        </button>
-      </div>
+      <PageHeader
+        className="mb-1!"
+        title={{ emphasis: "Plans" }}
+        subtitle={loading ? "Loading..." : `${plans.length} plan${plans.length === 1 ? "" : "s"} · ${activeCount} live`}
+        actions={
+          <button
+            type="button"
+            onClick={() => setModal({ mode: "create" })}
+            disabled={!orgId}
+            title={orgId ? undefined : "Set up your organization to create plans"}
+            className="btn-signal-v2 inline-flex items-center gap-2 self-start sm:self-auto disabled:opacity-40"
+            style={{ height: "36px", padding: "0 16px", fontSize: "13px" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+            New plan
+          </button>
+        }
+      />
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, PageHeader } from "@/components/ds";
 import {
   nutritionService,
   type CreateFoodItemRequest,
@@ -421,12 +421,11 @@ export default function DietitianFoodsPage() {
         </div>
       }
     >
-      <div>
-        <h1 className="text-[30px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Food database</h1>
-        <div className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {loading ? "Loading your food library..." : `${filtered.length} food${filtered.length === 1 ? "" : "s"} in your library`}
-        </div>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title={{ before: "Food ", emphasis: "database" }}
+        subtitle={loading ? "Loading your food library..." : `${filtered.length} food${filtered.length === 1 ? "" : "s"} in your library`}
+      />
 
       {error && (
         <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
@@ -437,15 +436,11 @@ export default function DietitianFoodsPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpis.map((k) => (
-          <div key={k.label} className="rounded-(--r-3) px-4.5 py-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{k.label}</div>
-            <div className="font-medium mt-1.5 text-[18px]" style={{ letterSpacing: "-0.02em", color: "var(--ink)", lineHeight: 1.2 }}>{k.value}</div>
-            <div className="font-mono text-[11.5px] mt-1" style={{ color: "var(--signal-ink)" }}>{k.delta}</div>
-          </div>
+          <DSStatCard key={k.label} size="sm" label={k.label} value={k.value} delta={k.delta} />
         ))}
       </div>
 
-      <div className="rounded-(--r-3) flex flex-col sm:flex-row sm:items-center gap-3.5 px-3.5 py-2.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="flex flex-col sm:flex-row sm:items-center gap-3.5 px-3.5 py-2.5">
         <div className="flex items-center gap-2 h-8 px-3 rounded-(--r-2) flex-1 min-w-0 sm:min-w-[280px]" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input placeholder="Search foods..." className="flex-1 border-0 bg-transparent text-[13px] outline-none" style={{ color: "var(--ink)" }} value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -464,9 +459,9 @@ export default function DietitianFoodsPage() {
             ))}
           </div>
         )}
-      </div>
+      </DSCard>
 
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[13.5px] min-w-[860px]" style={{ fontVariantNumeric: "tabular-nums" }}>
             <thead>
@@ -553,7 +548,7 @@ export default function DietitianFoodsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DSCard>
 
       {modalOpen && <NewFoodModal onClose={() => setModalOpen(false)} onSave={handleCreate} />}
     </DietitianDashboardShell>

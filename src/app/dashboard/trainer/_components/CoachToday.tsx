@@ -45,7 +45,7 @@ import {
   isLiveBooking,
   type ScheduleGapInfo,
 } from "./coachSchedule";
-import { ScheduleGap, ScheduleList, ScheduleRow } from "./ScheduleRow";
+import { ScheduleGap, ScheduleList, ScheduleRow } from "@/components/ds/ScheduleRow";
 import type { CoachTodayData } from "./useCoachTodayData";
 
 export interface CoachTodayProps {

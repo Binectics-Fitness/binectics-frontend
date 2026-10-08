@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProviderListingProfile } from "@/components/provider/ProviderListingProfile";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, Eyebrow } from "@/components/ds";
 import { useMyListing } from "@/lib/queries/marketplace";
 import { useTargetAggregate, useTargetReviews } from "@/lib/queries/reviews";
 import { queryKeys } from "@/lib/queries/keys";
@@ -79,11 +79,11 @@ export function ReviewsTab() {
 
   if (!listingId) {
     return (
-      <div className="rounded-(--r-3) px-6 py-10 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="px-6 py-10 text-center">
         <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>
           Reviews appear once your marketplace listing is live. Create and publish it on the Listing tab.
         </p>
-      </div>
+      </DSCard>
     );
   }
 
@@ -110,13 +110,13 @@ export function ReviewsTab() {
       )}
 
       {!isLoading && !isError && reviews.length === 0 && (
-        <div className="rounded-(--r-3) px-6 py-10 text-center" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="px-6 py-10 text-center">
           <EmptySlate
             message="No reviews yet."
             hint="Clients can leave a review after a completed consultation."
             mt="mt-0"
           />
-        </div>
+        </DSCard>
       )}
 
       {reviews.map((review) => (
@@ -169,7 +169,7 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
   });
 
   return (
-    <div className="rounded-(--r-3) p-4.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+    <DSCard className="p-4.5">
       <div className="flex items-center gap-2.5">
         <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{review.reviewerName}</span>
         <Stars rating={review.rating} />
@@ -181,9 +181,9 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
 
       {review.providerResponse ? (
         <div className="mt-3 pl-3.5 py-2" style={{ borderLeft: "2px solid var(--border-2)" }}>
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+          <Eyebrow>
             Your response · {fmtDate(review.providerResponse.createdAt)}
-          </div>
+          </Eyebrow>
           <p className="text-[13px] mt-1 leading-relaxed" style={{ color: "var(--fg-2)" }}>{review.providerResponse.message}</p>
         </div>
       ) : replying ? (
@@ -207,6 +207,6 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
       ) : (
         <button className="btn-ghost-v2 sm mt-3" onClick={() => { setReplying(true); setError(null); }}>Respond</button>
       )}
-    </div>
+    </DSCard>
   );
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate, ActionModal } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, ActionModal } from "@/components/ds";
 import { bookingStatusTone } from "@/lib/ui/statusTones";
 import { toneColors } from "@/lib/ui/tones";
 import { bookingStatusLabel } from "@/lib/consultations/bookingActions";
@@ -343,10 +343,10 @@ export default function DietitianCalendarPage() {
 
       {/* Today's bookings — only when today is actually on screen */}
       {todayInVisibleWeek && (
-      <div className="rounded-(--r-3) p-3.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <div className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+      <DSCard className="p-3.5">
+        <Eyebrow>
           {loadingBookings ? "Loading today's bookings..." : "Today's bookings"}
-        </div>
+        </Eyebrow>
         <div className="mt-2.5 grid gap-2">
           {upcomingToday.map((booking) => (
             <div key={booking.id} className="flex items-center justify-between rounded-(--r-2) px-3 py-2" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
@@ -367,7 +367,7 @@ export default function DietitianCalendarPage() {
             </div>
           )}
         </div>
-      </div>
+      </DSCard>
       )}
 
       {/* Week grid */}
@@ -468,22 +468,22 @@ export default function DietitianCalendarPage() {
       <div className="grid lg:grid-cols-3 gap-3.5">
         {/* This week stats */}
         <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2.5" style={{ color: "var(--fg-3)" }}>This week</div>
-          <div className="rounded-(--r-3) overflow-hidden grid grid-cols-2" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <Eyebrow className="mb-2.5">This week</Eyebrow>
+          <DSCard className="grid grid-cols-2">
             {stats.map((s, i) => (
               <div key={s.label} className="p-3 px-3.5 flex flex-col gap-0.5" style={{ borderRight: i % 2 === 0 ? "1px solid var(--border)" : "none", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
-                <div className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.label}</div>
+                <Eyebrow>{s.label}</Eyebrow>
                 <div className="text-[18px] font-medium tracking-[-0.018em] tabular-nums leading-none mt-0.5" style={{ color: "var(--ink)" }}>{s.value}</div>
                 <div className="font-mono text-[10px] mt-1" style={{ color: "var(--fg-3)" }}>{s.delta}</div>
               </div>
             ))}
-          </div>
+          </DSCard>
         </div>
 
         {/* Working hours (real availability rules) */}
         <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2.5" style={{ color: "var(--fg-3)" }}>Working hours</div>
-          <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <Eyebrow className="mb-2.5">Working hours</Eyebrow>
+          <DSCard>
             {scheduleError ? (
               <div className="px-3.5 py-3 text-[12.5px]" style={{ color: "var(--danger)" }}>{scheduleError}</div>
             ) : rules.length === 0 ? (
@@ -520,14 +520,14 @@ export default function DietitianCalendarPage() {
                 Edit availability in Settings
               </Link>
             </div>
-          </div>
+          </DSCard>
         </div>
 
         {/* Blocked dates + status key */}
         <div className="flex flex-col gap-3.5">
           <div>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2.5" style={{ color: "var(--fg-3)" }}>Blocked dates</div>
-            <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <Eyebrow className="mb-2.5">Blocked dates</Eyebrow>
+            <DSCard>
               {upcomingExceptions.length === 0 ? (
                 <div className="px-3.5 py-3">
                   <EmptySlate message="No upcoming blocked time." hint="Use “Block off” to mark days you're unavailable." mt="mt-0" />
@@ -558,19 +558,19 @@ export default function DietitianCalendarPage() {
                   </div>
                 ))
               )}
-            </div>
+            </DSCard>
           </div>
 
           <div>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2.5" style={{ color: "var(--fg-3)" }}>Status key</div>
-            <div className="rounded-(--r-3) py-1" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <Eyebrow className="mb-2.5">Status key</Eyebrow>
+            <DSCard className="py-1">
               {Object.entries(STATUS_COLORS).map(([status, s]) => (
                 <div key={status} className="flex items-center gap-2 px-3.5 py-2 text-[12px]" style={{ color: "var(--fg-2)" }}>
                   <span className="w-2.5 h-2.5 rounded-[1px]" style={{ background: s.bg, border: `1px solid ${s.color}` }} />
                   {s.label}
                 </div>
               ))}
-            </div>
+            </DSCard>
           </div>
         </div>
       </div>
@@ -592,7 +592,7 @@ export default function DietitianCalendarPage() {
       >
         <div className="flex flex-col gap-3.5">
           <label className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Date</span>
+            <Eyebrow as="span">Date</Eyebrow>
             <input
               type="date"
               value={blockDate}
@@ -623,7 +623,7 @@ export default function DietitianCalendarPage() {
           {!blockAllDay && (
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1.5">
-                <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Available from</span>
+                <Eyebrow as="span">Available from</Eyebrow>
                 <input
                   type="time"
                   value={blockStart}
@@ -633,7 +633,7 @@ export default function DietitianCalendarPage() {
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Until</span>
+                <Eyebrow as="span">Until</Eyebrow>
                 <input
                   type="time"
                   value={blockEnd}
@@ -649,7 +649,7 @@ export default function DietitianCalendarPage() {
           )}
 
           <label className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Reason (optional)</span>
+            <Eyebrow as="span">Reason (optional)</Eyebrow>
             <input
               type="text"
               value={blockReason}

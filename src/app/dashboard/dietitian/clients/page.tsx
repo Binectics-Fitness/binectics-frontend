@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
+import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, PageHeader, StatusPill } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile } from "@/lib/api/progress";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
@@ -69,12 +69,11 @@ export default function DietitianClientsPage() {
 
   return (
     <DietitianDashboardShell activeItem="Clients" crumb="Clients">
-      <div>
-        <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Clients</h1>
-        <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-          {loading ? "Loading…" : `${clients.length} total clients`}
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0!"
+        title={{ emphasis: "Clients" }}
+        subtitle={loading ? "Loading…" : `${clients.length} total clients`}
+      />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -83,16 +82,12 @@ export default function DietitianClientsPage() {
           { label: "Active", value: loading ? "-" : String(counts.Active), delta: "Currently active" },
           { label: "Paused", value: loading ? "-" : String(counts.Paused), delta: "Inactive / paused" },
         ].map((kpi) => (
-          <div key={kpi.label} className="rounded-(--r-3) p-[14px_16px]" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{kpi.label}</div>
-            <div className="text-[22px] font-medium mt-1" style={{ color: "var(--ink)", letterSpacing: "-0.018em", fontVariantNumeric: "tabular-nums" }}>{kpi.value}</div>
-            <div className="font-mono text-[11px] mt-1" style={{ color: "var(--signal-ink)" }}>{kpi.delta}</div>
-          </div>
+          <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={kpi.delta} />
         ))}
       </div>
 
       {/* Toolbar */}
-      <div className="rounded-(--r-3) p-[10px_14px] flex gap-3.5 items-center flex-wrap" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard className="p-[10px_14px] flex gap-3.5 items-center flex-wrap">
         <div className="flex-1 min-w-[240px] flex items-center gap-2 h-8 px-3 rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           <input
@@ -119,7 +114,7 @@ export default function DietitianClientsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </DSCard>
 
       {isError && (
         <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
@@ -128,7 +123,7 @@ export default function DietitianClientsPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-(--r-3) overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+      <DSCard>
         <div className="overflow-x-auto">
           <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
             <thead>
@@ -173,7 +168,7 @@ export default function DietitianClientsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DSCard>
     </DietitianDashboardShell>
   );
 }

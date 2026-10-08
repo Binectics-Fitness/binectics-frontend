@@ -4,7 +4,7 @@ import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
+import { AsyncSpinner, DSCard, EmptySlate, PageHeader } from "@/components/ds";
 import {
   nutritionService,
   type FoodItem,
@@ -252,48 +252,51 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
   return (
     <DietitianDashboardShell activeItem="Food database" crumb={food.name}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
-        <div>
-          <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>{food.name}</h1>
-          <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+      <PageHeader
+        className="mb-0!"
+        title={food.name}
+        subtitle={
+          <>
             {food.category ? `${food.category} · ` : ""}{food.serving_label}
             {dirty && <span className="ml-2 font-mono text-[10.5px] uppercase tracking-[0.04em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--trainer-soft)", color: "oklch(0.42 0.13 75)" }}>Unsaved changes</span>}
-          </p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={handleArchive}
-            disabled={archiving}
-            className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer disabled:opacity-50"
-            style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger)" }}
-          >
-            {archiving ? "Archiving..." : "Archive"}
-          </button>
-          <button
-            type="button"
-            onClick={handleDuplicate}
-            disabled={duplicating}
-            className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer disabled:opacity-50"
-            style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}
-          >
-            {duplicating ? "Duplicating..." : "Duplicate"}
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!dirty || saving}
-            className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer disabled:opacity-50"
-            style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
-          >
-            {saving ? "Saving..." : "Save changes"}
-          </button>
-        </div>
-      </div>
+          </>
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={handleArchive}
+              disabled={archiving}
+              className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer disabled:opacity-50"
+              style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger)" }}
+            >
+              {archiving ? "Archiving..." : "Archive"}
+            </button>
+            <button
+              type="button"
+              onClick={handleDuplicate}
+              disabled={duplicating}
+              className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer disabled:opacity-50"
+              style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}
+            >
+              {duplicating ? "Duplicating..." : "Duplicate"}
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!dirty || saving}
+              className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] font-medium cursor-pointer disabled:opacity-50"
+              style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
+            >
+              {saving ? "Saving..." : "Save changes"}
+            </button>
+          </>
+        }
+      />
 
       {/* Details + macros */}
       <div className="grid lg:grid-cols-2 gap-3.5">
-        <div className="rounded-(--r-3) p-5.5 flex flex-col gap-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-5.5 flex flex-col gap-4">
           <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Details</h3>
           {textField("name", "Name", true)}
           <div className="grid grid-cols-2 gap-3">
@@ -311,9 +314,9 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
               style={inputStyle}
             />
           </div>
-        </div>
+        </DSCard>
 
-        <div className="rounded-(--r-3) p-5.5 flex flex-col gap-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DSCard className="p-5.5 flex flex-col gap-4">
           <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Nutrition · per serving</h3>
           <div className="grid grid-cols-2 gap-3">
             {macroField("caloriesKcal", "Calories (kcal)", true)}
@@ -324,7 +327,7 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
             {macroField("sugarG", "Sugar (g)")}
             {macroField("sodiumMg", "Sodium (mg)")}
           </div>
-        </div>
+        </DSCard>
       </div>
     </DietitianDashboardShell>
   );
