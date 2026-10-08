@@ -58,7 +58,9 @@ export default function Modal({
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") requestClose();
+      // A child that already handled this Escape (e.g. a picker closing its
+      // list) marks it with preventDefault; leave the dialog open then.
+      if (e.key === "Escape" && !e.defaultPrevented) requestClose();
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
