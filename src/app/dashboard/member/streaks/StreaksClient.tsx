@@ -107,12 +107,9 @@ export function StreaksClient() {
   const streak = stats?.current_streak_days ?? 0;
   const total = stats?.total_check_ins ?? 0;
   const longest = typeof stats?.longest_streak_days === "number" ? stats.longest_streak_days : null;
+  // One tile per provider: points at one provider never spend at another,
+  // so a sum across them would describe a balance nobody can use.
   const programs = loyaltyQuery.data ?? [];
-  const points = programs.length ? programs.reduce((sum, p) => sum + p.balance, 0) : null;
-  const pointsWhere =
-    programs.length === 1
-      ? `With ${programs[0].organization_name || "your provider"}`
-      : `Across ${programs.length} providers`;
   // Milestone progress is shown only with the API's longest streak (owner
   // ruling: no "N days to milestone" until the API has it).
   const next = longest !== null && streak > 0 ? nextStreakMilestone(streak) : null;
@@ -192,7 +189,7 @@ export function StreaksClient() {
           </DSCard>
         )}
 
-        {(stats || points != null) && (
+        {(stats || programs.length > 0) && (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {stats && (
               <DSStatCard
@@ -205,9 +202,15 @@ export function StreaksClient() {
             {longest !== null && (
               <DSStatCard size="sm" label="Longest streak" value={longest} unit={longest === 1 ? "day" : "days"} />
             )}
-            {points != null && (
-              <DSStatCard size="sm" label="Loyalty points" value={points.toLocaleString()} delta={pointsWhere} />
-            )}
+            {programs.map((p) => (
+              <DSStatCard
+                key={p.organization_id}
+                size="sm"
+                label="Loyalty points"
+                value={p.balance.toLocaleString()}
+                delta={`With ${p.organization_name || "your provider"}`}
+              />
+            ))}
           </div>
         )}
 

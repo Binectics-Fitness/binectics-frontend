@@ -846,6 +846,11 @@ export interface LoyaltyProgram {
 
 export interface LoyaltyBalance {
   balance: number;
+  /**
+   * Whether a program exists: for one provider, that it is on (off is a
+   * 404); without one, that any of the member's providers runs one.
+   */
+  enabled?: boolean;
   programs?: LoyaltyProgram[];
 }
 

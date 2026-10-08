@@ -58,6 +58,21 @@ describe("streaks page", () => {
     expect(screen.queryByText(/Redeemable at your gym/)).not.toBeInTheDocument();
   });
 
+  it("shows each provider's points separately, never a sum across them", async () => {
+    balance.mockResolvedValue(
+      ok([
+        { organization_id: "g1", organization_name: "Iron Lab", account_type: "gym", balance: 120, is_member: true },
+        { organization_id: "t1", organization_name: "Coach Ada", account_type: "personal_trainer", balance: 30, is_member: true },
+      ]) as never,
+    );
+    stats.mockResolvedValue(ok({ has_checked_in_today: false, current_streak_days: 0, total_check_ins: 4 }) as never);
+    renderPage();
+    expect(await screen.findByText("With Iron Lab")).toBeInTheDocument();
+    expect(screen.getByText("With Coach Ada")).toBeInTheDocument();
+    expect(screen.getAllByText("Loyalty points")).toHaveLength(2);
+    expect(screen.queryByText("150")).not.toBeInTheDocument();
+  });
+
   it("shows no loyalty card when none of the member's providers runs a program", async () => {
     balance.mockResolvedValue(ok([]) as never);
     stats.mockResolvedValue(ok({ has_checked_in_today: false, current_streak_days: 0, total_check_ins: 4 }) as never);
