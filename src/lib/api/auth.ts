@@ -73,6 +73,14 @@ export interface PrivacyPreferences {
   allowUsageAnalytics: boolean;
 }
 
+/** Register answer for an unclaimed placeholder: a set-password link was emailed, no OTP. */
+export interface RegisterClaimLinkSent {
+  claim_link_sent: true;
+  email: string;
+}
+
+export type RegisterResult = User | RegisterClaimLinkSent;
+
 export const authService = {
   /**
    * Login with email and password
@@ -101,9 +109,13 @@ export const authService = {
   /**
    * Register a new user
    * Note: Registration does not return tokens. User must verify OTP first.
+   *
+   * Exception: when the email belongs to an unclaimed placeholder account (one
+   * a gym created), the API changes nothing, sends no OTP, and emails a
+   * set-password link instead, answering `{ claim_link_sent: true, email }`.
    */
-  async register(data: RegisterRequest): Promise<ApiResponse<User>> {
-    return apiClient.post<User>("/auth/register", data, false);
+  async register(data: RegisterRequest): Promise<ApiResponse<RegisterResult>> {
+    return apiClient.post<RegisterResult>("/auth/register", data, false);
   },
 
   /**
