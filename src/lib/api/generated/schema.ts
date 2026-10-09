@@ -305,6 +305,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/member-billing/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Renewal charges that need a person: amount mismatches, stuck attempts, money with nowhere to go (refund pending) */
+        get: operations["AdminMemberBillingController_reconcile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/metrics/overview": {
         parameters: {
             query?: never;
@@ -983,7 +1000,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get dashboard stats for the authenticated member */
+        /**
+         * Get dashboard stats for the authenticated member
+         * @description Check-in counts and streaks. The current streak still stands until a full day passes with no check-in; streak_at_risk says today is that day.
+         */
         get: operations["CheckinsController_getMyDashboardStats"];
         put?: never;
         post?: never;
@@ -1068,7 +1088,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get dashboard stats for an organisation */
+        /**
+         * Get dashboard stats for an organisation
+         * @description Revenue figures are in revenue_currency (the org currency when set); other currencies are listed in revenue_by_currency, never summed.
+         */
         get: operations["CheckinsController_getOrgDashboardStats"];
         put?: never;
         post?: never;
@@ -2012,6 +2035,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/listings/{id}/plans/{planId}/auto-renew-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The automatic-renewal consent text for paying this plan by card */
+        get: operations["MarketplaceController_getPlanAutoRenewConsent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/listings/{id}/plans/{planId}/checkout": {
         parameters: {
             query?: never;
@@ -2408,6 +2448,40 @@ export interface paths {
         patch: operations["MarketplaceMyListingsController_updateSlug"];
         trace?: never;
     };
+    "/api/v1/marketplace/my-payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My saved cards, per provider, with the memberships each one renews */
+        get: operations["MemberBillingController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-payment-methods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a saved card: auto-renew stops on every membership it paid, and the card is deactivated at Paystack */
+        delete: operations["MemberBillingController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/my-providers": {
         parameters: {
             query?: never;
@@ -2491,6 +2565,23 @@ export interface paths {
         head?: never;
         /** Toggle auto-renew on a subscription */
         patch: operations["MarketplaceController_toggleAutoRenew"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-subscriptions/{subscriptionId}/auto-renew-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The consent text to accept to turn card auto-renew back on for this membership */
+        get: operations["MarketplaceController_getSubscriptionAutoRenewConsent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/my-subscriptions/{subscriptionId}/pause": {
@@ -2752,6 +2843,23 @@ export interface paths {
         head?: never;
         /** Unpublish organization marketplace listing */
         patch: operations["MarketplaceOrgController_unpublishListing"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/member-billing/charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** This organization's open and failed member renewal charges (or one status) */
+        get: operations["ProviderMemberBillingController_charges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/archive": {
@@ -3142,6 +3250,23 @@ export interface paths {
         head?: never;
         /** Schedule (plan_id) or clear (null) a plan change applied at renewal; scheduling enables auto-renew */
         patch: operations["MarketplaceOrgController_setNextPlan"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/record-renewal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record that a member paid for one more term (cash, transfer): extends the same membership at the plan's price */
+        post: operations["MarketplaceOrgController_recordRenewalPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/resend-invite": {
@@ -6426,6 +6551,14 @@ export interface components {
             /** @example Consultation completed successfully */
             note?: string;
         };
+        ConsentEchoDto: {
+            /** @enum {string} */
+            channel: "web" | "mobile";
+            /** @description sha256 (hex) of the exact text shown */
+            text_sha256: string;
+            /** @example mbr-renew-v1 */
+            text_version: string;
+        };
         CountryDto: {
             cities: components["schemas"]["CityDto"][];
             /** @example US */
@@ -7461,6 +7594,58 @@ export interface components {
             /** @description External payment reference (e.g. bank transfer narration) */
             payment_reference?: string;
         };
+        MyDashboardStatsDto: {
+            /**
+             * @description Consecutive check-in days (stored per check-in in its gym's zone), ending today — or ending yesterday when the member has not checked in yet today. 0 once a full day is missed.
+             * @example 6
+             */
+            current_streak_days: number;
+            /**
+             * @description Whether the member has checked in today.
+             * @example false
+             */
+            has_checked_in_today: boolean;
+            /**
+             * Format: date-time
+             * @description Latest check-in that is not in the future.
+             */
+            last_check_in_at?: string;
+            /** @description Listing of the latest check-in (old listing-based QRs only). */
+            last_listing_id?: string;
+            /**
+             * @description Longest run of consecutive check-in days in the full history. Always >= current_streak_days.
+             * @example 21
+             */
+            longest_streak_days: number;
+            /**
+             * @description True when current_streak_days > 0 and there is no check-in yet today: checking in today extends the streak, missing today ends it.
+             * @example true
+             */
+            streak_at_risk: boolean;
+            /**
+             * @description IANA time zone "today" is computed in, from the gym of the latest (non-future) check-in: its time_zone setting, else its country's zone when the country has exactly one, else UTC. Past check-in days keep the zone of the gym they were made at.
+             * @example Africa/Lagos
+             */
+            streak_timezone: string;
+            /**
+             * Format: date-time
+             * @description Time of today's latest check-in, if any.
+             */
+            today_check_in_at?: string;
+            /**
+             * @description Every check-in row on record for the member, including historical second scans at the same gym on the same day that the local_day backfill set aside (they were real scans, and loyalty points reference them). Those rows are not streak days.
+             * @example 42
+             */
+            total_check_ins: number;
+        };
+        MyDashboardStatsResponseDto: {
+            data: components["schemas"]["MyDashboardStatsDto"];
+            /** @example true */
+            success: boolean;
+        };
+        MySubscriptionRenewalRetryDto: {
+            renewal_retry: components["schemas"]["RenewalRetryDto"];
+        };
         OptimizedImageVariantsDto: {
             /** @example https://res.cloudinary.com/.../image.jpg */
             full: string;
@@ -7469,8 +7654,63 @@ export interface components {
             /** @example https://res.cloudinary.com/.../w_200,h_200/.../image.jpg */
             thumbnail: string;
         };
+        OrgDashboardStatsDto: {
+            /**
+             * @description Members who could check in right now (not a seat count).
+             * @example 21
+             */
+            active_members: number;
+            /** @example 4.7 */
+            average_rating: number;
+            /** @example Lagos */
+            city?: string;
+            /** @example NG */
+            country_code?: string;
+            /** @example 48 */
+            month_check_ins: number;
+            /** @description The five latest check-ins, member populated. */
+            recent_check_ins: {
+                [key: string]: unknown;
+            }[];
+            /** @description Every currency the ledger holds in these windows, revenue_currency first, then by code. Never summed across currencies. A currency with no revenue in any window is not listed. */
+            revenue_by_currency: components["schemas"]["RevenueByCurrencyDto"][];
+            /**
+             * @description Currency of every revenue_* figure: the org currency, else the listing's, else one the ledger holds. Null when none is known, in which case every revenue_* figure is 0.
+             * @example USD
+             */
+            revenue_currency: string | null;
+            /**
+             * @description Settled revenue over the last month, minor unit of revenue_currency.
+             * @example 320000
+             */
+            revenue_month_minor: number;
+            /**
+             * @description Settled revenue since the start of today, in the minor unit of revenue_currency. Integer.
+             * @example 12000
+             */
+            revenue_today_minor: number;
+            /**
+             * @description Settled revenue over the last 7 days, minor unit of revenue_currency.
+             * @example 90000
+             */
+            revenue_week_minor: number;
+            /** @example 18 */
+            review_count: number;
+            /** @example 3 */
+            today_check_ins: number;
+            /** @example 17 */
+            week_check_ins: number;
+        };
+        OrgDashboardStatsResponseDto: {
+            data: components["schemas"]["OrgDashboardStatsDto"];
+            /** @example true */
+            success: boolean;
+        };
         OrgRevenueStatsDto: {
-            /** @example USD */
+            /**
+             * @description The currency to headline: the organization's currency when set, else one the timeseries holds (the first by code). Never picked by comparing totals across currencies. The timeseries keeps every currency's rows, each tagged with its own currency; never sum them.
+             * @example USD
+             */
             currency: string | null;
             /** @example 12 */
             new_members_count: number;
@@ -7559,6 +7799,18 @@ export interface components {
              */
             value: string;
         };
+        RecordRenewalPaymentDto: {
+            /**
+             * @description How the member paid
+             * @default cash
+             * @enum {string}
+             */
+            payment_method: "cash" | "bank_transfer" | "card" | "other";
+            /** @description URL to uploaded payment proof */
+            payment_proof_url?: string;
+            /** @description Receipt number or transfer narration, for the ledger note */
+            payment_reference?: string;
+        };
         RefreshTokenDto: {
             /**
              * @description Refresh token. When omitted the server reads the httpOnly refresh_token cookie.
@@ -7608,6 +7860,22 @@ export interface components {
             /** @description FCM registration token for this device */
             token: string;
         };
+        RenewalCheckoutDto: {
+            /** @enum {string} */
+            channel: "web" | "mobile";
+            /** @enum {boolean} */
+            save_card: true;
+            /** @description sha256 (hex) of the exact text shown */
+            text_sha256: string;
+            /** @example mbr-renew-v1 */
+            text_version: string;
+        };
+        RenewalRetryDto: {
+            /** @description When the next card retry is due (ISO), or null. */
+            next_attempt_at: string | null;
+            /** @description True while a saved-card charge for the current term is scheduled for retry or in flight: do not offer Renew. */
+            pending: boolean;
+        };
         ReorderListingGalleryDto: {
             /**
              * @example [
@@ -7642,6 +7910,25 @@ export interface components {
         RespondMarketplaceRequestDto: {
             /** @example Looking forward to working with you! */
             response_note?: string;
+        };
+        RevenueByCurrencyDto: {
+            /** @example USD */
+            currency: string;
+            /**
+             * @description Minor units. Integer.
+             * @example 320000
+             */
+            month_minor: number;
+            /**
+             * @description Minor units. Integer.
+             * @example 12000
+             */
+            today_minor: number;
+            /**
+             * @description Minor units. Integer.
+             * @example 90000
+             */
+            week_minor: number;
         };
         RevenueTimeseriesItemDto: {
             /** @example USD */
@@ -7716,6 +8003,10 @@ export interface components {
             /** @example Travelling */
             reason?: string;
         };
+        StartPlanCheckoutDto: {
+            /** @description Save the card for automatic renewal (card-only checkout). Only when the consent-text endpoint offered it; never pre-ticked. */
+            renewal?: components["schemas"]["RenewalCheckoutDto"];
+        };
         StartThreadDto: {
             /** @description The gym to message (member↔gym). */
             organization_id?: string;
@@ -7738,12 +8029,25 @@ export interface components {
              */
             completion_time_seconds?: number;
         };
+        SubscribeSaveCardOutcomeDto: {
+            /**
+             * @description Set only when "Renew automatically" was ticked and the card was NOT saved: why (a code; no card detail). Absent when the card was saved or none was asked for.
+             * @enum {string}
+             */
+            card_not_saved_reason?: "disabled" | "not_reusable" | "account_changed" | "no_customer_email" | "subscription_not_active" | "terms_mismatch" | "card_unavailable";
+        };
         SuspendSubscriptionDto: {
             /**
              * @description Why the member is being suspended. Included verbatim in the notification they receive, so it is written for the member rather than for internal notes.
              * @example Outstanding balance from March
              */
             reason?: string;
+        };
+        ToggleAutoRenewDto: {
+            /** @description Accept the renewal terms again to turn card auto-renew back on (GET my-subscriptions/:id/auto-renew-consent). */
+            consent?: components["schemas"]["ConsentEchoDto"];
+            /** @description The state wanted. Present: set it (the current state is a no-op, 200). Absent: flip (older clients). OFF works on active, paused and past-due memberships; ON on active or paused only. */
+            enabled?: boolean;
         };
         TransferClientDto: {
             /** @description Current ClientProfile to deactivate */
@@ -8796,6 +9100,23 @@ export interface operations {
             };
         };
     };
+    AdminMemberBillingController_reconcile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_getPlatformMetrics: {
         parameters: {
             query?: never;
@@ -9752,7 +10073,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MyDashboardStatsResponseDto"];
+                };
             };
         };
     };
@@ -9855,7 +10178,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OrgDashboardStatsResponseDto"];
+                };
             };
         };
     };
@@ -10187,7 +10512,9 @@ export interface operations {
         parameters: {
             query?: {
                 status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+                /** @description Inclusive lower bound on starts_at. */
                 from?: string;
+                /** @description Exclusive upper bound on starts_at: pass the start of the next window (e.g. tomorrow 00:00 for "today"). A session starting exactly at `to` is not included. */
                 to?: string;
             };
             header?: never;
@@ -11637,7 +11964,7 @@ export interface operations {
             };
         };
     };
-    MarketplaceController_startPlanCheckout: {
+    MarketplaceController_getPlanAutoRenewConsent: {
         parameters: {
             query?: never;
             header?: never;
@@ -11648,6 +11975,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceController_startPlanCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartPlanCheckoutDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -11740,11 +12091,17 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description The membership. After a "Renew automatically" checkout whose card could not be saved, it also carries card_not_saved_reason. */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["SubscribeSaveCardOutcomeDto"];
+                        success?: boolean;
+                    };
+                };
             };
         };
     };
@@ -12275,6 +12632,42 @@ export interface operations {
             };
         };
     };
+    MemberBillingController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberBillingController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceController_getMyProviders: {
         parameters: {
             query?: never;
@@ -12321,11 +12714,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at }. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["MySubscriptionRenewalRetryDto"][];
+                        success?: boolean;
+                    };
+                };
             };
         };
     };
@@ -12349,6 +12748,29 @@ export interface operations {
         };
     };
     MarketplaceController_toggleAutoRenew: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ToggleAutoRenewDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceController_getSubscriptionAutoRenewConsent: {
         parameters: {
             query?: never;
             header?: never;
@@ -12807,6 +13229,25 @@ export interface operations {
         };
     };
     MarketplaceOrgController_unpublishListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProviderMemberBillingController_charges: {
         parameters: {
             query?: never;
             header?: never;
@@ -13375,6 +13816,30 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_recordRenewalPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordRenewalPaymentDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13951,7 +14416,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;

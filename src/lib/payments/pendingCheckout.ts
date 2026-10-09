@@ -20,6 +20,8 @@ export interface PendingMembershipCheckout {
   listing_id: string;
   plan_id: string;
   amount_minor: number;
+  /** The member ticked "Renew automatically" (only words the success page). */
+  save_card?: boolean;
 }
 
 const KEY = "binectics.pendingMembershipCheckout";

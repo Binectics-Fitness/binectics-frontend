@@ -5,6 +5,7 @@
  */
 
 import { apiClient } from "./client";
+import type { RenewalCheckoutRequest } from "./memberBilling";
 import type {
   ApiResponse,
   AmenityKey,
@@ -137,6 +138,10 @@ export interface PlanCheckout {
   amount_minor: number;
   currency: string;
   plan_id: string;
+  /** True when this checkout will save the card for auto-renew (card only). */
+  save_card?: boolean;
+  /** Set when the payment renews a membership the member already holds. */
+  renews_subscription_id?: string | null;
 }
 
 /**
@@ -921,10 +926,17 @@ export const marketplaceService = {
   async startPlanCheckout(
     listingId: string,
     planId: string,
+    /**
+     * Only when the member ticked "Renew automatically" on the consent the
+     * API offered: the version and hash of the text they read. The checkout
+     * is then card-only and the card is saved once Paystack says it can be
+     * charged again. Omitted, this is a one-off payment.
+     */
+    renewal?: RenewalCheckoutRequest,
   ): Promise<ApiResponse<PlanCheckout>> {
     return await apiClient.post<PlanCheckout>(
-      `/marketplace/listings/${listingId}/plans/${planId}/checkout`,
-      {},
+      `/marketplace/listings/${encodeURIComponent(listingId)}/plans/${encodeURIComponent(planId)}/checkout`,
+      renewal ? { renewal } : {},
     );
   },
 

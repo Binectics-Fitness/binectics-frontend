@@ -1,5 +1,26 @@
 import { UserRole } from "@/lib/types";
 import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
+import { billingNotificationTarget } from "@/lib/billing/autoRenew";
+
+/**
+ * Where tapping a notification goes. Billing notices are routed by TYPE
+ * (the member's go to Billing, a provider's final payment failure to their
+ * members), whatever action URL they carry; everything else resolves its
+ * action URL below.
+ */
+export function resolveNotificationTarget(
+  item: {
+    type?: string | null;
+    metadata?: Record<string, unknown> | null;
+    actionUrl?: string;
+  },
+  userRole?: UserRole,
+): string {
+  return (
+    billingNotificationTarget(item, userRole) ??
+    resolveNotificationLink(item.actionUrl, userRole)
+  );
+}
 
 /**
  * Resolves the backend-generated notification action URL into a
