@@ -178,7 +178,7 @@ export default function NotificationsInboxClient() {
                 </button>
                 {renewHref && (
                   <div className="-mt-1 pb-4 pl-[64px] pr-5 sm:pl-[68px] sm:pr-6">
-                    <Link href={renewHref} className="btn-primary-v2 md inline-flex">
+                    <Link href={renewHref} className="btn-primary-v2 md inline-flex" aria-label={`Renew: ${item.title}`}>
                       Renew
                     </Link>
                   </div>

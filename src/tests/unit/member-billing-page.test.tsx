@@ -123,7 +123,7 @@ describe("auto-renew switch", () => {
     expect(await screen.findByText(/needs a working card saved with this provider/)).toBeInTheDocument();
     // Not optimistic: still off.
     expect(screen.getByRole("switch", { name: /Auto-renew/ })).toHaveAttribute("aria-checked", "false");
-    expect(screen.getByRole("link", { name: "Pay next term by card" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Pay the next Monthly term by card" })).toHaveAttribute(
       "href",
       "/checkout?listing=l1&plan=p1",
     );
@@ -157,11 +157,11 @@ describe("auto-renew switch", () => {
     });
     await userEvent.click(turnOn);
     await waitFor(() =>
-      expect(setAutoRenew).toHaveBeenLastCalledWith("s1", {
-        text_version: "mbr-renew-v1",
-        text_sha256: "a".repeat(64),
-        channel: "web",
-      }),
+      expect(setAutoRenew).toHaveBeenLastCalledWith(
+        "s1",
+        { text_version: "mbr-renew-v1", text_sha256: "a".repeat(64), channel: "web" },
+        true,
+      ),
     );
     await waitFor(() =>
       expect(screen.getByRole("switch", { name: /Auto-renew/ })).toHaveAttribute("aria-checked", "true"),
@@ -217,7 +217,8 @@ describe("auto-renew switch", () => {
     expect(sw).toHaveAttribute("aria-checked", "true");
     expect(await screen.findByText(/Next charge .* · ₦25,000 · Visa •••• 4081/)).toBeInTheDocument();
     await userEvent.click(sw);
-    expect(setAutoRenew).toHaveBeenCalledWith("s1");
+    // The desired state goes with the call (sent once the API takes it).
+    expect(setAutoRenew).toHaveBeenCalledWith("s1", undefined, false);
     expect(await screen.findByText(/Auto-renew is off. Your card stays saved/)).toBeInTheDocument();
   });
 
@@ -247,14 +248,83 @@ describe("Renew", () => {
     renderPage();
     const banner = await screen.findByRole("alert");
     expect(banner).toHaveTextContent("Your Monthly payment didn't go through.");
-    expect(within(banner).getByRole("link", { name: "Renew now" })).toHaveAttribute(
+    expect(within(banner).getByRole("link", { name: "Renew Monthly now" })).toHaveAttribute(
       "href",
       "/checkout?listing=l1&plan=p1",
     );
   });
 });
 
+describe("past due, card retries (no second payment)", () => {
+  it("says when the card will be tried again, and offers no Renew, while retries remain", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [
+        sub({
+          status: MembershipSubscriptionStatus.PAST_DUE,
+          grace_expires_at: soon,
+          auto_renew: true,
+          collection_method: "card_auto",
+          renewal_retry: { pending: true, next_attempt_at: "2026-10-12T09:00:00.000Z" },
+        }),
+      ],
+    });
+    renderPage();
+    const banner = await screen.findByRole("alert");
+    expect(banner).toHaveTextContent(/We'll try your card again on Oct 12, 2026/);
+    expect(within(banner).queryByRole("link")).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+  });
+
+  it("without renewal_retry, treats a past-due card membership as still being retried", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, auto_renew: true, collection_method: "card_auto" })],
+    });
+    renderPage();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/try your card again soon/);
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+  });
+
+  it("offers Renew once the API says no retry is pending", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [
+        sub({
+          status: MembershipSubscriptionStatus.PAST_DUE,
+          auto_renew: true,
+          collection_method: "card_auto",
+          renewal_retry: { pending: false, next_attempt_at: null },
+        }),
+      ],
+    });
+    renderPage();
+    expect(await screen.findByRole("link", { name: "Renew Monthly now" })).toBeInTheDocument();
+  });
+
+  it("hides the auto-renew toggle while past due and points to Cancel or Remove card", async () => {
+    getSubs.mockResolvedValue({ success: true, data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE })] });
+    renderPage();
+    expect(await screen.findByText(/can't be changed while a payment is due/)).toBeInTheDocument();
+    expect(screen.queryByRole("switch")).toBeNull();
+  });
+});
+
 describe("saved cards", () => {
+  it("doesn't count or list memberships that have ended", async () => {
+    listCards.mockResolvedValue({
+      success: true,
+      data: [{ ...visa, subscriptions: [...visa.subscriptions, { ...visa.subscriptions[0], id: "old", plan_name: "Old Plan", status: "expired" }] }],
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Remove Visa •••• 4081" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Monthly");
+    expect(dialog).not.toHaveTextContent("Old Plan");
+    expect(screen.queryByText(/Old Plan/)).toBeNull();
+    expect(within(dialog).getByRole("button", { name: "Remove card" })).toHaveStyle({ background: "var(--danger-ink)" });
+  });
+
   it("says so when there are none", async () => {
     renderPage();
     expect(await screen.findByText(/No saved cards/)).toBeInTheDocument();

@@ -935,7 +935,7 @@ export const marketplaceService = {
     renewal?: RenewalCheckoutRequest,
   ): Promise<ApiResponse<PlanCheckout>> {
     return await apiClient.post<PlanCheckout>(
-      `/marketplace/listings/${listingId}/plans/${planId}/checkout`,
+      `/marketplace/listings/${encodeURIComponent(listingId)}/plans/${encodeURIComponent(planId)}/checkout`,
       renewal ? { renewal } : {},
     );
   },

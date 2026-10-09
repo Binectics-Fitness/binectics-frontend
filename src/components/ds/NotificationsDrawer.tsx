@@ -182,7 +182,7 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
             </button>
             {renewHref && (
               <div className="-mt-1 pb-4 pl-[68px] pr-6">
-                <Link href={renewHref} onClick={onClose} className="btn-primary-v2 md inline-flex">
+                <Link href={renewHref} onClick={onClose} className="btn-primary-v2 md inline-flex" aria-label={`Renew: ${n.title}`}>
                   Renew
                 </Link>
               </div>

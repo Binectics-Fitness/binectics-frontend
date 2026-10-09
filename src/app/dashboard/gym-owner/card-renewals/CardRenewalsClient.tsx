@@ -122,7 +122,7 @@ export default function CardRenewalsClient() {
                 type="button"
                 aria-pressed={status === f.value}
                 onClick={() => setStatus(f.value)}
-                className={`min-h-9 rounded-(--r-full) px-3 text-[13px] font-medium ${
+                className={`min-h-11 rounded-(--r-full) px-3.5 text-[13px] font-medium ${
                   status === f.value ? "bg-ink text-bg" : "text-fg-2 hover:bg-bg-2"
                 }`}
               >

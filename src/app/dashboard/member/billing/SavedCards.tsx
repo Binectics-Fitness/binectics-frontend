@@ -15,6 +15,12 @@ import {
 } from "@/lib/billing/autoRenew";
 import { useMyPaymentMethods, useRemovePaymentMethod } from "@/lib/queries/memberBilling";
 
+/** Memberships a card still renews: an ended one isn't counted or listed. */
+const ENDED = new Set(["expired", "cancelled"]);
+function liveSubs(card: PaymentMethodView) {
+  return card.subscriptions.filter((s) => !ENDED.has(s.status));
+}
+
 function chargeLine(s: PaymentMethodView["subscriptions"][number]): string {
   const name = s.plan_name ?? "Membership";
   if (!s.next_charge_at) return `${name}: auto-renew off`;
@@ -47,7 +53,7 @@ export function SavedCards() {
     setError(null);
     const res = await remove.mutateAsync(confirming.id);
     if (res.success) {
-      const n = confirming.subscriptions.length;
+      const n = liveSubs(confirming).length;
       toast.success(
         n > 0
           ? `Card removed. Auto-renew is off on ${n === 1 ? "1 membership" : `${n} memberships`}.`
@@ -112,9 +118,9 @@ export function SavedCards() {
                       {card.bank ? ` · ${card.bank}` : ""}
                     </p>
                     {st.hint && <p className="mt-1 text-[12.5px] text-fg-2">{st.hint}</p>}
-                    {card.subscriptions.length > 0 ? (
+                    {liveSubs(card).length > 0 ? (
                       <ul className="mt-1.5 flex flex-col gap-0.5" aria-label={`Memberships on ${cardLabel(card)}`}>
-                        {card.subscriptions.map((s) => (
+                        {liveSubs(card).map((s) => (
                           <li key={s.id} className="text-[12.5px] text-fg-2">
                             {chargeLine(s)}
                           </li>
@@ -153,6 +159,9 @@ export function SavedCards() {
             <button
               type="button"
               className="btn-primary-v2 md"
+              // Destructive: the danger ink, with the page colour for text
+              // (inline, because button text classes don't apply here).
+              style={{ background: "var(--danger-ink)", borderColor: "var(--danger-ink)", color: "var(--bg)" }}
               onClick={() => void onRemove()}
               disabled={remove.isPending}
             >
@@ -167,16 +176,16 @@ export function SavedCards() {
               <strong className="text-ink">{cardLabel(confirming)}</strong>
               {confirming.provider_name ? ` saved with ${confirming.provider_name}` : ""} will be removed.
             </p>
-            {confirming.subscriptions.length > 0 ? (
+            {liveSubs(confirming).length > 0 ? (
               <>
                 <p>Auto-renew stops on these memberships:</p>
                 <ul className="list-disc pl-5">
-                  {confirming.subscriptions.map((s) => (
+                  {liveSubs(confirming).map((s) => (
                     <li key={s.id}>{s.plan_name ?? "Membership"}</li>
                   ))}
                 </ul>
                 <p>
-                  They stay active until their current term ends. After that, renew them yourself from Billing.
+                  Each keeps its access for the time already paid for. One with a payment due keeps it only until its grace period ends. After that, renew it yourself from Billing.
                 </p>
               </>
             ) : (

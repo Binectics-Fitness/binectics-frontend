@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   autoRenewOutcome,
+  autoRenewSuccessQuery,
+  cardRetryFor,
   autoRenewUnavailableCopy,
   billingNotificationTarget,
   cardNotSavedCopy,
@@ -313,5 +315,46 @@ describe("why a card wasn't saved, or a renewal stopped", () => {
     expect(chargeFailureCopy({ closed_reason: null, attempts: [{ failure_class: "hard" }, { failure_class: "soft" }] })).toMatch(/retried/);
     expect(chargeFailureCopy({ closed_reason: null, attempts: [] })).toBeNull();
     expect(chargeFailureCopy({ closed_reason: "odd_new_reason", attempts: [] })).toBe("The renewal was stopped.");
+  });
+});
+
+describe("review fixes (SF-1, SF-2)", () => {
+  it("no Renew on a failed card payment while retries remain (final: false)", () => {
+    const meta = { checkoutPath: "/marketplace/listings/l1/plans/p1/checkout" };
+    expect(renewHrefForNotification({ type: "SUBSCRIPTION_PAYMENT_FAILED", metadata: { ...meta, final: false } })).toBeNull();
+    expect(renewHrefForNotification({ type: "SUBSCRIPTION_PAYMENT_FAILED", metadata: { ...meta, final: true } })).toBe(
+      "/checkout?listing=l1&plan=p1",
+    );
+  });
+
+  it("no Renew on a past-due membership whose card will be retried", () => {
+    const due = { status: MembershipSubscriptionStatus.PAST_DUE };
+    expect(
+      renewHrefForMembership(sub({ ...due, renewal_retry: { pending: true, next_attempt_at: "2026-10-12T00:00:00Z" } }), NOW),
+    ).toBeNull();
+    expect(renewHrefForMembership(sub({ ...due, renewal_retry: { pending: false, next_attempt_at: null } }), NOW)).not.toBeNull();
+    // Fallback without renewal_retry: still on the card means retried.
+    expect(renewHrefForMembership(sub({ ...due, auto_renew: true, collection_method: "card_auto" }), NOW)).toBeNull();
+    expect(cardRetryFor(sub({ ...due, auto_renew: true, collection_method: "card_auto", next_charge_at: "2026-10-12T00:00:00Z" }))).toEqual({
+      pending: true,
+      nextAttemptAt: "2026-10-12T00:00:00Z",
+    });
+    expect(cardRetryFor(sub()).pending).toBe(false);
+  });
+
+  it("no Renew for a negotiated (non-self-serve) plan, as on mobile", () => {
+    const plan = sub().plan_id as Exclude<MembershipSubscription["plan_id"], string>;
+    expect(renewHrefForMembership(sub({ plan_id: { ...plan, is_self_serve: false } }), NOW)).toBeNull();
+    expect(renewHrefForMembership(sub({ plan_id: { ...plan, is_self_serve: true } }), NOW)).not.toBeNull();
+  });
+
+  it("carries the not-saved reason code to the success page, and nothing else", () => {
+    expect(autoRenewSuccessQuery(false, {})).toBe("");
+    expect(autoRenewSuccessQuery(true, { collection_method: "card_auto", auto_renew: true })).toBe("&renewal=on");
+    expect(autoRenewSuccessQuery(true, { card_not_saved_reason: "card_unavailable" })).toBe(
+      "&renewal=not_saved&reason=card_unavailable",
+    );
+    expect(autoRenewSuccessQuery(true, { card_not_saved_reason: "x&y=<b>" })).toBe("&renewal=not_saved");
+    expect(autoRenewSuccessQuery(true, {})).toBe("&renewal=not_saved");
   });
 });

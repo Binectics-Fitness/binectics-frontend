@@ -438,6 +438,10 @@ export function RecordRenewalModal({
       onRecorded();
     } else if (res.status === 403) {
       setError("You don't have permission to record payments for this gym.");
+    } else if (res.code === "RENEWAL_CHARGE_IN_PROGRESS") {
+      // A saved-card charge for this term is with the bank: recording a
+      // payment now could take the money twice.
+      setError("A card payment for this term is still processing. Try again once it settles.");
     } else {
       setError(res.message ?? "We couldn't record the renewal. Please try again.");
     }

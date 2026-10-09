@@ -145,6 +145,17 @@ export interface OrgChargeView {
   created_at: string | null;
 }
 
+/** Every id goes into a path segment encoded, whatever its source. */
+const enc = encodeURIComponent;
+
+/**
+ * Whether the API takes the desired-state toggle body `{ enabled }`
+ * (planned for api #206). Until it does, its whitelist would refuse the
+ * field, so the PATCH stays a flip and the screen re-reads after it. Turn
+ * this on with the API change.
+ */
+export const AUTO_RENEW_SENDS_DESIRED_STATE = false;
+
 export const memberBillingService = {
   /** The consent for paying this plan at checkout. */
   getPlanAutoRenewConsent(
@@ -152,7 +163,7 @@ export const memberBillingService = {
     planId: string,
   ): Promise<ApiResponse<AutoRenewConsentOffer>> {
     return apiClient.get<AutoRenewConsentOffer>(
-      `/marketplace/listings/${listingId}/plans/${planId}/auto-renew-consent`,
+      `/marketplace/listings/${enc(listingId)}/plans/${enc(planId)}/auto-renew-consent`,
     );
   },
 
@@ -161,7 +172,7 @@ export const memberBillingService = {
     subscriptionId: string,
   ): Promise<ApiResponse<AutoRenewConsentOffer>> {
     return apiClient.get<AutoRenewConsentOffer>(
-      `/marketplace/my-subscriptions/${subscriptionId}/auto-renew-consent`,
+      `/marketplace/my-subscriptions/${enc(subscriptionId)}/auto-renew-consent`,
     );
   },
 
@@ -173,10 +184,15 @@ export const memberBillingService = {
   setAutoRenew(
     subscriptionId: string,
     consent?: ConsentEcho,
+    /** The state the member asked for, so a stale screen can't flip it the wrong way. */
+    enabled?: boolean,
   ): Promise<ApiResponse<MembershipSubscription>> {
     return apiClient.patch<MembershipSubscription>(
-      `/marketplace/my-subscriptions/${subscriptionId}/auto-renew`,
-      consent ? { consent } : {},
+      `/marketplace/my-subscriptions/${enc(subscriptionId)}/auto-renew`,
+      {
+        ...(AUTO_RENEW_SENDS_DESIRED_STATE && enabled !== undefined ? { enabled } : {}),
+        ...(consent ? { consent } : {}),
+      },
     );
   },
 
@@ -188,7 +204,7 @@ export const memberBillingService = {
     id: string,
   ): Promise<ApiResponse<{ id: string; status: "revoked" }>> {
     return apiClient.delete<{ id: string; status: "revoked" }>(
-      `/marketplace/my-payment-methods/${id}`,
+      `/marketplace/my-payment-methods/${enc(id)}`,
     );
   },
 
@@ -200,9 +216,9 @@ export const memberBillingService = {
     organizationId: string,
     status?: ChargeStatus,
   ): Promise<ApiResponse<OrgChargeView[]>> {
-    const q = status ? `?status=${encodeURIComponent(status)}` : "";
+    const q = status ? `?status=${enc(status)}` : "";
     return apiClient.get<OrgChargeView[]>(
-      `/marketplace/organizations/${organizationId}/member-billing/charges${q}`,
+      `/marketplace/organizations/${enc(organizationId)}/member-billing/charges${q}`,
     );
   },
 
@@ -213,7 +229,7 @@ export const memberBillingService = {
     body: RecordRenewalRequest,
   ): Promise<ApiResponse<MembershipSubscription>> {
     return apiClient.post<MembershipSubscription>(
-      `/marketplace/organizations/${organizationId}/subscriptions/${subscriptionId}/record-renewal`,
+      `/marketplace/organizations/${enc(organizationId)}/subscriptions/${enc(subscriptionId)}/record-renewal`,
       body,
     );
   },

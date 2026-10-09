@@ -12,6 +12,7 @@ import { MembershipPlanType } from "@/lib/types";
 import DashboardLoading from "@/components/DashboardLoading";
 import { Button } from "@/components/Button";
 import { formatMinor } from "@/lib/currencies/helpers";
+import { cardNotSavedCopy } from "@/lib/billing/autoRenew";
 
 function SuccessContent() {
   const router = useRouter();
@@ -23,6 +24,9 @@ function SuccessContent() {
   // Set by the checkout only when the member ticked "Renew automatically".
   // Wording only: Billing re-reads the real state from the API.
   const renewal = searchParams.get("renewal");
+  // Why the card wasn't saved (the API's card_not_saved_reason code). Only
+  // ever looked up in the copy table, never rendered as given.
+  const notSavedReason = searchParams.get("reason");
 
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [plan, setPlan] = useState<MarketplaceMembershipPlan | null>(null);
@@ -133,7 +137,8 @@ function SuccessContent() {
         )}
         {renewal === "not_saved" && (
           <p role="status" className="mb-6 rounded-(--r-3) border border-warn bg-warn-soft px-4 py-3 text-left text-sm text-warn-ink">
-            We couldn&apos;t save this card for renewals, so auto-renew is off. Renew in Billing when your term ends.
+            {notSavedReason ? `${cardNotSavedCopy(notSavedReason)} ` : "We couldn't save this card for renewals. "}
+            Auto-renew is off. Renew in Billing when your term ends.
           </p>
         )}
 

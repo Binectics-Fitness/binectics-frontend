@@ -22,7 +22,7 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { queryKeys } from "@/lib/queries/keys";
 import { useMyPaymentMethods } from "@/lib/queries/memberBilling";
-import { cardLabel, renewHrefForMembership } from "@/lib/billing/autoRenew";
+import { cardLabel, cardRetryFor, renewHrefForMembership } from "@/lib/billing/autoRenew";
 import { MembershipPlanType } from "@/lib/types";
 import { AutoRenewControl } from "./AutoRenewControl";
 import { SavedCards } from "./SavedCards";
@@ -178,6 +178,9 @@ export function BillingClient() {
           grace runs out, so the way to pay sits at the top. */}
       {pastDue.map((s) => {
         const href = renewHrefForMembership(s);
+        // While the card will be tried again, don't invite a second payment.
+        const retry = cardRetryFor(s);
+        const name = planOf(s)?.name ?? "membership";
         return (
           <div
             key={`due-${s._id}`}
@@ -187,13 +190,17 @@ export function BillingClient() {
             <div className="min-w-0 flex-1 text-[13.5px] text-ink">
               <p className="font-medium">Your {planOf(s)?.name ?? "membership"} payment didn&apos;t go through.</p>
               <p className="mt-0.5 text-fg-2">
-                {s.grace_expires_at
-                  ? `Pay by ${formatDate(s.grace_expires_at)} to keep your access.`
-                  : "Pay now to keep your access."}
+                {retry.pending
+                  ? retry.nextAttemptAt
+                    ? `We'll try your card again on ${formatDate(retry.nextAttemptAt)}. You don't need to do anything yet.`
+                    : "We'll try your card again soon. You don't need to do anything yet."
+                  : s.grace_expires_at
+                    ? `Pay by ${formatDate(s.grace_expires_at)} to keep your access.`
+                    : "Pay now to keep your access."}
               </p>
             </div>
-            {href && (
-              <Link href={href} className="btn-primary-v2 md shrink-0">
+            {href && !retry.pending && (
+              <Link href={href} className="btn-primary-v2 md shrink-0" aria-label={`Renew ${name} now`}>
                 Renew now
               </Link>
             )}
@@ -281,10 +288,17 @@ export function BillingClient() {
               <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-6">
                 {s.enrolled_by ? (
                   <p className="text-[12.5px] text-fg-2">Your gym manages renewals for this membership. Pay your gym to renew it.</p>
+                ) : s.status === MembershipSubscriptionStatus.PAST_DUE ? (
+                  // No toggle while a payment is due: turning it on can't
+                  // pay this term, and the way to stop is Cancel or
+                  // removing the card.
+                  <p className="text-[12.5px] text-fg-2">
+                    Auto-renew can&apos;t be changed while a payment is due. To stop it, cancel the membership or remove the card under Saved cards.
+                  </p>
                 ) : (
                   <AutoRenewControl sub={s} renewHref={renewHref ?? renewHrefForMembership(s, dayBeforeTermEnd(s))} onChanged={onAutoRenewChanged} />
                 )}
-                {byCard && (
+                {byCard && s.status !== MembershipSubscriptionStatus.PAST_DUE && (
                   <p className="text-[12.5px] text-fg-2 sm:pt-3">
                     {s.next_charge_at ? `Next charge ${formatDate(s.next_charge_at)}` : "Renews automatically"}
                     {s.renewal_price_minor != null ? ` · ${formatMinor(s.currency, s.renewal_price_minor)}` : ""}

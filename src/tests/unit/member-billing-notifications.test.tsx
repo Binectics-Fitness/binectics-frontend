@@ -70,7 +70,10 @@ describe("notifications drawer: billing", () => {
       }),
     ];
     render(<NotificationsDrawer open onClose={vi.fn()} />);
-    expect(screen.getByRole("link", { name: "Renew" })).toHaveAttribute("href", "/checkout?listing=l1&plan=p1");
+    expect(screen.getByRole("link", { name: "Renew: Your membership is due for renewal" })).toHaveAttribute(
+      "href",
+      "/checkout?listing=l1&plan=p1",
+    );
   });
 
   it("puts a Renew button on a failed renewal payment", () => {
@@ -78,17 +81,29 @@ describe("notifications drawer: billing", () => {
       note({
         type: NotificationType.SUBSCRIPTION_PAYMENT_FAILED,
         title: "We couldn't take your payment",
-        metadata: { checkoutPath: "/marketplace/listings/l9/plans/p9/checkout" },
+        metadata: { final: true, checkoutPath: "/marketplace/listings/l9/plans/p9/checkout" },
       }),
     ];
     render(<NotificationsDrawer open onClose={vi.fn()} />);
-    expect(screen.getByRole("link", { name: "Renew" })).toHaveAttribute("href", "/checkout?listing=l9&plan=p9");
+    expect(screen.getByRole("link", { name: /^Renew: / })).toHaveAttribute("href", "/checkout?listing=l9&plan=p9");
+  });
+
+  it("offers no Renew on a failed payment the card will retry (final: false)", () => {
+    items = [
+      note({
+        type: NotificationType.SUBSCRIPTION_PAYMENT_FAILED,
+        title: "Your renewal payment didn't go through",
+        metadata: { final: false, checkoutPath: "/marketplace/listings/l9/plans/p9/checkout" },
+      }),
+    ];
+    render(<NotificationsDrawer open onClose={vi.fn()} />);
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
   });
 
   it("has no Renew button on other notices", () => {
     items = [note({ type: NotificationType.PAYMENT_RECEIVED, title: "Paid", metadata: {} })];
     render(<NotificationsDrawer open onClose={vi.fn()} />);
-    expect(screen.queryByRole("link", { name: "Renew" })).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
   });
 
   it("opens Billing at the membership for a card notice", async () => {
@@ -180,6 +195,23 @@ describe("Record renewal payment (gym staff)", () => {
     const dialog = await screen.findByRole("dialog");
     await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("You don't have permission to record payments");
+    expect(onRecorded).not.toHaveBeenCalled();
+  });
+
+  it("says a card payment is still processing (RENEWAL_CHARGE_IN_PROGRESS)", async () => {
+    record.mockResolvedValue({
+      success: false,
+      status: 409,
+      code: "RENEWAL_CHARGE_IN_PROGRESS",
+      message: "A renewal payment from the saved card is being processed right now.",
+    });
+    const onRecorded = vi.fn();
+    render(<RecordRenewalModal open sub={sub} orgId="o1" onClose={vi.fn()} onRecorded={onRecorded} />);
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "A card payment for this term is still processing. Try again once it settles.",
+    );
     expect(onRecorded).not.toHaveBeenCalled();
   });
 

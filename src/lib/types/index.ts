@@ -672,6 +672,11 @@ export interface MembershipSubscription {
         price_minor: number;
         currency: string;
         features: string[];
+        /**
+         * False for a negotiated, off-app plan: its price is not one a
+         * member can pay in the app. Absent means self-serve (as mobile).
+         */
+        is_self_serve?: boolean;
       };
   listing_id?:
     | string
@@ -709,6 +714,17 @@ export interface MembershipSubscription {
   renewal_price_minor?: number | null;
   /** When the next automatic charge is due (a day before the term ends). */
   next_charge_at?: string | null;
+  /**
+   * A failed card renewal the API will retry (coming with api #206):
+   * while `pending`, the member must not be invited to pay another way,
+   * which could charge them twice.
+   */
+  renewal_retry?: { pending: boolean; next_attempt_at: string | null } | null;
+  /**
+   * Set on the subscribe response when "Renew automatically" was ticked but
+   * the card wasn't saved: why, as a code (api #206).
+   */
+  card_not_saved_reason?: string;
   /** When the current pause began. Null in every state except `paused`. */
   paused_at?: string | null;
   /** Total time spent paused, in ms, across all pauses. Credited to end_date. */

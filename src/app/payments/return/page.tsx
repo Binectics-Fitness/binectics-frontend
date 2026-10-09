@@ -7,7 +7,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { consultationsService } from "@/lib/api/consultations";
 import { marketplaceService } from "@/lib/api/marketplace";
-import { autoRenewOutcome } from "@/lib/billing/autoRenew";
+import { autoRenewSuccessQuery } from "@/lib/billing/autoRenew";
 import { clearPendingCheckout, readPendingCheckout } from "@/lib/payments/pendingCheckout";
 
 /**
@@ -97,9 +97,8 @@ function PaymentReturnInner() {
         );
         if (res.success) {
           clearPendingCheckout();
-          const outcome = autoRenewOutcome(!!pending.save_card, res.data);
           router.replace(
-            `/checkout/success?listing=${pending.listing_id}&plan=${pending.plan_id}${outcome ? `&renewal=${outcome}` : ""}`,
+            `/checkout/success?listing=${pending.listing_id}&plan=${pending.plan_id}${autoRenewSuccessQuery(!!pending.save_card, res.data)}`,
           );
           return;
         }

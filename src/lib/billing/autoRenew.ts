@@ -99,12 +99,17 @@ export function renewHrefFromMetadata(
   return null;
 }
 
-/** A notification that asks the member to pay for their next term. */
+/**
+ * A notification that asks the member to pay for their next term. A failed
+ * card payment counts only once it is final (`metadata.final !== false`):
+ * while the card will be retried, paying another way could charge the
+ * member twice, so no Renew is offered.
+ */
 export function isRenewalNotice(input: {
   type?: string | null;
   metadata?: Record<string, unknown> | null;
 }): boolean {
-  if (input.type === "SUBSCRIPTION_PAYMENT_FAILED") return true;
+  if (input.type === "SUBSCRIPTION_PAYMENT_FAILED") return input.metadata?.final !== false;
   return input.metadata?.reason === "renewal_payment_due";
 }
 
@@ -114,6 +119,26 @@ export function renewHrefForNotification(input: {
   metadata?: Record<string, unknown> | null;
 }): string | null {
   return isRenewalNotice(input) ? renewHrefFromMetadata(input.metadata) : null;
+}
+
+/**
+ * Whether the API will try the saved card again for a past-due membership.
+ * Uses `renewal_retry` when the API sends it. Without it, a past-due
+ * membership still renewing by card is treated as pending: a second payment
+ * while the card is retried could charge the member twice.
+ */
+export function cardRetryFor(
+  sub: MembershipSubscription,
+): { pending: boolean; nextAttemptAt: string | null } {
+  if (sub.status !== MembershipSubscriptionStatus.PAST_DUE) return { pending: false, nextAttemptAt: null };
+  if (sub.renewal_retry) {
+    return {
+      pending: sub.renewal_retry.pending === true,
+      nextAttemptAt: sub.renewal_retry.next_attempt_at ?? null,
+    };
+  }
+  const byCard = sub.auto_renew && sub.collection_method === "card_auto";
+  return { pending: byCard, nextAttemptAt: byCard ? (sub.next_charge_at ?? null) : null };
 }
 
 /** How long after expiry the API still renews the same membership (api #196). */
@@ -128,7 +153,8 @@ const DAY = 86_400_000;
 
 /**
  * The checkout that renews this membership, or null when "Renew" shouldn't
- * show. Shown for a paid, recurring plan bought from a listing when:
+ * show. Shown for a paid, recurring, self-serve plan bought from a listing
+ * (a negotiated plan, `is_self_serve: false`, never; as on mobile) when:
  *  - it is past due, or expired within the last 30 days (renew in place);
  *  - it is active and ends within RENEW_AHEAD_DAYS (7), and no saved card
  *    will renew it.
@@ -143,12 +169,15 @@ export function renewHrefForMembership(
   if (!plan || !listingId) return null;
   if (plan.plan_type === MembershipPlanType.ONE_TIME) return null;
   if (!(plan.price_minor > 0)) return null;
+  if (plan.is_self_serve === false) return null;
   const end = sub.end_date ? new Date(sub.end_date).getTime() : NaN;
   const t = now.getTime();
   const renewsByCard = sub.auto_renew && sub.collection_method === "card_auto";
 
   switch (sub.status) {
     case MembershipSubscriptionStatus.PAST_DUE:
+      // Not while the card will be tried again (double charge).
+      if (cardRetryFor(sub).pending) return null;
       return checkoutHref(listingId, plan._id);
     case MembershipSubscriptionStatus.EXPIRED:
       if (Number.isNaN(end) || t - end > RENEWABLE_AFTER_EXPIRY_DAYS * DAY) return null;
@@ -273,6 +302,25 @@ export function autoRenewOutcome(
 ): "on" | "not_saved" | null {
   if (!ticked) return null;
   return sub?.collection_method === "card_auto" && sub.auto_renew ? "on" : "not_saved";
+}
+
+const REASON_CODE = /^[a-z_]{1,40}$/;
+
+/**
+ * The success-page query for a ticked checkout: `&renewal=on`, or
+ * `&renewal=not_saved` plus the API's `card_not_saved_reason` when it gave
+ * one (a code only; anything else is dropped).
+ */
+export function autoRenewSuccessQuery(
+  ticked: boolean,
+  sub: Partial<MembershipSubscription> | null | undefined,
+): string {
+  const outcome = autoRenewOutcome(ticked, sub);
+  if (!outcome) return "";
+  const reason = sub?.card_not_saved_reason;
+  return outcome === "not_saved" && typeof reason === "string" && REASON_CODE.test(reason)
+    ? `&renewal=not_saved&reason=${reason}`
+    : `&renewal=${outcome}`;
 }
 
 // ─── Why a card wasn't saved, or a renewal didn't go through ─────────────────

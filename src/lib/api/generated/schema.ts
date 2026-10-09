@@ -8020,6 +8020,13 @@ export interface components {
              */
             completion_time_seconds?: number;
         };
+        SubscribeSaveCardOutcomeDto: {
+            /**
+             * @description Set only when "Renew automatically" was ticked and the card was NOT saved: why (a code; no card detail). Absent when the card was saved or none was asked for.
+             * @enum {string}
+             */
+            card_not_saved_reason?: "disabled" | "not_reusable" | "account_changed" | "no_customer_email" | "subscription_not_active" | "terms_mismatch" | "card_unavailable";
+        };
         SuspendSubscriptionDto: {
             /**
              * @description Why the member is being suspended. Included verbatim in the notification they receive, so it is written for the member rather than for internal notes.
@@ -12073,11 +12080,17 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description The membership. After a "Renew automatically" checkout whose card could not be saved, it also carries card_not_saved_reason. */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["SubscribeSaveCardOutcomeDto"];
+                        success?: boolean;
+                    };
+                };
             };
         };
     };

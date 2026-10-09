@@ -21,7 +21,7 @@ import {
   type RenewalCheckoutRequest,
 } from "@/lib/api/memberBilling";
 import {
-  autoRenewOutcome,
+  autoRenewSuccessQuery,
   autoRenewUnavailableCopy,
   consentFromError,
   isOfferedConsent,
@@ -179,6 +179,14 @@ function CheckoutContent() {
         );
         return;
       }
+      if (!started.success && started.code === "RENEWAL_CHARGE_IN_PROGRESS") {
+        // A saved-card renewal for this membership is with the bank now;
+        // paying again could charge the member twice.
+        setPaymentError(
+          "A renewal payment from your saved card is being processed right now. Check back in a few minutes before paying again.",
+        );
+        return;
+      }
       if (!started.success || !started.data?.access_code) {
         setPaymentError(writeErrorMessage(started, "We couldn't start the payment. Please try again."));
         return;
@@ -219,9 +227,8 @@ function CheckoutContent() {
       );
       if (res.success) {
         clearPendingCheckout();
-        const outcome = autoRenewOutcome(!!renewal, res.data);
         router.push(
-          `/checkout/success?listing=${listing._id}&plan=${plan._id}${outcome ? `&renewal=${outcome}` : ""}`,
+          `/checkout/success?listing=${listing._id}&plan=${plan._id}${autoRenewSuccessQuery(!!renewal, res.data)}`,
         );
       } else {
         setPaymentError(

@@ -54,6 +54,7 @@ export function AutoRenewControl({
   const [dialogError, setDialogError] = useState<string | null>(null);
 
   const on = !!sub.auto_renew;
+  const planName = typeof sub.plan_id === "object" ? sub.plan_id.name : "membership";
 
   const fetchConsent = async (): Promise<OfferedConsent | null> => {
     const res = await memberBillingService.getSubscriptionAutoRenewConsent(sub._id);
@@ -81,7 +82,7 @@ export function AutoRenewControl({
     setStatus(
       updated.auto_renew
         ? "Auto-renew is on. We'll remind you before each charge."
-        : "Auto-renew is off. Your card stays saved, and nothing more will be charged for this membership.",
+        : "Auto-renew is off. Your card stays saved and won't be used for future renewals of this membership. A payment already being processed may still go through.",
     );
   };
 
@@ -91,7 +92,7 @@ export function AutoRenewControl({
     setProblem(null);
     setStatus(null);
     try {
-      const res = await memberBillingService.setAutoRenew(sub._id);
+      const res = await memberBillingService.setAutoRenew(sub._id, undefined, !on);
       if (res.success && res.data) {
         applied(res.data);
         return;
@@ -124,11 +125,15 @@ export function AutoRenewControl({
     setBusy(true);
     setDialogError(null);
     try {
-      const res = await memberBillingService.setAutoRenew(sub._id, {
-        text_version: consent.text_version,
-        text_sha256: consent.text_sha256,
-        channel: "web",
-      });
+      const res = await memberBillingService.setAutoRenew(
+        sub._id,
+        {
+          text_version: consent.text_version,
+          text_sha256: consent.text_sha256,
+          channel: "web",
+        },
+        true,
+      );
       if (res.success && res.data) {
         closeDialog();
         applied(res.data);
@@ -182,7 +187,7 @@ export function AutoRenewControl({
             />
           </span>
           Auto-renew
-          <span className="sr-only">{busy ? " (saving)" : ""}</span>
+          <span className="sr-only">{` for ${planName}${busy ? " (saving)" : ""}`}</span>
         </button>
         <span className="font-mono text-[11px] uppercase tracking-[0.04em] text-fg-2">
           {busy ? "Saving…" : on ? "On" : "Off"}
@@ -199,7 +204,11 @@ export function AutoRenewControl({
               automatically&rdquo; to save one.
             </p>
             {renewHref && (
-              <Link href={renewHref} className="btn-ghost-v2 md mt-2 inline-flex">
+              <Link
+                href={renewHref}
+                className="btn-ghost-v2 md mt-2 inline-flex"
+                aria-label={`Pay the next ${planName} term by card`}
+              >
                 Pay next term by card
               </Link>
             )}

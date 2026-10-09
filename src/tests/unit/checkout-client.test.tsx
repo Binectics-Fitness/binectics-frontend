@@ -230,6 +230,38 @@ describe("plan checkout", () => {
       );
     });
 
+    it("passes the API's reason the card wasn't saved to the success page", async () => {
+      consent.mockResolvedValue({ success: true, data: offered });
+      open.mockResolvedValue({ closed: "callback", reference: "mbr_123" });
+      subscribe.mockResolvedValue({
+        success: true,
+        data: { auto_renew: false, collection_method: "offline", card_not_saved_reason: "terms_mismatch" } as never,
+      });
+      render(<CheckoutPage />);
+      await userEvent.click(await screen.findByRole("checkbox"));
+      await userEvent.click(screen.getByRole("button", { name: /Pay .* with Paystack/ }));
+      await waitFor(() =>
+        expect(push).toHaveBeenCalledWith(
+          "/checkout/success?listing=l1&plan=p1&renewal=not_saved&reason=terms_mismatch",
+        ),
+      );
+    });
+
+    it("says a saved-card renewal is processing (RENEWAL_CHARGE_IN_PROGRESS) and opens nothing", async () => {
+      start.mockResolvedValue({
+        success: false,
+        status: 409,
+        code: "RENEWAL_CHARGE_IN_PROGRESS",
+        message: "A renewal payment from the saved card is being processed right now.",
+      });
+      render(<CheckoutPage />);
+      await userEvent.click(await screen.findByRole("button", { name: /Pay .* with Paystack/ }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "A renewal payment from your saved card is being processed right now. Check back in a few minutes before paying again.",
+      );
+      expect(open).not.toHaveBeenCalled();
+    });
+
     it("on 409 CONSENT_TEXT_CHANGED shows the new terms, unticked, and opens nothing", async () => {
       const changed = { ...offered, text: "Renew automatically. New price ₦18,000.00 every 30 days.", text_sha256: "b".repeat(64) };
       consent.mockResolvedValue({ success: true, data: offered });
