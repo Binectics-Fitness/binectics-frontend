@@ -289,16 +289,25 @@ export function BillingClient() {
                 {s.enrolled_by ? (
                   <p className="text-[12.5px] text-fg-2">Your gym manages renewals for this membership. Pay your gym to renew it.</p>
                 ) : s.status === MembershipSubscriptionStatus.PAST_DUE ? (
-                  // No toggle while a payment is due: turning it on can't
-                  // pay this term, and the way to stop is Cancel or
-                  // removing the card.
-                  <p className="text-[12.5px] text-fg-2">
-                    Auto-renew can&apos;t be changed while a payment is due. To stop it, cancel the membership or remove the card under Saved cards.
-                  </p>
+                  // Past due: only OFF (the API turns it on for active or
+                  // paused memberships only), behind a confirmation. Once
+                  // it's off the row offers Renew instead.
+                  s.auto_renew ? (
+                    <AutoRenewControl sub={s} renewHref={null} onChanged={onAutoRenewChanged} offOnly />
+                  ) : (
+                    <p className="text-[12.5px] text-fg-2">Auto-renew is off. Renew to keep your access.</p>
+                  )
                 ) : (
                   <AutoRenewControl sub={s} renewHref={renewHref ?? renewHrefForMembership(s, dayBeforeTermEnd(s))} onChanged={onAutoRenewChanged} />
                 )}
-                {byCard && s.status !== MembershipSubscriptionStatus.PAST_DUE && (
+                {s.status !== MembershipSubscriptionStatus.PAST_DUE && cardRetryFor(s).pending && (
+                  <p className="text-[12.5px] text-fg-2 sm:pt-3">
+                    {cardRetryFor(s).nextAttemptAt
+                      ? `We'll try your card again on ${formatDate(cardRetryFor(s).nextAttemptAt)}.`
+                      : "We'll try your card again soon."}
+                  </p>
+                )}
+                {byCard && s.status !== MembershipSubscriptionStatus.PAST_DUE && !cardRetryFor(s).pending && (
                   <p className="text-[12.5px] text-fg-2 sm:pt-3">
                     {s.next_charge_at ? `Next charge ${formatDate(s.next_charge_at)}` : "Renews automatically"}
                     {s.renewal_price_minor != null ? ` · ${formatMinor(s.currency, s.renewal_price_minor)}` : ""}

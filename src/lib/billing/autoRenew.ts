@@ -122,21 +122,22 @@ export function renewHrefForNotification(input: {
 }
 
 /**
- * Whether the API will try the saved card again for a past-due membership.
- * Uses `renewal_retry` when the API sends it. Without it, a past-due
- * membership still renewing by card is treated as pending: a second payment
- * while the card is retried could charge the member twice.
+ * Whether a saved-card charge for the current term is scheduled for retry
+ * or in flight (my-subscriptions `renewal_retry`, api #206). While it is, a
+ * second payment could charge the member twice, so Renew isn't offered.
+ * An older API without the field: a past-due membership still renewing by
+ * card is treated as pending.
  */
 export function cardRetryFor(
   sub: MembershipSubscription,
 ): { pending: boolean; nextAttemptAt: string | null } {
-  if (sub.status !== MembershipSubscriptionStatus.PAST_DUE) return { pending: false, nextAttemptAt: null };
   if (sub.renewal_retry) {
     return {
       pending: sub.renewal_retry.pending === true,
       nextAttemptAt: sub.renewal_retry.next_attempt_at ?? null,
     };
   }
+  if (sub.status !== MembershipSubscriptionStatus.PAST_DUE) return { pending: false, nextAttemptAt: null };
   const byCard = sub.auto_renew && sub.collection_method === "card_auto";
   return { pending: byCard, nextAttemptAt: byCard ? (sub.next_charge_at ?? null) : null };
 }
@@ -173,11 +174,11 @@ export function renewHrefForMembership(
   const end = sub.end_date ? new Date(sub.end_date).getTime() : NaN;
   const t = now.getTime();
   const renewsByCard = sub.auto_renew && sub.collection_method === "card_auto";
+  // Never while a card charge for this term is retrying or in flight.
+  if (cardRetryFor(sub).pending) return null;
 
   switch (sub.status) {
     case MembershipSubscriptionStatus.PAST_DUE:
-      // Not while the card will be tried again (double charge).
-      if (cardRetryFor(sub).pending) return null;
       return checkoutHref(listingId, plan._id);
     case MembershipSubscriptionStatus.EXPIRED:
       if (Number.isNaN(end) || t - end > RENEWABLE_AFTER_EXPIRY_DAYS * DAY) return null;

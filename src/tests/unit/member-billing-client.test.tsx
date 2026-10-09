@@ -34,14 +34,14 @@ describe("member billing client", () => {
     expect(post.mock.calls[1][0]).toBe("/marketplace/listings/l%2F1/plans/p%2F1/checkout");
   });
 
-  it("doesn't send { enabled } until the API takes it, and sends the consent", async () => {
+  it("sends the desired state { enabled } with the consent (api #206)", async () => {
     const patch = vi.spyOn(apiClient, "patch").mockResolvedValue({ success: true, data: {} as never });
     const echo = { text_version: "v", text_sha256: "h", channel: "web" as const };
     await memberBillingService.setAutoRenew("s1", undefined, false);
     await memberBillingService.setAutoRenew("s1", echo, true);
-    expect(AUTO_RENEW_SENDS_DESIRED_STATE).toBe(false);
-    expect(patch.mock.calls[0][1]).toEqual({});
-    expect(patch.mock.calls[1][1]).toEqual({ consent: echo });
+    expect(AUTO_RENEW_SENDS_DESIRED_STATE).toBe(true);
+    expect(patch.mock.calls[0][1]).toEqual({ enabled: false });
+    expect(patch.mock.calls[1][1]).toEqual({ enabled: true, consent: echo });
   });
 });
 

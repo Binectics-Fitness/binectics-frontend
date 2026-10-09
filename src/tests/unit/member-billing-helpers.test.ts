@@ -342,6 +342,13 @@ describe("review fixes (SF-1, SF-2)", () => {
     expect(cardRetryFor(sub()).pending).toBe(false);
   });
 
+  it("renewal_retry wins on any status: pending hides Renew, even on an active term", () => {
+    const pendingActive = sub({ renewal_retry: { pending: true, next_attempt_at: "2026-10-12T00:00:00Z" } });
+    expect(cardRetryFor(pendingActive)).toEqual({ pending: true, nextAttemptAt: "2026-10-12T00:00:00Z" });
+    expect(renewHrefForMembership(pendingActive, NOW)).toBeNull();
+    expect(renewHrefForMembership(sub({ renewal_retry: { pending: false, next_attempt_at: null } }), NOW)).not.toBeNull();
+  });
+
   it("no Renew for a negotiated (non-self-serve) plan, as on mobile", () => {
     const plan = sub().plan_id as Exclude<MembershipSubscription["plan_id"], string>;
     expect(renewHrefForMembership(sub({ plan_id: { ...plan, is_self_serve: false } }), NOW)).toBeNull();

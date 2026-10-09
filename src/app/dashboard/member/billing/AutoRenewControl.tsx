@@ -38,11 +38,18 @@ export function AutoRenewControl({
   sub,
   renewHref,
   onChanged,
+  offOnly = false,
 }: {
   sub: MembershipSubscription;
   /** The checkout that pays the next term (and can save a card), if any. */
   renewHref: string | null;
   onChanged: (updated: MembershipSubscription) => void;
+  /**
+   * Past due: auto-renew can only be turned off (api #206 turns it on for
+   * active or paused memberships only), and turning it off ends the grace
+   * period, so it asks first.
+   */
+  offOnly?: boolean;
 }) {
   const hintId = useId();
   const [busy, setBusy] = useState(false);
@@ -52,6 +59,7 @@ export function AutoRenewControl({
   const [ticked, setTicked] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
+  const [confirmOff, setConfirmOff] = useState(false);
 
   const on = !!sub.auto_renew;
   const planName = typeof sub.plan_id === "object" ? sub.plan_id.name : "membership";
@@ -159,6 +167,81 @@ export function AutoRenewControl({
       setBusy(false);
     }
   };
+
+  /** Past due: turn off after the member confirms, then render the server's answer. */
+  const turnOffPastDue = async () => {
+    if (busy) return;
+    setBusy(true);
+    setDialogError(null);
+    try {
+      const res = await memberBillingService.setAutoRenew(sub._id, undefined, false);
+      if (res.success && res.data) {
+        setConfirmOff(false);
+        onChanged(res.data);
+        setStatus("Auto-renew is off. You can renew any time from Billing.");
+        return;
+      }
+      setDialogError(res.message ?? "We couldn't turn off auto-renew. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (offOnly) {
+    if (!on) return null;
+    return (
+      <div className="flex flex-col gap-1.5">
+        <button
+          type="button"
+          className="btn-ghost-v2 md self-start"
+          onClick={() => {
+            setDialogError(null);
+            setConfirmOff(true);
+          }}
+          disabled={busy}
+          aria-label={`Turn off auto-renew for ${planName}`}
+        >
+          Turn off auto-renew
+        </button>
+        <div aria-live="polite">{status && <p className="text-[12.5px] text-fg-2">{status}</p>}</div>
+        <Modal
+          open={confirmOff}
+          onClose={() => !busy && setConfirmOff(false)}
+          title="Turn off auto-renew?"
+          size="sm"
+          disableCloseGuard
+          footer={
+            <div className="flex justify-end gap-2">
+              <button type="button" className="btn-ghost-v2 md" onClick={() => setConfirmOff(false)} disabled={busy}>
+                Keep it on
+              </button>
+              <button
+                type="button"
+                className="btn-primary-v2 md"
+                style={{ background: "var(--danger-ink)", borderColor: "var(--danger-ink)", color: "var(--bg)" }}
+                onClick={() => void turnOffPastDue()}
+                disabled={busy}
+              >
+                {busy ? "Turning off…" : "Turn off"}
+              </button>
+            </div>
+          }
+        >
+          <div className="flex flex-col gap-3 text-[13.5px] text-fg-2">
+            <p>
+              Turning off auto-renew ends your grace period and access now. A payment already in progress may still go
+              through. You can renew any time from Billing.
+            </p>
+            {dialogError && (
+              <p role="alert" className="text-danger-ink">
+                {dialogError}
+              </p>
+            )}
+          </div>
+        </Modal>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1.5">

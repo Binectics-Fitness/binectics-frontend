@@ -149,12 +149,11 @@ export interface OrgChargeView {
 const enc = encodeURIComponent;
 
 /**
- * Whether the API takes the desired-state toggle body `{ enabled }`
- * (planned for api #206). Until it does, its whitelist would refuse the
- * field, so the PATCH stays a flip and the screen re-reads after it. Turn
- * this on with the API change.
+ * The toggle PATCH carries the state wanted, `{ enabled }` (api #206), so a
+ * stale screen can't flip auto-renew the wrong way: the current state is a
+ * no-op. An API without it would flip instead.
  */
-export const AUTO_RENEW_SENDS_DESIRED_STATE = false;
+export const AUTO_RENEW_SENDS_DESIRED_STATE = true;
 
 export const memberBillingService = {
   /** The consent for paying this plan at checkout. */

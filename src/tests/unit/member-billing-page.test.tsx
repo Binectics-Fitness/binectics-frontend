@@ -302,11 +302,68 @@ describe("past due, card retries (no second payment)", () => {
     expect(await screen.findByRole("link", { name: "Renew Monthly now" })).toBeInTheDocument();
   });
 
-  it("hides the auto-renew toggle while past due and points to Cancel or Remove card", async () => {
-    getSubs.mockResolvedValue({ success: true, data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE })] });
+  it("past due: only OFF, after a confirmation, and Renew once it's off", async () => {
+    const due = sub({
+      status: MembershipSubscriptionStatus.PAST_DUE,
+      auto_renew: true,
+      collection_method: "card_auto",
+      renewal_retry: { pending: true, next_attempt_at: null },
+    });
+    getSubs.mockResolvedValue({ success: true, data: [due] });
     renderPage();
-    expect(await screen.findByText(/can't be changed while a payment is due/)).toBeInTheDocument();
+    const off = await screen.findByRole("button", { name: "Turn off auto-renew for Monthly" });
     expect(screen.queryByRole("switch")).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+    await userEvent.click(off);
+    const dialog = await screen.findByRole("dialog", { name: "Turn off auto-renew?" });
+    expect(dialog).toHaveTextContent(
+      "Turning off auto-renew ends your grace period and access now. A payment already in progress may still go through. You can renew any time from Billing.",
+    );
+    expect(setAutoRenew).not.toHaveBeenCalled();
+    const ended = sub({
+      status: MembershipSubscriptionStatus.EXPIRED,
+      end_date: new Date(Date.now() - DAY).toISOString(),
+      auto_renew: false,
+      collection_method: "pay_link",
+      renewal_retry: { pending: false, next_attempt_at: null },
+    });
+    setAutoRenew.mockResolvedValue({ success: true, data: ended });
+    getSubs.mockResolvedValue({ success: true, data: [ended] });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Turn off" }));
+    expect(setAutoRenew).toHaveBeenCalledWith("s1", undefined, false);
+    expect(await screen.findByRole("link", { name: "Renew Monthly" })).toHaveAttribute("href", "/checkout?listing=l1&plan=p1");
+  });
+
+  it("past due: backing out of the confirmation changes nothing", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, auto_renew: true, collection_method: "card_auto" })],
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /Turn off auto-renew/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Keep it on" }));
+    expect(setAutoRenew).not.toHaveBeenCalled();
+  });
+
+  it("past due with auto-renew already off: no toggle, and Renew", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, renewal_retry: { pending: false, next_attempt_at: null } })],
+    });
+    renderPage();
+    expect(await screen.findByText("Auto-renew is off. Renew to keep your access.")).toBeInTheDocument();
+    expect(screen.queryByRole("switch")).toBeNull();
+    expect(screen.getByRole("link", { name: "Renew Monthly now" })).toBeInTheDocument();
+  });
+
+  it("an active membership with a card charge in flight shows no Renew and when the card is tried", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ end_date: soon, auto_renew: true, collection_method: "card_auto", renewal_retry: { pending: true, next_attempt_at: null } })],
+    });
+    renderPage();
+    expect(await screen.findByText("We'll try your card again soon.")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
   });
 });
 

@@ -7643,6 +7643,9 @@ export interface components {
             /** @example true */
             success: boolean;
         };
+        MySubscriptionRenewalRetryDto: {
+            renewal_retry: components["schemas"]["RenewalRetryDto"];
+        };
         OptimizedImageVariantsDto: {
             /** @example https://res.cloudinary.com/.../image.jpg */
             full: string;
@@ -7867,6 +7870,12 @@ export interface components {
             /** @example mbr-renew-v1 */
             text_version: string;
         };
+        RenewalRetryDto: {
+            /** @description When the next card retry is due (ISO), or null. */
+            next_attempt_at: string | null;
+            /** @description True while a saved-card charge for the current term is scheduled for retry or in flight: do not offer Renew. */
+            pending: boolean;
+        };
         ReorderListingGalleryDto: {
             /**
              * @example [
@@ -8037,6 +8046,8 @@ export interface components {
         ToggleAutoRenewDto: {
             /** @description Accept the renewal terms again to turn card auto-renew back on (GET my-subscriptions/:id/auto-renew-consent). */
             consent?: components["schemas"]["ConsentEchoDto"];
+            /** @description The state wanted. Present: set it (the current state is a no-op, 200). Absent: flip (older clients). OFF works on active, paused and past-due memberships; ON on active or paused only. */
+            enabled?: boolean;
         };
         TransferClientDto: {
             /** @description Current ClientProfile to deactivate */
@@ -12703,11 +12714,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at }. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["MySubscriptionRenewalRetryDto"][];
+                        success?: boolean;
+                    };
+                };
             };
         };
     };
