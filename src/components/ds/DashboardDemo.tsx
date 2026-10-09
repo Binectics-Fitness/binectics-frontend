@@ -49,8 +49,8 @@ const ROLES: RoleDef[] = [
     kpis: [
       { label: "Revenue", value: "{{1080000k}}", sub: "+12.4%", pct: 82 },
       { label: "Members", value: "1,284", sub: "+38 net new", pct: 68 },
-      { label: "Check-ins", value: "412", sub: "32% attendance", pct: 32 },
-      { label: "Churn", value: "2.1%", sub: "-0.4 pts", pct: 21 },
+      { label: "Check-ins", value: "412", sub: "today", pct: 32 },
+      { label: "Avg rating", value: "4.8", sub: "62 reviews", pct: 96 },
     ],
     sidebar: [
       { icon: "grid", label: "Dashboard", active: true },
@@ -98,8 +98,8 @@ const ROLES: RoleDef[] = [
     hasSidebar: true,
     kpis: [
       { label: "Clients", value: "68", sub: "+5 this month", pct: 72 },
-      { label: "Adherence", value: "76%", sub: "+4 pts vs apr", pct: 76 },
-      { label: "Expiring", value: "9", sub: "in 7 days", pct: 30 },
+      { label: "Meal plans", value: "41", sub: "active", pct: 60 },
+      { label: "Consults", value: "12", sub: "this week", pct: 30 },
       { label: "Earnings", value: "N 1.84M", sub: "+9% vs apr", pct: 58 },
     ],
     sidebar: [
@@ -122,8 +122,8 @@ const ROLES: RoleDef[] = [
     roleBadge: "MEMBER",
     hasSidebar: false,
     kpis: [
-      { label: "Streak", value: "32", sub: "personal best", pct: 90 },
-      { label: "This week", value: "4/5", sub: "1 more to goal", pct: 80 },
+      { label: "Streak", value: "32", sub: "your longest", pct: 90 },
+      { label: "Check-ins", value: "4", sub: "this week", pct: 80 },
       { label: "Next session", value: "Wed", sub: "08:30 · Sarah", pct: 0 },
       { label: "Weight", value: "73.4", sub: "-1.8 kg · 4 wk", pct: 55 },
     ],
@@ -136,21 +136,21 @@ const GYM_CHART_POINTS = [34, 42, 38, 50, 46, 58, 52, 64, 60, 72, 68, 78, 74, 82
 const GYM_FEED = [
   { dot: "var(--signal)", text: "Sarah O. checked in", time: "2m" },
   { dot: "var(--signal)", text: "Marcus C. signed up", time: "5m" },
-  { dot: "oklch(0.65 0.15 75)", text: "Evening Yoga full", time: "12m" },
+  { dot: "var(--signal)", text: "Grace E. checked in", time: "12m" },
 ];
 
 /* ---- Trainer: schedule data ---- */
 const TRAINER_SCHEDULE = [
-  { time: "06:30", client: "Lerato M.", type: "Strength", streak: 32, status: "done" },
-  { time: "08:00", client: "Marcus C.", type: "Powerlifting", streak: 48, status: "done" },
-  { time: "09:30", client: "Aisha P.", type: "Beginner", streak: null, status: "now", badge: "First session" },
-  { time: "11:00", client: "Daniel K.", type: "Conditioning", streak: null, status: "upcoming" },
+  { time: "06:30", client: "Lerato M.", type: "Strength", status: "done" },
+  { time: "08:00", client: "Marcus C.", type: "Powerlifting", status: "done" },
+  { time: "09:30", client: "Aisha P.", type: "Beginner", status: "now", badge: "First session" },
+  { time: "11:00", client: "Daniel K.", type: "Conditioning", status: "upcoming" },
 ];
 
 /* ---- Dietitian: adherence data ---- */
 const DIET_CLIENTS = [
   { name: "Grace A.", adherence: 94, dots: [1,1,1,0,1,1,1], status: "On track", statusColor: "var(--signal)" },
-  { name: "James O.", adherence: 72, dots: [1,0,1,1,0,1,0], status: "Needs nudge", statusColor: "oklch(0.65 0.15 75)" },
+  { name: "James O.", adherence: 72, dots: [1,0,1,1,0,1,0], status: "Behind", statusColor: "var(--warn)" },
   { name: "Fatima K.", adherence: 88, dots: [1,1,0,1,1,1,1], status: "On track", statusColor: "var(--signal)" },
 ];
 
@@ -239,12 +239,6 @@ function TrainerContent({ playing }: { playing: boolean }) {
           <div className={`dd-sched-card ${s.status === "now" ? "dd-sched-now" : ""} ${s.status === "done" ? "dd-sched-done" : ""}`}>
             <div className="dd-sched-top">
               <span className="dd-sched-client">{s.client}</span>
-              {s.streak && (
-                <span className="dd-sched-streak">
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1L7.5 4.5L6 7L8 5.5L7 9.5L9 6.5L11 11H1L3 6.5L5 9.5L4 5.5L6 7L4.5 4.5L6 1Z" fill="oklch(0.65 0.18 45)" /></svg>
-                  {s.streak}
-                </span>
-              )}
               {s.badge && <span className="dd-sched-badge">{s.badge}</span>}
             </div>
             <div className="dd-sched-type">{s.type}</div>
@@ -259,10 +253,10 @@ function DietitianContent({ playing }: { playing: boolean }) {
   return (
     <div className="dd-role-content">
       <div className={`dd-anim-item ${playing ? "dd-in" : ""}`} style={{ animationDelay: "200ms" }}>
-        <div className="dd-section-label">Client adherence</div>
+        <div className="dd-section-label">Program adherence</div>
         <div className="dd-adh-header">
           <span>Client</span>
-          <span>7-day log</span>
+          <span>Last 7 days</span>
           <span>Status</span>
         </div>
       </div>
@@ -299,7 +293,7 @@ function MemberContent({ playing }: { playing: boolean }) {
         </div>
       </div>
       <div className={`dd-anim-item ${playing ? "dd-in" : ""}`} style={{ animationDelay: "400ms" }}>
-        <div className="dd-section-label">This week (4/5)</div>
+        <div className="dd-section-label">Check-ins this week</div>
         <div className="dd-week-grid">
           {MEMBER_WEEK.map((d) => (
             <div key={d.day} className={`dd-week-day ${d.done ? "dd-week-done" : ""} ${d.today ? "dd-week-today" : ""}`}>
@@ -657,10 +651,6 @@ const DASHBOARD_CSS = `
 .dd-sched-now { border-left-color: var(--trainer); background: oklch(0.97 0.02 75); }
 .dd-sched-top { display: flex; align-items: center; gap: 6px; }
 .dd-sched-client { font-size: 12px; font-weight: 500; color: var(--ink); }
-.dd-sched-streak {
-  display: flex; align-items: center; gap: 2px;
-  font-family: var(--font-mono); font-size: 9px; color: oklch(0.55 0.15 45);
-}
 .dd-sched-badge {
   font-family: var(--font-mono); font-size: 8px; color: var(--signal-ink);
   background: var(--signal-soft); padding: 1px 4px; border-radius: var(--r-1);

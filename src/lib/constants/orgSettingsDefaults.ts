@@ -1,6 +1,5 @@
 import type {
   BookingRules,
-  KioskSettings,
   PayoutSchedule,
 } from "@/lib/api/teams";
 
@@ -20,14 +19,6 @@ export const DEFAULT_BOOKING_RULES: BookingRules = {
   booking_lead_time_hours: 0,
   no_show_policy: "none",
   waitlist_enabled: false,
-};
-
-export const DEFAULT_KIOSK_SETTINGS: KioskSettings = {
-  qr_checkin_from_phones: true,
-  success_animation: true,
-  auto_sleep: true,
-  idle_seconds: 60,
-  voice_announcement: false,
 };
 
 export const DEFAULT_PAYOUT_SCHEDULE: PayoutSchedule = {

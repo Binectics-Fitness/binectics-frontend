@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "QR Check-in",
   description:
-    "Touchless QR attendance: a check-in screen at the door, real-time attendance on your dashboard, and streak tracking for members.",
+    "QR check-in for gyms: a screen at your door shows a QR code that changes every minute, members scan it with their phone, and each visit lands on your dashboard.",
   keywords:
     "gym check-in, QR attendance, touchless check-in, gym kiosk, attendance tracking, member streaks, gym access control",
 };
@@ -15,35 +15,35 @@ export const metadata: Metadata = {
 const HOW_IT_WORKS = [
   {
     step: "01",
-    title: "Mount a kiosk at the door",
-    desc: "Any iPad or Android tablet running the Binectics Kiosk app. Mount it, connect to Wi-Fi, pair it to your gym in settings.",
+    title: "Put a screen at the door",
+    desc: "Any tablet, phone or computer with a web browser. There is no app to install and nothing to pair.",
   },
   {
     step: "02",
-    title: "Members scan on entry",
-    desc: "Each member has a unique QR code in the Binectics app. Hold it up to the kiosk camera, no tap, no PIN, no card.",
+    title: "Open the check-in kiosk",
+    desc: "Open Check-in kiosk from your dashboard on that screen and leave it on. It shows a QR code that changes every minute, so a photo or screenshot of it stops working.",
   },
   {
     step: "03",
-    title: "The kiosk responds instantly",
-    desc: "Name, photo, streak count, next class, in a short animated welcome. The member feels recognized. The gym gets timestamped attendance data.",
+    title: "Members scan with their phone",
+    desc: "With the Binectics app or their phone camera. Members with an active plan are checked in and see their streak on their phone. Anyone else is turned away.",
   },
 ];
 
 const GYM_OWNER_FEATURES = [
-  { title: "Live attendance feed", desc: "Every check-in appears on your dashboard in real time. Name, photo, timestamp, subscription status. See your gym fill up as the morning rush hits." },
-  { title: "Streak analytics", desc: "See streak distribution, identify members at risk of breaking, and send auto-nudges at configurable thresholds." },
-  { title: "Capacity monitoring", desc: "Set your gym's max capacity. The dashboard shows current occupancy as a percentage. Optional: kiosk displays 'at capacity' when the limit is reached." },
-  { title: "Peak hour heatmap", desc: "Hourly check-in volume for every day of the week, visualised as a heatmap. Use it to plan staffing, schedule popular classes, and identify dead hours." },
-  { title: "Multi-location support", desc: "Members can check in at any of your locations. Each location has its own kiosk, its own attendance data, and its own leaderboard, or one combined view." },
-  { title: "Offline resilience", desc: "If Wi-Fi drops, the kiosk queues check-ins locally and syncs when connectivity returns. Members never get stuck at the door." },
+  { title: "Today's arrivals", desc: "Every check-in shows on your kiosk page with the member's name and time. The kiosk page updates every few seconds, so there is no need to refresh." },
+  { title: "Declined attempts", desc: "Scans from people without an active plan are turned away and listed on the kiosk page, so the front desk can follow up." },
+  { title: "Check-in history", desc: "A check-ins page with your gym's recent check-ins, updated every 30 seconds while it is open." },
+  { title: "Only paying members get in", desc: "A scan only counts when the member has an active plan at your gym. Lapsed members are declined at the door." },
+  { title: "A code that can't be shared", desc: "The QR code changes every minute and is checked when it is scanned, so printed copies, photos and shared links stop working." },
+  { title: "Free on every plan", desc: "QR check-in is included on every gym plan, including Free." },
 ];
 
 const MEMBER_FEATURES = [
-  { title: "Personal streaks", desc: "Consecutive-day and weekly visit counters. Personal best tracking. Break a streak and start rebuilding, the counter remembers your record." },
-  { title: "Visit history", desc: "Every check-in logged with date, time, and location. Exportable as CSV. Useful for insurance claims, employer wellness programs, and personal records." },
-  { title: "Next class preview", desc: "The kiosk shows your next scheduled class, trainer name, and time. First-timers see a welcome message and their assigned trainer's name." },
-  { title: "Personalised welcome", desc: "Four flavours: standard returning member, PR potential day, first-timer welcome, and lapsed member re-engagement. The kiosk knows who's at the door." },
+  { title: "Scan with your phone", desc: "Open Check in in the Binectics app, or use your phone's camera, and point it at the code at the door. No card, no PIN." },
+  { title: "Streaks", desc: "Your current and longest check-in streak, counted per day at your gym. Miss a day and the current streak starts again." },
+  { title: "Visit history", desc: "Every check-in is kept with its date and time, and shows in your activity in the app." },
+  { title: "Milestone badges", desc: "The streaks page on the web shows badges for streaks of 7, 30, 50, 100 and 365 days, and for 10 to 500 total check-ins." },
 ];
 
 export default function QRCheckinFeaturePage() {
@@ -74,12 +74,14 @@ export default function QRCheckinFeaturePage() {
           className="text-[17px] sm:text-[18px] max-w-[62ch] leading-[1.5] mt-5"
           style={{ color: "var(--fg-2)" }}
         >
-          A QR scan at the door. A personalised welcome on the screen.
-          Attendance data that hits your dashboard in real time. No card readers, no PINs, no friction.
+          A QR code on a screen at your door, scanned by members with their
+          own phone. Each visit lands on your dashboard, and only members
+          with an active plan get in. No card readers, no PINs, nothing to
+          install.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
           <Link href="/login?mode=signup&role=gym" className="btn-primary-v2 lg">
-            Set up your kiosk &rarr;
+            Set up check-in &rarr;
           </Link>
           <Link href="/qr-help" className="btn-ghost-v2 lg">
             Member check-in guide
@@ -102,10 +104,9 @@ export default function QRCheckinFeaturePage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Four members, four contexts. The kiosk recognises who&rsquo;s at
-          the door and responds accordingly, standard return, PR day,
-          first-timer, or a member who&rsquo;s been away. Click a name to
-          see each flow.
+          The gym&rsquo;s screen shows the code. The member scans it with
+          their phone, and the arrival shows on the kiosk page. Pick a member
+          to see a check-in, or a scan from someone without an active plan.
         </p>
         <KioskDemo />
       </section>
@@ -166,8 +167,8 @@ export default function QRCheckinFeaturePage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Every scan generates data. Your dashboard turns it into decisions,
-          staffing, capacity, retention, and engagement.
+          Every scan is recorded, so you know who came in and when, and who
+          was turned away.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {GYM_OWNER_FEATURES.map((f) => (
@@ -208,8 +209,8 @@ export default function QRCheckinFeaturePage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Check-in is not just access control, it&rsquo;s the moment the
-          gym acknowledges a member by name. That matters for retention.
+          Checking in takes a few seconds and counts toward the
+          member&rsquo;s streak.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {MEMBER_FEATURES.map((f) => (
@@ -250,8 +251,8 @@ export default function QRCheckinFeaturePage() {
           className="text-[16px] sm:text-[17px] max-w-[46ch] mx-auto leading-[1.5] mb-7"
           style={{ color: "var(--fg-2)" }}
         >
-          Set up your first kiosk from your gym settings. Free on every
-          Binectics gym plan.
+          Open the check-in kiosk from your dashboard on any screen. Free on
+          every Binectics gym plan.
         </p>
         <Link href="/login?mode=signup&role=gym" className="btn-primary-v2 lg">
           Get started free &rarr;

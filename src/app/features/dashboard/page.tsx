@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 
 const PAIN_POINTS = [
   { before: "5 tabs to see one client's history", after: "Everything on one screen" },
-  { before: "Export to Excel for monthly reports", after: "Real-time KPIs, always current" },
-  { before: "Separate logins for billing, schedule, CRM", after: "Single sign-on, unified data" },
+  { before: "Export to Excel for monthly reports", after: "Revenue and check-ins on your dashboard" },
+  { before: "Separate logins for billing, schedule, CRM", after: "One login, one set of data" },
   { before: "WhatsApp groups to coordinate staff", after: "Built-in team views and roles" },
 ];
 
@@ -25,12 +25,12 @@ const ROLE_VIEWS = [
     accent: "var(--gym)",
     headline: "Operations at a glance",
     items: [
-      "Daily / weekly / monthly revenue graph with comparison overlay",
-      "Live check-in feed, member name, photo, timestamp, streak count",
-      "Class schedule heatmap, see which slots are full, which need promotion",
-      "Payout timeline, next payout amount, date, and bank destination",
-      "Member churn alerts, flags accounts with no check-in in 14+ days",
-      "Multi-location switcher, one dashboard, separate P&Ls",
+      "Revenue for the last 30 days, with a daily chart and revenue by plan",
+      "Today's check-ins, with who arrived and when",
+      "Members list with plan, status and payment history, exportable to CSV",
+      "Class timetable with capacity and waitlists",
+      "Staff roles with their own permission scopes",
+      "Several branches as listings under one organization",
     ],
   },
   {
@@ -38,25 +38,25 @@ const ROLE_VIEWS = [
     accent: "var(--trainer)",
     headline: "Clients and sessions",
     items: [
-      "Active client roster with last session date and rebooking status",
-      "Weekly calendar with drag-drop rescheduling and buffer time",
-      "Program builder, sets, reps, tempo, rest, with copy-to-next-week",
-      "Earnings breakdown, per-client revenue, monthly trend, projected",
-      "Session completion rate, how many clients finish prescribed programs",
-      "Rebooking nudges, auto-drafted follow-up for clients who haven't rebooked",
+      "Client roster with each client's program, journal and weight logs",
+      "Session types and weekly hours that clients book from",
+      "Program builder with daily tasks on a schedule",
+      "Program adherence: the share of due tasks each client has done",
+      "Earnings, with each currency shown as it was paid",
+      "Sessions log you can export to CSV",
     ],
   },
   {
     role: "Dietitian",
     accent: "var(--dietitian)",
-    headline: "Plans and compliance",
+    headline: "Plans and clients",
     items: [
-      "Active client list with meal plan status and adherence score",
-      "Meal plan editor, drag-drop meals across days, auto-calculate macros",
-      "Macro compliance graph, daily actuals vs targets per client",
-      "Consultation calendar with video call integration and prep notes",
-      "Protocol library, save and reuse plans for common conditions",
-      "Revenue dashboard, consultation fees, plan sales, subscription income",
+      "Weekly meal plans, built day by day and meal by meal",
+      "Food library with macros per food, exportable to CSV",
+      "Meal feedback: clients log meals and rate how each one went",
+      "Consultation types and weekly hours that clients book from",
+      "Intake and check-in forms, with answers on the client profile",
+      "Earnings from your consultations and plans",
     ],
   },
   {
@@ -64,12 +64,12 @@ const ROLE_VIEWS = [
     accent: "var(--consumer)",
     headline: "Your fitness in one place",
     items: [
-      "Active subscriptions with renewal dates and payment history",
-      "Check-in streak counter with personal best and gym leaderboard",
-      "Upcoming sessions, trainer or dietitian, with join/cancel buttons",
-      "Progress journal, weight, measurements, photos, mood over time",
-      "Invoices and receipts, downloadable PDF for every transaction",
-      "Provider discovery, recommended gyms and trainers near you",
+      "Active memberships and plans with renewal dates",
+      "Check-in streak, with your current and longest streak",
+      "Upcoming sessions with your trainer or dietitian",
+      "Your own weight, meal and workout logs, next to your provider's notes",
+      "A receipt page for every booking, printable from your browser",
+      "Marketplace to find gyms, trainers and dietitians near you",
     ],
   },
 ];
@@ -77,12 +77,12 @@ const ROLE_VIEWS = [
 const SHARED_FEATURES = [
   { title: "Unified notifications", desc: "One inbox for bookings, payments, check-ins, and journal updates. Push, email, or in-app, you pick." },
   { title: "Cross-role visibility", desc: "Gym owners see trainer schedules. Trainers see member check-ins. Everyone works from the same data." },
-  { title: "Real-time sync", desc: "A check-in at the door shows on the gym dashboard in real time. No refresh button." },
-  { title: "Mobile-first responsive", desc: "Every dashboard renders cleanly from 320px phone to 2560px ultrawide. No pinch-zooming required." },
-  { title: "Keyboard shortcuts", desc: "Power users navigate with G+D for dashboard, G+C for clients, G+S for settings. Vim-style, discoverable." },
-  { title: "Export and API", desc: "CSV and PDF exports for every data table. REST API for gyms that want to pipe data into their own BI tool." },
-  { title: "Granular permissions", desc: "Gym staff can view check-ins but not payouts. Receptionist role can't edit class schedules. You set the rules." },
-  { title: "Audit log", desc: "Every action is timestamped and attributed. See who changed a member's plan, when, and from what." },
+  { title: "Check-ins without refreshing", desc: "The kiosk page updates every few seconds and the check-ins page every 30 seconds, so arrivals show up on their own." },
+  { title: "Works on your phone", desc: "Every dashboard is built to work on a phone as well as on a desktop." },
+  { title: "Quick search", desc: "Press Cmd+K, or Ctrl+K on Windows, to jump to any page." },
+  { title: "CSV exports", desc: "Export your member list, sessions log, or food library to CSV." },
+  { title: "Roles and permissions", desc: "Create staff roles and choose what each one can see and change, from check-ins to payouts." },
+  { title: "Messaging", desc: "Message your clients and members directly. Gyms can also send one message to every member." },
 ];
 
 export default function DashboardFeaturePage() {
