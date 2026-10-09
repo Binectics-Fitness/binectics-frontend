@@ -6,6 +6,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection, ApiKeysSection } from "./TeamAccessSections";
+import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useOrganizationDetails,
@@ -162,6 +163,17 @@ function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest
 export function SettingsClient() {
   const { currentOrg, refreshOrganizations } = useOrganization();
   const orgId = currentOrg?._id;
+  // The Activity log entry only for those the API will show it to.
+  const showActivity = canSeeActivityLog(currentOrg);
+  const sections = useMemo(
+    () =>
+      showActivity
+        ? SECTIONS.map((g) =>
+            g.group === "Team" ? { ...g, items: [...g.items, { id: "activity", label: "Activity log" }] } : g,
+          )
+        : SECTIONS,
+    [showActivity],
+  );
   const { data: org, isLoading } = useOrganizationDetails(orgId);
   const updateOrg = useUpdateOrganization();
   const { data: countries = [] } = useCountries();
@@ -207,7 +219,7 @@ export function SettingsClient() {
 
   // Scroll-spy: highlight the section currently in view.
   useEffect(() => {
-    const ids = SECTIONS.flatMap((s) => s.items.map((i) => i.id));
+    const ids = sections.flatMap((s) => s.items.map((i) => i.id));
     const els = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => !!el);
@@ -223,7 +235,7 @@ export function SettingsClient() {
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, [form]);
+  }, [form, sections]);
 
   const payload = useMemo(
     () => (baseline && form ? diff(baseline, form) : {}),
@@ -313,7 +325,7 @@ export function SettingsClient() {
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-10 items-start">
         {/* Section nav */}
         <nav className="sticky top-22 flex flex-col sm:flex-row lg:flex-col gap-0.5 overflow-x-auto">
-          {SECTIONS.map((s, si) => (
+          {sections.map((s, si) => (
             <div key={s.group}>
               <Eyebrow className={`px-2.5 py-1 ${si > 0 ? "mt-3.5" : ""}`}>{s.group}</Eyebrow>
               {s.items.map((item) => {
@@ -449,6 +461,9 @@ export function SettingsClient() {
 
           {/* API access — issue, list, revoke org API keys */}
           <ApiKeysSection />
+
+          {/* Activity log — who changed what, on its own page */}
+          {showActivity && <ActivityLogSection href="/dashboard/gym-owner/settings/activity" />}
 
           {isLoading && (
             <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your organization…</p>

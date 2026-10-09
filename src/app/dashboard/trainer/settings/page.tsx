@@ -4,10 +4,13 @@ import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { DSCard } from "@/components/ds";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
+import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
 
 export default function TrainerSettingsPage() {
   const gym = useCoachingGym();
+  const { currentOrg } = useOrganization();
   return (
     <TrainerDashboardShell activeItem="Settings" crumb="Settings">
       <ConsultationAvailabilityManager
@@ -38,6 +41,12 @@ export default function TrainerSettingsPage() {
           />
         )}
       </div>
+      {/* Their own workspace's log; a gym's staff trainer has none here. */}
+      {!gym && canSeeActivityLog(currentOrg, true) && (
+        <div className="mt-8">
+          <ActivityLogSection href="/dashboard/trainer/settings/activity" />
+        </div>
+      )}
     </TrainerDashboardShell>
   );
 }

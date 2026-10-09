@@ -25,6 +25,8 @@ export enum TeamPermission {
   MANAGE_ORGANIZATION = "team:manage_organization",
   CANCEL_INVITATION = "team:cancel_invitation",
   VIEW_INVITATIONS = "team:view_invitations",
+  /** Read the workspace's activity log (owner and Admin by default). */
+  VIEW_AUDIT_LOG = "team:view_audit_log",
 
   // Progress Tracking Permissions
   PROGRESS_VIEW = "progress:view",
@@ -125,6 +127,8 @@ export interface Organization {
   checkin_code?: string;
   is_owner?: boolean;
   can_manage_organization?: boolean;
+  /** May open the workspace's Activity log (owner, or a role holding team:view_audit_log). */
+  can_view_audit_log?: boolean;
   my_role_code?: string | null;
   /** Optional white-label custom domain (gated by `custom_domain_enabled`). */
   custom_domain?: string | null;
