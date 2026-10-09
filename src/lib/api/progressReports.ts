@@ -4,8 +4,9 @@
  * A coach generates a report for a period (a draft only they and their
  * colleagues with access can open), checks the PDF, then shares it, which
  * lists it on the client's Reports page and notifies them. The PDF itself is
- * served behind a short-lived signed link minted on click, so no file URL is
- * ever stored or shared.
+ * served behind a signed link minted on click (valid 24 hours by default,
+ * set by the API), and nothing here stores or reuses it: every click asks
+ * for a fresh one, and the API re-checks access on every download.
  */
 
 import { apiClient, API_BASE_URL } from "./client";

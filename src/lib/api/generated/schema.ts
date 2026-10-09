@@ -5502,7 +5502,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * A signed download link for a report (expires in 5 minutes)
+         * A signed download link for a report (24 hours by default; PROGRESS_REPORT_LINK_TTL_SECONDS)
          * @description For the client (shared reports) or a coach who may generate for that client. The path is relative to the API base and needs no session.
          */
         post: operations["ProgressReportsController_link"];

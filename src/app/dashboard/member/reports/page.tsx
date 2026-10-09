@@ -2,7 +2,7 @@
 
 /**
  * Reports: the progress reports a member's coaches have shared with them.
- * Each opens as a PDF through a short-lived signed link. A report stays here
+ * Each opens as a PDF through a signed link minted on click. A report stays here
  * after the coaching relationship ends: it is the member's own progress.
  */
 
