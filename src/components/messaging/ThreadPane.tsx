@@ -120,6 +120,7 @@ export const ThreadPane = forwardRef<
       setReply(target);
       requestAnimationFrame(() => composer.current?.focus());
     },
+    onShowOriginal: (seq) => openReply(seq),
   });
 
   /** Show the quoted message: in place when loaded, else re-open the thread around it. */

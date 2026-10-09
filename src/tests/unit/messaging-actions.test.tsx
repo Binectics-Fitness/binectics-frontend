@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReadOnlyReason, ThreadKind, ThreadRole } from "@/lib/api/messaging";
 import { MessagingCenter } from "@/components/messaging/MessagingCenter";
 import { clearMessagingStorage } from "@/components/messaging/messagingStorage";
-import { toggleReaction } from "@/components/messaging/MessageActions";
+import { placeMenu, toggleReaction } from "@/components/messaging/MessageActions";
 import { createMessagingFake, ME, networkError, type MessagingFake } from "./messaging-fake";
 
 const nav = vi.hoisted(() => {
@@ -135,6 +135,71 @@ describe("message action menu (web W19)", () => {
     fireEvent.click(within(menu()).getByRole("menuitem", { name: "Copy text" }));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith("copy this"));
     expect(toasts.success).toHaveBeenCalledWith("Copied.");
+  });
+});
+
+describe("menu placement and focus order (verify H1, M2, N2)", () => {
+  it("renders the menu outside the scrolling transcript, so nothing clips it", async () => {
+    const t = fake.addThread({ title: "Tunde" });
+    fake.sendAsMe(t, "mine at the bottom");
+    const log = await openThread(t);
+    fireEvent.contextMenu(bubble("mine at the bottom"));
+    const m = menu();
+    expect(log.contains(m)).toBe(false);
+    expect(m.parentElement).toBe(document.body);
+    expect(m.className).toContain("fixed");
+    expect(within(m).getByRole("menuitem", { name: "Delete" })).toBeInTheDocument();
+  });
+
+  it("becomes a bottom sheet below md, with every action and all six reactions", async () => {
+    const mm = vi.fn((q: string) => ({ matches: q.includes("max-width"), media: q, addEventListener() {}, removeEventListener() {} }));
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: mm });
+    const t = fake.addThread({ title: "Tunde" });
+    fake.sendAsMe(t, "on a phone");
+    await openThread(t);
+    fireEvent.click(screen.getByRole("button", { name: "Actions for your message" }));
+    const m = menu();
+    expect(m.closest("[data-menu-sheet]")).not.toBeNull();
+    expect(within(m).getAllByRole("menuitemcheckbox")).toHaveLength(6);
+    for (const name of ["Reply", "Copy text", "Edit", "Delete"]) {
+      expect(within(m).getByRole("menuitem", { name })).toBeInTheDocument();
+    }
+    Reflect.deleteProperty(window, "matchMedia");
+  });
+
+  it("flips above the anchor near the bottom edge and stays inside the viewport", () => {
+    const vp = { width: 390, height: 800 };
+    const size = { width: 220, height: 300 };
+    expect(placeMenu({ top: 100, bottom: 130, left: 300, right: 330 }, size, vp, "end")).toEqual({ top: 134, left: 110 });
+    expect(placeMenu({ top: 700, bottom: 730, left: 300, right: 330 }, size, vp, "end").top).toBe(396);
+    expect(placeMenu({ top: 700, bottom: 730, left: 300, right: 330 }, size, vp, "start").left).toBe(162);
+    expect(placeMenu({ top: 700, bottom: 730, left: 2, right: 30 }, size, vp, "end").left).toBe(8);
+  });
+
+  it("adds no tab stop per message: the action buttons and reaction chips are out of the tab order", async () => {
+    const t = fake.addThread({ title: "Tunde" });
+    for (let i = 1; i <= 5; i++) fake.receive(t, `m${i}`);
+    const m = fake.sendAsMe(t, "with reaction");
+    fake.change(t, m._id, { reactions: [{ key: "heart" as never, emoji: "❤️", count: 1, mine: false }] });
+    const log = await openThread(t);
+    await within(log).findByText("with reaction");
+    const tabbable = [...log.querySelectorAll<HTMLElement>("button, [tabindex]")].filter((el) => el.tabIndex >= 0);
+    expect(tabbable).toEqual([]);
+    expect(log.tabIndex).toBe(0);
+    for (const b of screen.getAllByRole("button", { name: /^Actions for/ })) expect(b.className).toContain("h-11 w-11");
+  });
+
+  it("reaches a quoted original from the keyboard via Show original message", async () => {
+    const t = fake.addThread({ title: "Tunde" });
+    const q = fake.receive(t, "the question");
+    const r = fake.sendAsMe(t, "the answer");
+    fake.change(t, r._id, { reply_to: { message_id: q._id, seq: q.seq, author_name: "Tunde", excerpt: "the question", deleted: false } });
+    await openThread(t);
+    fireEvent.contextMenu(screen.getByRole("log").querySelector<HTMLElement>(`[data-message-id="${r._id}"]`)!);
+    fireEvent.click(within(menu()).getByRole("menuitem", { name: "Show original message" }));
+    const original = () =>
+      screen.getByRole("log").querySelector<HTMLElement>(`[data-message-id="${q._id}"]`)!;
+    await waitFor(() => expect(original().getAttribute("style")).toContain("outline"));
   });
 });
 

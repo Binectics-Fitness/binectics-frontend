@@ -42,6 +42,9 @@ function ReplyQuote({
   return onOpen && !deleted ? (
     <button
       type="button"
+      // The message list is one tab stop; keyboard users reach the original
+      // through the message menu ("Show original message").
+      tabIndex={-1}
       onClick={onOpen}
       className="mb-1.5 block w-full min-w-0 pl-2 text-left"
       style={style}

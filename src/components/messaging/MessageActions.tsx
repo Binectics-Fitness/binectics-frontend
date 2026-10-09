@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { createPortal } from "react-dom";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/Button";
 import { toast } from "@/components/Toast";
@@ -37,36 +38,118 @@ function MoreIcon() {
   );
 }
 
-/** A menu that takes focus, moves with the arrow keys and gives focus back on close. */
+const NARROW = "(max-width: 47.99rem)";
+// Above page chrome such as the cookie banner (z 9000), below toasts (9999):
+// the menu is short-lived and was asked for.
+const GAP = 4;
+const EDGE = 8;
+
+function isNarrow(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(NARROW).matches;
+}
+
+/**
+ * Where a popover menu goes: under its anchor, or above it when there is
+ * no room below; aligned to the anchor's start or end and kept inside the
+ * viewport. Fixed coordinates, so no scroll container can clip it.
+ */
+export function placeMenu(
+  anchor: { top: number; bottom: number; left: number; right: number },
+  menu: { width: number; height: number },
+  viewport: { width: number; height: number },
+  align: "start" | "end",
+): { top: number; left: number } {
+  const below = anchor.bottom + GAP;
+  const above = anchor.top - GAP - menu.height;
+  const top =
+    below + menu.height <= viewport.height - EDGE || above < EDGE
+      ? Math.max(EDGE, Math.min(below, viewport.height - EDGE - menu.height))
+      : above;
+  const wanted = align === "end" ? anchor.right - menu.width : anchor.left;
+  const left = Math.max(EDGE, Math.min(wanted, viewport.width - EDGE - menu.width));
+  return { top, left };
+}
+
+/**
+ * A menu that takes focus, moves with the arrow keys and gives focus back
+ * on close. It renders in a portal on document.body, so the transcript's
+ * scroll box can't clip it: a popover with fixed, viewport-aware placement
+ * from md up, and a bottom sheet with full-width 48 px rows below md.
+ */
 export function ActionMenu({
   label,
   onClose,
   children,
   align,
+  anchor,
   returnFocusTo,
 }: {
   label: string;
   onClose: () => void;
   children: React.ReactNode;
   align: "start" | "end";
+  /** The element the popover sits against (the button, or the message on right click / keyboard). */
+  anchor: () => HTMLElement | null;
   /** Where focus goes back to when the menu closes (the trigger or the message). */
   returnFocusTo: () => HTMLElement | null;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [sheet] = useState(isNarrow);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  // Callers pass fresh closures each render; keep the latest without
+  // re-running the effects (which would steal focus back to the first item).
+  const latest = useRef({ anchor, onClose, returnFocusTo });
+  useLayoutEffect(() => {
+    latest.current = { anchor, onClose, returnFocusTo };
+  });
+
+  useLayoutEffect(() => {
+    if (sheet) return;
+    const place = () => {
+      const el = ref.current;
+      const at = latest.current.anchor();
+      if (!el || !at) return;
+      const r = at.getBoundingClientRect();
+      setPos(
+        placeMenu(r, { width: el.offsetWidth, height: el.offsetHeight }, { width: window.innerWidth, height: window.innerHeight }, align),
+      );
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [align, sheet]);
 
   useEffect(() => {
     const first = ref.current?.querySelector<HTMLElement>("[role^=menuitem]:not([disabled])");
-    first?.focus();
+    first?.focus({ preventScroll: true });
     const onPointer = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      // The trigger toggles the menu itself; closing here would reopen it.
+      if (latest.current.anchor()?.contains(target)) return;
+      latest.current.onClose();
+    };
+    // Escape closes even when focus has left the menu (e.g. back on the trigger).
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (ref.current?.contains(document.activeElement)) return;
+      latest.current.onClose();
     };
     document.addEventListener("mousedown", onPointer);
-    return () => document.removeEventListener("mousedown", onPointer);
-  }, [onClose]);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   const close = (restore = true) => {
-    onClose();
-    if (restore) requestAnimationFrame(() => returnFocusTo()?.focus());
+    latest.current.onClose();
+    if (restore) requestAnimationFrame(() => latest.current.returnFocusTo()?.focus());
   };
 
   const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -87,17 +170,48 @@ export function ActionMenu({
     } else if (e.key === "Tab") close(false);
   };
 
-  return (
-    <div
-      ref={ref}
-      role="menu"
-      aria-label={label}
-      onKeyDown={onKeyDown}
-      className={`absolute top-full z-30 mt-1 min-w-[200px] rounded-(--r-3) border border-border bg-bg p-1 ${align === "end" ? "right-0" : "left-0"}`}
-      style={{ boxShadow: "var(--shadow-2)" }}
-    >
-      {children}
-    </div>
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    sheet ? (
+      <div className="fixed inset-0 z-[9500]" data-menu-sheet="">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{ background: "oklch(0.14 0.008 80 / 0.3)" }}
+          onMouseDown={() => close()}
+        />
+        <div
+          ref={ref}
+          role="menu"
+          aria-label={label}
+          onKeyDown={onKeyDown}
+          className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-(--r-3) border-t border-border bg-bg px-2 pb-[max(env(safe-area-inset-bottom),12px)] pt-2"
+        >
+          <span aria-hidden="true" className="mx-auto mb-2 block h-1 w-10 rounded-full" style={{ background: "var(--border-2)" }} />
+          {children}
+        </div>
+      </div>
+    ) : (
+      <div
+        ref={ref}
+        role="menu"
+        aria-label={label}
+        onKeyDown={onKeyDown}
+        className="fixed z-[9500] min-w-[200px] max-w-[calc(100vw-16px)] rounded-(--r-3) border border-border bg-bg p-1"
+        style={{
+          boxShadow: "var(--shadow-2)",
+          top: pos?.top ?? 0,
+          left: pos?.left ?? 0,
+          // Not visibility:hidden: the first item must take focus while the
+          // position is still being measured.
+          opacity: pos ? 1 : 0,
+        }}
+      >
+        {children}
+      </div>
+    ),
+    document.body,
   );
 }
 
@@ -116,7 +230,7 @@ export function MenuItem({
       role="menuitem"
       tabIndex={-1}
       onClick={onSelect}
-      className={`flex min-h-10 w-full items-center rounded-(--r-2) px-3 py-2 text-left text-[14px] font-medium outline-none focus-visible:bg-bg-2 ${
+      className={`flex min-h-12 w-full items-center rounded-(--r-2) px-3 py-2 text-left text-[15px] font-medium outline-none focus-visible:bg-bg-2 md:min-h-10 md:text-[14px] ${
         danger ? "text-danger hover:bg-danger-soft focus-visible:bg-danger-soft" : "text-ink hover:bg-bg-2"
       }`}
     >
@@ -218,12 +332,15 @@ export function useMessageActions({
   state,
   isBroadcast,
   onReply,
+  onShowOriginal,
 }: {
   threadId: string;
   sync: ThreadSync;
   state: ThreadState;
   isBroadcast: boolean;
   onReply: (target: ReplyTarget) => void;
+  /** Jump to the message a reply quotes (keyboard path; the quote itself isn't a tab stop). */
+  onShowOriginal?: (seq: number) => void;
 }) {
   const [menu, setMenu] = useState<{ id: string; openedAt: number; origin: HTMLElement | null } | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
@@ -321,16 +438,25 @@ export function useMessageActions({
           aria-label={`Actions for ${mine ? "your" : `${m.author.name}'s`} message`}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
+          // Not a tab stop: the message list is one stop, and the arrow keys
+          // plus Enter or Shift+F10 on a message open this same menu.
+          tabIndex={-1}
           onClick={(e) => (menuOpen ? closeMenu() : open(m, e.currentTarget))}
-          className={`flex h-8 w-8 items-center justify-center rounded-(--r-2) transition-opacity hover:bg-bg-2 focus-visible:opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 ${menuOpen ? "md:opacity-100" : ""}`}
+          className={`flex h-11 w-11 md:h-8 md:w-8 items-center justify-center rounded-(--r-2) transition-opacity hover:bg-bg-2 focus-visible:opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 ${menuOpen ? "md:opacity-100" : ""}`}
           style={{ color: "var(--fg-3)" }}
         >
           <MoreIcon />
         </button>
         {menuOpen && items && (
-          <ActionMenu label="Message actions" onClose={closeMenu} align={mine ? "end" : "start"} returnFocusTo={() => menu.origin}>
+          <ActionMenu
+            label="Message actions"
+            onClose={closeMenu}
+            align={mine ? "end" : "start"}
+            anchor={() => menu.origin}
+            returnFocusTo={() => menu.origin}
+          >
             {items.react && (
-              <div className="mb-1 flex gap-0.5 border-b border-border px-1 pb-1" role="group" aria-label="React">
+              <div className="mb-1 flex justify-between gap-0.5 border-b border-border px-1 pb-1 md:justify-start" role="group" aria-label="React">
                 {REACTIONS.map((r) => {
                   const on = Boolean(m.reactions.find((x) => x.key === r.key)?.mine);
                   return (
@@ -345,7 +471,7 @@ export function useMessageActions({
                         closeMenu();
                         void react(m, r.key);
                       }}
-                      className="flex h-9 w-9 items-center justify-center rounded-(--r-2) text-[18px] outline-none hover:bg-bg-2 focus-visible:bg-bg-2"
+                      className="flex h-11 w-11 items-center justify-center rounded-(--r-2) text-[20px] outline-none hover:bg-bg-2 focus-visible:bg-bg-2 md:h-9 md:w-9 md:text-[18px]"
                       style={{ background: on ? "var(--bg-3)" : undefined }}
                     >
                       <span aria-hidden="true">{r.emoji}</span>
@@ -362,6 +488,16 @@ export function useMessageActions({
                 }}
               >
                 Reply
+              </MenuItem>
+            )}
+            {m.reply_to && !m.reply_to.deleted && !m.deleted_at && onShowOriginal && (
+              <MenuItem
+                onSelect={() => {
+                  closeMenu();
+                  onShowOriginal(m.reply_to!.seq);
+                }}
+              >
+                Show original message
               </MenuItem>
             )}
             {items.copy && (
@@ -412,9 +548,10 @@ export function useMessageActions({
                 key={r.key}
                 type="button"
                 aria-pressed={r.mine}
+                tabIndex={-1}
                 aria-label={`${description}. ${r.mine ? "Remove your reaction" : "Add your reaction"}`}
                 onClick={() => void react(m, r.key)}
-                className="flex min-h-7 items-center gap-1 rounded-full px-2 text-[13px] tabular-nums"
+                className="flex min-h-11 items-center gap-1 rounded-full px-3 text-[14px] tabular-nums md:min-h-7 md:px-2 md:text-[13px]"
                 style={{
                   border: `1px solid ${r.mine ? "var(--ink)" : "var(--border)"}`,
                   background: r.mine ? "var(--bg-3)" : "var(--bg)",
@@ -429,7 +566,7 @@ export function useMessageActions({
                 key={r.key}
                 role="img"
                 aria-label={description}
-                className="flex min-h-7 items-center gap-1 rounded-full px-2 text-[13px] tabular-nums"
+                className="flex min-h-11 items-center gap-1 rounded-full px-3 text-[14px] tabular-nums md:min-h-7 md:px-2 md:text-[13px]"
                 style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" }}
               >
                 <span aria-hidden="true">{r.emoji}</span>

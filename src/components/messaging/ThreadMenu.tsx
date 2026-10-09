@@ -85,7 +85,7 @@ export function ThreadMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-9 items-center justify-center rounded-(--r-2) hover:bg-bg-2"
+        className="flex h-11 w-11 items-center justify-center rounded-(--r-2) hover:bg-bg-2 md:h-9 md:w-9"
         style={{ border: "1px solid var(--border)", color: "var(--fg-2)" }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -95,7 +95,13 @@ export function ThreadMenu({
         </svg>
       </button>
       {open && (
-        <ActionMenu label="Conversation options" align="end" onClose={() => setOpen(false)} returnFocusTo={() => trigger.current}>
+        <ActionMenu
+          label="Conversation options"
+          align="end"
+          onClose={() => setOpen(false)}
+          anchor={() => trigger.current}
+          returnFocusTo={() => trigger.current}
+        >
           <MenuItem onSelect={() => void toggleMute()}>
             {state.muted ? "Unmute notifications" : "Mute notifications"}
           </MenuItem>
