@@ -194,8 +194,9 @@ export function AutoRenewControl({
         {problem?.kind === "needs_card" && (
           <div className="text-[12.5px] text-fg-2">
             <p>
-              Auto-renew needs a card saved with this provider. Pay your next term by card and tick
-              &ldquo;Renew automatically&rdquo; to save one.
+              Auto-renew needs a working card saved with this provider, and there isn&apos;t one (it may
+              have expired or been retired). Pay your next term by card and tick &ldquo;Renew
+              automatically&rdquo; to save one.
             </p>
             {renewHref && (
               <Link href={renewHref} className="btn-ghost-v2 md mt-2 inline-flex">

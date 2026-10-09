@@ -305,6 +305,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/member-billing/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Renewal charges that need a person: amount mismatches, stuck attempts, money with nowhere to go (refund pending) */
+        get: operations["AdminMemberBillingController_reconcile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/metrics/overview": {
         parameters: {
             query?: never;
@@ -2826,6 +2843,23 @@ export interface paths {
         head?: never;
         /** Unpublish organization marketplace listing */
         patch: operations["MarketplaceOrgController_unpublishListing"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/member-billing/charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** This organization's open and failed member renewal charges (or one status) */
+        get: operations["ProviderMemberBillingController_charges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/archive": {
@@ -9048,6 +9082,23 @@ export interface operations {
             };
         };
     };
+    AdminMemberBillingController_reconcile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_getPlatformMetrics: {
         parameters: {
             query?: never;
@@ -13166,6 +13217,25 @@ export interface operations {
             };
         };
     };
+    ProviderMemberBillingController_charges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceOrgController_archiveMember: {
         parameters: {
             query?: never;
@@ -14316,7 +14386,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;

@@ -176,7 +176,8 @@ export const MEMBER_BILLING_NOTIFICATION_TYPES = [
 const MEMBER_BILLING = "/dashboard/member/billing";
 
 const PROVIDER_MEMBERS: Partial<Record<string, string>> = {
-  [UserRole.GYM_OWNER]: "/dashboard/gym-owner/members",
+  // The owner's list of card renewals names the failed one.
+  [UserRole.GYM_OWNER]: "/dashboard/gym-owner/card-renewals",
   [UserRole.TRAINER]: "/dashboard/trainer/clients",
   [UserRole.DIETITIAN]: "/dashboard/dietitian/clients",
 };
@@ -186,8 +187,8 @@ const PROVIDER_MEMBERS: Partial<Record<string, string>> = {
  * then resolves its action URL as usual).
  *  - The member's card and renewal notices open Billing, scrolled to the
  *    membership when the notice names one.
- *  - MEMBER_PAYMENT_FAILED_FINAL goes to the provider: it opens their members
- *    (or clients) list, where the lapsed member is.
+ *  - MEMBER_PAYMENT_FAILED_FINAL goes to the provider: a gym owner opens
+ *    Card renewals, a trainer or dietitian their clients list.
  */
 export function billingNotificationTarget(
   input: { type?: string | null; metadata?: Record<string, unknown> | null },
@@ -272,4 +273,76 @@ export function autoRenewOutcome(
 ): "on" | "not_saved" | null {
   if (!ticked) return null;
   return sub?.collection_method === "card_auto" && sub.auto_renew ? "on" : "not_saved";
+}
+
+// ─── Why a card wasn't saved, or a renewal didn't go through ─────────────────
+
+/**
+ * Plain copy for the reasons the API gives when a card couldn't be saved
+ * after a checkout (SaveCardOutcome) or a card renewal was stopped or
+ * closed (a charge's closed_reason). Shown to members and providers, so it
+ * names no internal states.
+ */
+const REASON_COPY: Record<string, string> = {
+  disabled: "Automatic renewal is switched off for now.",
+  not_reusable: "The bank didn't allow this card to be saved for renewals.",
+  account_changed: "The provider changed their payment account, so the saved card can't be used.",
+  no_customer_email: "The payment didn't come back with the details needed to save the card.",
+  subscription_not_active: "The membership wasn't active when the payment finished.",
+  terms_mismatch:
+    "The payment didn't match the renewal terms that were agreed, so the card wasn't saved.",
+  card_unavailable: "The saved card can't be used any more, so renewals are paid by link.",
+  card_expired: "The card expired.",
+  card_removed: "The member removed the card.",
+  card_rejected: "The bank declined the card, so renewals are paid by link.",
+  needs_customer: "The bank asked the member to approve the payment themselves.",
+  retries_exhausted: "Every retry was declined.",
+  grace_ended: "The grace period ended before the renewal was paid.",
+  term_paid_another_way: "This term was paid another way.",
+  auto_renew_off: "The member turned auto-renew off.",
+  no_consent: "There's no agreement in force to charge this card.",
+  member_suspended: "The member's account is suspended.",
+  membership_not_live: "The membership had already ended.",
+  cancelled: "The membership was cancelled.",
+  no_provider_account: "There's no Paystack account connected to charge the card on.",
+  amount_not_disclosed: "The new price hadn't been announced to the member in time.",
+};
+
+/** Why a card wasn't saved after checkout, in plain words. */
+export function cardNotSavedCopy(reason: string | null | undefined): string {
+  return (reason && REASON_COPY[reason]) || "We couldn't save this card for renewals.";
+}
+
+const CHARGE_STATUS: Record<string, { label: string; tone: "neutral" | "warn" | "danger" | "success" }> = {
+  scheduled: { label: "Scheduled", tone: "neutral" },
+  in_flight: { label: "Charging", tone: "neutral" },
+  retry_scheduled: { label: "Retrying", tone: "warn" },
+  awaiting_payment: { label: "Waiting for member", tone: "warn" },
+  failed_final: { label: "Failed", tone: "danger" },
+  succeeded: { label: "Paid", tone: "success" },
+  cancelled: { label: "Cancelled", tone: "neutral" },
+  superseded: { label: "Paid another way", tone: "neutral" },
+};
+
+export function chargeStatusCopy(status: string): { label: string; tone: "neutral" | "warn" | "danger" | "success" } {
+  return CHARGE_STATUS[status] ?? { label: status.replace(/_/g, " "), tone: "neutral" };
+}
+
+const FAILURE_CLASS_COPY: Record<string, string> = {
+  soft: "Declined for now (for example, not enough funds). It will be retried.",
+  hard: "The bank declined the card.",
+  needs_customer: "The bank asked the member to approve the payment themselves.",
+  unknown: "The payment didn't go through.",
+};
+
+/** Why a renewal charge stopped or failed: its closed reason, else its last attempt. */
+export function chargeFailureCopy(charge: {
+  closed_reason: string | null;
+  attempts: Array<{ failure_class: string | null }>;
+}): string | null {
+  if (charge.closed_reason) {
+    return REASON_COPY[charge.closed_reason] ?? "The renewal was stopped.";
+  }
+  const last = charge.attempts[charge.attempts.length - 1];
+  return last?.failure_class ? (FAILURE_CLASS_COPY[last.failure_class] ?? null) : null;
 }

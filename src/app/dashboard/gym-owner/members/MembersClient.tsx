@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AddMemberButton } from "./_actions";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -563,6 +565,11 @@ function ChangePlanModal({
 
 export default function GymMembersClient() {
   const { currentOrg } = useOrganization();
+  const { user } = useAuth();
+  // Card renewals are owner-only in the API; fail closed without an owner_id.
+  const isOwner = Boolean(
+    currentOrg?._id && user?.id && currentOrg.owner_id != null && String(currentOrg.owner_id) === user.id,
+  );
   const { fmtDate, fmtMoney, fmtNumber } = useOrgFormat();
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
@@ -702,6 +709,13 @@ export default function GymMembersClient() {
       <PageHeader
         className="mb-0!"
         title="Members"
+        actions={
+          isOwner ? (
+            <Link href="/dashboard/gym-owner/card-renewals" className="btn-ghost-v2 md">
+              Card renewals
+            </Link>
+          ) : undefined
+        }
         subtitle={
           loading
             ? "Loading…"

@@ -3,6 +3,9 @@ import {
   autoRenewOutcome,
   autoRenewUnavailableCopy,
   billingNotificationTarget,
+  cardNotSavedCopy,
+  chargeFailureCopy,
+  chargeStatusCopy,
   cardExpiry,
   cardLabel,
   cardStatusCopy,
@@ -175,9 +178,9 @@ describe("billing notification routing", () => {
     ).toBe("/dashboard/member/billing");
   });
 
-  it("sends a provider's final payment failure to their members", () => {
+  it("sends a provider's final payment failure to Card renewals or their clients", () => {
     const n = { type: "MEMBER_PAYMENT_FAILED_FINAL", metadata: {} };
-    expect(billingNotificationTarget(n, UserRole.GYM_OWNER)).toBe("/dashboard/gym-owner/members");
+    expect(billingNotificationTarget(n, UserRole.GYM_OWNER)).toBe("/dashboard/gym-owner/card-renewals");
     expect(billingNotificationTarget(n, UserRole.TRAINER)).toBe("/dashboard/trainer/clients");
     expect(billingNotificationTarget(n, UserRole.DIETITIAN)).toBe("/dashboard/dietitian/clients");
   });
@@ -280,5 +283,35 @@ describe("Record renewal payment availability", () => {
         NOW,
       ),
     ).toBe(false);
+  });
+});
+
+describe("why a card wasn't saved, or a renewal stopped", () => {
+  it("has plain copy for the new not-saved reasons (api #205/#206)", () => {
+    expect(cardNotSavedCopy("terms_mismatch")).toBe(
+      "The payment didn't match the renewal terms that were agreed, so the card wasn't saved.",
+    );
+    expect(cardNotSavedCopy("card_unavailable")).toBe(
+      "The saved card can't be used any more, so renewals are paid by link.",
+    );
+    for (const r of ["disabled", "not_reusable", "account_changed", "no_customer_email", "subscription_not_active"]) {
+      expect(cardNotSavedCopy(r)).not.toMatch(/_/);
+    }
+    expect(cardNotSavedCopy("something_new")).toBe("We couldn't save this card for renewals.");
+  });
+
+  it("labels every charge status in plain words", () => {
+    expect(chargeStatusCopy("failed_final")).toEqual({ label: "Failed", tone: "danger" });
+    expect(chargeStatusCopy("awaiting_payment").label).toBe("Waiting for member");
+    expect(chargeStatusCopy("retry_scheduled").tone).toBe("warn");
+    expect(chargeStatusCopy("brand_new").label).toBe("brand new");
+  });
+
+  it("explains a charge by its closed reason, else its last attempt", () => {
+    expect(chargeFailureCopy({ closed_reason: "card_unavailable", attempts: [] })).toMatch(/can't be used any more/);
+    expect(chargeFailureCopy({ closed_reason: "retries_exhausted", attempts: [] })).toBe("Every retry was declined.");
+    expect(chargeFailureCopy({ closed_reason: null, attempts: [{ failure_class: "hard" }, { failure_class: "soft" }] })).toMatch(/retried/);
+    expect(chargeFailureCopy({ closed_reason: null, attempts: [] })).toBeNull();
+    expect(chargeFailureCopy({ closed_reason: "odd_new_reason", attempts: [] })).toBe("The renewal was stopped.");
   });
 });

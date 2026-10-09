@@ -97,6 +97,54 @@ export interface RecordRenewalRequest {
   payment_reference?: string;
 }
 
+/** A renewal charge's state (api #205 ChargeStatus). */
+export type ChargeStatus =
+  | "scheduled"
+  | "in_flight"
+  | "retry_scheduled"
+  | "awaiting_payment"
+  | "succeeded"
+  | "failed_final"
+  | "cancelled"
+  | "superseded";
+
+export type ChargeFailureClass = "soft" | "hard" | "needs_customer" | "unknown";
+
+export interface ChargeAttemptView {
+  n: number;
+  started_at: string;
+  finished_at: string | null;
+  outcome: string | null;
+  failure_class: ChargeFailureClass | null;
+  gateway_status: string | null;
+}
+
+/**
+ * GET /marketplace/organizations/:id/member-billing/charges row (owner
+ * only). Ids, money and states: no card codes, no Paystack text.
+ */
+export interface OrgChargeView {
+  id: string;
+  subscription_id: string;
+  organization_id: string;
+  member_user_id: string;
+  plan_id: string;
+  cycle_seq: number;
+  period_start: string | null;
+  period_end: string | null;
+  amount_minor: number;
+  currency: string;
+  status: ChargeStatus;
+  closed_reason: string | null;
+  reconcile_reason: string | null;
+  late_payment: string | null;
+  next_attempt_at: string | null;
+  settled_at: string | null;
+  transaction_id: string | null;
+  attempts: ChargeAttemptView[];
+  created_at: string | null;
+}
+
 export const memberBillingService = {
   /** The consent for paying this plan at checkout. */
   getPlanAutoRenewConsent(
@@ -141,6 +189,20 @@ export const memberBillingService = {
   ): Promise<ApiResponse<{ id: string; status: "revoked" }>> {
     return apiClient.delete<{ id: string; status: "revoked" }>(
       `/marketplace/my-payment-methods/${id}`,
+    );
+  },
+
+  /**
+   * The organization's open and failed card renewals, or one status. The
+   * API allows the organization's owner only (403 for anyone else).
+   */
+  listOrgCharges(
+    organizationId: string,
+    status?: ChargeStatus,
+  ): Promise<ApiResponse<OrgChargeView[]>> {
+    const q = status ? `?status=${encodeURIComponent(status)}` : "";
+    return apiClient.get<OrgChargeView[]>(
+      `/marketplace/organizations/${organizationId}/member-billing/charges${q}`,
     );
   },
 

@@ -107,7 +107,7 @@ describe("notifications drawer: billing", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("sends a gym owner's final payment failure to their members", async () => {
+  it("sends a gym owner's final payment failure to Card renewals", async () => {
     authState.user.role = UserRole.GYM_OWNER;
     items = [
       note({
@@ -119,7 +119,7 @@ describe("notifications drawer: billing", () => {
     ];
     render(<NotificationsDrawer open onClose={vi.fn()} />);
     await userEvent.click(screen.getByRole("button", { name: /A member's renewal failed/ }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard/gym-owner/members"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard/gym-owner/card-renewals"));
   });
 });
 

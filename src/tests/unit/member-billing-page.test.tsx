@@ -120,7 +120,7 @@ describe("auto-renew switch", () => {
     const sw = await screen.findByRole("switch", { name: /Auto-renew/ });
     expect(sw).toHaveAttribute("aria-checked", "false");
     await userEvent.click(sw);
-    expect(await screen.findByText(/needs a card saved with this provider/)).toBeInTheDocument();
+    expect(await screen.findByText(/needs a working card saved with this provider/)).toBeInTheDocument();
     // Not optimistic: still off.
     expect(screen.getByRole("switch", { name: /Auto-renew/ })).toHaveAttribute("aria-checked", "false");
     expect(screen.getByRole("link", { name: "Pay next term by card" })).toHaveAttribute(
