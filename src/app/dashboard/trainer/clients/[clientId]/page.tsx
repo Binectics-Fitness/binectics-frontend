@@ -13,6 +13,7 @@ import { programsService, type ClientProgramSummary } from "@/lib/api/programs";
 import { consultationsService, type ConsultationBooking } from "@/lib/api/consultations";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import OneOffTasksCard from "@/components/programs/OneOffTasksCard";
+import { ClientReportsCard } from "@/components/progress-reports/ClientReportsCard";
 import { TRAINER_PROGRAMS_CONFIG } from "@/components/programs/config";
 
 /**
@@ -254,6 +255,8 @@ export default function ClientDetailPage() {
 
         {/* Right rail */}
         <aside className="flex flex-col gap-4">
+          {clientId && profile.is_active && <ClientReportsCard clientProfileId={clientId} clientFirstName={firstName} />}
+
           <DSCard className="p-3.5">
             <section aria-labelledby="programs-heading">
               <Eyebrow as="h2" id="programs-heading" className="mb-2">Programs</Eyebrow>

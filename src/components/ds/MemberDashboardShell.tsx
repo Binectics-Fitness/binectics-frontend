@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { label: "Messages",    href: "/dashboard/messages" },
   { label: "Meal plans",  href: "/dashboard/member/meal-plans" },
   { label: "Activity",    href: "/dashboard/member/streaks" },
+  { label: "Reports",     href: "/dashboard/member/reports" },
   { label: "Requests",    href: "/dashboard/member/requests" },
 ];
 
