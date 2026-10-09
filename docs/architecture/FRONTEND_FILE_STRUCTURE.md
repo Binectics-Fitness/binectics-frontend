@@ -215,7 +215,6 @@ Next.js App Router uses the file system for routing. Each folder with a `page.ts
 | `/dashboard/gym-owner/classes`                     | Class management          |
 | `/dashboard/gym-owner/classes/new`                 | Create new class          |
 | `/dashboard/gym-owner/facility`                    | Facility management       |
-| `/dashboard/gym-owner/marketing`                   | Marketing tools           |
 | `/dashboard/gym-owner/marketplace`                 | Org marketplace listings  |
 | `/dashboard/gym-owner/members`                     | Member management         |
 | `/dashboard/gym-owner/members/[memberId]`          | Member detail             |
@@ -266,7 +265,6 @@ Next.js App Router uses the file system for routing. Each folder with a `page.ts
 | `/admin`                        | Admin login / entry     |
 | `/admin/dashboard`              | Admin main dashboard    |
 | `/admin/analytics`              | Platform analytics      |
-| `/admin/create-super-admin`     | Create super admin user |
 | `/admin/providers`              | Provider management     |
 | `/admin/providers/[providerId]` | Provider detail         |
 | `/admin/revenue`                | Revenue analytics       |

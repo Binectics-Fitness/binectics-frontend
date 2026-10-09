@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { InactivityNotification } from "@/components/InactivityNotification";
-import { UserRole } from "@/lib/types";
+import { isPlatformAdmin } from "@/hooks/useRequireAuth";
+import { getDashboardRoute } from "@/lib/constants/routes";
 import { adminLoginSchema, type AdminLoginFormData } from "@/lib/schemas/admin";
 
 export default function AdminLoginPage() {
@@ -24,11 +25,10 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string>("");
 
-  // Redirect if already logged in as admin
+  // Signed in already: admins go to the dashboard, anyone else to their own.
   useEffect(() => {
-    if (user && user.role === UserRole.ADMIN) {
-      router.push("/admin/dashboard");
-    }
+    if (!user) return;
+    router.replace(isPlatformAdmin(user) ? "/admin/dashboard" : getDashboardRoute(user.role));
   }, [user, router]);
 
   const onSubmit = async (data: AdminLoginFormData) => {
@@ -126,7 +126,7 @@ export default function AdminLoginPage() {
                 id="email"
                 required
                 {...registerField("email")}
-                placeholder="admin@binectics.com"
+                placeholder="name@example.com"
                 className={`w-full h-12 border ${
                   errors.email ? "border-danger" : "border-border"
                 } rounded-(--r-2) px-4 text-fg placeholder:text-fg-4 focus:outline-none focus:border-signal transition-colors`}
@@ -190,25 +190,6 @@ export default function AdminLoginPage() {
                 user login page
               </Link>
               .
-            </p>
-          </div>
-
-          {/* Demo Account Info */}
-          <div className="mt-4 p-4 bg-bg-2 border border-border rounded-(--r-3)">
-            <p className="text-xs text-fg-2">
-              <strong>Demo Account:</strong>
-            </p>
-            <p className="text-xs text-fg-2 mt-1 font-mono">
-              admin@binectics.com / Admin@123456
-            </p>
-            <p className="text-xs text-fg-2 mt-2">
-              Create demo accounts at{" "}
-              <Link
-                href="/admin/create-super-admin"
-                className="text-signal-ink hover:underline"
-              >
-                /admin/create-super-admin
-              </Link>
             </p>
           </div>
         </form>

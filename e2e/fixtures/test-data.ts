@@ -51,7 +51,7 @@ export const TEST_USERS = {
   },
   ADMIN: {
     id: "e2e-admin-id",
-    email: "admin@binectics.com",
+    email: "e2e-admin@example.com",
     first_name: "Test",
     last_name: "Admin",
     role: "ADMIN" as const,
