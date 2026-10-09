@@ -96,6 +96,10 @@ export interface NotificationPreferences {
   inAppMessages: boolean;
   inAppReminders: boolean;
   inAppPromotions: boolean;
+  /** Streak milestones, a program's halfway mark and end. */
+  inAppMilestones: boolean;
+  /** One nudge after 3 days with no check-in, task or log. */
+  inAppNudges: boolean;
 }
 
 // ─── Service ────────────────────────────────────────────────────

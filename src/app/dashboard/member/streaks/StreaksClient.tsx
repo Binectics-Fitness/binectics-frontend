@@ -123,10 +123,11 @@ export function StreaksClient() {
   // so it can't read as locked next to "10 sessions" earned.
   const best = Math.max(longest ?? 0, streak);
   const milestones = [
+    { name: "First step", sub: "Day 1", earned: total >= 1 },
     ...STREAK_MILESTONES.map((d) => ({
-      name: d === 1 ? "First step" : `${d}-day streak`,
+      name: `${d}-day streak`,
       sub: `Day ${d}`,
-      earned: d === 1 ? total >= 1 : best >= d,
+      earned: best >= d,
     })),
     ...SESSION_MILESTONES.map((n) => ({ name: `${n} sessions`, sub: "check-ins", earned: total >= n })),
   ];

@@ -149,3 +149,17 @@ describe("resolveNotificationLink", () => {
     );
   });
 });
+
+describe("nudge and milestone links (API buildActionUrl)", () => {
+  it("a streak milestone opens the member's streaks page", () => {
+    expect(resolveNotificationLink("/dashboard/member/streaks", UserRole.USER)).toBe("/dashboard/member/streaks");
+  });
+
+  it("the inactivity nudge opens the member's home", () => {
+    expect(resolveNotificationLink("/dashboard/member", UserRole.USER)).toBe("/dashboard/member");
+  });
+
+  it("program halfway and completed links land on the member home (no web program page)", () => {
+    expect(resolveNotificationLink("/dashboard/my-programs/6abc", UserRole.USER)).toBe("/dashboard/member");
+  });
+});

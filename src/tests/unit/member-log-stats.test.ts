@@ -86,7 +86,8 @@ describe("mealsToday", () => {
 
 describe("nextStreakMilestone", () => {
   it("is the first milestone above the streak", () => {
-    expect(nextStreakMilestone(0)).toBe(1);
+    expect(nextStreakMilestone(0)).toBe(7);
+    expect(nextStreakMilestone(1)).toBe(7);
     expect(nextStreakMilestone(7)).toBe(30);
     expect(nextStreakMilestone(32)).toBe(50);
     expect(nextStreakMilestone(365)).toBeNull();

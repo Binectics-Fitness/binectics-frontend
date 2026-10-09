@@ -44,6 +44,11 @@ const BY_TYPE: Record<string, { icon: NotificationIconKey; tone?: Tone }> = {
   WORKOUT_PLAN_ASSIGNED: { icon: "workout", tone: "trainer" },
   PROGRAM_ASSIGNED: { icon: "program" },
   PROGRAM_REMINDER: { icon: "program" },
+  PROGRAM_HALFWAY: { icon: "program" },
+  PROGRAM_COMPLETED: { icon: "program", tone: "success" },
+  // The check-in streak is a gym's; the nudge is news, not a warning.
+  STREAK_MILESTONE: { icon: "checkin", tone: "gym" },
+  INACTIVITY_NUDGE: { icon: "checkin" },
   JOURNAL_ENTRY_ADDED: { icon: "journal" },
 
   BOOKING_CREATED: { icon: "booking" },
