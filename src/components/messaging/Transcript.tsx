@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { MessageSide, ThreadKind, type ChatMessage } from "@/lib/api/messaging";
 import { MessageBubble, PendingBubble } from "./MessageBubble";
 import { dayKey, dayLabel } from "./format";
@@ -14,6 +14,8 @@ const TOP_TRIGGER_PX = 160;
 export interface MessageDecorations {
   actions?: ReactNode;
   reactions?: ReactNode;
+  /** Replaces the text while the message is being edited. */
+  editor?: ReactNode;
   bubbleProps?: React.HTMLAttributes<HTMLDivElement> & { "data-message-id"?: string };
 }
 
@@ -62,6 +64,7 @@ export function Transcript({
   canSend,
   highlightSeq,
   onAtBottomChange,
+  onOpenReply,
   decorate,
 }: {
   sync: ThreadSync;
@@ -70,6 +73,7 @@ export function Transcript({
   canSend: boolean;
   highlightSeq?: number | null;
   onAtBottomChange: (atBottom: boolean) => void;
+  onOpenReply?: (seq: number) => void;
   decorate?: (message: ChatMessage) => MessageDecorations;
 }) {
   const { transcript, outbox } = sync;
@@ -79,6 +83,7 @@ export function Transcript({
   const snapshot = useRef({ scrollTop: 0, scrollHeight: 0, firstId: "", lastKey: "", ready: false });
   const [pill, setPill] = useState(0);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const hintId = useId();
   const [announcement, setAnnouncement] = useState("");
 
   const lastKey = `${messages.at(-1)?._id ?? ""}|${outbox.length}`;
@@ -162,6 +167,28 @@ export function Transcript({
     if (bottom && transcript && !transcript.atTip && !sync.loadingNewer) void sync.loadNewer();
   };
 
+  // Arrow keys move between messages (one tab stop for the whole list);
+  // Enter or Shift+F10 on a message opens its actions.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown" && e.key !== "Home" && e.key !== "End") return;
+    const target = e.target as HTMLElement;
+    if (target !== e.currentTarget && !target.hasAttribute("data-message-id")) return;
+    const bubbles = [...e.currentTarget.querySelectorAll<HTMLElement>("[data-message-id]")];
+    if (bubbles.length === 0) return;
+    const i = bubbles.indexOf(target);
+    const next =
+      e.key === "Home"
+        ? 0
+        : e.key === "End"
+          ? bubbles.length - 1
+          : i === -1
+            ? bubbles.length - 1
+            : Math.min(bubbles.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)));
+    e.preventDefault();
+    bubbles[next].focus();
+    bubbles[next].scrollIntoView?.({ block: "nearest" });
+  };
+
   const showPill = (pill > 0 && !isAtBottom) || Boolean(transcript?.newerAvailable);
 
   const jump = async () => {
@@ -193,7 +220,9 @@ export function Transcript({
         role="log"
         aria-live="off"
         aria-label={`Messages with ${title}`}
+        aria-describedby={decorate ? hintId : undefined}
         tabIndex={0}
+        onKeyDown={decorate ? onKeyDown : undefined}
       >
         {transcript?.hasOlder && (
           <div className="mb-3 flex justify-center">
@@ -232,7 +261,9 @@ export function Transcript({
                       highlighted={highlightSeq === m.seq}
                       actions={deco?.actions}
                       reactions={deco?.reactions}
+                      editor={deco?.editor}
                       bubbleProps={deco?.bubbleProps}
+                      onOpenReply={onOpenReply}
                     />
                   </li>
                 </Fragment>
@@ -285,6 +316,11 @@ export function Transcript({
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
       </div>
+      {decorate && (
+        <p id={hintId} className="sr-only">
+          Use the up and down arrow keys to move between messages, then Enter for message actions.
+        </p>
+      )}
     </div>
   );
 }

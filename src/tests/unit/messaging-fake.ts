@@ -16,6 +16,7 @@ import {
   messagingService,
   type ChatMessage,
   type MessagesCursor,
+  type ReactionKey,
   type ThreadState,
   type ThreadSummary,
 } from "@/lib/api/messaging";
@@ -35,6 +36,9 @@ interface FakeThread {
   myRead: number;
   theirRead: number;
   readOnly: ReadOnlyReason | null;
+  muted?: boolean;
+  blockedByMe?: boolean;
+  canBlock?: boolean;
 }
 
 const READ_ONLY_CODE: Record<ReadOnlyReason, MessagingErrorCode> = {
@@ -66,9 +70,9 @@ export function createMessagingFake({ settle = 2 }: { settle?: number } = {}) {
     read_only_reason: t.readOnly,
     can_reply: t.readOnly === null,
     can_react: t.readOnly === null && t.summary.kind !== ThreadKind.BROADCAST,
-    can_block: false,
-    blocked_by_me: false,
-    muted: false,
+    can_block: Boolean(t.canBlock) && !t.blockedByMe,
+    blocked_by_me: Boolean(t.blockedByMe),
+    muted: Boolean(t.muted),
     my_last_read_seq: t.myRead,
     counterpart_last_read_seq: t.summary.kind === ThreadKind.BROADCAST ? null : t.theirRead,
   });
@@ -139,7 +143,7 @@ export function createMessagingFake({ settle = 2 }: { settle?: number } = {}) {
       deleted_at: null,
       reply_to: null,
       reactions: [],
-      editable_until: null,
+      editable_until: side === MessageSide.MINE ? new Date(Date.now() + 15 * 60_000).toISOString() : null,
       can_delete: side === MessageSide.MINE,
     };
     t.messages.push(m);
@@ -156,6 +160,22 @@ export function createMessagingFake({ settle = 2 }: { settle?: number } = {}) {
     t.rev += 1;
     const i = t.messages.findIndex((m) => m._id === messageId);
     t.messages[i] = { ...t.messages[i], ...patch, rev: t.rev };
+  }
+
+  function react(threadId: string, messageId: string, key: ReactionKey, on: boolean): ApiResponse<ChatMessage> {
+    calls.push({ method: on ? "addReaction" : "removeReaction", args: [threadId, messageId, key] });
+    const failed = take<ChatMessage>(on ? "addReaction" : "removeReaction");
+    if (failed) return failed;
+    const t = threads.get(threadId)!;
+    if (t.summary.kind === ThreadKind.BROADCAST) return fail<ChatMessage>(403, MessagingErrorCode.REACTIONS_DISABLED);
+    const m = t.messages.find((x) => x._id === messageId)!;
+    const existing = m.reactions.find((r) => r.key === key);
+    if (on === Boolean(existing?.mine)) return { success: true, data: m };
+    const others = m.reactions.filter((r) => r.key !== key);
+    const count = (existing?.count ?? 0) + (on ? 1 : -1);
+    const emoji = { thumbs_up: "👍", heart: "❤️", joy: "😂", tada: "🎉", pray: "🙏", open_mouth: "😮" }[key];
+    change(threadId, messageId, { reactions: count > 0 ? [...others, { key, emoji, count, mine: on }] : others });
+    return { success: true, data: t.messages.find((x) => x._id === messageId)! };
   }
 
   function take<T>(method: string): ApiResponse<T> | null {
@@ -246,6 +266,85 @@ export function createMessagingFake({ settle = 2 }: { settle?: number } = {}) {
       const total = [...threads.values()].reduce((n, x) => n + summary(x).unread_count, 0);
       return { success: true, data: { last_read_seq: t.myRead, unread_count: summary(t).unread_count, total_unread: total } };
     },
+    editMessage: async (threadId: string, messageId: string, body: string) => {
+      calls.push({ method: "editMessage", args: [threadId, messageId, body] });
+      const failed = take<ChatMessage>("editMessage");
+      if (failed) return failed;
+      const t = threads.get(threadId)!;
+      const m = t.messages.find((x) => x._id === messageId);
+      if (!m) return fail<ChatMessage>(404, MessagingErrorCode.MESSAGE_NOT_FOUND);
+      if (m.side !== MessageSide.MINE) return fail<ChatMessage>(403, MessagingErrorCode.NOT_SENDER);
+      if (m.deleted_at) return fail<ChatMessage>(409, MessagingErrorCode.MESSAGE_DELETED);
+      if (!m.editable_until || Date.parse(m.editable_until) < Date.now()) {
+        return fail<ChatMessage>(403, MessagingErrorCode.EDIT_WINDOW_CLOSED);
+      }
+      change(threadId, messageId, { body, edited_at: new Date().toISOString() });
+      return { success: true, data: t.messages.find((x) => x._id === messageId)! };
+    },
+    deleteMessage: async (threadId: string, messageId: string) => {
+      calls.push({ method: "deleteMessage", args: [threadId, messageId] });
+      const t = threads.get(threadId)!;
+      const m = t.messages.find((x) => x._id === messageId)!;
+      if (m.side !== MessageSide.MINE) return fail<ChatMessage>(403, MessagingErrorCode.NOT_SENDER);
+      change(threadId, messageId, {
+        body: "",
+        deleted_at: new Date().toISOString(),
+        reply_to: null,
+        reactions: [],
+        editable_until: null,
+        can_delete: false,
+      });
+      return { success: true, data: t.messages.find((x) => x._id === messageId)! };
+    },
+    addReaction: async (threadId: string, messageId: string, key: ReactionKey) => react(threadId, messageId, key, true),
+    removeReaction: async (threadId: string, messageId: string, key: ReactionKey) => react(threadId, messageId, key, false),
+    setMuted: async (threadId: string, muted: boolean) => {
+      calls.push({ method: "setMuted", args: [threadId, muted] });
+      threads.get(threadId)!.muted = muted;
+      return { success: true, data: { muted } };
+    },
+    block: async (threadId: string) => {
+      calls.push({ method: "block", args: [threadId] });
+      const t = threads.get(threadId)!;
+      t.blockedByMe = true;
+      return { success: true, data: summary(t) };
+    },
+    unblock: async (threadId: string) => {
+      calls.push({ method: "unblock", args: [threadId] });
+      const t = threads.get(threadId)!;
+      t.blockedByMe = false;
+      return { success: true, data: summary(t) };
+    },
+    search: async ({ q }: { q: string; limit?: number; cursor?: string }) => {
+      calls.push({ method: "search", args: [q] });
+      const failed = take<never>("search");
+      if (failed) return failed;
+      const needle = q.toLowerCase();
+      const all = [...threads.values()];
+      return {
+        success: true,
+        data: {
+          conversations: all.filter((t) => t.summary.title.toLowerCase().includes(needle)).map(summary),
+          messages: all.flatMap((t) =>
+            t.messages
+              .filter((m) => !m.deleted_at && m.body.toLowerCase().includes(needle))
+              .map((m) => ({
+                thread_id: t.summary._id,
+                thread_title: t.summary.title,
+                kind: t.summary.kind,
+                message_id: m._id,
+                seq: m.seq,
+                side: m.side,
+                author_name: m.author.name,
+                excerpt: m.body.slice(0, 160),
+                created_at: m.created_at,
+              })),
+          ),
+          next_cursor: null,
+          scope_limited: false,
+        },
+      };
+    },
     unreadCount: async () => {
       calls.push({ method: "unreadCount", args: [] });
       const all = [...threads.values()].map(summary);
@@ -266,6 +365,9 @@ export function createMessagingFake({ settle = 2 }: { settle?: number } = {}) {
     change,
     setReadOnly: (threadId: string, reason: ReadOnlyReason | null) => {
       threads.get(threadId)!.readOnly = reason;
+    },
+    allowBlock: (threadId: string) => {
+      threads.get(threadId)!.canBlock = true;
     },
     setTheirRead: (threadId: string, seq: number) => {
       threads.get(threadId)!.theirRead = seq;

@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { AsyncSpinner } from "@/components/ds";
 import { MessageSide, ThreadKind, type ThreadSummary } from "@/lib/api/messaging";
 import { Avatar } from "./Avatar";
@@ -40,7 +39,6 @@ export function ThreadList({
   emptyHint,
   onOpen,
   onRetry,
-  header,
 }: {
   threads: ThreadSummary[];
   status: "loading" | "error" | "ready";
@@ -48,11 +46,9 @@ export function ThreadList({
   emptyHint: string;
   onOpen: (threadId: string) => void;
   onRetry: () => void;
-  header: ReactNode;
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {header}
       {status === "loading" ? (
         <div className="flex flex-1 items-center justify-center">
           <AsyncSpinner label="Loading conversations" />

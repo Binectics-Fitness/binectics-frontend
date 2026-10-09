@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AnnouncePanel } from "./AnnouncePanel";
 import { useInbox, useThreadSummary, type MessagingRequestError } from "./queries";
 import { ThreadList } from "./ThreadList";
+import { SearchBox, SearchPanel } from "./SearchPanel";
 import { PaneMessage, THREAD_ID_PATTERN, ThreadPane } from "./ThreadPane";
 
 const WIDE = "(min-width: 48rem)";
@@ -42,6 +43,7 @@ export function MessagingCenter({ emptyHint, broadcastOrg }: MessagingCenterProp
   const anchorSeq = validId && Number.isInteger(seqParam) && seqParam > 0 ? seqParam : null;
 
   const [announcing, setAnnouncing] = useState(false);
+  const [query, setQuery] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
   const lastOpened = useRef<string | null>(null);
 
@@ -87,42 +89,49 @@ export function MessagingCenter({ emptyHint, broadcastOrg }: MessagingCenterProp
 
   const showConversation = Boolean(activeId) || announcing;
 
+  const listHeader = (
+    <div className="shrink-0 px-4 pb-3 pt-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+          Conversations
+        </h2>
+        {broadcastOrg && (
+          <button
+            type="button"
+            className="btn-ghost-v2 sm"
+            aria-pressed={announcing}
+            onClick={() => {
+              if (activeId) router.replace(pathname, { scroll: false });
+              setAnnouncing(true);
+            }}
+          >
+            Announce
+          </button>
+        )}
+      </div>
+      <SearchBox value={query} onChange={setQuery} />
+    </div>
+  );
+
   return (
     <div className="grid h-[calc(100dvh-10rem)] min-h-[440px] grid-cols-1 gap-3 md:h-[calc(100dvh-11rem)] md:min-h-[520px] md:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
       <div
         className={`min-h-0 min-w-0 flex-col overflow-hidden rounded-(--r-3) ${showConversation ? "hidden md:flex" : "flex"}`}
         style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
       >
-        <ThreadList
-          threads={threads}
-          status={listStatus}
-          activeId={activeId}
-          emptyHint={emptyHint}
-          onOpen={(id) => open(id)}
-          onRetry={() => void inbox.refetch()}
-          header={
-            <div className="shrink-0 px-4 pb-3 pt-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
-                  Conversations
-                </h2>
-                {broadcastOrg && (
-                  <button
-                    type="button"
-                    className="btn-ghost-v2 sm"
-                    aria-pressed={announcing}
-                    onClick={() => {
-                      if (activeId) router.replace(pathname, { scroll: false });
-                      setAnnouncing(true);
-                    }}
-                  >
-                    Announce
-                  </button>
-                )}
-              </div>
-            </div>
-          }
-        />
+        {listHeader}
+        {query ? (
+          <SearchPanel query={query} onOpen={open} />
+        ) : (
+          <ThreadList
+            threads={threads}
+            status={listStatus}
+            activeId={activeId}
+            emptyHint={emptyHint}
+            onOpen={(id) => open(id)}
+            onRetry={() => void inbox.refetch()}
+          />
+        )}
       </div>
 
       <div
@@ -161,6 +170,7 @@ export function MessagingCenter({ emptyHint, broadcastOrg }: MessagingCenterProp
             summaryMissing={summaryMissing}
             anchorSeq={anchorSeq}
             onBack={back}
+            onOpenAt={(seq) => open(validId, seq)}
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">

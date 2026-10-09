@@ -1,17 +1,34 @@
 "use client";
 
-import { forwardRef, useState, type ReactNode } from "react";
+import { forwardRef, useRef, useState, type ReactNode } from "react";
 import { AsyncSpinner } from "@/components/ds";
 import { ReadOnlyReason, ThreadKind, ThreadRole, type ThreadState, type ThreadSummary } from "@/lib/api/messaging";
 import { Avatar } from "./Avatar";
-import { Composer } from "./Composer";
+import { Composer, type ComposerHandle } from "./Composer";
+import { useMessageActions } from "./MessageActions";
 import { MovedToGymNotice } from "./MovedToGymNotice";
+import { ThreadMenu } from "./ThreadMenu";
 import { readOnlyCopy } from "./format";
 import { Transcript } from "./Transcript";
 import { highestSeq } from "./transcriptModel";
-import { useDocumentVisible, useMarkRead, useThreadSync } from "./useThreadSync";
+import { useDocumentVisible, useMarkRead, useThreadSync, type ReplyTarget } from "./useThreadSync";
 
 export const THREAD_ID_PATTERN = /^[a-f0-9]{24}$/i;
+
+/** Until the first page arrives nothing is allowed. */
+const FALLBACK_STATE: ThreadState = {
+  seq: 0,
+  rev: 0,
+  can_send: false,
+  read_only_reason: null,
+  can_reply: false,
+  can_react: false,
+  can_block: false,
+  blocked_by_me: false,
+  muted: false,
+  my_last_read_seq: 0,
+  counterpart_last_read_seq: null,
+};
 
 export function BackButton({ onBack }: { onBack: () => void }) {
   return (
@@ -70,12 +87,17 @@ export const ThreadPane = forwardRef<
     summaryMissing: boolean;
     anchorSeq?: number | null;
     onBack: () => void;
+    /** Re-open this thread around a message outside the loaded window. */
+    onOpenAt: (seq: number) => void;
   }
->(function ThreadPane({ threadId, userId, summary, summaryMissing, anchorSeq, onBack }, headingRef) {
+>(function ThreadPane({ threadId, userId, summary, summaryMissing, anchorSeq, onBack, onOpenAt }, headingRef) {
   const sync = useThreadSync({ threadId, userId, anchorSeq });
   const visible = useDocumentVisible();
   const [atBottom, setAtBottom] = useState(true);
-  
+  const [reply, setReply] = useState<ReplyTarget | null>(null);
+  const [highlight, setHighlight] = useState<number | null>(anchorSeq ?? null);
+  const composer = useRef<ComposerHandle>(null);
+
   const transcript = sync.transcript;
   const state: ThreadState | null = transcript?.thread ?? summary ?? null;
   const title = summary?.title ?? "Conversation";
@@ -88,6 +110,29 @@ export const ThreadPane = forwardRef<
     initialReadSeq: state?.my_last_read_seq ?? 0,
     active: visible && atBottom && sync.status === "ready" && Boolean(transcript?.atTip),
   });
+
+  const actions = useMessageActions({
+    threadId,
+    sync,
+    state: state ?? FALLBACK_STATE,
+    isBroadcast: kind === ThreadKind.BROADCAST,
+    onReply: (target) => {
+      setReply(target);
+      requestAnimationFrame(() => composer.current?.focus());
+    },
+  });
+
+  /** Show the quoted message: in place when loaded, else re-open the thread around it. */
+  const openReply = (seq: number) => {
+    const el = document.querySelector<HTMLElement>(`[data-seq="${seq}"]`);
+    if (el) {
+      el.scrollIntoView?.({ block: "center", behavior: "smooth" });
+      setHighlight(seq);
+      setTimeout(() => setHighlight((h) => (h === seq ? null : h)), 2_000);
+    } else {
+      onOpenAt(seq);
+    }
+  };
 
   const gone = sync.status === "gone" || (summaryMissing && !transcript);
   const sending = sync.outbox.some((e) => e.status === "sending");
@@ -114,6 +159,10 @@ export const ThreadPane = forwardRef<
             </p>
           )}
         </div>
+        {/* The gym posting its own announcements has nothing to mute or block there. */}
+        {state && !gone && !(kind === ThreadKind.BROADCAST && summary?.my_role === ThreadRole.GYM_OWNER) && (
+          <ThreadMenu threadId={threadId} userId={userId} title={title} state={state} sync={sync} />
+        )}
       </header>
 
       {!sync.online && (
@@ -153,23 +202,61 @@ export const ThreadPane = forwardRef<
             kind={kind}
             title={title}
             canSend={state.can_send}
-            highlightSeq={anchorSeq}
+            highlightSeq={highlight}
             onAtBottomChange={setAtBottom}
+            onOpenReply={openReply}
+            decorate={actions.decorate}
           />
           {state.can_send ? (
             <Composer
+              ref={composer}
               userId={userId}
               draftKey={threadId}
               label={kind === ThreadKind.BROADCAST ? `Announcement to ${title}` : `Message ${title}`}
               placeholder={kind === ThreadKind.BROADCAST ? "Write an announcement…" : "Message…"}
+              onEscape={reply ? () => setReply(null) : undefined}
               context={
-                summary?.as_gym && (
-                  <p className="mb-1.5 px-1 font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
-                    Replying as {summary.as_gym.name}
-                  </p>
-                )
+                <>
+                  {summary?.as_gym && (
+                    <p className="mb-1.5 px-1 font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+                      Replying as {summary.as_gym.name}
+                    </p>
+                  )}
+                  {reply && state.can_reply && (
+                    <div
+                      className="mb-2 flex items-start gap-2 rounded-(--r-2) px-3 py-2"
+                      style={{ background: "var(--bg-2)", borderLeft: "2px solid var(--ink)" }}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                          Replying to {reply.author_name}
+                        </p>
+                        <p className="truncate text-[13px]" style={{ color: "var(--fg-2)" }}>
+                          {reply.excerpt}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Cancel reply"
+                        onClick={() => {
+                          setReply(null);
+                          composer.current?.focus();
+                        }}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-(--r-2) hover:bg-bg-3"
+                        style={{ color: "var(--fg-2)" }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                          <path d="M18 6 6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </>
               }
-              onSend={(text) => sync.send(text)}
+              onSend={(text) => {
+                sync.send(text, state.can_reply ? reply : null);
+                setReply(null);
+              }}
             />
           ) : state.read_only_reason === ReadOnlyReason.MOVED_TO_GYM_INBOX ? (
             <MovedToGymNotice organizationId={summary?.moved_to_organization_id ?? null} title={title} />
@@ -184,6 +271,7 @@ export const ThreadPane = forwardRef<
           )}
         </>
       )}
+      {actions.overlay}
     </section>
   );
 });
