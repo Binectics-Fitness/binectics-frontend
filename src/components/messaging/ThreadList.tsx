@@ -17,7 +17,7 @@ export function previewText(t: ThreadSummary): string {
 /** One clean accessible name per row: who, how many unread, the latest line, when. */
 export function rowLabel(t: ThreadSummary): string {
   const parts = [t.title];
-  if (t.as_gym) parts.push(`as ${t.as_gym.name}`);
+  if (t.as_gym && t.kind !== ThreadKind.BROADCAST) parts.push(`${t.as_gym.name} inbox`);
   if (t.unread_count > 0) parts.push(`${t.unread_count} unread`);
   if (t.muted) parts.push("muted");
   parts.push(previewText(t));
@@ -96,7 +96,8 @@ export function ThreadList({
                   aria-current={active ? "true" : undefined}
                   aria-label={rowLabel(t)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-bg-2"
-                  style={{ background: active ? "var(--bg-2)" : undefined }}
+                  // The open row is marked by the ink bar and stays on --bg, so
+                  // its secondary text keeps AA contrast (prototype .conv.on).
                 >
                   <Avatar name={t.title} url={t.avatar_url} square={t.kind === ThreadKind.BROADCAST} />
                   <span className="min-w-0 flex-1">
@@ -104,19 +105,19 @@ export function ThreadList({
                       <span className="truncate text-[14px] font-medium" style={{ color: "var(--ink)" }}>
                         {t.title}
                       </span>
-                      <span className="shrink-0 font-mono text-[12px] md:text-[11px]" style={{ color: "var(--fg-3)" }}>
+                      <span className="shrink-0 font-mono text-[12px] md:text-[11px]" style={{ color: "var(--fg-2)" }}>
                         {listTime(t.last_message?.created_at)}
                       </span>
                     </span>
-                    {t.as_gym && (
-                      <span className="block truncate text-[12px] font-mono uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+                    {t.as_gym && t.kind !== ThreadKind.BROADCAST && (
+                      <span className="block truncate text-[12px] font-mono uppercase tracking-[0.04em]" style={{ color: "var(--fg-2)" }}>
                         {t.as_gym.name} inbox
                       </span>
                     )}
                     <span className="mt-0.5 flex items-center justify-between gap-2">
                       <span
                         className={`truncate text-[14px] md:text-[13px] ${unread ? "font-medium" : ""}`}
-                        style={{ color: unread ? "var(--ink)" : "var(--fg-3)" }}
+                        style={{ color: unread ? "var(--ink)" : "var(--fg-2)" }}
                       >
                         {previewText(t)}
                       </span>

@@ -196,6 +196,33 @@ describe("MessagingCenter: opening and reading", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: /^Halima/ })).toHaveAttribute("aria-current", "true"));
   });
 
+  it("keeps the open row on --bg with --fg-2 secondary text (AA contrast), and labels only gym threads as an inbox", async () => {
+    setup();
+    const gym = fake.addThread({
+      title: "Yemi Balogun",
+      kind: ThreadKind.GYM,
+      my_role: ThreadRole.GYM_OWNER,
+      as_gym: { organization_id: "o1", name: "Dapo Fitness Hub" },
+    });
+    const ann = fake.addThread({
+      title: "Dapo Fitness Hub · announcements",
+      kind: ThreadKind.BROADCAST,
+      my_role: ThreadRole.GYM_OWNER,
+      as_gym: { organization_id: "o1", name: "Dapo Fitness Hub" },
+    });
+    fake.receive(gym, "pool on Sunday?");
+    fake.sendAsMe(ann, "Closed Monday");
+    nav.set(`/dashboard/messages?thread=${gym}`);
+    mount();
+    const row = await screen.findByRole("button", { name: /^Yemi Balogun, Dapo Fitness Hub inbox/ });
+    await waitFor(() => expect(row).toHaveAttribute("aria-current", "true"));
+    expect(row.getAttribute("style") ?? "").not.toContain("--bg-2");
+    const annRow = screen.getByRole("button", { name: /^Dapo Fitness Hub · announcements/ });
+    expect(within(annRow).getByText("You: Closed Monday").getAttribute("style")).toContain("var(--fg-2)");
+    expect(annRow.getAttribute("aria-label")).not.toContain("inbox");
+    expect(within(annRow).queryByText(/inbox/i)).not.toBeInTheDocument();
+  });
+
   it("tells an error apart from an empty inbox, with a retry", async () => {
     setup();
     fake.failNext("listThreads", serverError());
