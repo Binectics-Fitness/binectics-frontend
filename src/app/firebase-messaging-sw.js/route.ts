@@ -20,8 +20,12 @@ firebase.initializeApp(${raw});
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const title = (payload.notification && payload.notification.title) || "Binectics";
-  const body = (payload.notification && payload.notification.body) || "";
+  // When the payload carries a \`notification\` block the Firebase SDK has
+  // already shown it (and opens its webpush link on click); showing it here
+  // too made every push appear twice. Only data-only payloads are drawn here.
+  if (payload.notification) return;
+  const title = (payload.data && payload.data.title) || "Binectics";
+  const body = (payload.data && payload.data.body) || "";
   const link = (payload.data && payload.data.link) || "/";
   self.registration.showNotification(title, {
     body,

@@ -1,405 +1,176 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { AsyncSpinner, EmptySlate } from "@/components/ds";
-import {
-  messagingService,
-  type ChatMessage,
-  type MessageThreadSummary,
-} from "@/lib/api/messaging";
+import { AnnouncePanel } from "./AnnouncePanel";
+import { useInbox, useThreadSummary, type MessagingRequestError } from "./queries";
+import { ThreadList } from "./ThreadList";
+import { PaneMessage, THREAD_ID_PATTERN, ThreadPane } from "./ThreadPane";
 
-const LIST_POLL_MS = 15_000;
-const THREAD_POLL_MS = 6_000;
+const WIDE = "(min-width: 48rem)";
 
-function initials(name: string): string {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase() ?? "")
-      .join("") || "?"
-  );
+function isWide(): boolean {
+  return typeof window === "undefined" || typeof window.matchMedia !== "function" || window.matchMedia(WIDE).matches;
 }
 
-function timeLabel(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const today = new Date();
-  const sameDay = d.toDateString() === today.toDateString();
-  return sameDay
-    ? d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-    : d.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+export interface MessagingCenterProps {
+  /** Who this inbox is for, in the empty state. */
+  emptyHint: string;
+  /** When set, the owner can post an announcement to this gym. */
+  broadcastOrg?: { id: string; name: string } | null;
 }
 
 /**
- * The full messaging surface, shared by every role. Thread list + open
- * conversation + composer, with light polling. A `broadcastOrgId` turns
- * the composer into a gym-wide announcement box for that org's owner.
+ * The messaging surface shared by every role: the inbox, the open
+ * conversation and the composer. The open thread lives in the URL
+ * (`?thread=<id>`, plus `&seq=<n>` to open at a message), so refresh, Back,
+ * deep links and notification links all land on the same conversation.
+ * Under the md breakpoint one pane shows at a time.
  */
-export function MessagingCenter({
-  broadcastOrgId,
-}: {
-  /** When set, the owner can also post an announcement to this org. */
-  broadcastOrgId?: string | null;
-}) {
+export function MessagingCenter({ emptyHint, broadcastOrg }: MessagingCenterProps) {
   const { user } = useAuth();
-  const myId = user?.id ?? "";
+  const userId = user?.id ?? "";
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [threads, setThreads] = useState<MessageThreadSummary[]>([]);
-  const [loadingList, setLoadingList] = useState(true);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loadingThread, setLoadingThread] = useState(false);
-  const [draft, setDraft] = useState("");
-  const [sending, setSending] = useState(false);
-  const [broadcastMode, setBroadcastMode] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const rawThread = searchParams.get("thread");
+  const activeId = rawThread && rawThread.length > 0 ? rawThread : null;
+  const validId = activeId && THREAD_ID_PATTERN.test(activeId) ? activeId : null;
+  const seqParam = Number(searchParams.get("seq"));
+  const anchorSeq = validId && Number.isInteger(seqParam) && seqParam > 0 ? seqParam : null;
 
-  const refreshList = useCallback(async () => {
-    const res = await messagingService.listThreads();
-    if (res.success && res.data) setThreads(res.data);
-    setLoadingList(false);
-  }, []);
+  const [announcing, setAnnouncing] = useState(false);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const lastOpened = useRef<string | null>(null);
 
-  const openThread = useCallback(
-    async (threadId: string) => {
-      setActiveId(threadId);
-      setBroadcastMode(false);
-      setLoadingThread(true);
-      const res = await messagingService.getMessages(threadId);
-      if (res.success && res.data) setMessages(res.data.messages);
-      setLoadingThread(false);
-      // Opening clears the unread badge locally; the server marked it read.
-      setThreads((prev) =>
-        prev.map((t) =>
-          t._id === threadId ? { ...t, unread_count: 0 } : t,
-        ),
-      );
+  const inbox = useInbox();
+  const summary = useThreadSummary(validId);
+  const summaryError = summary.error as MessagingRequestError | null;
+  const summaryMissing = summaryError ? [400, 403, 404].includes(summaryError.status ?? 0) : false;
+
+  const threads = inbox.data?.threads ?? [];
+  const listStatus = inbox.isLoading ? "loading" : inbox.isError ? "error" : "ready";
+
+  const open = useCallback(
+    (threadId: string, seq?: number) => {
+      setAnnouncing(false);
+      const query = `?thread=${encodeURIComponent(threadId)}${seq ? `&seq=${seq}` : ""}`;
+      // From the list into a thread is a step Back should undo; thread to
+      // thread is a switch that shouldn't pile up history.
+      if (activeId) router.replace(`${pathname}${query}`, { scroll: false });
+      else router.push(`${pathname}${query}`, { scroll: false });
     },
-    [],
+    [activeId, pathname, router],
   );
 
-  // Initial load + deep link (?thread=…) + list polling.
-  useEffect(() => {
-    let alive = true;
-    const kick = window.setTimeout(() => {
-      void refreshList().then(() => {
-        if (!alive) return;
-        const deep = searchParams.get("thread");
-        if (deep) void openThread(deep);
-      });
-    }, 0);
-    const interval = window.setInterval(() => void refreshList(), LIST_POLL_MS);
-    return () => {
-      alive = false;
-      window.clearTimeout(kick);
-      window.clearInterval(interval);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const back = useCallback(() => {
+    lastOpened.current = activeId;
+    setAnnouncing(false);
+    router.replace(pathname, { scroll: false });
+  }, [activeId, pathname, router]);
 
-  // Poll the open thread for new messages.
+  // Focus: on narrow screens the list disappears when a thread opens, so
+  // move focus to the conversation heading; on Back, return it to the row.
   useEffect(() => {
-    if (!activeId) return;
-    const interval = window.setInterval(() => {
-      void messagingService.getMessages(activeId).then((res) => {
-        if (res.success && res.data) setMessages(res.data.messages);
-      });
-    }, THREAD_POLL_MS);
-    return () => window.clearInterval(interval);
+    if (activeId && !isWide()) {
+      requestAnimationFrame(() => heading.current?.focus());
+    }
+    if (!activeId && lastOpened.current && !isWide()) {
+      const id = lastOpened.current;
+      requestAnimationFrame(() =>
+        document.querySelector<HTMLElement>(`[data-thread-id="${id}"]`)?.focus(),
+      );
+    }
   }, [activeId]);
 
-  // Keep the transcript pinned to the latest message.
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  const activeThread = threads.find((t) => t._id === activeId) ?? null;
-  const canPost =
-    broadcastMode ||
-    (activeThread ? activeThread.kind === "direct" : false) ||
-    // Owner replying inside their own broadcast thread is allowed server-side.
-    (activeThread?.kind === "broadcast" &&
-      activeThread.organization_id === broadcastOrgId);
-
-  async function send() {
-    const text = draft.trim();
-    if (!text || sending) return;
-    setSending(true);
-    try {
-      if (broadcastMode && broadcastOrgId) {
-        const res = await messagingService.broadcast(broadcastOrgId, text);
-        if (res.success) {
-          setDraft("");
-          await refreshList();
-        }
-      } else if (activeId) {
-        const res = await messagingService.sendMessage(activeId, text);
-        if (res.success && res.data) {
-          setMessages((prev) => [...prev, res.data as ChatMessage]);
-          setDraft("");
-          void refreshList();
-        }
-      }
-    } finally {
-      setSending(false);
-    }
-  }
+  const showConversation = Boolean(activeId) || announcing;
 
   return (
-    <div
-      className="grid gap-3 h-[calc(100vh-11rem)] min-h-[500px]"
-      style={{ gridTemplateColumns: "minmax(0, 320px) 1fr" }}
-    >
-      {/* ── Thread list ── */}
+    <div className="grid h-[calc(100dvh-10rem)] min-h-[440px] grid-cols-1 gap-3 md:h-[calc(100dvh-11rem)] md:min-h-[520px] md:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
       <div
-        className={`flex flex-col rounded-(--r-3) overflow-hidden ${activeId ? "hidden md:flex" : ""}`}
+        className={`min-h-0 min-w-0 flex-col overflow-hidden rounded-(--r-3) ${showConversation ? "hidden md:flex" : "flex"}`}
         style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
       >
-        <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
-            Conversations
-          </span>
-          {broadcastOrgId && (
-            <button
-              type="button"
-              className="btn-ghost-v2 sm"
-              onClick={() => {
-                setActiveId(null);
-                setMessages([]);
-                setBroadcastMode(true);
-              }}
-            >
-              Announce
-            </button>
-          )}
-        </div>
-        {loadingList ? (
-          <div className="flex flex-1 items-center justify-center">
-            <AsyncSpinner />
-          </div>
-        ) : threads.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center">
-            <EmptySlate
-              message="No conversations yet"
-              hint="Messages with your gym, trainer or clients appear here."
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col overflow-y-auto flex-1">
-            {threads.map((t) => (
-              <button
-                key={t._id}
-                type="button"
-                onClick={() => void openThread(t._id)}
-                className="flex items-center gap-3 px-4 py-3 text-left transition-colors"
-                style={{
-                  borderBottom: "1px solid var(--border)",
-                  background:
-                    t._id === activeId ? "var(--bg-2)" : "transparent",
-                  // Left accent bar on the active conversation, per the
-                  // messages prototype (.conv.on::before).
-                  boxShadow:
-                    t._id === activeId
-                      ? "inset 2px 0 0 var(--ink)"
-                      : "none",
-                }}
-              >
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
-                  style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}
-                >
-                  {initials(t.counterparty?.name ?? "?")}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center justify-between gap-2">
-                    <span
-                      className="truncate text-[13.5px] font-medium"
-                      style={{ color: "var(--ink)" }}
-                    >
-                      {t.counterparty?.name ?? "Conversation"}
-                    </span>
-                    <span
-                      className="shrink-0 font-mono text-[10.5px]"
-                      style={{ color: "var(--fg-3)" }}
-                    >
-                      {timeLabel(t.last_message_at)}
-                    </span>
-                  </span>
-                  <span className="flex items-center justify-between gap-2">
-                    <span
-                      className="truncate text-[12.5px]"
-                      style={{ color: "var(--fg-3)" }}
-                    >
-                      {t.last_message_preview || "No messages yet"}
-                    </span>
-                    {t.unread_count > 0 && (
-                      <span
-                        className="shrink-0 rounded-full px-1.5 text-[10.5px] font-semibold"
-                        style={{ background: "var(--ink)", color: "var(--bg)" }}
-                      >
-                        {t.unread_count}
-                      </span>
-                    )}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── Conversation ── */}
-      <div
-        className={`flex flex-col rounded-(--r-3) overflow-hidden ${activeId || broadcastMode ? "" : "hidden md:flex"}`}
-        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-      >
-        {!activeId && !broadcastMode ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-            <span
-              className="flex h-12 w-12 items-center justify-center rounded-full"
-              style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.5 8.5 0 1 1 16-4z" />
-              </svg>
-            </span>
-            <span className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
-              No conversation selected
-            </span>
-            <span className="text-[13px] max-w-[34ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
-              Choose a conversation on the left to read and reply, or start a new one.
-            </span>
-          </div>
-        ) : (
-          <>
-            <div
-              className="flex items-center gap-3 px-4 py-3"
-              style={{ borderBottom: "1px solid var(--border)" }}
-            >
-              <button
-                type="button"
-                className="md:hidden text-[13px]"
-                style={{ color: "var(--fg-2)" }}
-                onClick={() => {
-                  setActiveId(null);
-                  setBroadcastMode(false);
-                }}
-              >
-                ← Back
-              </button>
-              <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
-                {broadcastMode
-                  ? "New announcement"
-                  : (activeThread?.counterparty?.name ?? "Conversation")}
-              </span>
-            </div>
-
-            {!broadcastMode && (
-              <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto px-4 py-4"
-                style={{ minHeight: 320, maxHeight: 460 }}
-              >
-                {loadingThread ? (
-                  <AsyncSpinner />
-                ) : messages.length === 0 ? (
-                  <div
-                    className="flex h-full items-center justify-center text-[13px]"
-                    style={{ color: "var(--fg-3)" }}
+        <ThreadList
+          threads={threads}
+          status={listStatus}
+          activeId={activeId}
+          emptyHint={emptyHint}
+          onOpen={(id) => open(id)}
+          onRetry={() => void inbox.refetch()}
+          header={
+            <div className="shrink-0 px-4 pb-3 pt-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+                  Conversations
+                </h2>
+                {broadcastOrg && (
+                  <button
+                    type="button"
+                    className="btn-ghost-v2 sm"
+                    aria-pressed={announcing}
+                    onClick={() => {
+                      if (activeId) router.replace(pathname, { scroll: false });
+                      setAnnouncing(true);
+                    }}
                   >
-                    Say hello.
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {messages.map((m) => {
-                      const mine = m.sender_id === myId;
-                      return (
-                        <div
-                          key={m._id}
-                          className="flex"
-                          style={{
-                            justifyContent: mine ? "flex-end" : "flex-start",
-                          }}
-                        >
-                          <div
-                            className="max-w-[76%] rounded-(--r-2) px-3 py-2 text-[13.5px]"
-                            style={{
-                              background: mine ? "var(--ink)" : "var(--bg-2)",
-                              color: mine ? "var(--bg)" : "var(--ink)",
-                            }}
-                          >
-                            <div style={{ whiteSpace: "pre-wrap" }}>{m.body}</div>
-                            <div
-                              className="mt-1 font-mono text-[10px]"
-                              style={{
-                                color: mine ? "var(--bg-2)" : "var(--fg-3)",
-                                textAlign: "right",
-                              }}
-                            >
-                              {timeLabel(m.created_at)}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                    Announce
+                  </button>
                 )}
               </div>
-            )}
-            {broadcastMode && (
-              <div className="flex-1 px-4 py-4 text-[13px]" style={{ color: "var(--fg-3)" }}>
-                This message is sent to every active member of your gym. They
-                can&rsquo;t reply to announcements.
-              </div>
-            )}
+            </div>
+          }
+        />
+      </div>
 
-            {(canPost || broadcastMode) && (
-              <div
-                className="flex items-end gap-2 px-3 py-3"
-                style={{ borderTop: "1px solid var(--border)" }}
-              >
-                <textarea
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      void send();
-                    }
-                  }}
-                  rows={1}
-                  placeholder={
-                    broadcastMode ? "Announcement to all members…" : "Message…"
-                  }
-                  className="flex-1 resize-none rounded-(--r-2) px-3 py-2 text-[13.5px]"
-                  style={{
-                    border: "1px solid var(--border-2)",
-                    color: "var(--ink)",
-                    background: "var(--bg)",
-                    maxHeight: 120,
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn-primary-v2 sm"
-                  disabled={!draft.trim() || sending}
-                  onClick={() => void send()}
-                >
-                  {broadcastMode ? "Send to all" : "Send"}
-                </button>
-              </div>
-            )}
-          </>
+      <div
+        className={`min-h-0 min-w-0 flex-col overflow-hidden rounded-(--r-3) ${showConversation ? "flex" : "hidden md:flex"}`}
+        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+      >
+        {announcing && broadcastOrg ? (
+          <AnnouncePanel
+            userId={userId}
+            organizationId={broadcastOrg.id}
+            gymName={broadcastOrg.name}
+            onBack={back}
+            onSent={(threadId) => {
+              setAnnouncing(false);
+              void inbox.refetch();
+              router.replace(`${pathname}?thread=${encodeURIComponent(threadId)}`, { scroll: false });
+            }}
+          />
+        ) : activeId && !validId ? (
+          <PaneMessage
+            title="This conversation isn't available"
+            body="The link may be incomplete. Choose a conversation from your list."
+            action={
+              <button type="button" className="btn-ghost-v2 sm mt-2" onClick={back}>
+                Back to conversations
+              </button>
+            }
+          />
+        ) : validId && userId ? (
+          <ThreadPane
+            key={`${validId}:${anchorSeq ?? ""}`}
+            ref={heading}
+            threadId={validId}
+            userId={userId}
+            summary={summary.data}
+            summaryMissing={summaryMissing}
+            anchorSeq={anchorSeq}
+            onBack={back}
+          />
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
+            <p className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+              No conversation selected
+            </p>
+            <p className="max-w-[34ch] text-[14px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
+              {threads.length > 0 ? "Choose a conversation to read and reply." : emptyHint}
+            </p>
+          </div>
         )}
       </div>
     </div>

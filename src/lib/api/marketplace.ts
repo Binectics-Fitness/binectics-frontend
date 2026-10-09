@@ -358,6 +358,20 @@ export interface SavedListingState {
   saved_at?: string;
 }
 
+/** GET /marketplace/my-providers: who the member already belongs to. */
+export interface MyProviders {
+  professionals: {
+    professional_id: string;
+    first_name: string | null;
+    last_name: string | null;
+    profile_picture: string | null;
+    /** Role name, e.g. "Personal Trainer" or "Dietitian". */
+    role: string | null;
+    since: string | null;
+  }[];
+  gyms: { organization_id: string; name: string | null }[];
+}
+
 export const marketplaceService = {
   // ─── Public ───
 
@@ -450,6 +464,11 @@ export const marketplaceService = {
       `/marketplace/listings/${listingId}/request`,
       data,
     );
+  },
+
+  /** The trainers, dietitians and gyms the signed-in member already belongs to. */
+  async getMyProviders(): Promise<ApiResponse<MyProviders>> {
+    return await apiClient.get<MyProviders>("/marketplace/my-providers");
   },
 
   async getMyRequests(): Promise<ApiResponse<MarketplaceRequest[]>> {

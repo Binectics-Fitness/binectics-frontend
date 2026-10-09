@@ -4,6 +4,7 @@
  */
 
 import type { User } from "@/lib/types";
+import { clearMessagingStorage } from "@/components/messaging/messagingStorage";
 
 const STORAGE_KEYS = {
   USER: "user",
@@ -153,6 +154,8 @@ export function clearAuthStorage(): void {
   tokenStorage.removeExpiry();
   refreshTokenStorage.remove();
   userStorage.remove();
+  // Unsent messages and drafts belong to the session that wrote them.
+  clearMessagingStorage();
 }
 
 /**
