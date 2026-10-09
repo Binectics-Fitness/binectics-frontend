@@ -15,6 +15,7 @@ import {
 import { DietPlanDeliveryType, PlanStatus } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import OneOffTasksCard from "@/components/programs/OneOffTasksCard";
+import { ClientReportsCard } from "@/components/progress-reports/ClientReportsCard";
 import { isTemplatePlan } from "@/app/dashboard/dietitian/meal-plans/_lib";
 
 function clientName(c: ClientProfile): string {
@@ -307,6 +308,10 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
           </div>
 
           <OneOffTasksCard clientProfileId={clientId} />
+
+          {client.is_active && (
+            <ClientReportsCard clientProfileId={clientId} clientFirstName={name.split(" ")[0] || "your client"} />
+          )}
 
           {/* Diet plans */}
           <DSCard>
