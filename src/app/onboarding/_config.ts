@@ -525,7 +525,7 @@ export const ROLES: RoleDef[] = [
       { label: "Step 03", title: "Membership plans" },
       { label: "Step 04", title: "Verification documents" },
       { label: "Step 05", title: "Connect your payments" },
-      { label: "Step 06", title: "Pick your kiosk" },
+      { label: "Step 06", title: "How check-in works" },
       { label: "Step 07", title: "Invite your staff" },
       { label: "Step 08", title: "Submit for review" },
     ],

@@ -37,10 +37,10 @@ const WORKFLOW = [
 
 const FEATURES = [
   { title: "Local currency pricing", desc: "Price in the currency your clients use. Only currencies we can charge are offered, so a price never fails at checkout." },
-  { title: "Payout dashboard", desc: "Every payment listed with date, amount, and status. Filter by period, export to CSV, or reconcile against your accounting software." },
-  { title: "Invoice generation", desc: "Automatic branded invoices for every transaction. VAT number, tax breakdown, and provider details included. PDF download or email delivery." },
-  { title: "Subscription billing", desc: "Auto-renewal with retries on failed payments, and a notice to the member before anything lapses." },
-  { title: "Refund management", desc: "Full or partial refunds from your dashboard. Refund hits the member's original payment method. No manual gateway login needed." },
+  { title: "Revenue view", desc: "Revenue totals and a daily chart on your dashboard. Each currency is shown as it was paid, never converted." },
+  { title: "Booking receipts", desc: "Every booking has a receipt page with the provider, session, amount and payment reference, which can be printed from the browser." },
+  { title: "Subscription billing", desc: "Plans can renew automatically, and members get a reminder before a membership runs out." },
+  { title: "Card or bank transfer", desc: "Members pay by card, or by bank transfer to a one-time account number. The membership starts once the payment is confirmed." },
   { title: "Fraud protection", desc: "3D Secure on card transactions, plus the payment provider's own fraud tools." },
 ];
 

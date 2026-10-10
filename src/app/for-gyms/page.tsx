@@ -293,7 +293,7 @@ export default function ForGymsPage() {
           className="text-[16px] sm:text-[17px] max-w-[50ch] mx-auto leading-[1.5] mb-7"
           style={{ color: "var(--fg-2)" }}
         >
-          Create a free account and see the dashboard in under 10 minutes.
+          Create a free account and see your dashboard straight away.
           No credit card required.
         </p>
         <Link href="/login?mode=signup&role=gym" className="btn-primary-v2 lg">

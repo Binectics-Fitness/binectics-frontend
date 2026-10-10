@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
@@ -35,13 +36,11 @@ import type {
   Organization,
   UpdateOrganizationRequest,
   BookingRules,
-  KioskSettings,
   PayoutSchedule,
   PayoutFrequency,
 } from "@/lib/api/teams";
 import {
   DEFAULT_BOOKING_RULES,
-  DEFAULT_KIOSK_SETTINGS,
   DEFAULT_PAYOUT_SCHEDULE,
   PAYOUT_WEEKDAYS,
 } from "@/lib/constants/orgSettingsDefaults";
@@ -60,13 +59,6 @@ const BOOKING_TOGGLE_DEFS = [
   { key: "cancellation_fee" as const, t: "Charge cancellation fee within 24h", s: "50% of session price. Reasonable exceptions waived by support team." },
   { key: "allow_video_recording" as const, t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review." },
   { key: "public_reviews" as const, t: "Public reviews on listing", s: "Strongly recommended · drives 3.4× more bookings vs hidden." },
-];
-
-const KIOSK_TOGGLE_DEFS = [
-  { key: "qr_checkin_from_phones" as const, t: "Allow QR check‑in from members’ phones", s: "If off, only the kiosk’s camera can scan member codes." },
-  { key: "success_animation" as const, t: "Show success animation on check‑in", s: "The 2‑second celebration the system is known for. Off only if you must." },
-  { key: "auto_sleep" as const, t: "Auto‑sleep after 60 seconds idle", s: "Saves screen burn‑in on always‑on iPads." },
-  { key: "voice_announcement" as const, t: "Voice announcement on successful check‑in", s: "“Welcome, Linda.” Useful at busy 6am rushes, can be intrusive at 8pm." },
 ];
 
 const INPUT_STYLE = {
@@ -99,7 +91,6 @@ interface SettingsForm {
   tax_inclusive: boolean;
   tax_label: string;
   booking_rules: BookingRules;
-  kiosk_settings: KioskSettings;
   payout_schedule: PayoutSchedule;
 }
 
@@ -122,7 +113,6 @@ function seedForm(org: Organization): SettingsForm {
     tax_inclusive: org.tax_inclusive ?? true,
     tax_label: org.tax_label ?? "VAT",
     booking_rules: { ...DEFAULT_BOOKING_RULES, ...(org.booking_rules ?? {}) },
-    kiosk_settings: { ...DEFAULT_KIOSK_SETTINGS, ...(org.kiosk_settings ?? {}) },
     payout_schedule: { ...DEFAULT_PAYOUT_SCHEDULE, ...(org.payout_schedule ?? {}) },
   };
 }
@@ -236,8 +226,6 @@ export function SettingsClient() {
 
   const setBooking = (patch: Partial<BookingRules>) =>
     setForm((f) => (f ? { ...f, booking_rules: { ...f.booking_rules, ...patch } } : f));
-  const setKiosk = (patch: Partial<KioskSettings>) =>
-    setForm((f) => (f ? { ...f, kiosk_settings: { ...f.kiosk_settings, ...patch } } : f));
   const setPayout = (patch: Partial<PayoutSchedule>) =>
     setForm((f) => (f ? { ...f, payout_schedule: { ...f.payout_schedule, ...patch } } : f));
 
@@ -401,18 +389,21 @@ export function SettingsClient() {
             disabled={!form}
           />
 
-          {/* Kiosk & QR */}
-          <WiredToggleSection
-            id="kiosk"
-            title="Kiosk & QR"
-            desc="Hardware and behaviour for the iPads at your front desks."
-            items={KIOSK_TOGGLE_DEFS.map((d) => ({
-              ...d,
-              on: form?.kiosk_settings[d.key] ?? DEFAULT_KIOSK_SETTINGS[d.key],
-              onToggle: () => form && setKiosk({ [d.key]: !form.kiosk_settings[d.key] }),
-            }))}
-            disabled={!form}
-          />
+          {/* Kiosk & QR. The kiosk has no settings of its own yet; this
+              explains how check-in works and links to the kiosk page. */}
+          <section id="kiosk">
+            <SectionHeading title="Kiosk & QR" desc="Check-in runs in a web browser, so there is nothing to install or pair." />
+            <DSCard className="flex flex-col gap-3 p-5.5">
+              <p className="text-[14px] leading-relaxed max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
+                Open the check-in kiosk on any tablet, phone or computer at your door and leave it on. It shows a QR code that changes every minute. Members scan it with the Binectics app or their phone camera, and only members with an active plan are let in.
+              </p>
+              <div>
+                <Link href="/dashboard/gym-owner/kiosk" className="btn-ghost-v2 sm">
+                  Open check-in kiosk
+                </Link>
+              </div>
+            </DSCard>
+          </section>
 
           {/* Notifications — per-event channel matrix, saves per toggle */}
           <NotificationsSection />
