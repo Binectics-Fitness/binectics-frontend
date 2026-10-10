@@ -372,14 +372,9 @@ function OnboardingContent() {
             preferred_payout_gateway: payout,
           });
         }
-      } else if (currentStep === 6) {
-        // Kiosk preference — use visual default ('existing') if user never interacted
-        const kiosk = (stepData.kiosk as string) || 'existing';
-        await teamsService.updateOrganization(orgId, {
-          kiosk_preference: kiosk,
-        });
       } else if (currentStep === 7) {
-        // Staff invites
+        // Staff invites. (Step 6 only explains how check-in works and has
+        // no branch: it used to save kiosk_preference, which nothing read.)
         const emails = ((stepData.staffEmails as string) || '')
           .split(/[\n,]/)
           .map((e) => e.trim())
@@ -941,7 +936,7 @@ function OnboardingContent() {
         <div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 10 }}>Why we ask</div>
           <p style={{ fontSize: "12.5px", color: "var(--fg-3)", lineHeight: 1.6 }}>
-            Members see a verified badge on your profile only after ID and certification are confirmed by our team. Verified providers earn 3.4x more trust from reviewers, so we move quickly. Most are approved in under 48 hours.
+            Members see a verified badge on your profile only after ID and certification are confirmed by our team.
           </p>
         </div>
       </aside>

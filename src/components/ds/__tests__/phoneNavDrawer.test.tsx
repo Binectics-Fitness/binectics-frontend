@@ -379,11 +379,11 @@ describe("member shell phone menu", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("closes at the md breakpoint (48rem), stays closed on the way back, and focuses <main>", async () => {
+  it("closes at the lg breakpoint (64rem; eight links overflow a 768px tablet row), stays closed on the way back, and focuses <main>", async () => {
     const user = userEvent.setup();
     mountMember();
     await user.click(trigger());
-    expect(window.matchMedia).toHaveBeenCalledWith("(min-width: 48rem)");
+    expect(window.matchMedia).toHaveBeenCalledWith("(min-width: 64rem)");
     trigger().style.display = "none";
     resizeTo(true);
     expect(screen.queryByRole("dialog")).toBeNull();

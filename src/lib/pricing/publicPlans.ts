@@ -138,7 +138,6 @@ export const FEATURE_LABELS: readonly { key: keyof ProviderBillingFeatures; labe
   { key: "white_label_enabled", label: "White-label branding" },
   { key: "custom_domain_enabled", label: "Custom domain" },
   { key: "branded_email_enabled", label: "Branded email" },
-  { key: "api_access_enabled", label: "API access" },
 ];
 
 /** "Up to 250 active members", "1 marketplace listing", "Unlimited staff seats", "No staff seats". */
