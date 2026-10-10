@@ -344,8 +344,8 @@ export default function ForTrainersPage() {
           className="text-[16px] sm:text-[17px] max-w-[46ch] mx-auto leading-[1.5] mb-7"
           style={{ color: "var(--fg-2)" }}
         >
-          Create your profile in under 10 minutes. Start showing up in
-          marketplace results today.
+          Create your profile and start showing up in marketplace
+          results.
         </p>
         <Link href="/login?mode=signup&role=trainer" className="btn-primary-v2 lg">
           List your practice, free
