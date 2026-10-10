@@ -936,7 +936,7 @@ function OnboardingContent() {
         <div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 10 }}>Why we ask</div>
           <p style={{ fontSize: "12.5px", color: "var(--fg-3)", lineHeight: 1.6 }}>
-            Members see a verified badge on your profile only after ID and certification are confirmed by our team. Verified providers earn 3.4x more trust from reviewers, so we move quickly. Most are approved in under 48 hours.
+            Members see a verified badge on your profile only after ID and certification are confirmed by our team.
           </p>
         </div>
       </aside>

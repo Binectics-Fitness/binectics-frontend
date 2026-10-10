@@ -62,7 +62,7 @@ export function TrainerStep2({ data, setField }: StepProps) {
 export function TrainerStep3({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 03 of 06, trainer track" title="Upload your certifications." desc="Verified providers convert 3.4x better. We re-check every 24 months." />
+      <StageHead crumb="Step 03 of 06, trainer track" title="Upload your certifications." desc="Members see a verified badge once our team has confirmed them." />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <UploadZone
           title="Primary certification"

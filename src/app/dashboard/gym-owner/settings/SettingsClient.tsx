@@ -6,7 +6,7 @@ import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { NotificationsSection } from "./NotificationsSection";
-import { RolesSection, ApiKeysSection } from "./TeamAccessSections";
+import { RolesSection } from "./TeamAccessSections";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useOrganizationDetails,
@@ -49,7 +49,7 @@ const SECTIONS = [
   { group: "Business", items: [{ id: "org", label: "Organization" }, { id: "currency", label: "Currency & locale" }, { id: "tax", label: "Tax & VAT" }] },
   { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
   { group: "Money", items: [{ id: "gateways", label: "Payment gateways" }, { id: "payouts", label: "Payout schedule" }] },
-  { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }, { id: "api", label: "API access" }] },
+  { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }] },
 ];
 
 /** Booking toggles — key maps to a boolean on BookingRules (fee is derived). */
@@ -58,7 +58,7 @@ const BOOKING_TOGGLE_DEFS = [
   { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: "Standard health history form. Sent automatically before first session." },
   { key: "cancellation_fee" as const, t: "Charge cancellation fee within 24h", s: "50% of session price. Reasonable exceptions waived by support team." },
   { key: "allow_video_recording" as const, t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review." },
-  { key: "public_reviews" as const, t: "Public reviews on listing", s: "Strongly recommended · drives 3.4× more bookings vs hidden." },
+  { key: "public_reviews" as const, t: "Public reviews on listing", s: "Members see ratings and reviews on your listing page." },
 ];
 
 const INPUT_STYLE = {
@@ -437,9 +437,6 @@ export function SettingsClient() {
 
           {/* Roles & scopes — read-only summary, managed at /dashboard/team */}
           <RolesSection />
-
-          {/* API access — issue, list, revoke org API keys */}
-          <ApiKeysSection />
 
           {isLoading && (
             <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your organization…</p>
