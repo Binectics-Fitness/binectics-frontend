@@ -23,6 +23,26 @@ const PROVIDER_CLIENTS: ByRole = {
   ADMIN: "/admin/dashboard",
 };
 
+/** Each role's messages page. Admins have none. */
+export const MESSAGES_PATHS: Readonly<Record<Exclude<Role, "ADMIN">, string>> = {
+  USER: "/dashboard/messages",
+  TRAINER: "/dashboard/trainer/messages",
+  DIETITIAN: "/dashboard/dietitian/messages",
+  GYM_OWNER: "/dashboard/gym-owner/messages",
+};
+
+/**
+ * The messages page for this role, with a thread open when the id is a
+ * well-formed ObjectId. Message notifications all link to the member page
+ * (`/dashboard/messages?thread=<id>`); this sends providers to their own.
+ */
+export function messagesHref(role: string | null | undefined, threadId?: string | null): string {
+  const base = MESSAGES_PATHS[(role ?? "") as keyof typeof MESSAGES_PATHS] ?? MESSAGES_PATHS.USER;
+  return threadId && /^[a-f0-9]{24}$/i.test(threadId)
+    ? `${base}?thread=${threadId}`
+    : base;
+}
+
 /**
  * Where a legacy address goes for this role, or null when the address is
  * not one of them (a real page). Query strings are dropped: the pages they
@@ -37,6 +57,13 @@ export function legacyLinkTarget(
   const params = new URLSearchParams(search);
   const path = pathname.replace(/\/+$/, "") || "/";
 
+  if (path === "/dashboard/messages") {
+    // A real page for members; every provider role has its own inbox.
+    if (role === "TRAINER" || role === "DIETITIAN" || role === "GYM_OWNER") {
+      return messagesHref(role, params.get("thread"));
+    }
+    return null;
+  }
   if (path === "/dashboard/subscriptions") {
     return pick({ ...PROVIDER_CLIENTS, USER: "/dashboard/member/billing" }, role);
   }

@@ -24,6 +24,7 @@ vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
 }));
 vi.mock("@/components/messaging/StartConversationButton", () => ({ StartConversationButton: () => null }));
+vi.mock("@/components/messaging/MyCoachesCard", () => ({ MyCoachesCard: () => null }));
 
 const NOW = new Date(2026, 9, 7, 10, 0, 0); // Wed 7 Oct 2026, local
 const at = (daysAgo: number, h = 8) =>

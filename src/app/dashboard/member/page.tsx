@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
+import { MyCoachesCard } from "@/components/messaging/MyCoachesCard";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { IconTile } from "@/components/ds/IconTile";
@@ -319,6 +320,8 @@ function MemberHomeContent() {
               </div>
             </DSCard>
           )}
+
+          <MyCoachesCard className={CARD_PAD} />
 
           <DSCard className={CARD_PAD}>
             <div className="flex items-center justify-between mb-3">
