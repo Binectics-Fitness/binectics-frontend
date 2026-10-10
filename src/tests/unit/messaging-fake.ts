@@ -42,6 +42,7 @@ const READ_ONLY_CODE: Record<ReadOnlyReason, MessagingErrorCode> = {
   [ReadOnlyReason.BLOCKED]: MessagingErrorCode.BLOCKED,
   [ReadOnlyReason.ANNOUNCEMENTS_ONLY]: MessagingErrorCode.ANNOUNCEMENTS_ONLY,
   [ReadOnlyReason.UNAVAILABLE]: MessagingErrorCode.UNAVAILABLE,
+  [ReadOnlyReason.MOVED_TO_GYM_INBOX]: MessagingErrorCode.MOVED_TO_GYM_INBOX,
 };
 
 const fail = <T>(status: number | undefined, code?: string, message = "refused"): ApiResponse<T> => ({
@@ -227,6 +228,15 @@ export function createMessagingFake({ settle = 2 }: { settle?: number } = {}) {
       }
       if (t.readOnly) return fail<ChatMessage>(403, READ_ONLY_CODE[t.readOnly]);
       return { success: true, data: push(threadId, MessageSide.MINE, payload.body, payload.client_message_id) };
+    },
+    startThread: async (payload: { organization_id?: string; recipient_user_id?: string }) => {
+      calls.push({ method: "startThread", args: [payload] });
+      const org = payload.organization_id;
+      const existing = [...threads.values()].find((t) => t.summary.kind === ThreadKind.GYM && t.summary.organization_id === org);
+      const id =
+        existing?.summary._id ??
+        addThread({ title: "Dapo Fitness Hub", kind: ThreadKind.GYM, my_role: ThreadRole.MEMBER, organization_id: org ?? null });
+      return { success: true, data: { thread_id: id, thread: summary(threads.get(id)!) } };
     },
     markRead: async (threadId: string, upToSeq: number) => {
       calls.push({ method: "markRead", args: [threadId, upToSeq] });

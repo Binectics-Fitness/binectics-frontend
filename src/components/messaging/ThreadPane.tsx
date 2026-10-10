@@ -5,6 +5,7 @@ import { AsyncSpinner } from "@/components/ds";
 import { ReadOnlyReason, ThreadKind, ThreadRole, type ThreadState, type ThreadSummary } from "@/lib/api/messaging";
 import { Avatar } from "./Avatar";
 import { Composer } from "./Composer";
+import { MovedToGymNotice } from "./MovedToGymNotice";
 import { readOnlyCopy } from "./format";
 import { Transcript } from "./Transcript";
 import { highestSeq } from "./transcriptModel";
@@ -170,6 +171,8 @@ export const ThreadPane = forwardRef<
               }
               onSend={(text) => sync.send(text)}
             />
+          ) : state.read_only_reason === ReadOnlyReason.MOVED_TO_GYM_INBOX ? (
+            <MovedToGymNotice organizationId={summary?.moved_to_organization_id ?? null} title={title} />
           ) : (
             <p
               className="shrink-0 px-4 py-4 text-center text-[14px] leading-normal md:px-5"

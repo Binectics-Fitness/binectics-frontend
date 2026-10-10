@@ -13,17 +13,22 @@ import { StartConversationButton } from "./StartConversationButton";
  * to write first). The server decides who may be messaged; a refusal shows
  * as a toast from StartConversationButton.
  */
-export function MyCoachesCard({ className }: { className?: string }) {
+/** Who the signed-in member belongs to (GET /marketplace/my-providers). */
+export function useMyProviders(enabled = true) {
   const { user } = useAuth();
-  const { data } = useQuery({
+  return useQuery({
     queryKey: ["marketplace", user?.id ?? "", "my-providers"],
-    enabled: Boolean(user?.id),
+    enabled: enabled && Boolean(user?.id),
     queryFn: async () => {
       const res = await marketplaceService.getMyProviders();
       if (!res.success || !res.data) throw new Error(res.message ?? "Couldn't load your providers");
       return res.data;
     },
   });
+}
+
+export function MyCoachesCard({ className }: { className?: string }) {
+  const { data } = useMyProviders();
   const pros = data?.professionals ?? [];
   if (pros.length === 0) return null;
 

@@ -124,8 +124,12 @@ export function gymNameFromTitle(title: string): string {
 }
 
 /** Composer replacement copy for a read-only thread (CONTRACT §11). */
-export function readOnlyCopy(reason: ReadOnlyReason, threadTitle: string): string {
+export function readOnlyCopy(reason: ReadOnlyReason, threadTitle: string, gymName?: string | null): string {
   switch (reason) {
+    case ReadOnlyReason.MOVED_TO_GYM_INBOX:
+      return gymName
+        ? `This conversation has moved to ${gymName}'s inbox. You can still read it here.`
+        : "This conversation has moved to the gym's inbox. You can still read it here.";
     case ReadOnlyReason.RELATIONSHIP_ENDED:
       return "This conversation has ended. You can still read it, but not send new messages.";
     case ReadOnlyReason.BLOCKED:

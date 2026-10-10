@@ -27,6 +27,8 @@ export enum ReadOnlyReason {
   BLOCKED = "blocked",
   ANNOUNCEMENTS_ONLY = "announcements_only",
   UNAVAILABLE = "unavailable",
+  /** A past member↔gym-owner conversation, frozen when the gym inbox opened (owner ruling, Oct 10). */
+  MOVED_TO_GYM_INBOX = "moved_to_gym_inbox",
 }
 
 export enum MessageSide {
@@ -44,6 +46,7 @@ export enum MessagingErrorCode {
   BLOCKED = "MESSAGING_BLOCKED",
   ANNOUNCEMENTS_ONLY = "MESSAGING_ANNOUNCEMENTS_ONLY",
   UNAVAILABLE = "MESSAGING_UNAVAILABLE",
+  MOVED_TO_GYM_INBOX = "MESSAGING_MOVED_TO_GYM_INBOX",
   NOT_SENDER = "MESSAGING_NOT_SENDER",
   EDIT_WINDOW_CLOSED = "MESSAGING_EDIT_WINDOW_CLOSED",
   REACTIONS_DISABLED = "MESSAGING_REACTIONS_DISABLED",
@@ -57,12 +60,13 @@ export enum MessagingErrorCode {
   BUSY = "MESSAGING_BUSY",
 }
 
-/** The four refusals that mean "this side can't write here" (CONTRACT §0). */
+/** The refusals that mean "this side can't write here" (CONTRACT §0). */
 export const READ_ONLY_CODES: Readonly<Record<string, ReadOnlyReason>> = {
   [MessagingErrorCode.RELATIONSHIP_ENDED]: ReadOnlyReason.RELATIONSHIP_ENDED,
   [MessagingErrorCode.BLOCKED]: ReadOnlyReason.BLOCKED,
   [MessagingErrorCode.ANNOUNCEMENTS_ONLY]: ReadOnlyReason.ANNOUNCEMENTS_ONLY,
   [MessagingErrorCode.UNAVAILABLE]: ReadOnlyReason.UNAVAILABLE,
+  [MessagingErrorCode.MOVED_TO_GYM_INBOX]: ReadOnlyReason.MOVED_TO_GYM_INBOX,
 };
 
 export enum ReactionKey {
@@ -121,6 +125,11 @@ export interface ThreadSummary extends ThreadState {
   as_gym: { organization_id: string; name: string } | null;
   last_message: LastMessagePreview | null;
   unread_count: number;
+  /**
+   * With read_only_reason 'moved_to_gym_inbox': the gym to message instead,
+   * or null when the member was at several of the owner's gyms.
+   */
+  moved_to_organization_id?: string | null;
 }
 
 export interface MessageAuthor {

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MessageSide, ReadOnlyReason, ThreadKind, ThreadRole } from "@/lib/api/messaging";
+import { marketplaceService } from "@/lib/api/marketplace";
 import { MessagingCenter } from "@/components/messaging/MessagingCenter";
 import { clearMessagingStorage } from "@/components/messaging/messagingStorage";
 import { syncIfOpen } from "@/components/messaging/openThread";
@@ -37,6 +38,9 @@ vi.mock("next/navigation", async () => {
 });
 
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: ME, role: "USER" } }) }));
+
+const orgs = vi.hoisted(() => ({ list: [] as { _id: string; name: string; owner_id: string }[] }));
+vi.mock("@/contexts/OrganizationContext", () => ({ useOrganization: () => ({ organizations: orgs.list }) }));
 
 const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
 vi.mock("@/components/Toast", () => ({ toast: Object.assign(vi.fn(), toasts) }));
@@ -74,6 +78,7 @@ beforeEach(() => {
   });
   clearMessagingStorage();
   sessionStorage.clear();
+  orgs.list = [];
   toasts.success.mockClear();
   toasts.error.mockClear();
   nav.push.mockClear();
@@ -268,6 +273,82 @@ describe("MessagingCenter: read-only states (web W11)", () => {
     nav.set(`/dashboard/messages?thread=${t}`);
     mount();
     expect(await screen.findByText("Only Dapo Fitness Hub can post announcements.")).toBeInTheDocument();
+  });
+});
+
+describe("past member↔gym-owner conversations (owner ruling, Oct 10)", () => {
+  const GYM = "f".repeat(24);
+  const gymProviders = () =>
+    vi.spyOn(marketplaceService, "getMyProviders").mockResolvedValue({
+      success: true,
+      data: { professionals: [], gyms: [{ organization_id: GYM, name: "Dapo Fitness Hub" }] },
+    });
+
+  it("the member reads it, can't write, and Message <Gym> opens the gym's inbox, which starts empty", async () => {
+    setup();
+    gymProviders();
+    const old = fake.addThread({ title: "Dapo Ade", moved_to_organization_id: GYM }, ReadOnlyReason.MOVED_TO_GYM_INBOX);
+    fake.receive(old, "Old chat with the owner");
+    nav.set(`/dashboard/messages?thread=${old}`);
+    mount();
+    expect(await within(await screen.findByRole("log")).findByText("Old chat with the owner")).toBeInTheDocument();
+    expect(
+      await screen.findByText("This conversation has moved to Dapo Fitness Hub's inbox. You can still read it here."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Message Dapo Fitness Hub" }));
+    await waitFor(() => expect(fake.calls.find((c) => c.method === "startThread")?.args[0]).toEqual({ organization_id: GYM }));
+    const gymThread = [...fake.threads.values()].find((t) => t.summary.kind === ThreadKind.GYM)!.summary._id;
+    await waitFor(() => expect(nav.get().get("thread")).toBe(gymThread));
+    expect(await screen.findByText("No messages yet. Write the first one below.")).toBeInTheDocument();
+    fireEvent.change(composer(), { target: { value: "Hi gym" } });
+    fireEvent.keyDown(composer(), { key: "Enter" });
+    await waitFor(() => expect(fake.threads.get(gymThread)!.messages.map((m) => m.body)).toEqual(["Hi gym"]));
+  });
+
+  it("shows a neutral notice with no action when no single gym can be named", async () => {
+    setup();
+    const old = fake.addThread({ title: "Dapo Ade", moved_to_organization_id: null }, ReadOnlyReason.MOVED_TO_GYM_INBOX);
+    fake.receive(old, "older");
+    nav.set(`/dashboard/messages?thread=${old}`);
+    mount();
+    expect(
+      await screen.findByText("This conversation has moved to the gym's inbox. You can still read it here."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Message / })).not.toBeInTheDocument();
+  });
+
+  it("the owner sees it read-only with the gym named and no action", async () => {
+    setup();
+    orgs.list = [{ _id: GYM, name: "Dapo Fitness Hub", owner_id: ME }];
+    const providers = vi.spyOn(marketplaceService, "getMyProviders");
+    const old = fake.addThread({ title: "Yemi Balogun", moved_to_organization_id: GYM }, ReadOnlyReason.MOVED_TO_GYM_INBOX);
+    fake.receive(old, "a question from before");
+    nav.set(`/dashboard/messages?thread=${old}`);
+    mount();
+    expect(
+      await screen.findByText("This conversation has moved to Dapo Fitness Hub's inbox. You can still read it here."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Message / })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(providers).not.toHaveBeenCalled();
+  });
+
+  it("a send refused with MESSAGING_MOVED_TO_GYM_INBOX turns the thread read-only", async () => {
+    setup();
+    gymProviders();
+    const t = fake.addThread({ title: "Dapo Ade", moved_to_organization_id: GYM });
+    fake.receive(t, "hi");
+    nav.set(`/dashboard/messages?thread=${t}`);
+    mount();
+    await within(await screen.findByRole("log")).findByText("hi");
+    fake.setReadOnly(t, ReadOnlyReason.MOVED_TO_GYM_INBOX);
+    fireEvent.change(composer(), { target: { value: "late" } });
+    fireEvent.keyDown(composer(), { key: "Enter" });
+    expect(await screen.findByRole("button", { name: "Message Dapo Fitness Hub" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
   });
 });
 
