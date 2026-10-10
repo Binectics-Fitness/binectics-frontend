@@ -23,14 +23,17 @@ interface EyebrowProps {
   /** Element to render; a div by default. */
   as?: ElementType;
   id?: string;
+  /** With as="label": the control this labels. */
+  htmlFor?: string;
   className?: string;
 }
 
-export function Eyebrow({ children, tone, muted, as: Tag = "div", id, className = "" }: EyebrowProps) {
+export function Eyebrow({ children, tone, muted, as: Tag = "div", id, htmlFor, className = "" }: EyebrowProps) {
   const resolved: EyebrowTone = tone ?? (muted ? "muted" : "default");
   return (
     <Tag
       id={id}
+      htmlFor={htmlFor}
       data-tone={resolved}
       className={`font-mono text-[11px] uppercase tracking-[0.06em] ${className}`}
       style={{ color: TONE_COLOR[resolved] }}
