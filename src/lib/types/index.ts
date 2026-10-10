@@ -767,6 +767,10 @@ export enum RecommendationPlanType {
 }
 
 // ==================== Loyalty & Rewards ====================
+//
+// Loyalty is each provider's own opt-in program. Points are earned with one
+// provider and spend only on that provider's rewards; there is no
+// Binectics-wide balance or reward catalogue.
 
 export enum LoyaltyEventType {
   SUBSCRIPTION_PURCHASE = "subscription_purchase",
@@ -817,6 +821,7 @@ export interface LoyaltyRedemption {
   _id: string;
   user_id: string;
   reward_id: string | LoyaltyReward;
+  organization_id?: string | null;
   points_spent: number;
   status: LoyaltyRedemptionStatus;
   redemption_code?: string;
@@ -826,25 +831,62 @@ export interface LoyaltyRedemption {
   updated_at: string;
 }
 
-export interface LoyaltyBalance {
+/**
+ * One provider program a member can see (GET /loyalty/programs): a provider
+ * they belong to or hold points with, that has loyalty turned on.
+ */
+export interface LoyaltyProgram {
+  organization_id: string;
+  organization_name: string;
+  account_type: string | null;
   balance: number;
+  /** Their membership there opens the door today; redeeming needs it. */
+  is_member: boolean;
 }
 
-export interface CreateLoyaltyRewardRequest {
+export interface LoyaltyBalance {
+  balance: number;
+  /**
+   * Whether a program exists: for one provider, that it is on (off is a
+   * 404); without one, that any of the member's providers runs one.
+   */
+  enabled?: boolean;
+  programs?: LoyaltyProgram[];
+}
+
+/** A provider's own switch (GET/PATCH /loyalty/organizations/:id/settings). */
+export interface LoyaltySettings {
+  organization_id: string;
+  enabled: boolean;
+  updated_at: string | null;
+}
+
+/** The fields a provider sets on one of its rewards. */
+export interface LoyaltyRewardInput {
   name: string;
   description?: string;
   points_cost: number;
   image_url?: string;
-  organization_id?: string;
   max_redemptions?: number;
   is_active?: boolean;
 }
 
-export type UpdateLoyaltyRewardRequest = Partial<CreateLoyaltyRewardRequest>;
+/** Admin (support) create: always inside one provider's program. */
+export interface CreateLoyaltyRewardRequest extends LoyaltyRewardInput {
+  organization_id: string;
+}
+
+export type UpdateLoyaltyRewardRequest = Partial<LoyaltyRewardInput>;
 
 export interface AdjustPointsRequest {
+  organization_id: string;
   points: number;
   reason: string;
+}
+
+export interface AdminLoyaltyBalances {
+  programs: Array<{ organization_id: string; balance: number; enabled: boolean }>;
+  unattributed: number;
 }
 
 // ==================== Assignment Rules ====================
