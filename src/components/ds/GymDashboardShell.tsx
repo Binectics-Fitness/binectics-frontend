@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 import { UserRole } from "@/lib/types";
-import { ProviderShell, SidebarIcon as I, type NavSection } from "./ProviderShell";
+import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
+import { useMessagingUnread } from "@/components/messaging/queries";
 
 const SIDEBAR: NavSection[] = [
   { label: "Operate", items: [
@@ -44,6 +45,7 @@ export interface GymDashboardShellProps {
 }
 
 export function GymDashboardShell({ activeItem, crumb, actions, children }: GymDashboardShellProps) {
+  const unreadMessages = useMessagingUnread();
   return (
     <ProviderShell
       activeItem={activeItem}
@@ -51,7 +53,7 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
       actions={actions}
       config={{
         role: UserRole.GYM_OWNER,
-        sections: SIDEBAR,
+        sections: withNavBadge(SIDEBAR, "Messages", unreadMessages),
         identity: "org",
         tone: { avatarBg: "var(--gym)", avatarColor: "oklch(0.98 0 0)", chipSquare: true },
         settingsHref: "/dashboard/settings",

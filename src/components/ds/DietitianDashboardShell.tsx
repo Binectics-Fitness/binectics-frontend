@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { UserRole } from "@/lib/types";
 import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
 import { usePendingListingRequestCount } from "@/lib/queries/marketplace";
+import { useMessagingUnread } from "@/components/messaging/queries";
 
 const SIDEBAR: NavSection[] = [
   { label: "Practice", items: [
@@ -37,6 +38,7 @@ export interface DietitianDashboardShellProps {
 
 export function DietitianDashboardShell({ activeItem, crumb, actions, children }: DietitianDashboardShellProps) {
   const pendingRequests = usePendingListingRequestCount();
+  const unreadMessages = useMessagingUnread();
   return (
     <ProviderShell
       activeItem={activeItem}
@@ -44,7 +46,7 @@ export function DietitianDashboardShell({ activeItem, crumb, actions, children }
       actions={actions}
       config={{
         role: UserRole.DIETITIAN,
-        sections: withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"),
+        sections: withNavBadge(withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"), "Inbox", unreadMessages),
         identity: "user",
         tone: { avatarBg: "var(--dietitian-soft)", avatarColor: "var(--dietitian)" },
         settingsHref: "/dashboard/dietitian/settings",

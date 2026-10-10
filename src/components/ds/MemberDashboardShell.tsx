@@ -7,6 +7,7 @@ import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { openCommandBar } from "@/hooks/useCommandBar";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
+import { useMessagingUnread } from "@/components/messaging/queries";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -30,6 +31,20 @@ const NAV_LINKS = [
   { label: "Requests",    href: "/dashboard/member/requests" },
 ];
 
+/* ── Unread count on the Messages link ── */
+function NavCount({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className="ml-1.5 inline-block rounded-full px-1.5 font-mono text-[11px] tabular-nums"
+      style={{ background: "var(--ink)", color: "var(--bg)" }}
+    >
+      {count > 99 ? "99+" : count}
+      <span className="sr-only"> unread</span>
+    </span>
+  );
+}
+
 /* ── Props ── */
 interface MemberDashboardShellProps {
   activeLabel: string;
@@ -40,6 +55,7 @@ interface MemberDashboardShellProps {
 /* ── Component ── */
 export function MemberDashboardShell({ activeLabel, children, actions }: MemberDashboardShellProps) {
   const { user, logout } = useAuth();
+  const unreadMessages = useMessagingUnread();
   const memberInitials =
     `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase() || "··";
   // Phone menu: a modal dialog (focus trap, Escape, inert page, scroll lock),
@@ -105,6 +121,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                   }}
                 >
                   {link.label}
+                  {link.href === "/dashboard/messages" && <NavCount count={unreadMessages} />}
                 </Link>
               );
             })}
@@ -287,6 +304,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                     }}
                   >
                     {link.label}
+                    {link.href === "/dashboard/messages" && <NavCount count={unreadMessages} />}
                   </Link>
                 );
               })}

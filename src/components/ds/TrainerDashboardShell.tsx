@@ -5,6 +5,7 @@ import { UserRole } from "@/lib/types";
 import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
 import { usePendingListingRequestCount } from "@/lib/queries/marketplace";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
+import { useMessagingUnread } from "@/components/messaging/queries";
 
 /**
  * What a gym's staff trainer doesn't get: members find them through the
@@ -48,6 +49,7 @@ export interface TrainerDashboardShellProps {
 export function TrainerDashboardShell({ activeItem, crumb, actions, children }: TrainerDashboardShellProps) {
   const pendingRequests = usePendingListingRequestCount();
   const gym = useCoachingGym();
+  const unreadMessages = useMessagingUnread();
   return (
     <ProviderShell
       activeItem={activeItem}
@@ -55,7 +57,7 @@ export function TrainerDashboardShell({ activeItem, crumb, actions, children }: 
       actions={actions}
       config={{
         role: UserRole.TRAINER,
-        sections: sidebarFor(withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"), Boolean(gym)),
+        sections: sidebarFor(withNavBadge(withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"), "Inbox", unreadMessages), Boolean(gym)),
         chipNote: gym ? `Coaching at ${gym.name}` : undefined,
         identity: "user",
         tone: { avatarBg: "var(--trainer-soft)", avatarColor: "var(--trainer-ink)" },
