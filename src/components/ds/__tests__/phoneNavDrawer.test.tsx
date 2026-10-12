@@ -21,6 +21,7 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "a-1", role: "ADMIN", first_name: "Ada" }, isLoading: false, logout: vi.fn() }),
 }));
 vi.mock("../ShellNotificationBell", () => ({ ShellNotificationBell: () => null }));
+vi.mock("@/components/messaging/queries", () => ({ useMessagingUnread: () => 0 }));
 vi.mock("@/hooks/useCommandBar", () => ({ openCommandBar: vi.fn() }));
 
 /** A controllable (min-width: 64rem) media query. */

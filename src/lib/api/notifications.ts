@@ -96,6 +96,8 @@ export interface NotificationPreferences {
   inAppMessages: boolean;
   inAppReminders: boolean;
   inAppPromotions: boolean;
+  /** Message pushes include the message text (off: "New message from <name>"). */
+  pushMessagePreviews?: boolean;
 }
 
 // ─── Service ────────────────────────────────────────────────────

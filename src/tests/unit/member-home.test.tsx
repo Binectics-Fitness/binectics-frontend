@@ -24,6 +24,7 @@ vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
 }));
 vi.mock("@/components/messaging/StartConversationButton", () => ({ StartConversationButton: () => null }));
+vi.mock("@/components/messaging/MyCoachesCard", () => ({ MyCoachesCard: () => null }));
 // Covered in its own test (it needs a QueryClient); not part of this page's layout checks.
 vi.mock("@/app/dashboard/member/_components/EnrollmentOffersCard", () => ({ EnrollmentOffersCard: () => null }));
 

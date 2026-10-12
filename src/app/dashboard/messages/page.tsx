@@ -12,7 +12,7 @@ export default function MessagesPage() {
   return (
     <MemberDashboardShell activeLabel="Messages">
       <Suspense fallback={null}>
-        <MessagingCenter />
+        <MessagingCenter emptyHint="Messages with your gym, trainer or dietitian appear here. Start one from their card on your home page." />
       </Suspense>
     </MemberDashboardShell>
   );

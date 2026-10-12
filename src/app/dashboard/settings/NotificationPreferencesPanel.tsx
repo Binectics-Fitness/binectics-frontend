@@ -229,6 +229,25 @@ export default function NotificationPreferencesPanel() {
           </p>
         )}
 
+        {prefs && (
+          <div className="flex justify-between gap-3.5 border-t border-border pt-4.5">
+            <div className="flex-1">
+              <div className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>
+                Show message text in notifications
+              </div>
+              <div className="mt-0.75 max-w-[56ch] text-[12.5px] leading-normal" style={{ color: "var(--fg-3)" }}>
+                When this is off, a message notification only says who wrote, so nothing private shows on a locked screen.
+              </div>
+            </div>
+            <Check
+              on={Boolean(prefs.pushMessagePreviews)}
+              disabled={updatePrefs.isPending}
+              onClick={() => toggleField("pushMessagePreviews")}
+              ariaLabel="Show message text in notifications"
+            />
+          </div>
+        )}
+
         <div className="flex justify-between gap-3.5 border-t border-border pt-4.5">
           <div className="flex-1">
             <div className="text-[14px] font-medium" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>

@@ -33,6 +33,9 @@ export enum TeamPermission {
   PROGRESS_DELETE = "progress:delete",
   PROGRESS_MANAGE_CLIENTS = "progress:manage_clients",
   PROGRESS_INVITE_CLIENT = "progress:invite_client",
+
+  // Messaging: read and reply in member conversations as the gym.
+  MESSAGING_ANSWER_MEMBERS = "messaging:answer_members",
 }
 
 export enum MemberStatus {

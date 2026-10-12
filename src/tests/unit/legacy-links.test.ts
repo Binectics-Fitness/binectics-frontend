@@ -49,6 +49,19 @@ describe("legacyLinkTarget", () => {
     expect(legacyLinkTarget("/dashboard/nutrition", "", "USER")).toBe("/dashboard/member/meal-plans");
   });
 
+  it("sends a message notification to each role's own inbox, keeping the thread (web B9)", () => {
+    expect(legacyLinkTarget("/dashboard/messages", `?thread=${id}`, "TRAINER")).toBe(`/dashboard/trainer/messages?thread=${id}`);
+    expect(legacyLinkTarget("/dashboard/messages", `?thread=${id}`, "DIETITIAN")).toBe(`/dashboard/dietitian/messages?thread=${id}`);
+    expect(legacyLinkTarget("/dashboard/messages", `?thread=${id}`, "GYM_OWNER")).toBe(`/dashboard/gym-owner/messages?thread=${id}`);
+    expect(legacyLinkTarget("/dashboard/messages", "", "TRAINER")).toBe("/dashboard/trainer/messages");
+    // A malformed thread id is dropped rather than carried along.
+    expect(legacyLinkTarget("/dashboard/messages", "?thread=../x", "TRAINER")).toBe("/dashboard/trainer/messages");
+    // Members (and gym staff on member accounts) already have the right page.
+    expect(legacyLinkTarget("/dashboard/messages", `?thread=${id}`, "USER")).toBeNull();
+    expect(legacyLinkTarget("/dashboard/messages", `?thread=${id}`, undefined)).toBeNull();
+    expect(legacyLinkTarget("/dashboard/messages", `?thread=${id}`, "ADMIN")).toBeNull();
+  });
+
   it("leaves real pages alone", () => {
     for (const p of ["/dashboard/member/billing", "/dashboard/team", "/dashboard/marketplace/requests", "/marketplace"]) {
       expect(legacyLinkTarget(p, "", "USER")).toBeNull();
