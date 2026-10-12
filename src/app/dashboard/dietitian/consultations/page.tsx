@@ -6,6 +6,7 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { AsyncSpinner, BookingStatusBadge, Drawer, DSCard, DSStatCard, Eyebrow, IconTile, PageHeader } from "@/components/ds";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { BookingActionsPanel } from "@/components/BookingActionsPanel";
+import { RescheduleBookingButton } from "@/components/bookings/RescheduleBookingButton";
 import {
   bookingTypeName,
   consultationsService,
@@ -315,6 +316,15 @@ export default function DietitianConsultationsPage() {
                 {selected.cancelReason}
               </DetailRow>
             )}
+
+            {/* Held to your own working hours by the API: only open times are offered. */}
+            <div>
+              <RescheduleBookingButton
+                key={`move-${selected.id}-${selected.startsAt}`}
+                booking={selected}
+                onRescheduled={load}
+              />
+            </div>
 
             <div style={{ borderTop: "1px solid var(--border)" }} />
 

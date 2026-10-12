@@ -8,6 +8,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useGymClasses, useCreateGymClass } from "@/lib/queries/classes";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { ClassForm, WEEKDAYS } from "./ClassForm";
+import { TeamSessionsCard } from "./TeamSessionsCard";
 import { classTime, type GymClass } from "@/lib/api/classes";
 
 /**
@@ -94,6 +95,8 @@ export function ScheduleClient() {
           })}
         </div>
       )}
+
+      <TeamSessionsCard orgId={orgId} />
     </GymDashboardShell>
   );
 }

@@ -2,11 +2,16 @@ import type { ApiResponse } from "@/lib/types";
 
 /**
  * The API's code for a start time the provider doesn't offer for that
- * session type: outside their hours, a blocked day, off the slot grid or
- * inside the minimum notice. Sent with a 400. A slot that is offered but
- * already taken is a 409 instead.
+ * session type: outside their working hours, a day off, a session that would
+ * run past the end of the day, off the slot grid, or inside the minimum
+ * notice. Sent with a 400, and the message says which; show it as sent.
+ * The server holds everyone to these hours (members, providers and gym
+ * staff alike), so a refusal means the open times have changed.
  */
 export const SLOT_NOT_OFFERED = "CONSULTATION_SLOT_UNAVAILABLE";
+
+/** The API's code for an offered time someone else just took (409). */
+export const SLOT_TAKEN = "CONSULTATION_SLOT_TAKEN";
 
 /**
  * The LOCAL calendar day, YYYY-MM-DD, which is what the slots endpoint's
@@ -34,5 +39,9 @@ export function isSlotRefusal(
   res: Pick<ApiResponse<unknown>, "success" | "code" | "status">,
 ): boolean {
   if (res.success) return false;
-  return res.code === SLOT_NOT_OFFERED || res.status === 409;
+  return (
+    res.code === SLOT_NOT_OFFERED ||
+    res.code === SLOT_TAKEN ||
+    res.status === 409
+  );
 }
