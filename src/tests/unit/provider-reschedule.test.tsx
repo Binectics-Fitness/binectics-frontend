@@ -146,6 +146,38 @@ describe("TeamSessionsCard (gym schedule)", () => {
     expect(list).toHaveBeenCalledWith("org1", expect.objectContaining({ from: expect.any(String), to: expect.any(String) }));
   });
 
+  it("never shows the member's free text, whether the API sent it or left it out", async () => {
+    const privateText = {
+      notes: "Knee injury, on medication",
+      completionNote: "Weighed 82kg",
+      cancelReason: "Feeling unwell",
+    };
+    // As the owner gets it (fields present), and as staff get it (absent).
+    list.mockResolvedValue({
+      success: true,
+      data: [
+        booking({ id: "owner-view", startsAt: at(8), providerName: "Femi Okoro", ...privateText }),
+        booking({ id: "staff-view", startsAt: at(9), providerName: "Kemi Adeyemi" }),
+      ],
+    });
+    const getSlots = vi.spyOn(consultationsService, "getProviderSlots");
+    getSlots.mockResolvedValue({ success: true, data: [slot(at(11))] });
+    render(<TeamSessionsCard orgId="org1" />);
+
+    const card = await screen.findByTestId("team-sessions");
+    await waitFor(() => expect(within(card).getAllByRole("listitem")).toHaveLength(2));
+    const rows = within(card).getAllByRole("listitem");
+    expect(rows[1]).toHaveTextContent("Ngozi Eze with Kemi Adeyemi");
+
+    // The move modal for either row shows none of it either.
+    await userEvent.click(within(rows[0]).getByRole("button", { name: "Move session" }));
+    await screen.findByRole("option", { name: localTimeKey(at(11)) });
+    for (const text of Object.values(privateText)) {
+      expect(screen.queryByText(new RegExp(text))).not.toBeInTheDocument();
+    }
+    getSlots.mockRestore();
+  });
+
   it("stays out of the way for someone the API won't show them to", async () => {
     list.mockResolvedValue({ success: false, status: 404, message: "Organization not found" });
     const { container } = render(<TeamSessionsCard orgId="org1" />);

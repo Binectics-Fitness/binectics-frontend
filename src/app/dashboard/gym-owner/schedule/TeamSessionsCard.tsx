@@ -27,6 +27,11 @@ type State =
  * them: the owner and staff whose role holds bookings:manage. For anyone
  * else it answers 404, and the card stays out of the way. A move is held to
  * the trainer's own working hours, days off and custom hours.
+ *
+ * Shows only who, when, what and status: never the member's free text
+ * (intake notes, session notes, cancel reason). The API leaves those out for
+ * staff anyway (owner ruling, Oct 2026), and the card does not render them
+ * even when the viewer is the owner and they are present.
  */
 export function TeamSessionsCard({ orgId }: { orgId: string | undefined }) {
   const { fmtDateTime } = useOrgFormat();

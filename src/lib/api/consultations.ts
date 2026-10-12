@@ -175,6 +175,12 @@ export interface ConsultationBooking {
   providerTimezone: string;
   clientTimezone: string;
   status: ConsultationBookingStatus;
+  /**
+   * The member's free text: intake notes, the session note, the cancel
+   * reason. The API leaves them out for gym staff acting through
+   * bookings:manage (getOrganizationBookings, and a staff move's response);
+   * only the booked provider and the org owner get them. Never assume them.
+   */
   notes?: string;
   completionNote?: string;
   cancelledBy?: ConsultationCancelledBy;
