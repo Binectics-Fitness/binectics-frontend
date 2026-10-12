@@ -530,7 +530,7 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
           </tr>
           <tr>
             <td style={{ ...S.td, ...S.tdK }}>Health &amp; meal logs</td>
-            <td style={S.td}>Deleted with your account - purged after 30 days</td>
+            <td style={S.td}>Deleted when you delete your account - backup copies expire within 35 days</td>
           </tr>
           <tr>
             <td style={{ ...S.td, ...S.tdK }}>Verification documents</td>
