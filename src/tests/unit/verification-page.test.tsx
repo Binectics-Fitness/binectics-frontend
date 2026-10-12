@@ -6,6 +6,7 @@ import VerificationPage from "@/app/verification/page";
 const router = { replace: vi.fn(), push: vi.fn() };
 const refreshUser = vi.fn();
 const verifyOtp = vi.fn();
+const resendOtp = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
@@ -14,7 +15,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/link", () => ({ default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ refreshUser }) }));
 vi.mock("@/hooks/useVerification", () => ({
-  useVerification: () => ({ verifyOtp, resendOtp: vi.fn(), isVerifying: false, isResending: false }),
+  useVerification: () => ({ verifyOtp, resendOtp, isVerifying: false, isResending: false }),
 }));
 vi.mock("@/components/BinecticsLogo", () => ({ BinecticsLockup: () => <span>Binectics</span> }));
 
@@ -60,5 +61,26 @@ describe("verification page after a correct code", () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(2100); });
     expect(router.push).toHaveBeenCalledWith("/login");
     expect(router.replace).not.toHaveBeenCalled();
+  });
+});
+
+// A gym-created (placeholder) account has no password of its own: resend
+// emails a set-password link, flagged as data.claim_link_sent by the API.
+describe("verification page resend", () => {
+  beforeEach(() => resendOtp.mockReset());
+
+  it("says a set-password link was emailed when the account was created by a gym", async () => {
+    resendOtp.mockResolvedValue("claim_link");
+    render(<VerificationPage />);
+    await userEvent.click(screen.getByRole("button", { name: /Resend/i }));
+    expect(await screen.findByText(/emailed you a link to set your password/i)).toBeInTheDocument();
+    expect(screen.queryByText(/code has been resent/i)).toBeNull();
+  });
+
+  it("keeps the code message for an ordinary resend", async () => {
+    resendOtp.mockResolvedValue(true);
+    render(<VerificationPage />);
+    await userEvent.click(screen.getByRole("button", { name: /Resend/i }));
+    expect(await screen.findByText(/code has been resent/i)).toBeInTheDocument();
   });
 });
