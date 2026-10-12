@@ -134,8 +134,13 @@ export function mealsToday(meals: readonly MealLike[], now: Date): {
   };
 }
 
-/** Streak milestones, in days. Client-side badges, not server awards. */
-export const STREAK_MILESTONES = [1, 7, 30, 50, 100, 365] as const;
+/**
+ * Streak milestones, in days: the API's list (binectics-api
+ * src/nudges/nudge-rules.ts STREAK_MILESTONES), which sends a
+ * STREAK_MILESTONE notification when a check-in reaches one. The badges are
+ * drawn here from the API's streaks; mobile celebrates the same days.
+ */
+export const STREAK_MILESTONES = [7, 30, 50, 100, 365] as const;
 /** Lifetime check-in milestones. */
 export const SESSION_MILESTONES = [10, 50, 100, 250, 500] as const;
 

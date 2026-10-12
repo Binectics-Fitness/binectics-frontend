@@ -32,6 +32,16 @@ const ROWS: PreferenceRow[] = [
     inAppKey: "inAppReminders",
   },
   {
+    label: "Milestones",
+    sub: "Check-in streaks of 7, 30, 50, 100 and 365 days; halfway through or finishing a program",
+    inAppKey: "inAppMilestones",
+  },
+  {
+    label: "Check-in nudges",
+    sub: "One nudge after 3 days with no check-in, task or log",
+    inAppKey: "inAppNudges",
+  },
+  {
     label: "Messages from providers",
     sub: "When a provider writes",
     inAppKey: "inAppMessages",

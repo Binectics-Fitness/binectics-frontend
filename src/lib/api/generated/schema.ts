@@ -89,6 +89,93 @@ export interface paths {
         patch: operations["AdminController_updateCurrency"];
         trace?: never;
     };
+    "/api/v1/admin/feature-flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every registered flag with its global value */
+        get: operations["FeatureFlagsAdminController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/feature-flags/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One flag with its per-organization overrides */
+        get: operations["FeatureFlagsAdminController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Turn a flag on or off globally (audited) */
+        patch: operations["FeatureFlagsAdminController_setGlobal"];
+        trace?: never;
+    };
+    "/api/v1/admin/feature-flags/{key}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A flag's changes, newest first */
+        get: operations["FeatureFlagsAdminController_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/feature-flags/{key}/overrides/{organizationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set one organization's value for a flag (audited) */
+        put: operations["FeatureFlagsAdminController_setOverride"];
+        post?: never;
+        /** Remove one organization's override so it follows the global value (audited) */
+        delete: operations["FeatureFlagsAdminController_removeOverride"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/feature-flags/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Find organizations to override a flag for */
+        get: operations["FeatureFlagsAdminController_organizations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/feedback/summary": {
         parameters: {
             query?: never;
@@ -297,6 +384,23 @@ export interface paths {
         };
         /** A user's balance in every provider program (on or off) plus legacy unattributed points, for support */
         get: operations["LoyaltyAdminController_getUserBalance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/member-billing/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Renewal charges that need a person: amount mismatches, stuck attempts, money with nowhere to go (refund pending) */
+        get: operations["AdminMemberBillingController_reconcile"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1339,6 +1443,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/consultations/organizations/{organizationId}/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An organization's consultation sessions (owner, or staff with bookings:manage) */
+        get: operations["ConsultationsController_getOrganizationBookings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/consultations/provider/availability": {
         parameters: {
             query?: never;
@@ -1524,6 +1645,23 @@ export interface paths {
         };
         /** Currencies offered on the platform and what each can be used for */
         get: operations["CurrenciesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/feature-flags/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every registered flag's global value, and its value for each organization the caller owns or is active staff of */
+        get: operations["FeatureFlagsController_me"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1848,6 +1986,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/health-data/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether health import is on for me, the types and the batch limits. The app reads it before showing any health UI. */
+        get: operations["HealthDataController_config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health-data/connection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Health Connect connection, devices and per-type sharing. With device_key, whether another account has this phone connected. */
+        get: operations["HealthDataController_getConnection"];
+        /** Connect or update this device (idempotent) */
+        put: operations["HealthDataController_connect"];
+        post?: never;
+        /** Disconnect. Deletes imported data unless keep_history=true; tasks already completed stay done. */
+        delete: operations["HealthDataController_disconnect"];
+        options?: never;
+        head?: never;
+        /** Change "use for my program tasks", or remove another device */
+        patch: operations["HealthDataController_patch"];
+        trace?: never;
+    };
+    "/api/v1/health-data/me/days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My daily steps, sleep and resting heart rate */
+        get: operations["HealthDataController_myDays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health-data/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** One page of Health Connect data: ≤200 records, ≤500 deletions, ≤62 day summaries. Idempotent. */
+        post: operations["HealthDataController_sync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/loyalty/balance": {
         parameters: {
             query?: never;
@@ -2021,6 +2230,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/enrollment-offers/{offerId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept a membership offer: creates the subscription. For a bank-transfer offer, data.transfer_account is the account to pay into. */
+        post: operations["EnrollmentOffersController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/enrollment-offers/{offerId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a membership offer */
+        post: operations["EnrollmentOffersController_decline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/enrollment-offers/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Membership offers gyms have sent to my (verified) email, waiting for my answer */
+        get: operations["EnrollmentOffersController_listMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/featured": {
         parameters: {
             query?: never;
@@ -2098,6 +2358,23 @@ export interface paths {
         };
         /** List active public membership plans for a listing */
         get: operations["MarketplaceController_getListingPlans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/listings/{id}/plans/{planId}/auto-renew-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The automatic-renewal consent text for paying this plan by card */
+        get: operations["MarketplaceController_getPlanAutoRenewConsent"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2502,6 +2779,40 @@ export interface paths {
         patch: operations["MarketplaceMyListingsController_updateSlug"];
         trace?: never;
     };
+    "/api/v1/marketplace/my-payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My saved cards, per provider, with the memberships each one renews */
+        get: operations["MemberBillingController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-payment-methods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a saved card: auto-renew stops on every membership it paid, and the card is deactivated at Paystack */
+        delete: operations["MemberBillingController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/my-providers": {
         parameters: {
             query?: never;
@@ -2587,6 +2898,23 @@ export interface paths {
         patch: operations["MarketplaceController_toggleAutoRenew"];
         trace?: never;
     };
+    "/api/v1/marketplace/my-subscriptions/{subscriptionId}/auto-renew-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The consent text to accept to turn card auto-renew back on for this membership */
+        get: operations["MarketplaceController_getSubscriptionAutoRenewConsent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/my-subscriptions/{subscriptionId}/pause": {
         parameters: {
             query?: never;
@@ -2656,6 +2984,40 @@ export interface paths {
         head?: never;
         /** Update an auto-assignment rule */
         patch: operations["AssignmentsController_update"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/enrollment-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organization's membership offers still waiting for an answer */
+        get: operations["EnrollmentOffersController_listForOrganization"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/enrollment-offers/{offerId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Withdraw a membership offer */
+        post: operations["EnrollmentOffersController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/listing": {
@@ -2846,6 +3208,23 @@ export interface paths {
         head?: never;
         /** Unpublish organization marketplace listing */
         patch: operations["MarketplaceOrgController_unpublishListing"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/member-billing/charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** This organization's open and failed member renewal charges (or one status) */
+        get: operations["ProviderMemberBillingController_charges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/archive": {
@@ -3321,7 +3700,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Manually enroll a member by email into an organization plan */
+        /** Offer a member a plan by email. Nothing is created until the person accepts (POST /marketplace/enrollment-offers/:id/accept); the response is the same whether or not the email has an account. */
         post: operations["MarketplaceOrgController_enrollMember"];
         delete?: never;
         options?: never;
@@ -3450,6 +3829,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/messaging/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search my conversations and messages
+         * @description Only conversations I can read now. Messages newest first, paged by cursor; conversation-name matches on the first page only.
+         */
+        get: operations["MessagingActionsController_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/messaging/threads": {
         parameters: {
             query?: never;
@@ -3457,12 +3856,50 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** My conversations (direct + gym announcements) */
+        /**
+         * My conversations, newest activity first
+         * @description Paged with limit + cursor ({ threads, next_cursor }). Without either, the legacy bare array of the first 200 (old clients).
+         */
         get: operations["MessagingController_listThreads"];
         put?: never;
-        /** Start or resume a direct conversation */
+        /** Start or resume a conversation */
         post: operations["MessagingController_startThread"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/threads/{threadId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One conversation summary (deep links, push taps) */
+        get: operations["MessagingController_getThread"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/threads/{threadId}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Block the other party in an ended conversation (read-only provider side only) */
+        post: operations["MessagingActionsController_block"];
+        /** Lift a block I (or my gym) placed */
+        delete: operations["MessagingActionsController_unblock"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3475,11 +3912,70 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Messages in a conversation (marks it read) */
+        /**
+         * History and sync (never marks read)
+         * @description Latest page, or one of before_seq / after_seq / since_rev. Poll with since_rev = next_rev.
+         */
         get: operations["MessagingController_getMessages"];
         put?: never;
-        /** Send a message */
+        /**
+         * Send a message (idempotent on client_message_id)
+         * @description 201 with the new message; 200 with the original when client_message_id was already used for the same message.
+         */
         post: operations["MessagingController_sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/threads/{threadId}/messages/{messageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete my message for everyone (leaves a tombstone) */
+        delete: operations["MessagingActionsController_deleteMessage"];
+        options?: never;
+        head?: never;
+        /** Edit my message (within 15 minutes, no push) */
+        patch: operations["MessagingActionsController_editMessage"];
+        trace?: never;
+    };
+    "/api/v1/messaging/threads/{threadId}/messages/{messageId}/reactions/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** React to a message (idempotent) */
+        put: operations["MessagingActionsController_react"];
+        post?: never;
+        /** Remove my reaction (idempotent) */
+        delete: operations["MessagingActionsController_unreact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/threads/{threadId}/mute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mute or unmute notifications for this conversation (me only) */
+        put: operations["MessagingActionsController_mute"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3495,7 +3991,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mark a conversation read */
+        /** Mark read up to a seq (forward-only) */
         post: operations["MessagingController_markRead"];
         delete?: never;
         options?: never;
@@ -3510,7 +4006,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Total unread messages (for the nav badge) */
+        /** Unread messages and threads, muted threads excluded (nav badge) */
         get: operations["MessagingController_unreadCount"];
         put?: never;
         post?: never;
@@ -5842,6 +6338,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teams/invitations/{invitationId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept one of my team invitations by id
+         * @description Same effects as POST /teams/invitations/accept (the emailed token): staff cap, membership, trainer account for the trainer role, the inviter's notification. Needs a verified email. Returns the membership.
+         */
+        post: operations["TeamsController_acceptInvitationById"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/invitations/{invitationId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decline one of my team invitations by id
+         * @description The invitation becomes declined; the workspace may invite again. Needs a verified email.
+         */
+        post: operations["TeamsController_declineInvitationById"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teams/invitations/accept": {
         parameters: {
             query?: never;
@@ -5853,6 +6389,26 @@ export interface paths {
         put?: never;
         /** Accept a team invitation (authenticated user) */
         post: operations["TeamsController_acceptInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/invitations/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my pending team invitations
+         * @description Pending, unexpired invitations addressed to the signed-in account's email (case-insensitive). Empty until the email is verified. Invitations to an inactive workspace are left out. Never includes the token or its hash.
+         */
+        get: operations["TeamsController_getMyInvitations"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5926,6 +6482,40 @@ export interface paths {
         post?: never;
         /** Revoke an API key (kept for audit) */
         delete: operations["ApiKeysController_revokeKey"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List this workspace's activity (newest first) */
+        get: operations["OrgAuditController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/audit-log/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Event types and people to filter the activity by */
+        get: operations["OrgAuditController_filters"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6037,6 +6627,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teams/organizations/{organizationId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave an organization team you belong to */
+        post: operations["TeamsController_leaveOrganization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teams/organizations/{organizationId}/locations": {
         parameters: {
             query?: never;
@@ -6083,7 +6690,7 @@ export interface paths {
         /** List all members of the organization */
         get: operations["TeamsController_getMembers"];
         put?: never;
-        /** Directly add a member — creates an account if the email is new */
+        /** Add a member by email: sends a pending invitation they accept (same as POST invitations). Creates no account; data is the invitation, whether or not the email has an account. first_name, last_name and password are deprecated and ignored. */
         post: operations["TeamsController_addMemberDirect"];
         delete?: never;
         options?: never;
@@ -6522,12 +7129,21 @@ export interface components {
         AddMemberDirectDto: {
             /** @example john.doe@example.com */
             email: string;
-            /** @example John */
-            first_name: string;
-            /** @example Doe */
-            last_name: string;
-            /** @example SecurePass123! */
-            password: string;
+            /**
+             * @deprecated
+             * @example John
+             */
+            first_name?: string;
+            /**
+             * @deprecated
+             * @example Doe
+             */
+            last_name?: string;
+            /**
+             * @deprecated
+             * @description Deprecated and ignored. The invitee sets their own password when they sign up.
+             */
+            password?: string;
             /** @description TeamRole _id to assign to the new member */
             team_role_id: string;
         };
@@ -6557,6 +7173,10 @@ export interface components {
              */
             reason?: string;
         };
+        AsGymDto: {
+            name: string;
+            organization_id: string;
+        };
         AssignProgramDto: {
             /** @description ClientProfile id to assign the program to */
             client_profile_id: string;
@@ -6568,6 +7188,13 @@ export interface components {
         AssignStaffDto: {
             /** @description The team member to coach this gym member, or null to unassign them. */
             staff_user_id: string | null;
+        };
+        AuthorDto: {
+            avatar_url: string | null;
+            /** @enum {string} */
+            kind: "user" | "gym";
+            name: string;
+            user_id: string | null;
         };
         AvailabilityRuleInputDto: {
             /** @example 1 */
@@ -6630,6 +7257,7 @@ export interface components {
         };
         BroadcastDto: {
             body: string;
+            client_message_id?: string;
             /** @description The organization broadcasting. */
             organization_id: string;
         };
@@ -6648,6 +7276,34 @@ export interface components {
         CompleteBookingDto: {
             /** @example Consultation completed successfully */
             note?: string;
+        };
+        ConnectDeviceDto: {
+            app_version: string;
+            background_granted: boolean;
+            /** @description Version of the consent text the member saw */
+            consent_copy_version: string;
+            /** @description Random UUID per app install */
+            device_key: string;
+            granted_types: ("steps" | "exercise" | "sleep" | "resting_hr" | "weight")[];
+            manufacturer?: string;
+            model?: string;
+            /** @enum {string} */
+            source: "health_connect";
+            /** @description Consent: imported data may complete my program tasks (the value shows to that program’s provider) */
+            use_for_tasks?: boolean;
+        };
+        ConsentEchoDto: {
+            /** @enum {string} */
+            channel: "web" | "mobile";
+            /** @description sha256 (hex) of the exact text shown */
+            text_sha256: string;
+            /** @example mbr-renew-v1 */
+            text_version: string;
+        };
+        CounterpartyDto: {
+            name: string;
+            profile_picture?: string | null;
+            user_id?: string;
         };
         CountryDto: {
             cities: components["schemas"]["CityDto"][];
@@ -6690,7 +7346,7 @@ export interface components {
              *       "form:view"
              *     ]
              */
-            scopes: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews")[];
+            scopes: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "messaging:answer_members")[];
         };
         CreateAssignmentRuleDto: {
             /** @description Match only these client tiers (empty = any tier). */
@@ -7357,7 +8013,7 @@ export interface components {
             description?: string;
             /** @example Senior Trainer */
             name: string;
-            permissions: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews")[];
+            permissions: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "messaging:answer_members")[];
         };
         CreateWeightLogDto: {
             /** @example Morning fasted weight */
@@ -7398,6 +8054,15 @@ export interface components {
             /** @example Client fatigues quickly — keep rest periods longer */
             trainer_notes?: string;
         };
+        DeclinedTeamInvitationDto: {
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "accepted" | "declined" | "expired" | "cancelled";
+        };
+        DeclineTeamInvitationResponseDto: {
+            data: components["schemas"]["DeclinedTeamInvitationDto"];
+            success: boolean;
+        };
         DeleteAccountDto: {
             /** @description Current password, required to confirm */
             current_password: string;
@@ -7422,6 +8087,10 @@ export interface components {
              */
             publicIds: string[];
         };
+        EditMessageDto: {
+            /** @description Plain text, 1..4000 characters after trimming. */
+            body: string;
+        };
         EnrollMemberDto: {
             /**
              * @description Amount paid in the currency minor unit (kobo, cents). Defaults to the plan price; use 0 for a comped or free enrolment.
@@ -7433,9 +8102,9 @@ export interface components {
              * @example member@example.com
              */
             email: string;
-            /** @description First name of the member. Required when no Binectics account exists for the email — used to provision a placeholder account. */
+            /** @description First name of the member, shown on the gym's list of open offers. Never written to an account. */
             first_name?: string;
-            /** @description Last name of the member. Required when no Binectics account exists for the email — used to provision a placeholder account. */
+            /** @description Last name of the member, shown on the gym's list of open offers. Never written to an account. */
             last_name?: string;
             /**
              * @description How payment is collected. MANUAL (default): money taken off-platform, subscription active immediately. PAYSTACK_TRANSFER: open a one-time Paystack transfer account for the plan price; the response carries the account details and the subscription stays PENDING_PAYMENT until the charge.success webhook confirms the transfer.
@@ -7450,7 +8119,7 @@ export interface components {
             /** @description ID of the membership plan to enroll the member in */
             plan_id: string;
             /**
-             * @description When a placeholder account is created for the member, send them an email with a link to set their password and claim the account. Defaults to true.
+             * @description Deprecated and ignored: the member is always emailed the offer, since they have to accept it.
              * @default true
              */
             send_invite: boolean;
@@ -7467,15 +8136,40 @@ export interface components {
             success: boolean;
         };
         EnrollMemberResultDto: {
-            /** @description The created or updated membership subscription. */
-            subscription: Record<string, never>;
-            /** @description Present only for a paystack_transfer enrolment — the account to display so the member can pay. */
+            enrollment_offer: components["schemas"]["EnrollmentOfferSummaryDto"];
+            /**
+             * @description Always true: the member has to accept the offer.
+             * @example true
+             */
+            pending_acceptance: boolean;
+            /** @description Always null: the subscription is created when the member accepts the offer. */
+            subscription: Record<string, never> | null;
+            /**
+             * @deprecated
+             * @description No longer returned to the gym: for a paystack_transfer offer the account is opened when the member accepts, and returned to them.
+             */
             transfer_account?: components["schemas"]["EnrollTransferAccountDto"];
             /**
-             * @description True when a placeholder account was provisioned for the email (no prior Binectics account).
+             * @deprecated
+             * @description Always false: enrolling never creates an account.
              * @example false
              */
             user_created: boolean;
+        };
+        EnrollmentOfferSummaryDto: {
+            /** @example 6720f0c2a1b2c3d4e5f60718 */
+            _id: string;
+            /** @example member@example.com */
+            email: string;
+            /**
+             * Format: date-time
+             * @example 2026-10-22T12:00:00.000Z
+             */
+            expires_at: string;
+            /** @example 6720f0c2a1b2c3d4e5f60719 */
+            plan_id: string;
+            /** @example pending */
+            status: string;
         };
         EnrollTransferAccountDto: {
             /** @example BINECTICS / IRON LAB */
@@ -7507,7 +8201,19 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "PROGRAM_AUTO_RULE_INVALID" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED";
+            /**
+             * @description Structured detail of a billing refusal: { quota, limit, current_usage, plan_tier } for BILLING_LIMIT_REACHED sent to the provider (only { quota } when the refused party is a member joining), { feature, plan_tier } for BILLING_FEATURE_DISABLED.
+             * @example {
+             *       "current_usage": 10,
+             *       "limit": 10,
+             *       "plan_tier": "free",
+             *       "quota": "max_active_members"
+             *     }
+             */
+            details?: {
+                [key: string]: unknown;
+            };
             /** @example Validation failed */
             message: Record<string, never>;
             /** @example POST */
@@ -7541,6 +8247,61 @@ export interface components {
             max_membership_plans: number;
             /** @example 50 */
             max_staff_members: number;
+        };
+        HealthDayDto: {
+            computed_at: string;
+            local_day: string;
+            manual_value: number;
+            /** @enum {string} */
+            metric: "steps" | "sleep_minutes" | "resting_hr_bpm";
+            origins: string[];
+            value: number;
+        };
+        HealthDeletionDto: {
+            record_id: string;
+        };
+        HealthRecordDto: {
+            /** @description metadata.clientRecordId, if set */
+            client_record_id?: string;
+            /** @enum {string} */
+            device_type: "watch" | "phone" | "scale" | "ring" | "chest_strap" | "fitness_band" | "head_mounted" | "unknown";
+            end_time: string;
+            /** @enum {string} */
+            kind: "exercise" | "weight" | "sleep" | "resting_hr";
+            /** @description metadata.lastModifiedTime */
+            last_modified: string;
+            /** @example 2026-11-03 */
+            local_day: string;
+            /** @example com.sec.android.app.shealth */
+            origin_app: string;
+            /** @description Health Connect metadata.id */
+            record_id: string;
+            /** @enum {string} */
+            recording_method: "manual" | "automatic" | "active" | "unknown";
+            start_time: string;
+            /** @description startZoneOffset (endZoneOffset for sleep), minutes */
+            zone_offset_minutes?: number;
+        };
+        HealthSharingDto: {
+            heartRate?: boolean;
+            sleep?: boolean;
+            steps?: boolean;
+            weight?: boolean;
+            workouts?: boolean;
+        };
+        HealthSyncDto: {
+            days: components["schemas"]["HealthDayDto"][];
+            deletions: components["schemas"]["HealthDeletionDto"][];
+            device_key: string;
+            /** @example Africa/Lagos */
+            device_time_zone: string;
+            /** @description More pages follow; program tasks are evaluated on the last page only */
+            more: boolean;
+            records: components["schemas"]["HealthRecordDto"][];
+            /** @enum {string} */
+            source: "health_connect";
+            /** @description Client batch id (logs and support only) */
+            sync_id: string;
         };
         ImageMetadataResponseDto: {
             createdAt: string;
@@ -7669,6 +8430,18 @@ export interface components {
             /** @example false */
             voice_announcement: boolean;
         };
+        LastMessageDto: {
+            _id: string;
+            author_name: string;
+            /** Format: date-time */
+            created_at: string | null;
+            deleted: boolean;
+            /** @description null when deleted */
+            preview: string | null;
+            seq: number;
+            /** @enum {string} */
+            side: "mine" | "theirs";
+        };
         LoginDto: {
             /**
              * @description User email address
@@ -7703,11 +8476,65 @@ export interface components {
             name: string;
             points_cost: number;
         };
+        MarkReadDto: {
+            /** @description Mark read up to this seq (capped at the thread tip). Missing: up to the tip. The cursor never moves back. */
+            up_to_seq?: number;
+        };
+        MarkReadResponseDto: {
+            last_read_seq: number;
+            total_unread: number;
+            unread_count: number;
+        };
         MarkSubscriptionPaidDto: {
             /** @description URL to uploaded payment proof image */
             payment_proof_url?: string;
             /** @description External payment reference (e.g. bank transfer narration) */
             payment_reference?: string;
+        };
+        MessageDto: {
+            _id: string;
+            author: components["schemas"]["AuthorDto"];
+            /** @description '' when deleted */
+            body: string;
+            can_delete: boolean;
+            /** @description Mine only. */
+            client_message_id: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            deleted_at: string | null;
+            /**
+             * Format: date-time
+             * @description null when the viewer cannot edit it now.
+             */
+            editable_until: string | null;
+            /** Format: date-time */
+            edited_at: string | null;
+            reactions: components["schemas"]["ReactionDto"][];
+            reply_to: components["schemas"]["ReplyToDto"] | null;
+            rev: number;
+            /** @description null on a message sent as the gym, for the member. */
+            sender_id: string | null;
+            seq: number;
+            /** @enum {string} */
+            side: "mine" | "theirs";
+            /** @description Gym-side viewers only: who sent it as the gym. */
+            staff_sender: components["schemas"]["StaffSenderDto"] | null;
+            thread_id: string;
+        };
+        MessagePageDto: {
+            /** @description Older (latest/before_seq), newer (after_seq), or more changes waiting (since_rev). */
+            has_more: boolean;
+            messages: components["schemas"]["MessageDto"][];
+            /** @description Cursor for the next since_rev poll. */
+            next_rev: number;
+            thread: components["schemas"]["ThreadStateDto"];
+        };
+        MuteDto: {
+            muted: boolean;
+        };
+        MuteResponseDto: {
+            muted: boolean;
         };
         MyDashboardStatsDto: {
             /**
@@ -7756,6 +8583,29 @@ export interface components {
         MyDashboardStatsResponseDto: {
             data: components["schemas"]["MyDashboardStatsDto"];
             /** @example true */
+            success: boolean;
+        };
+        MySubscriptionRenewalRetryDto: {
+            renewal_retry: components["schemas"]["RenewalRetryDto"];
+        };
+        MyTeamInvitationDto: {
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            expires_at: string;
+            /** @description Invitation id; accept or decline with it */
+            id: string;
+            invited_by_name: string | null;
+            organization_id: string;
+            /** @description The inviting workspace (gym) name */
+            organization_name: string;
+            /** @description Team role code, e.g. 'consultant' (a trainer at the gym) */
+            role_code: string | null;
+            /** @description Team role label, e.g. 'Consultant / Trainer' */
+            role_name: string | null;
+        };
+        MyTeamInvitationsResponseDto: {
+            data: components["schemas"]["MyTeamInvitationDto"][];
             success: boolean;
         };
         OptimizedImageVariantsDto: {
@@ -7828,6 +8678,12 @@ export interface components {
             new_members_count: number;
             timeseries: components["schemas"]["RevenueTimeseriesItemDto"][];
         };
+        PatchConnectionDto: {
+            consent_copy_version?: string;
+            /** @description Stop syncing from another device */
+            remove_device_key?: string;
+            use_for_tasks?: boolean;
+        };
         PayoutScheduleDto: {
             /**
              * @example weekly
@@ -7850,7 +8706,26 @@ export interface components {
              */
             payout_day?: number;
         };
+        ProgramAutoRuleDto: {
+            activity_types?: ("cardio" | "strength" | "flexibility" | "hiit" | "yoga" | "swimming" | "cycling" | "running" | "walking" | "other")[];
+            /** @enum {string} */
+            comparator: "gte" | "lte" | "any";
+            /** @enum {string} */
+            metric: "steps" | "sleep_minutes" | "resting_hr_bpm" | "weight_kg" | "exercise_minutes" | "exercise_session";
+            /** @description Default ['automatic','active']: entries typed into the health app don't count */
+            recording_methods?: ("manual" | "automatic" | "active" | "unknown")[];
+            sources?: ("health_connect" | "healthkit")[];
+            /** @example 8000 */
+            threshold?: number;
+            /**
+             * @default scheduled_day
+             * @enum {string}
+             */
+            window: "scheduled_day" | "open_window";
+        };
         ProgramBlockDto: {
+            /** @description Completes (habit, workout_plan) or fills (measurement) the task from connected health apps */
+            auto_rule?: components["schemas"]["ProgramAutoRuleDto"];
             /**
              * @default once
              * @enum {string}
@@ -7961,6 +8836,13 @@ export interface components {
             /** @description Question id */
             question_id: string;
         };
+        ReactionDto: {
+            count: number;
+            emoji: string;
+            /** @enum {string} */
+            key: "thumbs_up" | "heart" | "joy" | "tada" | "pray" | "open_mouth";
+            mine: boolean;
+        };
         RecordRenewalPaymentDto: {
             /**
              * @description How the member paid
@@ -8022,6 +8904,25 @@ export interface components {
             /** @description FCM registration token for this device */
             token: string;
         };
+        RemoveFeatureFlagOverrideDto: {
+            reason?: string;
+        };
+        RenewalCheckoutDto: {
+            /** @enum {string} */
+            channel: "web" | "mobile";
+            /** @enum {boolean} */
+            save_card: true;
+            /** @description sha256 (hex) of the exact text shown */
+            text_sha256: string;
+            /** @example mbr-renew-v1 */
+            text_version: string;
+        };
+        RenewalRetryDto: {
+            /** @description When the next card retry is due (ISO), or null. */
+            next_attempt_at: string | null;
+            /** @description True while a saved-card charge for the current term is scheduled for retry or in flight: do not offer Renew. */
+            pending: boolean;
+        };
         ReorderListingGalleryDto: {
             /**
              * @example [
@@ -8033,6 +8934,13 @@ export interface components {
         };
         ReorderQuestionsDto: {
             questions: components["schemas"]["QuestionOrderDto"][];
+        };
+        ReplyToDto: {
+            author_name: string;
+            deleted: boolean;
+            excerpt: string | null;
+            message_id: string;
+            seq: number;
         };
         ReportAttendance: {
             checkins?: components["schemas"]["ReportCheckins"] | null;
@@ -8094,6 +9002,11 @@ export interface components {
             kg: number;
         };
         RescheduleBookingDto: {
+            /**
+             * @description Binectics support only (an admin with users:write, not the booking's client or provider): move the session outside the provider's offered times. Needs a reason, and is audited. Anyone else sending it gets 403 CONSULTATION_HOURS_OVERRIDE_FORBIDDEN.
+             * @example false
+             */
+            overrideHours?: boolean;
             /** @example Client requested a different time */
             reason?: string;
             /** @example 2026-03-26T10:00:00Z */
@@ -8156,9 +9069,36 @@ export interface components {
             /** @description Rotating kiosk token from the scanned QR (?t=). Required: proves the member scanned a live QR rather than reusing an old link. */
             token?: string;
         };
+        SearchHitDto: {
+            author_name: string;
+            /** Format: date-time */
+            created_at: string;
+            excerpt: string;
+            /** @enum {string} */
+            kind: "direct" | "gym" | "broadcast";
+            message_id: string;
+            seq: number;
+            /** @enum {string} */
+            side: "mine" | "theirs";
+            thread_id: string;
+            thread_title: string;
+        };
+        SearchPageDto: {
+            /** @description Conversations whose name matches (first page only, up to 5). */
+            conversations: components["schemas"]["ThreadSummaryDto"][];
+            messages: components["schemas"]["SearchHitDto"][];
+            next_cursor: string | null;
+            /** @description True when only the 1,000 most recently active conversations were searched. */
+            scope_limited: boolean;
+        };
         SeedTemplateDto: Record<string, never>;
         SendMessageDto: {
+            /** @description Plain text, 1..4000 characters after trimming. */
             body: string;
+            /** @description Client-generated id, unique per sender and thread. A retry with the same id returns the original message (200) instead of sending again. Both clients always send it; optional only for old builds. */
+            client_message_id?: string;
+            /** @description Reply to this message (same thread, not deleted). */
+            reply_to_message_id?: string;
         };
         SendOneOffTaskDto: {
             /** @description Note shown with the task */
@@ -8179,6 +9119,12 @@ export interface components {
             title?: string;
             /** @enum {string} */
             type: "form" | "instruction";
+        };
+        SetFeatureFlagDto: {
+            /** @description On or off */
+            enabled: boolean;
+            /** @description Why, kept in the flag history ("pilot", "incident 12") */
+            reason?: string;
         };
         SetGymSuspensionDto: {
             reason?: string;
@@ -8211,11 +9157,25 @@ export interface components {
             /** @example Travelling */
             reason?: string;
         };
+        StaffSenderDto: {
+            name: string;
+            user_id: string;
+        };
+        StartPlanCheckoutDto: {
+            /** @description Save the card for automatic renewal (card-only checkout). Only when the consent-text endpoint offered it; never pre-ticked. */
+            renewal?: components["schemas"]["RenewalCheckoutDto"];
+        };
         StartThreadDto: {
-            /** @description The gym to message (member↔gym). */
+            /** @description With organization_id: the member whose gym thread to open. */
+            member_user_id?: string;
+            /** @description The gym or workspace. */
             organization_id?: string;
-            /** @description The other user (member↔provider). */
+            /** @description The other user. */
             recipient_user_id?: string;
+        };
+        StartThreadResponseDto: {
+            thread: components["schemas"]["ThreadSummaryDto"];
+            thread_id: string;
         };
         SubmitFeedbackDto: {
             comment?: string;
@@ -8233,12 +9193,76 @@ export interface components {
              */
             completion_time_seconds?: number;
         };
+        SubscribeSaveCardOutcomeDto: {
+            /**
+             * @description Set only when "Renew automatically" was ticked and the card was NOT saved: why (a code; no card detail). Absent when the card was saved or none was asked for.
+             * @enum {string}
+             */
+            card_not_saved_reason?: "disabled" | "not_reusable" | "account_changed" | "no_customer_email" | "subscription_not_active" | "terms_mismatch" | "card_unavailable";
+        };
         SuspendSubscriptionDto: {
             /**
              * @description Why the member is being suspended. Included verbatim in the notification they receive, so it is written for the member rather than for internal notes.
              * @example Outstanding balance from March
              */
             reason?: string;
+        };
+        ThreadPageDto: {
+            next_cursor: string | null;
+            threads: components["schemas"]["ThreadSummaryDto"][];
+        };
+        ThreadStateDto: {
+            blocked_by_me: boolean;
+            can_block: boolean;
+            can_react: boolean;
+            can_reply: boolean;
+            can_send: boolean;
+            counterpart_last_read_seq: number | null;
+            muted: boolean;
+            my_last_read_seq: number;
+            /** @enum {string|null} */
+            read_only_reason: "moved_to_gym_inbox" | "relationship_ended" | "blocked" | "announcements_only" | "unavailable" | null;
+            rev: number;
+            seq: number;
+        };
+        ThreadSummaryDto: {
+            _id: string;
+            as_gym: components["schemas"]["AsGymDto"] | null;
+            avatar_url: string | null;
+            blocked_by_me: boolean;
+            can_block: boolean;
+            can_react: boolean;
+            can_reply: boolean;
+            can_send: boolean;
+            counterpart_last_read_seq: number | null;
+            /** @description Legacy; use title. */
+            counterparty: components["schemas"]["CounterpartyDto"];
+            /** @enum {string} */
+            kind: "direct" | "gym" | "broadcast";
+            last_message: components["schemas"]["LastMessageDto"] | null;
+            /** Format: date-time */
+            last_message_at: string | null;
+            /** @description Legacy; use last_message. */
+            last_message_preview: string;
+            /** @description With read_only_reason 'moved_to_gym_inbox': the gym to start a new conversation with (null when the member was at several of the owner's gyms). */
+            moved_to_organization_id: string | null;
+            muted: boolean;
+            my_last_read_seq: number;
+            /** @enum {string} */
+            my_role: "participant" | "member" | "gym_owner" | "gym_staff" | "audience";
+            organization_id: string | null;
+            /** @enum {string|null} */
+            read_only_reason: "moved_to_gym_inbox" | "relationship_ended" | "blocked" | "announcements_only" | "unavailable" | null;
+            rev: number;
+            seq: number;
+            title: string;
+            unread_count: number;
+        };
+        ToggleAutoRenewDto: {
+            /** @description Accept the renewal terms again to turn card auto-renew back on (GET my-subscriptions/:id/auto-renew-consent). */
+            consent?: components["schemas"]["ConsentEchoDto"];
+            /** @description The state wanted. Present: set it (the current state is a no-op, 200). Absent: flip (older clients). OFF works on active, paused and past-due memberships; ON on active or paused only. */
+            enabled?: boolean;
         };
         TransferClientDto: {
             /** @description Current ClientProfile to deactivate */
@@ -8252,6 +9276,11 @@ export interface components {
             message?: string;
             /** @description New listing to connect with */
             to_listing_id: string;
+        };
+        UnreadCountDto: {
+            /** @description Threads with unread messages. */
+            threads: number;
+            unread: number;
         };
         UpdateAmenitiesDto: {
             /** @description Full replacement set of amenity keys for this listing. */
@@ -8566,9 +9595,15 @@ export interface components {
             emailSubscriptionUpdates?: boolean;
             inAppBookings?: boolean;
             inAppMessages?: boolean;
+            /** @description Streak milestones, and a program halfway mark and end. */
+            inAppMilestones?: boolean;
+            /** @description A nudge after 3 days with no check-in, task or log. */
+            inAppNudges?: boolean;
             inAppPayments?: boolean;
             inAppPromotions?: boolean;
             inAppReminders?: boolean;
+            /** @description Show message text in message push notifications (default false). */
+            pushMessagePreviews?: boolean;
         };
         UpdateOrganizationDto: {
             booking_rules?: components["schemas"]["BookingRulesDto"];
@@ -8682,6 +9717,10 @@ export interface components {
         };
         UpdatePrivacyPreferencesDto: {
             allowUsageAnalytics?: boolean;
+            /** @description Imported health data visible to providers with an active link, per type. Off by default; only applies while shareProgressWithProviders is on. */
+            healthSharing?: components["schemas"]["HealthSharingDto"];
+            /** @description The consent text version shown with the sharing switches, recorded with the change. */
+            healthSharingCopyVersion?: string;
             /** @enum {string} */
             profileVisibility?: "public" | "members" | "private";
             shareProgressWithProviders?: boolean;
@@ -8739,6 +9778,11 @@ export interface components {
              *     ]
              */
             preferred_training_times?: string[];
+            /**
+             * @description IANA time zone of the member's device; reminders and nudges are sent in its local morning.
+             * @example Africa/Lagos
+             */
+            time_zone?: string;
         };
         UpdateProgramTemplateDto: {
             /**
@@ -8826,7 +9870,7 @@ export interface components {
             description?: string;
             /** @example Senior Trainer */
             name?: string;
-            permissions?: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews")[];
+            permissions?: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "messaging:answer_members")[];
         };
         UpdateWorkoutPlanDto: {
             description?: string;
@@ -9009,6 +10053,154 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateCurrencyDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeatureFlagsAdminController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeatureFlagsAdminController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeatureFlagsAdminController_setGlobal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetFeatureFlagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeatureFlagsAdminController_history: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeatureFlagsAdminController_setOverride: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetFeatureFlagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeatureFlagsAdminController_removeOverride: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemoveFeatureFlagOverrideDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeatureFlagsAdminController_organizations: {
+        parameters: {
+            query?: {
+                /** @description Part of an organization name, or its exact id */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -9284,6 +10476,23 @@ export interface operations {
             path: {
                 userId: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminMemberBillingController_reconcile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -10668,6 +11877,31 @@ export interface operations {
             };
         };
     };
+    ConsultationsController_getOrganizationBookings: {
+        parameters: {
+            query?: {
+                status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+                /** @description Inclusive lower bound on starts_at. */
+                from?: string;
+                /** @description Exclusive upper bound on starts_at: pass the start of the next window (e.g. tomorrow 00:00 for "today"). A session starting exactly at `to` is not included. */
+                to?: string;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ConsultationsController_getMyAvailability: {
         parameters: {
             query?: never;
@@ -10991,6 +12225,23 @@ export interface operations {
         };
     };
     CurrenciesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeatureFlagsController_me: {
         parameters: {
             query?: never;
             header?: never;
@@ -11926,6 +13177,147 @@ export interface operations {
             };
         };
     };
+    HealthDataController_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HealthDataController_getConnection: {
+        parameters: {
+            query?: {
+                /** @description This install’s key, to learn whether another account connected it */
+                device_key?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HealthDataController_connect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectDeviceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HealthDataController_disconnect: {
+        parameters: {
+            query?: {
+                keep_history?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HealthDataController_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchConnectionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HealthDataController_myDays: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                /** @description Comma-separated: steps,sleep_minutes,resting_hr_bpm,exercise_minutes */
+                metrics?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HealthDataController_sync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HealthSyncDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     LoyaltyController_getBalance: {
         parameters: {
             query?: {
@@ -12201,6 +13593,61 @@ export interface operations {
             };
         };
     };
+    EnrollmentOffersController_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EnrollmentOffersController_decline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EnrollmentOffersController_listMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceController_getFeatured: {
         parameters: {
             query?: never;
@@ -12314,7 +13761,7 @@ export interface operations {
             };
         };
     };
-    MarketplaceController_startPlanCheckout: {
+    MarketplaceController_getPlanAutoRenewConsent: {
         parameters: {
             query?: never;
             header?: never;
@@ -12325,6 +13772,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceController_startPlanCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartPlanCheckoutDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -12417,11 +13888,17 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description The membership. After a "Renew automatically" checkout whose card could not be saved, it also carries card_not_saved_reason. */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["SubscribeSaveCardOutcomeDto"];
+                        success?: boolean;
+                    };
+                };
             };
         };
     };
@@ -12952,6 +14429,42 @@ export interface operations {
             };
         };
     };
+    MemberBillingController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberBillingController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceController_getMyProviders: {
         parameters: {
             query?: never;
@@ -12998,11 +14511,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at }. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["MySubscriptionRenewalRetryDto"][];
+                        success?: boolean;
+                    };
+                };
             };
         };
     };
@@ -13026,6 +14545,29 @@ export interface operations {
         };
     };
     MarketplaceController_toggleAutoRenew: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ToggleAutoRenewDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceController_getSubscriptionAutoRenewConsent: {
         parameters: {
             query?: never;
             header?: never;
@@ -13181,6 +14723,45 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EnrollmentOffersController_listForOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EnrollmentOffersController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                offerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13484,6 +15065,25 @@ export interface operations {
         };
     };
     MarketplaceOrgController_unpublishListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProviderMemberBillingController_charges: {
         parameters: {
             query?: never;
             header?: never;
@@ -14162,7 +15762,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Member enrolled. For payment_mode=paystack_transfer, data.transfer_account carries the one-time account to display. */
+            /** @description Offer sent. data.subscription is null and data.pending_acceptance is true. For payment_mode=paystack_transfer the one-time account is opened when the member accepts, and returned to them. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -14344,13 +15944,61 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
-    MessagingController_listThreads: {
+    MessagingActionsController_search: {
         parameters: {
-            query?: never;
+            query: {
+                /** @description Matched literally (no pattern syntax), ignoring case, after trimming. */
+                q: string;
+                limit?: number;
+                /** @description next_cursor from the previous page. */
+                cursor?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -14361,7 +16009,113 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SearchPageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingController_listThreads: {
+        parameters: {
+            query?: {
+                /** @description Page size. Without limit and cursor the response is the legacy bare array (first 200). */
+                limit?: number;
+                /** @description Opaque cursor from next_cursor. */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ThreadPageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -14382,15 +16136,245 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StartThreadResponseDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingController_getThread: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ThreadSummaryDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingActionsController_block: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ThreadSummaryDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingActionsController_unblock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ThreadSummaryDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
     MessagingController_getMessages: {
         parameters: {
-            query: {
-                limit: string;
-                before: string;
+            query?: {
+                limit?: number;
+                /** @description The messages just older than this seq (history). */
+                before_seq?: number;
+                /** @description The messages just newer than this seq. */
+                after_seq?: number;
+                /** @description Every message created or changed with rev above this (the poll). Pass next_rev back verbatim. */
+                since_rev?: number;
             };
             header?: never;
             path: {
@@ -14404,7 +16388,49 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessagePageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -14423,11 +16449,387 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Replay of an earlier send */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingActionsController_deleteMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingActionsController_editMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditMessageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingActionsController_react: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+                messageId: string;
+                /** @description thumbs_up 👍, heart ❤️, joy 😂, tada 🎉, pray 🙏, open_mouth 😮 */
+                key: "thumbs_up" | "heart" | "joy" | "tada" | "pray" | "open_mouth";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingActionsController_unreact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+                messageId: string;
+                /** @description thumbs_up 👍, heart ❤️, joy 😂, tada 🎉, pray 🙏, open_mouth 😮 */
+                key: "thumbs_up" | "heart" | "joy" | "tada" | "pray" | "open_mouth";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessageDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    MessagingActionsController_mute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MuteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MuteResponseDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -14440,13 +16842,59 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadDto"];
+            };
+        };
         responses: {
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MarkReadResponseDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -14463,7 +16911,49 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["UnreadCountDto"];
+                        /** @example true */
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -14652,7 +17142,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;
@@ -14787,9 +17277,7 @@ export interface operations {
     };
     NotificationsController_stream: {
         parameters: {
-            query: {
-                token: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -17853,6 +20341,96 @@ export interface operations {
             };
         };
     };
+    TeamsController_acceptInvitationById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description AUTH_EMAIL_NOT_VERIFIED, or BILLING_LIMIT_REACHED when the workspace is at its staff cap */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such invitation, or it was sent to another email */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Already a member of the workspace, or already accepted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The invitation expired, was withdrawn, or was declined */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_declineInvitationById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeclineTeamInvitationResponseDto"];
+                };
+            };
+            /** @description AUTH_EMAIL_NOT_VERIFIED */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such invitation, or it was sent to another email */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Already accepted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The invitation expired, was withdrawn, or was declined */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     TeamsController_acceptInvitation: {
         parameters: {
             query?: never;
@@ -17871,6 +20449,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    TeamsController_getMyInvitations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyTeamInvitationsResponseDto"];
+                };
             };
         };
     };
@@ -18098,6 +20695,55 @@ export interface operations {
             };
             /** @description Key not found or already revoked */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgAuditController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                /** @description Only this event type */
+                event?: "TEAM_MEMBER_ADDED" | "TEAM_MEMBER_UPDATED" | "TEAM_MEMBER_REMOVED" | "TEAM_INVITATION_CREATED" | "TEAM_INVITATION_ACCEPTED" | "TEAM_INVITATION_CANCELLED" | "TEAM_INVITATION_SUPERSEDED" | "TEAM_STAFF_TRAINER_ACCOUNT_PROMOTED" | "TEAM_ROLE_CREATED" | "TEAM_ROLE_UPDATED" | "TEAM_ROLE_DELETED" | "ORG_PAYMENT_CONFIG_UPSERTED" | "ORG_PAYMENT_CONFIG_REMOVED" | "ORG_PAYOUT_SETTINGS_UPDATED" | "PROVIDER_CURRENCY_VERIFIED" | "PROVIDER_CURRENCY_REMOVED" | "PROVIDER_CURRENCIES_REFRESHED" | "PROVIDER_CURRENCIES_RECHECKED" | "ORG_LOYALTY_SETTINGS_UPDATED";
+                /** @description Only changes made by this user (a team member or the owner) */
+                actor_id?: string;
+                /** @description ISO date lower bound */
+                from?: string;
+                /** @description ISO date upper bound */
+                to?: string;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgAuditController_filters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18432,6 +21078,25 @@ export interface operations {
             path: {
                 organizationId: string;
                 invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_leaveOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
             };
             cookie?: never;
         };

@@ -30,6 +30,8 @@ export const notificationPreferencesSchema = z.object({
   inAppMessages: z.boolean(),
   inAppReminders: z.boolean(),
   inAppPromotions: z.boolean(),
+  inAppMilestones: z.boolean(),
+  inAppNudges: z.boolean(),
 });
 
 export type NotificationPreferencesFormData = z.infer<

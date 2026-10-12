@@ -23,6 +23,8 @@ const basePreferences = {
   inAppMessages: true,
   inAppReminders: true,
   inAppPromotions: false,
+  inAppMilestones: true,
+  inAppNudges: true,
 };
 
 describe("NotificationPreferencesPanel", () => {
@@ -133,5 +135,22 @@ describe("NotificationPreferencesPanel", () => {
       });
     });
     expect(refetch).toHaveBeenCalled();
+  });
+});
+
+describe("NotificationPreferencesPanel nudges", () => {
+  afterEach(() => cleanup());
+
+  it("offers Milestones and Check-in nudges, in-app only, and saves the toggle", async () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    mockUseNotificationPreferences.mockReturnValue({ data: basePreferences, isLoading: false, refetch: vi.fn() });
+    mockUseUpdateNotificationPreferences.mockReturnValue({ mutateAsync, isPending: false, isError: false });
+
+    render(<NotificationPreferencesPanel />);
+
+    expect(screen.getByText("Milestones")).toBeInTheDocument();
+    expect(screen.getByText("Check-in nudges")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /Check-in nudges/i }).find((b) => !b.hasAttribute("disabled"))!);
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ inAppNudges: false }));
   });
 });

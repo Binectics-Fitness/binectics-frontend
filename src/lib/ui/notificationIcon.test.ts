@@ -31,3 +31,12 @@ describe("notificationIcon", () => {
     expect(notificationIcon({ type: null, category: null })).toEqual({ icon: "bell", tone: "neutral" });
   });
 });
+
+describe("nudges and milestones", () => {
+  it("match the mobile table", () => {
+    expect(notificationIcon({ type: "STREAK_MILESTONE", category: "mention" })).toEqual({ icon: "checkin", tone: "gym" });
+    expect(notificationIcon({ type: "INACTIVITY_NUDGE", category: "mention" })).toEqual({ icon: "checkin", tone: "neutral" });
+    expect(notificationIcon({ type: "PROGRAM_HALFWAY" })).toEqual({ icon: "program", tone: "neutral" });
+    expect(notificationIcon({ type: "PROGRAM_COMPLETED" })).toEqual({ icon: "program", tone: "success" });
+  });
+});
