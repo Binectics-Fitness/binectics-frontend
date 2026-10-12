@@ -702,6 +702,11 @@ export interface MembershipSubscription {
   accumulated_pause_ms?: number;
   /** When `past_due` grace runs out. Null in every other state. */
   grace_expires_at?: string | null;
+  /**
+   * The member cancelled a term that is still running: it stays active until
+   * end_date and does not renew (owner ruling, Oct 12 2026). Null otherwise.
+   */
+  cancel_requested_at?: string | null;
   /** Plan change scheduled by the org, applied at renewal (may be populated). */
   next_plan_id?: string | { _id: string; name: string } | null;
   /**

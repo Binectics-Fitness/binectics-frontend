@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  REFUND_ORIGIN_LABEL,
   REFUND_STATUS,
+  adminRequestActions,
   disputeTone,
   newIdempotencyKey,
   refundAmountError,
@@ -45,5 +47,41 @@ describe("refundUi", () => {
     expect(refundErrorMessage("REFUND_NOT_COLLECTOR")).toMatch(/only they can refund/);
     expect(refundErrorMessage("REFUND_DISPUTE_OPEN")).toMatch(/disputed this payment/);
     expect(refundErrorMessage("X", "server said")).toBe("server said");
+  });
+});
+
+describe("admin request actions (owner rulings, Oct 4 and 12)", () => {
+  it("platform requests: approve and decline", () => {
+    expect(adminRequestActions({ payment_rail: "platform", origin: "provider_request", status: "requested" })).toEqual({
+      approve: true,
+      decline: true,
+      onProviderKey: false,
+    });
+  });
+
+  it("a suspended provider's own-key request: approvable, sent from their account", () => {
+    expect(adminRequestActions({ payment_rail: "provider", origin: "provider_suspension", status: "requested" })).toEqual({
+      approve: true,
+      decline: true,
+      onProviderKey: true,
+    });
+  });
+
+  it("other own-key requests (a suspended member's): decline only", () => {
+    expect(adminRequestActions({ payment_rail: "provider", origin: "member_suspension", status: "requested" })).toEqual({
+      approve: false,
+      decline: true,
+      onProviderKey: false,
+    });
+  });
+
+  it("nothing once decided", () => {
+    expect(adminRequestActions({ payment_rail: "platform", origin: "provider_request", status: "queued" }).approve).toBe(false);
+  });
+
+  it("names every origin the API sends", () => {
+    for (const o of ["provider_suspension", "member_suspension", "late_payment", "gym_cancellation"] as const) {
+      expect(REFUND_ORIGIN_LABEL[o]).toMatch(/\w/);
+    }
   });
 });

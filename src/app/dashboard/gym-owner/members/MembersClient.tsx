@@ -202,7 +202,7 @@ function RowActions({
       if (
         !window.confirm(
           hasAccess
-            ? `Cancel ${getMemberName(sub)}'s membership? They lose access and the seat is freed.`
+            ? `Cancel ${getMemberName(sub)}'s membership? They lose access and the seat is freed. If they paid online, the unused part of their term is refunded to them automatically.`
             : `Cancel ${getMemberName(sub)}'s membership? It ends for good and the seat is freed, a pause or suspension can be lifted, this cannot.`,
         )
       )

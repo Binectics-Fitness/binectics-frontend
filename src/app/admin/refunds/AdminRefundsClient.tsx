@@ -7,7 +7,7 @@ import { ActionModal } from "@/components/ds/ActionModal";
 import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { refundsService, type Refund, type RefundStatus } from "@/lib/api/refunds";
-import { REFUND_ORIGIN_LABEL, REFUND_STATUS, refundErrorMessage } from "@/lib/refunds/refundUi";
+import { REFUND_ORIGIN_LABEL, REFUND_STATUS, adminRequestActions, refundErrorMessage } from "@/lib/refunds/refundUi";
 
 type Filter = "requested" | "attention" | "all";
 const FILTERS: { id: Filter; label: string }[] = [
@@ -28,11 +28,12 @@ function memberName(r: Refund): string {
 }
 
 /**
- * The admin refund queue. Admins act only on money Binectics collected
- * (the API refuses anything else): approve or decline providers' requests,
- * check a refund with Paystack, and release an unanswered one after
- * checking the dashboard. Refunds of a provider's own-key money show here
- * for oversight, without actions.
+ * The admin refund queue. Admins act on money Binectics collected: approve
+ * or decline requests, check a refund with Paystack, and release an
+ * unanswered one after checking the dashboard. On a provider's own-key
+ * money they may only decline a request, except one queued because
+ * Binectics suspended that provider, which they may approve and send with
+ * the provider's key (owner ruling, Oct 12 2026; the API enforces it).
  */
 export function AdminRefundsClient() {
   const [filter, setFilter] = useState<Filter>("requested");
@@ -128,6 +129,9 @@ export function AdminRefundsClient() {
             {items.map((r) => {
               const s = REFUND_STATUS[r.status];
               const platform = r.payment_rail === "platform";
+              const req = adminRequestActions(r);
+              // What an admin sent on a suspended provider's key, they also settle.
+              const adminSent = platform || (r.origin === "provider_suspension" && !!r.decided_at);
               return (
                 <li key={r.id} className="flex flex-wrap items-start justify-between gap-3 px-4.5 py-3" style={{ borderTop: "1px solid var(--border)" }} data-testid="admin-refund-row">
                   <div className="min-w-0">
@@ -146,20 +150,25 @@ export function AdminRefundsClient() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill label={s.label} tone={s.tone} title={s.help} />
-                    {platform && r.status === "requested" ? (
-                      <>
-                        <button className="btn-primary-v2" disabled={busy === r.id} onClick={() => act(r.id, () => refundsService.approve(r.id))}>
-                          Approve and send
-                        </button>
-                        <button className="btn-ghost-v2" disabled={busy === r.id} onClick={() => setRejecting(r)}>Decline</button>
-                      </>
+                    {req.approve ? (
+                      <button className="btn-primary-v2" disabled={busy === r.id} onClick={() => act(r.id, () => refundsService.approve(r.id))}>
+                        {req.onProviderKey ? "Approve and send from the provider's account" : "Approve and send"}
+                      </button>
                     ) : null}
-                    {platform && ["pending", "needs_attention", "unknown"].includes(r.status) ? (
+                    {req.decline ? (
+                      <button className="btn-ghost-v2" disabled={busy === r.id} onClick={() => setRejecting(r)}>Decline</button>
+                    ) : null}
+                    {r.status === "requested" && !platform && !req.approve ? (
+                      <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                        Provider&rsquo;s own account: declining frees it for them to refund.
+                      </span>
+                    ) : null}
+                    {adminSent && ["pending", "needs_attention", "unknown"].includes(r.status) ? (
                       <button className="btn-ghost-v2" disabled={busy === r.id} onClick={() => act(r.id, () => refundsService.check(r.id))}>
                         Check with Paystack
                       </button>
                     ) : null}
-                    {platform && r.status === "unknown" && r.needs_review ? (
+                    {adminSent && r.status === "unknown" && r.needs_review ? (
                       <button className="btn-ghost-v2" onClick={() => setReleasing(r)}>Mark as not sent</button>
                     ) : null}
                   </div>

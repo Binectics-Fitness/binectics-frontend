@@ -1,5 +1,5 @@
 import type { Tone } from "@/lib/ui/tones";
-import type { Dispute, RefundOrigin, RefundStatus } from "@/lib/api/refunds";
+import type { Dispute, Refund, RefundOrigin, RefundStatus } from "@/lib/api/refunds";
 
 /** What each refund status says to a person, and how it is coloured. */
 export const REFUND_STATUS: Record<RefundStatus, { label: string; tone: Tone; help: string }> = {
@@ -29,7 +29,29 @@ export const REFUND_ORIGIN_LABEL: Record<RefundOrigin, string> = {
   provider: "Refunded by provider",
   admin: "Refunded by Binectics",
   provider_request: "Requested by provider",
+  provider_suspension: "Provider suspended",
+  member_suspension: "Member suspended",
+  late_payment: "Paid after the hold ended",
+  gym_cancellation: "Gym cancelled the membership (unused part)",
 };
+
+/**
+ * What an admin may do with a refund REQUEST (owner rulings, Oct 4 and 12):
+ * approve platform money; approve a suspended provider's own-key money (sent
+ * with their key; the API refuses once they are reinstated); every other
+ * own-key request can only be declined, which frees it for the provider to
+ * refund themselves.
+ */
+export function adminRequestActions(r: Pick<Refund, "payment_rail" | "origin" | "status">): {
+  approve: boolean;
+  decline: boolean;
+  onProviderKey: boolean;
+} {
+  if (r.status !== "requested") return { approve: false, decline: false, onProviderKey: false };
+  if (r.payment_rail === "platform") return { approve: true, decline: true, onProviderKey: false };
+  const exception = r.origin === "provider_suspension";
+  return { approve: exception, decline: true, onProviderKey: exception };
+}
 
 /** Which dispute state to show. */
 export function disputeTone(d: Pick<Dispute, "open" | "resolution">): { label: string; tone: Tone } {

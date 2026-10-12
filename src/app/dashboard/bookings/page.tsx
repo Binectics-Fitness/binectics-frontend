@@ -773,7 +773,9 @@ function CancelModal({
           data-testid="cancel-refund-quote"
         >
           {quote.refund_minor <= 0
-            ? `Under this provider's policy, cancelling less than ${quote.policy.window_hours} hours before the start refunds nothing.`
+            ? quote.late
+              ? `Under this provider's policy, cancelling less than ${quote.policy.window_hours} hours before the start refunds nothing.`
+              : "Cancelling now refunds nothing under this provider's policy."
             : partial
               ? `You'll get ${formatMinor(quote.currency, quote.refund_minor)} of ${formatMinor(quote.currency, quote.paid_minor)} back, under this provider's cancellation policy.`
               : `You'll get ${formatMinor(quote.currency, quote.refund_minor)} back in full.`}

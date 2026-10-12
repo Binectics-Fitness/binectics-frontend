@@ -30,7 +30,15 @@ export type RefundOrigin =
   | "admin_cancellation"
   | "provider"
   | "admin"
-  | "provider_request";
+  | "provider_request"
+  /** Binectics suspended the provider: an admin decides (owner ruling, Oct 12). */
+  | "provider_suspension"
+  /** Binectics suspended the member: an admin decides. */
+  | "member_suspension"
+  /** Paid after the booking hold lapsed and the time was taken. */
+  | "late_payment"
+  /** The gym cancelled the membership: the unused part, pro rata. */
+  | "gym_cancellation";
 
 export interface Refund {
   id: string;
