@@ -17,6 +17,8 @@ export function FilterPill({ label, count, active, onClick }: FilterPillProps) {
     <button
       type="button"
       onClick={onClick}
+      // A toggle: say whether it is on, when the caller tracks it.
+      aria-pressed={active === undefined ? undefined : active}
       className="h-7 px-2.5 rounded-[var(--r-2)] text-[12.5px] font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5"
       style={{
         background: active ? "var(--ink)" : "transparent",
