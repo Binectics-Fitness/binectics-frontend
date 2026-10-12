@@ -234,6 +234,9 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
           Settled revenue from your organization&rsquo;s ledger, plus your {sessionNoun} activity
         </p>
+        <Link href="/dashboard/refunds" className="inline-block mt-2 text-[13px] underline" style={{ color: "var(--fg-2)" }}>
+          Refunds and disputes
+        </Link>
       </div>
 
       {/* ── Settled revenue ─────────────────────────────────────────────── */}

@@ -12,6 +12,7 @@ import {
   type AdminTransactionDetail,
 } from "@/lib/api/admin";
 import { formatMinor } from "@/lib/currencies/helpers";
+import { ChargeRefundPanel } from "@/components/refunds/ChargeRefundPanel";
 
 const REFERENCE_LABEL: Record<string, string> = {
   membership_subscription: "Membership subscription",
@@ -282,9 +283,13 @@ export function PaymentDetailClient({ paymentId }: { paymentId: string }) {
                     No refunds recorded against this payment.
                   </div>
                 ) : null}
-                <p className="text-[12px] mt-3" style={{ color: "var(--fg-4)" }}>
-                  Refunds can&apos;t be issued from here yet.
-                </p>
+                {detail.transaction.direction === "credit" &&
+                (detail.transaction.type === "consultation" || detail.transaction.type === "subscription") ? (
+                  <div className="mt-4">
+                    {/* The API decides who may refund: only platform money here. */}
+                    <ChargeRefundPanel mode="admin" chargeId={paymentId} />
+                  </div>
+                ) : null}
               </Card>
             </div>
           </div>

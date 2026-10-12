@@ -17,6 +17,24 @@ const api = vi.hoisted(() => ({ getTransaction: vi.fn(), listTransactions: vi.fn
 vi.mock("@/components/ds/AdminDashboardShell", () => ({
   AdminDashboardShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
+// The refund panel asks the API who collected the payment; here, the
+// provider's own key, so an admin gets no refund form.
+vi.mock("@/lib/api/refunds", async (orig) => ({
+  ...(await orig<typeof import("@/lib/api/refunds")>()),
+  refundsService: {
+    adminQuote: vi.fn(async () => ({
+      success: true,
+      data: {
+        charge: { id: "tx1", type: "subscription", amount_minor: 4_500_000, currency: "NGN", occurred_at: null, reference_type: "membership_subscription", reference_id: "s1", member_user_id: "u1" },
+        payment_rail: "provider",
+        action: "none",
+        refundable_minor: 4_500_000,
+        refunded_minor: 0,
+        refunds: [],
+      },
+    })),
+  },
+}));
 vi.mock("@/lib/api/admin", () => ({
   adminService: {
     getTransaction: api.getTransaction,
@@ -82,7 +100,8 @@ describe("admin payment detail", () => {
     expect(screen.getByText("None (automated)")).toBeTruthy();
     expect(screen.queryByText(/PI_3OqL08|chargeback/i)).toBeNull();
     expect(screen.queryByRole("button", { name: /refund/i })).toBeNull();
-    expect(screen.getByText(/Refunds can.t be issued from here yet/)).toBeTruthy();
+    expect(await screen.findByText(/Only the provider can refund it/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^refund$/i })).toBeNull();
   });
 
   it("shows a booking reference and links refunds of the row", async () => {

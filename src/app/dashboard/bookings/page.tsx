@@ -21,6 +21,8 @@ import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingM
 import { bookingPaymentState, isPayable } from "@/lib/bookings/paymentState";
 import { bookingPaymentStateTone } from "@/lib/ui/statusTones";
 import { hasPaidReceipt, receiptHref } from "@/lib/bookings/receipt";
+import { refundsService, type CancellationQuote } from "@/lib/api/refunds";
+import { formatMinor } from "@/lib/currencies/helpers";
 
 type TabKey = "upcoming" | "past" | "cancelled";
 
@@ -680,11 +682,14 @@ export default function MyBookingsPage() {
             booking={selected}
             loading={actionLoading}
             onClose={() => setCancelOpen(false)}
-            onConfirm={async (reason) => {
+            onConfirm={async (reason, acknowledgeRefundPolicy) => {
               setActionLoading(true);
               try {
                 // apiClient reports a refusal as success: false, not a throw.
-                const res = await consultationsService.cancelBooking(selected.id, { reason });
+                const res = await consultationsService.cancelBooking(selected.id, {
+                  reason,
+                  ...(acknowledgeRefundPolicy ? { acknowledge_refund_policy: true } : {}),
+                });
                 if (!res.success) {
                   toast.error(res.message ?? "Failed to cancel");
                   return;
@@ -717,11 +722,26 @@ function CancelModal({
   booking: ConsultationBooking;
   loading: boolean;
   onClose: () => void;
-  onConfirm: (reason?: string) => void;
+  onConfirm: (reason: string | undefined, acknowledgeRefundPolicy: boolean) => void;
 }) {
   const [reason, setReason] = useState("");
+  const [quote, setQuote] = useState<CancellationQuote | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    refundsService.cancellationQuote(booking.id).then((res) => {
+      if (active && res.success && res.data) setQuote(res.data);
+    });
+    return () => {
+      active = false;
+    };
+  }, [open, booking.id]);
 
   const when = formatDateBlock(booking.startsAt);
+  // Less than everything back under the provider's policy: the member is
+  // told exactly what they get and confirming sends the acknowledgement.
+  const partial = !!quote?.paid_online && quote.refund_minor < quote.paid_minor;
 
   return (
     <ActionModal
@@ -736,7 +756,7 @@ function CancelModal({
           </button>
           <button
             type="button"
-            onClick={() => onConfirm(reason || undefined)}
+            onClick={() => onConfirm(reason || undefined, partial)}
             disabled={loading}
             className="btn-primary-v2 disabled:opacity-40"
             style={{ background: "var(--danger)", color: "white" }}
@@ -746,6 +766,19 @@ function CancelModal({
         </>
       }
     >
+      {quote?.paid_online && quote.currency ? (
+        <p
+          className="mb-4 rounded-(--r-2) px-3 py-2 text-[13.5px]"
+          style={{ background: partial ? "var(--warn-soft)" : "var(--signal-soft)", color: partial ? "var(--warn-ink)" : "var(--signal-ink)" }}
+          data-testid="cancel-refund-quote"
+        >
+          {quote.refund_minor <= 0
+            ? `Under this provider's policy, cancelling less than ${quote.policy.window_hours} hours before the start refunds nothing.`
+            : partial
+              ? `You'll get ${formatMinor(quote.currency, quote.refund_minor)} of ${formatMinor(quote.currency, quote.paid_minor)} back, under this provider's cancellation policy.`
+              : `You'll get ${formatMinor(quote.currency, quote.refund_minor)} back in full.`}
+        </p>
+      ) : null}
       <div>
         <label className="mb-1.5 block font-mono text-[10.5px] uppercase tracking-wide text-fg-3">
           Reason (optional)
