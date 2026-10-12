@@ -77,7 +77,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
           {[
             ["Bookings & payments", "7 years (tax compliance)"],
             ["Messages", "2 years after last interaction"],
-            ["Health & meal logs", "Deleted with your account · purged after 30 days"],
+            ["Health & meal logs", "Deleted when you delete your account · backup copies expire within 35 days"],
             ["Verification documents", "Hash + outcome only · originals deleted in 90 days"],
             ["Behavioral analytics", "Anonymized after 14 days · aggregated indefinitely"],
           ].map(([k, v], i) => (
