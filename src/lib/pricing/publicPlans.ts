@@ -134,11 +134,11 @@ export const FEATURE_LABELS: readonly { key: keyof ProviderBillingFeatures; labe
   { key: "forms_enabled", label: "Forms (PAR-Q, waivers)" },
   { key: "classes_enabled", label: "Class schedule" },
   { key: "analytics_enabled", label: "Analytics" },
-  { key: "loyalty_enabled", label: "Loyalty rewards" },
+  // No loyalty row: a provider's own loyalty program is on every tier, so it
+  // is not something one plan has and another lacks.
   { key: "white_label_enabled", label: "White-label branding" },
   { key: "custom_domain_enabled", label: "Custom domain" },
   { key: "branded_email_enabled", label: "Branded email" },
-  { key: "api_access_enabled", label: "API access" },
 ];
 
 /** "Up to 250 active members", "1 marketplace listing", "Unlimited staff seats", "No staff seats". */

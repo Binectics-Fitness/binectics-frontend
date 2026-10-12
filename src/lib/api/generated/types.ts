@@ -49,3 +49,9 @@ export type CityDto = Schemas["CityDto"];
 
 /* ── Error envelope ────────────────────────────────────────────────────── */
 export type ErrorResponseDto = Schemas["ErrorResponseDto"];
+
+/* ── Progress reports ──────────────────────────────────────────────────── */
+export type CreateProgressReportDto = Schemas["CreateProgressReportDto"];
+export type ProgressReportView = Schemas["ProgressReportView"];
+export type ProgressReportSnapshot = Schemas["ProgressReportSnapshot"];
+export type ProgressReportLink = Schemas["ProgressReportLink"];

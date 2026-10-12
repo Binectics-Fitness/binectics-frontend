@@ -53,8 +53,6 @@ export const queryKeys = {
       [...queryKeys.teams.all, "invitations", orgId] as const,
     orgNotificationSettings: (orgId: string) =>
       [...queryKeys.teams.all, "orgNotificationSettings", orgId] as const,
-    apiKeys: (orgId: string) =>
-      [...queryKeys.teams.all, "apiKeys", orgId] as const,
   },
 
   marketplace: {
@@ -145,9 +143,15 @@ export const queryKeys = {
 
   loyalty: {
     all: ["loyalty"] as const,
-    balance: () => [...queryKeys.loyalty.all, "balance"] as const,
-    history: (limit?: number, skip?: number) =>
-      [...queryKeys.loyalty.all, "history", limit, skip] as const,
+    programs: () => [...queryKeys.loyalty.all, "programs"] as const,
+    balance: (orgId?: string) =>
+      [...queryKeys.loyalty.all, "balance", orgId ?? "all"] as const,
+    history: (limit?: number, skip?: number, orgId?: string) =>
+      [...queryKeys.loyalty.all, "history", limit, skip, orgId ?? "all"] as const,
+    orgSettings: (orgId: string) =>
+      [...queryKeys.loyalty.all, "orgSettings", orgId] as const,
+    orgRewards: (orgId: string) =>
+      [...queryKeys.loyalty.all, "orgRewards", orgId] as const,
     rewards: (orgId?: string) =>
       [...queryKeys.loyalty.all, "rewards", orgId ?? "all"] as const,
     myRedemptions: () =>

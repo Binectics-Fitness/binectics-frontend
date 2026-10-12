@@ -30,7 +30,7 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { currentProgramDay, myProgramsService, type ProgramDay } from "@/lib/api/myPrograms";
 import { progressService } from "@/lib/api/progress";
 import type { WeightLog } from "@/lib/api/progress";
-import type { LoyaltyBalance } from "@/lib/types";
+import type { LoyaltyProgram } from "@/lib/types";
 import { dayUnit, longestStreakLine, type StreakStats } from "@/lib/checkins/streak";
 import {
   activeGyms,
@@ -45,8 +45,12 @@ interface MemberSnapshot {
   /** Check-in moments from the last 7 days; null when the read failed. */
   weekCheckIns: string[] | null;
   next: NextUpItem | null;
-  loyalty: LoyaltyBalance | null;
-  loyaltyFailed: boolean;
+  /**
+   * The member's providers' loyalty programs (only those switched on). Empty,
+   * or a failed read, shows no loyalty card at all: loyalty is a provider's
+   * own opt-in, not something every member has.
+   */
+  loyalty: LoyaltyProgram[];
   /** null when the read failed (no profile is not a failure: that's []). */
   weights: WeightLog[] | null;
   gyms: { orgId: string; name: string }[];
@@ -57,8 +61,7 @@ const EMPTY: MemberSnapshot = {
   checkins: null,
   weekCheckIns: [],
   next: null,
-  loyalty: null,
-  loyaltyFailed: false,
+  loyalty: [],
   weights: [],
   gyms: [],
   program: null,
@@ -102,7 +105,7 @@ function MemberHomeContent() {
             checkinsService.getMyHistory(CheckInHistoryPeriod.WEEK),
             consultationsService.getMyBookings("upcoming"),
             classBookingsService.getMyClassBookings(),
-            loyaltyService.getBalance(),
+            loyaltyService.getPrograms(),
             progressService.getMyOwnProfiles(),
             marketplaceService.getMyMembershipSubscriptions(),
             myProgramsService.listMine(),
@@ -128,8 +131,7 @@ function MemberHomeContent() {
           checkins: (settled(checkinsRes) as StreakStats | undefined) ?? null,
           weekCheckIns: succeeded(historyRes) ? (settled(historyRes) ?? []).map((c) => c.checked_in_at) : null,
           next: nextUp(settled(bookingsRes) ?? [], settled(classesRes) ?? [], at),
-          loyalty: settled(loyaltyRes) ?? null,
-          loyaltyFailed: !succeeded(loyaltyRes),
+          loyalty: settled(loyaltyRes) ?? [],
           weights,
           gyms: activeGyms(settled(subsRes) ?? [], at),
           program: currentProgramDay(settled(programsRes) ?? []),
@@ -320,46 +322,40 @@ function MemberHomeContent() {
             </DSCard>
           )}
 
-          <DSCard className={CARD_PAD}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
-                Loyalty balance
-              </h3>
-              <Link
-                href="/dashboard/loyalty"
-                className="font-mono text-[11px] uppercase tracking-[0.04em]"
-                style={{ color: "var(--fg-3)" }}
-              >
-                View all →
-              </Link>
-            </div>
-            {loading && (
-              <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-                Loading...
-              </div>
-            )}
-            {!loading && !snapshot.loyalty && snapshot.loyaltyFailed && (
-              <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-                Couldn&rsquo;t load your balance. Try again later.
-              </div>
-            )}
-            {!loading && !snapshot.loyalty && !snapshot.loyaltyFailed && (
-              <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-                No loyalty activity yet. Start checking in to earn points.
-              </div>
-            )}
-            {!loading && snapshot.loyalty && (
-              <div className="flex items-baseline gap-3">
-                <div
-                  className="text-[32px] font-medium"
-                  style={{ color: "var(--ink)", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+          {!loading && snapshot.loyalty.length > 0 && (
+            <DSCard className={CARD_PAD}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
+                  Loyalty points
+                </h3>
+                <Link
+                  href="/dashboard/loyalty"
+                  className="font-mono text-[11px] uppercase tracking-[0.04em]"
+                  style={{ color: "var(--fg-3)" }}
                 >
-                  {snapshot.loyalty.balance.toLocaleString()}
-                </div>
-                <Eyebrow as="span">points</Eyebrow>
+                  Rewards →
+                </Link>
               </div>
-            )}
-          </DSCard>
+              <div className="flex flex-col gap-2">
+                {snapshot.loyalty.map((p) => (
+                  <div key={p.organization_id} className="flex items-baseline justify-between gap-3">
+                    <span className="text-[13px] truncate" style={{ color: "var(--fg-2)" }}>
+                      {p.organization_name || "Your provider"}
+                    </span>
+                    <span className="flex items-baseline gap-2 shrink-0">
+                      <span
+                        className="text-[24px] font-medium"
+                        style={{ color: "var(--ink)", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+                      >
+                        {p.balance.toLocaleString()}
+                      </span>
+                      <Eyebrow as="span">points</Eyebrow>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </DSCard>
+          )}
         </div>
 
         <div>

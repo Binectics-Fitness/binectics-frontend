@@ -1,236 +1,82 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const MEMBERS = [
-  {
-    id: "lerato",
-    name: "Lerato Mokoena",
-    initials: "LM",
-    photoBg: "oklch(0.86 0.04 80)",
-    type: "Iron Lab Member · 2 years",
-    streakFrom: 23,
-    streakTo: 24,
-    streakLabel: "day streak",
-    nextTime: "6:30",
-    nextLine: "Strength",
-    nextSub: "with Sarah Okafor",
-    nextBadge: null,
-    welcome: "Welcome back",
-    flavor: "standard",
-    tag: "Standard",
-  },
-  {
-    id: "marcus",
-    name: "Marcus Chen",
-    initials: "MC",
-    photoBg: "oklch(0.84 0.05 60)",
-    type: "Iron Lab Member · 4 years",
-    streakFrom: 47,
-    streakTo: 48,
-    streakLabel: "day streak",
-    nextTime: "7:00",
-    nextLine: "5×5 Powerlifting",
-    nextSub: "one rep from a PR",
-    nextBadge: "PR day",
-    welcome: "A personal record kind of day",
-    flavor: "pr",
-    tag: "PR potential",
-  },
-  {
-    id: "aisha",
-    name: "Aisha Patel",
-    initials: "AP",
-    photoBg: "oklch(0.86 0.04 120)",
-    type: "Iron Lab Member · day 1",
-    streakFrom: 0,
-    streakTo: 1,
-    streakLabel: "first day",
-    nextTime: "6:00",
-    nextLine: "Beginner Strength",
-    nextSub: "with Sarah, she’s expecting you",
-    nextBadge: "First class",
-    welcome: "Welcome to Iron Lab. We are glad you are here.",
-    flavor: "first",
-    tag: "First-timer",
-  },
-  {
-    id: "daniel",
-    name: "Daniel Kovač",
-    initials: "DK",
-    photoBg: "oklch(0.84 0.03 240)",
-    type: "Iron Lab Member · 3 years",
-    streakFrom: null,
-    streakTo: null,
-    streakLabel: null,
-    nextTime: "now",
-    nextLine: "Open gym",
-    nextSub: "drop in any time today",
-    nextBadge: null,
-    welcome: "Missed you these 14 days.",
-    flavor: "returning",
-    tag: "Returning",
-  },
+/**
+ * Marketing demo of the real check-in flow: the gym's screen shows a QR code
+ * that changes every minute, a member scans it with their phone, and the
+ * arrival (or a declined attempt) shows on the gym's kiosk page. Names and
+ * times are illustrative; nothing here claims a feature the product lacks.
+ */
+
+type Scenario = {
+  id: string;
+  name: string;
+  first: string;
+  tag: string;
+  ok: boolean;
+  time: string;
+  streak: number;
+};
+
+const SCENARIOS: Scenario[] = [
+  { id: "ada", name: "Ada O.", first: "Ada", tag: "Active plan", ok: true, time: "07:42", streak: 24 },
+  { id: "kemi", name: "Kemi B.", first: "Kemi", tag: "No active plan", ok: false, time: "07:44", streak: 0 },
 ];
 
-const SEQ_TOTAL = 2150;
-const HOLD = 2500;
-const IDLE_GAP = 800;
+const EARLIER = [
+  { name: "Tunde A.", time: "07:31" },
+  { name: "Grace E.", time: "07:18" },
+];
 
-function useRAFTime(playing: boolean, duration: number) {
-  const [t, setT] = useState(0);
-  useEffect(() => {
-    if (!playing) {
-      setT(0);
-      return;
-    }
-    let raf: number;
-    const start = performance.now();
-    const loop = (now: number) => {
-      const elapsed = now - start;
-      if (elapsed >= duration) {
-        setT(duration);
-        return;
+/** Run phases, in ms from the start of a run. */
+const SCAN_AT = 700;
+const RESULT_AT = 1700;
+const FEED_AT = 2600;
+const RUN_MS = 6500;
+
+const QR_SIZE = 21;
+
+/** A QR-looking pattern with the three finder squares; `seed` changes it. */
+function qrCells(seed: number): boolean[] {
+  let s = seed * 7919 + 17;
+  const rnd = () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+  const inFinder = (r: number, c: number) => {
+    const corners = [
+      [0, 0],
+      [0, QR_SIZE - 7],
+      [QR_SIZE - 7, 0],
+    ];
+    for (const [r0, c0] of corners) {
+      if (r >= r0 && r < r0 + 7 && c >= c0 && c < c0 + 7) {
+        const rr = r - r0;
+        const cc = c - c0;
+        const ring = rr === 0 || rr === 6 || cc === 0 || cc === 6;
+        const core = rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4;
+        return { finder: true, on: ring || core };
       }
-      setT(elapsed);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [playing, duration]);
-  return t;
-}
-
-function StreakNumber({
-  from,
-  to,
-  playing,
-}: {
-  from: number | null;
-  to: number | null;
-  playing: boolean;
-}) {
-  const t = useRAFTime(playing, SEQ_TOTAL);
-  if (from === null || to === null) return null;
-  let value = from;
-  const startT = 1550;
-  const endT = 2150;
-  if (t < startT) value = from;
-  else if (t >= endT) value = to;
-  else {
-    const p = (t - startT) / (endT - startT);
-    const eased = 1 - Math.pow(1 - p, 3);
-    value = Math.round(from + (to - from) * eased);
-  }
-  return <span>{value}</span>;
-}
-
-function Success({
-  member,
-  playing,
-  runKey,
-}: {
-  member: (typeof MEMBERS)[0];
-  playing: boolean;
-  runKey: number;
-}) {
-  return (
-    <div className={`kd-success flavor-${member.flavor}`} key={runKey}>
-      <div className="kd-ok-flash">
-        <svg
-          viewBox="0 0 12 12"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M 2.5 6 L 5 8.5 L 9.5 4" />
-        </svg>
-        <span>Checked in</span>
-      </div>
-
-      <div className="kd-hero">
-        <div className="kd-ring">
-          <div className="kd-tick">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M 5 12 L 10 17 L 19 7" />
-            </svg>
-          </div>
-          <div className="kd-photo" style={{ background: member.photoBg }}>
-            <span>{member.initials}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="kd-name">{member.name}</div>
-      <div className="kd-type">{member.type}</div>
-
-      <div className="kd-nextcard">
-        <div className="kd-nc-time">
-          <span className="kd-nc-h">{member.nextTime}</span>
-          {member.nextTime !== "now" && <span>PM</span>}
-        </div>
-        <div className="kd-nc-body">
-          <div className="kd-nc-t">{member.nextLine}</div>
-          <div className="kd-nc-s">{member.nextSub}</div>
-        </div>
-        {member.nextBadge && (
-          <div className="kd-nc-badge">{member.nextBadge}</div>
-        )}
-      </div>
-
-      {member.streakTo !== null && (
-        <div className="kd-streak">
-          <div className="kd-str-num">
-            <StreakNumber
-              from={member.streakFrom}
-              to={member.streakTo}
-              playing={playing}
-            />
-          </div>
-          <div className="kd-str-lbl">
-            <div className="kd-str-top">
-              {member.flavor === "first" ? "Your streak begins" : "Day streak"}
-            </div>
-            <div>{member.streakLabel}</div>
-          </div>
-          {(member.streakTo ?? 0) - (member.streakFrom ?? 0) > 0 && (
-            <div className="kd-str-plus">+1</div>
-          )}
-        </div>
-      )}
-
-      <div className="kd-welcome">{member.welcome}</div>
-    </div>
-  );
-}
-
-function QRHint() {
-  const cells = useMemo(() => {
-    const result: boolean[] = [];
-    let s = 7;
-    const rnd = () => {
-      s = (s * 9301 + 49297) % 233280;
-      return s / 233280;
-    };
-    for (let i = 0; i < 169; i++) {
-      result.push(rnd() <= 0.55);
     }
-    return result;
-  }, []);
+    return { finder: false, on: false };
+  };
+  const out: boolean[] = [];
+  for (let r = 0; r < QR_SIZE; r++) {
+    for (let c = 0; c < QR_SIZE; c++) {
+      const f = inFinder(r, c);
+      out.push(f.finder ? f.on : rnd() < 0.48);
+    }
+  }
+  return out;
+}
 
+function Qr({ seed }: { seed: number }) {
+  const cells = useMemo(() => qrCells(seed), [seed]);
   return (
-    <div className="kd-qr-hint">
-      {cells.map((visible, i) => (
-        <span key={i} style={visible ? undefined : { opacity: 0 }} />
+    <div className="kd-qr" aria-hidden="true">
+      {cells.map((on, i) => (
+        <span key={i} className={on ? "on" : undefined} />
       ))}
     </div>
   );
@@ -238,428 +84,232 @@ function QRHint() {
 
 export function KioskDemo() {
   const [idx, setIdx] = useState(0);
-  const [runKey, setRunKey] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [run, setRun] = useState(0);
+  const [t, setT] = useState(0);
+  const member = SCENARIOS[idx];
 
-  const member = MEMBERS[idx];
-
+  // One run per scenario; the code "rotates" between runs.
   useEffect(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setPlaying(false);
-    const tStart = setTimeout(() => {
-      setRunKey((k) => k + 1);
-      setPlaying(true);
-    }, IDLE_GAP);
-    return () => clearTimeout(tStart);
-  }, [idx]);
-
-  useEffect(() => {
-    if (!playing) return;
-    timerRef.current = setTimeout(() => {
-      setIdx((i) => (i + 1) % MEMBERS.length);
-    }, SEQ_TOTAL + HOLD);
+    const timers = [SCAN_AT, RESULT_AT, FEED_AT].map((at) => setTimeout(() => setT(at), at));
+    const next = setTimeout(() => {
+      setT(0);
+      setIdx((i) => (i + 1) % SCENARIOS.length);
+      setRun((r) => r + 1);
+    }, RUN_MS);
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      timers.forEach(clearTimeout);
+      clearTimeout(next);
     };
-  }, [playing, runKey]);
+  }, [run]);
 
-  const [clock, setClock] = useState("");
-  useEffect(() => {
-    const upd = () => {
-      const d = new Date();
-      setClock(
-        `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
-      );
-    };
-    upd();
-    const i = setInterval(upd, 30000);
-    return () => clearInterval(i);
-  }, []);
+  const pick = (i: number) => {
+    setT(0);
+    setIdx(i);
+    setRun((r) => r + 1);
+  };
+
+  const scanning = t >= SCAN_AT && t < RESULT_AT;
+  const result = t >= RESULT_AT;
+  const fed = t >= FEED_AT;
 
   return (
     <div className="kd-root">
       <style>{KIOSK_CSS}</style>
 
-      {/* Member selector chips */}
-      <div className="kd-chips">
-        {MEMBERS.map((m, i) => (
+      <div className="kd-chips" role="group" aria-label="Choose a member">
+        {SCENARIOS.map((s, i) => (
           <button
-            key={m.id}
-            className={`kd-chip ${i === idx ? "active" : ""}`}
-            onClick={() => setIdx(i)}
+            key={s.id}
             type="button"
+            className={`kd-chip ${i === idx ? "active" : ""}`}
+            aria-pressed={i === idx}
+            onClick={() => pick(i)}
           >
-            <span className="kd-chip-nm">
-              {m.name.split(" ")[0]} {m.name.split(" ")[1]?.[0]}.
-            </span>
-            <span className="kd-chip-tg">{m.tag}</span>
+            <span className="kd-chip-nm">{s.name}</span>
+            <span className="kd-chip-tg">{s.tag}</span>
           </button>
         ))}
       </div>
 
-      {/* Stage */}
       <div className="kd-stage">
-        <div className="kd-stage-tag">
-          <span>Live · Iron Lab kiosk</span>
-        </div>
-
-        <div className="kd-kiosk">
-          <div className={`kd-screen ${playing ? "kd-playing" : ""}`}>
-            {/* Status bar */}
-            <div className="kd-stbar">
-              <div className="kd-stbar-gym">
-                <svg
-                  viewBox="0 0 12 12"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                >
-                  <path d="M 8 1.5 A 4.5 4.5 0 1 0 8 10.5" />
-                  <path d="M 7 4 A 2 2 0 1 0 7 8" />
-                </svg>
-                <span>Iron Lab</span>
-              </div>
-              <div>{clock}</div>
+        {/* The gym's screen: any tablet, phone or computer in a browser */}
+        <figure className="kd-col">
+          <div className="kd-screen">
+            <div className="kd-bar">
+              <span>Iron Lab</span>
+              <span>Check-in kiosk</span>
             </div>
-
-            <div className="kd-stage-area">
-              {/* Idle */}
-              <div className="kd-idle">
-                <div className="kd-idle-eyebrow">Scan to enter</div>
-                <div className="kd-idle-title">
-                  Hold your <em>Binectics</em> code up to the camera
-                </div>
-                <div className="kd-viewfinder">
-                  <span className="kd-bracket tl" />
-                  <span className="kd-bracket tr" />
-                  <span className="kd-bracket bl" />
-                  <span className="kd-bracket br" />
-                  <QRHint />
-                  <div className="kd-scanline" />
-                </div>
-                <div className="kd-idle-help">
-                  Camera unlocks the door · checks you in · counts
-                  your streak.
-                </div>
-                <div className="kd-idle-foot">
-                  <span>
-                    Today ·{" "}
-                    <span style={{ color: "var(--ink)" }}>216 checked in</span>
-                  </span>
-                  <span>Door ✓</span>
-                </div>
+            <div className="kd-screen-body">
+              <div className="kd-eyebrow">Scan to check in</div>
+              <Qr seed={run} />
+              <div className="kd-rotate">
+                <span className="kd-rotate-track">
+                  <span key={run} className="kd-rotate-fill" />
+                </span>
+                <span>Code changes every minute</span>
               </div>
-
-              {/* Success */}
-              <Success member={member} playing={playing} runKey={runKey} />
+            </div>
+            <div className="kd-feed">
+              <div className="kd-feed-head">Today&rsquo;s arrivals</div>
+              {fed && (
+                <div key={`row-${run}`} className={`kd-row kd-row-new ${member.ok ? "" : "kd-row-declined"}`}>
+                  <span>{member.name}</span>
+                  <span>{member.ok ? member.time : "Declined · No membership"}</span>
+                </div>
+              )}
+              {EARLIER.map((r) => (
+                <div key={r.name} className="kd-row">
+                  <span>{r.name}</span>
+                  <span>{r.time}</span>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+          <figcaption className="kd-cap">The gym&rsquo;s screen, in a web browser</figcaption>
+        </figure>
+
+        {/* The member's phone */}
+        <figure className="kd-col">
+          <div className={`kd-phone ${result && member.ok ? "kd-phone-dark" : ""}`}>
+            {!result && (
+              <div className="kd-cam">
+                <div className="kd-cam-label">{scanning ? "Scanning…" : "Point your camera at the code"}</div>
+                <div className="kd-finder">
+                  <span className="kd-br tl" />
+                  <span className="kd-br tr" />
+                  <span className="kd-br bl" />
+                  <span className="kd-br br" />
+                  <div className="kd-finder-qr">
+                    <Qr seed={run} />
+                  </div>
+                  {scanning && <div className="kd-scanline" />}
+                </div>
+              </div>
+            )}
+            {result && member.ok && (
+              <div key={`ok-${run}`} className="kd-result">
+                <div className="kd-status">Checked in · {member.time}</div>
+                <div className="kd-hello">You&rsquo;re in, {member.first}.</div>
+                <div className="kd-gym">Iron Lab</div>
+                <div className="kd-streak">
+                  <span className="kd-streak-num">{member.streak}</span>
+                  <span className="kd-streak-lbl">day streak</span>
+                </div>
+              </div>
+            )}
+            {result && !member.ok && (
+              <div key={`no-${run}`} className="kd-result kd-result-light">
+                <div className="kd-status kd-status-no">Not checked in</div>
+                <div className="kd-hello kd-hello-light">You need an active plan at Iron Lab.</div>
+                <div className="kd-gym kd-gym-light">Buy or renew a plan, then scan again.</div>
+              </div>
+            )}
+          </div>
+          <figcaption className="kd-cap">The member&rsquo;s phone</figcaption>
+        </figure>
       </div>
     </div>
   );
 }
 
 const KIOSK_CSS = `
-/* ====== Kiosk Demo (kd- prefix) ====== */
 .kd-root { display: flex; flex-direction: column; gap: 16px; }
-
-.kd-chips {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-}
-@media (max-width: 640px) {
-  .kd-chips { grid-template-columns: repeat(2, 1fr); }
-}
+.kd-chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-width: 420px; }
 .kd-chip {
   border: 1px solid var(--border); border-radius: var(--r-2);
-  padding: 8px 10px; background: var(--bg); text-align: left;
-  cursor: pointer; transition: border-color 120ms, background 120ms;
+  padding: 8px 10px; background: var(--bg); text-align: left; cursor: pointer;
   display: flex; flex-direction: column; gap: 2px;
+  transition: border-color var(--motion-fast, 120ms);
 }
 .kd-chip:hover { border-color: var(--border-2); }
 .kd-chip.active { border-color: var(--ink); }
-.kd-chip-nm { font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: var(--ink); }
+.kd-chip-nm { font-size: 13px; font-weight: 500; color: var(--ink); }
 .kd-chip-tg { font-family: var(--font-mono); font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.05em; }
 
 .kd-stage {
-  background: oklch(0.93 0.005 80);
-  border: 1px solid var(--border);
-  border-radius: var(--r-3);
-  padding: 40px;
-  display: flex; align-items: center; justify-content: center;
-  position: relative;
-  min-height: 600px;
-  background-image: radial-gradient(circle at 50% 30%, oklch(0 0 0 / 0.04), transparent 70%);
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r-3);
+  padding: 32px 24px; display: flex; gap: 32px; justify-content: center; align-items: flex-start;
+  flex-wrap: wrap;
 }
-@media (max-width: 640px) {
-  .kd-stage { padding: 20px 12px; min-height: 520px; }
-}
-.kd-stage-tag {
-  position: absolute; top: 14px; left: 16px;
-  font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3);
-  text-transform: uppercase; letter-spacing: 0.06em;
-  display: flex; align-items: center; gap: 8px;
-}
-.kd-stage-tag::before {
-  content: ""; width: 6px; height: 6px; border-radius: 50%;
-  background: var(--signal); box-shadow: 0 0 0 3px oklch(0.68 0.16 148 / 0.2);
-  animation: kd-livedot 1.4s ease-in-out infinite;
-}
-@keyframes kd-livedot { 50% { opacity: 0.4; } }
+@media (max-width: 640px) { .kd-stage { padding: 20px 12px; gap: 24px; } }
+.kd-col { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.kd-cap { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.05em; text-align: center; }
 
-/* Kiosk device */
-.kd-kiosk {
-  width: 300px; height: 600px;
-  background: oklch(0.10 0.005 80);
-  border-radius: 28px; padding: 10px;
-  box-shadow:
-    0 30px 50px -22px oklch(0 0 0 / 0.35),
-    0 2px 0 0 oklch(0 0 0 / 0.06) inset,
-    0 -2px 0 0 oklch(1 0 0 / 0.04) inset;
-  position: relative;
-}
-@media (max-width: 640px) {
-  .kd-kiosk { width: 260px; height: 520px; border-radius: 24px; padding: 8px; }
-}
-.kd-kiosk::before {
-  content: ""; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-  width: 5px; height: 5px; border-radius: 50%; background: oklch(0.20 0.01 240);
-  z-index: 3;
-}
-
+/* Gym screen */
 .kd-screen {
-  width: 100%; height: 100%;
-  background: var(--bg);
-  border-radius: 20px; overflow: hidden;
-  position: relative;
-  display: flex; flex-direction: column;
+  width: 320px; max-width: 100%; background: var(--bg); border: 1px solid var(--border-2);
+  border-radius: var(--r-3); overflow: hidden; display: flex; flex-direction: column;
 }
-
-.kd-stbar {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 14px 6px;
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em;
-}
-.kd-stbar-gym { display: flex; align-items: center; gap: 5px; color: var(--ink); }
-.kd-stbar-gym svg { width: 11px; height: 11px; }
-
-.kd-stage-area { flex: 1; position: relative; overflow: hidden; }
-
-/* ====== IDLE ====== */
-.kd-idle {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center;
-  padding: 40px 24px 24px;
-  transition: opacity 200ms ease-out;
-}
-.kd-playing .kd-idle { opacity: 0; pointer-events: none; }
-
-.kd-idle-eyebrow {
+.kd-bar {
+  display: flex; justify-content: space-between; padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
   font-family: var(--font-mono); font-size: 10px; color: var(--fg-3);
-  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
-.kd-idle-title {
-  font-size: 22px; letter-spacing: -0.02em; font-weight: 500; line-height: 1.1;
-  text-align: center; margin-bottom: 28px; max-width: 14ch; color: var(--ink);
+.kd-bar span:first-child { color: var(--ink); }
+.kd-screen-body { display: flex; flex-direction: column; align-items: center; padding: 18px 16px 14px; gap: 12px; }
+.kd-eyebrow { font-family: var(--font-mono); font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.08em; }
+.kd-qr {
+  width: 150px; height: 150px; display: grid;
+  grid-template-columns: repeat(${QR_SIZE}, 1fr); grid-template-rows: repeat(${QR_SIZE}, 1fr);
+  padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-2);
 }
-.kd-idle-title em { font-family: var(--font-serif); font-weight: 400; font-style: italic; }
+.kd-qr span.on { background: var(--ink); }
+.kd-rotate { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-3); }
+.kd-rotate-track { width: 150px; height: 3px; border-radius: var(--r-full); background: var(--bg-3); overflow: hidden; }
+.kd-rotate-fill { display: block; height: 100%; background: var(--signal); animation: kd-drain ${RUN_MS}ms linear forwards; }
+@keyframes kd-drain { from { width: 100%; } to { width: 0%; } }
+.kd-feed { border-top: 1px solid var(--border); padding: 10px 14px 12px; }
+.kd-feed-head { font-family: var(--font-mono); font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.kd-row {
+  display: flex; justify-content: space-between; gap: 8px; padding: 6px 0;
+  border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--ink);
+}
+.kd-row:last-child { border-bottom: none; }
+.kd-row span:last-child { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-3); }
+.kd-row-new { animation: kd-in var(--motion-base, 240ms) ease-out; background: var(--signal-soft); margin: 0 -6px; padding: 6px; border-radius: var(--r-1); }
+.kd-row-declined { background: var(--danger-soft); }
+.kd-row-declined span:last-child { color: var(--danger-ink); }
+@keyframes kd-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 
-.kd-viewfinder { width: 160px; height: 160px; position: relative; margin-bottom: 24px; }
-.kd-bracket {
-  position: absolute; width: 24px; height: 24px;
-  border-color: var(--ink); border-style: solid; border-width: 0;
+/* Member phone */
+.kd-phone {
+  width: 220px; height: 400px; border-radius: 28px; border: 8px solid var(--ink);
+  background: var(--bg); overflow: hidden; display: flex; flex-direction: column;
+  transition: background var(--motion-base, 240ms);
 }
-.kd-bracket.tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
-.kd-bracket.tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
-.kd-bracket.bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
-.kd-bracket.br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
-
+.kd-phone-dark { background: var(--ink); }
+.kd-cam { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 16px; }
+.kd-cam-label { font-size: 12.5px; color: var(--fg-2); text-align: center; min-height: 18px; }
+.kd-finder { position: relative; width: 150px; height: 150px; }
+.kd-finder-qr { position: absolute; inset: 14px; opacity: 0.85; }
+.kd-finder-qr .kd-qr { width: 100%; height: 100%; padding: 4px; }
+.kd-br { position: absolute; width: 22px; height: 22px; border: 0 solid var(--ink); }
+.kd-br.tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
+.kd-br.tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
+.kd-br.bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
+.kd-br.br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
 .kd-scanline {
-  position: absolute; left: 6px; right: 6px; height: 2px;
-  background: linear-gradient(to right, transparent, var(--signal), transparent);
-  box-shadow: 0 0 12px var(--signal);
-  animation: kd-scan 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  position: absolute; left: 8px; right: 8px; height: 2px; background: var(--signal);
+  animation: kd-scan 1s ease-in-out infinite alternate;
 }
-@keyframes kd-scan {
-  0%   { top: 6px; opacity: 0.5; }
-  50%  { top: calc(100% - 8px); opacity: 1; }
-  100% { top: 6px; opacity: 0.5; }
-}
-
-.kd-qr-hint {
-  position: absolute; inset: 24px;
-  display: grid; grid-template-columns: repeat(13, 1fr); grid-template-rows: repeat(13, 1fr);
-  gap: 1px; opacity: 0.10;
-}
-.kd-qr-hint span { background: var(--ink); }
-
-.kd-idle-help {
-  font-size: 12px; color: var(--fg-3); text-align: center;
-  line-height: 1.45; max-width: 22ch;
-}
-
-.kd-idle-foot {
-  margin-top: auto; width: 100%;
-  border-top: 1px solid var(--border); padding-top: 12px;
-  display: flex; justify-content: space-between; align-items: center;
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.05em;
-}
-
-/* ====== SUCCESS ====== */
-.kd-success {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  padding: 28px 22px 20px;
-  opacity: 0; pointer-events: none;
-}
-.kd-playing .kd-success { opacity: 1; pointer-events: auto; }
-
-.kd-ok-flash {
-  position: absolute; top: 0; left: 0; right: 0; height: 32px;
-  background: var(--signal-soft);
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--signal-ink); text-transform: uppercase; letter-spacing: 0.07em;
-  transform: translateY(-100%);
-}
-.kd-ok-flash svg { width: 10px; height: 10px; }
-.kd-playing .kd-ok-flash { animation: kd-flash 800ms cubic-bezier(0.16, 1, 0.3, 1) 200ms forwards; }
-@keyframes kd-flash { to { transform: translateY(0%); } }
-
-.kd-hero { display: flex; justify-content: center; padding-top: 28px; margin-bottom: 18px; }
-.kd-ring {
-  width: 120px; height: 120px; border-radius: 50%;
-  position: relative; background: var(--signal);
-  transform: scale(0); opacity: 0;
-}
-.kd-playing .kd-ring {
-  animation: kd-ringIn 500ms cubic-bezier(0.34, 1.4, 0.64, 1) 50ms forwards,
-             kd-ringFade 400ms ease-out 800ms forwards;
-}
-@keyframes kd-ringIn { to { transform: scale(1); opacity: 1; } }
-@keyframes kd-ringFade { to { background: transparent; box-shadow: inset 0 0 0 1.5px var(--border-2); } }
-
-.kd-tick {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-}
-.kd-tick svg { width: 48px; height: 48px; color: oklch(0.985 0.005 85); }
-.kd-tick svg path { stroke-dasharray: 60; stroke-dashoffset: 60; }
-.kd-playing .kd-tick svg path { animation: kd-tickdraw 320ms cubic-bezier(0.16, 1, 0.3, 1) 350ms forwards; }
-@keyframes kd-tickdraw { to { stroke-dashoffset: 0; } }
-.kd-playing .kd-tick { animation: kd-tickfade 300ms ease-out 850ms forwards; }
-@keyframes kd-tickfade { to { opacity: 0; transform: scale(0.7); } }
-
-.kd-photo {
-  position: absolute; inset: 0;
-  border-radius: 50%; overflow: hidden;
-  opacity: 0; transform: scale(0.85);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-serif); font-style: italic; font-size: 48px; color: var(--ink);
-}
-.kd-playing .kd-photo { animation: kd-photoIn 500ms cubic-bezier(0.16, 1, 0.3, 1) 800ms forwards; }
-@keyframes kd-photoIn { to { opacity: 1; transform: scale(1); } }
-
-.kd-name {
-  text-align: center; font-size: 22px; letter-spacing: -0.025em;
-  font-weight: 500; line-height: 1.1; color: var(--ink);
-  opacity: 0; transform: translateY(8px); margin-bottom: 3px;
-}
-.kd-playing .kd-name { animation: kd-riseIn 500ms cubic-bezier(0.16, 1, 0.3, 1) 950ms forwards; }
-
-.kd-type {
-  text-align: center;
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em;
-  opacity: 0; transform: translateY(6px); margin-bottom: 16px;
-}
-.kd-playing .kd-type { animation: kd-riseIn 500ms cubic-bezier(0.16, 1, 0.3, 1) 1040ms forwards; }
-@keyframes kd-riseIn { to { opacity: 1; transform: translateY(0); } }
-
-/* Next class card */
-.kd-nextcard {
-  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r-3);
-  padding: 10px 12px; display: flex; align-items: center; gap: 10px;
-  opacity: 0; transform: translateY(6px); margin-bottom: 10px;
-}
-.kd-playing .kd-nextcard { animation: kd-riseIn 500ms cubic-bezier(0.16, 1, 0.3, 1) 1180ms forwards; }
-.kd-nc-time {
-  flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
-  width: 38px; font-family: var(--font-mono); font-size: 9px;
-  color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1;
-}
-.kd-nc-h { color: var(--ink); font-family: var(--font-sans); font-size: 16px; font-weight: 500; letter-spacing: -0.02em; }
-.kd-nc-body { flex: 1; min-width: 0; }
-.kd-nc-t { font-size: 13px; font-weight: 500; letter-spacing: -0.01em; color: var(--ink); }
-.kd-nc-s { font-size: 10.5px; color: var(--fg-3); margin-top: 1px; font-family: var(--font-mono); }
-.kd-nc-badge {
-  font-family: var(--font-mono); font-size: 9px;
-  color: var(--signal-ink); background: var(--signal-soft);
-  padding: 2px 5px; border-radius: var(--r-1);
-  text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;
-}
-
-/* Streak */
+@keyframes kd-scan { from { top: 10px; } to { top: calc(100% - 12px); } }
+.kd-result { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 20px 18px; animation: kd-in var(--motion-base, 240ms) ease-out; }
+.kd-status { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--signal); }
+.kd-status-no { color: var(--danger-ink); }
+.kd-hello { font-size: 22px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; color: var(--bg); }
+.kd-hello-light { color: var(--ink); font-size: 18px; }
+.kd-gym { font-size: 13px; color: var(--on-ink-2); }
+.kd-gym-light { color: var(--fg-3); }
 .kd-streak {
-  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r-3);
-  padding: 12px; display: flex; align-items: center; gap: 12px;
-  opacity: 0; transform: translateY(6px); margin-bottom: 10px;
+  margin-top: 10px; display: flex; align-items: baseline; gap: 8px;
+  padding: 12px 14px; border-radius: var(--r-2); background: var(--ink-2);
 }
-.kd-playing .kd-streak { animation: kd-riseIn 500ms cubic-bezier(0.16, 1, 0.3, 1) 1300ms forwards; }
-.kd-str-num {
-  font-size: 30px; font-weight: 500; letter-spacing: -0.04em; line-height: 1;
-  font-variant-numeric: tabular-nums; color: var(--ink);
-}
-.kd-str-lbl {
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.3;
-}
-.kd-str-top { color: var(--ink); font-family: var(--font-sans); font-size: 12px; letter-spacing: -0.005em; text-transform: none; margin-bottom: 1px; }
-.kd-str-plus {
-  margin-left: auto;
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--signal-ink); background: var(--signal-soft);
-  padding: 3px 6px; border-radius: var(--r-1);
-  opacity: 0; transform: translateY(-4px);
-}
-.kd-playing .kd-str-plus { animation: kd-riseIn 400ms cubic-bezier(0.16, 1, 0.3, 1) 1700ms forwards; }
+.kd-streak-num { font-size: 28px; font-weight: 500; color: var(--bg); font-variant-numeric: tabular-nums; }
+.kd-streak-lbl { font-size: 12px; color: var(--on-ink-3); }
 
-/* Welcome */
-.kd-welcome {
-  margin-top: auto; text-align: center;
-  font-family: var(--font-serif); font-style: italic;
-  font-size: 15px; color: var(--fg-2); letter-spacing: -0.01em;
-  padding-top: 10px;
-  opacity: 0; transform: translateY(6px);
-}
-.kd-playing .kd-welcome { animation: kd-riseIn 500ms cubic-bezier(0.16, 1, 0.3, 1) 1600ms forwards; }
-
-/* Flavor variants */
-.flavor-first .kd-str-num { font-size: 24px; }
-.flavor-pr .kd-nextcard { border-color: oklch(0.85 0.07 75); background: var(--trainer-soft); }
-.flavor-pr .kd-nc-badge { background: oklch(0.92 0.07 75); color: oklch(0.32 0.12 75); }
-.flavor-returning .kd-welcome { font-size: 18px; color: var(--ink); }
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .kd-scanline { animation: none; top: 50%; }
-  .kd-playing .kd-ok-flash,
-  .kd-playing .kd-ring,
-  .kd-playing .kd-tick svg path,
-  .kd-playing .kd-tick,
-  .kd-playing .kd-photo,
-  .kd-playing .kd-name,
-  .kd-playing .kd-type,
-  .kd-playing .kd-nextcard,
-  .kd-playing .kd-streak,
-  .kd-playing .kd-str-plus,
-  .kd-playing .kd-welcome {
-    animation: kd-fade 200ms ease forwards !important;
-  }
-  @keyframes kd-fade { to { opacity: 1; transform: none; } }
+  .kd-rotate-fill, .kd-row-new, .kd-result, .kd-scanline { animation: none; }
+  .kd-rotate-fill { width: 50%; }
 }
 `;
