@@ -35,7 +35,7 @@ const GYM_OWNER_FEATURES = [
   { title: "Streak analytics", desc: "Members with active streaks churn 43% less. See streak distribution, identify members at risk of breaking, and send auto-nudges at configurable thresholds." },
   { title: "Capacity monitoring", desc: "Set your gym's max capacity. The dashboard shows current occupancy as a percentage. Optional: kiosk displays 'at capacity' when the limit is reached." },
   { title: "Peak hour heatmap", desc: "Hourly check-in volume for every day of the week, visualised as a heatmap. Use it to plan staffing, schedule popular classes, and identify dead hours." },
-  { title: "Multi-location support", desc: "Members can check in at any of your locations. Each location has its own kiosk, its own attendance data, and its own leaderboard, or one combined view." },
+  { title: "Multi-location support", desc: "Members can check in at any of your locations. Each location has its own kiosk and its own attendance data, or one combined view." },
   { title: "Offline resilience", desc: "If Wi-Fi drops, the kiosk queues check-ins locally and syncs when connectivity returns. Members never get stuck at the door." },
 ];
 
