@@ -28,9 +28,10 @@ export function RescheduleBookingModal({
   booking: ConsultationBooking;
   /**
    * Who is moving the booking, for the copy only: the slots offered and the
-   * request sent are the same either way.
+   * request sent are the same either way. "staff" is the provider's gym or
+   * team moving one of its providers' sessions.
    */
-  audience?: "client" | "provider";
+  audience?: "client" | "provider" | "staff";
   onClose: () => void;
   /** Sends the reschedule. The modal shows the API's message on failure. */
   onConfirm: (
@@ -119,7 +120,9 @@ export function RescheduleBookingModal({
       description={
         audience === "provider"
           ? "Pick one of your open times for this session. We'll let your client know."
-          : "Pick one of your provider's open times. We'll let them know."
+          : audience === "staff"
+            ? "Pick one of the provider's open times. We'll let the client and the provider know."
+            : "Pick one of your provider's open times. We'll let them know."
       }
       footer={
         <>
@@ -212,7 +215,7 @@ export function RescheduleBookingModal({
             rows={3}
             className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-[13.5px] text-ink focus:border-border-2 focus:outline-none"
             placeholder={
-              audience === "provider" ? "Anything your client should know?" : "Anything your provider should know?"
+              audience === "client" ? "Anything your provider should know?" : "Anything your client should know?"
             }
           />
         </div>

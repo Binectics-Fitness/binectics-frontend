@@ -137,3 +137,35 @@ describe("AuthContext logout destination", () => {
     expect(assign).toHaveBeenLastCalledWith("/login");
   });
 });
+
+describe("AuthContext register", () => {
+  beforeEach(() => {
+    push.mockClear();
+  });
+
+  it("a normal sign-up goes to the OTP screen", async () => {
+    authService.register.mockResolvedValue({ success: true, data: { id: "u1", email: "a@b.co" } });
+    mount();
+    let result: Awaited<ReturnType<typeof auth.register>> | undefined;
+    await act(async () => {
+      result = await auth.register({ first_name: "A", last_name: "B", email: "a@b.co", password: "pw", accept_tos: true });
+    });
+    expect(result).toEqual({ success: true });
+    expect(push).toHaveBeenCalledWith("/verification?email=a%40b.co");
+  });
+
+  it("an unclaimed placeholder gets a set-password link, never the OTP screen", async () => {
+    authService.register.mockResolvedValue({
+      success: true,
+      message: "We emailed you a link to set your password. Use it to finish creating your account.",
+      data: { claim_link_sent: true, email: "a@b.co" },
+    });
+    mount();
+    let result: Awaited<ReturnType<typeof auth.register>> | undefined;
+    await act(async () => {
+      result = await auth.register({ first_name: "A", last_name: "B", email: "a@b.co", password: "pw", accept_tos: true });
+    });
+    expect(result).toEqual({ success: true, claimLinkSent: true });
+    expect(push).not.toHaveBeenCalled();
+  });
+});

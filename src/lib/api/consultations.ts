@@ -159,6 +159,11 @@ export interface ConsultationBooking {
    */
   providerFirstName?: string;
   providerLastName?: string;
+  /**
+   * The provider's full name. Only the organization list
+   * (getOrganizationBookings) sends it, since its rows are many providers'.
+   */
+  providerName?: string | null;
   consultationTypeId: string;
   /**
    * The session type's name, resolved by the API. Missing from older API
@@ -170,6 +175,12 @@ export interface ConsultationBooking {
   providerTimezone: string;
   clientTimezone: string;
   status: ConsultationBookingStatus;
+  /**
+   * The member's free text: intake notes, the session note, the cancel
+   * reason. The API leaves them out for gym staff acting through
+   * bookings:manage (getOrganizationBookings, and a staff move's response);
+   * only the booked provider and the org owner get them. Never assume them.
+   */
   notes?: string;
   completionNote?: string;
   cancelledBy?: ConsultationCancelledBy;
@@ -441,6 +452,25 @@ export const consultationsService = {
     const query = search.toString();
     return apiClient.get<ConsultationBooking[]>(
       `/consultations/provider/bookings${query ? `?${query}` : ""}`,
+    );
+  },
+
+  /**
+   * The consultation sessions booked under an organization: every provider's
+   * on the team. For the owner and staff whose role holds bookings:manage;
+   * anyone else gets a 404 (success false, status 404).
+   */
+  getOrganizationBookings(
+    organizationId: string,
+    params?: { status?: ConsultationBookingStatus; from?: string; to?: string },
+  ): Promise<ApiResponse<ConsultationBooking[]>> {
+    const search = new URLSearchParams();
+    if (params?.status) search.set("status", params.status);
+    if (params?.from) search.set("from", params.from);
+    if (params?.to) search.set("to", params.to);
+    const query = search.toString();
+    return apiClient.get<ConsultationBooking[]>(
+      `/consultations/organizations/${organizationId}/bookings${query ? `?${query}` : ""}`,
     );
   },
 

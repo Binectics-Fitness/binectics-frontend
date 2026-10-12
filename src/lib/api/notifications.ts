@@ -100,6 +100,8 @@ export interface NotificationPreferences {
   inAppMilestones: boolean;
   /** One nudge after 3 days with no check-in, task or log. */
   inAppNudges: boolean;
+  /** Message pushes include the message text (off: "New message from <name>"). */
+  pushMessagePreviews?: boolean;
 }
 
 // ─── Service ────────────────────────────────────────────────────

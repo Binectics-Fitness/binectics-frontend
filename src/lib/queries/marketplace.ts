@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "./keys";
 import {
   marketplaceService,
+  type EnrollmentOffer,
+  type OrgEnrollmentOffer,
   type OrgPaymentConfig,
 } from "@/lib/api/marketplace";
 import type {
@@ -547,5 +549,79 @@ export function useDeleteOrgMembershipPlan(orgId: string | undefined) {
       return marketplaceService.deleteOrgMembershipPlan(orgId, planId);
     },
     onSuccess: invalidate,
+  });
+}
+
+// ==================== ENROLMENT OFFERS ====================
+
+/**
+ * Membership offers a gym sent to the signed-in member. A gym can no longer
+ * enrol anyone directly: the member accepts (or declines) here. The API
+ * returns nothing until the member's email is verified.
+ */
+export function useMyEnrollmentOffers(enabled = true) {
+  return useQuery<EnrollmentOffer[]>({
+    queryKey: queryKeys.marketplace.myEnrollmentOffers(),
+    queryFn: async () => {
+      const res = await marketplaceService.getMyEnrollmentOffers();
+      if (!res.success) throw new Error(res.message ?? "Couldn't load offers");
+      return res.data ?? [];
+    },
+    enabled,
+    retry: false,
+  });
+}
+
+/** Accept or decline an offer. Accepting returns the new subscription (and a transfer account for a transfer offer). */
+export function useRespondToEnrollmentOffer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ offerId, accept }: { offerId: string; accept: boolean }) => {
+      if (accept) {
+        const res = await marketplaceService.acceptEnrollmentOffer(offerId);
+        if (!res.success || !res.data) {
+          throw new Error(res.message ?? "Couldn't accept this offer");
+        }
+        return res.data;
+      }
+      const res = await marketplaceService.declineEnrollmentOffer(offerId);
+      if (!res.success) throw new Error(res.message ?? "Couldn't decline this offer");
+      return null;
+    },
+    // Settled: a 4xx (expired, already answered) means the list is stale too.
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.myEnrollmentOffers() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.subscriptions() }),
+      ]);
+    },
+  });
+}
+
+/** Pending offers a gym has sent and nobody has answered yet. */
+export function useOrgEnrollmentOffers(orgId?: string, enabled = true) {
+  return useQuery<OrgEnrollmentOffer[]>({
+    queryKey: queryKeys.marketplace.orgEnrollmentOffers(orgId ?? ""),
+    queryFn: async () => {
+      const res = await marketplaceService.getOrgEnrollmentOffers(orgId!);
+      if (!res.success) throw new Error(res.message ?? "Couldn't load pending offers");
+      return res.data ?? [];
+    },
+    enabled: enabled && !!orgId,
+    retry: false,
+  });
+}
+
+export function useCancelOrgEnrollmentOffer(orgId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (offerId: string) => {
+      const res = await marketplaceService.cancelOrgEnrollmentOffer(orgId!, offerId);
+      if (!res.success) throw new Error(res.message ?? "Couldn't withdraw this offer");
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.orgEnrollmentOffers(orgId ?? ""),
+      }),
   });
 }

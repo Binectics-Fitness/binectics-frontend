@@ -7,6 +7,7 @@ import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { openCommandBar } from "@/hooks/useCommandBar";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
+import { useMessagingUnread } from "@/components/messaging/queries";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -26,8 +27,23 @@ const NAV_LINKS = [
   { label: "Messages",    href: "/dashboard/messages" },
   { label: "Meal plans",  href: "/dashboard/member/meal-plans" },
   { label: "Activity",    href: "/dashboard/member/streaks" },
+  { label: "Reports",     href: "/dashboard/member/reports" },
   { label: "Requests",    href: "/dashboard/member/requests" },
 ];
+
+/* ── Unread count on the Messages link ── */
+function NavCount({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className="ml-1.5 inline-block rounded-full px-1.5 font-mono text-[11px] tabular-nums"
+      style={{ background: "var(--ink)", color: "var(--bg)" }}
+    >
+      {count > 99 ? "99+" : count}
+      <span className="sr-only"> unread</span>
+    </span>
+  );
+}
 
 /* ── Props ── */
 interface MemberDashboardShellProps {
@@ -39,10 +55,13 @@ interface MemberDashboardShellProps {
 /* ── Component ── */
 export function MemberDashboardShell({ activeLabel, children, actions }: MemberDashboardShellProps) {
   const { user, logout } = useAuth();
+  const unreadMessages = useMessagingUnread();
   const memberInitials =
     `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase() || "··";
   // Phone menu: a modal dialog (focus trap, Escape, inert page, scroll lock),
-  // closed on navigation and once the md top nav takes over.
+  // closed on navigation and once the lg top nav takes over. Eight links
+  // don't fit a tablet row (768px overflowed by ~80px), so tablets get the
+  // phone bar and its menu too.
   const {
     open: mobileOpen,
     show: openMobileMenu,
@@ -50,14 +69,14 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
     triggerRef: mobileTriggerRef,
     overlayRef: mobileOverlayRef,
     panelRef: mobilePanelRef,
-  } = useNavDrawer("(min-width: 48rem)");
+  } = useNavDrawer("(min-width: 64rem)");
   const setMobileOpen = (next: boolean) => (next ? openMobileMenu() : closeMobileMenu());
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
-      {/* ── Desktop + Tablet top nav ── */}
+      {/* ── Desktop top nav (lg and up) ── */}
       <header
-        className="sticky top-0 z-50 hidden md:block"
+        className="sticky top-0 z-50 hidden lg:block"
         style={{
           background: "oklch(0.985 0.005 85 / 0.85)",
           backdropFilter: "blur(8px) saturate(140%)",
@@ -104,6 +123,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                   }}
                 >
                   {link.label}
+                  {link.href === "/dashboard/messages" && <NavCount count={unreadMessages} />}
                 </Link>
               );
             })}
@@ -161,9 +181,9 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
         </div>
       </header>
 
-      {/* ── Mobile top bar ── */}
+      {/* ── Phone + tablet top bar ── */}
       <header
-        className="md:hidden sticky top-0 z-50 flex items-center justify-between"
+        className="lg:hidden sticky top-0 z-50 flex items-center justify-between"
         style={{
           height: 56,
           padding: "0 16px",
@@ -224,7 +244,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
       {/* ── Mobile dropdown overlay ── */}
       {mobileOpen && (
-        <div ref={mobileOverlayRef} className="fixed inset-0 z-50 md:hidden" style={{ animation: "fade-in var(--motion-base, 220ms) var(--ease, ease-out)" }}>
+        <div ref={mobileOverlayRef} className="fixed inset-0 z-50 lg:hidden" style={{ animation: "fade-in var(--motion-base, 220ms) var(--ease, ease-out)" }}>
           {/* Backdrop */}
           <div
             className="absolute inset-0"
@@ -286,6 +306,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                     }}
                   >
                     {link.label}
+                    {link.href === "/dashboard/messages" && <NavCount count={unreadMessages} />}
                   </Link>
                 );
               })}

@@ -25,6 +25,8 @@ export enum TeamPermission {
   MANAGE_ORGANIZATION = "team:manage_organization",
   CANCEL_INVITATION = "team:cancel_invitation",
   VIEW_INVITATIONS = "team:view_invitations",
+  /** Read the workspace's activity log (owner and Admin by default). */
+  VIEW_AUDIT_LOG = "team:view_audit_log",
 
   // Progress Tracking Permissions
   PROGRESS_VIEW = "progress:view",
@@ -33,6 +35,9 @@ export enum TeamPermission {
   PROGRESS_DELETE = "progress:delete",
   PROGRESS_MANAGE_CLIENTS = "progress:manage_clients",
   PROGRESS_INVITE_CLIENT = "progress:invite_client",
+
+  // Messaging: read and reply in member conversations as the gym.
+  MESSAGING_ANSWER_MEMBERS = "messaging:answer_members",
 }
 
 export enum MemberStatus {
@@ -125,6 +130,8 @@ export interface Organization {
   checkin_code?: string;
   is_owner?: boolean;
   can_manage_organization?: boolean;
+  /** May open the workspace's Activity log (owner, or a role holding team:view_audit_log). */
+  can_view_audit_log?: boolean;
   my_role_code?: string | null;
   /** Optional white-label custom domain (gated by `custom_domain_enabled`). */
   custom_domain?: string | null;
@@ -274,12 +281,17 @@ export interface InviteMemberRequest {
   team_role_id: string;
 }
 
+/**
+ * "Add member directly" no longer creates an account or a membership: the API
+ * sends the same pending invitation as `inviteMember`, so nobody joins a team
+ * (or gets an account) without accepting. Names are optional and only used to
+ * personalise the email; a password is never sent.
+ */
 export interface AddMemberDirectRequest {
-  first_name: string;
-  last_name: string;
   email: string;
-  password: string;
   team_role_id: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface UpdateMemberRequest {
@@ -312,34 +324,6 @@ export const ORG_NOTIFICATION_EVENTS = [
 
 export const ORG_NOTIFICATION_CHANNELS = ["email", "sms", "push"] as const;
 export type OrgNotificationChannel = (typeof ORG_NOTIFICATION_CHANNELS)[number];
-
-// ==================== API KEYS ====================
-
-export interface OrgApiKey {
-  _id: string;
-  organization_id: string;
-  name: string;
-  key_prefix: string;
-  scopes: TeamPermission[];
-  created_by_id: string;
-  last_used_at: string | null;
-  expires_at: string | null;
-  revoked_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateApiKeyRequest {
-  name: string;
-  scopes: TeamPermission[];
-  expires_at?: string;
-}
-
-/** Reveal-once create response: api_key is never retrievable again. */
-export interface CreatedApiKey {
-  api_key: string;
-  key: OrgApiKey;
-}
 
 // ==================== SERVICE ====================
 
@@ -534,14 +518,24 @@ export const teamsService = {
     );
   },
 
+  /** Leave a team you belong to (not available to the owner). 204 on success. */
+  async leaveOrganization(organizationId: string): Promise<ApiResponse<void>> {
+    return await apiClient.post<void>(
+      `/teams/organizations/${organizationId}/leave`,
+    );
+  },
+
   // ==================== INVITATIONS ====================
 
-  /** Directly add a member — creates a user account if the email is new */
+  /**
+   * "Add member directly" — the API now sends a pending invitation (same as
+   * `inviteMember`) and returns it; no account or membership is created.
+   */
   async addMemberDirect(
     organizationId: string,
     data: AddMemberDirectRequest,
-  ): Promise<ApiResponse<OrganizationMember>> {
-    return await apiClient.post<OrganizationMember>(
+  ): Promise<ApiResponse<TeamInvitation>> {
+    return await apiClient.post<TeamInvitation>(
       `/teams/organizations/${organizationId}/members`,
       data,
     );
@@ -606,37 +600,6 @@ export const teamsService = {
     return await apiClient.patch<OrgNotificationSettings>(
       `/teams/organizations/${organizationId}/notification-settings`,
       data,
-    );
-  },
-
-  // ==================== API KEYS ====================
-
-  /** Create an API key — the secret in the response is shown exactly once. */
-  async createApiKey(
-    organizationId: string,
-    data: CreateApiKeyRequest,
-  ): Promise<ApiResponse<CreatedApiKey>> {
-    return await apiClient.post<CreatedApiKey>(
-      `/teams/organizations/${organizationId}/api-keys`,
-      data,
-    );
-  },
-
-  async getApiKeys(
-    organizationId: string,
-  ): Promise<ApiResponse<OrgApiKey[]>> {
-    return await apiClient.get<OrgApiKey[]>(
-      `/teams/organizations/${organizationId}/api-keys`,
-    );
-  },
-
-  /** Revoke (not delete) an API key. */
-  async revokeApiKey(
-    organizationId: string,
-    keyId: string,
-  ): Promise<ApiResponse<OrgApiKey>> {
-    return await apiClient.delete<OrgApiKey>(
-      `/teams/organizations/${organizationId}/api-keys/${keyId}`,
     );
   },
 };

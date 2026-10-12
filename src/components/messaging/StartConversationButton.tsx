@@ -15,6 +15,7 @@ export function StartConversationButton({
   organizationId,
   messagesHref,
   label = "Message",
+  ariaLabel,
   className = "btn-ghost-v2 sm",
 }: {
   recipientUserId?: string;
@@ -22,6 +23,8 @@ export function StartConversationButton({
   /** The current role's messages route, e.g. /dashboard/dietitian/messages. */
   messagesHref: string;
   label?: string;
+  /** Names who the button messages when several sit side by side. */
+  ariaLabel?: string;
   className?: string;
 }) {
   const router = useRouter();
@@ -31,12 +34,15 @@ export function StartConversationButton({
     if (busy) return;
     setBusy(true);
     try {
-      const res = await messagingService.startThread({
-        recipient_user_id: recipientUserId,
-        organization_id: organizationId,
-      });
+      const payload = recipientUserId
+        ? { recipient_user_id: recipientUserId }
+        : organizationId
+          ? { organization_id: organizationId }
+          : null;
+      if (!payload) return;
+      const res = await messagingService.startThread(payload);
       if (res.success && res.data) {
-        router.push(`${messagesHref}?thread=${res.data.thread_id}`);
+        router.push(`${messagesHref}?thread=${encodeURIComponent(res.data.thread_id)}`);
       } else {
         toast.error(res.message || "Couldn't open the conversation.");
       }
@@ -52,6 +58,7 @@ export function StartConversationButton({
       type="button"
       className={className}
       disabled={busy}
+      aria-label={ariaLabel}
       onClick={() => void start()}
     >
       {busy ? "Opening…" : label}

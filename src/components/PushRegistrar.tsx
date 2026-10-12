@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/Toast";
 import { enablePush, isPushConfigured } from "@/lib/push/push";
+import { messagesHref } from "@/lib/routing/legacyLinks";
+import { syncIfOpen, threadIdFromLink } from "@/components/messaging/openThread";
+import { refreshMessaging } from "@/components/messaging/queries";
 
 const DISMISS_KEY = "push_prompt_dismissed_at";
 const DISMISS_DAYS = 7;
@@ -20,12 +24,25 @@ export function PushRegistrar() {
   const { user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showBanner, setShowBanner] = useState(false);
 
   const inApp =
     pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
 
   const onForeground = (title: string, body: string, link?: string) => {
+    // A message push is a "go fetch" signal (chat contract §5): refresh the
+    // inbox and badge, and stay quiet when that conversation is already open.
+    const threadId = threadIdFromLink(link);
+    if (threadId && user) {
+      refreshMessaging(queryClient, user.id);
+      if (syncIfOpen(threadId)) return;
+      toast.info(`${title}, ${body}`, {
+        label: "View",
+        onClick: () => router.push(messagesHref(user.role, threadId)),
+      });
+      return;
+    }
     toast.info(
       `${title}, ${body}`,
       link ? { label: "View", onClick: () => router.push(link) } : undefined,
