@@ -42,6 +42,9 @@ function ReplyQuote({
   return onOpen && !deleted ? (
     <button
       type="button"
+      // The message list is one tab stop; keyboard users reach the original
+      // through the message menu ("Show original message").
+      tabIndex={-1}
       onClick={onOpen}
       className="mb-1.5 block w-full min-w-0 pl-2 text-left"
       style={style}
@@ -64,6 +67,7 @@ export function MessageBubble({
   highlighted,
   actions,
   reactions,
+  editor,
   onOpenReply,
   bubbleProps,
 }: {
@@ -79,6 +83,8 @@ export function MessageBubble({
   actions?: ReactNode;
   /** Reaction chips under the bubble. */
   reactions?: ReactNode;
+  /** Inline editor shown in place of the text while editing. */
+  editor?: ReactNode;
   onOpenReply?: (seq: number) => void;
   /** Focus and keyboard props for the bubble (action menu). */
   bubbleProps?: React.HTMLAttributes<HTMLDivElement> & { "data-message-id"?: string };
@@ -87,6 +93,14 @@ export function MessageBubble({
   const deleted = Boolean(message.deleted_at);
   const author = mine ? "You" : message.author.name;
   const time = timeOf(message.created_at);
+
+  if (editor) {
+    return (
+      <div className={`flex flex-col ${mine ? "items-end" : "items-start"}`} data-seq={message.seq}>
+        {editor}
+      </div>
+    );
+  }
 
   return (
     <div
