@@ -33,7 +33,7 @@ const STEPS = [
   {
     step: "04",
     title: "You're checked in, your streak updates automatically",
-    desc: "A confirmation screen appears instantly. Your attendance streak, visit history, and gym analytics all update in real time.",
+    desc: "A confirmation screen appears straight away, and your streak and visit history update with it.",
   },
 ];
 

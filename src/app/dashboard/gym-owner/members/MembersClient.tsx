@@ -6,6 +6,7 @@ import { DSCard, PageHeader } from "@/components/ds";
 import { useRouter } from "next/navigation";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AddMemberButton } from "./_actions";
+import { buildMembersCsv } from "./members-csv";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
   providerBillingApi,
@@ -508,22 +509,20 @@ export default function GymMembersClient() {
             style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}
             aria-label="Export members"
             onClick={() => {
-              const rows = [
-                ["Name", "Email", "Plan", "Status", "Joined", "Amount", "Currency"],
-                ...filtered.map((s) => [
-                  getMemberName(s),
-                  getMemberEmail(s),
-                  getPlanName(s),
-                  membershipStatusMeta(s.status).label,
-                  fmtDate(s.created_at),
+              const csv = buildMembersCsv(
+                filtered.map((s) => ({
+                  name: getMemberName(s),
+                  email: getMemberEmail(s),
+                  plan: getPlanName(s),
+                  status: membershipStatusMeta(s.status).label,
+                  joined: fmtDate(s.created_at),
                   // Major units in the export: a spreadsheet column headed
                   // "Amount" next to a "Currency" column means naira, not kobo,
                   // and every formula the operator writes against it assumes so.
-                  minorToMajor(s.amount_paid_minor, s.currency ?? "").toString(),
-                  s.currency,
-                ]),
-              ];
-              const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+                  amount: minorToMajor(s.amount_paid_minor, s.currency ?? ""),
+                  currency: s.currency,
+                })),
+              );
               const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
               const a = document.createElement("a");
               a.href = url;

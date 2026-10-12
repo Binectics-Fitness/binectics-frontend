@@ -372,14 +372,9 @@ function OnboardingContent() {
             preferred_payout_gateway: payout,
           });
         }
-      } else if (currentStep === 6) {
-        // Kiosk preference — use visual default ('existing') if user never interacted
-        const kiosk = (stepData.kiosk as string) || 'existing';
-        await teamsService.updateOrganization(orgId, {
-          kiosk_preference: kiosk,
-        });
       } else if (currentStep === 7) {
-        // Staff invites
+        // Staff invites. (Step 6 only explains how check-in works and has
+        // no branch: it used to save kiosk_preference, which nothing read.)
         const emails = ((stepData.staffEmails as string) || '')
           .split(/[\n,]/)
           .map((e) => e.trim())
