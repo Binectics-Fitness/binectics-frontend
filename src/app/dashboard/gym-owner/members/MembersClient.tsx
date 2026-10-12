@@ -374,7 +374,7 @@ function ChangePlanModal({
         <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Change plan</h2>
         <p className="text-[13px] mt-1.5 leading-relaxed" style={{ color: "var(--fg-3)" }}>
           {getMemberName(sub)} stays on <strong style={{ color: "var(--ink)" }}>{getPlanName(sub)}</strong> until the current period ends
-          {sub.end_date ? ` on ${fmtDate(sub.end_date)}` : ""}, then renews onto the new plan. Auto-renew turns on so the switch happens.
+          {sub.end_date ? ` on ${fmtDate(sub.end_date)}` : ""}. Their next term is on the new plan once it is paid for: when they renew in the app, or when you record their payment.
         </p>
         <div className="mt-4">
           <SearchableSelect

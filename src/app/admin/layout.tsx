@@ -1,11 +1,7 @@
 "use client";
 
-// PROTOTYPE MODE: bypass AdminClientShell (auth hooks)
-// TODO: Restore:
-//   import AdminClientShell from "@/components/AdminClientShell";
-//   return <AdminClientShell>{children}</AdminClientShell>;
-
 import { useEffect } from "react";
+import AdminClientShell from "@/components/AdminClientShell";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -14,5 +10,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => { document.body.style.background = prev; };
   }, []);
 
-  return <>{children}</>;
+  return <AdminClientShell>{children}</AdminClientShell>;
 }

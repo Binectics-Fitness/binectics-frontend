@@ -200,7 +200,7 @@ describe("member home page", () => {
     vi.spyOn(checkinsService, "getMyHistory").mockReturnValue(ok([]));
     vi.spyOn(consultationsService, "getMyBookings").mockReturnValue(ok([]));
     vi.spyOn(classBookingsService, "getMyClassBookings").mockReturnValue(ok([]));
-    vi.spyOn(loyaltyService, "getBalance").mockReturnValue(ok(null as never));
+    vi.spyOn(loyaltyService, "getPrograms").mockReturnValue(ok([]));
     vi.spyOn(progressService, "getMyOwnProfiles").mockReturnValue(ok([]));
     vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(ok([]));
     vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([]));
@@ -270,7 +270,7 @@ describe("member home page", () => {
       ok([{ status: MembershipSubscriptionStatus.ACTIVE, organization_id: { _id: "g1", name: "Dapo" } } as MembershipSubscription]),
     );
     vi.spyOn(checkinsService, "getMyHistory").mockRejectedValue(new Error("offline"));
-    vi.spyOn(loyaltyService, "getBalance").mockResolvedValue({ success: false, message: "boom" } as never);
+    vi.spyOn(loyaltyService, "getPrograms").mockResolvedValue({ success: false, message: "boom" } as never);
     vi.spyOn(progressService, "getMyOwnProfiles").mockReturnValue(ok([{ _id: "cp" }] as never));
     vi.spyOn(progressService, "getWeightLogs").mockRejectedValue(new Error("offline"));
     render(<MemberHomePage />);
@@ -279,8 +279,29 @@ describe("member home page", () => {
     const values = Array.from(document.querySelectorAll("[data-stat-value]")).map((el) => el.textContent);
     expect(values).toEqual(["–", "–"]); // check-ins this week, weight
     expect(screen.queryByText("Log your weight")).toBeNull();
-    expect(screen.getByText(/Couldn.t load your balance/)).toBeInTheDocument();
-    expect(screen.queryByText(/No loyalty activity yet/)).toBeNull();
+    // Loyalty is optional per provider: a failed read hides the card.
+    expect(screen.queryByText("Loyalty points")).toBeNull();
+  });
+
+  it("shows no loyalty card when none of the member's providers runs a program", async () => {
+    render(<MemberHomePage />);
+    await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
+    expect(screen.queryByText("Loyalty points")).toBeNull();
+    expect(screen.queryByRole("link", { name: /Rewards/ })).toBeNull();
+  });
+
+  it("shows each provider program that is on, with its own balance", async () => {
+    vi.spyOn(loyaltyService, "getPrograms").mockReturnValue(
+      ok([
+        { organization_id: "g1", organization_name: "Iron Lab", account_type: "gym", balance: 1200, is_member: true },
+        { organization_id: "t1", organization_name: "Coach Ada", account_type: "personal_trainer", balance: 40, is_member: true },
+      ]),
+    );
+    render(<MemberHomePage />);
+    expect(await screen.findByText("Loyalty points")).toBeInTheDocument();
+    expect(screen.getByText("Iron Lab")).toBeInTheDocument();
+    expect(screen.getByText("Coach Ada")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Rewards/ })).toHaveAttribute("href", "/dashboard/loyalty");
   });
 
   it("lets Weight take the row when there are no check-in widgets", async () => {

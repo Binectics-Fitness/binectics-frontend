@@ -1039,8 +1039,8 @@ export const marketplaceService = {
   },
 
   /**
-   * Schedule (plan_id) or clear (null) a plan change applied at the end of
-   * the current period. Scheduling turns auto-renew on.
+   * Schedule (plan_id) or clear (null) a plan change applied to the member's
+   * next PAID term. It does not touch the member's auto-renew (api #196).
    */
   async setSubscriptionNextPlan(
     organizationId: string,
