@@ -58,4 +58,6 @@ export const REMOVED_PAGE_REDIRECTS: RemovedPageRedirect[] = [
   { source: "/blog/:slug", destination: "/", permanent: false },
   // A status page that hardcoded "Operational" for every service.
   { source: "/status", destination: "/help", permanent: false },
+  // A gym-owner "Marketing tools" page of invented KPIs and discount codes.
+  { source: "/dashboard/gym-owner/marketing", destination: "/dashboard/gym-owner", permanent: false },
 ];
