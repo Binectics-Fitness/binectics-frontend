@@ -8,7 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { authService } from "@/lib/api/auth";
+import { authService, type RegisterClaimLinkSent } from "@/lib/api/auth";
 import { getDashboardRoute, getLoginRoute, getOnboardingRoute } from "@/lib/constants/routes";
 import { tokenStorage } from "@/lib/utils/storage";
 import SessionModal from "@/components/SessionModal";
@@ -39,6 +39,12 @@ interface AuthContextType {
     success: boolean;
     error?: string;
     errors?: Record<string, string[]>;
+    /**
+     * The email belonged to an unclaimed account a gym created: nothing was
+     * changed, no OTP was sent, and a set-password link was emailed instead.
+     * The caller shows a "check your email" state; there is no OTP screen.
+     */
+    claimLinkSent?: boolean;
   }>;
   /**
    * Sign out and hard-navigate to the login page, or to `to` (a same-origin
@@ -315,6 +321,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     success: boolean;
     error?: string;
     errors?: Record<string, string[]>;
+    claimLinkSent?: boolean;
   }> => {
     try {
       // Clear any previous session so the middleware doesn't
@@ -323,6 +330,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
 
       const response = await authService.register(data);
+
+      if (
+        response.success &&
+        (response.data as Partial<RegisterClaimLinkSent> | undefined)?.claim_link_sent === true
+      ) {
+        // Placeholder account: a set-password link was emailed, no OTP.
+        return { success: true, claimLinkSent: true };
+      }
 
       if (response.success && response.data) {
         // Redirect to verification page instead of logging in
