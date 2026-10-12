@@ -30,6 +30,7 @@ const SIDEBAR: NavSection[] = [
   ]},
   { label: "Practice", items: [
     { name: "Forms", href: "/dashboard/forms", icon: <I><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></I> },
+    { name: "Loyalty", href: "/dashboard/loyalty", icon: <I d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z" /> },
     { name: "Earnings", href: "/dashboard/trainer/earnings", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
     { name: "Packages", href: "/dashboard/trainer/plans", icon: <I d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /> },
     { name: "Programs", href: "/dashboard/trainer/programs", icon: <I><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></I> },

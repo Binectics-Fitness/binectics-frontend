@@ -45,7 +45,8 @@ const QUOTAS: { key: QuotaKey; label: string }[] = [
 const FEATURES: { key: FeatureKey; label: string }[] = [
   { key: "forms_enabled", label: "Forms (PAR-Q, waivers)" },
   { key: "classes_enabled", label: "Class schedule" },
-  { key: "loyalty_enabled", label: "Loyalty rewards" },
+  // loyalty_enabled is retired: loyalty is each provider's own opt-in on
+  // every tier (Settings → Loyalty), so the plan no longer switches it.
   { key: "api_access_enabled", label: "API access" },
   { key: "analytics_enabled", label: "Analytics" },
   { key: "consultations_enabled", label: "Consultations" },
