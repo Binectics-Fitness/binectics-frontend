@@ -313,34 +313,6 @@ export const ORG_NOTIFICATION_EVENTS = [
 export const ORG_NOTIFICATION_CHANNELS = ["email", "sms", "push"] as const;
 export type OrgNotificationChannel = (typeof ORG_NOTIFICATION_CHANNELS)[number];
 
-// ==================== API KEYS ====================
-
-export interface OrgApiKey {
-  _id: string;
-  organization_id: string;
-  name: string;
-  key_prefix: string;
-  scopes: TeamPermission[];
-  created_by_id: string;
-  last_used_at: string | null;
-  expires_at: string | null;
-  revoked_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateApiKeyRequest {
-  name: string;
-  scopes: TeamPermission[];
-  expires_at?: string;
-}
-
-/** Reveal-once create response: api_key is never retrievable again. */
-export interface CreatedApiKey {
-  api_key: string;
-  key: OrgApiKey;
-}
-
 // ==================== SERVICE ====================
 
 export const teamsService = {
@@ -606,37 +578,6 @@ export const teamsService = {
     return await apiClient.patch<OrgNotificationSettings>(
       `/teams/organizations/${organizationId}/notification-settings`,
       data,
-    );
-  },
-
-  // ==================== API KEYS ====================
-
-  /** Create an API key — the secret in the response is shown exactly once. */
-  async createApiKey(
-    organizationId: string,
-    data: CreateApiKeyRequest,
-  ): Promise<ApiResponse<CreatedApiKey>> {
-    return await apiClient.post<CreatedApiKey>(
-      `/teams/organizations/${organizationId}/api-keys`,
-      data,
-    );
-  },
-
-  async getApiKeys(
-    organizationId: string,
-  ): Promise<ApiResponse<OrgApiKey[]>> {
-    return await apiClient.get<OrgApiKey[]>(
-      `/teams/organizations/${organizationId}/api-keys`,
-    );
-  },
-
-  /** Revoke (not delete) an API key. */
-  async revokeApiKey(
-    organizationId: string,
-    keyId: string,
-  ): Promise<ApiResponse<OrgApiKey>> {
-    return await apiClient.delete<OrgApiKey>(
-      `/teams/organizations/${organizationId}/api-keys/${keyId}`,
     );
   },
 };

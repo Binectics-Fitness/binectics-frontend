@@ -205,12 +205,10 @@ function FlowBHome() {
         </div>
 
         <div style={{ background: "#1a1814", color: "#f6f4ef", borderRadius: 18, padding: "20px 22px", marginBottom: 14 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#a09c95" }}>Current streak</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#a09c95" }}>Check-in streak</div>
           <div style={{ fontSize: 44, fontWeight: 500, letterSpacing: "-0.026em", marginTop: 4, fontVariantNumeric: "tabular-nums" }}>32 days</div>
-          <div style={{ fontSize: 12, color: "#c8c4bd", marginTop: 2 }}>Personal best · 18 days to milestone</div>
-          <div style={{ height: 6, background: "#2a2724", borderRadius: 3, marginTop: 14 }}>
-            <div style={{ height: "100%", width: "64%", background: "#7bbf52", borderRadius: 3 }} />
-          </div>
+          <div style={{ fontSize: 12, color: "#c8c4bd", marginTop: 2 }}>Checked in today</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#a09c95", marginTop: 12 }}>Longest · 40 days</div>
         </div>
 
         <div style={{ background: "#fff", borderRadius: 14, padding: 18, marginBottom: 10 }}>
@@ -227,14 +225,14 @@ function FlowBHome() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
           <div style={{ background: "#fff", borderRadius: 14, padding: 16 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b" }}>This week</div>
-            <div style={{ fontSize: 24, fontWeight: 500, marginTop: 4, color: "#1a1814" }}>4 / 5</div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "#2d5028", marginTop: 2 }}>1 to goal</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b" }}>Check-ins · this week</div>
+            <div style={{ fontSize: 24, fontWeight: 500, marginTop: 4, color: "#1a1814" }}>4</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "#2d5028", marginTop: 2 }}>Last: today</div>
           </div>
           <div style={{ background: "#fff", borderRadius: 14, padding: 16 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b" }}>Weight</div>
             <div style={{ fontSize: 24, fontWeight: 500, marginTop: 4, fontVariantNumeric: "tabular-nums", color: "#1a1814" }}>73.4 kg</div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "#2d5028", marginTop: 2 }}>↓ 1.8 · 30d</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "#2d5028", marginTop: 2 }}>↓ 1.8 kg since 25 Apr</div>
           </div>
         </div>
 
@@ -290,7 +288,7 @@ function FlowBCheckin() {
             33 <span style={{ fontSize: 14, color: "#a09c95", fontWeight: 400, marginLeft: 4 }}>days</span>
           </div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#7bbf52", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 6 }}>
-            New personal best
+            Longest · 40 days
           </div>
         </div>
       </div>
@@ -314,18 +312,18 @@ function FlowBWorkout() {
         <div style={{ fontSize: 28, letterSpacing: "-0.022em", fontWeight: 500, color: "#1a1814" }}>
           Workout <em style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>log</em>
         </div>
-        <p style={{ fontSize: 13, color: "#75716b", marginTop: 4 }}>Sarah&apos;s program · 32-day streak</p>
+        <p style={{ fontSize: 13, color: "#75716b", marginTop: 4 }}>Your sessions, from your own log</p>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: 14 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b" }}>Top set · squat</div>
-            <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4, fontVariantNumeric: "tabular-nums", color: "#1a1814" }}>92.5 kg</div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#2d5028", marginTop: 2 }}>↑ PR · from 87.5</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b" }}>Sessions · this week</div>
+            <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4, fontVariantNumeric: "tabular-nums", color: "#1a1814" }}>3</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#2d5028", marginTop: 2 }}>14 in 30d</div>
           </div>
           <div style={{ background: "#fff", borderRadius: 12, padding: 14 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b" }}>Volume · week</div>
-            <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4, fontVariantNumeric: "tabular-nums", color: "#1a1814" }}>14.8t</div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#2d5028", marginTop: 2 }}>↑ above avg</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b" }}>Minutes · this week</div>
+            <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4, fontVariantNumeric: "tabular-nums", color: "#1a1814" }}>165 min</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#2d5028", marginTop: 2 }}>760 min in 30d</div>
           </div>
         </div>
 
@@ -346,11 +344,11 @@ function FlowBWorkout() {
         </div>
 
         <div style={{ marginTop: 14 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b", margin: "4px 4px 10px" }}>Recent sessions</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b", margin: "4px 4px 10px" }}>Recent workouts</div>
           {[
-            ["Wed 21 May", "PR day · 92.5 squat", "strength"],
-            ["Mon 19 May", "Upper body · 62.5 bench", "strength"],
-            ["Sat 17 May", "Row 5k 22:14", "conditioning"],
+            ["Wed 21 May", "Lower body", "strength · 60 min"],
+            ["Mon 19 May", "Upper body", "strength · 55 min"],
+            ["Sat 17 May", "Row 5k", "cardio · 22 min"],
           ].map((s, i) => (
             <div key={i} className={i === 0 ? "tap-target" : undefined} style={{ background: "#fff", borderRadius: 10, padding: "12px 14px", marginBottom: 6, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
@@ -409,7 +407,7 @@ function FlowBReview() {
 
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b", margin: "20px 4px 8px" }}>Your review</div>
         <div style={{ background: "#fff", border: "1px solid #ebe7e1", borderRadius: 12, padding: 14, minHeight: 70, fontSize: 13.5, color: "#54504a", lineHeight: 1.5 }}>
-          Sarah&apos;s programming is the reason I hit 92.5 on squat. She pays attention to recovery, sleep, not just the lift.
+          Clear cues, always on time, and she plans around my sleep and recovery, not just the lift.
         </div>
       </div>
       <div style={{ padding: "12px 20px 28px", borderTop: "1px solid #ebe7e1" }}>
@@ -507,21 +505,21 @@ function ParticleField() {
 
 // ─── Dashboard Preview ──────────────────────────────────────────────
 
-const TRAINER_STATS = [
-  { label: "Sessions · this week", value: "28", unit: "/ 32 slots", delta: "88% utilization" },
-  { label: "Active clients", value: "42", delta: "+ 3 this month" },
-  { label: "Earnings · MTD", value: "{{38400}}", delta: "↑ 14% vs apr" },
-  { label: "Rating · last 30d", value: "4.9", delta: "No change", steady: true },
+const TRAINER_STATS: Array<{ label: string; value: string; unit?: string; delta: string; steady?: boolean }> = [
+  { label: "Sessions · today", value: "6", delta: "4 still to come" },
+  { label: "Active clients", value: "42", delta: "51 total" },
+  { label: "Upcoming sessions", value: "23", delta: "Next: today 08:00" },
+  { label: "Earnings · this month", value: "{{38400}}", delta: "Settled", steady: true },
 ];
 
 const SESSIONS: Array<{ time: string; initials: string; name: string; meta: string; tag?: string; tagColor?: string; streak?: number; cancelled?: boolean }> = [
   { time: "06:30", initials: "JC", name: "Jamal Chen", meta: "Intake + assessment · 60 min · Iron Lab Sea Point", tag: "First session", tagColor: "var(--signal)" },
-  { time: "08:00", initials: "LM", name: "Linda Mokoena", meta: "Session 14 / 24 · Strength upper · 60 min", streak: 32 },
-  { time: "09:30", initials: "WC", name: "Wei Chen", meta: "Session 8 / 12 · Olympic basics · 90 min" },
+  { time: "08:00", initials: "LM", name: "Linda Mokoena", meta: "Strength upper · 60 min · Iron Lab Sea Point" },
+  { time: "09:30", initials: "WC", name: "Wei Chen", meta: "Olympic basics · 90 min · Iron Lab Sea Point" },
   { time: "11:30", initials: "AA", name: "Aisha Adams", meta: "Programming review · Dubai (GMT+4) · 30 min · Zoom", tag: "Online", tagColor: "var(--gym)" },
-  { time: "13:00", initials: "PB", name: "Pier Botha", meta: "Refund issued · slot reopened for booking", tag: "Cancelled · 06:42", tagColor: "var(--fg-4)", cancelled: true },
-  { time: "15:30", initials: "TN", name: "Thandi Nkosi", meta: "Session 6 / 12 · Postnatal strength · 60 min", streak: 18 },
-  { time: "17:00", initials: "MK", name: "Mike Khumalo", meta: "Session 22 / 24 · Conditioning · 60 min" },
+  { time: "13:00", initials: "PB", name: "Pier Botha", meta: "Cancelled by client · slot open again", tag: "Cancelled · 06:42", tagColor: "var(--fg-4)", cancelled: true },
+  { time: "15:30", initials: "TN", name: "Thandi Nkosi", meta: "Postnatal strength · 60 min · Iron Lab Sea Point" },
+  { time: "17:00", initials: "MK", name: "Mike Khumalo", meta: "Conditioning · 60 min · Iron Lab Sea Point" },
 ];
 
 function DashboardPreview() {
@@ -601,7 +599,7 @@ function DashboardPreview() {
             <div className="dash-el" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", transitionDelay: "100ms" }}>
               <div>
                 <div style={{ fontSize: 30, letterSpacing: "-0.02em", fontWeight: 500 }}>Today, Sarah</div>
-                <div style={{ color: "var(--fg-3)", fontSize: 13.5, marginTop: 6 }}>Mon · May 11 · 6 sessions · {money(7200)} forecast</div>
+                <div style={{ color: "var(--fg-3)", fontSize: 13.5, marginTop: 6 }}>Mon · May 11 · 6 sessions today · 42 active clients</div>
               </div>
             </div>
 
@@ -625,7 +623,7 @@ function DashboardPreview() {
               <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 500 }}>Today&apos;s schedule</div>
-                  <div style={{ fontSize: 12, color: "var(--fg-3)" }}>6 confirmed · 1 cancellation · gap 14:00–15:30</div>
+                  <div style={{ fontSize: 12, color: "var(--fg-3)" }}>6 sessions · 1 cancelled, missed or expired</div>
                 </div>
                 <span style={{ fontSize: 12.5, color: "var(--fg-2)" }}>Open calendar →</span>
               </div>
@@ -813,7 +811,7 @@ function Row1SmallCard() {
       ref={smallRef}
       className="bento-card bento-small"
       role="img"
-      aria-label="Weekly session calendar with streak tracking"
+      aria-label="Session calendar with today's sessions"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -828,11 +826,11 @@ function Row1SmallCard() {
           padding: "18px 20px", display: "flex", flexDirection: "column", gap: 6,
           boxShadow: "0 4px 16px oklch(0 0 0 / 0.06)",
         }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--fg-3)" }}>Sessions · this week</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--fg-3)" }}>Sessions · today</div>
           <div style={{ fontSize: 36, letterSpacing: "-0.02em", fontWeight: 500, fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
-            28<small style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg-3)", fontWeight: 400, marginLeft: 4 }}>/ 32 slots</small>
+            6
           </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#2d5028" }}>88% utilization</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#2d5028" }}>4 still to come</div>
         </div>
 
         {/* Monthly calendar */}
@@ -924,10 +922,10 @@ interface KioskMember {
 }
 
 const KIOSK_MEMBERS: KioskMember[] = [
-  { name: "Lerato Mokoena", initials: "LM", bg: "oklch(0.86 0.04 80)", type: "Iron Lab Member · 2 years", streak: 24, nextTime: "6:30", nextLine: "Strength", nextSub: "with Sarah Okafor", welcome: "Welcome back" },
-  { name: "Marcus Chen", initials: "MC", bg: "oklch(0.84 0.05 60)", type: "Iron Lab Member · 4 years", streak: 48, nextTime: "7:00", nextLine: "5×5 Powerlifting", nextSub: "one rep from a PR", welcome: "A personal record kind of day" },
-  { name: "Aisha Patel", initials: "AP", bg: "oklch(0.86 0.04 120)", type: "Iron Lab Member · day 1", streak: 1, nextTime: "6:00", nextLine: "Beginner Strength", nextSub: "with Sarah · she’s expecting you", welcome: "Welcome to Iron Lab" },
-  { name: "Daniel Kovač", initials: "DK", bg: "oklch(0.84 0.03 240)", type: "Iron Lab Member · 3 years", streak: null, nextTime: "now", nextLine: "Open gym", nextSub: "drop in any time today", welcome: "Missed you these 14 days." },
+  { name: "Lerato Mokoena", initials: "LM", bg: "oklch(0.86 0.04 80)", type: "Studio · monthly", streak: 24, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
+  { name: "Marcus Chen", initials: "MC", bg: "oklch(0.84 0.05 60)", type: "Pro · annual", streak: 48, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
+  { name: "Aisha Patel", initials: "AP", bg: "oklch(0.86 0.04 120)", type: "Studio · monthly", streak: 1, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome to Iron Lab" },
+  { name: "Daniel Kovač", initials: "DK", bg: "oklch(0.84 0.03 240)", type: "Day pass", streak: null, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
 ];
 
 function KioskFrame({ playing, member, playKey }: { playing: boolean; member: KioskMember; playKey: number }) {
@@ -956,26 +954,26 @@ function KioskFrame({ playing, member, playKey }: { playing: boolean; member: Ki
           <div style={{ position: "relative", overflow: "hidden", height: KIOSK_H2 - 36 }}>
             {/* IDLE */}
             <div className="kiosk-idle" style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "56px 28px 32px" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 18 }}>Scan to enter</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 18 }}>Check in at Iron Lab</div>
               <div style={{ fontSize: 26, letterSpacing: "-0.02em", fontWeight: 500, lineHeight: 1.1, textAlign: "center", marginBottom: 32, maxWidth: "14ch" }}>
-                Hold your <em style={{ fontFamily: "var(--font-serif)", fontWeight: 400, fontStyle: "italic" }}>Binectics</em> code up to the camera
+                Scan this code with your <em style={{ fontFamily: "var(--font-serif)", fontWeight: 400, fontStyle: "italic" }}>phone</em>
               </div>
               <div style={{ width: 200, height: 200, position: "relative", marginBottom: 28 }}>
                 <span style={{ position: "absolute", top: 0, left: 0, width: 28, height: 28, borderTop: "2px solid var(--ink)", borderLeft: "2px solid var(--ink)" }} />
                 <span style={{ position: "absolute", top: 0, right: 0, width: 28, height: 28, borderTop: "2px solid var(--ink)", borderRight: "2px solid var(--ink)" }} />
                 <span style={{ position: "absolute", bottom: 0, left: 0, width: 28, height: 28, borderBottom: "2px solid var(--ink)", borderLeft: "2px solid var(--ink)" }} />
                 <span style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderBottom: "2px solid var(--ink)", borderRight: "2px solid var(--ink)" }} />
-                <div style={{ position: "absolute", inset: 28, display: "grid", gridTemplateColumns: "repeat(13, 1fr)", gridTemplateRows: "repeat(13, 1fr)", gap: 1.5, opacity: 0.10 }}>
+                <div style={{ position: "absolute", inset: 28, display: "grid", gridTemplateColumns: "repeat(13, 1fr)", gridTemplateRows: "repeat(13, 1fr)", gap: 1.5, opacity: 0.85 }}>
                   {QR_CELLS.map((v, i) => <span key={i} style={{ background: v ? "var(--ink)" : "transparent" }} />)}
                 </div>
                 <div className="kiosk-scanline" />
               </div>
               <div style={{ fontSize: 13.5, color: "var(--fg-3)", textAlign: "center", lineHeight: 1.45, maxWidth: "22ch" }}>
-                Camera unlocks the door · checks you in · counts your streak.
+                Your phone checks you in and counts your streak.
               </div>
               <div style={{ marginTop: "auto", width: "100%", borderTop: "1px solid var(--border)", paddingTop: 14, display: "flex", justifyContent: "space-between", fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <span>Today · <span style={{ color: "var(--ink)" }}>216 checked in</span></span>
-                <span>Door ✓</span>
+                <span>Code refreshes</span>
               </div>
             </div>
             {/* SUCCESS — keyed to force animation restart */}
@@ -994,7 +992,7 @@ function KioskFrame({ playing, member, playKey }: { playing: boolean; member: Ki
               </div>
               <div className="k-name" style={{ textAlign: "center", fontSize: 26, letterSpacing: "-0.025em", fontWeight: 500, lineHeight: 1.1, marginBottom: 4 }}>{member.name}</div>
               <div className="k-type" style={{ textAlign: "center", fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 20 }}>{member.type}</div>
-              <div className="k-nextcard" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "var(--r-3)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+              {member.nextLine && <div className="k-nextcard" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "var(--r-3)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                 <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", width: 44, fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.05em", lineHeight: 1.1 }}>
                   <span style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.02em" }}>{member.nextTime}</span>
                   {member.nextTime !== "now" && <span>PM</span>}
@@ -1003,7 +1001,7 @@ function KioskFrame({ playing, member, playKey }: { playing: boolean; member: Ki
                   <div style={{ fontSize: 14, fontWeight: 500 }}>{member.nextLine}</div>
                   <div style={{ fontSize: 11.5, color: "var(--fg-3)", marginTop: 2, fontFamily: "var(--font-mono)" }}>{member.nextSub}</div>
                 </div>
-              </div>
+              </div>}
               {member.streak !== null && (
                 <div className="k-streak" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "var(--r-3)", padding: 14, display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
                   <div style={{ fontSize: 36, fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 1, fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>{member.streak}</div>
@@ -1070,7 +1068,7 @@ function Row2QRCard() {
   useVisibleOnTouch(qrRef, handleMouseEnter, handleMouseLeave);
 
   return (
-    <div ref={qrRef} className="bento-card bento-r2 bento-r2-qr" role="img" aria-label="QR check-in kiosk scanning members into the gym" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div ref={qrRef} className="bento-card bento-r2 bento-r2-qr" role="img" aria-label="Gym check-in QR on a front-desk screen, scanned by members with their phones" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <WaveBackground id="qr-grad" stops={[["0%", "var(--gym)"], ["60%", "var(--signal)"], ["100%", "var(--gym)"]]} />
       <div className="radar-bg" aria-hidden="true">
         {[1, 2, 3, 4].map(i => <div key={i} className="radar-circle" style={{ width: 100 + i * 120, height: 100 + i * 120 }} />)}
@@ -1087,7 +1085,7 @@ function Row2QRCard() {
 const VERIFY_STEPS = [
   { icon: "M4 4h16v16H4zM4 8h16M8 4v4", label: "ID Verification", sub: "Government-issued photo ID" },
   { icon: "M12 2L3 7v9c0 5.25 3.82 10.15 9 11 5.18-.85 9-5.75 9-11V7z", label: "Credentials Check", sub: "Certifications & qualifications" },
-  { icon: "M9 12l2 2 4-4m6 2a10 10 0 1 1-20 0 10 10 0 0 1 20 0z", label: "Background Review", sub: "Professional background verified" },
+  { icon: "M9 12l2 2 4-4m6 2a10 10 0 1 1-20 0 10 10 0 0 1 20 0z", label: "Team review", sub: "Checked by the Binectics team" },
 ];
 
 function Row2VerifyCard() {
@@ -1183,30 +1181,29 @@ function Row2GlobalCard() {
 // ─── Row 3: Gym Owner Analytics ───────────────────────────────────────
 
 const R3_KPIS = [
-  { label: "Revenue · 30d", value: "{{1084200}}", delta: "↑ 12.4% vs prev", down: false, spark: [30,45,38,60,52,64,70,58,72,80,68,90] },
-  { label: "Active members", value: "1,284", delta: "↑ 38 net new", down: false, spark: [50,55,60,58,64,68,72,75,78,80,82,86] },
+  { label: "Revenue · 30d", value: "{{1084200}}", delta: "Settled", down: false, spark: [30,45,38,60,52,64,70,58,72,80,68,90] },
+  { label: "Active members", value: "1,284", delta: "9,860 check-ins · 30d", down: false, spark: [50,55,60,58,64,68,72,75,78,80,82,86] },
   { label: "Check‑ins · today", value: "412", suffix: "/ 1,284", delta: "32% attendance", down: false, spark: [12,28,48,70,88,96,78,60,38,28,18,8] },
-  { label: "Churn · 30d", value: "2.1", suffix: "%", delta: "↓ 0.4 pts", down: true, spark: [60,52,58,48,44,50,42,38,32,36,28,22] },
+  { label: "Avg rating", value: "4.8", suffix: "/ 5", delta: "212 reviews", down: false, spark: [70,72,71,74,76,75,78,80,79,82,84,86] },
 ];
 
 const R3_LIVE = [
   { dot: "signal", name: "Sarah O.", text: "checked in via QR at Sea Point", ts: "just now" },
   { dot: "signal", name: "", text: "New subscription · Studio monthly · Jamal S.", ts: "2m" },
-  { dot: "warn", name: "Coach Themba", text: "running 4m late · 18:00 class", ts: "4m" },
   { dot: "signal", name: "", text: "Class booked · Olympic basics · Tue 19:00", ts: "8m" },
-  { dot: "danger", name: "", text: "Refund request · {{850}} · Pier B. · awaiting review", ts: "14m" },
+  { dot: "warn", name: "", text: "Declined at the door · no membership · Pier B.", ts: "14m" },
   { dot: "signal", name: "", text: "14 members checked in at Foreshore in last 20m", ts: "22m" },
-  { dot: "signal", name: "", text: "Auto‑payout posted · {{84200}} → ABSA •••2241", ts: "1h" },
+  { dot: "signal", name: "Thandi N.", text: "checked in via QR at Camps Bay", ts: "31m" },
 ];
 
 const R3_MEMBERS = [
   { init: "JS", name: "Jamal Sutherland", plan: "Studio · monthly", loc: "Sea Point", joined: "May 02 · 09:14", status: "Active", sType: "signal", ltv: "{{850}}" },
   { init: "LM", name: "Linda Mokoena", plan: "Pro · annual", loc: "Foreshore", joined: "May 01 · 18:22", status: "Active", sType: "signal", ltv: "{{9200}}" },
   { init: "WC", name: "Wei Chen", plan: "Studio · monthly", loc: "Sea Point", joined: "Apr 30 · 12:08", status: "Active", sType: "signal", ltv: "{{1700}}" },
-  { init: "PB", name: "Pier Botha", plan: "Day pass", loc: "Woodstock", joined: "Apr 28 · 07:42", status: "Refund req.", sType: "danger", ltv: "{{180}}" },
+  { init: "PB", name: "Pier Botha", plan: "Day pass", loc: "Woodstock", joined: "Apr 28 · 07:42", status: "Pending payment", sType: "warn", ltv: "{{180}}" },
   { init: "TN", name: "Thandi Nkosi", plan: "Studio · monthly", loc: "Camps Bay", joined: "Apr 27 · 16:30", status: "Active", sType: "signal", ltv: "{{2550}}" },
   { init: "AA", name: "Aisha Adams", plan: "Pro · annual", loc: "Sea Point", joined: "Apr 26 · 14:11", status: "Active", sType: "signal", ltv: "{{9200}}" },
-  { init: "MK", name: "Mike Khumalo", plan: "Studio · monthly", loc: "Foreshore", joined: "Apr 25 · 19:48", status: "Payment retry", sType: "warn", ltv: "{{0}}" },
+  { init: "MK", name: "Mike Khumalo", plan: "Studio · monthly", loc: "Foreshore", joined: "Apr 25 · 19:48", status: "Past due", sType: "danger", ltv: "{{850}}" },
 ];
 
 const R3_CLASSES = [
@@ -1286,7 +1283,7 @@ function R3CheckoutCard({ step }: { step: number }) {
           </div>
         </div>
         <div style={{ height: 36, borderRadius: "var(--r-2)", background: "var(--signal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 500, color: "var(--ink)", marginTop: 12 }}>Pay {money(12500)}</div>
-        <div style={{ textAlign: "center", fontSize: 10, color: "var(--fg-3)", marginTop: 6 }}>Cancel any time · 24‑hr review window</div>
+        <div style={{ textAlign: "center", fontSize: 10, color: "var(--fg-3)", marginTop: 6 }}>Cancel any time from Billing</div>
       </div>
 
       {/* Screen 2: Processing */}
@@ -1440,7 +1437,6 @@ function Row3DashCard() {
                       <div style={{ position: "relative", height: 220 }}>
                         <svg viewBox="0 0 600 220" preserveAspectRatio="none" style={{ width: "100%", height: "100%", display: "block" }}>
                           <g stroke="oklch(0.91 0.006 85)" strokeWidth="1"><line x1="0" y1="20" x2="600" y2="20"/><line x1="0" y1="70" x2="600" y2="70"/><line x1="0" y1="120" x2="600" y2="120"/><line x1="0" y1="170" x2="600" y2="170"/></g>
-                          <path d="M 0 130 L 22 138 L 44 124 L 66 132 L 88 118 L 110 122 L 132 110 L 154 116 L 176 100 L 198 104 L 220 96 L 242 102 L 264 90 L 286 94 L 308 86 L 330 92 L 352 78 L 374 82 L 396 74 L 418 70 L 440 66 L 462 72 L 484 60 L 506 64 L 528 56 L 550 60 L 572 50 L 600 56" fill="none" stroke="oklch(0.72 0.008 80)" strokeWidth="1.4" strokeDasharray="4 4" />
                           <path className="r3-chart-fill" d="M 0 160 L 22 158 L 44 142 L 66 144 L 88 128 L 110 120 L 132 110 L 154 108 L 176 92 L 198 100 L 220 84 L 242 76 L 264 80 L 286 68 L 308 62 L 330 70 L 352 54 L 374 48 L 396 56 L 418 42 L 440 38 L 462 46 L 484 32 L 506 28 L 528 36 L 550 22 L 572 30 L 600 18 L 600 220 L 0 220 Z" fill="oklch(0.94 0.04 148)" />
                           <path className="r3-chart-line" d="M 0 160 L 22 158 L 44 142 L 66 144 L 88 128 L 110 120 L 132 110 L 154 108 L 176 92 L 198 100 L 220 84 L 242 76 L 264 80 L 286 68 L 308 62 L 330 70 L 352 54 L 374 48 L 396 56 L 418 42 L 440 38 L 462 46 L 484 32 L 506 28 L 528 36 L 550 22 L 572 30 L 600 18" fill="none" stroke="oklch(0.55 0.16 148)" strokeWidth="2" />
                           <circle cx="600" cy="18" r="4" fill="oklch(0.55 0.16 148)" />
@@ -1451,7 +1447,6 @@ function Row3DashCard() {
                     </div>
                     <div style={{ display: "flex", gap: 16, padding: "0 18px 14px", fontSize: 12, color: "var(--fg-2)" }}>
                       <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, marginRight: 6, verticalAlign: "middle", background: "oklch(0.55 0.16 148)" }} />This period · {money(1080000, { compact: true })}</span>
-                      <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, marginRight: 6, verticalAlign: "middle", background: "oklch(0.72 0.008 80)" }} />Previous · {money(964000, { compact: true })}</span>
                     </div>
                   </div>
 
@@ -1492,7 +1487,7 @@ function Row3DashCard() {
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
                       <thead>
                         <tr>
-                          {["Member", "Plan", "Location", "Joined", "Status", "LTV"].map((h, i) => (
+                          {["Member", "Plan", "Location", "Joined", "Status", "Amount"].map((h, i) => (
                             <th key={h} style={{ textAlign: i === 5 ? "right" : "left", fontWeight: 500, fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", padding: "12px 18px", color: "var(--fg-3)", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>{h}</th>
                           ))}
                         </tr>
