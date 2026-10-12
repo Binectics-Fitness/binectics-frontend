@@ -76,7 +76,7 @@ const ROLE_VIEWS = [
 
 const SHARED_FEATURES = [
   { title: "Unified notifications", desc: "One inbox for bookings, payments, check-ins, and journal updates. Push, email, or in-app, you pick." },
-  { title: "Cross-role visibility", desc: "Gym owners see trainer schedules. Trainers see member check-ins. Everyone works from the same data." },
+  { title: "Class schedule", desc: "Gym owners build the weekly class timetable, with an instructor and a capacity for each class." },
   { title: "Check-ins without refreshing", desc: "The kiosk page updates every few seconds and the check-ins page every 30 seconds, so arrivals show up on their own." },
   { title: "Works on your phone", desc: "Every dashboard is built to work on a phone as well as on a desktop." },
   { title: "Quick search", desc: "Press Cmd+K, or Ctrl+K on Windows, to jump to any page." },

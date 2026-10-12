@@ -38,18 +38,18 @@ const ENTRY_TYPES = [
   },
   {
     title: "Weight",
-    desc: "An entry can carry the client's weight, shown with the note in the client's app.",
-    fields: "Weight in kg · optional",
+    desc: "The client's weight log, from their own entries in the app or ones their trainer adds in the coach app. The latest shows on their profile.",
+    fields: "kg · dated",
   },
   {
-    title: "Mood",
-    desc: "An entry can record how the client was feeling, shown with the note in the client's app.",
-    fields: "Excellent · Good · Okay · Low · Stressed · optional",
+    title: "Program adherence",
+    desc: "For clients on a program, the share of due tasks they have done, on their profile and on each program.",
+    fields: "0 to 100% · clients on a program",
   },
   {
-    title: "Adherence",
-    desc: "An entry can carry an adherence number from 0 to 100, shown with the note in the client's app.",
-    fields: "0 to 100 · optional",
+    title: "Meal and workout logs",
+    desc: "What the client logs in their app: meals, with how each one went, and workouts.",
+    fields: "Logged by the client",
   },
 ];
 
@@ -202,15 +202,15 @@ export default function ClientJournalsPage() {
           className="text-[28px] sm:text-[32px] font-medium mb-3"
           style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}
         >
-          What a journal entry holds
+          What sits next to your notes
         </h2>
         <p
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          A journal entry is a dated note. It can also carry three optional
-          values, which the client&rsquo;s app shows with the note. Today,
-          notes are written from the client&rsquo;s profile.
+          A journal entry is a dated note, written from the client&rsquo;s
+          profile. Next to your notes you see the client&rsquo;s own logs and
+          their progress.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {ENTRY_TYPES.map((et) => (
