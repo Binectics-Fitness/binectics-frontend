@@ -64,7 +64,7 @@ export default function QrHelpPage() {
           QR Check-in <em className="font-serif font-normal italic">guide</em>.
         </h1>
         <p className="text-[17px] sm:text-[18px] max-w-[60ch] leading-[1.5] mt-5" style={{ color: "var(--fg-2)" }}>
-          Check in to any Binectics gym in under 3 seconds. Here&apos;s exactly how it works.
+          Check in to any Binectics gym with a quick scan. Here&apos;s exactly how it works.
         </p>
       </section>
 

@@ -16,7 +16,7 @@ const WORKFLOW = [
   {
     step: "01",
     title: "Log an entry",
-    desc: "After a session, consultation, or weigh-in, tap, type, done. Structured fields for metrics, free text for everything else. Under 90 seconds per entry.",
+    desc: "After a session, consultation, or weigh-in, tap, type, done. Structured fields for metrics, free text for everything else.",
   },
   {
     step: "02",
@@ -87,13 +87,6 @@ const FEATURES = [
   { title: "Milestone alerts", desc: "Automatic celebrations at streak milestones (7, 30, 90 days), PBs, and weight targets. Custom milestones available." },
   { title: "Smart reminders", desc: "If a client hasn't logged in 3+ days, they get a gentle nudge. If a provider hasn't journaled post-session, they get one too." },
   { title: "Template entries", desc: "Save common entry structures as templates. 'Leg day log', 'Weekly weigh-in', 'Initial consultation', one tap to start." },
-];
-
-const KPIS = [
-  { label: "Avg entries / client / week", value: "3.4" },
-  { label: "Client retention lift", value: "+34%" },
-  { label: "Time to log", value: "82 s" },
-  { label: "Active journals", value: "9,241" },
 ];
 
 export default function ClientJournalsPage() {
@@ -340,38 +333,6 @@ export default function ClientJournalsPage() {
               >
                 {f.desc}
               </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* KPIs */}
-      <section
-        className="mx-auto max-w-280 px-5 sm:px-8 py-12"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {KPIS.map((k) => (
-            <div
-              key={k.label}
-              className="rounded-(--r-3) p-4.5"
-              style={{ background: "var(--bg-2)" }}
-            >
-              <div
-                className="font-mono text-[10.5px] uppercase tracking-[0.04em]"
-                style={{ color: "var(--fg-3)" }}
-              >
-                {k.label}
-              </div>
-              <div
-                className="text-[24px] sm:text-[32px] font-medium mt-1"
-                style={{
-                  letterSpacing: "-0.024em",
-                  color: "var(--ink)",
-                }}
-              >
-                {k.value}
-              </div>
             </div>
           ))}
         </div>
