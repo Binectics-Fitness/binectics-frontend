@@ -241,7 +241,14 @@ export interface ConsultationBooking {
 // frontend tracks the API automatically. See src/lib/api/generated/types.ts.
 export type CreateBookingRequest = CreateBookingDto;
 export type RescheduleBookingRequest = RescheduleBookingDto;
-export type CancelBookingRequest = CancelBookingDto;
+export type CancelBookingRequest = CancelBookingDto & {
+  /**
+   * The member accepts that, under the provider's cancellation policy,
+   * cancelling now refunds less than they paid (api #218). Not in the
+   * generated schema until it is re-synced after that merges.
+   */
+  acknowledge_refund_policy?: boolean;
+};
 export type CompleteBookingRequest = CompleteBookingDto;
 
 /**

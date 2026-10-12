@@ -1,26 +1,27 @@
-import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { FeaturePending } from "@/components/ds/FeaturePending";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
+import { DisputeDetail } from "@/components/refunds/DisputeDetail";
 
 export const metadata: Metadata = {
   title: "Dispute",
   description: "Dispute detail",
 };
 
-/**
- * Honest pending state — this page previously rendered fabricated demo
- * data. Policy: wire what has a backend; never fabricate.
- */
-export default function AdminDisputeDetailPage() {
+export default async function AdminDisputeDetailPage({
+  params,
+}: {
+  params: Promise<{ disputeId: string }>;
+}) {
+  const { disputeId } = await params;
   return (
-    <AdminDashboardShell activeItem={"Disputes"} crumb={"Dispute"}>
-      <FeaturePending
-        title={"Dispute"}
-        subtitle={"Dispute detail"}
-        pendingTitle={"Dispute detail is coming soon"}
-        pendingBody={"There are no disputes yet, the disputes subsystem hasn't been built. This page previously showed fabricated dispute data."}
-        cta={{ href: "/admin/disputes", label: "Back to disputes" }}
-      />
+    <AdminDashboardShell activeItem="Disputes" crumb="Dispute">
+      <Link href="/admin/disputes" className="text-[13px] underline" style={{ color: "var(--fg-2)" }}>
+        Back to disputes
+      </Link>
+      <div className="rounded-(--r-3) p-4.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <DisputeDetail mode="admin" disputeId={disputeId} />
+      </div>
     </AdminDashboardShell>
   );
 }

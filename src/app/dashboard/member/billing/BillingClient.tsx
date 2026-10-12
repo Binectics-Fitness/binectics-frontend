@@ -140,6 +140,11 @@ export function BillingClient() {
                 {!meta.hasAccess && !TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) && (
                   <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }}>{meta.hint}</div>
                 )}
+                {s.cancel_requested_at && s.status === MembershipSubscriptionStatus.ACTIVE && (
+                  <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }} data-testid="membership-ends">
+                    Cancelled, access ends {s.end_date ? formatDate(s.end_date) : "at the end of the term"}. It won&rsquo;t renew.
+                  </div>
+                )}
                 {s.status === MembershipSubscriptionStatus.PAST_DUE && s.grace_expires_at && (
                   <div className="text-[11.5px] mt-1" style={{ color: "var(--danger)" }}>
                     Access continues until {formatDate(s.grace_expires_at)}, settle the renewal to keep it.
@@ -152,7 +157,7 @@ export function BillingClient() {
               {/* Cancelling is offered wherever the membership is still live —
                   a past_due member can still choose to stop, and a paused one
                   should not have to resume first. */}
-              {!TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) && s.status !== MembershipSubscriptionStatus.PENDING_PAYMENT && (
+              {!TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) && s.status !== MembershipSubscriptionStatus.PENDING_PAYMENT && !s.cancel_requested_at && (
                 <button className="btn-ghost-v2 sm shrink-0" disabled={cancel.isPending} onClick={() => onCancel(s)}>
                   Cancel
                 </button>

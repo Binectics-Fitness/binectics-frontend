@@ -36,6 +36,11 @@ vi.mock("@/lib/api/consultations", async (orig) => ({
     getProviderSlots: (...a: unknown[]) => getProviderSlots(...a),
   },
 }));
+const cancellationQuote = vi.fn();
+vi.mock("@/lib/api/refunds", async (orig) => ({
+  ...(await orig<typeof import("@/lib/api/refunds")>()),
+  refundsService: { cancellationQuote: (...a: unknown[]) => cancellationQuote(...a) },
+}));
 const booking = (status: string, id = "b-00000001") => ({
   id, clientUserId: "u-1", providerId: "p", consultationTypeId: "t",
   consultationTypeName: "Strength", startsAt: "2026-10-07T08:00:00.000Z", endsAt: "2026-10-07T09:00:00.000Z",
@@ -51,6 +56,8 @@ describe("My bookings", () => {
     getMyBookings.mockReset();
     getMyBookings.mockImplementation(async () => listResponse());
     cancelBooking.mockReset();
+    cancellationQuote.mockReset();
+    cancellationQuote.mockResolvedValue({ success: false });
     rescheduleBooking.mockReset();
     getProviderSlots.mockReset();
   });
@@ -151,6 +158,48 @@ describe("My bookings", () => {
       await userEvent.type(within(dialogs[0]).getByRole("textbox"), "Travelling");
       await userEvent.click(within(dialogs[0]).getByRole("button", { name: "Cancel booking" }));
       expect(cancelBooking).toHaveBeenCalledWith("b-00000001", { reason: "Travelling" });
+    });
+
+    it("a paid booking's cancel dialog says what comes back, and a partial refund is confirmed knowingly", async () => {
+      role = "USER";
+      cancellationQuote.mockResolvedValue({
+        success: true,
+        data: {
+          booking_id: "b-00000001", cancellable: true, cancelled_by: "member",
+          paid_online: true, paid_minor: 1_000_000, refund_minor: 500_000, currency: "NGN",
+          late: false, percent: 50, policy: { window_hours: 48, refund_percent: 50, is_default: false },
+        },
+      });
+      cancelBooking.mockResolvedValue({ success: true, data: booking("CANCELLED") });
+      renderWithProviders(<MyBookingsPage />);
+      await screen.findAllByText(/Strength · 60 min/);
+      await userEvent.click(within(phoneActions()!).getByRole("button", { name: "Cancel booking" }));
+      const quote = await screen.findByTestId("cancel-refund-quote");
+      expect(quote.textContent).toMatch(/₦5,000 of ₦10,000 back/);
+      await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel booking" }));
+      expect(cancelBooking).toHaveBeenCalledWith("b-00000001", {
+        reason: undefined,
+        acknowledge_refund_policy: true,
+      });
+    });
+
+    it("a full refund needs no acknowledgement", async () => {
+      role = "USER";
+      cancellationQuote.mockResolvedValue({
+        success: true,
+        data: {
+          booking_id: "b-00000001", cancellable: true, cancelled_by: "member",
+          paid_online: true, paid_minor: 1_000_000, refund_minor: 1_000_000, currency: "NGN",
+          late: false, percent: 100, policy: { window_hours: 24, refund_percent: 100, is_default: true },
+        },
+      });
+      cancelBooking.mockResolvedValue({ success: true, data: booking("CANCELLED") });
+      renderWithProviders(<MyBookingsPage />);
+      await screen.findAllByText(/Strength · 60 min/);
+      await userEvent.click(within(phoneActions()!).getByRole("button", { name: "Cancel booking" }));
+      expect((await screen.findByTestId("cancel-refund-quote")).textContent).toMatch(/back in full/);
+      await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel booking" }));
+      expect(cancelBooking).toHaveBeenCalledWith("b-00000001", { reason: undefined });
     });
 
     it("Reschedule opens the page's one reschedule dialog", async () => {

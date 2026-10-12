@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, DSCard, DSCardHead, DSStatCard, EmptySlate, PageHeader } from "@/components/ds";
@@ -114,6 +116,7 @@ export default function RevenueClient() {
         className="mb-0!"
         title="Revenue"
         subtitle={currentOrg ? `${currentOrg.name} · settled revenue` : "Your gym revenue"}
+        actions={<Link href="/dashboard/refunds" className="btn-ghost-v2">Refunds and disputes</Link>}
       />
 
       {!currentOrg && !orgLoading ? (
