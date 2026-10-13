@@ -48,6 +48,17 @@ export interface OrgPaymentConfig {
   public_key: string;
   is_active: boolean;
   currencies: ProviderAccountCurrency[];
+  /**
+   * Paystack only: the URL to paste into the provider's own Paystack
+   * dashboard as its webhook URL. Null when the API has no public address
+   * configured; absent from an older API.
+   */
+  webhook_url?: string | null;
+  /**
+   * Paystack only: when a webhook signed with this account's key last
+   * reached Binectics (ISO). Null: not yet.
+   */
+  webhook_last_received_at?: string | null;
 }
 
 /** POST/DELETE .../payment-config/:gateway/currencies response. */
@@ -95,6 +106,22 @@ export function normalizePaymentConfig(raw: unknown): OrgPaymentConfig | null {
     public_key: typeof r.public_key === "string" ? r.public_key : "",
     is_active: r.is_active === true,
     currencies: normalizeProviderCurrencies(r.currencies),
+    ...("webhook_url" in r
+      ? {
+          // Only ever shown and copied as an https address.
+          webhook_url:
+            typeof r.webhook_url === "string" && /^https:\/\/[^\s]+$/.test(r.webhook_url) ? r.webhook_url : null,
+        }
+      : {}),
+    ...("webhook_last_received_at" in r
+      ? {
+          webhook_last_received_at:
+            typeof r.webhook_last_received_at === "string" &&
+            !Number.isNaN(new Date(r.webhook_last_received_at).getTime())
+              ? r.webhook_last_received_at
+              : null,
+        }
+      : {}),
   };
 }
 
