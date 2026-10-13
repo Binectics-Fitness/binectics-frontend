@@ -61,6 +61,52 @@ export function reasonFromError(
   return typeof reason === "string" ? reason : null;
 }
 
+/**
+ * Whether a checkout for `planId` renews a membership the member cancelled
+ * mid-term: their own, on this plan (or with it scheduled next), still
+ * running (active or past due) and with `cancel_requested_at` set. Ticking
+ * "renew automatically" on that checkout takes the cancellation back (the
+ * API clears it when it saves the card), so the page says so first.
+ */
+export function cancelledTermForPlan(
+  subs: MembershipSubscription[] | null | undefined,
+  planId: string,
+): MembershipSubscription | null {
+  const idOf = (v: unknown): string | null =>
+    typeof v === "string" ? v : v && typeof v === "object" && "_id" in v ? String((v as { _id: unknown })._id) : null;
+  const running = (subs ?? [])
+    .filter(
+      (s) =>
+        (idOf(s.plan_id) === planId || idOf(s.next_plan_id) === planId) &&
+        (s.status === MembershipSubscriptionStatus.ACTIVE ||
+          s.status === MembershipSubscriptionStatus.PAST_DUE),
+    )
+    // The API renews the most recent one; only that one's state counts.
+    .sort((a, b) => new Date(b.end_date ?? 0).getTime() - new Date(a.end_date ?? 0).getTime());
+  return running[0]?.cancel_requested_at ? running[0] : null;
+}
+
+/**
+ * The line above the renewal terms at checkout for a membership cancelled
+ * mid-term (web PR 228, mobile PR 107). The date is the terms' own first
+ * charge, never one computed here; without it, "at your next renewal".
+ * A renewal that charges nothing promises no charge.
+ */
+export function uncancelCheckoutLine(
+  consent: Pick<OfferedConsent, "rendered"> | null | undefined,
+  fmt: (iso: string) => string,
+): string {
+  const lead =
+    "You cancelled this membership. Ticking the box to renew automatically takes that back: your membership keeps going";
+  // Nothing to charge, nothing promised (a free plan never gets here today).
+  const amount = consent?.rendered?.amount_minor;
+  if (typeof amount === "number" && !(amount > 0)) return `${lead}.`;
+  const raw = consent?.rendered?.first_charge_at;
+  const valid = typeof raw === "string" && !Number.isNaN(new Date(raw).getTime());
+  const when = valid ? `on ${fmt(raw)}` : "at your next renewal";
+  return `${lead} and your card will be charged ${when}.`;
+}
+
 // ─── Renew in place ──────────────────────────────────────────────────────────
 
 const CHECKOUT_PATH = /\/marketplace\/listings\/([A-Za-z0-9_-]+)\/plans\/([A-Za-z0-9_-]+)\/checkout\/?$/;

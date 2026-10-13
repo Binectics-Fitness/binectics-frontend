@@ -11,6 +11,7 @@ import {
   cardExpiry,
   cardLabel,
   cardStatusCopy,
+  cancelledTermForPlan,
   consentFromError,
   groupCardsByProvider,
   reasonFromError,
@@ -18,6 +19,7 @@ import {
   renewHrefForNotification,
   renewHrefFromMetadata,
   RENEW_AHEAD_DAYS,
+  uncancelCheckoutLine,
 } from "@/lib/billing/autoRenew";
 import { resolveNotificationTarget } from "@/utils/resolveNotificationLink";
 import { canRecordRenewalFor } from "@/app/dashboard/gym-owner/members/MembersClient";
@@ -363,5 +365,68 @@ describe("review fixes (SF-1, SF-2)", () => {
     );
     expect(autoRenewSuccessQuery(true, { card_not_saved_reason: "x&y=<b>" })).toBe("&renewal=not_saved");
     expect(autoRenewSuccessQuery(true, {})).toBe("&renewal=not_saved");
+  });
+});
+
+describe("renewing a membership cancelled mid-term at checkout", () => {
+  const CANCELLED = "2026-10-05T10:00:00Z";
+  const fmt = (iso: string) => `<${iso.slice(0, 10)}>`;
+  const rendered = (over: Record<string, unknown> = {}) => ({
+    rendered: {
+      merchant_name: "Iron Temple",
+      collected_by: "provider" as const,
+      amount_minor: 2_500_000,
+      currency: "NGN",
+      interval_days: 30,
+      first_charge_at: "2026-11-07T00:00:00.000Z",
+      reminder_hours: 72,
+      price_notice_days: 7,
+      ...over,
+    },
+  });
+
+  it("finds the running membership on this plan the member cancelled", () => {
+    const s = sub({ cancel_requested_at: CANCELLED });
+    expect(cancelledTermForPlan([s], "p1")).toBe(s);
+  });
+
+  it("finds it through the plan the gym scheduled next", () => {
+    const s = sub({ plan_id: "p0", next_plan_id: { _id: "p1", name: "Monthly" }, cancel_requested_at: CANCELLED });
+    expect(cancelledTermForPlan([s], "p1")).toBe(s);
+  });
+
+  it("finds nothing when it wasn't cancelled, is on another plan, or has ended", () => {
+    expect(cancelledTermForPlan([sub()], "p1")).toBeNull();
+    expect(cancelledTermForPlan([sub({ cancel_requested_at: CANCELLED })], "p2")).toBeNull();
+    expect(
+      cancelledTermForPlan([sub({ cancel_requested_at: CANCELLED, status: MembershipSubscriptionStatus.EXPIRED })], "p1"),
+    ).toBeNull();
+    expect(cancelledTermForPlan(null, "p1")).toBeNull();
+  });
+
+  it("goes by the most recent membership on the plan, the one the API renews", () => {
+    const older = sub({ _id: "s0", cancel_requested_at: CANCELLED, end_date: "2026-10-01T00:00:00Z" });
+    const newer = sub({ _id: "s1", end_date: "2026-11-08T00:00:00Z" });
+    expect(cancelledTermForPlan([older, newer], "p1")).toBeNull();
+  });
+
+  it("says the card is charged on the terms' first charge date", () => {
+    expect(uncancelCheckoutLine(rendered(), fmt)).toBe(
+      "You cancelled this membership. Ticking the box to renew automatically takes that back: your membership keeps going and your card will be charged on <2026-11-07>.",
+    );
+  });
+
+  it("says 'at your next renewal' without a usable date", () => {
+    expect(uncancelCheckoutLine(rendered({ first_charge_at: "" }), fmt)).toMatch(/charged at your next renewal\.$/);
+    expect(uncancelCheckoutLine(rendered({ first_charge_at: "not a date" }), fmt)).toMatch(/at your next renewal\.$/);
+    expect(uncancelCheckoutLine(null, fmt)).toMatch(/at your next renewal\.$/);
+  });
+
+  it("promises no charge when the renewal costs nothing", () => {
+    const line = uncancelCheckoutLine(rendered({ amount_minor: 0 }), fmt);
+    expect(line).toBe(
+      "You cancelled this membership. Ticking the box to renew automatically takes that back: your membership keeps going.",
+    );
+    expect(line).not.toMatch(/charge/);
   });
 });
