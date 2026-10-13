@@ -16,6 +16,13 @@ type PreferenceRow = {
   inAppKey?: PreferenceKey;
   smsEnabled?: boolean;
   emailLocked?: boolean;
+  /**
+   * Always emailed, so there is no email switch to show. Payment receipts:
+   * the API sends every receipt regardless of email_payment_receipts
+   * (API pull request 244), so that switch did nothing. The field stays on
+   * the API.
+   */
+  emailAlways?: boolean;
 };
 
 const ROWS: PreferenceRow[] = [
@@ -49,7 +56,7 @@ const ROWS: PreferenceRow[] = [
   {
     label: "Payment receipts",
     sub: "Charges and refunds",
-    emailKey: "emailPaymentReceipts",
+    emailAlways: true,
     inAppKey: "inAppPayments",
   },
   {
@@ -203,12 +210,14 @@ export default function NotificationPreferencesPanel() {
                   </div>
 
                   <div className="flex justify-center">
-                    <Check
-                      on={emailOn}
-                      disabled={!row.emailKey || row.emailLocked || updatePrefs.isPending}
-                      onClick={emailToggle}
-                      ariaLabel={`${row.label} email`}
-                    />
+                    {row.emailAlways ? null : (
+                      <Check
+                        on={emailOn}
+                        disabled={!row.emailKey || row.emailLocked || updatePrefs.isPending}
+                        onClick={emailToggle}
+                        ariaLabel={`${row.label} email`}
+                      />
+                    )}
                   </div>
 
                   <div className="flex justify-center">
@@ -232,6 +241,12 @@ export default function NotificationPreferencesPanel() {
             })
           )}
         </div>
+
+        {prefs && (
+          <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+            Payment receipts are always emailed.
+          </p>
+        )}
 
         {updatePrefs.isError && (
           <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
