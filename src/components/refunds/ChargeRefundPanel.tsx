@@ -14,6 +14,7 @@ import {
   REFUND_ORIGIN_LABEL,
   REFUND_STATUS,
   newIdempotencyKey,
+  promptPill,
   refundAmountError,
   refundErrorMessage,
 } from "@/lib/refunds/refundUi";
@@ -31,7 +32,8 @@ function when(iso?: string | null): string {
 }
 
 export function RefundRow({ refund }: { refund: Refund }) {
-  const s = REFUND_STATUS[refund.status];
+  // A declined request put to the provider reads as the prompt, not "Declined".
+  const s = promptPill(refund) ?? REFUND_STATUS[refund.status];
   return (
     <li className="flex flex-wrap items-start justify-between gap-2 py-2.5" style={{ borderTop: "1px solid var(--border)" }}>
       <div className="min-w-0">
