@@ -40,6 +40,24 @@ export type RefundOrigin =
   /** The gym cancelled the membership: the unused part, pro rata. */
   | "gym_cancellation";
 
+/**
+ * "Refund suggested" (owner ruling, Oct 13 2026): Binectics suspended a
+ * member, their paid session was cancelled, and the money was on the
+ * provider's own Paystack account, so an admin could only decline the
+ * refund. The provider is then asked to refund it (open) until they do
+ * (refunded) or decide not to (dismissed).
+ */
+export type RefundPromptStatus = "open" | "refunded" | "dismissed";
+
+export interface RefundPrompt {
+  status: RefundPromptStatus;
+  prompted_at: string | null;
+  resolved_at: string | null;
+  /** The provider's own refund that answered it. */
+  refund_id: string | null;
+  note: string | null;
+}
+
 export interface Refund {
   id: string;
   charge_transaction_id: string;
@@ -64,6 +82,8 @@ export interface Refund {
   created_at: string | null;
   updated_at: string | null;
   history: Array<{ at: string; status: string; note?: string }>;
+  /** Set only on a "Refund suggested" row; null (or absent on older APIs) otherwise. */
+  provider_prompt?: RefundPrompt | null;
   member?: { id: string; first_name: string | null; last_name: string | null; email: string | null } | null;
   organization?: { id: string; name: string | null } | null;
 }
@@ -205,8 +225,23 @@ export const refundsService = {
   orgRequest(orgId: string, chargeId: string, input: CreateRefundInput): Promise<ApiResponse<Refund>> {
     return apiClient.post(`/refunds/organizations/${orgId}/charges/${chargeId}/refund-requests`, input);
   },
-  orgRefunds(orgId: string, params: { status?: RefundStatus; page?: number } = {}): Promise<ApiResponse<RefundPage>> {
+  orgRefunds(
+    orgId: string,
+    params: { status?: RefundStatus; provider_prompt?: RefundPromptStatus; page?: number } = {},
+  ): Promise<ApiResponse<RefundPage>> {
     return apiClient.get(`/refunds/organizations/${orgId}${qs(params)}`);
+  },
+  /** Refund a suggested refund on the provider's own key (all of it unless amount_minor says less). */
+  orgRefundSuggested(
+    orgId: string,
+    refundId: string,
+    input: { idempotency_key: string; amount_minor?: number },
+  ): Promise<ApiResponse<Refund>> {
+    return apiClient.post(`/refunds/organizations/${orgId}/refunds/${refundId}/suggestion/refund`, input);
+  },
+  /** Decide not to refund a suggested refund. */
+  orgDismissSuggested(orgId: string, refundId: string, note?: string): Promise<ApiResponse<Refund>> {
+    return apiClient.post(`/refunds/organizations/${orgId}/refunds/${refundId}/suggestion/dismiss`, note ? { note } : {});
   },
   orgMarkNotSent(orgId: string, refundId: string, note: string): Promise<ApiResponse<Refund>> {
     return apiClient.post(`/refunds/organizations/${orgId}/refunds/${refundId}/mark-not-sent`, { note });

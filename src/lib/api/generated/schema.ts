@@ -6542,6 +6542,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/refunds/organizations/{organizationId}/refunds/{refundId}/suggestion/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide not to refund a suggested refund */
+        post: operations["RefundsController_dismissSuggested"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/refunds/organizations/{organizationId}/refunds/{refundId}/suggestion/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund a suggested refund (a suspended member's cancelled session) on your own Paystack account */
+        post: operations["RefundsController_refundSuggested"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reviews": {
         parameters: {
             query?: never;
@@ -8467,6 +8501,9 @@ export interface components {
              */
             publicIds: string[];
         };
+        DismissSuggestedRefundDto: {
+            note?: string;
+        };
         DisputeNoteDto: {
             note: string;
         };
@@ -9263,6 +9300,18 @@ export interface components {
              * @example 24
              */
             window_hours: number;
+        };
+        RefundSuggestedDto: {
+            /**
+             * @description Amount to refund in the smallest currency unit. Defaults to the suggested amount, or what is left of the payment if that is less.
+             * @example 500000
+             */
+            amount_minor?: number;
+            /**
+             * @description A key the client makes once per refund it means to create. Sending the same key again returns the same refund.
+             * @example 1f7a8c2e-6d2b-4c9e-9a51-3f0f6c2d9b10
+             */
+            idempotency_key: string;
         };
         RegisterDto: {
             /**
@@ -11380,6 +11429,8 @@ export interface operations {
             query?: {
                 status?: "requested" | "rejected" | "queued" | "sending" | "pending" | "needs_attention" | "unknown" | "processed" | "failed";
                 payment_rail?: "provider" | "platform";
+                /** @description "Refund suggested" rows only: declined requests the provider is asked to refund themselves (open), or how they answered. */
+                provider_prompt?: "open" | "refunded" | "dismissed";
                 page?: number;
                 limit?: number;
             };
@@ -17854,7 +17905,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "REFUND_SUGGESTED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;
@@ -20859,6 +20910,8 @@ export interface operations {
             query?: {
                 status?: "requested" | "rejected" | "queued" | "sending" | "pending" | "needs_attention" | "unknown" | "processed" | "failed";
                 payment_rail?: "provider" | "platform";
+                /** @description "Refund suggested" rows only: declined requests the provider is asked to refund themselves (open), or how they answered. */
+                provider_prompt?: "open" | "refunded" | "dismissed";
                 page?: number;
                 limit?: number;
             };
@@ -21005,6 +21058,54 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_dismissSuggested: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DismissSuggestedRefundDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_refundSuggested: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundSuggestedDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

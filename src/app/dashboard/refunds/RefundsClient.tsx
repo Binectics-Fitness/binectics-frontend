@@ -7,6 +7,7 @@ import { ActionModal } from "@/components/ds/ActionModal";
 import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { ChargeRefundPanel, RefundRow } from "@/components/refunds/ChargeRefundPanel";
 import { DisputeDetail } from "@/components/refunds/DisputeDetail";
+import { SuggestedRefunds } from "@/components/refunds/SuggestedRefunds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { formatMinor } from "@/lib/currencies/helpers";
 import {
@@ -53,6 +54,8 @@ export function RefundsClient() {
   const tab = (TABS.find((t) => t.id === params.get("tab"))?.id ?? "payments") as Tab;
   const setTab = (t: Tab) => router.replace(`${pathname}?tab=${t}`);
   const orgId = currentOrg?._id ?? null;
+  // Bumped when a suggested refund is answered, so the lists below reload.
+  const [rev, setRev] = useState(0);
 
   return (
     <WorkspaceShell activeItem="Refunds" crumb="Refunds and disputes">
@@ -82,14 +85,17 @@ export function RefundsClient() {
           </button>
         ))}
       </div>
+      {orgId && !orgLoading ? (
+        <SuggestedRefunds orgId={orgId} highlightId={params.get("suggested")} onChanged={() => setRev((n) => n + 1)} />
+      ) : null}
       {orgLoading ? (
         <AsyncSpinner />
       ) : !orgId ? (
         <EmptySlate message="Set up your workspace to take payments first." />
       ) : tab === "payments" ? (
-        <PaymentsTab orgId={orgId} />
+        <PaymentsTab key={rev} orgId={orgId} />
       ) : tab === "refunds" ? (
-        <RefundsTab orgId={orgId} />
+        <RefundsTab key={rev} orgId={orgId} />
       ) : tab === "disputes" ? (
         <DisputesTab orgId={orgId} openId={params.get("dispute")} />
       ) : (

@@ -53,6 +53,27 @@ export function adminRequestActions(r: Pick<Refund, "payment_rail" | "origin" | 
   return { approve: exception, decline: true, onProviderKey: exception };
 }
 
+/**
+ * How a "Refund suggested" row reads to the provider. Null for every other
+ * refund, which shows its own status.
+ */
+export function promptPill(r: Pick<Refund, "provider_prompt">): { label: string; tone: Tone; help: string } | null {
+  switch (r.provider_prompt?.status) {
+    case "open":
+      return {
+        label: "Refund suggested",
+        tone: "warn",
+        help: "Binectics couldn't refund this because it was paid to your own Paystack account. Refund it or dismiss it.",
+      };
+    case "refunded":
+      return { label: "Refunded by you", tone: "success", help: "You refunded this payment from your own account." };
+    case "dismissed":
+      return { label: "Dismissed", tone: "neutral", help: "You chose not to refund this payment." };
+    default:
+      return null;
+  }
+}
+
 /** Which dispute state to show. */
 export function disputeTone(d: Pick<Dispute, "open" | "resolution">): { label: string; tone: Tone } {
   if (d.open) return { label: "Open", tone: "warn" };
