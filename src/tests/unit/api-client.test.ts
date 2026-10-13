@@ -120,6 +120,22 @@ describe("apiClient sign-in refusal details", () => {
     });
   });
 
+  it("surfaces the fresh auto-renew consent and the refusal reason in details (api #204)", async () => {
+    const consent = { offered: true, text_version: "mbr-renew-v1", text: "Renew automatically.", text_sha256: "a".repeat(64), rendered: {} };
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      jsonResponse(409, { code: "CONSENT_TEXT_CHANGED", message: "changed", consent }),
+    );
+    const changed = await apiClient.post("/marketplace/listings/l/plans/p/checkout", {});
+    expect(changed.code).toBe("CONSENT_TEXT_CHANGED");
+    expect(changed.details).toEqual({ consent });
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      jsonResponse(400, { code: "AUTO_RENEW_NOT_AVAILABLE", message: "no", reason: "gym_managed" }),
+    );
+    const refused = await apiClient.patch("/marketplace/my-subscriptions/s/auto-renew", {});
+    expect(refused.details).toEqual({ reason: "gym_managed" });
+  });
+
   it("reads a 429's Retry-After header into details.retry_after_seconds", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       withHeaders(jsonResponse(429, { message: "Too Many Requests" }), {

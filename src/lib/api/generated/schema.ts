@@ -89,6 +89,74 @@ export interface paths {
         patch: operations["AdminController_updateCurrency"];
         trace?: never;
     };
+    "/api/v1/admin/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Disputes, newest first */
+        get: operations["AdminDisputesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/disputes/{disputeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One dispute, with evidence (signed links) */
+        get: operations["AdminDisputesController_getOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/disputes/{disputeId}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add an admin note (platform money) */
+        post: operations["AdminDisputesController_addNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/disputes/{disputeId}/request-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask the provider for evidence (platform money) */
+        post: operations["AdminDisputesController_requestEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/feature-flags": {
         parameters: {
             query?: never;
@@ -666,6 +734,125 @@ export interface paths {
         post?: never;
         /** Delete a market price */
         delete: operations["AdminProviderBillingController_deletePrice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Refunds and refund requests, newest first */
+        get: operations["AdminRefundsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{refundId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a provider's refund request and send it */
+        post: operations["AdminRefundsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{refundId}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask Paystack about this refund now */
+        post: operations["AdminRefundsController_check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{refundId}/mark-not-sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** After checking Paystack: an unanswered platform refund was never created */
+        post: operations["AdminRefundsController_markNotSent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{refundId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a provider's refund request */
+        post: operations["AdminRefundsController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/charges/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Refund state of one payment */
+        get: operations["AdminRefundsController_quote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/charges/{transactionId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund platform-collected money (all or part) */
+        post: operations["AdminRefundsController_refund"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1647,6 +1834,57 @@ export interface paths {
         get: operations["CurrenciesController_list"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/disputes/organizations/{organizationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organization's disputed payments */
+        get: operations["DisputesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/disputes/organizations/{organizationId}/{disputeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One dispute, with its evidence and events */
+        get: operations["DisputesController_getOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/disputes/organizations/{organizationId}/{disputeId}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add evidence: a note and/or a private document uploaded via POST /upload/document */
+        post: operations["DisputesController_addEvidence"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6184,6 +6422,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/refunds/bookings/{bookingId}/cancellation-quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What cancelling this booking now would refund, under the provider's policy */
+        get: operations["RefundsController_bookingQuote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/refunds/organizations/{organizationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organization's refunds and refund requests */
+        get: operations["RefundsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/refunds/organizations/{organizationId}/charges/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Refund state of one payment: who refunds it, how much is left, its refunds */
+        get: operations["RefundsController_quote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/refunds/organizations/{organizationId}/charges/{transactionId}/refund-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask Binectics to refund a payment it collected for you (all or part) */
+        post: operations["RefundsController_request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/refunds/organizations/{organizationId}/charges/{transactionId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund a payment taken on your own Paystack account (all or part) */
+        post: operations["RefundsController_refund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/refunds/organizations/{organizationId}/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The cancellation refund policy (default if unset) */
+        get: operations["RefundsController_getPolicy"];
+        /** Set the cancellation refund policy */
+        put: operations["RefundsController_setPolicy"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/refunds/organizations/{organizationId}/refunds/{refundId}/mark-not-sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** After checking Paystack: an unanswered refund was never created; free its amount */
+        post: operations["RefundsController_markNotSent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reviews": {
         parameters: {
             query?: never;
@@ -7126,6 +7484,12 @@ export interface components {
             /** @example 75 */
             target_weight_kg?: number;
         };
+        AddDisputeEvidenceDto: {
+            /** @description The `url` returned by POST /upload/document (folder disputes/evidence). Must be your own upload. */
+            document_url?: string;
+            /** @example Session held on 3 Oct; attendance log attached. */
+            note?: string;
+        };
         AddMemberDirectDto: {
             /** @example john.doe@example.com */
             email: string;
@@ -7262,6 +7626,8 @@ export interface components {
             organization_id: string;
         };
         CancelBookingDto: {
+            /** @description For a booking paid online: the member accepts that, under the provider's cancellation policy, cancelling now refunds less than they paid. Without it such a cancellation is refused (REFUND_POLICY_ACK_REQUIRED, or CANCELLATION_WINDOW_EXPIRED inside 24 hours). */
+            acknowledge_refund_policy?: boolean;
             /** @example Unable to attend */
             reason?: string;
         };
@@ -7988,6 +8354,20 @@ export interface components {
              */
             type: "TEXT" | "TEXTAREA" | "MULTIPLE_CHOICE" | "CHECKBOX" | "SELECT" | "DATE" | "NUMBER" | "EMAIL" | "PHONE" | "RATING";
         };
+        CreateRefundDto: {
+            /**
+             * @description Amount to refund, in the charge currency's smallest unit (kobo, cents). Whole number. Several partial refunds may add up to the charge, never more.
+             * @example 500000
+             */
+            amount_minor: number;
+            /**
+             * @description A key the client makes once per refund it means to create (e.g. a UUID made when the dialog opens). Sending the same key again returns the same refund instead of a second one.
+             * @example 1f7a8c2e-6d2b-4c9e-9a51-3f0f6c2d9b10
+             */
+            idempotency_key: string;
+            /** @example Session did not happen */
+            reason?: string;
+        };
         CreateReviewDto: {
             comment?: string;
             rating: number;
@@ -8086,6 +8466,9 @@ export interface components {
              *     ]
              */
             publicIds: string[];
+        };
+        DisputeNoteDto: {
+            note: string;
         };
         EditMessageDto: {
             /** @description Plain text, 1..4000 characters after trimming. */
@@ -8201,7 +8584,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "PROGRAM_AUTO_RULE_INVALID" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED";
             /**
              * @description Structured detail of a billing refusal: { quota, limit, current_usage, plan_tier } for BILLING_LIMIT_REACHED sent to the provider (only { quota } when the refused party is a member joining), { feature, plan_tier } for BILLING_FEATURE_DISABLED.
              * @example {
@@ -8475,6 +8858,10 @@ export interface components {
             max_redemptions?: number;
             name: string;
             points_cost: number;
+        };
+        MarkNotSentDto: {
+            /** @description What was checked in the Paystack dashboard. */
+            note: string;
         };
         MarkReadDto: {
             /** @description Mark read up to this seq (capped at the thread tip). Missing: up to the tip. The cursor never moves back. */
@@ -8862,6 +9249,21 @@ export interface components {
              */
             refreshToken?: string;
         };
+        RefundDecisionDto: {
+            note?: string;
+        };
+        RefundPolicyDto: {
+            /**
+             * @description Percent of the payment refunded when they do.
+             * @example 100
+             */
+            refund_percent: number;
+            /**
+             * @description A member must cancel at least this many hours before the start.
+             * @example 24
+             */
+            window_hours: number;
+        };
         RegisterDto: {
             /**
              * @description Acceptance of terms of service
@@ -8903,6 +9305,9 @@ export interface components {
             platform: "web" | "android" | "ios";
             /** @description FCM registration token for this device */
             token: string;
+        };
+        RejectRefundDto: {
+            note: string;
         };
         RemoveFeatureFlagOverrideDto: {
             reason?: string;
@@ -10062,6 +10467,93 @@ export interface operations {
             };
         };
     };
+    AdminDisputesController_list: {
+        parameters: {
+            query?: {
+                state?: "open" | "resolved";
+                handled_by?: "provider" | "platform";
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDisputesController_getOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                disputeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDisputesController_addNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                disputeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisputeNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDisputesController_requestEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                disputeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisputeNoteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     FeatureFlagsAdminController_list: {
         parameters: {
             query?: never;
@@ -10876,6 +11368,158 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRefundsController_list: {
+        parameters: {
+            query?: {
+                status?: "requested" | "rejected" | "queued" | "sending" | "pending" | "needs_attention" | "unknown" | "processed" | "failed";
+                payment_rail?: "provider" | "platform";
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRefundsController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundDecisionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRefundsController_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRefundsController_markNotSent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkNotSentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRefundsController_reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectRefundDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRefundsController_quote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRefundsController_refund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRefundDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12234,6 +12878,74 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DisputesController_list: {
+        parameters: {
+            query?: {
+                state?: "open" | "resolved";
+                handled_by?: "provider" | "platform";
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DisputesController_getOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                disputeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DisputesController_addEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                disputeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddDisputeEvidenceDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -17142,7 +17854,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;
@@ -20123,6 +20835,183 @@ export interface operations {
             };
         };
     };
+    RefundsController_bookingQuote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_list: {
+        parameters: {
+            query?: {
+                status?: "requested" | "rejected" | "queued" | "sending" | "pending" | "needs_attention" | "unknown" | "processed" | "failed";
+                payment_rail?: "provider" | "platform";
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_quote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRefundDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_refund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRefundDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_getPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_setPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundPolicyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RefundsController_markNotSent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkNotSentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ReviewsController_createReview: {
         parameters: {
             query?: never;
@@ -21553,7 +22442,7 @@ export interface operations {
                      * @description Destination folder, inside your own upload space
                      * @enum {string}
                      */
-                    folder: "gyms/verification" | "gyms/documents" | "teams/documents";
+                    folder: "gyms/verification" | "gyms/documents" | "teams/documents" | "disputes/evidence";
                 };
             };
         };
@@ -21595,7 +22484,7 @@ export interface operations {
                      * @description Destination folder, inside your own upload space
                      * @enum {string}
                      */
-                    folder: "users/profiles" | "gyms/profiles" | "gyms/gallery" | "gyms/documents" | "gyms/verification" | "marketplace/listings" | "marketplace/providers" | "store/products" | "teams/documents" | "plans/workouts" | "plans/diet-documents" | "payments/proofs";
+                    folder: "users/profiles" | "gyms/profiles" | "gyms/gallery" | "gyms/documents" | "gyms/verification" | "marketplace/listings" | "marketplace/providers" | "store/products" | "teams/documents" | "disputes/evidence" | "plans/workouts" | "plans/diet-documents" | "payments/proofs";
                 };
             };
         };
@@ -21739,7 +22628,7 @@ export interface operations {
                      * @description Destination folder, inside your own upload space
                      * @enum {string}
                      */
-                    folder: "users/profiles" | "gyms/profiles" | "gyms/gallery" | "gyms/documents" | "gyms/verification" | "marketplace/listings" | "marketplace/providers" | "store/products" | "teams/documents" | "plans/workouts" | "plans/diet-documents" | "payments/proofs";
+                    folder: "users/profiles" | "gyms/profiles" | "gyms/gallery" | "gyms/documents" | "gyms/verification" | "marketplace/listings" | "marketplace/providers" | "store/products" | "teams/documents" | "disputes/evidence" | "plans/workouts" | "plans/diet-documents" | "payments/proofs";
                 };
             };
         };

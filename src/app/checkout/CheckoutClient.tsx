@@ -14,6 +14,19 @@ import type {
 import { MembershipPlanType } from "@/lib/types";
 import DashboardLoading from "@/components/DashboardLoading";
 import { Button } from "@/components/Button";
+import { AutoRenewConsentBox } from "@/components/billing/AutoRenewConsentBox";
+import {
+  memberBillingService,
+  type AutoRenewConsentOffer,
+  type RenewalCheckoutRequest,
+} from "@/lib/api/memberBilling";
+import {
+  autoRenewSuccessQuery,
+  autoRenewUnavailableCopy,
+  consentFromError,
+  isOfferedConsent,
+  reasonFromError,
+} from "@/lib/billing/autoRenew";
 
 /**
  * Plan checkout.
@@ -27,6 +40,11 @@ import { Button } from "@/components/Button";
  *
  * Paystack is the only gateway the API takes member payments through, so
  * there is no Stripe or Flutterwave path here.
+ *
+ * Auto-renew (api #204): when the API offers it, its consent text shows
+ * word for word beside an unticked box. Ticking it sends the text's version
+ * and hash with the checkout, which makes it card-only and saves the card
+ * once Paystack says it can be charged again. Not offered, no box.
  */
 
 // ==================== CHECKOUT CONTENT ====================
@@ -45,6 +63,10 @@ function CheckoutContent() {
   const [error, setError] = useState("");
   const [paymentError, setPaymentError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  // Null while loading or when the read failed: no box either way.
+  const [consent, setConsent] = useState<AutoRenewConsentOffer | null>(null);
+  const [renewTicked, setRenewTicked] = useState(false);
+  const [consentNotice, setConsentNotice] = useState<string | null>(null);
   // One checkout at a time: a second click while the popup is up is ignored.
   const inFlight = useRef(false);
 
@@ -54,10 +76,15 @@ function CheckoutContent() {
     setLoading(true);
     setError("");
     try {
-      const [listingRes, plansRes] = await Promise.all([
+      const [listingRes, plansRes, consentRes] = await Promise.all([
         marketplaceService.getListingById(listingId),
         marketplaceService.getPublicListingPlans(listingId),
+        // A failed read just leaves the box out: paying once still works.
+        memberBillingService
+          .getPlanAutoRenewConsent(listingId, planId)
+          .catch(() => null),
       ]);
+      setConsent(consentRes?.success && consentRes.data ? consentRes.data : null);
 
       if (listingRes.success && listingRes.data) {
         setListing(listingRes.data);
@@ -91,6 +118,9 @@ function CheckoutContent() {
       return;
     }
     if (user && listingId && planId) {
+      // Loading the checkout from the API is the external sync this effect
+      // exists for; its loading flag is set before the first await.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadCheckoutData();
     }
   }, [user, authLoading, listingId, planId, loadCheckoutData, router]);
@@ -106,7 +136,57 @@ function CheckoutContent() {
     setIsProcessing(true);
     setPaymentError("");
     try {
-      const started = await marketplaceService.startPlanCheckout(listing._id, plan._id);
+      const renewal: RenewalCheckoutRequest | undefined =
+        renewTicked && isOfferedConsent(consent)
+          ? {
+              save_card: true,
+              text_version: consent.text_version,
+              text_sha256: consent.text_sha256,
+              channel: "web",
+            }
+          : undefined;
+      const started = renewal
+        ? await marketplaceService.startPlanCheckout(listing._id, plan._id, renewal)
+        : await marketplaceService.startPlanCheckout(listing._id, plan._id);
+      if (!started.success && started.code === "CONSENT_TEXT_CHANGED") {
+        // The price, plan or provider changed since the page loaded. Show
+        // the new terms, untick, and let the member decide again.
+        const fresh =
+          consentFromError(started) ??
+          (await memberBillingService.getPlanAutoRenewConsent(listing._id, plan._id)).data ??
+          null;
+        setConsent(fresh);
+        setRenewTicked(false);
+        setConsentNotice(
+          isOfferedConsent(fresh)
+            ? "The renewal terms changed since you opened this page. Read them again and tick the box if you agree."
+            : null,
+        );
+        if (!isOfferedConsent(fresh)) {
+          setPaymentError(
+            `${autoRenewUnavailableCopy(fresh && !fresh.offered ? fresh.reason : null)} You can still pay for this term on its own.`,
+          );
+        }
+        return;
+      }
+      if (!started.success && started.code === "AUTO_RENEW_NOT_AVAILABLE") {
+        const reason = reasonFromError(started);
+        setConsent({ offered: false, reason: reason ?? "disabled" });
+        setRenewTicked(false);
+        setConsentNotice(null);
+        setPaymentError(
+          `${autoRenewUnavailableCopy(reason)} You can still pay for this term on its own.`,
+        );
+        return;
+      }
+      if (!started.success && started.code === "RENEWAL_CHARGE_IN_PROGRESS") {
+        // A saved-card renewal for this membership is with the bank now;
+        // paying again could charge the member twice.
+        setPaymentError(
+          "A renewal payment from your saved card is being processed right now. Check back in a few minutes before paying again.",
+        );
+        return;
+      }
       if (!started.success || !started.data?.access_code) {
         setPaymentError(writeErrorMessage(started, "We couldn't start the payment. Please try again."));
         return;
@@ -120,6 +200,7 @@ function CheckoutContent() {
         listing_id: listing._id,
         plan_id: plan._id,
         amount_minor: checkout.amount_minor,
+        save_card: !!renewal,
       });
       let result;
       try {
@@ -146,7 +227,9 @@ function CheckoutContent() {
       );
       if (res.success) {
         clearPendingCheckout();
-        router.push(`/checkout/success?listing=${listing._id}&plan=${plan._id}`);
+        router.push(
+          `/checkout/success?listing=${listing._id}&plan=${plan._id}${autoRenewSuccessQuery(!!renewal, res.data)}`,
+        );
       } else {
         setPaymentError(
           res.message
@@ -361,6 +444,25 @@ function CheckoutContent() {
                 </div>
               ) : (
                 <>
+                  {isOfferedConsent(consent) && (
+                    <div className="mb-5">
+                      <AutoRenewConsentBox
+                        consent={consent}
+                        checked={renewTicked}
+                        onChange={(next) => {
+                          setRenewTicked(next);
+                          setConsentNotice(null);
+                        }}
+                        notice={consentNotice}
+                        disabled={isProcessing}
+                      />
+                      <p className="mt-2 text-[12.5px] text-fg-2">
+                        {renewTicked
+                          ? "You pay today's amount now, by card. Your card is saved for renewals only if your bank allows it."
+                          : "Leave this unticked to pay for this term only."}
+                      </p>
+                    </div>
+                  )}
                   <Button
                     onClick={() => void handlePay()}
                     disabled={isProcessing}
