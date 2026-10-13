@@ -58,8 +58,9 @@ const HEALTH_DATA_SECTION: Section = {
     <h3 className={hcH3} style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>What your providers see</h3>
     <ul className={hcUl} style={{ color: "var(--fg-2)" }}>
       <li><strong style={hcStrong}>Sharing is per type and starts off</strong>. Steps, workouts, sleep, heart rate and weight each have their own &ldquo;share with my providers&rdquo; switch, in the connect flow and in Settings → Privacy. Every one starts off.</li>
-      <li><strong style={hcStrong}>Steps, workouts, sleep and resting heart rate</strong> you import are not shown to providers today, whatever those switches say.</li>
-      <li><strong style={hcStrong}>Weight is the exception</strong>. Imported weigh‑ins join your weight history, and providers you are currently working with (and authorised staff at their gym or practice) can see your weight history while &ldquo;Share my progress with my providers&rdquo; is on. Turn that off in Settings → Privacy and they see only the weights logged within their own relationship with you.</li>
+      <li><strong style={hcStrong}>Imported data is shared only for the types you switch on</strong>, and only while &ldquo;Share my progress with my providers&rdquo; is also on. It goes only to providers you are currently working with (and authorised staff at their gym or practice). With a type off, providers see none of what you imported of it.</li>
+      <li><strong style={hcStrong}>Today, that means weight</strong>. Shared imported weigh‑ins appear in your weight history for those providers. Imported steps, workouts, sleep and resting heart rate don&apos;t appear anywhere a provider can see yet, even when shared.</li>
+      <li><strong style={hcStrong}>What you type in yourself</strong> is not covered by these switches. It follows &ldquo;Share my progress with my providers&rdquo;, as before.</li>
       <li><strong style={hcStrong}>Program tasks</strong>, as described above, if you turned on &ldquo;Use for my program tasks&rdquo;.</li>
     </ul>
 
