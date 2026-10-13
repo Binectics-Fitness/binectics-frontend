@@ -64,6 +64,11 @@ export function useCancelSubscription() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.marketplace.subscriptions(),
       });
+      // Cancelling stops card auto-renew: the saved-card list would still
+      // say "next charge" otherwise.
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.paymentMethods(),
+      });
     },
   });
 }

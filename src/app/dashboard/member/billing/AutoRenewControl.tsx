@@ -15,6 +15,7 @@ import {
   reasonFromError,
 } from "@/lib/billing/autoRenew";
 import type { ApiResponse, MembershipSubscription } from "@/lib/types";
+import { formatDate } from "@/utils/format";
 
 type Problem =
   | { kind: "needs_card" }
@@ -62,6 +63,9 @@ export function AutoRenewControl({
   const [confirmOff, setConfirmOff] = useState(false);
 
   const on = !!sub.auto_renew;
+  // Cancelled mid-term: turning auto-renew back on takes the cancellation
+  // back (the API clears it), so the member is told before and after.
+  const cancelled = !!sub.cancel_requested_at;
   const planName = typeof sub.plan_id === "object" ? sub.plan_id.name : "membership";
 
   const fetchConsent = async (): Promise<OfferedConsent | null> => {
@@ -89,7 +93,9 @@ export function AutoRenewControl({
     onChanged(updated);
     setStatus(
       updated.auto_renew
-        ? "Auto-renew is on. We'll remind you before each charge."
+        ? cancelled
+          ? "Auto-renew is on and your cancellation is taken back: your membership keeps going. We'll remind you before each charge."
+          : "Auto-renew is on. We'll remind you before each charge."
         : "Auto-renew is off. Your card stays saved and won't be used for future renewals of this membership. A payment already being processed may still go through.",
     );
   };
@@ -326,6 +332,16 @@ export function AutoRenewControl({
       >
         {consent && (
           <div className="flex flex-col gap-3">
+            {cancelled && (
+              <p className="text-[13.5px] text-ink" data-testid="uncancel-note">
+                You cancelled this membership. Turning auto-renew back on takes that back: your membership keeps going
+                and your card will be charged{" "}
+                {consent.rendered?.first_charge_at
+                  ? `on ${formatDate(consent.rendered.first_charge_at)}`
+                  : "at your next renewal"}
+                .
+              </p>
+            )}
             <p className="text-[13.5px] text-fg-2">
               Read the terms below. Tick the box to agree, then turn auto-renew on.
             </p>
