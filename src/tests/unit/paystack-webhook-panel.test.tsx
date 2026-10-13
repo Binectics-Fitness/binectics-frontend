@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
-import { paystackKeyMode, webhookReceivedLabel } from "@/components/provider/PaystackWebhookPanel";
+import {
+  paystackKeyMode,
+  webhookIsStale,
+  webhookReceivedLabel,
+} from "@/components/provider/PaystackWebhookPanel";
 import { normalizePaymentConfig } from "@/lib/api/marketplace";
 
 /**
@@ -108,12 +112,34 @@ describe("Paystack webhook panel", () => {
   });
 
   it("shows when the last one arrived", () => {
-    const at = "2026-10-13T09:30:00.000Z";
+    // Relative to now, so the test doesn't go stale with the calendar.
+    const at = new Date(Date.now() - 2 * 86_400_000).toISOString();
     h.configs = [paystack({ webhook_last_received_at: at })];
     render(<GatewaysSection />);
     expect(panel()).toHaveTextContent(`Last received ${webhookReceivedLabel(at)}.`);
     expect(within(panel()).getByText("Receiving")).toBeInTheDocument();
     expect(panel()).not.toHaveTextContent(/not received yet/i);
+  });
+
+  it("stops saying Receiving after 30 days without one, and suggests a check", () => {
+    const at = new Date(Date.now() - 31 * 86_400_000).toISOString();
+    h.configs = [paystack({ webhook_last_received_at: at })];
+    render(<GatewaysSection />);
+    expect(within(panel()).queryByText("Receiving")).toBeNull();
+    expect(within(panel()).getByText("Quiet for 30 days")).toBeInTheDocument();
+    expect(within(panel()).getByTestId("paystack-webhook-stale")).toHaveTextContent(
+      "No payment notifications from Paystack in 30 days. If you take payments, check the webhook is still set in your Paystack dashboard.",
+    );
+    // When the last one arrived is still said, in words, not by colour alone.
+    expect(panel()).toHaveTextContent(`Last received ${webhookReceivedLabel(at)}.`);
+  });
+
+  it("shows no stale note while webhooks are recent", () => {
+    const at = new Date(Date.now() - 29 * 86_400_000).toISOString();
+    h.configs = [paystack({ webhook_last_received_at: at })];
+    render(<GatewaysSection />);
+    expect(within(panel()).getByText("Receiving")).toBeInTheDocument();
+    expect(within(panel()).queryByTestId("paystack-webhook-stale")).toBeNull();
   });
 
   it("explains, without a Copy button, when the API has no URL to give", () => {
@@ -148,6 +174,15 @@ describe("webhook helpers", () => {
     expect(paystackKeyMode("pk_test_x")).toBe("Test");
     expect(paystackKeyMode("PK_LIVE_x")).toBe("Live");
     expect(paystackKeyMode("something")).toBeNull();
+  });
+
+  it("calls a webhook stale only after 30 days, and never without a valid time", () => {
+    const now = new Date("2026-11-20T12:00:00.000Z");
+    expect(webhookIsStale("2026-10-21T11:00:00.000Z", now)).toBe(true);
+    expect(webhookIsStale("2026-10-21T13:00:00.000Z", now)).toBe(false);
+    expect(webhookIsStale("2026-11-19T12:00:00.000Z", now)).toBe(false);
+    expect(webhookIsStale(null, now)).toBe(false);
+    expect(webhookIsStale("not a date", now)).toBe(false);
   });
 
   it("formats a received time, and nothing for a bad one", () => {
